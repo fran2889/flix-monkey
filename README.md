@@ -20,13 +20,13 @@ A Tampermonkey/Greasemonkey userscript that overlays IMDb ratings on Netflix thu
 ## Requirements
 
 - [Tampermonkey](https://www.tampermonkey.net/) (Chrome/Edge), [Violentmonkey](https://violentmonkey.github.io/) (Chrome/Edge/Firefox), or [Greasemonkey](https://www.greasespot.net/) (Firefox)
-- A free [OMDB API key](https://www.omdbapi.com/apikey.aspx)
+- A free [OMDB API key](https://www.omdbapi.com/apikey.aspx) (Optional – FlixMonkey now falls back to scraping IMDb directly if the key is not set or if OMDB fails to return a rating)
 
 ## Installation
 
 1. Install Tampermonkey, Violentmonkey, or Greasemonkey.
 2. Open `FlixMonkey.user.js` and click **Raw**, or navigate directly to the raw file URL — the extension will detect it and prompt you to install.
-3. Open the script in the extension dashboard and set your OMDB API key:
+3. (Optional) Open the script in the extension dashboard and set your OMDB API key to get more accurate ratings and additional data like Rotten Tomatoes and Metacritic scores:
 
 ```js
 omdbApiKey: 'YOUR_OMDB_API_KEY',
@@ -38,7 +38,7 @@ All options live in the `CONFIG` object at the top of the script:
 
 | Option | Default | Description |
 |---|---|---|
-| `omdbApiKey` | `'YOUR_OMDB_API_KEY'` | Your OMDB API key |
+| `omdbApiKey` | `'YOUR_OMDB_API_KEY'` | Your OMDB API key (Optional) |
 | `overlayCorner` | `'top-left'` | Badge position — `top-left`, `top-right`, `bottom-left`, `bottom-right` |
 | `cacheTtlRated` | 7 days | Cache duration for titles with a rating |
 | `cacheTtlNoRating` | 24 h | Cache duration for titles found but without a rating |

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.7.0
+// @version      0.8.0
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -9,6 +9,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @connect      www.omdbapi.com
+// @connect      www.imdb.com
+// @connect      v3.sg.media-imdb.com
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -81,17 +83,37 @@
     // OMDB API
     // ---------------------------------------------------------------------------
 
-    /** Wrap GM_xmlhttpRequest in a Promise that resolves with parsed JSON. */
-    function gmFetch(url) {
+    /** Wrap GM_xmlhttpRequest in a Promise that resolves with parsed JSON or text. */
+    function gmFetch(url, responseType = 'json') {
+        const userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+        ];
+        const ua = userAgents[Math.floor(Math.random() * userAgents.length)];
+
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: 'GET',
                 url,
-                responseType: 'json',
-                onload: r =>
-                    r.status >= 200 && r.status < 300
-                        ? resolve(r.response ?? JSON.parse(r.responseText))
-                        : reject(new Error(`HTTP ${r.status}`)),
+                responseType,
+                headers: {
+                    'User-Agent': ua,
+                    Referer: 'https://www.imdb.com/',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                },
+                onload: r => {
+                    if (r.status >= 200 && r.status < 300) {
+                        if (responseType === 'json') {
+                            resolve(r.response ?? JSON.parse(r.responseText));
+                        } else {
+                            resolve(r.responseText);
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${r.status}`));
+                    }
+                },
                 onerror: () => reject(new Error('network error')),
                 ontimeout: () => reject(new Error('timeout')),
                 timeout: 8000,
@@ -127,20 +149,123 @@
         return { imdbId: json.imdbID, rating, rtRating, mcRating };
     }
 
+    /**
+     * Scrape IMDb rating by searching for the title and parsing the resulting title page.
+     * Returns { imdbId, rating, rtRating, mcRating } on success, null otherwise.
+     */
+    async function fetchImdbScrape(title, year) {
+        const query = (year ? `${title} ${year}` : title).toLowerCase();
+        const firstChar = query[0] || 'x';
+        const suggestUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(query)}.json`;
+
+        let imdbId = null;
+        try {
+            const suggestJson = await gmFetch(suggestUrl, 'json');
+            if (suggestJson && Array.isArray(suggestJson.d)) {
+                // Find the first entry that looks like a title (tt...)
+                const match = suggestJson.d.find(entry => entry.id && entry.id.startsWith('tt'));
+                if (match) {
+                    imdbId = match.id;
+                }
+            }
+        } catch (e) {
+            console.warn('[FlixMonkey] Suggestions API failed:', e.message);
+        }
+
+        if (!imdbId) return null;
+
+        // Random delay (1s to 2.5s) to be nicer to IMDb
+        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
+
+        const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
+        const titleHtml = await gmFetch(titleUrl, 'text');
+
+        let rating = null;
+
+        // Try extracting from all JSON-LD blocks
+        const jsonLdBlocks = titleHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
+        if (jsonLdBlocks) {
+            for (const block of jsonLdBlocks) {
+                try {
+                    const content = block.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
+                    const data = JSON.parse(content);
+                    const extract = d => {
+                        if (d.aggregateRating) return d.aggregateRating.ratingValue;
+                        if (Array.isArray(d)) {
+                            const found = d.find(o => o.aggregateRating);
+                            return found ? found.aggregateRating.ratingValue : null;
+                        }
+                        return null;
+                    };
+                    const val = extract(data);
+                    if (val) {
+                        rating = val.toString();
+                        break;
+                    }
+                } catch {
+                    /* ignore */
+                }
+            }
+        }
+
+        // Fallback: search for rating in data-testid with a more flexible regex
+        if (!rating) {
+            // Updated regex to handle more variations and capture rating even if nested deeply
+            const rMatch = titleHtml.match(
+                /data-testid="hero-rating-bar__aggregate-rating__score"[^>]*>[\s\S]*?<span[^>]*>([\d.]+)<\/span>/
+            );
+            if (rMatch) rating = rMatch[1];
+        }
+
+        return { imdbId, rating, rtRating: null, mcRating: null };
+    }
+
+    function formatRating(val) {
+        if (!val || val === 'N/A') return null;
+        const num = parseFloat(val);
+        return isNaN(num) ? val : num.toFixed(1);
+    }
+
     /** Get OMDB data for a title, using cache where possible. Returns null on no-result or network error. */
     async function getOmdbData(title, year) {
         const cached = readCache(title, year);
         if (cached !== null) return cached;
 
-        let data;
-        try {
-            data = await fetchOmdb(title, year);
-        } catch (err) {
-            console.warn('[FlixMonkey] OMDB fetch failed:', err.message);
-            return null; // network error – don't cache
+        let data = null;
+        const isOmdbConfigured = CONFIG.omdbApiKey && CONFIG.omdbApiKey !== 'YOUR_OMDB_API_KEY';
+
+        if (isOmdbConfigured) {
+            try {
+                data = await fetchOmdb(title, year);
+            } catch (err) {
+                console.warn('[FlixMonkey] OMDB fetch failed:', err.message);
+            }
         }
 
-        if (!data) return null; // not found – don't cache
+        // Fallback to scraping if OMDB didn't give us a rating (or wasn't configured)
+        if (!data || !data.rating) {
+            try {
+                const scraped = await fetchImdbScrape(title, year);
+                if (scraped) {
+                    if (data) {
+                        // Merge scraped data if we already had something (like RT/MC ratings)
+                        data.imdbId = scraped.imdbId || data.imdbId;
+                        data.rating = scraped.rating || data.rating;
+                    } else {
+                        data = scraped;
+                    }
+                }
+            } catch (err) {
+                console.warn('[FlixMonkey] IMDb scrape failed:', err.message);
+            }
+        }
+
+        if (!data) return null; // not found anywhere – don't cache
+
+        // Ensure rating is always formatted as a decimal (e.g. 7.0 instead of 7)
+        if (data.rating) {
+            data.rating = formatRating(data.rating);
+        }
 
         writeCache(
             title,
