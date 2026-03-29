@@ -1,7 +1,7 @@
 {
   "name": "flixmonkey",
-  "version": "0.5.0",
-  "description": "Show IMDb ratings on Netflix thumbnails and banners",
+  "version": "0.6.0",
+  "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
   "type": "module",
   "scripts": {
     "format": "prettier --write FlixMonkey.user.js",

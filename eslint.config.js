@@ -12,6 +12,8 @@ export default [
                 GM_xmlhttpRequest: 'readonly',
                 GM_getValue: 'readonly',
                 GM_setValue: 'readonly',
+                GM_listValues: 'readonly',
+                GM_deleteValue: 'readonly',
             },
         },
         rules: {

@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.5.0
-// @description  Show IMDb ratings on Netflix thumbnails and banners
+// @version      0.6.0
+// @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_listValues
+// @grant        GM_deleteValue
 // @connect      www.omdbapi.com
 // @run-at       document-idle
 // ==/UserScript==
@@ -26,6 +28,14 @@
         // Which corner to show the rating overlay.
         // Options: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
         overlayCorner: 'top-left',
+
+        // Toggle individual rating sources
+        showRtRating: true, // Rotten Tomatoes
+        showMcRating: true, // Metacritic
+
+        // Keyboard shortcut to wipe all cached ratings (useful after API key change etc.)
+        // Format: modifier(s) joined by '+' then the key, e.g. 'Alt+Shift+C'
+        clearCacheShortcut: 'Alt+Shift+C',
 
         // Cache TTL in milliseconds
         cacheTtlRated: 7 * 24 * 60 * 60 * 1000, // 7 days – title has a rating
@@ -81,17 +91,31 @@
     }
 
     /**
-     * Fetch OMDB data for a title. Returns { imdbId, rating } on success, null if not found.
-     * No type filter – letting OMDB pick its best match avoids false positives when a title
-     * exists as both a movie and a series.
+     * Fetch OMDB data for a title. Returns { imdbId, rating, rtRating, mcRating } on success,
+     * null if not found. No type filter – letting OMDB pick its best match avoids false positives
+     * when a title exists as both a movie and a series.
      */
     async function fetchOmdb(title, year) {
         const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: title });
         if (year) params.set('y', year);
         const json = await gmFetch(`https://www.omdbapi.com/?${params}`);
         if (json.Response === 'False') return null;
+
         const rating = json.imdbRating && json.imdbRating !== 'N/A' ? json.imdbRating : null;
-        return { imdbId: json.imdbID, rating };
+
+        const ratingsArr = Array.isArray(json.Ratings) ? json.Ratings : [];
+        const rtEntry = ratingsArr.find(r => r.Source === 'Rotten Tomatoes');
+        const mcEntry = ratingsArr.find(r => r.Source === 'Metacritic');
+
+        const rtRating = rtEntry && rtEntry.Value !== 'N/A' ? rtEntry.Value : null;
+
+        let mcRating = null;
+        if (mcEntry && mcEntry.Value !== 'N/A') {
+            const m = mcEntry.Value.match(/^(\d+)\//);
+            mcRating = m ? `${m[1]}%` : null;
+        }
+
+        return { imdbId: json.imdbID, rating, rtRating, mcRating };
     }
 
     /** Get OMDB data for a title, using cache where possible. Returns null on no-result or network error. */
@@ -109,7 +133,12 @@
 
         if (!data) return null; // not found – don't cache
 
-        writeCache(title, year, data, data.rating ? CONFIG.cacheTtlRated : CONFIG.cacheTtlNoRating);
+        writeCache(
+            title,
+            year,
+            data,
+            data.rating || data.rtRating || data.mcRating ? CONFIG.cacheTtlRated : CONFIG.cacheTtlNoRating
+        );
         return data;
     }
 
@@ -136,15 +165,14 @@
             ${positionCss}
             z-index: 9999;
             display: flex;
-            align-items: center;
-            gap: 4px;
+            flex-direction: column;
+            gap: 3px;
             background: rgba(0,0,0,0.72);
-            color: #f5c518;
             font-family: Arial, sans-serif;
             font-size: 12px;
             font-weight: 700;
             line-height: 1;
-            padding: 3px 6px;
+            padding: 4px 6px;
             border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
@@ -153,7 +181,11 @@
             transition: background 0.15s;
         }
         .${OVERLAY_CLASS}:hover { background: rgba(0,0,0,0.92); }
-        .${OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
+        .${OVERLAY_CLASS} .fm-row { display: flex; align-items: center; gap: 4px; }
+        .${OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
+        .${OVERLAY_CLASS} .fm-rt { color: #fa320a; }
+        .${OVERLAY_CLASS} .fm-mc { color: #6ac; }
+        .${OVERLAY_CLASS} .fm-value { color: #fff; }
         .${OVERLAY_CLASS} .fm-na { color: #aaa; }
         .${OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
     `;
@@ -176,16 +208,43 @@
             ? `https://www.imdb.com/title/${data.imdbId}/`
             : `https://www.imdb.com/find/?q=${encodeURIComponent(title)}`;
 
+        const rows = [];
+        const titleParts = [];
+
+        // IMDb row – always shown
         if (data.rating) {
-            a.innerHTML = `<span class="fm-label">IMDb</span><span>${data.rating}</span>`;
-            a.title = `IMDb rating: ${data.rating} – click to open IMDb`;
+            rows.push(
+                `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-value">${data.rating}</span></div>`
+            );
+            titleParts.push(`IMDb: ${data.rating}`);
         } else if (data.imdbId) {
-            a.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-na">N/A</span>`;
-            a.title = 'No IMDb rating available – click to open IMDb';
+            rows.push(`<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-na">N/A</span></div>`);
         } else {
-            a.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-search">🔍</span>`;
-            a.title = 'Not found on IMDb – click to search';
+            rows.push(`<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-search">🔍</span></div>`);
         }
+
+        // Rotten Tomatoes row – only when available
+        if (CONFIG.showRtRating && data.rtRating) {
+            rows.push(
+                `<div class="fm-row"><span class="fm-label fm-rt">RT</span><span class="fm-value">${data.rtRating}</span></div>`
+            );
+            titleParts.push(`RT: ${data.rtRating}`);
+        }
+
+        // Metacritic row – only when available
+        if (CONFIG.showMcRating && data.mcRating) {
+            rows.push(
+                `<div class="fm-row"><span class="fm-label fm-mc">MC</span><span class="fm-value">${data.mcRating}</span></div>`
+            );
+            titleParts.push(`MC: ${data.mcRating}`);
+        }
+
+        a.innerHTML = rows.join('');
+        a.title = titleParts.length
+            ? `${titleParts.join(' · ')} – click to open IMDb`
+            : data.imdbId
+              ? 'No ratings available – click to open IMDb'
+              : 'Not found on IMDb – click to search';
 
         a.addEventListener('click', e => e.stopPropagation());
         return a;
@@ -324,6 +383,30 @@
             decorateContainer(container, title);
         }
     }
+
+    // ---------------------------------------------------------------------------
+    // Cache management
+    // ---------------------------------------------------------------------------
+
+    function clearCache() {
+        const keys = GM_listValues().filter(k => k.startsWith(CACHE_PREFIX));
+        keys.forEach(k => GM_deleteValue(k));
+        console.warn(`[FlixMonkey] Cache cleared – removed ${keys.length} entr${keys.length === 1 ? 'y' : 'ies'}.`);
+    }
+
+    document.addEventListener('keydown', e => {
+        const parts = CONFIG.clearCacheShortcut.split('+');
+        const key = parts[parts.length - 1];
+        if (
+            e.key === key &&
+            e.altKey === parts.includes('Alt') &&
+            e.shiftKey === parts.includes('Shift') &&
+            e.ctrlKey === (parts.includes('Ctrl') || parts.includes('Control')) &&
+            e.metaKey === parts.includes('Meta')
+        ) {
+            clearCache();
+        }
+    });
 
     // ---------------------------------------------------------------------------
     // SPA navigation + DOM mutation observer
