@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.2.0
+// @version      0.3.0
 // @description  Show IMDB ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -175,32 +175,45 @@
         .${OVERLAY_CLASS}:hover {
             background: rgba(0,0,0,0.92);
         }
-        .${OVERLAY_CLASS} .fm-star {
-            font-size: 11px;
+        .${OVERLAY_CLASS} .fm-label {
+            font-size: 10px;
+            letter-spacing: 0.03em;
         }
         .${OVERLAY_CLASS} .fm-na {
             color: #aaa;
+        }
+        .${OVERLAY_CLASS} .fm-search {
+            font-size: 11px;
+            color: #ccc;
         }
     `;
     document.head.appendChild(style);
 
     /**
      * Create an overlay anchor element.
-     * @param {object} data  – { imdbId, rating }
+     * @param {object} data   – { imdbId, rating }
+     * @param {string} title  – display title (used for search fallback URL)
      */
-    function createOverlay(data) {
+    function createOverlay(data, title) {
         const a = document.createElement('a');
         a.className = OVERLAY_CLASS;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        a.href = `https://www.imdb.com/title/${data.imdbId}/`;
+
+        // Link to the title page when we have an imdbId, otherwise fall back to search
+        a.href = data.imdbId
+            ? `https://www.imdb.com/title/${data.imdbId}/`
+            : `https://www.imdb.com/find/?q=${encodeURIComponent(title)}`;
 
         if (data.rating) {
-            a.innerHTML = `<span class="fm-star">★</span><span>${data.rating}</span>`;
-            a.title = `IMDB rating: ${data.rating} – click to open IMDB`;
+            a.innerHTML = `<span class="fm-label">IMDb</span><span>${data.rating}</span>`;
+            a.title = `IMDb rating: ${data.rating} – click to open IMDb`;
+        } else if (data.imdbId) {
+            a.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-na">N/A</span>`;
+            a.title = 'No IMDb rating available – click to open IMDb';
         } else {
-            a.innerHTML = `<span class="fm-star">★</span><span class="fm-na">N/A</span>`;
-            a.title = 'No IMDB rating available – click to open IMDB';
+            a.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-search">🔍</span>`;
+            a.title = 'Not found on IMDb – click to search';
         }
 
         // Stop the click from triggering Netflix navigation
@@ -213,12 +226,12 @@
      * Inject (or refresh) the rating overlay on a container element.
      * The container must have position:relative or similar.
      */
-    function injectOverlay(container, data) {
+    function injectOverlay(container, data, title) {
         // Remove stale overlay if present
         const existing = container.querySelector(`.${OVERLAY_CLASS}`);
         if (existing) existing.remove();
 
-        const overlay = createOverlay(data);
+        const overlay = createOverlay(data, title);
         container.appendChild(overlay);
         container.setAttribute(OVERLAY_ATTR, '1');
     }
@@ -378,7 +391,7 @@
         if (cached !== null) {
             const pos = getComputedStyle(container).position;
             if (pos === 'static') container.style.position = 'relative';
-            injectOverlay(container, cached);
+            injectOverlay(container, cached, title);
             return;
         }
 
@@ -390,12 +403,12 @@
 
         try {
             const data = await getOmdbData(title, year);
-            if (!data) return; // no OMDB result – show nothing
 
             const pos = getComputedStyle(container).position;
             if (pos === 'static') container.style.position = 'relative';
 
-            injectOverlay(container, data);
+            // Always show an overlay – fall back to IMDb search when no result/id
+            injectOverlay(container, data || { imdbId: null, rating: null }, title);
         } finally {
             inFlight.delete(dedupKey);
         }
