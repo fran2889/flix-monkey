@@ -1,15 +1,13 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.6.0
+// @version      0.7.0
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @grant        GM_listValues
-// @grant        GM_deleteValue
 // @connect      www.omdbapi.com
 // @run-at       document-idle
 // ==/UserScript==
@@ -47,25 +45,36 @@
     // Cache helpers
     // ---------------------------------------------------------------------------
 
-    const CACHE_PREFIX = 'fm_cache_';
+    const CACHE_KEY = 'fm_cache';
 
     function cacheKey(title, year) {
-        return CACHE_PREFIX + title.toLowerCase().replace(/\s+/g, '_') + (year ? `_${year}` : '');
+        return title.toLowerCase().replace(/\s+/g, '_') + (year ? `_${year}` : '');
     }
 
-    function readCache(title, year) {
-        const stored = GM_getValue(cacheKey(title, year));
-        if (!stored) return null;
+    /** Load the whole cache blob from GM storage, returning {} on missing/corrupt data. */
+    function loadBlob() {
         try {
-            const entry = JSON.parse(stored);
-            return Date.now() > entry.expires ? null : entry.data;
+            return JSON.parse(GM_getValue(CACHE_KEY) || '{}');
         } catch {
-            return null;
+            return {};
         }
     }
 
+    function readCache(title, year) {
+        const entry = loadBlob()[cacheKey(title, year)];
+        if (!entry) return null;
+        return Date.now() > entry.expires ? null : entry.data;
+    }
+
     function writeCache(title, year, data, ttl) {
-        GM_setValue(cacheKey(title, year), JSON.stringify({ data, expires: Date.now() + ttl }));
+        const blob = loadBlob();
+        const now = Date.now();
+        // Prune expired entries on every write to keep the blob lean
+        for (const k of Object.keys(blob)) {
+            if (now > blob[k].expires) delete blob[k];
+        }
+        blob[cacheKey(title, year)] = { data, expires: now + ttl };
+        GM_setValue(CACHE_KEY, JSON.stringify(blob));
     }
 
     // ---------------------------------------------------------------------------
@@ -389,9 +398,9 @@
     // ---------------------------------------------------------------------------
 
     function clearCache() {
-        const keys = GM_listValues().filter(k => k.startsWith(CACHE_PREFIX));
-        keys.forEach(k => GM_deleteValue(k));
-        console.warn(`[FlixMonkey] Cache cleared – removed ${keys.length} entr${keys.length === 1 ? 'y' : 'ies'}.`);
+        const count = Object.keys(loadBlob()).length;
+        GM_setValue(CACHE_KEY, '{}');
+        console.warn(`[FlixMonkey] Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 
     document.addEventListener('keydown', e => {
