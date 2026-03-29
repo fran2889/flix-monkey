@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.4.0
+// @version      0.5.0
 // @description  Show IMDb ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -157,6 +157,14 @@
         .${OVERLAY_CLASS} .fm-na { color: #aaa; }
         .${OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
     `;
+
+    // Top 10 cards (.title-card-top-10): the rank number SVG sits in the left 50% of the
+    // card and the thumbnail image sits in the right 50%.  For left-side corners the badge
+    // must be shifted past the rank area; right-side corners already land on the thumbnail.
+    if (CONFIG.overlayCorner.includes('left')) {
+        style.textContent += `\n        .title-card-top-10 .${OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+    }
+
     document.head.appendChild(style);
 
     function createOverlay(data, title) {
@@ -204,7 +212,8 @@
      *   containerSel   – .closest() selector to reach the overlay container
      */
     const SURFACES = [
-        // Browse cards
+        // Browse cards (includes Top 10 cards, which also carry .title-card-top-10;
+        // their badge position is corrected by the CSS override above)
         {
             titleSelectors: '.title-card .fallback-text',
             getTitle: el => el.textContent?.trim() || null,
@@ -243,20 +252,6 @@
             ].join(','),
             getTitle: el => el.getAttribute('alt')?.trim() || el.textContent?.trim() || null,
             containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
-        },
-        // Hero billboard – image + text fallbacks
-        {
-            titleSelectors: [
-                '.title-logo img[alt]',
-                '.logo-and-text img[alt]',
-                '[data-uia="billboard"] img[alt]',
-                '.billboard img[alt]',
-                '.billboard .fallback-text',
-                '.billboard .logo-name',
-                '[data-uia="billboard-title"]',
-            ].join(','),
-            getTitle: el => el.getAttribute('alt')?.trim() || el.textContent?.trim() || null,
-            containerSel: '.billboard-row, .billboard-pane, .billboard',
         },
     ];
 
