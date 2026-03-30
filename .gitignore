@@ -1,6 +1,13 @@
-# JetBrains IDE settings
+# IDE settings
 .idea/
+.kiro/
+.vscode/
 
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Node.js
+node_modules/
+package.json
+package-lock.json
