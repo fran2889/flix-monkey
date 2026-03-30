@@ -12,6 +12,7 @@
 // @connect      www.imdb.com
 // @connect      v3.sg.media-imdb.com
 // @connect      xmdbapi.com
+// @connect      api.imdbapi.dev
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -47,7 +48,7 @@
         // Titles not found in OMDB are not cached
 
         // Comma separated list of API clients to use, in fallback order.
-        apiClients: 'xmdb,omdb,imdb',
+        apiClients: 'xmdb,omdb,imdbapi,imdb',
     };
 
     // ---------------------------------------------------------------------------
@@ -309,6 +310,60 @@
         }
     }
 
+    class ImdbApiDevClient extends BaseApiClient {
+        constructor() {
+            super();
+            this.lastFetchPromise = Promise.resolve();
+        }
+
+        async delayedFetch(url) {
+            const currentFetch = this.lastFetchPromise.then(async () => {
+                await new Promise(r => setTimeout(r, 1000));
+                return this.gmFetch(url, 'json');
+            });
+            this.lastFetchPromise = currentFetch.catch(() => {});
+            return currentFetch;
+        }
+
+        async fetch(title, year) {
+            const searchParams = new URLSearchParams({ query: title });
+            let searchJson;
+            try {
+                searchJson = await this.delayedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`);
+            } catch (e) {
+                console.warn('[FlixMonkey] IMDB API Dev fetch failed:', e.message);
+                return null;
+            }
+
+            if (!searchJson.titles || searchJson.titles.length === 0) return null;
+
+            let bestMatch = searchJson.titles[0];
+            if (year) {
+                const targetYear = parseInt(year);
+                const nearYear = searchJson.titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
+                if (nearYear) bestMatch = nearYear;
+            }
+
+            const titleId = bestMatch.id;
+            let details = null;
+            try {
+                details = await this.delayedFetch(`https://api.imdbapi.dev/titles/${titleId}`);
+            } catch (e) {
+                console.warn(`[FlixMonkey] IMDB API Dev failed to fetch details for ${titleId}:`, e.message);
+            }
+
+            const source = details || bestMatch;
+
+            const rating =
+                source.rating && source.rating.aggregateRating ? source.rating.aggregateRating.toString() : null;
+            const mcRating = source.metacritic && source.metacritic.score ? `${source.metacritic.score}%` : null;
+            const rtRating = null;
+
+            const formattedRating = this.formatRating(rating);
+            return { imdbId: source.id, rating: formattedRating, rtRating, mcRating };
+        }
+    }
+
     class ImdbApiClient extends BaseApiClient {
         async fetch(title, year) {
             const query = (year ? `${title} ${year}` : title).toLowerCase();
@@ -385,12 +440,13 @@
             this.cache = cacheManager;
             this.clients = [];
 
-            const configuredClients = (CONFIG.apiClients || 'xmdb,omdb,imdb')
+            const configuredClients = (CONFIG.apiClients || 'xmdb,omdb,imdbapi,imdb')
                 .split(',')
                 .map(c => c.trim().toLowerCase());
             for (const clientName of configuredClients) {
                 if (clientName === 'xmdb') this.clients.push(new XmdbApiClient());
                 else if (clientName === 'omdb') this.clients.push(new OmdbApiClient());
+                else if (clientName === 'imdbapi') this.clients.push(new ImdbApiDevClient());
                 else if (clientName === 'imdb') this.clients.push(new ImdbApiClient());
             }
         }
