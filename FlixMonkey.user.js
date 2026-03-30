@@ -11,6 +11,7 @@
 // @connect      www.omdbapi.com
 // @connect      www.imdb.com
 // @connect      v3.sg.media-imdb.com
+// @connect      xmdbapi.com
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -22,6 +23,9 @@
     // ---------------------------------------------------------------------------
 
     const CONFIG = {
+        // Your XMDB API key – get one free at https://xmdbapi.com/api-key
+        xmdbApiKey: 'YOUR_XMDB_API_KEY',
+
         // Your OMDB API key – get one free at https://www.omdbapi.com/apikey.aspx
         omdbApiKey: 'YOUR_OMDB_API_KEY',
 
@@ -43,7 +47,7 @@
         // Titles not found in OMDB are not cached
 
         // Comma separated list of API clients to use, in fallback order.
-        apiClients: 'omdb,imdb',
+        apiClients: 'xmdb,omdb,imdb',
     };
 
     // ---------------------------------------------------------------------------
@@ -143,6 +147,130 @@
          */
         async fetch() {
             throw new Error('Not implemented');
+        }
+    }
+
+    class XmdbApiClient extends BaseApiClient {
+        constructor() {
+            super();
+            this.isProcessingQueue = false;
+            this.requestQueue = [];
+            this.lastLocalReqTime = 0;
+        }
+
+        async processQueue() {
+            if (this.isProcessingQueue) return;
+            this.isProcessingQueue = true;
+
+            const MIN_INTERVAL_MS = 1500; // Delay between requests in milliseconds
+
+            while (this.requestQueue.length > 0) {
+                const now = Date.now();
+                const lastGlobalStr = GM_getValue('fm_last_req');
+                const lastGlobal = lastGlobalStr ? parseInt(lastGlobalStr, 10) : 0;
+
+                const lastEffective = Math.max(this.lastLocalReqTime, lastGlobal);
+                const wait = Math.max(0, MIN_INTERVAL_MS - (now - lastEffective));
+
+                if (wait > 0) {
+                    await new Promise(r => setTimeout(r, wait + Math.random() * 50));
+                    continue;
+                }
+
+                this.lastLocalReqTime = Date.now();
+                GM_setValue('fm_last_req', this.lastLocalReqTime.toString());
+
+                const { url, resolve, reject } = this.requestQueue.shift();
+
+                try {
+                    const result = await this.gmFetch(url, 'json');
+                    resolve(result);
+                } catch (e) {
+                    reject(e);
+                }
+            }
+
+            this.isProcessingQueue = false;
+        }
+
+        xmdbFetch(url) {
+            return new Promise((resolve, reject) => {
+                this.requestQueue.push({ url, resolve, reject });
+                this.processQueue();
+            });
+        }
+
+        async fetch(title, year) {
+            const isXmdbConfigured = CONFIG.xmdbApiKey && CONFIG.xmdbApiKey !== 'YOUR_XMDB_API_KEY';
+            if (!isXmdbConfigured) return null;
+
+            const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: title, limit: 5 });
+            console.warn(`[FlixMonkey] Searching XMDB for title: "${title}"` + (year ? ` (${year})` : ''));
+            let searchJson;
+            try {
+                searchJson = await this.xmdbFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`);
+            } catch (err) {
+                console.warn('[FlixMonkey] XMDB search fetch failed:', err.message);
+                return null;
+            }
+
+            if (!searchJson.results || searchJson.results.length === 0) {
+                console.warn(`[FlixMonkey] No search results found for: "${title}"`);
+                return null;
+            }
+
+            const titleResults = searchJson.results.filter(r => r.type === 'title');
+
+            if (titleResults.length === 0) {
+                console.warn(`[FlixMonkey] No title matches found in search results for: "${title}"`);
+                return null;
+            }
+
+            let match = titleResults[0];
+            if (year) {
+                const yearMatch = titleResults.find(r => String(r.year) === String(year));
+                if (yearMatch) match = yearMatch;
+            }
+
+            console.warn(
+                `[FlixMonkey] Fetching XMDB details for ID: ${match.id} ("${match.name || match.title || title}")`
+            );
+
+            let detailsJson;
+            try {
+                detailsJson = await this.xmdbFetch(
+                    `https://xmdbapi.com/api/v1/movies/${match.id}?apiKey=${CONFIG.xmdbApiKey}`
+                );
+            } catch (err) {
+                console.warn('[FlixMonkey] XMDB details fetch failed:', err.message);
+                return null;
+            }
+
+            if (!detailsJson || detailsJson.error) return null;
+
+            const rating = detailsJson.rating && detailsJson.rating !== 'N/A' ? String(detailsJson.rating) : null;
+
+            let rtRating = null;
+            let mcRating = null;
+
+            if (Array.isArray(detailsJson.ratings)) {
+                const rtEntry = detailsJson.ratings.find(
+                    r => r.source === 'Rotten Tomatoes' || r.Source === 'Rotten Tomatoes'
+                );
+                const mcEntry = detailsJson.ratings.find(r => r.source === 'Metacritic' || r.Source === 'Metacritic');
+
+                rtRating = rtEntry?.value || rtEntry?.Value || null;
+                if (rtRating === 'N/A') rtRating = null;
+
+                const mcVal = mcEntry?.value || mcEntry?.Value || null;
+                if (mcVal && mcVal !== 'N/A') {
+                    const m = String(mcVal).match(/^(\d+)/);
+                    mcRating = m ? `${m[1]}%` : null;
+                }
+            }
+
+            const formattedRating = this.formatRating(rating);
+            return { imdbId: match.id, rating: formattedRating, rtRating, mcRating };
         }
     }
 
@@ -257,9 +385,12 @@
             this.cache = cacheManager;
             this.clients = [];
 
-            const configuredClients = (CONFIG.apiClients || 'omdb,imdb').split(',').map(c => c.trim().toLowerCase());
+            const configuredClients = (CONFIG.apiClients || 'xmdb,omdb,imdb')
+                .split(',')
+                .map(c => c.trim().toLowerCase());
             for (const clientName of configuredClients) {
-                if (clientName === 'omdb') this.clients.push(new OmdbApiClient());
+                if (clientName === 'xmdb') this.clients.push(new XmdbApiClient());
+                else if (clientName === 'omdb') this.clients.push(new OmdbApiClient());
                 else if (clientName === 'imdb') this.clients.push(new ImdbApiClient());
             }
         }
