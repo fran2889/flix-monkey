@@ -282,6 +282,7 @@
 
             const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: title });
             if (year) params.set('y', year);
+            console.warn(`[FlixMonkey] Searching OMDB for title: "${title}"` + (year ? ` (${year})` : ''));
 
             let json;
             try {
@@ -291,7 +292,10 @@
                 return null;
             }
 
-            if (json.Response === 'False') return null;
+            if (json.Response === 'False') {
+                console.warn(`[FlixMonkey] No search results found in OMDB for: "${title}"`);
+                return null;
+            }
 
             const rating = json.imdbRating && json.imdbRating !== 'N/A' ? json.imdbRating : null;
             const ratingsArr = Array.isArray(json.Ratings) ? json.Ratings : [];
@@ -327,15 +331,19 @@
 
         async fetch(title, year) {
             const searchParams = new URLSearchParams({ query: title });
+            console.warn(`[FlixMonkey] Searching IMDB API Dev for title: "${title}"` + (year ? ` (${year})` : ''));
             let searchJson;
             try {
                 searchJson = await this.delayedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`);
             } catch (e) {
-                console.warn('[FlixMonkey] IMDB API Dev fetch failed:', e.message);
+                console.warn('[FlixMonkey] IMDB API Dev search fetch failed:', e.message);
                 return null;
             }
 
-            if (!searchJson.titles || searchJson.titles.length === 0) return null;
+            if (!searchJson.titles || searchJson.titles.length === 0) {
+                console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${title}"`);
+                return null;
+            }
 
             let bestMatch = searchJson.titles[0];
             if (year) {
@@ -345,11 +353,15 @@
             }
 
             const titleId = bestMatch.id;
+            console.warn(
+                `[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${bestMatch.title || title}")`
+            );
+
             let details = null;
             try {
                 details = await this.delayedFetch(`https://api.imdbapi.dev/titles/${titleId}`);
             } catch (e) {
-                console.warn(`[FlixMonkey] IMDB API Dev failed to fetch details for ${titleId}:`, e.message);
+                console.warn(`[FlixMonkey] IMDB API Dev details fetch failed for ${titleId}:`, e.message);
             }
 
             const source = details || bestMatch;
@@ -370,6 +382,10 @@
             const firstChar = query[0] || 'x';
             const suggestUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(query)}.json`;
 
+            console.warn(
+                `[FlixMonkey] Searching IMDb via suggestions for title: "${title}"` + (year ? ` (${year})` : '')
+            );
+
             let imdbId = null;
             try {
                 const suggestJson = await this.gmFetch(suggestUrl, 'json');
@@ -380,20 +396,25 @@
                     }
                 }
             } catch (e) {
-                console.warn('[FlixMonkey] Suggestions API failed:', e.message);
+                console.warn('[FlixMonkey] IMDb suggestions API failed:', e.message);
             }
 
-            if (!imdbId) return null;
+            if (!imdbId) {
+                console.warn(`[FlixMonkey] No search results found in IMDb suggestions for: "${title}"`);
+                return null;
+            }
 
             // Random delay (1s to 2.5s)
             await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
+
+            console.warn(`[FlixMonkey] Scraping IMDb details for ID: ${imdbId}`);
 
             let titleHtml;
             try {
                 const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
                 titleHtml = await this.gmFetch(titleUrl, 'text');
             } catch (err) {
-                console.warn('[FlixMonkey] IMDb scrape failed:', err.message);
+                console.warn('[FlixMonkey] IMDb scrape fetch failed:', err.message);
                 return null;
             }
 
