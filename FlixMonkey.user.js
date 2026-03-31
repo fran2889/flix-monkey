@@ -100,6 +100,14 @@
     // ---------------------------------------------------------------------------
 
     class BaseApiClient {
+        constructor() {
+            this.requestQueue = [];
+            this.isProcessingQueue = false;
+            this.lastLocalReqTime = 0;
+            this.minInterval = 1000;
+            this.globalSyncKey = null;
+        }
+
         gmFetch(url, responseType = 'json') {
             const userAgents = [
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -137,41 +145,23 @@
             });
         }
 
-        formatRating(val) {
-            if (!val || val === 'N/A') return null;
-            const num = parseFloat(val);
-            return isNaN(num) ? val : num.toFixed(1);
-        }
-
-        /**
-         * @returns Promise<{ imdbId, rating, rtRating, mcRating } | null>
-         */
-        async fetch() {
-            throw new Error('Not implemented');
-        }
-    }
-
-    class XmdbApiClient extends BaseApiClient {
-        constructor() {
-            super();
-            this.isProcessingQueue = false;
-            this.requestQueue = [];
-            this.lastLocalReqTime = 0;
-        }
-
         async processQueue() {
             if (this.isProcessingQueue) return;
             this.isProcessingQueue = true;
 
-            const MIN_INTERVAL_MS = 1500; // Delay between requests in milliseconds
-
             while (this.requestQueue.length > 0) {
+                // Priority 1 for details, 0 for search
+                this.requestQueue.sort((a, b) => b.priority - a.priority);
+
                 const now = Date.now();
-                const lastGlobalStr = GM_getValue('fm_last_req');
-                const lastGlobal = lastGlobalStr ? parseInt(lastGlobalStr, 10) : 0;
+                let lastGlobal = 0;
+                if (this.globalSyncKey) {
+                    const lastGlobalStr = GM_getValue(this.globalSyncKey);
+                    lastGlobal = lastGlobalStr ? parseInt(lastGlobalStr, 10) : 0;
+                }
 
                 const lastEffective = Math.max(this.lastLocalReqTime, lastGlobal);
-                const wait = Math.max(0, MIN_INTERVAL_MS - (now - lastEffective));
+                const wait = Math.max(0, this.minInterval - (now - lastEffective));
 
                 if (wait > 0) {
                     await new Promise(r => setTimeout(r, wait + Math.random() * 50));
@@ -179,12 +169,14 @@
                 }
 
                 this.lastLocalReqTime = Date.now();
-                GM_setValue('fm_last_req', this.lastLocalReqTime.toString());
+                if (this.globalSyncKey) {
+                    GM_setValue(this.globalSyncKey, this.lastLocalReqTime.toString());
+                }
 
-                const { url, resolve, reject } = this.requestQueue.shift();
+                const { url, resolve, reject, responseType } = this.requestQueue.shift();
 
                 try {
-                    const result = await this.gmFetch(url, 'json');
+                    const result = await this.gmFetch(url, responseType);
                     resolve(result);
                 } catch (e) {
                     reject(e);
@@ -194,29 +186,60 @@
             this.isProcessingQueue = false;
         }
 
-        xmdbFetch(url) {
+        queuedFetch(url, priority = 0, responseType = 'json') {
             return new Promise((resolve, reject) => {
-                this.requestQueue.push({ url, resolve, reject });
+                this.requestQueue.push({ url, priority, resolve, reject, responseType });
                 this.processQueue();
             });
         }
 
+        formatRating(val) {
+            if (!val || val === 'N/A') return null;
+            const num = parseFloat(val);
+            return isNaN(num) ? val : num.toFixed(1);
+        }
+
+        /**
+         * @returns Promise<{ imdbId, rating, rtRating, mcRating } | null>
+         */
         async fetch(title, year) {
+            try {
+                const match = await this.search(title, year);
+                if (!match) return null;
+                return await this.getDetails(match, title);
+            } catch (err) {
+                console.warn(`[FlixMonkey] ${this.constructor.name} failed:`, err.message);
+                return null;
+            }
+        }
+
+        async search(title, year) {
+            throw new Error('Not implemented');
+        }
+
+        async getDetails(id, title) {
+            throw new Error('Not implemented');
+        }
+    }
+
+    class XmdbApiClient extends BaseApiClient {
+        constructor() {
+            super();
+            this.minInterval = 1500;
+            this.globalSyncKey = 'fm_last_req';
+        }
+
+        async search(title, year) {
             const isXmdbConfigured = CONFIG.xmdbApiKey && CONFIG.xmdbApiKey !== 'YOUR_XMDB_API_KEY';
             if (!isXmdbConfigured) return null;
 
             const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: title, limit: 5 });
             console.warn(`[FlixMonkey] Searching XMDB for title: "${title}"` + (year ? ` (${year})` : ''));
-            let searchJson;
-            try {
-                searchJson = await this.xmdbFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`);
-            } catch (err) {
-                console.warn('[FlixMonkey] XMDB search fetch failed:', err.message);
-                return null;
-            }
+
+            const searchJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
 
             if (!searchJson.results || searchJson.results.length === 0) {
-                console.warn(`[FlixMonkey] No search results found for: "${title}"`);
+                console.warn(`[FlixMonkey] No search results found in XMDB for: "${title}"`);
                 return null;
             }
 
@@ -233,19 +256,17 @@
                 if (yearMatch) match = yearMatch;
             }
 
-            console.warn(
-                `[FlixMonkey] Fetching XMDB details for ID: ${match.id} ("${match.name || match.title || title}")`
-            );
+            return match;
+        }
 
-            let detailsJson;
-            try {
-                detailsJson = await this.xmdbFetch(
-                    `https://xmdbapi.com/api/v1/movies/${match.id}?apiKey=${CONFIG.xmdbApiKey}`
-                );
-            } catch (err) {
-                console.warn('[FlixMonkey] XMDB details fetch failed:', err.message);
-                return null;
-            }
+        async getDetails(match, title) {
+            const id = match.id;
+            console.warn(`[FlixMonkey] Fetching XMDB details for ID: ${id} ("${title}")`);
+
+            const detailsJson = await this.queuedFetch(
+                `https://xmdbapi.com/api/v1/movies/${id}?apiKey=${CONFIG.xmdbApiKey}`,
+                1
+            );
 
             if (!detailsJson || detailsJson.error) return null;
 
@@ -271,29 +292,35 @@
             }
 
             const formattedRating = this.formatRating(rating);
-            return { imdbId: match.id, rating: formattedRating, rtRating, mcRating };
+            return { imdbId: id, rating: formattedRating, rtRating, mcRating };
         }
     }
 
     class OmdbApiClient extends BaseApiClient {
-        async fetch(title, year) {
+        constructor() {
+            super();
+            this.minInterval = 0; // OMDB is usually fast/not strictly limited by us
+        }
+
+        async search(title, year) {
             const isOmdbConfigured = CONFIG.omdbApiKey && CONFIG.omdbApiKey !== 'YOUR_OMDB_API_KEY';
             if (!isOmdbConfigured) return null;
 
-            const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: title });
-            if (year) params.set('y', year);
-            console.warn(`[FlixMonkey] Searching OMDB for title: "${title}"` + (year ? ` (${year})` : ''));
+            // For OMDB, we can just use the title as the ID for getDetails
+            return { id: { title, year } };
+        }
 
-            let json;
-            try {
-                json = await this.gmFetch(`https://www.omdbapi.com/?${params}`);
-            } catch (err) {
-                console.warn('[FlixMonkey] OMDB fetch failed:', err.message);
-                return null;
-            }
+        async getDetails(match, title) {
+            const { title: t, year: y } = match.id;
+            const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: t });
+            if (y) params.set('y', y);
+
+            console.warn(`[FlixMonkey] Fetching OMDB details for: "${t}"` + (y ? ` (${y})` : ''));
+
+            const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
 
             if (json.Response === 'False') {
-                console.warn(`[FlixMonkey] No search results found in OMDB for: "${title}"`);
+                console.warn(`[FlixMonkey] No search results found in OMDB for: "${t}"`);
                 return null;
             }
 
@@ -317,28 +344,14 @@
     class ImdbApiDevClient extends BaseApiClient {
         constructor() {
             super();
-            this.lastFetchPromise = Promise.resolve();
+            this.minInterval = 1000;
         }
 
-        async delayedFetch(url) {
-            const currentFetch = this.lastFetchPromise.then(async () => {
-                await new Promise(r => setTimeout(r, 1000));
-                return this.gmFetch(url, 'json');
-            });
-            this.lastFetchPromise = currentFetch.catch(() => {});
-            return currentFetch;
-        }
-
-        async fetch(title, year) {
+        async search(title, year) {
             const searchParams = new URLSearchParams({ query: title });
             console.warn(`[FlixMonkey] Searching IMDB API Dev for title: "${title}"` + (year ? ` (${year})` : ''));
-            let searchJson;
-            try {
-                searchJson = await this.delayedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`);
-            } catch (e) {
-                console.warn('[FlixMonkey] IMDB API Dev search fetch failed:', e.message);
-                return null;
-            }
+
+            const searchJson = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
 
             if (!searchJson.titles || searchJson.titles.length === 0) {
                 console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${title}"`);
@@ -352,19 +365,21 @@
                 if (nearYear) bestMatch = nearYear;
             }
 
-            const titleId = bestMatch.id;
-            console.warn(
-                `[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${bestMatch.title || title}")`
-            );
+            return bestMatch;
+        }
+
+        async getDetails(match, title) {
+            const titleId = match.id;
+            console.warn(`[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${match.title || title}")`);
 
             let details = null;
             try {
-                details = await this.delayedFetch(`https://api.imdbapi.dev/titles/${titleId}`);
+                details = await this.queuedFetch(`https://api.imdbapi.dev/titles/${titleId}`, 1);
             } catch (e) {
                 console.warn(`[FlixMonkey] IMDB API Dev details fetch failed for ${titleId}:`, e.message);
             }
 
-            const source = details || bestMatch;
+            const source = details || match;
 
             const rating =
                 source.rating && source.rating.aggregateRating ? source.rating.aggregateRating.toString() : null;
@@ -377,46 +392,41 @@
     }
 
     class ImdbApiClient extends BaseApiClient {
-        async fetch(title, year) {
+        constructor() {
+            super();
+            this.minInterval = 1500;
+        }
+
+        async search(title, year) {
             const query = (year ? `${title} ${year}` : title).toLowerCase();
             const firstChar = query[0] || 'x';
             const suggestUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(query)}.json`;
 
-            console.warn(
-                `[FlixMonkey] Searching IMDb via suggestions for title: "${title}"` + (year ? ` (${year})` : '')
-            );
+            console.warn(`[FlixMonkey] Searching IMDb via suggestions for title: "${title}"` + (year ? ` (${year})` : ''));
 
-            let imdbId = null;
-            try {
-                const suggestJson = await this.gmFetch(suggestUrl, 'json');
-                if (suggestJson && Array.isArray(suggestJson.d)) {
-                    const match = suggestJson.d.find(entry => entry.id && entry.id.startsWith('tt'));
-                    if (match) {
-                        imdbId = match.id;
-                    }
-                }
-            } catch (e) {
-                console.warn('[FlixMonkey] IMDb suggestions API failed:', e.message);
-            }
+            const suggestJson = await this.queuedFetch(suggestUrl, 0);
 
-            if (!imdbId) {
+            if (!suggestJson || !Array.isArray(suggestJson.d)) {
                 console.warn(`[FlixMonkey] No search results found in IMDb suggestions for: "${title}"`);
                 return null;
             }
 
-            // Random delay (1s to 2.5s)
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
+            const match = suggestJson.d.find(entry => entry.id && entry.id.startsWith('tt'));
 
-            console.warn(`[FlixMonkey] Scraping IMDb details for ID: ${imdbId}`);
-
-            let titleHtml;
-            try {
-                const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
-                titleHtml = await this.gmFetch(titleUrl, 'text');
-            } catch (err) {
-                console.warn('[FlixMonkey] IMDb scrape fetch failed:', err.message);
+            if (!match) {
+                console.warn(`[FlixMonkey] No title matches found in suggestions for: "${title}"`);
                 return null;
             }
+
+            return match;
+        }
+
+        async getDetails(match, title) {
+            const imdbId = match.id;
+            console.warn(`[FlixMonkey] Scraping IMDb details for ID: ${imdbId} ("${title}")`);
+
+            const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
+            const titleHtml = await this.queuedFetch(titleUrl, 1, 'text');
 
             let rating = null;
             const jsonLdBlocks = titleHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
@@ -448,10 +458,17 @@
                 const rMatch = titleHtml.match(
                     /data-testid="hero-rating-bar__aggregate-rating__score"[^>]*>[\s\S]*?<span[^>]*>([\d.]+)<\/span>/
                 );
-                if (rMatch) rating = rMatch[1];
+                if (rMatch) {
+                    rating = rMatch[1];
+                } else {
+                    console.warn(`[FlixMonkey] Failed to extract rating from IMDb page for ID: ${imdbId}`);
+                }
             }
 
             const formattedRating = this.formatRating(rating);
+            if (!formattedRating) {
+                console.warn(`[FlixMonkey] No rating found on IMDb for ID: ${imdbId}`);
+            }
             return { imdbId, rating: formattedRating, rtRating: null, mcRating: null };
         }
     }
@@ -487,7 +504,10 @@
                 }
             }
 
-            if (!bestData) return null;
+            if (!bestData) {
+                console.warn(`[FlixMonkey] Total failure: No ratings found for "${title}"` + (year ? ` (${year})` : '') + ` using any configured client.`);
+                return null;
+            }
 
             this.cache.write(
                 title,
