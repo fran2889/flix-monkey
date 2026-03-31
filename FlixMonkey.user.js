@@ -1,13 +1,17 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.8.0
+// @version      0.9.4
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @require      https://openuserjs.org/src/libs/sizzle/GM_config.js
 // @connect      www.omdbapi.com
 // @connect      www.imdb.com
 // @connect      v3.sg.media-imdb.com
@@ -20,35 +24,127 @@
     'use strict';
 
     // ---------------------------------------------------------------------------
-    // Configuration
-    // ---------------------------------------------------------------------------
+    GM_config.init({
+        id: 'FlixMonkey',
+        title: 'FlixMonkey Settings',
+        css: `
+            body { background-color: #141414 !important; margin: 0 !important; }
+            #FlixMonkey_wrapper { display: inline-flex !important; flex-direction: column !important; align-items: stretch !important; background: #141414 !important; color: #fff !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; padding: 25px !important; box-sizing: border-box !important; }
+            #FlixMonkey_header { color: #e50914 !important; font-size: 24px !important; margin-bottom: 25px !important; font-weight: bold !important; text-align: center !important; width: 100% !important; }
+            .config_var { display: flex !important; justify-content: flex-start !important; align-items: center !important; margin-bottom: 12px !important; }
+            .field_label { flex: 0 0 200px !important; padding-right: 15px !important; text-align: right !important; color: #ccc !important; font-size: 14px !important; font-weight: normal !important; box-sizing: border-box !important; }
+            #FlixMonkey_wrapper input[type="text"], #FlixMonkey_wrapper select { flex: 0 0 220px !important; background: #333 !important; color: #fff !important; border: 1px solid #555 !important; border-radius: 4px !important; padding: 6px 12px !important; outline: none !important; font-size: 14px !important; box-sizing: border-box !important; margin: 0 !important; }
+            #FlixMonkey_wrapper input[type="text"]:focus, #FlixMonkey_wrapper select:focus { border-color: #e50914 !important; }
+            #FlixMonkey_wrapper input[type="checkbox"] { flex: 0 0 auto !important; width: 16px !important; height: 16px !important; margin: 0 !important; cursor: pointer !important; }
+            .reset_holder { position: absolute !important; right: 0 !important; top: 50% !important; transform: translateY(-50%) !important; margin: 0 !important; padding: 0 !important; width: auto !important; }
+            #FlixMonkey_resetLink { color: #aaa !important; font-size: 13px !important; text-decoration: none !important; cursor: pointer !important; transition: color 0.2s !important; background: none !important; border: none !important; padding: 0 !important; }
+            #FlixMonkey_resetLink:hover { background: none !important; color: #fff !important; text-decoration: underline !important; border: none !important; }
+            #FlixMonkey_buttons_holder { position: relative !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 15px !important; margin-top: 15px !important; width: 100% !important; }
+            #FlixMonkey_saveBtn, #FlixMonkey_closeBtn { padding: 8px 20px !important; border: none !important; border-radius: 4px !important; font-size: 14px !important; font-weight: bold !important; cursor: pointer !important; transition: background 0.2s !important; }
+            #FlixMonkey_saveBtn { background: #e50914 !important; color: #fff !important; }
+            #FlixMonkey_saveBtn:hover { background: #f40612 !important; }
+            #FlixMonkey_closeBtn { background: transparent !important; color: #ccc !important; border: 1px solid #555 !important; }
+            #FlixMonkey_closeBtn:hover { background: #333 !important; color: #fff !important; }
+        `,
+        fields: {
+            xmdbApiKey: {
+                label: 'XMDB API Key',
+                type: 'text',
+                default: 'YOUR_XMDB_API_KEY',
+            },
+            omdbApiKey: {
+                label: 'OMDB API Key',
+                type: 'text',
+                default: 'YOUR_OMDB_API_KEY',
+            },
+            apiClients: {
+                label: 'API Fallback Order',
+                type: 'text',
+                default: 'xmdb,omdb,imdbapi,imdb',
+            },
+            overlayCorner: {
+                label: 'Overlay Position',
+                type: 'select',
+                options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+                default: 'top-left',
+            },
+            showRtRating: {
+                label: 'Show Rotten Tomatoes',
+                type: 'checkbox',
+                default: true,
+            },
+            showMcRating: {
+                label: 'Show Metacritic',
+                type: 'checkbox',
+                default: true,
+            },
+            cacheTtlRated: {
+                label: 'Cache TTL - Rated (days)',
+                type: 'text',
+                default: '7',
+            },
+            cacheTtlNoRating: {
+                label: 'Cache TTL - Unrated (hours)',
+                type: 'text',
+                default: '24',
+            },
+        },
+        events: {
+            init: startApp,
+            open: function (doc, win, frame) {
+                if (frame && doc) {
+                    const wrapper = doc.getElementById('FlixMonkey_wrapper');
+                    if (wrapper) {
+                        frame.style.width = wrapper.offsetWidth + 'px';
+                        frame.style.height = wrapper.offsetHeight + 'px';
+                        frame.style.border = '1px solid #333';
+                        frame.style.borderRadius = '5px';
+                        this.center();
+                    }
+                }
+            },
+            save: () => {
+                GM_config.close();
+                window.location.reload();
+            },
+        },
+    });
+
+    const configGet = (id, fallback) => {
+        try {
+            return GM_config.get(id);
+        } catch {
+            return fallback;
+        }
+    };
 
     const CONFIG = {
-        // Your XMDB API key – get one free at https://xmdbapi.com/api-key
-        xmdbApiKey: 'YOUR_XMDB_API_KEY',
-
-        // Your OMDB API key – get one free at https://www.omdbapi.com/apikey.aspx
-        omdbApiKey: 'YOUR_OMDB_API_KEY',
-
-        // Which corner to show the rating overlay.
-        // Options: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-        overlayCorner: 'top-left',
-
-        // Toggle individual rating sources
-        showRtRating: true, // Rotten Tomatoes
-        showMcRating: true, // Metacritic
-
-        // Keyboard shortcut to wipe all cached ratings (useful after API key change etc.)
-        // Format: modifier(s) joined by '+' then the key, e.g. 'Alt+Shift+C'
-        clearCacheShortcut: 'Alt+Shift+C',
-
-        // Cache TTL in milliseconds
-        cacheTtlRated: 7 * 24 * 60 * 60 * 1000, // 7 days – title has a rating
-        cacheTtlNoRating: 24 * 60 * 60 * 1000, //  24 h   – OMDB found title but no rating
-        // Titles not found in OMDB are not cached
-
-        // Comma separated list of API clients to use, in fallback order.
-        apiClients: 'xmdb,omdb,imdbapi,imdb',
+        get xmdbApiKey() {
+            return configGet('xmdbApiKey', 'YOUR_XMDB_API_KEY');
+        },
+        get omdbApiKey() {
+            return configGet('omdbApiKey', 'YOUR_OMDB_API_KEY');
+        },
+        get overlayCorner() {
+            return configGet('overlayCorner', 'top-left');
+        },
+        get showRtRating() {
+            const v = configGet('showRtRating', true);
+            return v === undefined || v === null ? true : v;
+        },
+        get showMcRating() {
+            const v = configGet('showMcRating', true);
+            return v === undefined || v === null ? true : v;
+        },
+        get apiClients() {
+            return configGet('apiClients', 'xmdb,omdb,imdbapi,imdb');
+        },
+        get cacheTtlRated() {
+            return (parseInt(configGet('cacheTtlRated', '7'), 10) || 7) * 24 * 60 * 60 * 1000;
+        },
+        get cacheTtlNoRating() {
+            return (parseInt(configGet('cacheTtlNoRating', '24'), 10) || 24) * 60 * 60 * 1000;
+        },
     };
 
     // ---------------------------------------------------------------------------
@@ -766,19 +862,7 @@
         }
 
         #initCacheShortcut() {
-            document.addEventListener('keydown', e => {
-                const parts = CONFIG.clearCacheShortcut.split('+');
-                const key = parts.at(-1);
-
-                const match =
-                    e.key === key &&
-                    e.altKey === parts.includes('Alt') &&
-                    e.shiftKey === parts.includes('Shift') &&
-                    e.ctrlKey === (parts.includes('Ctrl') || parts.includes('Control')) &&
-                    e.metaKey === parts.includes('Meta');
-
-                if (match) this.#cache.clear();
-            });
+            // Replaced by GM_registerMenuCommand
         }
 
         #initNavigationObservers() {
@@ -813,11 +897,30 @@
         }
     }
 
-    const cache = new CacheManager();
-    const api = new ApiClientManager(cache);
-    const renderer = new OverlayRenderer();
-    const surfaces = new SurfaceManager();
+    // startApp is invoked by GM_config's events.init callback once stored values are loaded.
+    // Calling app.init() here or before that event fires would mean configGet() always
+    // returns the hardcoded fallbacks because GM_config.get() is not ready until init completes.
+    function startApp() {
+        console.warn(
+            '[FlixMonkey] GM_config ready – starting app (xmdbKey set:',
+            CONFIG.xmdbApiKey !== 'YOUR_XMDB_API_KEY',
+            ').'
+        );
+        const cache = new CacheManager();
+        const api = new ApiClientManager(cache);
+        const renderer = new OverlayRenderer();
+        const surfaces = new SurfaceManager();
 
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
-    app.init();
+        const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
+        app.init();
+
+        GM_registerMenuCommand('Clear Cache', () => {
+            if (confirm('Are you sure you want to clear the FlixMonkey cache?')) {
+                cache.clear();
+                alert('Cache cleared.');
+            }
+        });
+    }
+
+    GM_registerMenuCommand('FlixMonkey Settings', () => GM_config.open());
 })();
