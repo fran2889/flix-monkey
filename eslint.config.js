@@ -5,7 +5,7 @@ export default [
     js.configs.recommended,
     {
         languageOptions: {
-            ecmaVersion: 2020,
+             ecmaVersion: 'latest',
             sourceType: 'script',
             globals: {
                 ...globals.browser,
@@ -18,7 +18,8 @@ export default [
             'prefer-const': 'error',
             'no-var': 'error',
             eqeqeq: 'error',
-            'no-console': ['warn', { allow: ['warn', 'error'] }],
+             'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
         },
     },
 ];

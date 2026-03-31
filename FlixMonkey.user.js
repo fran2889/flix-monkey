@@ -56,42 +56,124 @@
     // ---------------------------------------------------------------------------
 
     class CacheManager {
-        constructor() {
-            this.CACHE_KEY = 'fm_cache';
+        #cacheKey = 'fm_cache';
+
+        #getKey(title, year) {
+            return `${title.toLowerCase().replace(/\s+/g, '_')}${year ? `_${year}` : ''}`;
         }
 
-        getKey(title, year) {
-            return title.toLowerCase().replace(/\s+/g, '_') + (year ? `_${year}` : '');
-        }
-
-        loadBlob() {
+        #loadBlob() {
             try {
-                return JSON.parse(GM_getValue(this.CACHE_KEY) || '{}');
+                return JSON.parse(GM_getValue(this.#cacheKey) ?? '{}');
             } catch {
                 return {};
             }
         }
 
         read(title, year) {
-            const entry = this.loadBlob()[this.getKey(title, year)];
+            const entry = this.#loadBlob()[this.#getKey(title, year)];
             if (!entry) return null;
             return Date.now() > entry.expires ? null : entry.data;
         }
 
         write(title, year, data, ttl) {
-            const blob = this.loadBlob();
+            const blob = this.#loadBlob();
             const now = Date.now();
-            for (const k of Object.keys(blob)) {
+            Object.keys(blob).forEach(k => {
                 if (now > blob[k].expires) delete blob[k];
-            }
-            blob[this.getKey(title, year)] = { data, expires: now + ttl };
-            GM_setValue(this.CACHE_KEY, JSON.stringify(blob));
+            });
+            blob[this.#getKey(title, year)] = { data, expires: now + ttl };
+            GM_setValue(this.#cacheKey, JSON.stringify(blob));
         }
 
         clear() {
-            const count = Object.keys(this.loadBlob()).length;
-            GM_setValue(this.CACHE_KEY, '{}');
+            const count = Object.keys(this.#loadBlob()).length;
+            GM_setValue(this.#cacheKey, '{}');
             console.warn(`[FlixMonkey] Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Helpers & Utilities
+    // ---------------------------------------------------------------------------
+
+    class RatingUtils {
+        static format(val) {
+            if (!val || val === 'N/A') return null;
+            const num = parseFloat(val);
+            return isNaN(num) ? val : num.toFixed(1);
+        }
+
+        static normalizeMc(val) {
+            if (!val || val === 'N/A') return null;
+            const m = String(val).match(/^(\d+)/);
+            return m ? `${m[1]}%` : null;
+        }
+
+        static normalizeRt(val) {
+            return val === 'N/A' ? null : (val ?? null);
+        }
+
+        static findInRatings(ratings, sourcePattern) {
+            if (!Array.isArray(ratings)) return null;
+            const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
+            return entry?.value || entry?.Value || null;
+        }
+    }
+
+    class RequestQueue {
+        #queue = [];
+        #isProcessing = false;
+        #lastLocalReqTime = 0;
+        #minInterval;
+        #globalSyncKey;
+
+        constructor(minInterval = 1000, globalSyncKey = null) {
+            this.#minInterval = minInterval;
+            this.#globalSyncKey = globalSyncKey;
+        }
+
+        enqueue(url, priority, fetchFn, responseType) {
+            return new Promise((resolve, reject) => {
+                this.#queue.push({ url, priority, resolve, reject, fetchFn, responseType });
+                this.#process();
+            });
+        }
+
+        async #process() {
+            if (this.#isProcessing) return;
+            this.#isProcessing = true;
+
+            while (this.#queue.length > 0) {
+                this.#queue.sort((a, b) => b.priority - a.priority);
+
+                const now = Date.now();
+                let lastGlobal = 0;
+                if (this.#globalSyncKey) {
+                    const str = GM_getValue(this.#globalSyncKey);
+                    lastGlobal = str ? parseInt(str, 10) : 0;
+                }
+
+                const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
+                if (wait > 0) {
+                    await new Promise(r => setTimeout(r, wait + Math.random() * 50));
+                    continue;
+                }
+
+                this.#lastLocalReqTime = Date.now();
+                if (this.#globalSyncKey) {
+                    GM_setValue(this.#globalSyncKey, this.#lastLocalReqTime.toString());
+                }
+
+                const { url, resolve, reject, fetchFn, responseType } = this.#queue.shift();
+                try {
+                    const result = await fetchFn(url, responseType);
+                    resolve(result);
+                } catch (err) {
+                    reject(err);
+                }
+            }
+            this.#isProcessing = false;
         }
     }
 
@@ -100,12 +182,10 @@
     // ---------------------------------------------------------------------------
 
     class BaseApiClient {
-        constructor() {
-            this.requestQueue = [];
-            this.isProcessingQueue = false;
-            this.lastLocalReqTime = 0;
-            this.minInterval = 1000;
-            this.globalSyncKey = null;
+        #queue;
+
+        constructor(queue) {
+            this.#queue = queue;
         }
 
         gmFetch(url, responseType = 'json') {
@@ -128,14 +208,15 @@
                         'Accept-Language': 'en-US,en;q=0.9',
                     },
                     onload: r => {
-                        if (r.status >= 200 && r.status < 300) {
+                        const { status, response, responseText } = r;
+                        if (status >= 200 && status < 300) {
                             if (responseType === 'json') {
-                                resolve(r.response ?? JSON.parse(r.responseText));
+                                resolve(response ?? JSON.parse(responseText));
                             } else {
-                                resolve(r.responseText);
+                                resolve(responseText);
                             }
                         } else {
-                            reject(new Error(`HTTP ${r.status}`));
+                            reject(new Error(`HTTP ${status}`));
                         }
                     },
                     onerror: () => reject(new Error('network error')),
@@ -145,122 +226,62 @@
             });
         }
 
-        async processQueue() {
-            if (this.isProcessingQueue) return;
-            this.isProcessingQueue = true;
-
-            while (this.requestQueue.length > 0) {
-                // Priority 1 for details, 0 for search
-                this.requestQueue.sort((a, b) => b.priority - a.priority);
-
-                const now = Date.now();
-                let lastGlobal = 0;
-                if (this.globalSyncKey) {
-                    const lastGlobalStr = GM_getValue(this.globalSyncKey);
-                    lastGlobal = lastGlobalStr ? parseInt(lastGlobalStr, 10) : 0;
-                }
-
-                const lastEffective = Math.max(this.lastLocalReqTime, lastGlobal);
-                const wait = Math.max(0, this.minInterval - (now - lastEffective));
-
-                if (wait > 0) {
-                    await new Promise(r => setTimeout(r, wait + Math.random() * 50));
-                    continue;
-                }
-
-                this.lastLocalReqTime = Date.now();
-                if (this.globalSyncKey) {
-                    GM_setValue(this.globalSyncKey, this.lastLocalReqTime.toString());
-                }
-
-                const { url, resolve, reject, responseType } = this.requestQueue.shift();
-
-                try {
-                    const result = await this.gmFetch(url, responseType);
-                    resolve(result);
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            this.isProcessingQueue = false;
-        }
-
         queuedFetch(url, priority = 0, responseType = 'json') {
-            return new Promise((resolve, reject) => {
-                this.requestQueue.push({ url, priority, resolve, reject, responseType });
-                this.processQueue();
-            });
+            return this.#queue.enqueue(url, priority, (u, resType) => this.gmFetch(u, resType), responseType);
         }
 
-        formatRating(val) {
-            if (!val || val === 'N/A') return null;
-            const num = parseFloat(val);
-            return isNaN(num) ? val : num.toFixed(1);
-        }
-
-        /**
-         * @returns Promise<{ imdbId, rating, rtRating, mcRating } | null>
-         */
         async fetch(title, year) {
             try {
                 const match = await this.search(title, year);
                 if (!match) return null;
                 return await this.getDetails(match, title);
             } catch (err) {
-                console.warn(`[FlixMonkey] ${this.constructor.name} failed:`, err.message);
+                console.warn(`[FlixMonkey] ${this.constructor.name} failed: ${err.message}`);
                 return null;
             }
         }
 
-        async search(title, year) {
+        async search(_title, _year) {
             throw new Error('Not implemented');
         }
 
-        async getDetails(id, title) {
+        async getDetails(_id, _title) {
             throw new Error('Not implemented');
         }
     }
 
     class XmdbApiClient extends BaseApiClient {
         constructor() {
-            super();
-            this.minInterval = 1500;
-            this.globalSyncKey = 'fm_last_req';
+            // XMDB has a global rate limit shared across tabs
+            super(new RequestQueue(1500, 'fm_last_req'));
         }
 
         async search(title, year) {
-            const isXmdbConfigured = CONFIG.xmdbApiKey && CONFIG.xmdbApiKey !== 'YOUR_XMDB_API_KEY';
-            if (!isXmdbConfigured) return null;
+            if (!CONFIG.xmdbApiKey || CONFIG.xmdbApiKey === 'YOUR_XMDB_API_KEY') return null;
 
             const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: title, limit: 5 });
-            console.warn(`[FlixMonkey] Searching XMDB for title: "${title}"` + (year ? ` (${year})` : ''));
+            console.warn(`[FlixMonkey] Searching XMDB for title: "${title}"${year ? ` (${year})` : ''}`);
 
-            const searchJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
+            const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
 
-            if (!searchJson.results || searchJson.results.length === 0) {
+            if (!results?.length) {
                 console.warn(`[FlixMonkey] No search results found in XMDB for: "${title}"`);
                 return null;
             }
 
-            const titleResults = searchJson.results.filter(r => r.type === 'title');
+            const titleResults = results.filter(r => r.type === 'title');
 
-            if (titleResults.length === 0) {
+            if (!titleResults.length) {
                 console.warn(`[FlixMonkey] No title matches found in search results for: "${title}"`);
                 return null;
             }
 
-            let match = titleResults[0];
-            if (year) {
-                const yearMatch = titleResults.find(r => String(r.year) === String(year));
-                if (yearMatch) match = yearMatch;
-            }
-
-            return match;
+            return year
+                ? (titleResults.find(r => String(r.year) === String(year)) ?? titleResults[0])
+                : titleResults[0];
         }
 
-        async getDetails(match, title) {
-            const id = match.id;
+        async getDetails({ id }, title) {
             console.warn(`[FlixMonkey] Fetching XMDB details for ID: ${id} ("${title}")`);
 
             const detailsJson = await this.queuedFetch(
@@ -270,52 +291,33 @@
 
             if (!detailsJson || detailsJson.error) return null;
 
-            const rating = detailsJson.rating && detailsJson.rating !== 'N/A' ? String(detailsJson.rating) : null;
+            const { rating, ratings } = detailsJson;
 
-            let rtRating = null;
-            let mcRating = null;
-
-            if (Array.isArray(detailsJson.ratings)) {
-                const rtEntry = detailsJson.ratings.find(
-                    r => r.source === 'Rotten Tomatoes' || r.Source === 'Rotten Tomatoes'
-                );
-                const mcEntry = detailsJson.ratings.find(r => r.source === 'Metacritic' || r.Source === 'Metacritic');
-
-                rtRating = rtEntry?.value || rtEntry?.Value || null;
-                if (rtRating === 'N/A') rtRating = null;
-
-                const mcVal = mcEntry?.value || mcEntry?.Value || null;
-                if (mcVal && mcVal !== 'N/A') {
-                    const m = String(mcVal).match(/^(\d+)/);
-                    mcRating = m ? `${m[1]}%` : null;
-                }
-            }
-
-            const formattedRating = this.formatRating(rating);
-            return { imdbId: id, rating: formattedRating, rtRating, mcRating };
+            return {
+                imdbId: id,
+                rating: RatingUtils.format(rating),
+                rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(ratings, /Rotten Tomatoes/i)),
+                mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(ratings, /Metacritic/i)),
+            };
         }
     }
 
     class OmdbApiClient extends BaseApiClient {
         constructor() {
-            super();
-            this.minInterval = 0; // OMDB is usually fast/not strictly limited by us
+            // OMDB is usually fast, no global sync needed by default
+            super(new RequestQueue(0));
         }
 
         async search(title, year) {
-            const isOmdbConfigured = CONFIG.omdbApiKey && CONFIG.omdbApiKey !== 'YOUR_OMDB_API_KEY';
-            if (!isOmdbConfigured) return null;
-
-            // For OMDB, we can just use the title as the ID for getDetails
+            if (!CONFIG.omdbApiKey || CONFIG.omdbApiKey === 'YOUR_OMDB_API_KEY') return null;
             return { id: { title, year } };
         }
 
-        async getDetails(match, title) {
-            const { title: t, year: y } = match.id;
+        async getDetails({ id: { title: t, year: y } }, _title) {
             const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: t });
             if (y) params.set('y', y);
 
-            console.warn(`[FlixMonkey] Fetching OMDB details for: "${t}"` + (y ? ` (${y})` : ''));
+            console.warn(`[FlixMonkey] Fetching OMDB details for: "${t}"${y ? ` (${y})` : ''}`);
 
             const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
 
@@ -324,52 +326,44 @@
                 return null;
             }
 
-            const rating = json.imdbRating && json.imdbRating !== 'N/A' ? json.imdbRating : null;
-            const ratingsArr = Array.isArray(json.Ratings) ? json.Ratings : [];
-            const rtEntry = ratingsArr.find(r => r.Source === 'Rotten Tomatoes');
-            const mcEntry = ratingsArr.find(r => r.Source === 'Metacritic');
+            const { imdbRating, Ratings, imdbID } = json;
 
-            const rtRating = rtEntry && rtEntry.Value !== 'N/A' ? rtEntry.Value : null;
-            let mcRating = null;
-            if (mcEntry && mcEntry.Value !== 'N/A') {
-                const m = mcEntry.Value.match(/^(\d+)\//);
-                mcRating = m ? `${m[1]}%` : null;
-            }
-
-            const formattedRating = this.formatRating(rating);
-            return { imdbId: json.imdbID, rating: formattedRating, rtRating, mcRating };
+            return {
+                imdbId: imdbID,
+                rating: RatingUtils.format(imdbRating),
+                rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(Ratings, /Rotten Tomatoes/i)),
+                mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(Ratings, /Metacritic/i)),
+            };
         }
     }
 
     class ImdbApiDevClient extends BaseApiClient {
         constructor() {
-            super();
-            this.minInterval = 1000;
+            super(new RequestQueue(1000));
         }
 
         async search(title, year) {
             const searchParams = new URLSearchParams({ query: title });
-            console.warn(`[FlixMonkey] Searching IMDB API Dev for title: "${title}"` + (year ? ` (${year})` : ''));
+            console.warn(`[FlixMonkey] Searching IMDB API Dev for title: "${title}"${year ? ` (${year})` : ''}`);
 
-            const searchJson = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
+            const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
 
-            if (!searchJson.titles || searchJson.titles.length === 0) {
+            if (!titles?.length) {
                 console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${title}"`);
                 return null;
             }
 
-            let bestMatch = searchJson.titles[0];
             if (year) {
                 const targetYear = parseInt(year);
-                const nearYear = searchJson.titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
-                if (nearYear) bestMatch = nearYear;
+                const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
+                if (nearYear) return nearYear;
             }
 
-            return bestMatch;
+            return titles[0];
         }
 
         async getDetails(match, title) {
-            const titleId = match.id;
+            const { id: titleId } = match;
             console.warn(`[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${match.title || title}")`);
 
             let details = null;
@@ -379,22 +373,20 @@
                 console.warn(`[FlixMonkey] IMDB API Dev details fetch failed for ${titleId}:`, e.message);
             }
 
-            const source = details || match;
+            const source = details ?? match;
 
-            const rating =
-                source.rating && source.rating.aggregateRating ? source.rating.aggregateRating.toString() : null;
-            const mcRating = source.metacritic && source.metacritic.score ? `${source.metacritic.score}%` : null;
-            const rtRating = null;
-
-            const formattedRating = this.formatRating(rating);
-            return { imdbId: source.id, rating: formattedRating, rtRating, mcRating };
+            return {
+                imdbId: source.id,
+                rating: RatingUtils.format(source.rating?.aggregateRating),
+                rtRating: null,
+                mcRating: source.metacritic?.score ? `${source.metacritic.score}%` : null,
+            };
         }
     }
 
     class ImdbApiClient extends BaseApiClient {
         constructor() {
-            super();
-            this.minInterval = 1500;
+            super(new RequestQueue(1500));
         }
 
         async search(title, year) {
@@ -402,16 +394,18 @@
             const firstChar = query[0] || 'x';
             const suggestUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(query)}.json`;
 
-            console.warn(`[FlixMonkey] Searching IMDb via suggestions for title: "${title}"` + (year ? ` (${year})` : ''));
+            console.warn(
+                `[FlixMonkey] Searching IMDb via suggestions for title: "${title}"${year ? ` (${year})` : ''}`
+            );
 
             const suggestJson = await this.queuedFetch(suggestUrl, 0);
 
-            if (!suggestJson || !Array.isArray(suggestJson.d)) {
+            if (!Array.isArray(suggestJson?.d)) {
                 console.warn(`[FlixMonkey] No search results found in IMDb suggestions for: "${title}"`);
                 return null;
             }
 
-            const match = suggestJson.d.find(entry => entry.id && entry.id.startsWith('tt'));
+            const match = suggestJson.d.find(({ id }) => id?.startsWith('tt'));
 
             if (!match) {
                 console.warn(`[FlixMonkey] No title matches found in suggestions for: "${title}"`);
@@ -421,8 +415,7 @@
             return match;
         }
 
-        async getDetails(match, title) {
-            const imdbId = match.id;
+        async getDetails({ id: imdbId }, title) {
             console.warn(`[FlixMonkey] Scraping IMDb details for ID: ${imdbId} ("${title}")`);
 
             const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
@@ -430,20 +423,14 @@
 
             let rating = null;
             const jsonLdBlocks = titleHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
+
             if (jsonLdBlocks) {
                 for (const block of jsonLdBlocks) {
                     try {
                         const content = block.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
                         const data = JSON.parse(content);
-                        const extract = d => {
-                            if (d.aggregateRating) return d.aggregateRating.ratingValue;
-                            if (Array.isArray(d)) {
-                                const found = d.find(o => o.aggregateRating);
-                                return found ? found.aggregateRating.ratingValue : null;
-                            }
-                            return null;
-                        };
-                        const val = extract(data);
+                        const items = Array.isArray(data) ? data : [data];
+                        const val = items.find(d => d.aggregateRating)?.aggregateRating?.ratingValue;
                         if (val) {
                             rating = val.toString();
                             break;
@@ -458,14 +445,10 @@
                 const rMatch = titleHtml.match(
                     /data-testid="hero-rating-bar__aggregate-rating__score"[^>]*>[\s\S]*?<span[^>]*>([\d.]+)<\/span>/
                 );
-                if (rMatch) {
-                    rating = rMatch[1];
-                } else {
-                    console.warn(`[FlixMonkey] Failed to extract rating from IMDb page for ID: ${imdbId}`);
-                }
+                if (rMatch) rating = rMatch[1];
             }
 
-            const formattedRating = this.formatRating(rating);
+            const formattedRating = RatingUtils.format(rating);
             if (!formattedRating) {
                 console.warn(`[FlixMonkey] No rating found on IMDb for ID: ${imdbId}`);
             }
@@ -474,42 +457,53 @@
     }
 
     class ApiClientManager {
-        constructor(cacheManager) {
-            this.cache = cacheManager;
-            this.clients = [];
+        #cache;
+        #clients = [];
 
-            const configuredClients = (CONFIG.apiClients || 'xmdb,omdb,imdbapi,imdb')
-                .split(',')
-                .map(c => c.trim().toLowerCase());
-            for (const clientName of configuredClients) {
-                if (clientName === 'xmdb') this.clients.push(new XmdbApiClient());
-                else if (clientName === 'omdb') this.clients.push(new OmdbApiClient());
-                else if (clientName === 'imdbapi') this.clients.push(new ImdbApiDevClient());
-                else if (clientName === 'imdb') this.clients.push(new ImdbApiClient());
+        constructor(cacheManager, clients = []) {
+            this.#cache = cacheManager;
+            this.#clients = clients;
+
+            if (this.#clients.length === 0) {
+                const configuredClients = (CONFIG.apiClients ?? 'xmdb,omdb,imdbapi,imdb')
+                    .split(',')
+                    .map(c => c.trim().toLowerCase());
+
+                const clientMap = {
+                    xmdb: XmdbApiClient,
+                    omdb: OmdbApiClient,
+                    imdbapi: ImdbApiDevClient,
+                    imdb: ImdbApiClient,
+                };
+
+                configuredClients.forEach(name => {
+                    if (clientMap[name]) this.#clients.push(new clientMap[name]());
+                });
             }
         }
 
         async getData(title, year) {
-            const cached = this.cache.read(title, year);
+            const cached = this.#cache.read(title, year);
             if (cached !== null) return cached;
 
             let bestData = null;
 
-            for (const client of this.clients) {
+            for (const client of this.#clients) {
                 const data = await client.fetch(title, year);
-                // "If a result has no rating it can be discarded even if it has IMDB id"
-                if (data && data.rating) {
+                if (data?.rating) {
                     bestData = data;
                     break;
                 }
             }
 
             if (!bestData) {
-                console.warn(`[FlixMonkey] Total failure: No ratings found for "${title}"` + (year ? ` (${year})` : '') + ` using any configured client.`);
+                console.warn(
+                    `[FlixMonkey] Total failure: No ratings found for "${title}"${year ? ` (${year})` : ''} using any configured client.`
+                );
                 return null;
             }
 
-            this.cache.write(
+            this.#cache.write(
                 title,
                 year,
                 bestData,
@@ -526,10 +520,8 @@
     // ---------------------------------------------------------------------------
 
     class OverlayRenderer {
-        constructor() {
-            this.OVERLAY_CLASS = 'fm-rating-overlay';
-            this.OVERLAY_ATTR = 'data-fm-injected';
-        }
+        #OVERLAY_CLASS = 'fm-rating-overlay';
+        #OVERLAY_ATTR = 'data-fm-injected';
 
         injectStyles() {
             const cornerStyles = {
@@ -539,11 +531,11 @@
                 'bottom-right': 'bottom:6px;right:6px;',
             };
 
-            const positionCss = cornerStyles[CONFIG.overlayCorner] || cornerStyles['top-left'];
+            const positionCss = cornerStyles[CONFIG.overlayCorner] ?? cornerStyles['top-left'];
 
             const style = document.createElement('style');
             style.textContent = `
-                .${this.OVERLAY_CLASS} {
+                .${this.#OVERLAY_CLASS} {
                     position: absolute;
                     ${positionCss}
                     z-index: 9999;
@@ -563,26 +555,26 @@
                     pointer-events: all;
                     transition: background 0.15s;
                 }
-                .${this.OVERLAY_CLASS}:hover { background: rgba(0,0,0,0.92); }
-                .${this.OVERLAY_CLASS} .fm-row { display: flex; align-items: center; gap: 4px; }
-                .${this.OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
-                .${this.OVERLAY_CLASS} .fm-rt { color: #fa320a; }
-                .${this.OVERLAY_CLASS} .fm-mc { color: #6ac; }
-                .${this.OVERLAY_CLASS} .fm-value { color: #fff; }
-                .${this.OVERLAY_CLASS} .fm-na { color: #aaa; }
-                .${this.OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
+                .${this.#OVERLAY_CLASS}:hover { background: rgba(0,0,0,0.92); }
+                .${this.#OVERLAY_CLASS} .fm-row { display: flex; align-items: center; gap: 4px; }
+                .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
+                .${this.#OVERLAY_CLASS} .fm-rt { color: #fa320a; }
+                .${this.#OVERLAY_CLASS} .fm-mc { color: #6ac; }
+                .${this.#OVERLAY_CLASS} .fm-value { color: #fff; }
+                .${this.#OVERLAY_CLASS} .fm-na { color: #aaa; }
+                .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
             `;
 
             if (CONFIG.overlayCorner.includes('left')) {
-                style.textContent += `\n                .title-card-top-10 .${this.OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+                style.textContent += `\n                .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
             }
 
             document.head.appendChild(style);
         }
 
-        createOverlay(data, title) {
+        #createOverlay(data, title) {
             const a = document.createElement('a');
-            a.className = this.OVERLAY_CLASS;
+            a.className = this.#OVERLAY_CLASS;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
             a.href = data.imdbId
@@ -592,12 +584,14 @@
             const rows = [];
             const titleParts = [];
 
-            if (data.rating) {
+            const { rating, imdbId, rtRating, mcRating } = data;
+
+            if (rating) {
                 rows.push(
-                    `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-value">${data.rating}</span></div>`
+                    `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-value">${rating}</span></div>`
                 );
-                titleParts.push(`IMDb: ${data.rating}`);
-            } else if (data.imdbId) {
+                titleParts.push(`IMDb: ${rating}`);
+            } else if (imdbId) {
                 rows.push(`<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-na">N/A</span></div>`);
             } else {
                 rows.push(
@@ -605,24 +599,24 @@
                 );
             }
 
-            if (CONFIG.showRtRating && data.rtRating) {
+            if (CONFIG.showRtRating && rtRating) {
                 rows.push(
-                    `<div class="fm-row"><span class="fm-label fm-rt">RT</span><span class="fm-value">${data.rtRating}</span></div>`
+                    `<div class="fm-row"><span class="fm-label fm-rt">RT</span><span class="fm-value">${rtRating}</span></div>`
                 );
-                titleParts.push(`RT: ${data.rtRating}`);
+                titleParts.push(`RT: ${rtRating}`);
             }
 
-            if (CONFIG.showMcRating && data.mcRating) {
+            if (CONFIG.showMcRating && mcRating) {
                 rows.push(
-                    `<div class="fm-row"><span class="fm-label fm-mc">MC</span><span class="fm-value">${data.mcRating}</span></div>`
+                    `<div class="fm-row"><span class="fm-label fm-mc">MC</span><span class="fm-value">${mcRating}</span></div>`
                 );
-                titleParts.push(`MC: ${data.mcRating}`);
+                titleParts.push(`MC: ${mcRating}`);
             }
 
             a.innerHTML = rows.join('');
             a.title = titleParts.length
                 ? `${titleParts.join(' · ')} – click to open IMDb`
-                : data.imdbId
+                : imdbId
                   ? 'No ratings available – click to open IMDb'
                   : 'Not found on IMDb – click to search';
 
@@ -635,13 +629,13 @@
         }
 
         injectOverlay(container, data, title) {
-            container.querySelector(`.${this.OVERLAY_CLASS}`)?.remove();
-            container.appendChild(this.createOverlay(data, title));
-            container.setAttribute(this.OVERLAY_ATTR, '1');
+            container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
+            container.appendChild(this.#createOverlay(data, title));
+            container.setAttribute(this.#OVERLAY_ATTR, '1');
         }
 
         hasOverlay(container) {
-            return container.hasAttribute(this.OVERLAY_ATTR);
+            return container.hasAttribute(this.#OVERLAY_ATTR);
         }
     }
 
@@ -650,70 +644,68 @@
     // ---------------------------------------------------------------------------
 
     class SurfaceManager {
-        constructor() {
-            this.SURFACES = [
-                {
-                    titleSelectors: '.title-card .fallback-text',
-                    getTitle: el => el.textContent?.trim() || null,
-                    containerSel: '.title-card',
-                },
-                {
-                    titleSelectors: '.bob-title',
-                    getTitle: el => el.textContent?.trim() || null,
-                    containerSel: '.bob-container',
-                },
-                {
-                    titleSelectors: [
-                        '.previewModal--player-titleTreatmentWrapper img[alt]',
-                        '.previewModal--wrapper img[alt]',
-                        '.previewModal img[alt]',
-                        '[data-uia="previewModal-title"]',
-                        '.previewModal--boxarttitle',
-                        '.previewModal h3',
-                    ].join(','),
-                    getTitle: el => el.getAttribute('alt')?.trim() || el.textContent?.trim() || null,
-                    containerSel: '.previewModal',
-                },
-                {
-                    titleSelectors: [
-                        '.jawBone img[alt]',
-                        '.jawBoneContainer img[alt]',
-                        '.previewModal--detailsMetadata img[alt]',
-                        '.jawBone .image-fallback-text',
-                        '.jawBoneContainer .image-fallback-text',
-                        '.previewModal--detailsMetadata h3',
-                        '.previewModal--detailsMetadata .title',
-                        '.previewModal--detailsMetadata [data-uia="previewModal-title"]',
-                    ].join(','),
-                    getTitle: el => el.getAttribute('alt')?.trim() || el.textContent?.trim() || null,
-                    containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
-                },
-            ];
-        }
+        #SURFACES = [
+            {
+                titleSelectors: '.title-card .fallback-text',
+                getTitle: el => el.textContent?.trim() ?? null,
+                containerSel: '.title-card',
+            },
+            {
+                titleSelectors: '.bob-title',
+                getTitle: el => el.textContent?.trim() ?? null,
+                containerSel: '.bob-container',
+            },
+            {
+                titleSelectors: [
+                    '.previewModal--player-titleTreatmentWrapper img[alt]',
+                    '.previewModal--wrapper img[alt]',
+                    '.previewModal img[alt]',
+                    '[data-uia="previewModal-title"]',
+                    '.previewModal--boxarttitle',
+                    '.previewModal h3',
+                ].join(','),
+                getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
+                containerSel: '.previewModal',
+            },
+            {
+                titleSelectors: [
+                    '.jawBone img[alt]',
+                    '.jawBoneContainer img[alt]',
+                    '.previewModal--detailsMetadata img[alt]',
+                    '.jawBone .image-fallback-text',
+                    '.jawBoneContainer .image-fallback-text',
+                    '.previewModal--detailsMetadata h3',
+                    '.previewModal--detailsMetadata .title',
+                    '.previewModal--detailsMetadata [data-uia="previewModal-title"]',
+                ].join(','),
+                getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
+                containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
+            },
+        ];
 
         discover(root) {
             const seen = new Set();
             const results = [];
 
-            for (const surface of this.SURFACES) {
+            this.#SURFACES.forEach(surface => {
                 let titleEls;
                 try {
                     titleEls = root.querySelectorAll(surface.titleSelectors);
                 } catch {
-                    continue;
+                    return;
                 }
 
-                for (const titleEl of titleEls) {
+                titleEls.forEach(titleEl => {
                     const title = surface.getTitle(titleEl);
-                    if (!title) continue;
+                    if (!title) return;
 
-                    const container = titleEl.closest(surface.containerSel) || titleEl.parentElement;
-                    if (!container || seen.has(container)) continue;
+                    const container = titleEl.closest(surface.containerSel) ?? titleEl.parentElement;
+                    if (!container || seen.has(container)) return;
 
                     seen.add(container);
                     results.push({ container, title });
-                }
-            }
+                });
+            });
 
             return results;
         }
@@ -722,7 +714,7 @@
             const yearEl = el.querySelector('.year, [data-year], .releaseYear');
             if (!yearEl) return null;
             const m = yearEl.textContent.match(/\d{4}/);
-            return m ? m[0] : null;
+            return m?.[0] ?? null;
         }
     }
 
@@ -731,92 +723,101 @@
     // ---------------------------------------------------------------------------
 
     class FlixMonkeyApp {
-        constructor() {
-            this.cache = new CacheManager();
-            this.api = new ApiClientManager(this.cache);
-            this.renderer = new OverlayRenderer();
-            this.surfaces = new SurfaceManager();
-            this.inFlight = new Map();
+        #cache;
+        #api;
+        #renderer;
+        #surfaces;
+        #inFlight = new Map();
+
+        constructor(cache, api, renderer, surfaces) {
+            this.#cache = cache;
+            this.#api = api;
+            this.#renderer = renderer;
+            this.#surfaces = surfaces;
         }
 
-        async decorateContainer(container, title) {
-            if (this.renderer.hasOverlay(container)) return;
+        async #decorateContainer(container, title) {
+            if (this.#renderer.hasOverlay(container)) return;
 
-            const year = this.surfaces.extractYear(container);
-            const cached = this.cache.read(title, year);
+            const year = this.#surfaces.extractYear(container);
+            const cached = this.#cache.read(title, year);
             if (cached !== null) {
-                this.renderer.ensureRelative(container);
-                this.renderer.injectOverlay(container, cached, title);
+                this.#renderer.ensureRelative(container);
+                this.#renderer.injectOverlay(container, cached, title);
                 return;
             }
 
             const dedupKey = title.toLowerCase();
-            let promise = this.inFlight.get(dedupKey);
+            let promise = this.#inFlight.get(dedupKey);
             if (!promise) {
-                promise = this.api.getData(title, year).finally(() => this.inFlight.delete(dedupKey));
-                this.inFlight.set(dedupKey, promise);
+                promise = this.#api.getData(title, year).finally(() => this.#inFlight.delete(dedupKey));
+                this.#inFlight.set(dedupKey, promise);
             }
 
             const data = await promise;
-            this.renderer.ensureRelative(container);
-            this.renderer.injectOverlay(container, data || { imdbId: null, rating: null }, title);
+            this.#renderer.ensureRelative(container);
+            this.#renderer.injectOverlay(container, data ?? { imdbId: null, rating: null }, title);
         }
 
         decorateRoot(root) {
-            for (const { container, title } of this.surfaces.discover(root)) {
-                this.decorateContainer(container, title);
-            }
+            this.#surfaces.discover(root).forEach(({ container, title }) => {
+                this.#decorateContainer(container, title);
+            });
         }
 
-        initCacheShortcut() {
+        #initCacheShortcut() {
             document.addEventListener('keydown', e => {
                 const parts = CONFIG.clearCacheShortcut.split('+');
-                const key = parts[parts.length - 1];
-                if (
+                const key = parts.at(-1);
+
+                const match =
                     e.key === key &&
                     e.altKey === parts.includes('Alt') &&
                     e.shiftKey === parts.includes('Shift') &&
                     e.ctrlKey === (parts.includes('Ctrl') || parts.includes('Control')) &&
-                    e.metaKey === parts.includes('Meta')
-                ) {
-                    this.cache.clear();
-                }
+                    e.metaKey === parts.includes('Meta');
+
+                if (match) this.#cache.clear();
             });
         }
 
-        initNavigationObservers() {
-            const _pushState = history.pushState;
-            const _replaceState = history.replaceState;
+        #initNavigationObservers() {
+            const { pushState, replaceState } = history;
 
             history.pushState = (...args) => {
-                _pushState.apply(history, args);
+                pushState.apply(history, args);
                 setTimeout(() => this.decorateRoot(document), 800);
             };
             history.replaceState = (...args) => {
-                _replaceState.apply(history, args);
+                replaceState.apply(history, args);
                 setTimeout(() => this.decorateRoot(document), 800);
             };
             window.addEventListener('popstate', () => setTimeout(() => this.decorateRoot(document), 800));
 
             const observer = new MutationObserver(mutations => {
-                for (const mutation of mutations) {
-                    for (const node of mutation.addedNodes) {
+                mutations.forEach(({ addedNodes }) => {
+                    addedNodes.forEach(node => {
                         if (node.nodeType === Node.ELEMENT_NODE) this.decorateRoot(node);
-                    }
-                }
+                    });
+                });
             });
 
             observer.observe(document.body, { childList: true, subtree: true });
         }
 
         init() {
-            this.renderer.injectStyles();
-            this.initCacheShortcut();
-            this.initNavigationObservers();
+            this.#renderer.injectStyles();
+            this.#initCacheShortcut();
+            this.#initNavigationObservers();
             this.decorateRoot(document);
         }
     }
 
-    const app = new FlixMonkeyApp();
+    const cache = new CacheManager();
+    const api = new ApiClientManager(cache);
+    const renderer = new OverlayRenderer();
+    const surfaces = new SurfaceManager();
+
+    const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
     app.init();
 })();
