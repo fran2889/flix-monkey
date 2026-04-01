@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.9.4
+// @version      0.9.5
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -745,6 +745,16 @@
                 titleSelectors: '.title-card .fallback-text',
                 getTitle: el => el.textContent?.trim() ?? null,
                 containerSel: '.title-card',
+            },
+            {
+                titleSelectors: '[data-uia="search-gallery-video-card"]',
+                getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
+                containerSel: '[data-uia="search-gallery-video-card"]',
+            },
+            {
+                titleSelectors: '[data-uia="search-suggestion-item-link"]',
+                getTitle: el => el.textContent?.trim() ?? null,
+                containerSel: '[data-uia="search-suggestion-item"]',
             },
             {
                 titleSelectors: '.bob-title',
