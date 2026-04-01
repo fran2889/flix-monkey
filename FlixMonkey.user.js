@@ -104,6 +104,7 @@
                 }
             },
             save: () => {
+                if (window.fmApi) window.fmApi.resetDisabledClients();
                 GM_config.close();
                 window.location.reload();
             },
@@ -236,6 +237,15 @@
             });
         }
 
+        clear() {
+            const count = this.#queue.length;
+            if (count > 0) {
+                this.#queue.forEach(item => item.reject(new Error('Client Disabled')));
+                this.#queue = [];
+            }
+            return count;
+        }
+
         async #process() {
             if (this.#isProcessing) return;
             this.#isProcessing = true;
@@ -279,9 +289,32 @@
 
     class BaseApiClient {
         #queue;
+        #slug;
 
-        constructor(queue) {
+        constructor(queue, slug) {
             this.#queue = queue;
+            this.#slug = slug;
+        }
+
+        get isDisabled() {
+            const key = `fm_disabled_${this.#slug}`;
+            const disabledUntil = parseInt(GM_getValue(key, '0'), 10);
+            if (disabledUntil === 0) return false;
+
+            if (Date.now() > disabledUntil) {
+                GM_setValue(key, '0');
+                return false;
+            }
+            return true;
+        }
+
+        disable(durationMs = 3600000) {
+            const count = this.#queue.clear();
+            const until = Date.now() + durationMs;
+            GM_setValue(`fm_disabled_${this.#slug}`, until.toString());
+            console.warn(
+                `[FlixMonkey] ${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
+            );
         }
 
         gmFetch(url, responseType = 'json') {
@@ -311,6 +344,9 @@
                             } else {
                                 resolve(responseText);
                             }
+                        } else if (status >= 400 && status < 500) {
+                            this.disable();
+                            reject(new Error(`HTTP ${status} (Client Disabled)`));
                         } else {
                             reject(new Error(`HTTP ${status}`));
                         }
@@ -327,6 +363,7 @@
         }
 
         async fetch(title, year) {
+            if (this.isDisabled) return null;
             try {
                 const match = await this.search(title, year);
                 if (!match) return null;
@@ -349,7 +386,7 @@
     class XmdbApiClient extends BaseApiClient {
         constructor() {
             // XMDB has a global rate limit shared across tabs
-            super(new RequestQueue(1500, 'fm_last_req'));
+            super(new RequestQueue(1500, 'fm_last_req'), 'xmdb');
         }
 
         async search(title, year) {
@@ -401,7 +438,7 @@
     class OmdbApiClient extends BaseApiClient {
         constructor() {
             // OMDB is usually fast, no global sync needed by default
-            super(new RequestQueue(0));
+            super(new RequestQueue(0), 'omdb');
         }
 
         async search(title, year) {
@@ -435,7 +472,7 @@
 
     class ImdbApiDevClient extends BaseApiClient {
         constructor() {
-            super(new RequestQueue(1000));
+            super(new RequestQueue(1000), 'imdbapi');
         }
 
         async search(title, year) {
@@ -482,7 +519,7 @@
 
     class ImdbApiClient extends BaseApiClient {
         constructor() {
-            super(new RequestQueue(1500));
+            super(new RequestQueue(1500), 'imdb');
         }
 
         async search(title, year) {
@@ -578,6 +615,13 @@
             }
         }
 
+        resetDisabledClients() {
+            ['xmdb', 'omdb', 'imdbapi', 'imdb'].forEach(slug => {
+                GM_setValue(`fm_disabled_${slug}`, '0');
+            });
+            console.warn('[FlixMonkey] All disabled API clients re-enabled.');
+        }
+
         async getData(title, year) {
             const cached = this.#cache.read(title, year);
             if (cached !== null) return cached;
@@ -585,6 +629,7 @@
             let bestData = null;
 
             for (const client of this.#clients) {
+                if (client.isDisabled) continue;
                 const data = await client.fetch(title, year);
                 if (data?.rating) {
                     bestData = data;
@@ -921,6 +966,7 @@
         const renderer = new OverlayRenderer();
         const surfaces = new SurfaceManager();
 
+        window.fmApi = api;
         const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
         app.init();
 
@@ -928,6 +974,13 @@
             if (confirm('Are you sure you want to clear the FlixMonkey cache?')) {
                 cache.clear();
                 alert('Cache cleared.');
+            }
+        });
+
+        GM_registerMenuCommand('Reset Disabled Clients', () => {
+            if (confirm('Are you sure you want to re-enable all failing API endpoints?')) {
+                api.resetDisabledClients();
+                alert('All API endpoints have been re-enabled.');
             }
         });
     }
