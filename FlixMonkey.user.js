@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.9.6
+// @version      0.10.0
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -127,6 +127,18 @@
                 default: '1',
                 title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
             },
+            enableFadeUnderRating: {
+                label: 'Fade Low-Rated Titles',
+                type: 'checkbox',
+                default: false,
+                title: 'Reduce opacity of titles with IMDb rating below the threshold.',
+            },
+            fadeRatingThreshold: {
+                label: 'Fade Threshold (IMDb)',
+                type: 'text',
+                default: '6.0',
+                title: 'Titles with IMDb rating below this value will be faded.',
+            },
         },
         events: {
             init: startApp,
@@ -197,6 +209,13 @@
         },
         get cacheTtlNoRating() {
             return createIntConfigGetter('cacheTtlNoRating', 1)();
+        },
+        get enableFadeUnderRating() {
+            return configGet('enableFadeUnderRating', false);
+        },
+        get fadeRatingThreshold() {
+            const val = parseFloat(configGet('fadeRatingThreshold', '6.0'));
+            return Number.isNaN(val) ? 6.0 : val;
         },
     };
 
@@ -795,6 +814,11 @@
                 style.textContent += `\n                .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
             }
 
+            style.textContent += `
+                .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
+                .fm-faded:hover { opacity: 1; }
+            `;
+
             document.head.appendChild(style);
         }
 
@@ -905,6 +929,19 @@
         hasOverlay(container) {
             return container.hasAttribute(this.#OVERLAY_ATTR);
         }
+
+        applyFade(container, titleObj, fadeable) {
+            if (!fadeable || !CONFIG.enableFadeUnderRating) {
+                container.classList.remove('fm-faded');
+                return;
+            }
+            const { rating } = titleObj ?? {};
+            if (typeof rating === 'number' && rating < CONFIG.fadeRatingThreshold) {
+                container.classList.add('fm-faded');
+            } else {
+                container.classList.remove('fm-faded');
+            }
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -917,21 +954,25 @@
                 titleSelectors: '.title-card .fallback-text',
                 getTitle: el => el.textContent?.trim() ?? null,
                 containerSel: '.title-card',
+                fadeable: true,
             },
             {
                 titleSelectors: '[data-uia="search-gallery-video-card"]',
                 getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
                 containerSel: '[data-uia="search-gallery-video-card"]',
+                fadeable: true,
             },
             {
                 titleSelectors: '[data-uia="search-suggestion-item-link"]',
                 getTitle: el => el.textContent?.trim() ?? null,
                 containerSel: '[data-uia="search-suggestion-item"]',
+                fadeable: true,
             },
             {
                 titleSelectors: '.bob-title',
                 getTitle: el => el.textContent?.trim() ?? null,
                 containerSel: '.bob-container',
+                fadeable: false,
             },
             {
                 titleSelectors: [
@@ -944,6 +985,7 @@
                 ].join(','),
                 getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
                 containerSel: '.previewModal',
+                fadeable: false,
             },
             {
                 titleSelectors: [
@@ -958,6 +1000,7 @@
                 ].join(','),
                 getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
                 containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
+                fadeable: false,
             },
         ];
 
@@ -981,7 +1024,7 @@
                     if (!container || seen.has(container)) return;
 
                     seen.add(container);
-                    results.push({ container, title });
+                    results.push({ container, title, fadeable: surface.fadeable ?? false });
                 });
             });
 
@@ -1014,7 +1057,7 @@
             this.#surfaces = surfaces;
         }
 
-        async #decorateContainer(container, displayTitle) {
+        async #decorateContainer(container, displayTitle, fadeable) {
             if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
             const domYear = this.#surfaces.extractYear(container);
@@ -1022,6 +1065,7 @@
             if (cached !== null) {
                 this.#renderer.ensureRelative(container);
                 this.#renderer.injectOverlay(container, cached);
+                this.#renderer.applyFade(container, cached, fadeable);
                 return;
             }
 
@@ -1035,23 +1079,15 @@
                 this.#inFlight.set(dedupKey, promise);
             }
 
-            const titleObj = await promise;
-            if (titleObj) {
-                const parts = [];
-                if (titleObj.rating) parts.push(`IMDb: ${titleObj.rating.toFixed(1)}`);
-                if (titleObj.rtRating) parts.push(`RT: ${titleObj.rtRating}%`);
-                if (titleObj.mcRating) parts.push(`MC: ${titleObj.mcRating}%`);
-                const ratingStr = parts.length ? parts.join(', ') : 'no ratings';
-                console.warn(
-                    `[FlixMonkey] Ratings found for "${displayTitle}": ${ratingStr} (via ${titleObj.source ?? 'unknown'})`
-                );
-            }
-            this.#renderer.injectOverlay(container, titleObj ?? Title.notFound(displayTitle));
+            const data = await promise;
+            this.#renderer.ensureRelative(container);
+            this.#renderer.injectOverlay(container, data ?? Title.notFound(displayTitle));
+            this.#renderer.applyFade(container, data, fadeable);
         }
 
         decorateRoot(root) {
-            this.#surfaces.discover(root).forEach(({ container, title }) => {
-                this.#decorateContainer(container, title);
+            this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
+                this.#decorateContainer(container, title, fadeable);
             });
         }
 
