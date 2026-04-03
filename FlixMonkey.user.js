@@ -489,21 +489,15 @@
         }
 
         async getDetails(match, title) {
-            const { id: titleId } = match;
-            console.warn(`[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${match.title || title}")`);
-
-            const details = await this.queuedFetch(`https://api.imdbapi.dev/titles/${titleId}`, 1).catch(e => {
-                console.warn(`[FlixMonkey] IMDB API Dev details fetch failed for ${titleId}:`, e.message);
-                return null;
-            });
-
-            const source = details ?? match;
+            console.warn(
+                `[FlixMonkey] Using IMDB API Dev search result for ID: ${match.id} ("${match.title || title}")`
+            );
 
             return {
-                imdbId: source.id,
-                rating: RatingUtils.format(source.rating?.aggregateRating),
+                imdbId: match.id,
+                rating: RatingUtils.format(match.rating?.aggregateRating),
                 rtRating: null,
-                mcRating: source.metacritic?.score ? `${source.metacritic.score}%` : null,
+                mcRating: match.metacritic?.score ? `${match.metacritic.score}%` : null,
             };
         }
     }
@@ -838,7 +832,6 @@
             });
         }
 
-
         #initNavigationObservers() {
             const { pushState, replaceState } = history;
 
@@ -904,5 +897,4 @@
             }
         });
     }
-
 })();
