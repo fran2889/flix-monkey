@@ -13,8 +13,6 @@
 // @grant        GM.setValue
 // @require      https://openuserjs.org/src/libs/sizzle/GM_config.js
 // @connect      www.omdbapi.com
-// @connect      www.imdb.com
-// @connect      v3.sg.media-imdb.com
 // @connect      xmdbapi.com
 // @connect      api.imdbapi.dev
 // @run-at       document-idle
@@ -60,7 +58,7 @@
             apiClients: {
                 label: 'API Fallback Order',
                 type: 'text',
-                default: 'xmdb,omdb,imdbapi,imdb',
+                default: 'xmdb,omdb,imdbapi',
             },
             overlayCorner: {
                 label: 'Overlay Position',
@@ -517,77 +515,6 @@
         }
     }
 
-    class ImdbApiClient extends BaseApiClient {
-        constructor() {
-            super(new RequestQueue(1500), 'imdb');
-        }
-
-        async search(title, year) {
-            const query = (year ? `${title} ${year}` : title).toLowerCase();
-            const firstChar = query[0] || 'x';
-            const suggestUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(query)}.json`;
-
-            console.warn(
-                `[FlixMonkey] Searching IMDb via suggestions for title: "${title}"${year ? ` (${year})` : ''}`
-            );
-
-            const suggestJson = await this.queuedFetch(suggestUrl, 0);
-
-            if (!Array.isArray(suggestJson?.d)) {
-                console.warn(`[FlixMonkey] No search results found in IMDb suggestions for: "${title}"`);
-                return null;
-            }
-
-            const match = suggestJson.d.find(({ id }) => id?.startsWith('tt'));
-
-            if (!match) {
-                console.warn(`[FlixMonkey] No title matches found in suggestions for: "${title}"`);
-                return null;
-            }
-
-            return match;
-        }
-
-        async getDetails({ id: imdbId }, title) {
-            console.warn(`[FlixMonkey] Scraping IMDb details for ID: ${imdbId} ("${title}")`);
-
-            const titleUrl = `https://www.imdb.com/title/${imdbId}/`;
-            const titleHtml = await this.queuedFetch(titleUrl, 1, 'text');
-
-            let rating = null;
-            const jsonLdBlocks = titleHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
-
-            if (jsonLdBlocks) {
-                for (const block of jsonLdBlocks) {
-                    try {
-                        const content = block.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
-                        const data = JSON.parse(content);
-                        const items = Array.isArray(data) ? data : [data];
-                        const val = items.find(d => d.aggregateRating)?.aggregateRating?.ratingValue;
-                        if (val) {
-                            rating = val.toString();
-                            break;
-                        }
-                    } catch {
-                        /* ignore */
-                    }
-                }
-            }
-
-            if (!rating) {
-                const rMatch = titleHtml.match(
-                    /data-testid="hero-rating-bar__aggregate-rating__score"[^>]*>[\s\S]*?<span[^>]*>([\d.]+)<\/span>/
-                );
-                if (rMatch) rating = rMatch[1];
-            }
-
-            const formattedRating = RatingUtils.format(rating);
-            if (!formattedRating) {
-                console.warn(`[FlixMonkey] No rating found on IMDb for ID: ${imdbId}`);
-            }
-            return { imdbId, rating: formattedRating, rtRating: null, mcRating: null };
-        }
-    }
 
     class ApiClientManager {
         #cache;
@@ -598,7 +525,7 @@
             this.#clients = clients;
 
             if (this.#clients.length === 0) {
-                const configuredClients = (CONFIG.apiClients ?? 'xmdb,omdb,imdbapi,imdb')
+                const configuredClients = (CONFIG.apiClients ?? 'xmdb,omdb,imdbapi')
                     .split(',')
                     .map(c => c.trim().toLowerCase());
 
@@ -606,7 +533,6 @@
                     xmdb: XmdbApiClient,
                     omdb: OmdbApiClient,
                     imdbapi: ImdbApiDevClient,
-                    imdb: ImdbApiClient,
                 };
 
                 configuredClients.forEach(name => {
@@ -616,7 +542,7 @@
         }
 
         resetDisabledClients() {
-            ['xmdb', 'omdb', 'imdbapi', 'imdb'].forEach(slug => {
+            ['xmdb', 'omdb', 'imdbapi'].forEach(slug => {
                 GM_setValue(`fm_disabled_${slug}`, '0');
             });
             console.warn('[FlixMonkey] All disabled API clients re-enabled.');
