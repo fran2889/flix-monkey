@@ -47,42 +47,56 @@
                 label: 'XMDB API Key',
                 type: 'text',
                 default: 'YOUR_XMDB_API_KEY',
+                title: 'Free movie and TV data API. Get API key at https://xmdbapi.com/api-key',
             },
             omdbApiKey: {
                 label: 'OMDB API Key',
                 type: 'text',
                 default: 'YOUR_OMDB_API_KEY',
+                title: 'Open Movie Database API key. Get API key at https://www.omdbapi.com/apikey.aspx',
             },
             apiClients: {
                 label: 'API Fallback Order',
                 type: 'text',
-                default: 'xmdb,omdb,imdbapi',
+                default: 'imdbapi',
+                title: 'Comma-separated list of APIs to try in order: imdbapi, xmdb, omdb. IMDb API does not require a key.',
             },
             overlayCorner: {
                 label: 'Overlay Position',
                 type: 'select',
                 options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
                 default: 'top-left',
+                title: 'Choose where the rating badge appears on Netflix thumbnails and banners.',
             },
             showRtRating: {
                 label: 'Show Rotten Tomatoes',
                 type: 'checkbox',
                 default: true,
+                title: 'Display Rotten Tomatoes score when available.',
             },
             showMcRating: {
                 label: 'Show Metacritic',
                 type: 'checkbox',
                 default: true,
+                title: 'Display Metacritic score when available.',
             },
-            cacheTtlRated: {
-                label: 'Cache TTL - Rated (days)',
+            cacheTtlRatedOldYear: {
+                label: 'Cache Rated > 1 year (days)',
                 type: 'text',
-                default: '7',
+                default: '-1',
+                title: 'Cache duration for titles older than 1 year with ratings. -1 = forever.',
+            },
+            cacheTtlRatedNewYear: {
+                label: 'Cache Rated < 1 year (days)',
+                type: 'text',
+                default: '30',
+                title: 'Cache duration for titles released within the last year with ratings.',
             },
             cacheTtlNoRating: {
-                label: 'Cache TTL - Unrated (hours)',
+                label: 'Cache Unrated (days)',
                 type: 'text',
-                default: '24',
+                default: '1',
+                title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
             },
         },
         events: {
@@ -136,11 +150,17 @@
         get apiClients() {
             return configGet('apiClients', 'imdbapi,xmdb,omdb');
         },
-        get cacheTtlRated() {
-            return (parseInt(configGet('cacheTtlRated', '7'), 10) || 7) * 24 * 60 * 60 * 1000;
+        get cacheTtlRatedOldYear() {
+            const val = parseInt(configGet('cacheTtlRatedOldYear', '-1'), 10);
+            return Number.isNaN(val) ? -1 : val;
+        },
+        get cacheTtlRatedNewYear() {
+            const val = parseInt(configGet('cacheTtlRatedNewYear', '30'), 10);
+            return Number.isNaN(val) ? 30 : val;
         },
         get cacheTtlNoRating() {
-            return (parseInt(configGet('cacheTtlNoRating', '24'), 10) || 24) * 60 * 60 * 1000;
+            const val = parseInt(configGet('cacheTtlNoRating', '1'), 10);
+            return Number.isNaN(val) ? 1 : val;
         },
     };
 
@@ -163,19 +183,40 @@
             }
         }
 
+        #calculateTtl(data) {
+            const { rating, rtRating, mcRating, year } = data;
+            const hasRating = rating || rtRating || mcRating;
+
+            if (!hasRating) return CONFIG.cacheTtlNoRating * 24 * 60 * 60 * 1000;
+
+            if (!year) return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
+
+            const releaseYear = parseInt(year, 10);
+            const currentYear = new Date().getFullYear();
+            const isOldRelease = currentYear - releaseYear > 1;
+
+            if (isOldRelease) {
+                const ttlDays = CONFIG.cacheTtlRatedOldYear;
+                return ttlDays === -1 ? Infinity : ttlDays * 24 * 60 * 60 * 1000;
+            }
+
+            return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
+        }
+
         read(title, year) {
             const entry = this.#loadBlob()[this.#getKey(title, year)];
             if (!entry) return null;
             return Date.now() > entry.expires ? null : entry.data;
         }
 
-        write(title, year, data, ttl) {
+        write(title, year, data) {
             const blob = this.#loadBlob();
             const now = Date.now();
             Object.keys(blob).forEach(k => {
                 if (now > blob[k].expires) delete blob[k];
             });
-            blob[this.#getKey(title, year)] = { data, expires: now + ttl };
+            const ttl = this.#calculateTtl(data);
+            blob[this.#getKey(title, year)] = { data, expires: ttl === Infinity ? Infinity : now + ttl };
             GM_setValue(this.#cacheKey, JSON.stringify(blob));
         }
 
@@ -417,10 +458,11 @@
 
             if (!detailsJson || detailsJson.error) return null;
 
-            const { rating, ratings } = detailsJson;
+            const { rating, ratings, year } = detailsJson;
 
             return {
                 imdbId: id,
+                year,
                 rating: RatingUtils.format(rating),
                 rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(ratings, /Rotten Tomatoes/i)),
                 mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(ratings, /Metacritic/i)),
@@ -452,10 +494,14 @@
                 return null;
             }
 
-            const { imdbRating, Ratings, imdbID } = json;
+            const { imdbRating, Ratings, imdbID, Year } = json;
+
+            // Extract first year from Year field: "1999", "1999-", or "1999-2000"
+            const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
 
             return {
                 imdbId: imdbID,
+                year: releaseYear,
                 rating: RatingUtils.format(imdbRating),
                 rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(Ratings, /Rotten Tomatoes/i)),
                 mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(Ratings, /Metacritic/i)),
@@ -495,6 +541,7 @@
 
             return {
                 imdbId: match.id,
+                year: match.startYear,
                 rating: RatingUtils.format(match.rating?.aggregateRating),
                 rtRating: null,
                 mcRating: match.metacritic?.score ? `${match.metacritic.score}%` : null,
@@ -560,14 +607,7 @@
                 return null;
             }
 
-            this.#cache.write(
-                title,
-                year,
-                bestData,
-                bestData.rating || bestData.rtRating || bestData.mcRating
-                    ? CONFIG.cacheTtlRated
-                    : CONFIG.cacheTtlNoRating
-            );
+            this.#cache.write(title, year, bestData);
             return bestData;
         }
     }
