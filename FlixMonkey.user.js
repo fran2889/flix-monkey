@@ -9,8 +9,6 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
-// @grant        GM.getValue
-// @grant        GM.setValue
 // @require      https://openuserjs.org/src/libs/sizzle/GM_config.js
 // @connect      www.omdbapi.com
 // @connect      xmdbapi.com
@@ -136,7 +134,7 @@
             return v === undefined || v === null ? true : v;
         },
         get apiClients() {
-            return configGet('apiClients', 'xmdb,omdb,imdbapi,imdb');
+            return configGet('apiClients', 'imdbapi,xmdb,omdb');
         },
         get cacheTtlRated() {
             return (parseInt(configGet('cacheTtlRated', '7'), 10) || 7) * 24 * 60 * 60 * 1000;
@@ -196,7 +194,7 @@
         static format(val) {
             if (!val || val === 'N/A') return null;
             const num = parseFloat(val);
-            return isNaN(num) ? val : num.toFixed(1);
+            return Number.isNaN(num) ? val : num.toFixed(1);
         }
 
         static normalizeMc(val) {
@@ -206,7 +204,7 @@
         }
 
         static normalizeRt(val) {
-            return val === 'N/A' ? null : (val ?? null);
+            return !val || val === 'N/A' ? null : val;
         }
 
         static findInRatings(ratings, sourcePattern) {
@@ -237,10 +235,8 @@
 
         clear() {
             const count = this.#queue.length;
-            if (count > 0) {
-                this.#queue.forEach(item => item.reject(new Error('Client Disabled')));
-                this.#queue = [];
-            }
+            this.#queue.forEach(item => item.reject(new Error('Client Disabled')));
+            this.#queue = [];
             return count;
         }
 
@@ -282,7 +278,7 @@
     }
 
     // ---------------------------------------------------------------------------
-    // OMDB / IMDb API Client
+    // API Clients
     // ---------------------------------------------------------------------------
 
     class BaseApiClient {
@@ -331,7 +327,6 @@
                     responseType,
                     headers: {
                         'User-Agent': ua,
-                        Referer: 'https://www.imdb.com/',
                         'Accept-Language': 'en-US,en;q=0.9',
                     },
                     onload: r => {
@@ -441,10 +436,10 @@
 
         async search(title, year) {
             if (!CONFIG.omdbApiKey || CONFIG.omdbApiKey === 'YOUR_OMDB_API_KEY') return null;
-            return { id: { title, year } };
+            return { title, year };
         }
 
-        async getDetails({ id: { title: t, year: y } }, _title) {
+        async getDetails({ title: t, year: y }, _title) {
             const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: t });
             if (y) params.set('y', y);
 
@@ -497,12 +492,10 @@
             const { id: titleId } = match;
             console.warn(`[FlixMonkey] Fetching IMDB API Dev details for ID: ${titleId} ("${match.title || title}")`);
 
-            let details = null;
-            try {
-                details = await this.queuedFetch(`https://api.imdbapi.dev/titles/${titleId}`, 1);
-            } catch (e) {
+            const details = await this.queuedFetch(`https://api.imdbapi.dev/titles/${titleId}`, 1).catch(e => {
                 console.warn(`[FlixMonkey] IMDB API Dev details fetch failed for ${titleId}:`, e.message);
-            }
+                return null;
+            });
 
             const source = details ?? match;
 
@@ -515,10 +508,9 @@
         }
     }
 
-
     class ApiClientManager {
         #cache;
-        #clients = [];
+        #clients;
 
         constructor(cacheManager, clients = []) {
             this.#cache = cacheManager;
@@ -557,10 +549,14 @@
             for (const client of this.#clients) {
                 if (client.isDisabled) continue;
                 const data = await client.fetch(title, year);
-                if (data?.rating) {
+                if (!data) continue;
+                if (data.rating) {
                     bestData = data;
                     break;
                 }
+                // Keep the first partial result (has imdbId / RT / MC but no IMDb rating)
+                // so we can still render something and link to IMDb.
+                bestData ??= data;
             }
 
             if (!bestData) {
@@ -842,9 +838,6 @@
             });
         }
 
-        #initCacheShortcut() {
-            // Replaced by GM_registerMenuCommand
-        }
 
         #initNavigationObservers() {
             const { pushState, replaceState } = history;
@@ -872,7 +865,6 @@
 
         init() {
             this.#renderer.injectStyles();
-            this.#initCacheShortcut();
             this.#initNavigationObservers();
             this.decorateRoot(document);
         }
@@ -896,6 +888,8 @@
         const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
         app.init();
 
+        GM_registerMenuCommand('FlixMonkey Settings', () => GM_config.open());
+
         GM_registerMenuCommand('Clear Cache', () => {
             if (confirm('Are you sure you want to clear the FlixMonkey cache?')) {
                 cache.clear();
@@ -911,5 +905,4 @@
         });
     }
 
-    GM_registerMenuCommand('FlixMonkey Settings', () => GM_config.open());
 })();
