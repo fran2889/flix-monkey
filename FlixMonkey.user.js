@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FlixMonkey
 // @namespace    https://github.com/fran/FlixMonkey
-// @version      0.9.5
+// @version      0.9.6
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
 // @match        https://www.netflix.com/*
@@ -171,8 +171,10 @@
     class CacheManager {
         #cacheKey = 'fm_cache';
 
-        #getKey(title, year) {
-            return `${title.toLowerCase().replace(/\s+/g, '_')}${year ? `_${year}` : ''}`;
+        // domYear is the Netflix-scraped year hint used only as a cache key qualifier.
+        // TTL is calculated from the API-authoritative Title.year, not domYear.
+        #getKey(displayTitle, domYear) {
+            return `${displayTitle.toLowerCase().replace(/\s+/g, '_')}${domYear ? `_${domYear}` : ''}`;
         }
 
         #loadBlob() {
@@ -183,15 +185,13 @@
             }
         }
 
-        #calculateTtl(data) {
-            const { rating, rtRating, mcRating, year } = data;
-            const hasRating = rating || rtRating || mcRating;
+        #calculateTtl(titleObj) {
+            // Use the API-authoritative release year (Title.year), not the Netflix DOM hint.
+            if (!titleObj.hasRating) return CONFIG.cacheTtlNoRating * 24 * 60 * 60 * 1000;
 
-            if (!hasRating) return CONFIG.cacheTtlNoRating * 24 * 60 * 60 * 1000;
+            if (!titleObj.year) return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
 
-            if (!year) return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
-
-            const releaseYear = parseInt(year, 10);
+            const releaseYear = parseInt(titleObj.year, 10);
             const currentYear = new Date().getFullYear();
             const isOldRelease = currentYear - releaseYear > 1;
 
@@ -203,20 +203,23 @@
             return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
         }
 
-        read(title, year) {
-            const entry = this.#loadBlob()[this.#getKey(title, year)];
+        read(displayTitle, domYear) {
+            const entry = this.#loadBlob()[this.#getKey(displayTitle, domYear)];
             if (!entry) return null;
-            return Date.now() > entry.expires ? null : entry.data;
+            return Date.now() > entry.expires ? null : Title.fromJSON(entry.data);
         }
 
-        write(title, year, data) {
+        write(displayTitle, domYear, titleObj) {
             const blob = this.#loadBlob();
             const now = Date.now();
             Object.keys(blob).forEach(k => {
                 if (now > blob[k].expires) delete blob[k];
             });
-            const ttl = this.#calculateTtl(data);
-            blob[this.#getKey(title, year)] = { data, expires: ttl === Infinity ? Infinity : now + ttl };
+            const ttl = this.#calculateTtl(titleObj);
+            blob[this.#getKey(displayTitle, domYear)] = {
+                data: titleObj,
+                expires: ttl === Infinity ? Infinity : now + ttl,
+            };
             GM_setValue(this.#cacheKey, JSON.stringify(blob));
         }
 
@@ -231,27 +234,78 @@
     // Helpers & Utilities
     // ---------------------------------------------------------------------------
 
-    class RatingUtils {
-        static format(val) {
+    // Enum of valid API source identifiers. Used in client constructors, ApiClientManager
+    // config parsing, GM_setValue disable keys, and Title.source.
+    const ApiSource = Object.freeze({
+        XMDB: 'xmdb',
+        OMDB: 'omdb',
+        IMDBAPI: 'imdbapi',
+    });
+
+    class Title {
+        constructor({
+            displayTitle = null,
+            apiTitle = null,
+            imdbId = null,
+            year = null,
+            rating = null,
+            rtRating = null,
+            mcRating = null,
+            source = null,
+        } = {}) {
+            this.displayTitle = displayTitle;
+            this.apiTitle = apiTitle;
+            this.imdbId = imdbId;
+            this.year = year;
+            this.rating = this.#formatRating(rating);
+            this.rtRating = this.#normalizeRt(rtRating);
+            this.mcRating = this.#normalizeMc(mcRating);
+            // source may be null for cache entries written before ApiSource was introduced.
+            this.source = source ?? null;
+        }
+
+        get hasRating() {
+            return !!(this.rating || this.rtRating || this.mcRating);
+        }
+
+        get imdbUrl() {
+            return this.imdbId
+                ? `https://www.imdb.com/title/${this.imdbId}/`
+                : `https://www.imdb.com/find/?q=${encodeURIComponent(this.displayTitle ?? '')}`;
+        }
+
+        // Returns true when this title has an IMDb rating and other does not.
+        // Drives the client fallback preference in ApiClientManager: stop as soon
+        // as a client returns an IMDb rating; otherwise keep the first partial result.
+        isBetterThan(other) {
+            return !!this.rating && !other?.rating;
+        }
+
+        // Deserialises a plain object from the cache. Normalisation methods are
+        // idempotent on their own output, so already-formatted values round-trip cleanly.
+        static fromJSON(obj) {
+            return new Title(obj ?? {});
+        }
+
+        // Creates a Title representing a title that could not be found by any API.
+        static notFound(displayTitle) {
+            return new Title({ displayTitle });
+        }
+
+        #formatRating(val) {
             if (!val || val === 'N/A') return null;
             const num = parseFloat(val);
             return Number.isNaN(num) ? val : num.toFixed(1);
         }
 
-        static normalizeMc(val) {
-            if (!val || val === 'N/A') return null;
-            const m = String(val).match(/^(\d+)/);
-            return m ? `${m[1]}%` : null;
-        }
-
-        static normalizeRt(val) {
+        #normalizeRt(val) {
             return !val || val === 'N/A' ? null : val;
         }
 
-        static findInRatings(ratings, sourcePattern) {
-            if (!Array.isArray(ratings)) return null;
-            const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
-            return entry?.value || entry?.Value || null;
+        #normalizeMc(val) {
+            if (!val || val === 'N/A') return null;
+            const m = String(val).match(/^(\d+)/);
+            return m ? `${m[1]}%` : null;
         }
     }
 
@@ -322,17 +376,28 @@
     // API Clients
     // ---------------------------------------------------------------------------
 
+    // Extracts a rating value from an array of { source, value } / { Source, Value } objects.
+    function parseRatings(ratings, sourcePattern) {
+        if (!Array.isArray(ratings)) return null;
+        const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
+        return entry?.value || entry?.Value || null;
+    }
+
     class BaseApiClient {
         #queue;
-        #slug;
+        #source;
 
-        constructor(queue, slug) {
+        constructor(queue, source) {
             this.#queue = queue;
-            this.#slug = slug;
+            this.#source = source;
+        }
+
+        get source() {
+            return this.#source;
         }
 
         get isDisabled() {
-            const key = `fm_disabled_${this.#slug}`;
+            const key = `fm_disabled_${this.#source}`;
             const disabledUntil = parseInt(GM_getValue(key, '0'), 10);
             if (disabledUntil === 0) return false;
 
@@ -346,7 +411,7 @@
         disable(durationMs = 3600000) {
             const count = this.#queue.clear();
             const until = Date.now() + durationMs;
-            GM_setValue(`fm_disabled_${this.#slug}`, until.toString());
+            GM_setValue(`fm_disabled_${this.#source}`, until.toString());
             console.warn(
                 `[FlixMonkey] ${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
             );
@@ -396,23 +461,28 @@
             return this.#queue.enqueue(url, priority, (u, resType) => this.gmFetch(u, resType), responseType);
         }
 
-        async fetch(title, year) {
+        async fetch(displayTitle, domYear) {
             if (this.isDisabled) return null;
             try {
-                const match = await this.search(title, year);
+                const match = await this.search(displayTitle, domYear);
                 if (!match) return null;
-                return await this.getDetails(match, title);
+                const titleObj = await this.getDetails(match, displayTitle);
+                if (titleObj) {
+                    titleObj.displayTitle = displayTitle;
+                    titleObj.source = this.#source;
+                }
+                return titleObj;
             } catch (err) {
                 console.warn(`[FlixMonkey] ${this.constructor.name} failed: ${err.message}`);
                 return null;
             }
         }
 
-        async search(_title, _year) {
+        async search(_displayTitle, _domYear) {
             throw new Error('Not implemented');
         }
 
-        async getDetails(_id, _title) {
+        async getDetails(_match, _displayTitle) {
             throw new Error('Not implemented');
         }
     }
@@ -420,36 +490,36 @@
     class XmdbApiClient extends BaseApiClient {
         constructor() {
             // XMDB has a global rate limit shared across tabs
-            super(new RequestQueue(1500, 'fm_last_req'), 'xmdb');
+            super(new RequestQueue(1500, 'fm_last_req'), ApiSource.XMDB);
         }
 
-        async search(title, year) {
+        async search(displayTitle, domYear) {
             if (!CONFIG.xmdbApiKey || CONFIG.xmdbApiKey === 'YOUR_XMDB_API_KEY') return null;
 
-            const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: title, limit: 5 });
-            console.warn(`[FlixMonkey] Searching XMDB for title: "${title}"${year ? ` (${year})` : ''}`);
+            const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
+            console.warn(`[FlixMonkey] Searching XMDB for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
 
             const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
 
             if (!results?.length) {
-                console.warn(`[FlixMonkey] No search results found in XMDB for: "${title}"`);
+                console.warn(`[FlixMonkey] No search results found in XMDB for: "${displayTitle}"`);
                 return null;
             }
 
             const titleResults = results.filter(r => r.type === 'title');
 
             if (!titleResults.length) {
-                console.warn(`[FlixMonkey] No title matches found in search results for: "${title}"`);
+                console.warn(`[FlixMonkey] No title matches found in search results for: "${displayTitle}"`);
                 return null;
             }
 
-            return year
-                ? (titleResults.find(r => String(r.year) === String(year)) ?? titleResults[0])
+            return domYear
+                ? (titleResults.find(r => String(r.year) === String(domYear)) ?? titleResults[0])
                 : titleResults[0];
         }
 
-        async getDetails({ id }, title) {
-            console.warn(`[FlixMonkey] Fetching XMDB details for ID: ${id} ("${title}")`);
+        async getDetails({ id, title: searchResultTitle }, displayTitle) {
+            console.warn(`[FlixMonkey] Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
 
             const detailsJson = await this.queuedFetch(
                 `https://xmdbapi.com/api/v1/movies/${id}?apiKey=${CONFIG.xmdbApiKey}`,
@@ -458,30 +528,31 @@
 
             if (!detailsJson || detailsJson.error) return null;
 
-            const { rating, ratings, year } = detailsJson;
+            const { rating, ratings, year, title } = detailsJson;
 
-            return {
+            return new Title({
+                apiTitle: title ?? searchResultTitle ?? null,
                 imdbId: id,
                 year,
-                rating: RatingUtils.format(rating),
-                rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(ratings, /Rotten Tomatoes/i)),
-                mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(ratings, /Metacritic/i)),
-            };
+                rating,
+                rtRating: parseRatings(ratings, /Rotten Tomatoes/i),
+                mcRating: parseRatings(ratings, /Metacritic/i),
+            });
         }
     }
 
     class OmdbApiClient extends BaseApiClient {
         constructor() {
             // OMDB is usually fast, no global sync needed by default
-            super(new RequestQueue(0), 'omdb');
+            super(new RequestQueue(0), ApiSource.OMDB);
         }
 
-        async search(title, year) {
+        async search(displayTitle, domYear) {
             if (!CONFIG.omdbApiKey || CONFIG.omdbApiKey === 'YOUR_OMDB_API_KEY') return null;
-            return { title, year };
+            return { title: displayTitle, year: domYear };
         }
 
-        async getDetails({ title: t, year: y }, _title) {
+        async getDetails({ title: t, year: y }, _displayTitle) {
             const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: t });
             if (y) params.set('y', y);
 
@@ -494,39 +565,42 @@
                 return null;
             }
 
-            const { imdbRating, Ratings, imdbID, Year } = json;
+            const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
 
             // Extract first year from Year field: "1999", "1999-", or "1999-2000"
             const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
 
-            return {
+            return new Title({
+                apiTitle: apiTitle ?? null,
                 imdbId: imdbID,
                 year: releaseYear,
-                rating: RatingUtils.format(imdbRating),
-                rtRating: RatingUtils.normalizeRt(RatingUtils.findInRatings(Ratings, /Rotten Tomatoes/i)),
-                mcRating: RatingUtils.normalizeMc(RatingUtils.findInRatings(Ratings, /Metacritic/i)),
-            };
+                rating: imdbRating,
+                rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
+                mcRating: parseRatings(Ratings, /Metacritic/i),
+            });
         }
     }
 
     class ImdbApiDevClient extends BaseApiClient {
         constructor() {
-            super(new RequestQueue(1000), 'imdbapi');
+            super(new RequestQueue(1000), ApiSource.IMDBAPI);
         }
 
-        async search(title, year) {
-            const searchParams = new URLSearchParams({ query: title });
-            console.warn(`[FlixMonkey] Searching IMDB API Dev for title: "${title}"${year ? ` (${year})` : ''}`);
+        async search(displayTitle, domYear) {
+            const searchParams = new URLSearchParams({ query: displayTitle });
+            console.warn(
+                `[FlixMonkey] Searching IMDB API Dev for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`
+            );
 
             const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
 
             if (!titles?.length) {
-                console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${title}"`);
+                console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${displayTitle}"`);
                 return null;
             }
 
-            if (year) {
-                const targetYear = parseInt(year);
+            if (domYear) {
+                const targetYear = parseInt(domYear);
                 const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
                 if (nearYear) return nearYear;
             }
@@ -534,18 +608,19 @@
             return titles[0];
         }
 
-        async getDetails(match, title) {
+        async getDetails(match, displayTitle) {
             console.warn(
-                `[FlixMonkey] Using IMDB API Dev search result for ID: ${match.id} ("${match.title || title}")`
+                `[FlixMonkey] Using IMDB API Dev search result for ID: ${match.id} ("${match.title || displayTitle}")`
             );
 
-            return {
+            return new Title({
+                apiTitle: match.title ?? null,
                 imdbId: match.id,
                 year: match.startYear,
-                rating: RatingUtils.format(match.rating?.aggregateRating),
+                rating: match.rating?.aggregateRating,
                 rtRating: null,
-                mcRating: match.metacritic?.score ? `${match.metacritic.score}%` : null,
-            };
+                mcRating: match.metacritic?.score ?? null,
+            });
         }
     }
 
@@ -563,9 +638,9 @@
                     .map(c => c.trim().toLowerCase());
 
                 const clientMap = {
-                    xmdb: XmdbApiClient,
-                    omdb: OmdbApiClient,
-                    imdbapi: ImdbApiDevClient,
+                    [ApiSource.XMDB]: XmdbApiClient,
+                    [ApiSource.OMDB]: OmdbApiClient,
+                    [ApiSource.IMDBAPI]: ImdbApiDevClient,
                 };
 
                 configuredClients.forEach(name => {
@@ -575,23 +650,23 @@
         }
 
         resetDisabledClients() {
-            ['xmdb', 'omdb', 'imdbapi'].forEach(slug => {
-                GM_setValue(`fm_disabled_${slug}`, '0');
+            Object.values(ApiSource).forEach(source => {
+                GM_setValue(`fm_disabled_${source}`, '0');
             });
             console.warn('[FlixMonkey] All disabled API clients re-enabled.');
         }
 
-        async getData(title, year) {
-            const cached = this.#cache.read(title, year);
+        async getData(displayTitle, domYear) {
+            const cached = this.#cache.read(displayTitle, domYear);
             if (cached !== null) return cached;
 
             let bestData = null;
 
             for (const client of this.#clients) {
                 if (client.isDisabled) continue;
-                const data = await client.fetch(title, year);
+                const data = await client.fetch(displayTitle, domYear);
                 if (!data) continue;
-                if (data.rating) {
+                if (data.isBetterThan(bestData)) {
                     bestData = data;
                     break;
                 }
@@ -602,12 +677,12 @@
 
             if (!bestData) {
                 console.warn(
-                    `[FlixMonkey] Total failure: No ratings found for "${title}"${year ? ` (${year})` : ''} using any configured client.`
+                    `[FlixMonkey] Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
                 );
                 return null;
             }
 
-            this.#cache.write(title, year, bestData);
+            this.#cache.write(displayTitle, domYear, bestData);
             return bestData;
         }
     }
@@ -669,19 +744,17 @@
             document.head.appendChild(style);
         }
 
-        #createOverlay(data, title) {
+        #createOverlay(titleObj) {
             const a = document.createElement('a');
             a.className = this.#OVERLAY_CLASS;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
-            a.href = data.imdbId
-                ? `https://www.imdb.com/title/${data.imdbId}/`
-                : `https://www.imdb.com/find/?q=${encodeURIComponent(title)}`;
+            a.href = titleObj.imdbUrl;
 
             const rows = [];
             const titleParts = [];
 
-            const { rating, imdbId, rtRating, mcRating } = data;
+            const { rating, imdbId, rtRating, mcRating } = titleObj;
 
             if (rating) {
                 rows.push(
@@ -725,9 +798,9 @@
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         }
 
-        injectOverlay(container, data, title) {
+        injectOverlay(container, titleObj) {
             container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-            container.appendChild(this.#createOverlay(data, title));
+            container.appendChild(this.#createOverlay(titleObj));
             container.setAttribute(this.#OVERLAY_ATTR, '1');
         }
 
@@ -843,27 +916,27 @@
             this.#surfaces = surfaces;
         }
 
-        async #decorateContainer(container, title) {
+        async #decorateContainer(container, displayTitle) {
             if (this.#renderer.hasOverlay(container)) return;
 
-            const year = this.#surfaces.extractYear(container);
-            const cached = this.#cache.read(title, year);
+            const domYear = this.#surfaces.extractYear(container);
+            const cached = this.#cache.read(displayTitle, domYear);
             if (cached !== null) {
                 this.#renderer.ensureRelative(container);
-                this.#renderer.injectOverlay(container, cached, title);
+                this.#renderer.injectOverlay(container, cached);
                 return;
             }
 
-            const dedupKey = title.toLowerCase();
+            const dedupKey = displayTitle.toLowerCase();
             let promise = this.#inFlight.get(dedupKey);
             if (!promise) {
-                promise = this.#api.getData(title, year).finally(() => this.#inFlight.delete(dedupKey));
+                promise = this.#api.getData(displayTitle, domYear).finally(() => this.#inFlight.delete(dedupKey));
                 this.#inFlight.set(dedupKey, promise);
             }
 
-            const data = await promise;
+            const titleObj = await promise;
             this.#renderer.ensureRelative(container);
-            this.#renderer.injectOverlay(container, data ?? { imdbId: null, rating: null }, title);
+            this.#renderer.injectOverlay(container, titleObj ?? Title.notFound(displayTitle));
         }
 
         decorateRoot(root) {
