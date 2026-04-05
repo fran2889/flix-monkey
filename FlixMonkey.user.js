@@ -20,6 +20,35 @@
     'use strict';
 
     // ---------------------------------------------------------------------------
+    // Module-level Constants
+    // ---------------------------------------------------------------------------
+
+    const DAYS_TO_MS = 24 * 60 * 60 * 1000;
+    const NAVIGATION_DEBOUNCE_MS = 800; // Allow Netflix DOM to stabilize after navigation
+    const HTTP_TIMEOUT = 8000;
+    const CLIENT_DISABLE_DURATION = 3600000; // 1 hour in ms
+
+    const USER_AGENTS = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+    ];
+
+    // Enum of valid API source identifiers. Must be defined before RATE_LIMITS
+    const ApiSource = Object.freeze({
+        XMDB: 'xmdb',
+        OMDB: 'omdb',
+        IMDBAPI: 'imdbapi',
+    });
+
+    const RATE_LIMITS = {
+        [ApiSource.XMDB]: 1500, // ms between requests, global sync across tabs
+        [ApiSource.OMDB]: 0, // no rate limit
+        [ApiSource.IMDBAPI]: 1000, // ms between requests
+    };
+
+    // ---------------------------------------------------------------------------
     GM_config.init({
         id: 'FlixMonkey',
         title: 'FlixMonkey Settings',
@@ -129,6 +158,21 @@
         }
     };
 
+    // Factory function to create normalized config getters
+    const createConfigGetter =
+        (key, fallback, normalizer = x => x) =>
+        () =>
+            normalizer(configGet(key, fallback));
+
+    const createIntConfigGetter = (key, fallback) =>
+        createConfigGetter(key, fallback, val => {
+            const num = Number.parseInt(val, 10);
+            return Number.isNaN(num) ? fallback : num;
+        });
+
+    const createBoolConfigGetter = (key, defaultValue) =>
+        createConfigGetter(key, defaultValue, val => (val === undefined || val === null ? defaultValue : val));
+
     const CONFIG = {
         get xmdbApiKey() {
             return configGet('xmdbApiKey', 'YOUR_XMDB_API_KEY');
@@ -140,27 +184,22 @@
             return configGet('overlayCorner', 'top-left');
         },
         get showRtRating() {
-            const v = configGet('showRtRating', true);
-            return v === undefined || v === null ? true : v;
+            return createBoolConfigGetter('showRtRating', true)();
         },
         get showMcRating() {
-            const v = configGet('showMcRating', true);
-            return v === undefined || v === null ? true : v;
+            return createBoolConfigGetter('showMcRating', true)();
         },
         get apiClients() {
             return configGet('apiClients', 'imdbapi,xmdb,omdb');
         },
         get cacheTtlRatedOldYear() {
-            const val = parseInt(configGet('cacheTtlRatedOldYear', '-1'), 10);
-            return Number.isNaN(val) ? -1 : val;
+            return createIntConfigGetter('cacheTtlRatedOldYear', -1)();
         },
         get cacheTtlRatedNewYear() {
-            const val = parseInt(configGet('cacheTtlRatedNewYear', '30'), 10);
-            return Number.isNaN(val) ? 30 : val;
+            return createIntConfigGetter('cacheTtlRatedNewYear', 30)();
         },
         get cacheTtlNoRating() {
-            const val = parseInt(configGet('cacheTtlNoRating', '1'), 10);
-            return Number.isNaN(val) ? 1 : val;
+            return createIntConfigGetter('cacheTtlNoRating', 1)();
         },
     };
 
@@ -169,63 +208,65 @@
     // ---------------------------------------------------------------------------
 
     class CacheManager {
-        #cacheKey = 'fm_cache';
+        #storageKey = 'fm_cache';
 
         // domYear is the Netflix-scraped year hint used only as a cache key qualifier.
         // TTL is calculated from the API-authoritative Title.year, not domYear.
-        #getKey(displayTitle, domYear) {
+        #getCacheKey(displayTitle, domYear) {
             return `${displayTitle.toLowerCase().replace(/\s+/g, '_')}${domYear ? `_${domYear}` : ''}`;
         }
 
-        #loadBlob() {
+        #loadCacheData() {
             try {
-                return JSON.parse(GM_getValue(this.#cacheKey) ?? '{}');
+                return JSON.parse(GM_getValue(this.#storageKey) ?? '{}');
             } catch {
                 return {};
             }
         }
 
         #calculateTtl(titleObj) {
-            // Use the API-authoritative release year (Title.year), not the Netflix DOM hint.
-            if (!titleObj.hasRating) return CONFIG.cacheTtlNoRating * 24 * 60 * 60 * 1000;
+            // Helper to convert days to milliseconds (-1 means infinity/forever)
+            const getTtlMs = days => (days === -1 ? Infinity : days * DAYS_TO_MS);
 
-            if (!titleObj.year) return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
-
-            const releaseYear = parseInt(titleObj.year, 10);
-            const currentYear = new Date().getFullYear();
-            const isOldRelease = currentYear - releaseYear > 1;
-
-            if (isOldRelease) {
-                const ttlDays = CONFIG.cacheTtlRatedOldYear;
-                return ttlDays === -1 ? Infinity : ttlDays * 24 * 60 * 60 * 1000;
+            if (!titleObj.hasRating) {
+                return getTtlMs(CONFIG.cacheTtlNoRating);
             }
 
-            return CONFIG.cacheTtlRatedNewYear * 24 * 60 * 60 * 1000;
+            if (!titleObj.year) {
+                return getTtlMs(CONFIG.cacheTtlRatedNewYear);
+            }
+
+            // Year is normalized to number in Title constructor
+            const currentYear = new Date().getFullYear();
+            const isOldRelease = currentYear - titleObj.year > 1;
+
+            const ttlDays = isOldRelease ? CONFIG.cacheTtlRatedOldYear : CONFIG.cacheTtlRatedNewYear;
+            return getTtlMs(ttlDays);
         }
 
         read(displayTitle, domYear) {
-            const entry = this.#loadBlob()[this.#getKey(displayTitle, domYear)];
+            const entry = this.#loadCacheData()[this.#getCacheKey(displayTitle, domYear)];
             if (!entry) return null;
             return Date.now() > entry.expires ? null : Title.fromJSON(entry.data);
         }
 
         write(displayTitle, domYear, titleObj) {
-            const blob = this.#loadBlob();
+            const blob = this.#loadCacheData();
             const now = Date.now();
             Object.keys(blob).forEach(k => {
                 if (now > blob[k].expires) delete blob[k];
             });
             const ttl = this.#calculateTtl(titleObj);
-            blob[this.#getKey(displayTitle, domYear)] = {
+            blob[this.#getCacheKey(displayTitle, domYear)] = {
                 data: titleObj,
                 expires: ttl === Infinity ? Infinity : now + ttl,
             };
-            GM_setValue(this.#cacheKey, JSON.stringify(blob));
+            GM_setValue(this.#storageKey, JSON.stringify(blob));
         }
 
         clear() {
-            const count = Object.keys(this.#loadBlob()).length;
-            GM_setValue(this.#cacheKey, '{}');
+            const count = Object.keys(this.#loadCacheData()).length;
+            GM_setValue(this.#storageKey, '{}');
             console.warn(`[FlixMonkey] Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
         }
     }
@@ -233,14 +274,6 @@
     // ---------------------------------------------------------------------------
     // Helpers & Utilities
     // ---------------------------------------------------------------------------
-
-    // Enum of valid API source identifiers. Used in client constructors, ApiClientManager
-    // config parsing, GM_setValue disable keys, and Title.source.
-    const ApiSource = Object.freeze({
-        XMDB: 'xmdb',
-        OMDB: 'omdb',
-        IMDBAPI: 'imdbapi',
-    });
 
     class Title {
         constructor({
@@ -256,10 +289,22 @@
             this.displayTitle = displayTitle;
             this.apiTitle = apiTitle;
             this.imdbId = imdbId;
-            this.year = year;
-            this.rating = this.#formatRating(rating);
-            this.rtRating = this.#normalizeRt(rtRating);
-            this.mcRating = this.#normalizeMc(mcRating);
+            // Normalize year to number or null for consistent cache storage and comparison
+            this.year = year !== null && year !== undefined ? Number.parseInt(year, 10) : null;
+            // Ratings are stored as numeric types: IMDb as float, RT/MC as integers.
+            // Display formatting is handled by OverlayRenderer, not here.
+            this.rating = this.#normalizeRating(rating, v => {
+                const num = parseFloat(v);
+                return Number.isNaN(num) ? null : num;
+            });
+            this.rtRating = this.#normalizeRating(rtRating, v => {
+                const num = Number.parseInt(v, 10);
+                return Number.isNaN(num) ? null : num;
+            });
+            this.mcRating = this.#normalizeRating(mcRating, v => {
+                const m = String(v).match(/^(\d+)/);
+                return m ? Number.parseInt(m[1], 10) : null;
+            });
             // source may be null for cache entries written before ApiSource was introduced.
             this.source = source ?? null;
         }
@@ -292,20 +337,9 @@
             return new Title({ displayTitle });
         }
 
-        #formatRating(val) {
+        #normalizeRating(val, converter) {
             if (!val || val === 'N/A') return null;
-            const num = parseFloat(val);
-            return Number.isNaN(num) ? val : num.toFixed(1);
-        }
-
-        #normalizeRt(val) {
-            return !val || val === 'N/A' ? null : val;
-        }
-
-        #normalizeMc(val) {
-            if (!val || val === 'N/A') return null;
-            const m = String(val).match(/^(\d+)/);
-            return m ? `${m[1]}%` : null;
+            return converter ? converter(val) : val;
         }
     }
 
@@ -376,6 +410,42 @@
     // API Clients
     // ---------------------------------------------------------------------------
 
+    // Creates a logger for a specific API client
+    const createClientLogger = clientName => ({
+        search: (title, year) =>
+            console.warn(`[FlixMonkey] Searching ${clientName} for title: "${title}"${year ? ` (${year})` : ''}`),
+        fetchDetails: (id, title) =>
+            console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
+        notFound: title => console.warn(`[FlixMonkey] No search results found in ${clientName} for: "${title}"`),
+        failed: message => console.warn(`[FlixMonkey] ${clientName} failed: ${message}`),
+    });
+
+    // Manages disabled state for all API clients via GM storage
+    class DisabledClientsManager {
+        isDisabled(source) {
+            const key = `fm_disabled_${source}`;
+            const disabledUntil = Number.parseInt(GM_getValue(key, '0'), 10);
+            if (disabledUntil === 0) return false;
+
+            if (Date.now() > disabledUntil) {
+                GM_setValue(key, '0');
+                return false;
+            }
+            return true;
+        }
+
+        disable(source, durationMs = CLIENT_DISABLE_DURATION) {
+            const until = Date.now() + durationMs;
+            GM_setValue(`fm_disabled_${source}`, until.toString());
+        }
+
+        resetAll() {
+            Object.values(ApiSource).forEach(source => {
+                GM_setValue(`fm_disabled_${source}`, '0');
+            });
+        }
+    }
+
     // Extracts a rating value from an array of { source, value } / { Source, Value } objects.
     function parseRatings(ratings, sourcePattern) {
         if (!Array.isArray(ratings)) return null;
@@ -386,10 +456,12 @@
     class BaseApiClient {
         #queue;
         #source;
+        #disabledManager;
 
-        constructor(queue, source) {
+        constructor(queue, source, disabledManager = new DisabledClientsManager()) {
             this.#queue = queue;
             this.#source = source;
+            this.#disabledManager = disabledManager;
         }
 
         get source() {
@@ -397,34 +469,19 @@
         }
 
         get isDisabled() {
-            const key = `fm_disabled_${this.#source}`;
-            const disabledUntil = parseInt(GM_getValue(key, '0'), 10);
-            if (disabledUntil === 0) return false;
-
-            if (Date.now() > disabledUntil) {
-                GM_setValue(key, '0');
-                return false;
-            }
-            return true;
+            return this.#disabledManager.isDisabled(this.#source);
         }
 
-        disable(durationMs = 3600000) {
+        disable(durationMs = CLIENT_DISABLE_DURATION) {
             const count = this.#queue.clear();
-            const until = Date.now() + durationMs;
-            GM_setValue(`fm_disabled_${this.#source}`, until.toString());
+            this.#disabledManager.disable(this.#source, durationMs);
             console.warn(
                 `[FlixMonkey] ${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
             );
         }
 
         gmFetch(url, responseType = 'json') {
-            const userAgents = [
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
-            ];
-            const ua = userAgents[Math.floor(Math.random() * userAgents.length)];
+            const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
             return new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
@@ -452,7 +509,7 @@
                     },
                     onerror: () => reject(new Error('network error')),
                     ontimeout: () => reject(new Error('timeout')),
-                    timeout: 8000,
+                    timeout: HTTP_TIMEOUT,
                 });
             });
         }
@@ -488,28 +545,30 @@
     }
 
     class XmdbApiClient extends BaseApiClient {
-        constructor() {
+        #logger = createClientLogger('XMDB');
+
+        constructor(disabledManager) {
             // XMDB has a global rate limit shared across tabs
-            super(new RequestQueue(1500, 'fm_last_req'), ApiSource.XMDB);
+            super(new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req'), ApiSource.XMDB, disabledManager);
         }
 
         async search(displayTitle, domYear) {
             if (!CONFIG.xmdbApiKey || CONFIG.xmdbApiKey === 'YOUR_XMDB_API_KEY') return null;
 
             const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
-            console.warn(`[FlixMonkey] Searching XMDB for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
+            this.#logger.search(displayTitle, domYear);
 
             const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
 
             if (!results?.length) {
-                console.warn(`[FlixMonkey] No search results found in XMDB for: "${displayTitle}"`);
+                this.#logger.notFound(displayTitle);
                 return null;
             }
 
             const titleResults = results.filter(r => r.type === 'title');
 
             if (!titleResults.length) {
-                console.warn(`[FlixMonkey] No title matches found in search results for: "${displayTitle}"`);
+                this.#logger.notFound(displayTitle);
                 return null;
             }
 
@@ -519,7 +578,7 @@
         }
 
         async getDetails({ id, title: searchResultTitle }, displayTitle) {
-            console.warn(`[FlixMonkey] Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
+            this.#logger.fetchDetails(id, displayTitle);
 
             const detailsJson = await this.queuedFetch(
                 `https://xmdbapi.com/api/v1/movies/${id}?apiKey=${CONFIG.xmdbApiKey}`,
@@ -542,9 +601,11 @@
     }
 
     class OmdbApiClient extends BaseApiClient {
-        constructor() {
+        #logger = createClientLogger('OMDB');
+
+        constructor(disabledManager) {
             // OMDB is usually fast, no global sync needed by default
-            super(new RequestQueue(0), ApiSource.OMDB);
+            super(new RequestQueue(RATE_LIMITS[ApiSource.OMDB]), ApiSource.OMDB, disabledManager);
         }
 
         async search(displayTitle, domYear) {
@@ -556,12 +617,12 @@
             const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t: t });
             if (y) params.set('y', y);
 
-            console.warn(`[FlixMonkey] Fetching OMDB details for: "${t}"${y ? ` (${y})` : ''}`);
+            this.#logger.fetchDetails(t, _displayTitle);
 
             const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
 
             if (json.Response === 'False') {
-                console.warn(`[FlixMonkey] No search results found in OMDB for: "${t}"`);
+                this.#logger.notFound(t);
                 return null;
             }
 
@@ -582,25 +643,25 @@
     }
 
     class ImdbApiDevClient extends BaseApiClient {
-        constructor() {
-            super(new RequestQueue(1000), ApiSource.IMDBAPI);
+        #logger = createClientLogger('IMDb API Dev');
+
+        constructor(disabledManager) {
+            super(new RequestQueue(RATE_LIMITS[ApiSource.IMDBAPI]), ApiSource.IMDBAPI, disabledManager);
         }
 
         async search(displayTitle, domYear) {
             const searchParams = new URLSearchParams({ query: displayTitle });
-            console.warn(
-                `[FlixMonkey] Searching IMDB API Dev for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`
-            );
+            this.#logger.search(displayTitle, domYear);
 
             const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
 
             if (!titles?.length) {
-                console.warn(`[FlixMonkey] No search results found in IMDB API Dev for: "${displayTitle}"`);
+                this.#logger.notFound(displayTitle);
                 return null;
             }
 
             if (domYear) {
-                const targetYear = parseInt(domYear);
+                const targetYear = Number.parseInt(domYear);
                 const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
                 if (nearYear) return nearYear;
             }
@@ -609,9 +670,7 @@
         }
 
         async getDetails(match, displayTitle) {
-            console.warn(
-                `[FlixMonkey] Using IMDB API Dev search result for ID: ${match.id} ("${match.title || displayTitle}")`
-            );
+            this.#logger.fetchDetails(match.id, match.title ?? displayTitle);
 
             return new Title({
                 apiTitle: match.title ?? null,
@@ -627,9 +686,11 @@
     class ApiClientManager {
         #cache;
         #clients;
+        #disabledManager;
 
-        constructor(cacheManager, clients = []) {
+        constructor(cacheManager, disabledManager = new DisabledClientsManager(), clients = []) {
             this.#cache = cacheManager;
+            this.#disabledManager = disabledManager;
             this.#clients = clients;
 
             if (this.#clients.length === 0) {
@@ -644,15 +705,13 @@
                 };
 
                 configuredClients.forEach(name => {
-                    if (clientMap[name]) this.#clients.push(new clientMap[name]());
+                    if (clientMap[name]) this.#clients.push(new clientMap[name](this.#disabledManager));
                 });
             }
         }
 
         resetDisabledClients() {
-            Object.values(ApiSource).forEach(source => {
-                GM_setValue(`fm_disabled_${source}`, '0');
-            });
+            this.#disabledManager.resetAll();
             console.warn('[FlixMonkey] All disabled API clients re-enabled.');
         }
 
@@ -744,6 +803,43 @@
             document.head.appendChild(style);
         }
 
+        #createRatingRow(label, value, className = '') {
+            return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-value">${value}</span></div>`;
+        }
+
+        #formatImdbRating(rating) {
+            if (typeof rating !== 'number') return String(rating);
+            return rating.toFixed(1);
+        }
+
+        #formatRtRating(rating) {
+            if (typeof rating !== 'number') return String(rating);
+            return `${rating}%`;
+        }
+
+        #formatMcRating(rating) {
+            if (typeof rating !== 'number') return String(rating);
+            return `${rating}%`;
+        }
+
+        #createMissingRatingRow(label, className = '') {
+            return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-na">N/A</span></div>`;
+        }
+
+        #createSearchRatingRow(label, className = '') {
+            return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-search">🔍</span></div>`;
+        }
+
+        #buildTooltip(titleParts, imdbId) {
+            if (titleParts.length) {
+                return `${titleParts.join(' · ')} – click to open IMDb`;
+            }
+            if (imdbId) {
+                return 'No ratings available – click to open IMDb';
+            }
+            return 'Not found on IMDb – click to search';
+        }
+
         #createOverlay(titleObj) {
             const a = document.createElement('a');
             a.className = this.#OVERLAY_CLASS;
@@ -757,38 +853,29 @@
             const { rating, imdbId, rtRating, mcRating } = titleObj;
 
             if (rating) {
-                rows.push(
-                    `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-value">${rating}</span></div>`
-                );
-                titleParts.push(`IMDb: ${rating}`);
+                const formattedRating = this.#formatImdbRating(rating);
+                rows.push(this.#createRatingRow('IMDb', formattedRating));
+                titleParts.push(`IMDb: ${formattedRating}`);
             } else if (imdbId) {
-                rows.push(`<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-na">N/A</span></div>`);
+                rows.push(this.#createMissingRatingRow('IMDb'));
             } else {
-                rows.push(
-                    `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-search">🔍</span></div>`
-                );
+                rows.push(this.#createSearchRatingRow('IMDb'));
             }
 
             if (CONFIG.showRtRating && rtRating) {
-                rows.push(
-                    `<div class="fm-row"><span class="fm-label fm-rt">RT</span><span class="fm-value">${rtRating}</span></div>`
-                );
-                titleParts.push(`RT: ${rtRating}`);
+                const formattedRt = this.#formatRtRating(rtRating);
+                rows.push(this.#createRatingRow('RT', formattedRt, 'fm-rt'));
+                titleParts.push(`RT: ${formattedRt}`);
             }
 
             if (CONFIG.showMcRating && mcRating) {
-                rows.push(
-                    `<div class="fm-row"><span class="fm-label fm-mc">MC</span><span class="fm-value">${mcRating}</span></div>`
-                );
-                titleParts.push(`MC: ${mcRating}`);
+                const formattedMc = this.#formatMcRating(mcRating);
+                rows.push(this.#createRatingRow('MC', formattedMc, 'fm-mc'));
+                titleParts.push(`MC: ${formattedMc}`);
             }
 
             a.innerHTML = rows.join('');
-            a.title = titleParts.length
-                ? `${titleParts.join(' · ')} – click to open IMDb`
-                : imdbId
-                  ? 'No ratings available – click to open IMDb'
-                  : 'Not found on IMDb – click to search';
+            a.title = this.#buildTooltip(titleParts, imdbId);
 
             a.addEventListener('click', e => e.stopPropagation());
             return a;
@@ -950,13 +1037,15 @@
 
             history.pushState = (...args) => {
                 pushState.apply(history, args);
-                setTimeout(() => this.decorateRoot(document), 800);
+                setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS);
             };
             history.replaceState = (...args) => {
                 replaceState.apply(history, args);
-                setTimeout(() => this.decorateRoot(document), 800);
+                setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS);
             };
-            window.addEventListener('popstate', () => setTimeout(() => this.decorateRoot(document), 800));
+            window.addEventListener('popstate', () =>
+                setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS)
+            );
 
             const observer = new MutationObserver(mutations => {
                 mutations.forEach(({ addedNodes }) => {
@@ -986,7 +1075,8 @@
             ').'
         );
         const cache = new CacheManager();
-        const api = new ApiClientManager(cache);
+        const disabledManager = new DisabledClientsManager();
+        const api = new ApiClientManager(cache, disabledManager);
         const renderer = new OverlayRenderer();
         const surfaces = new SurfaceManager();
 
