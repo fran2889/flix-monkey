@@ -1,0 +1,82 @@
+export const CONFIG_FIELDS = [
+    {
+        key: 'xmdbApiKey',
+        label: 'XMDB API Key',
+        type: 'text',
+        default: 'YOUR_XMDB_API_KEY',
+        title: 'Free movie and TV data API. Get API key at https://xmdbapi.com/api-key',
+    },
+    {
+        key: 'omdbApiKey',
+        label: 'OMDB API Key',
+        type: 'text',
+        default: 'YOUR_OMDB_API_KEY',
+        title: 'Open Movie Database API key. Get API key at https://www.omdbapi.com/apikey.aspx',
+    },
+    {
+        key: 'apiClients',
+        label: 'API Fallback Order',
+        type: 'text',
+        default: 'imdbapi',
+        title: 'Comma-separated list of APIs to try in order: imdbapi, xmdb, omdb. IMDb API does not require a key.',
+    },
+    {
+        key: 'overlayCorner',
+        label: 'Overlay Position',
+        type: 'select',
+        options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        default: 'top-left',
+        title: 'Choose where the rating badge appears on Netflix thumbnails and banners.',
+    },
+    {
+        key: 'showRtRating',
+        label: 'Show Rotten Tomatoes',
+        type: 'checkbox',
+        default: true,
+        title: 'Display Rotten Tomatoes score when available.',
+    },
+    {
+        key: 'showMcRating',
+        label: 'Show Metacritic',
+        type: 'checkbox',
+        default: true,
+        title: 'Display Metacritic score when available.',
+    },
+    {
+        key: 'cacheTtlRatedOldYear',
+        label: 'Cache Rated > 1 year (days)',
+        type: 'text',
+        default: '-1',
+        title: 'Cache duration for titles older than 1 year with ratings. -1 = forever.',
+    },
+    {
+        key: 'cacheTtlRatedNewYear',
+        label: 'Cache Rated < 1 year (days)',
+        type: 'text',
+        default: '30',
+        title: 'Cache duration for titles released within the last year with ratings.',
+    },
+    {
+        key: 'cacheTtlNoRating',
+        label: 'Cache Unrated (days)',
+        type: 'text',
+        default: '1',
+        title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
+    },
+    {
+        key: 'enableFadeUnderRating',
+        label: 'Fade Low-Rated Titles',
+        type: 'checkbox',
+        default: false,
+        title: 'Reduce opacity of titles with IMDb rating below the threshold.',
+    },
+    {
+        key: 'fadeRatingThreshold',
+        label: 'Fade Threshold (IMDb)',
+        type: 'text',
+        default: '6.0',
+        title: 'Titles with IMDb rating below this value will be faded.',
+    },
+];
+
+export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
