@@ -1,5 +1,4 @@
 import { RequestQueue } from './request-queue.js';
-import { DisabledClientsManager } from './disabled-clients.js';
 import { Title } from './title.js';
 import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION } from './constants.js';
 import { CONFIG } from './config.js';

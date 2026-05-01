@@ -1,5 +1,3 @@
-import { CacheManager } from './cache.js';
-import { DisabledClientsManager } from './disabled-clients.js';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
 import { ApiSource } from './constants.js';
 import { Title } from './title.js';
