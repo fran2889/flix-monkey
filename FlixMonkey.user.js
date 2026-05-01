@@ -692,9 +692,7 @@
             this.#clients = clients;
 
             if (this.#clients.length === 0) {
-                const configuredClients = (CONFIG.apiClients ?? 'xmdb,omdb,imdbapi')
-                    .split(',')
-                    .map(c => c.trim().toLowerCase());
+                const configuredClients = (CONFIG.apiClients ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
 
                 const clientMap = {
                     [ApiSource.XMDB]: XmdbApiClient,
