@@ -580,10 +580,8 @@
         async getDetails({ id, title: searchResultTitle }, displayTitle) {
             this.#logger.fetchDetails(id, displayTitle);
 
-            const detailsJson = await this.queuedFetch(
-                `https://xmdbapi.com/api/v1/movies/${id}?apiKey=${CONFIG.xmdbApiKey}`,
-                1
-            );
+            const detailsParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey });
+            const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
 
             if (!detailsJson || detailsJson.error) return null;
 
