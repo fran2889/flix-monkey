@@ -753,6 +753,7 @@
     class OverlayRenderer {
         #OVERLAY_CLASS = 'fm-rating-overlay';
         #OVERLAY_ATTR = 'data-fm-injected';
+        #LOADING_CLASS = 'fm-loading';
 
         injectStyles() {
             const cornerStyles = {
@@ -885,6 +886,27 @@
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         }
 
+        #createLoadingOverlay(displayTitle) {
+            const a = document.createElement('a');
+            a.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.href = `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle)}`;
+            a.innerHTML = `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-search">⏳</span></div>`;
+            a.title = 'Fetching ratings… click to search IMDb';
+            a.addEventListener('click', e => e.stopPropagation());
+            return a;
+        }
+
+        injectLoadingOverlay(container, displayTitle) {
+            container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
+            container.appendChild(this.#createLoadingOverlay(displayTitle));
+        }
+
+        isLoading(container) {
+            return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
+        }
+
         injectOverlay(container, titleObj) {
             container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
             container.appendChild(this.#createOverlay(titleObj));
@@ -1004,7 +1026,7 @@
         }
 
         async #decorateContainer(container, displayTitle) {
-            if (this.#renderer.hasOverlay(container)) return;
+            if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
             const domYear = this.#surfaces.extractYear(container);
             const cached = this.#cache.read(displayTitle, domYear);
@@ -1014,6 +1036,9 @@
                 return;
             }
 
+            this.#renderer.ensureRelative(container);
+            this.#renderer.injectLoadingOverlay(container, displayTitle);
+
             const dedupKey = displayTitle.toLowerCase();
             let promise = this.#inFlight.get(dedupKey);
             if (!promise) {
@@ -1022,7 +1047,14 @@
             }
 
             const titleObj = await promise;
-            this.#renderer.ensureRelative(container);
+            if (titleObj) {
+                const parts = [];
+                if (titleObj.rating) parts.push(`IMDb: ${titleObj.rating}`);
+                if (titleObj.rtRating) parts.push(`RT: ${titleObj.rtRating}%`);
+                if (titleObj.mcRating) parts.push(`MC: ${titleObj.mcRating}%`);
+                const ratingStr = parts.length ? parts.join(', ') : 'no ratings';
+                console.warn(`[FlixMonkey] Ratings found for "${displayTitle}": ${ratingStr} (via ${titleObj.source ?? 'unknown'})`);
+            }
             this.#renderer.injectOverlay(container, titleObj ?? Title.notFound(displayTitle));
         }
 
