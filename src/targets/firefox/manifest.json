@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "FlixMonkey",
+  "version": "0.0.0",
+  "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.netflix.com/*",
+    "https://xmdbapi.com/*",
+    "https://www.omdbapi.com/*",
+    "https://api.imdbapi.dev/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.netflix.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "flixmonkey@fran",
+      "strict_min_version": "109.0"
+    }
+  }
+}

@@ -61,7 +61,44 @@ const allConfigs = [
         output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
         plugins: sharedPlugins(),
     },
-    // Firefox and Chrome configs added in Task 16
+    {
+        _target: 'firefox',
+        input: 'src/targets/extension/content.js',
+        output: { file: 'dist/firefox/content.js', format: 'iife' },
+        plugins: [
+            ...sharedPlugins(),
+            copyStatic([
+                ['src/targets/firefox/background.js', 'dist/firefox/background.js'],
+                ['src/targets/extension/options.html', 'dist/firefox/options.html'],
+            ]),
+            injectManifestVersion('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
+        ],
+    },
+    {
+        _target: 'firefox',
+        input: 'src/targets/extension/options.js',
+        output: { file: 'dist/firefox/options.js', format: 'iife' },
+        plugins: sharedPlugins(),
+    },
+    {
+        _target: 'chrome',
+        input: 'src/targets/extension/content.js',
+        output: { file: 'dist/chrome/content.js', format: 'iife' },
+        plugins: [
+            ...sharedPlugins(),
+            copyStatic([
+                ['src/targets/chrome/service-worker.js', 'dist/chrome/service-worker.js'],
+                ['src/targets/extension/options.html', 'dist/chrome/options.html'],
+            ]),
+            injectManifestVersion('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
+        ],
+    },
+    {
+        _target: 'chrome',
+        input: 'src/targets/extension/options.js',
+        output: { file: 'dist/chrome/options.js', format: 'iife' },
+        plugins: sharedPlugins(),
+    },
 ];
 
 export default target
