@@ -450,7 +450,7 @@
     function parseRatings(ratings, sourcePattern) {
         if (!Array.isArray(ratings)) return null;
         const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
-        return entry?.value || entry?.Value || null;
+        return entry?.value ?? entry?.Value ?? null;
     }
 
     class BaseApiClient {
