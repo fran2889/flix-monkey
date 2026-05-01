@@ -145,6 +145,7 @@ docs: add AGENTS.md with architecture and workflow notes
 - Use the imperative mood in the description ("add", not "added" or "adds").
 - Keep the description under 72 characters.
 - Reference issues or PRs in the footer where applicable: `Closes #12`.
+- After every code change, output a suggested conventional commit message for the change.
 
 ## Common Gotchas
 
