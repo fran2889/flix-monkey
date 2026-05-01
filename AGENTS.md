@@ -2,17 +2,19 @@
 
 ## Project Overview
 
-**FlixMonkey** is a single-file Tampermonkey/Violentmonkey/Greasemonkey userscript (`FlixMonkey.user.js`) that overlays IMDb ratings on Netflix thumbnails and banners. It fetches data from the [OMDB API](https://www.omdbapi.com/) and caches results locally using `GM_getValue`/`GM_setValue`.
+**FlixMonkey** is a multi-target extension that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails and banners. It is built from a shared ES module codebase into three distribution targets:
 
-- **Language**: JavaScript (ES2020, IIFE, `'use strict'`)
-- **Target environment**: Browser userscript (not Node.js)
-- **Userscript managers**: Tampermonkey, Violentmonkey, Greasemonkey
-- **External API**: OMDB (`https://www.omdbapi.com/`)
-- **Greasemonkey APIs used**: `GM_xmlhttpRequest`, `GM_getValue`, `GM_setValue`
-- **Dev tooling**: ESLint (flat config), Prettier
+1. **Userscript**: Tampermonkey/Violentmonkey/Greasemonkey (`dist/FlixMonkey.user.js`)
+2. **Firefox Extension**: MV3 WebExtension (`dist/firefox/`)
+3. **Chrome Extension**: MV3 WebExtension (`dist/chrome/`)
+
+The project uses a **Platform Adapter** pattern to abstract differences between `GM_*` and `browser.*` APIs.
+
+- **Language**: JavaScript (ES2022)
+- **Architecture**: Modular ES modules in `src/`, bundled with Rollup
+- **External APIs**: XMDB (`xmdbapi.com`), OMDB (`omdbapi.com`), IMDb API Dev (`api.imdbapi.dev`)
+- **Dev tooling**: Rollup, ESLint (flat config), Prettier
 - **Package manager**: npm
-
-There is **no build step** and **no test suite**. The entire script is `FlixMonkey.user.js`.
 
 ## Setup
 
@@ -20,138 +22,104 @@ There is **no build step** and **no test suite**. The entire script is `FlixMonk
 npm install
 ```
 
-This installs ESLint, Prettier, and their configs as dev dependencies.
-
 ## Development Workflow
 
-All logic lives in the single self-contained IIFE inside `FlixMonkey.user.js`. To test changes:
+1. Edit source files in `src/`.
+2. Run the build to generate distribution artifacts in `dist/`.
+3. Run lint and format to ensure code quality.
 
-1. Edit `FlixMonkey.user.js`.
-2. Run lint and format (see below).
-3. Reload the script in your browser extension dashboard and refresh Netflix.
-
-**Reloading the script:**
-- **Tampermonkey**: Enable *Settings → Allow access to file URLs*, point the script at the local file, or paste source into the dashboard editor and save.
-- **Violentmonkey**: Use *Track local file* in the script editor.
-- **Greasemonkey**: Re-install from the local file or edit via the dashboard.
-
-Always refresh the Netflix tab after updating the script.
-
-## Scripts
+### Build Scripts
 
 | Command | Description |
 |---|---|
-| `npm run lint` | Lint `FlixMonkey.user.js` with ESLint |
-| `npm run lint:fix` | Lint and auto-fix |
+| `npm run build` | Build all targets (userscript, firefox, chrome) |
+| `npm run build:userscript` | Build only the userscript |
+| `npm run build:firefox` | Build only the Firefox extension |
+| `npm run build:chrome` | Build only the Chrome extension |
+| `npm run lint` | Lint `src/` modules and legacy script |
 | `npm run format` | Format with Prettier |
 
-Always run `npm run lint` and `npm run format` before committing.
+### Loading for Testing
 
-## Code Style
-
-- **ESLint**: Flat config in `eslint.config.js`. Rules enforced: `prefer-const`, `no-var`, `eqeqeq`, `no-console` (warn, allowing `console.warn`/`console.error`).
-- **Prettier**: Default config (120-char line width implied by the README).
-- **Globals**: Browser globals plus `GM_xmlhttpRequest`, `GM_getValue`, `GM_setValue` are declared in `eslint.config.js` — do not use `var` or add new undeclared globals.
-- Use `const`/`let` only; never `var`.
-- All async work via `async/await`; network calls wrapped in `gmFetch()` (returns a `Promise`).
+- **Userscript**: Point your userscript manager at `dist/FlixMonkey.user.js`.
+- **Firefox**: Load `dist/firefox/` as a temporary add-on in `about:debugging`.
+- **Chrome**: Load `dist/chrome/` as an unpacked extension in `chrome://extensions`.
 
 ## Architecture
 
-The script is structured as a single IIFE with clearly labelled sections (comments separate them):
+The project is structured into three main layers:
 
-| Section | Purpose |
+### 1. Core (`src/core/`)
+Platform-agnostic business logic.
+
+| Module | Responsibility |
 |---|---|
-| `CONFIG` | User-facing options: `omdbApiKey`, `overlayCorner`, cache TTLs |
-| Cache helpers | `cacheKey`, `readCache`, `writeCache` – thin wrappers around `GM_getValue`/`GM_setValue` |
-| OMDB API | `gmFetch` (Promise wrapper), `fetchOmdb`, `getOmdbData` (cache-aware) |
-| Overlay rendering | CSS injection, `createOverlay`, `ensureRelative`, `injectOverlay` |
-| Surface discovery | `SURFACES` config array + `discoverSurfaces` – maps Netflix DOM surfaces to title strings |
-| Core decoration | `decorateContainer`, `decorateRoot` – ties discovery → API → overlay |
-| SPA navigation | Patches `history.pushState`/`replaceState`, listens for `popstate`, runs `MutationObserver` |
+| `app.js` | Main application class and `startApp` factory |
+| `api-manager.js` | Orchestrates multiple API clients and handles fallbacks |
+| `api-clients.js` | Client implementations for XMDB, OMDB, and IMDb API Dev |
+| `cache.js` | Async cache manager with TTL logic |
+| `disabled-clients.js` | Tracks failing API endpoints to avoid redundant requests |
+| `request-queue.js` | Handles rate limiting and cross-tab synchronization |
+| `overlay.js` | UI rendering of the rating badges |
+| `surfaces.js` | DOM discovery logic for Netflix UI elements |
+| `config.js` | Reactive configuration object |
+| `config-fields.js` | Single source of truth for settings definitions |
+| `title.js` | Pure data class representing a movie/show |
+| `constants.js` | Shared constants and enumerations |
 
-### Adding a new Netflix UI surface
+### 2. Platform (`src/platform/`)
+Implementation of the `PlatformAdapter` interface.
 
-Add an entry to the `SURFACES` array in the *Surface discovery* section:
+| Module | Responsibility |
+|---|---|
+| `adapter.js` | Abstract base class defining the platform interface |
+| `userscript.js` | Implementation using `GM_*` APIs |
+| `webextension.js` | Implementation using `browser.*` APIs (via `webextension-polyfill`) |
+
+### 3. Targets (`src/targets/`)
+Entry points and platform-specific manifests.
+
+- `userscript/`: `entry.js` (GM_config wiring)
+- `extension/`: Shared extension logic (`content.js`, `options.html`, `options.js`)
+- `firefox/`: Firefox manifest and `background.js` proxy
+- `chrome/`: Chrome manifest and `service-worker.js` proxy
+
+## Platform Adapter Interface
+
+All platform-specific code must go through the `adapter` instance:
 
 ```js
-{
-    titleSelectors: 'css-selector-for-title-element',
-    getTitle: el => el.getAttribute('alt')?.trim() || el.textContent?.trim() || null,
-    containerSel: '.container-to-attach-overlay',
+class PlatformAdapter {
+    async storageGet(key)
+    async storageSet(key, value)
+    async httpFetch(url, options)
+    registerMenuCommand(label, fn)
 }
 ```
 
-`discoverSurfaces` will pick it up automatically on the next DOM scan.
+## Code Style
 
-### Cache keys
-
-Cache entries are stored with keys prefixed `fm_cache_`. The key format is:
-```
-fm_cache_<lowercase_title_underscored>[_<year>]
-```
-
-## Configuration
-
-All user-facing options are in the `CONFIG` object at the top of `FlixMonkey.user.js`:
-
-| Option | Default | Description |
-|---|---|---|
-| `omdbApiKey` | `'YOUR_OMDB_API_KEY'` | OMDB API key — **required**, never commit a real key |
-| `overlayCorner` | `'top-left'` | Badge position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
-| `cacheTtlRated` | 7 days (ms) | Cache TTL for titles with a rating |
-| `cacheTtlNoRating` | 24 h (ms) | Cache TTL for titles found but with no rating |
-
-> **Security**: Never commit a real OMDB API key. The placeholder `'YOUR_OMDB_API_KEY'` is the expected value in source control.
-
-## Pull Request Guidelines
-
-- Run `npm run lint` and `npm run format` — both must pass before merging.
-- Keep the single-file structure; do not split into modules (userscript managers load one file).
-- Bump the `@version` header in `FlixMonkey.user.js` and `package.json` together.
+- **ES modules**: Use `import`/`export` in all `src/` files.
+- **Async/Await**: All storage and network operations are asynchronous.
+- **Private Fields**: Use `#field` for class-private state.
+- **Naming**: PascalCase for classes, camelCase for methods/variables.
+- **Conventional Commits**: Strictly enforced for all changes.
 
 ## Commit Messages
 
-Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+Use [Conventional Commits](https://www.conventionalcommits.org/) format.
 
-```
-<type>[optional scope]: <description>
+**Allowed types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `chore`.
 
-[optional body]
+## Pull Request Guidelines
 
-[optional footer(s)]
-```
-
-**Allowed types:**
-
-| Type | When to use |
-|---|---|
-| `feat` | New user-facing feature |
-| `fix` | Bug fix |
-| `refactor` | Code change that is neither a fix nor a feature |
-| `perf` | Performance improvement |
-| `style` | Formatting only (no logic change) |
-| `docs` | Documentation changes only |
-| `chore` | Tooling, config, dependencies |
-
-**Examples:**
-
-```
-feat: add rating overlay for hover zoom (bob) surface
-fix: correct badge position on Top 10 cards for left-side corners
-refactor: replace seenTitleEls with single container-based deduplication
-docs: add AGENTS.md with architecture and workflow notes
-```
-
-- Use the imperative mood in the description ("add", not "added" or "adds").
-- Keep the description under 72 characters.
-- Reference issues or PRs in the footer where applicable: `Closes #12`.
-- After every code change, output a suggested conventional commit message for the change.
+- `npm run build` must pass.
+- `npm run lint` and `npm run format` must pass.
+- Logic changes should be accompanied by a version bump in `package.json`.
+- The legacy `FlixMonkey.user.js` in the root is preserved for now but should not be the primary target of new features.
 
 ## Common Gotchas
 
-- **`sourceType: 'script'`** is set in ESLint config because the IIFE is not an ES module — do not add `import`/`export` statements.
-- **`GM_*` globals** must remain listed in `eslint.config.js` if new Greasemonkey APIs are added.
-- Netflix is a SPA — DOM elements appear and disappear dynamically. The `MutationObserver` and patched `history` methods handle this, but changes to Netflix's DOM structure may require updating `SURFACES` selectors.
-- OMDB "not found" results (`Response === 'False'`) are intentionally **not cached** so a future lookup can succeed if the title is later added to OMDB.
-- The `inFlight` map deduplicates concurrent API calls for the same title key — preserve this when modifying the fetch path.
-
+- **CORS**: Extensions use a background proxy (`background.js` / `service-worker.js`) to bypass Netflix's CSP and CORS. Userscripts use `GM_xmlhttpRequest`.
+- **Config Sync**: In extensions, `browser.storage.onChanged` is used to react to settings changes without page reloads.
+- **Rate Limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs.
