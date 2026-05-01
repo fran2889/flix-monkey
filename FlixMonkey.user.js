@@ -810,12 +810,7 @@
             return rating.toFixed(1);
         }
 
-        #formatRtRating(rating) {
-            if (typeof rating !== 'number') return String(rating);
-            return `${rating}%`;
-        }
-
-        #formatMcRating(rating) {
+        #formatPercentRating(rating) {
             if (typeof rating !== 'number') return String(rating);
             return `${rating}%`;
         }
@@ -861,13 +856,13 @@
             }
 
             if (CONFIG.showRtRating && rtRating) {
-                const formattedRt = this.#formatRtRating(rtRating);
+                const formattedRt = this.#formatPercentRating(rtRating);
                 rows.push(this.#createRatingRow('RT', formattedRt, 'fm-rt'));
                 titleParts.push(`RT: ${formattedRt}`);
             }
 
             if (CONFIG.showMcRating && mcRating) {
-                const formattedMc = this.#formatMcRating(mcRating);
+                const formattedMc = this.#formatPercentRating(mcRating);
                 rows.push(this.#createRatingRow('MC', formattedMc, 'fm-mc'));
                 titleParts.push(`MC: ${formattedMc}`);
             }
@@ -1046,11 +1041,13 @@
             const titleObj = await promise;
             if (titleObj) {
                 const parts = [];
-                if (titleObj.rating) parts.push(`IMDb: ${titleObj.rating}`);
+                if (titleObj.rating) parts.push(`IMDb: ${titleObj.rating.toFixed(1)}`);
                 if (titleObj.rtRating) parts.push(`RT: ${titleObj.rtRating}%`);
                 if (titleObj.mcRating) parts.push(`MC: ${titleObj.mcRating}%`);
                 const ratingStr = parts.length ? parts.join(', ') : 'no ratings';
-                console.warn(`[FlixMonkey] Ratings found for "${displayTitle}": ${ratingStr} (via ${titleObj.source ?? 'unknown'})`);
+                console.warn(
+                    `[FlixMonkey] Ratings found for "${displayTitle}": ${ratingStr} (via ${titleObj.source ?? 'unknown'})`
+                );
             }
             this.#renderer.injectOverlay(container, titleObj ?? Title.notFound(displayTitle));
         }
