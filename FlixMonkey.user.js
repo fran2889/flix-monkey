@@ -738,6 +738,7 @@
                 console.warn(
                     `[FlixMonkey] Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
                 );
+                this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
                 return null;
             }
 
