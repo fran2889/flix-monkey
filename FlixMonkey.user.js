@@ -1039,7 +1039,7 @@
             this.#renderer.ensureRelative(container);
             this.#renderer.injectLoadingOverlay(container, displayTitle);
 
-            const dedupKey = displayTitle.toLowerCase();
+            const dedupKey = `${displayTitle.toLowerCase()}_${domYear ?? ''}`;
             let promise = this.#inFlight.get(dedupKey);
             if (!promise) {
                 promise = this.#api.getData(displayTitle, domYear).finally(() => this.#inFlight.delete(dedupKey));
