@@ -170,9 +170,6 @@
             return Number.isNaN(num) ? fallback : num;
         });
 
-    const createBoolConfigGetter = (key, defaultValue) =>
-        createConfigGetter(key, defaultValue, val => (val === undefined || val === null ? defaultValue : val));
-
     const CONFIG = {
         get xmdbApiKey() {
             return configGet('xmdbApiKey', 'YOUR_XMDB_API_KEY');
@@ -184,10 +181,10 @@
             return configGet('overlayCorner', 'top-left');
         },
         get showRtRating() {
-            return createBoolConfigGetter('showRtRating', true)();
+            return configGet('showRtRating', true);
         },
         get showMcRating() {
-            return createBoolConfigGetter('showMcRating', true)();
+            return configGet('showMcRating', true);
         },
         get apiClients() {
             return configGet('apiClients', 'imdbapi,xmdb,omdb');
@@ -1059,6 +1056,8 @@
         }
 
         #initNavigationObservers() {
+            if (history._fmPatched) return;
+            history._fmPatched = true;
             const { pushState, replaceState } = history;
 
             history.pushState = (...args) => {
