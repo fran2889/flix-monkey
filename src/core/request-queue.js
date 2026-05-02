@@ -38,8 +38,10 @@ export class RequestQueue {
 
     clear() {
         const count = this.#queue.length;
-        this.#queue.forEach(item => item.reject(new Error('Client Disabled')));
-        this.#queue = [];
+        while (this.#queue.length > 0) {
+            const item = this.#queue.shift();
+            item.reject(new Error('Client Disabled'));
+        }
         return count;
     }
 
