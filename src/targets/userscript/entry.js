@@ -3,7 +3,7 @@ import { initConfig } from '../../core/config.js';
 import { CONFIG_FIELDS, CONFIG_DEFAULTS } from '../../core/config-fields.js';
 import { startApp } from '../../core/app.js';
 
-'use strict';
+('use strict');
 
 const adapter = new UserscriptAdapter();
 
@@ -44,7 +44,11 @@ GM_config.init({
     events: {
         init: () => {
             initConfig(key => {
-                try { return GM_config.get(key); } catch { return CONFIG_DEFAULTS[key]; }
+                try {
+                    return GM_config.get(key);
+                } catch {
+                    return CONFIG_DEFAULTS[key];
+                }
             });
             const { api, cache } = startApp(adapter);
 

@@ -7,7 +7,9 @@ const statusEl = document.getElementById('status');
 
 function showStatus(msg) {
     statusEl.textContent = msg;
-    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+    setTimeout(() => {
+        statusEl.textContent = '';
+    }, 2000);
 }
 
 CONFIG_FIELDS.forEach(f => {
@@ -74,9 +76,7 @@ document.getElementById('clearCacheBtn').addEventListener('click', async () => {
 
 document.getElementById('resetClientsBtn').addEventListener('click', async () => {
     if (!confirm('Re-enable all failing API endpoints?')) return;
-    const resets = Object.fromEntries(
-        Object.values(ApiSource).map(s => [`fm_disabled_${s}`, '0'])
-    );
+    const resets = Object.fromEntries(Object.values(ApiSource).map(s => [`fm_disabled_${s}`, '0']));
     await browser.storage.local.set(resets);
     showStatus('API clients re-enabled.');
 });

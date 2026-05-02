@@ -20,7 +20,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     })
         .then(async res => {
             clearTimeout(timeoutId);
-            if (!res.ok) { sendResponse({ error: `HTTP ${res.status}`, status: res.status }); return; }
+            if (!res.ok) {
+                sendResponse({ error: `HTTP ${res.status}`, status: res.status });
+                return;
+            }
             const data = responseType === 'json' ? await res.json() : await res.text();
             sendResponse({ data });
         })

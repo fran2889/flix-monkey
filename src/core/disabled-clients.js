@@ -26,9 +26,7 @@ export class DisabledClientsManager {
 
     async resetAll() {
         await Promise.all(
-            Object.values(ApiSource).map(source =>
-                this.#adapter.storageSet(`fm_disabled_${source}`, '0')
-            )
+            Object.values(ApiSource).map(source => this.#adapter.storageSet(`fm_disabled_${source}`, '0'))
         );
     }
 }

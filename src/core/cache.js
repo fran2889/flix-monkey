@@ -41,7 +41,9 @@ export class CacheManager {
     async write(displayTitle, domYear, titleObj) {
         const blob = await this.#loadCacheData();
         const now = Date.now();
-        Object.keys(blob).forEach(k => { if (now > blob[k].expires) delete blob[k]; });
+        Object.keys(blob).forEach(k => {
+            if (now > blob[k].expires) delete blob[k];
+        });
         const ttl = this.#calculateTtl(titleObj);
         blob[this.#getCacheKey(displayTitle, domYear)] = {
             data: titleObj,

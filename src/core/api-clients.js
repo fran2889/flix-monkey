@@ -6,8 +6,7 @@ import { CONFIG } from './config.js';
 const createClientLogger = clientName => ({
     search: (title, year) =>
         console.warn(`[FlixMonkey] Searching ${clientName} for title: "${title}"${year ? ` (${year})` : ''}`),
-    fetchDetails: (id, title) =>
-        console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
+    fetchDetails: (id, title) => console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
     notFound: title => console.warn(`[FlixMonkey] No search results found in ${clientName} for: "${title}"`),
     failed: message => console.warn(`[FlixMonkey] ${clientName} failed: ${message}`),
 });
@@ -104,9 +103,15 @@ export class XmdbApiClient extends BaseApiClient {
         const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
         this.#logger.search(displayTitle, domYear);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
-        if (!results?.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!results?.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         const titleResults = results.filter(r => r.type === 'title');
-        if (!titleResults.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!titleResults.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         return domYear
             ? (titleResults.find(r => String(r.year) === String(domYear)) ?? titleResults[0])
             : titleResults[0];
@@ -146,7 +151,10 @@ export class OmdbApiClient extends BaseApiClient {
         if (y) params.set('y', y);
         this.#logger.fetchDetails(t, _displayTitle);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
-        if (json.Response === 'False') { this.#logger.notFound(t); return null; }
+        if (json.Response === 'False') {
+            this.#logger.notFound(t);
+            return null;
+        }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         return new Title({
@@ -176,7 +184,10 @@ export class ImdbApiDevClient extends BaseApiClient {
         const searchParams = new URLSearchParams({ query: displayTitle });
         this.#logger.search(displayTitle, domYear);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
-        if (!titles?.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!titles?.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         if (domYear) {
             const targetYear = Number.parseInt(domYear);
             const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);

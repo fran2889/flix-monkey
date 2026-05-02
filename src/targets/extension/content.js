@@ -9,7 +9,9 @@ import { startApp } from '../../core/app.js';
     const stored = await browser.storage.local.get(null);
     initConfig(key => stored[key] ?? CONFIG_DEFAULTS[key]);
     browser.storage.onChanged.addListener(changes => {
-        Object.entries(changes).forEach(([k, v]) => { stored[k] = v.newValue; });
+        Object.entries(changes).forEach(([k, v]) => {
+            stored[k] = v.newValue;
+        });
     });
     startApp(adapter);
 })();
