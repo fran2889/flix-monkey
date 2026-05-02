@@ -1,6 +1,6 @@
 # Core Module Unit Testing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [x]`) syntax for tracking.
 
 **Goal:** Implement comprehensive unit test coverage for all core modules, strictly following the project's testing architecture and using MSW for API mocking.
 
@@ -17,7 +17,7 @@
 - Create: `tests/unit/core/config.test.js`
 - Create: `tests/unit/core/config-fields.test.js`
 
-- [ ] **Step 1: Write tests for `constants.js`**
+ - [x] **Step 1: Write tests for `constants.js`**
 
 ```javascript
 import { describe, it, expect } from 'vitest';
@@ -31,7 +31,7 @@ describe('constants', () => {
 });
 ```
 
-- [ ] **Step 2: Write tests for `config.js`**
+ - [x] **Step 2: Write tests for `config.js`**
 
 ```javascript
 import { describe, it, expect } from 'vitest';
@@ -45,7 +45,7 @@ describe('Config', () => {
 });
 ```
 
-- [ ] **Step 3: Write tests for `config-fields.js`**
+ - [x] **Step 3: Write tests for `config-fields.js`**
 
 ```javascript
 import { describe, it, expect } from 'vitest';
@@ -58,12 +58,12 @@ describe('configFields', () => {
 });
 ```
 
-- [ ] **Step 4: Run tests and verify**
+ - [x] **Step 4: Run tests and verify**
 
 Run: `npm run test:unit`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+ - [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/core/constants.test.js tests/unit/core/config.test.js tests/unit/core/config-fields.test.js
@@ -79,7 +79,7 @@ git commit -m "test: add unit tests for Foundation modules"
 - Create: `tests/unit/core/api-manager.test.js`
 - Create: `tests/unit/core/request-queue.test.js`
 
-- [ ] **Step 1: Write tests for `api-clients.js` with MSW**
+ - [x] **Step 1: Write tests for `api-clients.js` with MSW**
 
 ```javascript
 import { describe, it, expect } from 'vitest';
@@ -100,20 +100,20 @@ describe('ApiClient', () => {
 });
 ```
 
-- [ ] **Step 2: Write tests for `api-manager.js` with MSW**
+ - [x] **Step 2: Write tests for `api-manager.js` with MSW**
 
 *(Similar pattern to step 1, adapted for ApiManager)*
 
-- [ ] **Step 3: Write tests for `request-queue.js`**
+ - [x] **Step 3: Write tests for `request-queue.js`**
 
 *(Focus on queueing logic and MSW handling)*
 
-- [ ] **Step 4: Run tests and verify**
+ - [x] **Step 4: Run tests and verify**
 
 Run: `npm run test:unit`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+ - [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/core/api-clients.test.js tests/unit/core/api-manager.test.js tests/unit/core/request-queue.test.js
@@ -131,20 +131,20 @@ git commit -m "test: add unit tests for API & Data modules"
 - Create: `tests/unit/core/title.test.js`
 - Create: `tests/unit/core/disabled-clients.test.js`
 
-- [ ] **Step 1: Write tests for `app.js`**
+ - [x] **Step 1: Write tests for `app.js`**
 
 *(Focus on state and orchestration)*
 
-- [ ] **Step 2: Write tests for `overlay.js`, `surfaces.js`, `title.js`, `disabled-clients.js`**
+ - [x] **Step 2: Write tests for `overlay.js`, `surfaces.js`, `title.js`, `disabled-clients.js`**
 
 *(Focus on UI-related core logic and DOM interactions)*
 
-- [ ] **Step 3: Run tests and verify**
+ - [x] **Step 3: Run tests and verify**
 
 Run: `npm run test:unit`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+ - [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/core/app.test.js tests/unit/core/overlay.test.js tests/unit/core/surfaces.test.js tests/unit/core/title.test.js tests/unit/core/disabled-clients.test.js

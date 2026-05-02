@@ -1,6 +1,6 @@
 # Multi-Target Build Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [x]`) syntax for tracking.
 
 **Goal:** Refactor FlixMonkey from a single-file IIFE userscript into three distribution targets (Tampermonkey userscript, Firefox MV3 extension, Chrome MV3 extension) built from shared ES modules using Rollup.
 
@@ -51,7 +51,7 @@
 - Create: `rollup.config.js` (stub)
 - Modify: `.gitignore` (if it exists, otherwise create)
 
-- [ ] **Step 1: Install new dependencies**
+ - [x] **Step 1: Install new dependencies**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -60,7 +60,7 @@ npm install --save-dev rollup @rollup/plugin-node-resolve @rollup/plugin-commonj
 
 Expected: `package-lock.json` updated, `node_modules/rollup` and `node_modules/webextension-polyfill` present.
 
-- [ ] **Step 2: Sync version in package.json to 0.10.0 and add build scripts**
+ - [x] **Step 2: Sync version in package.json to 0.10.0 and add build scripts**
 
 Replace the `"scripts"` block and update `"version"` in `package.json`:
 
@@ -94,7 +94,7 @@ Replace the `"scripts"` block and update `"version"` in `package.json`:
 
 Note: `webextension-polyfill` is listed under `devDependencies` because Rollup bundles it into the extension output — it is not a runtime npm dependency.
 
-- [ ] **Step 3: Create a stub rollup.config.js**
+ - [x] **Step 3: Create a stub rollup.config.js**
 
 This stub will be replaced in Task 16. Its purpose is to make `npm run build` runnable without errors before entry points exist.
 
@@ -103,7 +103,7 @@ This stub will be replaced in Task 16. Its purpose is to make `npm run build` ru
 export default [];
 ```
 
-- [ ] **Step 4: Add dist/ to .gitignore**
+ - [x] **Step 4: Add dist/ to .gitignore**
 
 Create or append to `.gitignore`:
 
@@ -112,13 +112,13 @@ node_modules/
 dist/
 ```
 
-- [ ] **Step 5: Create the src/ directory tree**
+ - [x] **Step 5: Create the src/ directory tree**
 
 ```bash
 mkdir -p src/core src/platform src/targets/userscript src/targets/extension src/targets/firefox src/targets/chrome
 ```
 
-- [ ] **Step 6: Commit**
+ - [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json rollup.config.js .gitignore
@@ -135,7 +135,7 @@ These are verbatim extractions — no logic changes, just add `export` keywords.
 - Create: `src/core/constants.js`
 - Create: `src/core/title.js`
 
-- [ ] **Step 1: Create src/core/constants.js**
+ - [x] **Step 1: Create src/core/constants.js**
 
 ```js
 export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
@@ -163,7 +163,7 @@ export const RATE_LIMITS = {
 };
 ```
 
-- [ ] **Step 2: Create src/core/title.js**
+ - [x] **Step 2: Create src/core/title.js**
 
 ```js
 export class Title {
@@ -225,7 +225,7 @@ export class Title {
 }
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/core/constants.js src/core/title.js
@@ -240,7 +240,7 @@ git commit -m "refactor: extract constants and Title to src/core modules"
 - Create: `src/platform/adapter.js`
 - Create: `src/platform/userscript.js`
 
-- [ ] **Step 1: Create src/platform/adapter.js**
+ - [x] **Step 1: Create src/platform/adapter.js**
 
 ```js
 export class PlatformAdapter {
@@ -251,7 +251,7 @@ export class PlatformAdapter {
 }
 ```
 
-- [ ] **Step 2: Create src/platform/userscript.js**
+ - [x] **Step 2: Create src/platform/userscript.js**
 
 `httpFetch` is the existing `gmFetch()` body moved here. Non-2xx responses reject with an error that carries a `status` property so `BaseApiClient.queuedFetch` can decide whether to disable the client.
 
@@ -304,7 +304,7 @@ export class UserscriptAdapter extends PlatformAdapter {
 }
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/platform/adapter.js src/platform/userscript.js
@@ -320,7 +320,7 @@ The only changes from the original: constructor gains an `adapter` param, and th
 **Files:**
 - Create: `src/core/request-queue.js`
 
-- [ ] **Step 1: Create src/core/request-queue.js**
+ - [x] **Step 1: Create src/core/request-queue.js**
 
 ```js
 export class RequestQueue {
@@ -389,7 +389,7 @@ export class RequestQueue {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/core/request-queue.js
@@ -405,7 +405,7 @@ git commit -m "refactor: extract RequestQueue to src/core, migrate storage to ad
 **Files:**
 - Create: `src/core/disabled-clients.js`
 
-- [ ] **Step 1: Create src/core/disabled-clients.js**
+ - [x] **Step 1: Create src/core/disabled-clients.js**
 
 ```js
 import { CLIENT_DISABLE_DURATION, ApiSource } from './constants.js';
@@ -444,7 +444,7 @@ export class DisabledClientsManager {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/core/disabled-clients.js
@@ -460,7 +460,7 @@ git commit -m "refactor: extract DisabledClientsManager to src/core, migrate sto
 **Files:**
 - Create: `src/core/cache.js`
 
-- [ ] **Step 1: Create src/core/cache.js**
+ - [x] **Step 1: Create src/core/cache.js**
 
 ```js
 import { DAYS_TO_MS } from './constants.js';
@@ -524,7 +524,7 @@ export class CacheManager {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/core/cache.js
@@ -544,7 +544,7 @@ Key changes from the original:
 **Files:**
 - Create: `src/core/api-clients.js`
 
-- [ ] **Step 1: Create src/core/api-clients.js**
+ - [x] **Step 1: Create src/core/api-clients.js**
 
 ```js
 import { RequestQueue } from './request-queue.js';
@@ -749,7 +749,7 @@ export class ImdbApiDevClient extends BaseApiClient {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -765,7 +765,7 @@ The constructor signature changes to `(cacheManager, disabledManager, adapter, c
 **Files:**
 - Create: `src/core/api-manager.js`
 
-- [ ] **Step 1: Create src/core/api-manager.js**
+ - [x] **Step 1: Create src/core/api-manager.js**
 
 ```js
 import { CacheManager } from './cache.js';
@@ -834,7 +834,7 @@ export class ApiClientManager {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/core/api-manager.js
@@ -851,7 +851,7 @@ Both are verbatim extractions — add imports for `CONFIG` and `export` keywords
 - Create: `src/core/overlay.js`
 - Create: `src/core/surfaces.js`
 
-- [ ] **Step 1: Create src/core/overlay.js**
+ - [x] **Step 1: Create src/core/overlay.js**
 
 ```js
 import { CONFIG } from './config.js';
@@ -1027,7 +1027,7 @@ export class OverlayRenderer {
 }
 ```
 
-- [ ] **Step 2: Create src/core/surfaces.js**
+ - [x] **Step 2: Create src/core/surfaces.js**
 
 ```js
 export class SurfaceManager {
@@ -1117,7 +1117,7 @@ export class SurfaceManager {
 }
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/core/overlay.js src/core/surfaces.js
@@ -1134,7 +1134,7 @@ git commit -m "refactor: extract OverlayRenderer and SurfaceManager to src/core"
 - Create: `src/core/config-fields.js`
 - Create: `src/core/config.js`
 
-- [ ] **Step 1: Create src/core/config-fields.js**
+ - [x] **Step 1: Create src/core/config-fields.js**
 
 ```js
 export const CONFIG_FIELDS = [
@@ -1221,7 +1221,7 @@ export const CONFIG_FIELDS = [
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
 ```
 
-- [ ] **Step 2: Create src/core/config.js**
+ - [x] **Step 2: Create src/core/config.js**
 
 ```js
 import { CONFIG_DEFAULTS } from './config-fields.js';
@@ -1263,7 +1263,7 @@ export const CONFIG = {
 };
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/core/config-fields.js src/core/config.js
@@ -1280,7 +1280,7 @@ git commit -m "refactor: extract config system to src/core with initConfig injec
 - Create: `src/core/app.js`
 - Create: `src/targets/userscript/entry.js`
 
-- [ ] **Step 1: Create src/core/app.js**
+ - [x] **Step 1: Create src/core/app.js**
 
 ```js
 import { CacheManager } from './cache.js';
@@ -1386,7 +1386,7 @@ export function startApp(adapter) {
 }
 ```
 
-- [ ] **Step 2: Create src/targets/userscript/entry.js**
+ - [x] **Step 2: Create src/targets/userscript/entry.js**
 
 This file contains the full `GM_config.init()` block from the original `FlixMonkey.user.js`, adapted to use `CONFIG_FIELDS` for field generation and `initConfig` for the getter injection. The CSS block is preserved verbatim.
 
@@ -1474,7 +1474,7 @@ GM_config.init({
 });
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/core/app.js src/targets/userscript/entry.js
@@ -1490,7 +1490,7 @@ Replace the stub `rollup.config.js` with a config that builds just the userscrip
 **Files:**
 - Modify: `rollup.config.js`
 
-- [ ] **Step 1: Replace rollup.config.js with userscript-only config**
+ - [x] **Step 1: Replace rollup.config.js with userscript-only config**
 
 ```js
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'fs';
@@ -1564,7 +1564,7 @@ export default target
     : allConfigs.map(({ _target, ...rest }) => rest);
 ```
 
-- [ ] **Step 2: Run the userscript build**
+ - [x] **Step 2: Run the userscript build**
 
 ```bash
 npm run build:userscript
@@ -1572,7 +1572,7 @@ npm run build:userscript
 
 Expected: `dist/FlixMonkey.user.js` created. No errors. Output starts with `// ==UserScript==`.
 
-- [ ] **Step 3: Verify the output header**
+ - [x] **Step 3: Verify the output header**
 
 ```bash
 head -20 dist/FlixMonkey.user.js
@@ -1591,7 +1591,7 @@ Expected output:
     ...
 ```
 
-- [ ] **Step 4: Spot-check that core class names are present in the output**
+ - [x] **Step 4: Spot-check that core class names are present in the output**
 
 ```bash
 grep -c "FlixMonkeyApp\|CacheManager\|OverlayRenderer" dist/FlixMonkey.user.js
@@ -1599,7 +1599,7 @@ grep -c "FlixMonkeyApp\|CacheManager\|OverlayRenderer" dist/FlixMonkey.user.js
 
 Expected: output is `3` (each class name appears at least once).
 
-- [ ] **Step 5: Commit**
+ - [x] **Step 5: Commit**
 
 ```bash
 git add rollup.config.js dist/FlixMonkey.user.js
@@ -1613,7 +1613,7 @@ git commit -m "build: wire userscript Rollup config, produce dist/FlixMonkey.use
 **Files:**
 - Create: `src/platform/webextension.js`
 
-- [ ] **Step 1: Create src/platform/webextension.js**
+ - [x] **Step 1: Create src/platform/webextension.js**
 
 ```js
 import browser from 'webextension-polyfill';
@@ -1639,7 +1639,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
 }
 ```
 
-- [ ] **Step 2: Commit**
+ - [x] **Step 2: Commit**
 
 ```bash
 git add src/platform/webextension.js
@@ -1656,7 +1656,7 @@ git commit -m "refactor: add WebExtensionAdapter using browser.storage and sendM
 - Create: `src/targets/firefox/background.js`
 - Create: `src/targets/chrome/service-worker.js`
 
-- [ ] **Step 1: Create src/targets/firefox/background.js**
+ - [x] **Step 1: Create src/targets/firefox/background.js**
 
 ```js
 const USER_AGENTS = [
@@ -1691,7 +1691,7 @@ browser.runtime.onMessage.addListener(async msg => {
 });
 ```
 
-- [ ] **Step 2: Create src/targets/chrome/service-worker.js**
+ - [x] **Step 2: Create src/targets/chrome/service-worker.js**
 
 ```js
 const USER_AGENTS = [
@@ -1728,7 +1728,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 ```
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/firefox/background.js src/targets/chrome/service-worker.js
@@ -1746,7 +1746,7 @@ The content script entry and options page are shared between Firefox and Chrome 
 - Create: `src/targets/extension/options.html`
 - Create: `src/targets/extension/options.js`
 
-- [ ] **Step 1: Create src/targets/extension/content.js**
+ - [x] **Step 1: Create src/targets/extension/content.js**
 
 ```js
 import browser from 'webextension-polyfill';
@@ -1766,7 +1766,7 @@ import { startApp } from '../../core/app.js';
 })();
 ```
 
-- [ ] **Step 2: Create src/targets/extension/options.html**
+ - [x] **Step 2: Create src/targets/extension/options.html**
 
 ```html
 <!doctype html>
@@ -1806,7 +1806,7 @@ import { startApp } from '../../core/app.js';
 </html>
 ```
 
-- [ ] **Step 3: Create src/targets/extension/options.js**
+ - [x] **Step 3: Create src/targets/extension/options.js**
 
 `options.js` is bundled by Rollup (Task 16), so ES module imports work here.
 
@@ -1897,7 +1897,7 @@ document.getElementById('resetClientsBtn').addEventListener('click', async () =>
 loadValues();
 ```
 
-- [ ] **Step 4: Commit**
+ - [x] **Step 4: Commit**
 
 ```bash
 git add src/targets/extension/content.js src/targets/extension/options.html src/targets/extension/options.js
@@ -1913,7 +1913,7 @@ git commit -m "feat: add shared extension content entry and options page"
 - Create: `src/targets/chrome/manifest.json`
 - Modify: `rollup.config.js`
 
-- [ ] **Step 1: Create src/targets/firefox/manifest.json**
+ - [x] **Step 1: Create src/targets/firefox/manifest.json**
 
 ```json
 {
@@ -1953,7 +1953,7 @@ git commit -m "feat: add shared extension content entry and options page"
 
 Note: `"version": "0.0.0"` is a placeholder — the Rollup `injectManifestVersion` plugin overwrites it with the version from `package.json` at build time.
 
-- [ ] **Step 2: Create src/targets/chrome/manifest.json**
+ - [x] **Step 2: Create src/targets/chrome/manifest.json**
 
 ```json
 {
@@ -1985,7 +1985,7 @@ Note: `"version": "0.0.0"` is a placeholder — the Rollup `injectManifestVersio
 }
 ```
 
-- [ ] **Step 3: Update rollup.config.js with the full three-target config**
+ - [x] **Step 3: Update rollup.config.js with the full three-target config**
 
 Replace the current `rollup.config.js` entirely:
 
@@ -2098,7 +2098,7 @@ export default target
     : allConfigs.map(({ _target, ...rest }) => rest);
 ```
 
-- [ ] **Step 4: Run the full build**
+ - [x] **Step 4: Run the full build**
 
 ```bash
 npm run build
@@ -2128,7 +2128,7 @@ ls dist/FlixMonkey.user.js dist/firefox/{content,options,background}.js dist/fir
 
 Expected: eleven paths printed, no "No such file" errors.
 
-- [ ] **Step 5: Verify manifest versions were injected**
+ - [x] **Step 5: Verify manifest versions were injected**
 
 ```bash
 node -e "const m=JSON.parse(require('fs').readFileSync('dist/firefox/manifest.json','utf8')); console.log(m.version);"
@@ -2137,7 +2137,7 @@ node -e "const m=JSON.parse(require('fs').readFileSync('dist/chrome/manifest.jso
 
 Expected: both print `0.10.0`.
 
-- [ ] **Step 6: Commit**
+ - [x] **Step 6: Commit**
 
 ```bash
 git add src/targets/firefox/manifest.json src/targets/chrome/manifest.json rollup.config.js
@@ -2153,7 +2153,7 @@ git commit -m "feat: add Firefox and Chrome manifests, complete Rollup config fo
 **Files:**
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Update eslint.config.js**
+ - [x] **Step 1: Update eslint.config.js**
 
 ```js
 import js from '@eslint/js';
@@ -2211,7 +2211,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 2: Run lint against src/**
+ - [x] **Step 2: Run lint against src/**
 
 ```bash
 npm run lint
@@ -2219,7 +2219,7 @@ npm run lint
 
 Expected: zero errors. There may be warnings for `console.warn` calls — those are expected and allowed by the `no-console` rule config.
 
-- [ ] **Step 3: Commit**
+ - [x] **Step 3: Commit**
 
 ```bash
 git add eslint.config.js
@@ -2230,7 +2230,7 @@ git commit -m "chore: update ESLint config for src/ ES modules alongside legacy 
 
 ## Task 18: Final build verification and AGENTS.md update
 
-- [ ] **Step 1: Run the full build one more time from a clean state**
+ - [x] **Step 1: Run the full build one more time from a clean state**
 
 ```bash
 npm run build
@@ -2238,7 +2238,7 @@ npm run build
 
 Expected: completes without errors.
 
-- [ ] **Step 2: Confirm all dist outputs are present and non-empty**
+ - [x] **Step 2: Confirm all dist outputs are present and non-empty**
 
 ```bash
 wc -l dist/FlixMonkey.user.js dist/firefox/content.js dist/chrome/content.js dist/firefox/options.js dist/chrome/options.js
@@ -2246,7 +2246,7 @@ wc -l dist/FlixMonkey.user.js dist/firefox/content.js dist/chrome/content.js dis
 
 Expected: each file has at least 100 lines (the bundles include all core modules).
 
-- [ ] **Step 3: Confirm manifest versions**
+ - [x] **Step 3: Confirm manifest versions**
 
 ```bash
 grep '"version"' dist/firefox/manifest.json dist/chrome/manifest.json
@@ -2258,7 +2258,7 @@ dist/firefox/manifest.json:  "version": "0.10.0",
 dist/chrome/manifest.json:  "version": "0.10.0",
 ```
 
-- [ ] **Step 4: Run lint**
+ - [x] **Step 4: Run lint**
 
 ```bash
 npm run lint
@@ -2266,7 +2266,7 @@ npm run lint
 
 Expected: no errors.
 
-- [ ] **Step 5: Update AGENTS.md to reflect the new project structure**
+ - [x] **Step 5: Update AGENTS.md to reflect the new project structure**
 
 In `AGENTS.md`, update the **Project Overview**, **Setup**, **Development Workflow**, **Scripts**, and **Architecture** sections to reflect:
 - The project now has a build step (`npm run build`)
@@ -2275,7 +2275,7 @@ In `AGENTS.md`, update the **Project Overview**, **Setup**, **Development Workfl
 - `FlixMonkey.user.js` is the legacy source (still works standalone); `dist/FlixMonkey.user.js` is the built output going forward
 - Module-level architecture (list the new `src/core/` files and their responsibilities)
 
-- [ ] **Step 6: Commit**
+ - [x] **Step 6: Commit**
 
 ```bash
 git add AGENTS.md
