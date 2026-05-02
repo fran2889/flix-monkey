@@ -35,6 +35,16 @@ function buildGmConfigFields(fields) {
     return result;
 }
 
+if (typeof GM_config === 'undefined') {
+    window.GM_config = {
+        init: () => {},
+        get: () => {},
+        open: () => {},
+        close: () => {},
+        save: () => {}
+    };
+}
+
 GM_config.init({
     id: 'FlixMonkey',
     title: 'FlixMonkey Settings',
