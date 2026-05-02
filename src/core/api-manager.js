@@ -36,9 +36,11 @@ export class ApiClientManager {
         if (cached !== null) return cached;
 
         let bestData = null;
+        let attempted = false;
 
         for (const client of this.#clients) {
             if (await client.isDisabled()) continue;
+            attempted = true;
             const data = await client.fetch(displayTitle, domYear);
             if (!data) continue;
             if (data.isBetterThan(bestData)) {
@@ -49,10 +51,12 @@ export class ApiClientManager {
         }
 
         if (!bestData) {
-            console.warn(
-                `[FlixMonkey] Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
-            );
-            await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
+            if (attempted) {
+                console.warn(
+                    `[FlixMonkey] Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
+                );
+                await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
+            }
             return null;
         }
 
