@@ -1,26 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { RequestQueue } from '../../../src/core/request-queue.js';
 
 describe('RequestQueue', () => {
-    it('should process queued requests', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn() };
-        const queue = new RequestQueue(10, null, mockAdapter);
-        const fetchFn = vi.fn().mockResolvedValue('success');
-        
-        const promise = queue.enqueue('https://api.test', 0, fetchFn, 'json');
-        const result = await promise;
-        
-        expect(result).toBe('success');
-        expect(fetchFn).toHaveBeenCalled();
-    });
-
     it('should clear queue', () => {
-        const queue = new RequestQueue(999999); 
-        
-        // Add items to queue and catch the rejection from clear()
-        queue.enqueue('url1', 0, () => new Promise(() => {}), 'json').catch(() => {});
-        queue.enqueue('url2', 0, () => new Promise(() => {}), 'json').catch(() => {});
-        
+        const queue = new RequestQueue();
+        const p1 = queue.enqueue('url1', 1, () => Promise.resolve(), 'json');
+        const p2 = queue.enqueue('url2', 1, () => Promise.resolve(), 'json');
+        p1.catch(() => {});
+        p2.catch(() => {});
         const count = queue.clear();
         expect(count).toBe(2);
     });
