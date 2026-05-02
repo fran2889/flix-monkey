@@ -13,6 +13,7 @@
   "background": {
     "service_worker": "service-worker.js"
   },
+  "action": {},
   "content_scripts": [
     {
       "matches": ["https://www.netflix.com/*"],

@@ -13,6 +13,7 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "action": {},
   "content_scripts": [
     {
       "matches": ["https://www.netflix.com/*"],

@@ -28,3 +28,7 @@ browser.runtime.onMessage.addListener(async msg => {
         return { error: err.message };
     }
 });
+
+browser.action.onClicked.addListener(() => {
+    browser.runtime.openOptionsPage();
+});
