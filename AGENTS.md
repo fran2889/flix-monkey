@@ -104,6 +104,8 @@ class PlatformAdapter {
 - **Private Fields**: Use `#field` for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
 - **Conventional Commits**: Strictly enforced for all changes.
+- **Tooling Preference**: Prefer using IntelliJ IDEA MCP tools over standard text tools for file operations and codebase exploration.
+- **Post-Task Protocol**: Always print the suggested commit message once the task is complete.
 
 ## Commit Messages
 
