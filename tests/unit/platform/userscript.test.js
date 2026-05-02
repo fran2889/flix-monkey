@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserscriptAdapter } from '../../../src/platform/userscript.js';
+import { setupUserscriptMocks } from '../../mocks/platform.js';
 
 describe('UserscriptAdapter', () => {
     let adapter;
 
     beforeEach(() => {
-        vi.stubGlobal('GM_getValue', vi.fn());
-        vi.stubGlobal('GM_setValue', vi.fn());
-        vi.stubGlobal('GM_xmlhttpRequest', vi.fn());
-        vi.stubGlobal('GM_registerMenuCommand', vi.fn());
+        setupUserscriptMocks();
         adapter = new UserscriptAdapter();
     });
 
