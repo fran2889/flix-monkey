@@ -10,17 +10,26 @@
     "build:userscript": "rollup -c --environment TARGET:userscript",
     "build:firefox": "rollup -c --environment TARGET:firefox",
     "build:chrome": "rollup -c --environment TARGET:chrome",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "test": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:ui": "vitest run tests/ui",
+    "test:integration": "vitest run tests/integration"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
     "eslint": "^10.1.0",
     "eslint-plugin-headers": "^1.3.4",
     "globals": "^17.4.0",
+    "jsdom": "^29.1.1",
+    "msw": "^2.14.2",
     "prettier": "^3.8.1",
     "rollup": "^4.0.0",
+    "vitest": "^4.1.5",
     "webextension-polyfill": "^0.12.0"
   }
 }
