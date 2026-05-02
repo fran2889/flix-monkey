@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CacheManager } from '../../../src/core/cache.js';
+import { CacheManager } from '@core/cache';
 
 describe('CacheManager', () => {
   it('should be instantiable', () => {

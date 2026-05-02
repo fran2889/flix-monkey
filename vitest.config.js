@@ -6,8 +6,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.js'],
     alias: {
-      '@core': './src/core',
-      '@platform': './src/platform',
+      '@core': '/home/fran/Projects/flix-monkey/src/core',
+      '@core/': '/home/fran/Projects/flix-monkey/src/core/',
+      '@platform': '/home/fran/Projects/flix-monkey/src/platform',
+      '@platform/': '/home/fran/Projects/flix-monkey/src/platform/',
     },
   },
 });
