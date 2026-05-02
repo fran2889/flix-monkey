@@ -133,4 +133,4 @@ npm run format
 ---
 
 ## License
-MIT
+GPLv3

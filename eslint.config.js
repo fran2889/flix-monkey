@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import globals from 'globals';
+import headers from 'eslint-plugin-headers';
 
 export default [
     js.configs.recommended,
@@ -29,6 +30,7 @@ export default [
     // src/ modules — ES module context
     {
         files: ['src/**/*.js'],
+        plugins: { headers },
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
@@ -45,6 +47,16 @@ export default [
             },
         },
         rules: {
+            'headers/header-format': [
+                'error',
+                {
+                    source: 'file',
+                    path: 'LICENSE_HEADER.template',
+                    variables: {
+                        year: new Date().getFullYear().toString(),
+                    },
+                },
+            ],
             'prefer-const': 'error',
             'no-var': 'error',
             eqeqeq: 'error',
