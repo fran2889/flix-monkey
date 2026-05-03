@@ -15,3 +15,4 @@ package.json
 package-lock.json
 .worktrees/
 .env
+.worktrees/
