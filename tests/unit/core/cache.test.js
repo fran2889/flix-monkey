@@ -1,10 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { CacheManager } from '@core/cache';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CacheManager } from '../../../src/core/cache.js';
 
 describe('CacheManager', () => {
-  it('should be instantiable', () => {
-    const mockAdapter = { storageGet: () => null, storageSet: () => null };
-    const cache = new CacheManager(mockAdapter);
-    expect(cache).toBeDefined();
-  });
+    let adapter;
+    let cacheManager;
+
+    beforeEach(() => {
+        adapter = {
+            storageGet: vi.fn(),
+            storageSet: vi.fn(),
+        };
+        cacheManager = new CacheManager(adapter);
+    });
+
+    it('should initialize correctly', () => {
+        expect(cacheManager).toBeInstanceOf(CacheManager);
+    });
 });
