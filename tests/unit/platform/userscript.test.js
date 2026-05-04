@@ -21,4 +21,44 @@ describe('UserscriptAdapter', () => {
         await adapter.storageSet('key', 'value');
         expect(GM_setValue).toHaveBeenCalledWith('key', 'value');
     });
+
+    it('registerMenuCommand should call GM_registerMenuCommand', () => {
+        const fn = vi.fn();
+        adapter.registerMenuCommand('test-label', fn);
+        expect(GM_registerMenuCommand).toHaveBeenCalledWith('test-label', fn);
+    });
+
+    it('httpFetch should resolve with JSON on success', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
+            onload({ status: 200, response: { data: 'ok' } });
+        });
+
+        const result = await adapter.httpFetch('http://example.com');
+        expect(GM_xmlhttpRequest).toHaveBeenCalled();
+        expect(result).toEqual({ data: 'ok' });
+    });
+
+    it('httpFetch should reject on HTTP error', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
+            onload({ status: 404 });
+        });
+
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('HTTP 404');
+    });
+
+    it('httpFetch should reject on network error', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onerror }) => {
+            onerror();
+        });
+
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('network error');
+    });
+
+    it('httpFetch should reject on timeout', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ ontimeout }) => {
+            ontimeout();
+        });
+
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('timeout');
+    });
 });

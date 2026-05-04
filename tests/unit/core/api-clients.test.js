@@ -30,4 +30,22 @@ describe('XmdbApiClient', () => {
         expect(result.rating).toBe(8.5);
         expect(result.rtRating).toBe(90);
     });
+
+    it('should disable itself on 4xx error', async () => {
+        const error = new Error('HTTP 403');
+        error.status = 403;
+        const mockAdapter = { 
+            httpFetch: vi.fn().mockRejectedValue(error),
+            storageGet: vi.fn().mockResolvedValue(null),
+            storageSet: vi.fn().mockResolvedValue(undefined)
+        };
+        const mockDisabledManager = { 
+            isDisabled: vi.fn().mockResolvedValue(false),
+            disable: vi.fn().mockResolvedValue(undefined)
+        };
+
+        const client = new XmdbApiClient(mockDisabledManager, mockAdapter);
+        await expect(client.queuedFetch('url')).rejects.toThrow('HTTP 403');
+        expect(mockDisabledManager.disable).toHaveBeenCalledWith(expect.any(String), expect.any(Number));
+    });
 });
