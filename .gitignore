@@ -16,3 +16,4 @@ package-lock.json
 .worktrees/
 .env
 .worktrees/
+coverage/
