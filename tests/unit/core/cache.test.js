@@ -42,6 +42,23 @@ describe('CacheManager', () => {
         expect(adapter.storageSet).toHaveBeenCalledWith('fm_cache', '{}');
     });
 
+    it('should write and read cache entry', async () => {
+        const titleData = { displayTitle: 'Test Title', year: 2026, rating: '8.0' };
+        const titleObj = new Title(titleData);
+        adapter.storageGet.mockResolvedValue('{}');
+        
+        await cacheManager.write('Test Title', 2026, titleObj);
+        expect(adapter.storageSet).toHaveBeenCalled();
+        
+        adapter.storageGet.mockResolvedValue(JSON.stringify({
+            'test_title_2026': { data: titleObj, expires: Date.now() + 10000 }
+        }));
+        
+        const result = await cacheManager.read('Test Title', 2026);
+        expect(result.displayTitle).toEqual(titleObj.displayTitle);
+        expect(result.year).toEqual(titleObj.year);
+    });
+
     it('should return null for expired cache', async () => {
         vi.useFakeTimers();
         const now = Date.now();
