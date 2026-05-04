@@ -15,15 +15,28 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Base class for platform adapters.
+ * All methods must be implemented by subclasses.
+ */
 export class PlatformAdapter {
+    /** @abstract */
     async storageGet(_key) {
-        throw new Error('Not implemented');
+        throw new Error('PlatformAdapter: storageGet() must be implemented by subclass');
     }
+
+    /** @abstract */
     async storageSet(_key, _value) {
-        throw new Error('Not implemented');
+        throw new Error('PlatformAdapter: storageSet() must be implemented by subclass');
     }
+
+    /** @abstract */
     async httpFetch(_url, _options) {
-        throw new Error('Not implemented');
+        throw new Error('PlatformAdapter: httpFetch() must be implemented by subclass');
     }
-    registerMenuCommand(_label, _fn) {}
+
+    /** @abstract */
+    registerMenuCommand(_label, _fn) {
+        throw new Error('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
+    }
 }
