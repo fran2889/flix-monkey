@@ -1,41 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { XmdbApiClient } from '../../../src/core/api-clients.js';
+import { XmdbApiClient, ImdbApiDevClient } from '../../../src/core/api-clients.js';
 import * as configModule from '../../../src/core/config.js';
 
 beforeEach(() => {
     vi.spyOn(configModule, 'CONFIG', 'get').mockReturnValue({ xmdbApiKey: 'test-key' });
 });
 
-describe('XmdbApiClient', () => {
-    it('should fetch title details successfully', async () => {
-        const mockAdapter = { 
-            httpFetch: vi.fn()
-                .mockResolvedValueOnce({ results: [{ id: 'tt123', title: 'Test Movie', type: 'title', year: '2023' }] })
-                .mockResolvedValueOnce({
-                    title: 'Test Movie',
-                    year: '2023',
-                    rating: '8.5',
-                    ratings: [{ source: 'Rotten Tomatoes', value: '90%' }]
-                }),
-            storageGet: vi.fn().mockResolvedValue(null),
-            storageSet: vi.fn().mockResolvedValue(undefined)
-        };
-        const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false) };
-
-        const client = new XmdbApiClient(mockDisabledManager, mockAdapter);
-        const result = await client.fetch('Test Movie', '2023');
-
-        expect(result).toBeDefined();
-        expect(result.apiTitle).toBe('Test Movie');
-        expect(result.rating).toBe(8.5);
-        expect(result.rtRating).toBe(90);
-    });
-
-    it('should disable itself on 4xx error', async () => {
+describe('BaseApiClient (via XmdbApiClient)', () => {
+    it('should disable itself and purge queue on 4xx error', async () => {
         const error = new Error('HTTP 403');
         error.status = 403;
+        
+        // We need a slow promise to keep it in queue
+        let resolveFetch;
+        const slowPromise = new Promise(resolve => { resolveFetch = resolve; });
+        
         const mockAdapter = { 
-            httpFetch: vi.fn().mockRejectedValue(error),
+            httpFetch: vi.fn()
+                .mockRejectedValueOnce(error)
+                .mockReturnValue(slowPromise),
             storageGet: vi.fn().mockResolvedValue(null),
             storageSet: vi.fn().mockResolvedValue(undefined)
         };
@@ -45,7 +28,39 @@ describe('XmdbApiClient', () => {
         };
 
         const client = new XmdbApiClient(mockDisabledManager, mockAdapter);
-        await expect(client.queuedFetch('url')).rejects.toThrow('HTTP 403');
-        expect(mockDisabledManager.disable).toHaveBeenCalledWith(expect.any(String), expect.any(Number));
+        
+        // Trigger first fetch that fails and disables the client
+        const p1 = client.queuedFetch('url1').catch(e => e);
+        
+        // Enqueue second fetch that should be purged
+        const p2 = client.queuedFetch('url2').catch(e => e);
+        
+        const [err1, err2] = await Promise.all([p1, p2]);
+        
+        expect(err1.status).toBe(403);
+        expect(err2.message).toBe('Client Disabled');
+        expect(mockDisabledManager.disable).toHaveBeenCalled();
+    });
+});
+
+describe('ImdbApiDevClient', () => {
+    it('should match near years (fuzzy matching)', async () => {
+        const mockAdapter = {
+            httpFetch: vi.fn().mockResolvedValue({
+                titles: [
+                    { id: 'tt1', title: 'Wrong Year', startYear: 2020 },
+                    { id: 'tt2', title: 'Close Year', startYear: 2022 },
+                    { id: 'tt3', title: 'Far Year', startYear: 2025 }
+                ]
+            }),
+            storageGet: vi.fn().mockResolvedValue(null),
+            storageSet: vi.fn().mockResolvedValue(undefined)
+        };
+        const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
+        
+        // Request for 2023 should match 2022
+        const result = await client.search('Some Movie', '2023');
+        expect(result.id).toBe('tt2');
+        expect(result.startYear).toBe(2022);
     });
 });

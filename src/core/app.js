@@ -41,28 +41,24 @@ class FlixMonkeyApp {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const domYear = this.#surfaces.extractYear(container);
-        const cached = await this.#cache.read(displayTitle, domYear);
-        if (cached !== null) {
-            this.#renderer.ensureRelative(container);
-            this.#renderer.injectOverlay(container, cached);
-            this.#renderer.applyFade(container, cached, fadeable);
-            return;
-        }
-
-        this.#renderer.ensureRelative(container);
-        this.#renderer.injectLoadingOverlay(container, displayTitle);
-
         const dedupKey = `${displayTitle.toLowerCase()}_${domYear ?? ''}`;
+        
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
-            promise = this.#api.getData(displayTitle, domYear).finally(() => this.#inFlight.delete(dedupKey));
+            promise = (async () => {
+                const cached = await this.#cache.read(displayTitle, domYear);
+                if (cached !== null) return cached;
+                return await this.#api.getData(displayTitle, domYear);
+            })().finally(() => this.#inFlight.delete(dedupKey));
             this.#inFlight.set(dedupKey, promise);
         }
 
         const data = await promise;
-        this.#renderer.ensureRelative(container);
-        this.#renderer.injectOverlay(container, data ?? Title.notFound(displayTitle));
-        this.#renderer.applyFade(container, data, fadeable);
+        if (!this.#renderer.hasOverlay(container)) {
+            this.#renderer.ensureRelative(container);
+            this.#renderer.injectOverlay(container, data ?? Title.notFound(displayTitle));
+            this.#renderer.applyFade(container, data, fadeable);
+        }
     }
 
     decorateRoot(root) {
