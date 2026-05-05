@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/unit",
     "test:ui": "vitest run tests/ui",
-    "test:integration": "vitest run tests/integration"
+    "test:integration": "vitest run tests/integration",
+    "audit": "npm audit"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
