@@ -42,7 +42,7 @@ class FlixMonkeyApp {
 
         const domYear = this.#surfaces.extractYear(container);
         const dedupKey = `${displayTitle.toLowerCase()}_${domYear ?? ''}`;
-        
+
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
             promise = (async () => {

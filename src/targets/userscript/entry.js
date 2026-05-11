@@ -41,7 +41,7 @@ if (typeof GM_config === 'undefined') {
         get: () => {},
         open: () => {},
         close: () => {},
-        save: () => {}
+        save: () => {},
     };
 }
 
