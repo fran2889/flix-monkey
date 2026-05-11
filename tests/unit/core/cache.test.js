@@ -29,11 +29,8 @@ describe('CacheManager', () => {
         adapter.storageGet.mockResolvedValue(JSON.stringify({}));
         const title = new Title({ apiTitle: 'Test Title' });
         await cacheManager.write('Test Title', '2023', title);
-        
-        expect(adapter.storageSet).toHaveBeenCalledWith(
-            'fm_cache',
-            expect.stringContaining('Test Title')
-        );
+
+        expect(adapter.storageSet).toHaveBeenCalledWith('fm_cache', expect.stringContaining('Test Title'));
     });
 
     it('should clear cache', async () => {
@@ -46,14 +43,16 @@ describe('CacheManager', () => {
         const titleData = { displayTitle: 'Test Title', year: 2026, rating: '8.0' };
         const titleObj = new Title(titleData);
         adapter.storageGet.mockResolvedValue('{}');
-        
+
         await cacheManager.write('Test Title', 2026, titleObj);
         expect(adapter.storageSet).toHaveBeenCalled();
-        
-        adapter.storageGet.mockResolvedValue(JSON.stringify({
-            'test_title_2026': { data: titleObj, expires: Date.now() + 10000 }
-        }));
-        
+
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                test_title_2026: { data: titleObj, expires: Date.now() + 10000 },
+            })
+        );
+
         const result = await cacheManager.read('Test Title', 2026);
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
         expect(result.year).toEqual(titleObj.year);
@@ -63,13 +62,15 @@ describe('CacheManager', () => {
         vi.useFakeTimers();
         const now = Date.now();
         vi.setSystemTime(now);
-        
+
         const titleData = { displayTitle: 'Old Title', year: 2020 };
         const titleObj = new Title(titleData);
-        adapter.storageGet.mockResolvedValue(JSON.stringify({
-            'old_title_2020': { data: titleObj, expires: now - 1000 }
-        }));
-        
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                old_title_2020: { data: titleObj, expires: now - 1000 },
+            })
+        );
+
         const result = await cacheManager.read('Old Title', 2020);
         expect(result).toBeNull();
         vi.useRealTimers();

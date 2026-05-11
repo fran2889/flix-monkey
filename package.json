@@ -5,9 +5,9 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"src/**/*.js\" \"src/**/*.html\"",
-        "lint": "eslint \"src/**/*.js\"",
-        "lint:fix": "eslint --fix \"src/**/*.js\"",
+        "format": "prettier --write \"src/**/*.js\" \"src/**/*.html\" \"tests/**/*.js\" \"*.{json,md,yml,html}\"",
+        "lint": "eslint \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
+        "lint:fix": "eslint --fix \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
         "build:userscript": "rollup -c --environment TARGET:userscript",
         "build:firefox": "rollup -c --environment TARGET:firefox",
         "build:chrome": "rollup -c --environment TARGET:chrome",
@@ -44,11 +44,11 @@
         "dotenv": "^17.4.2"
     },
     "lint-staged": {
-        "src/**/*.{js,ts,jsx,tsx}": [
+        "**/*.{js,ts,jsx,tsx}": [
             "prettier --write",
             "eslint --fix"
         ],
-        "*.{json,md,yml,html}": [
+        "**/*.{json,md,yml,html}": [
             "prettier --write"
         ]
     }

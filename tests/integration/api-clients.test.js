@@ -13,22 +13,22 @@ describe('api-clients integration', () => {
             return process.env[envKey] ?? null;
         });
     });
-  if (!hasCredentials(credentials)) {
-    it.skip('should fetch real data from APIs', async () => {});
-  } else {
-    it('should fetch real data from APIs', async () => {
-        const adapter = { 
-            httpFetch: async (url, options) => {
-                const response = await fetch(url, options);
-                return await response.json();
-            },
-            storageGet: async () => '0',
-            storageSet: async () => {}
-        };
-        const client = new XmdbApiClient(new DisabledClientsManager(adapter), adapter);
-        const result = await client.fetch('The Matrix');
-        expect(result).toBeDefined();
-        expect(result.apiTitle).toContain('Matrix');
-    });
-  }
+    if (!hasCredentials(credentials)) {
+        it.skip('should fetch real data from APIs', async () => {});
+    } else {
+        it('should fetch real data from APIs', async () => {
+            const adapter = {
+                httpFetch: async (url, options) => {
+                    const response = await fetch(url, options);
+                    return await response.json();
+                },
+                storageGet: async () => '0',
+                storageSet: async () => {},
+            };
+            const client = new XmdbApiClient(new DisabledClientsManager(adapter), adapter);
+            const result = await client.fetch('The Matrix');
+            expect(result).toBeDefined();
+            expect(result.apiTitle).toContain('Matrix');
+        });
+    }
 });

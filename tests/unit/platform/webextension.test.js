@@ -5,8 +5,8 @@ import browser from 'webextension-polyfill';
 vi.mock('webextension-polyfill', () => ({
     default: {
         storage: { local: { get: vi.fn(), set: vi.fn() } },
-        runtime: { sendMessage: vi.fn() }
-    }
+        runtime: { sendMessage: vi.fn() },
+    },
 }));
 
 describe('WebExtensionAdapter', () => {

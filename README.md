@@ -27,38 +27,43 @@ Compatible with all major userscript managers. This is the easiest way to get st
 The browser extensions provide a more seamless integration and better performance by using background processes for network requests.
 
 1. **Chrome / Edge**:
-   - Download the latest [Chrome release](https://github.com/fran/FlixMonkey/releases) (or build from source).
-   - Go to `chrome://extensions/` and enable **Developer mode**.
-   - Click **Load unpacked** and select the `dist/chrome` folder.
+    - Download the latest [Chrome release](https://github.com/fran/FlixMonkey/releases) (or build from source).
+    - Go to `chrome://extensions/` and enable **Developer mode**.
+    - Click **Load unpacked** and select the `dist/chrome` folder.
 2. **Firefox**:
-   - Download the latest [Firefox release](https://github.com/fran/FlixMonkey/releases) (or build from source).
-   - Go to `about:debugging#/runtime/this-firefox`.
-   - Click **Load Temporary Add-on...** and select `dist/firefox/manifest.json`.
+    - Download the latest [Firefox release](https://github.com/fran/FlixMonkey/releases) (or build from source).
+    - Go to `about:debugging#/runtime/this-firefox`.
+    - Click **Load Temporary Add-on...** and select `dist/firefox/manifest.json`.
 
 ---
 
 ## Features
 
 ### Rating Badges
+
 Displays a compact badge in your chosen corner on:
+
 - Browse grid thumbnails
 - Hover zoom cards
 - Preview modals
 - Hero banner images
 
 ### Supported Scores
+
 - **IMDb** rating (0.0–10.0)
 - **Rotten Tomatoes** score (0–100, requires OMDB key)
 - **Metacritic** score (0–100, requires OMDB key)
 
 ### Interactive Badges
-| Badge State | Appearance | Action |
-|---|---|---|
-| **Found & Rated** | `IMDb 8.3` | Click to open the IMDb title page |
-| **Found, No Rating** | `IMDb N/A` | Click to open the IMDb title page |
-| **Not Found on IMDb** | `IMDb 🔍` | Click to search for the title on IMDb |
+
+| Badge State           | Appearance | Action                                |
+| --------------------- | ---------- | ------------------------------------- |
+| **Found & Rated**     | `IMDb 8.3` | Click to open the IMDb title page     |
+| **Found, No Rating**  | `IMDb N/A` | Click to open the IMDb title page     |
+| **Not Found on IMDb** | `IMDb 🔍`  | Click to search for the title on IMDb |
 
 ### Smart Technology
+
 - **Caching**: Local storage caching with intelligent TTLs based on release year.
 - **Deduplication**: Only one API call per title, even if it appears multiple times on the page.
 - **Auto-Disable**: Slow or failing APIs are temporarily disabled for 1 hour to prevent UI lag.
@@ -68,18 +73,21 @@ Displays a compact badge in your chosen corner on:
 ## Configuration
 
 Access settings to customize your experience:
+
 - **Extensions**: Click the FlixMonkey icon in your browser toolbar and select **Options**.
 - **Userscript**: Right-click the userscript manager icon on Netflix and select **FlixMonkey Settings**.
 
 ### Key Settings
-| Option | Default | Description |
-|---|---|---|
-| **Overlay Position** | `top-left` | Corner where the rating badge appears. |
-| **API Fallback Order** | `imdbapi,xmdb,omdb` | Order in which APIs are queried. |
-| **OMDB API Key** | `Optional` | Provides RT/Metacritic scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
-| **XMDB API Key** | `Optional` | Additional movie/TV database. [Get a free key here](https://xmdbapi.com/api-key). |
+
+| Option                 | Default             | Description                                                                                |
+| ---------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| **Overlay Position**   | `top-left`          | Corner where the rating badge appears.                                                     |
+| **API Fallback Order** | `imdbapi,xmdb,omdb` | Order in which APIs are queried.                                                           |
+| **OMDB API Key**       | `Optional`          | Provides RT/Metacritic scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
+| **XMDB API Key**       | `Optional`          | Additional movie/TV database. [Get a free key here](https://xmdbapi.com/api-key).          |
 
 ### Cache Management
+
 Use the **Clear Cache** button in the settings menu to remove all cached ratings and force fresh API lookups.
 
 ---
@@ -98,7 +106,9 @@ Use the **Clear Cache** button in the settings menu to remove all cached ratings
 FlixMonkey is built using a modern modular architecture with a shared core for all platforms.
 
 ### Architecture
+
 The codebase is split into three layers:
+
 1. **Core (`src/core/`)**: Platform-agnostic business logic (APIs, Caching, Rendering).
 2. **Platform (`src/platform/`)**: Implementation of the `PlatformAdapter` interface for each environment.
 3. **Targets (`src/targets/`)**: Entry points and platform-specific manifests.
@@ -106,6 +116,7 @@ The codebase is split into three layers:
 Detailed architectural documentation can be found in [AGENTS.md](./AGENTS.md).
 
 ### Build Process
+
 Requires [Node.js](https://nodejs.org/).
 
 ```bash
@@ -126,6 +137,7 @@ npm run format
 ```
 
 ### Development Workflow
+
 1. Edit source files in `src/`.
 2. Run `npm run build` to generate distribution artifacts in `dist/`.
 3. Load the `dist/` folder into your browser (Extensions) or point your manager to `dist/FlixMonkey.user.js` (Userscript).
@@ -133,4 +145,5 @@ npm run format
 ---
 
 ## License
+
 GPLv3

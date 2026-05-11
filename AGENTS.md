@@ -30,14 +30,14 @@ npm install
 
 ### Build Scripts
 
-| Command | Description |
-|---|---|
-| `npm run build` | Build all targets (userscript, firefox, chrome) |
-| `npm run build:userscript` | Build only the userscript |
-| `npm run build:firefox` | Build only the Firefox extension |
-| `npm run build:chrome` | Build only the Chrome extension |
-| `npm run lint` | Lint `src/` modules and legacy script |
-| `npm run format` | Format with Prettier |
+| Command                    | Description                                     |
+| -------------------------- | ----------------------------------------------- |
+| `npm run build`            | Build all targets (userscript, firefox, chrome) |
+| `npm run build:userscript` | Build only the userscript                       |
+| `npm run build:firefox`    | Build only the Firefox extension                |
+| `npm run build:chrome`     | Build only the Chrome extension                 |
+| `npm run lint`             | Lint `src/` modules and legacy script           |
+| `npm run format`           | Format with Prettier                            |
 
 ### Loading for Testing
 
@@ -50,33 +50,36 @@ npm install
 The project is structured into three main layers:
 
 ### 1. Core (`src/core/`)
+
 Platform-agnostic business logic.
 
-| Module | Responsibility |
-|---|---|
-| `app.js` | Main application class and `startApp` factory |
-| `api-manager.js` | Orchestrates multiple API clients and handles fallbacks |
-| `api-clients.js` | Client implementations for XMDB, OMDB, and IMDb API Dev |
-| `cache.js` | Async cache manager with TTL logic |
+| Module                | Responsibility                                           |
+| --------------------- | -------------------------------------------------------- |
+| `app.js`              | Main application class and `startApp` factory            |
+| `api-manager.js`      | Orchestrates multiple API clients and handles fallbacks  |
+| `api-clients.js`      | Client implementations for XMDB, OMDB, and IMDb API Dev  |
+| `cache.js`            | Async cache manager with TTL logic                       |
 | `disabled-clients.js` | Tracks failing API endpoints to avoid redundant requests |
-| `request-queue.js` | Handles rate limiting and cross-tab synchronization |
-| `overlay.js` | UI rendering of the rating badges |
-| `surfaces.js` | DOM discovery logic for Netflix UI elements |
-| `config.js` | Reactive configuration object |
-| `config-fields.js` | Single source of truth for settings definitions |
-| `title.js` | Pure data class representing a movie/show |
-| `constants.js` | Shared constants and enumerations |
+| `request-queue.js`    | Handles rate limiting and cross-tab synchronization      |
+| `overlay.js`          | UI rendering of the rating badges                        |
+| `surfaces.js`         | DOM discovery logic for Netflix UI elements              |
+| `config.js`           | Reactive configuration object                            |
+| `config-fields.js`    | Single source of truth for settings definitions          |
+| `title.js`            | Pure data class representing a movie/show                |
+| `constants.js`        | Shared constants and enumerations                        |
 
 ### 2. Platform (`src/platform/`)
+
 Implementation of the `PlatformAdapter` interface.
 
-| Module | Responsibility |
-|---|---|
-| `adapter.js` | Abstract base class defining the platform interface |
-| `userscript.js` | Implementation using `GM_*` APIs |
+| Module            | Responsibility                                                      |
+| ----------------- | ------------------------------------------------------------------- |
+| `adapter.js`      | Abstract base class defining the platform interface                 |
+| `userscript.js`   | Implementation using `GM_*` APIs                                    |
 | `webextension.js` | Implementation using `browser.*` APIs (via `webextension-polyfill`) |
 
 ### 3. Targets (`src/targets/`)
+
 Entry points and platform-specific manifests.
 
 - `userscript/`: `entry.js` (GM_config wiring)

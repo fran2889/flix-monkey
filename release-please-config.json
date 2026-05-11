@@ -1,8 +1,8 @@
 {
-  "packages": {
-    ".": {
-      "release-type": "node",
-      "package-name": "flixmonkey"
+    "packages": {
+        ".": {
+            "release-type": "node",
+            "package-name": "flixmonkey"
+        }
     }
-  }
 }

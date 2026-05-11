@@ -27,9 +27,8 @@ export default [
             'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
         },
     },
-    // src/ modules — ES module context
     {
-        files: ['src/**/*.js'],
+        files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', '*.config.js'],
         plugins: { headers },
         languageOptions: {
             ecmaVersion: 'latest',

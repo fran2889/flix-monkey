@@ -5,7 +5,7 @@ vi.mock('../../../src/platform/userscript.js');
 vi.mock('../../../src/core/config.js');
 vi.mock('../../../src/core/config-fields.js', () => ({
     CONFIG_FIELDS: [],
-    CONFIG_DEFAULTS: {}
+    CONFIG_DEFAULTS: {},
 }));
 vi.mock('../../../src/core/app.js');
 
@@ -16,11 +16,11 @@ describe('Userscript Entry', () => {
             get: vi.fn(),
             open: vi.fn(),
             close: vi.fn(),
-            save: vi.fn()
+            save: vi.fn(),
         });
         vi.stubGlobal('window', {
             location: { reload: vi.fn() },
-            GM_config: GM_config
+            GM_config: GM_config,
         });
     });
 

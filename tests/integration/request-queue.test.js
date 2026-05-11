@@ -12,23 +12,23 @@ describe('request-queue integration', () => {
             return process.env[envKey] ?? null;
         });
     });
-  if (!hasCredentials(credentials)) {
-    it.skip('should handle concurrent requests against real API', async () => {});
-  } else {
-    it('should handle concurrent requests against real API', async () => {
-        const adapter = { 
-            storageGet: async () => '0',
-            storageSet: async () => {}
-        };
-        const queue = new RequestQueue(100, null, adapter);
-        const mockFetch = async () => ({ status: 200 });
-        
-        const results = await Promise.all([
-          queue.enqueue('https://google.com', 0, mockFetch, 'json'),
-          queue.enqueue('https://google.com', 0, mockFetch, 'json')
-        ]);
-        expect(results).toHaveLength(2);
-        expect(results[0].status).toBe(200);
-    });
-  }
+    if (!hasCredentials(credentials)) {
+        it.skip('should handle concurrent requests against real API', async () => {});
+    } else {
+        it('should handle concurrent requests against real API', async () => {
+            const adapter = {
+                storageGet: async () => '0',
+                storageSet: async () => {},
+            };
+            const queue = new RequestQueue(100, null, adapter);
+            const mockFetch = async () => ({ status: 200 });
+
+            const results = await Promise.all([
+                queue.enqueue('https://google.com', 0, mockFetch, 'json'),
+                queue.enqueue('https://google.com', 0, mockFetch, 'json'),
+            ]);
+            expect(results).toHaveLength(2);
+            expect(results[0].status).toBe(200);
+        });
+    }
 });
