@@ -27,24 +27,35 @@ export default [
             'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
         },
     },
+    // General code quality for all project JS files
     {
         files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', '*.config.js'],
-        plugins: { headers },
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
             globals: {
                 ...globals.browser,
                 ...globals.webextensions,
-                // Userscript entry only — these are globals injected by the userscript manager
                 GM_xmlhttpRequest: 'readonly',
                 GM_getValue: 'readonly',
                 GM_setValue: 'readonly',
                 GM_registerMenuCommand: 'readonly',
                 GM_config: 'readonly',
-                chrome: 'readonly', // For Chrome service worker
+                chrome: 'readonly',
             },
         },
+        rules: {
+            'prefer-const': 'error',
+            'no-var': 'error',
+            eqeqeq: 'error',
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+        },
+    },
+    // License header enforcement - src and tests only
+    {
+        files: ['{src,tests}/**/*.js'],
+        plugins: { headers },
         rules: {
             'headers/header-format': [
                 'error',
@@ -56,12 +67,6 @@ export default [
                     },
                 },
             ],
-            'prefer-const': 'error',
-            'no-var': 'error',
-            eqeqeq: 'error',
-            'no-console': ['warn', { allow: ['warn', 'error'] }],
-            'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
         },
     },
 ];
-
