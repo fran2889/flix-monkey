@@ -9,7 +9,7 @@ function zipDirectory(sourceDir, outPath) {
   const output = fs.createWriteStream(outPath);
   const archive = archiver('zip', { zlib: { level: 9 } });
 
-  output.on('close', () => console.log(`Created ${outPath} (${archive.pointer()} total bytes)`));
+  output.on('close', () => console.error(`Created ${outPath} (${archive.pointer()} total bytes)`));
   archive.pipe(output);
   archive.directory(sourceDir, false);
   archive.finalize();

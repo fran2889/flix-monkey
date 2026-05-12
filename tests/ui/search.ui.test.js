@@ -1,3 +1,20 @@
+/**
+ * Copyright (C) 2026 Fran
+ *
+ * This file is part of FlixMonkey.
+ *
+ * FlixMonkey is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * FlixMonkey is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
+ */
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
@@ -5,16 +22,16 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Search UI Surface', () => {
-    let surfaceManager, overlayRenderer, fixtureHtml;
+    let surfaceManager, _overlayRenderer, _fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-search.html'), 'utf8');
+        _fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-search.html'), 'utf8');
     });
 
     beforeEach(() => {
-        document.body.innerHTML = fixtureHtml;
+        document.body.innerHTML = _fixtureHtml;
         surfaceManager = new SurfaceManager();
-        overlayRenderer = new OverlayRenderer();
+        _overlayRenderer = new OverlayRenderer();
     });
 
     it('should discover both gallery cards and suggestion items', () => {

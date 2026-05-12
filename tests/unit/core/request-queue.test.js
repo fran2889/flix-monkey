@@ -1,11 +1,28 @@
+/**
+ * Copyright (C) 2026 Fran
+ *
+ * This file is part of FlixMonkey.
+ *
+ * FlixMonkey is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * FlixMonkey is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
+ */
 import { describe, it, expect, vi } from 'vitest';
 import { RequestQueue } from '../../../src/core/request-queue.js';
 
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
         const queue = new RequestQueue(999999);
-        const p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
-        const p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
+        const _p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
+        const _p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
 
         const count = queue.clear();
         expect(count).toBe(1);

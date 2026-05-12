@@ -5,9 +5,9 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"src/**/*.js\" \"src/**/*.html\" \"tests/**/*.js\" \"*.{json,md,yml,html}\"",
-        "lint": "eslint \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
-        "lint:fix": "eslint --fix \"src/**/*.js\" \"tests/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
+        "format": "prettier --write \"{src,tests}/**/*.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
+        "lint": "eslint \"{src,tests}/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
+        "lint:fix": "eslint --fix \"{src,tests}/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
         "build:userscript": "rollup -c --environment TARGET:userscript",
         "build:firefox": "rollup -c --environment TARGET:firefox",
         "build:chrome": "rollup -c --environment TARGET:chrome",

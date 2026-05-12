@@ -1,19 +1,36 @@
+/**
+ * Copyright (C) 2026 Fran
+ *
+ * This file is part of FlixMonkey.
+ *
+ * FlixMonkey is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * FlixMonkey is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
+ */
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
-import { CONFIG, initConfig } from '../../src/core/config.js';
+import { initConfig as _initConfig } from '../../src/core/config.js';
 import fs from 'fs';
 import path from 'path';
 
 describe('Browse UI Surface', () => {
-    let surfaceManager, overlayRenderer, fixtureHtml;
+    let surfaceManager, overlayRenderer, _fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
+        _fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
     });
 
     beforeEach(() => {
-        document.body.innerHTML = fixtureHtml;
+        document.body.innerHTML = _fixtureHtml;
         surfaceManager = new SurfaceManager();
         overlayRenderer = new OverlayRenderer();
         // Ensure styles are injected for position checks if needed
@@ -59,7 +76,7 @@ describe('Browse UI Surface', () => {
         const { container } = surfaces[0];
 
         // Set threshold high to ensure fading
-        initConfig(key => {
+        _initConfig(key => {
             if (key === 'enableFadeUnderRating') return true;
             if (key === 'fadeRatingThreshold') return 9.0;
             return null;

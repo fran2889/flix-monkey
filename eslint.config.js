@@ -7,7 +7,7 @@ const commonRules = {
     'no-var': 'error',
     eqeqeq: 'error',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 };
 
 const userscriptGlobals = {
@@ -29,16 +29,9 @@ export default [
         },
         rules: commonRules,
     },
-    // 2. Legacy userscript (script context)
+    // 2. Browser & WebExtension globals (src, tests)
     {
-        files: ['FlixMonkey.user.js'],
-        languageOptions: {
-            sourceType: 'script',
-        },
-    },
-    // 3. Browser & WebExtension globals (src, tests, userscript)
-    {
-        files: ['src/**/*.js', 'tests/**/*.js', 'FlixMonkey.user.js'],
+        files: ['src/**/*.js', 'tests/**/*.js'],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -48,7 +41,7 @@ export default [
             },
         },
     },
-    // 4. Vitest globals (tests)
+    // 3. Vitest globals (tests)
     {
         files: ['tests/**/*.js'],
         languageOptions: {
@@ -57,7 +50,7 @@ export default [
             },
         },
     },
-    // 5. Node.js globals (scripts, configs, tests)
+    // 4. Node.js globals (scripts, configs, tests)
     {
         files: ['scripts/**/*.js', '*.config.js', 'tests/**/*.js'],
         languageOptions: {
@@ -66,7 +59,7 @@ export default [
             },
         },
     },
-    // 6. License header enforcement - src and tests only (isolated block)
+    // 5. License header enforcement - src and tests only (isolated block)
     {
         files: ['{src,tests}/**/*.js'],
         plugins: { headers },

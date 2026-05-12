@@ -1,10 +1,8 @@
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
 
