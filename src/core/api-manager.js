@@ -57,8 +57,16 @@ export class ApiClientManager {
         let bestData = null;
         let attempted = false;
 
-        for (const client of this.#clients) {
-            if (await client.isDisabled()) continue;
+        const clientStatuses = await Promise.all(
+            this.#clients.map(async client => ({
+                client,
+                status: await client.getStatus(),
+            }))
+        );
+
+        const healthyClients = clientStatuses.filter(s => s.status.healthy).map(s => s.client);
+
+        for (const client of healthyClients) {
             attempted = true;
             const data = await client.fetch(displayTitle, domYear);
             if (!data) continue;
@@ -72,7 +80,7 @@ export class ApiClientManager {
         if (!bestData) {
             if (attempted) {
                 logger.warn(
-                    `Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
+                    `Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using ${healthyClients.length} healthy clients.`
                 );
                 await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
             }

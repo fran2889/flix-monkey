@@ -53,6 +53,13 @@ class BaseApiClient {
         return this.#disabledManager.isDisabled(this.#source);
     }
 
+    async getStatus() {
+        if (await this.isDisabled()) {
+            return { healthy: false, reason: 'Temporarily disabled due to errors' };
+        }
+        return { healthy: true };
+    }
+
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, durationMs);

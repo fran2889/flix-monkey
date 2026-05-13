@@ -34,7 +34,7 @@ describe('ApiClientManager', () => {
     it('should iterate through clients and return the first result', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const mockClient = {
-            isDisabled: vi.fn().mockResolvedValue(false),
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [mockClient]);
@@ -44,9 +44,12 @@ describe('ApiClientManager', () => {
 
     it('should fail over to next client if first returns null', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client1 = { isDisabled: vi.fn().mockResolvedValue(false), fetch: vi.fn().mockResolvedValue(null) };
+        const client1 = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(null),
+        };
         const client2 = {
-            isDisabled: vi.fn().mockResolvedValue(false),
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Backup Movie' })),
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1, client2]);
@@ -59,7 +62,10 @@ describe('ApiClientManager', () => {
 
     it('should cache "Not Found" result if all clients fail', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client1 = { isDisabled: vi.fn().mockResolvedValue(false), fetch: vi.fn().mockResolvedValue(null) };
+        const client1 = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(null),
+        };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1]);
 
         const result = await manager.getData('Unknown Movie', '2023');
@@ -72,5 +78,23 @@ describe('ApiClientManager', () => {
                 rating: null,
             })
         );
+    });
+
+    it('should skip unhealthy clients', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const unhealthyClient = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: false }),
+            fetch: vi.fn(),
+        };
+        const healthyClient = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Healthy Result' })),
+        };
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [unhealthyClient, healthyClient]);
+
+        const result = await manager.getData('Test Movie', '2023');
+        expect(result.apiTitle).toBe('Healthy Result');
+        expect(unhealthyClient.fetch).not.toHaveBeenCalled();
+        expect(healthyClient.fetch).toHaveBeenCalled();
     });
 });
