@@ -50,6 +50,11 @@ export class ApiClientManager {
         logger.warn('All disabled API clients re-enabled.');
     }
 
+    async clearCache() {
+        await this.#cache.clear();
+        logger.warn('API cache cleared.');
+    }
+
     async getData(displayTitle, domYear) {
         const cached = await this.#cache.read(displayTitle, domYear);
         if (cached !== null) return cached;

@@ -45,4 +45,28 @@ describe('WebExtensionAdapter', () => {
         await adapter.storageSet('key', 'value');
         expect(browser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
     });
+
+    it('httpFetch should send message to background and return data', async () => {
+        browser.runtime.sendMessage.mockResolvedValue({ data: { success: true } });
+        const result = await adapter.httpFetch('https://api.example.com', { method: 'GET' });
+        
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
+            type: 'FM_FETCH',
+            url: 'https://api.example.com',
+            options: { method: 'GET' }
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it('httpFetch should throw error if background returns error', async () => {
+        browser.runtime.sendMessage.mockResolvedValue({ error: 'Not Found', status: 404 });
+        
+        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('Not Found');
+        
+        try {
+            await adapter.httpFetch('https://api.example.com');
+        } catch (e) {
+            expect(e.status).toBe(404);
+        }
+    });
 });

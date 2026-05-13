@@ -15,16 +15,43 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
-describe('DisabledClients', () => {
-    it('should track disabled clients', () => {
-        const mockAdapter = {
-            get: vi.fn(),
-            set: vi.fn(),
-        };
-        const disabled = new DisabledClientsManager(mockAdapter);
-        expect(disabled).toBeDefined();
+describe('core/disabled-clients', () => {
+    let mockAdapter, manager;
+
+    beforeEach(() => {
+        mockAdapter = createMockAdapter();
+        manager = new DisabledClientsManager(mockAdapter);
+    });
+
+    it('should initially not be disabled', async () => {
+        mockAdapter.storageGet.mockResolvedValue(null);
+        expect(await manager.isDisabled('test-source')).toBe(false);
+    });
+
+    it('should disable a source and store expiry', async () => {
+        const now = Date.now();
+        await manager.disable('test-source', 1000);
+        
+        expect(mockAdapter.storageSet).toHaveBeenCalledWith(
+            'fm_disabled_test-source',
+            expect.any(String)
+        );
+        
+        const expiry = Number.parseInt(mockAdapter.storageSet.mock.calls[0][1], 10);
+        expect(expiry).toBeGreaterThanOrEqual(now + 1000);
+    });
+
+    it('should report as disabled if not expired', async () => {
+        mockAdapter.storageGet.mockResolvedValue(Date.now() + 5000);
+        expect(await manager.isDisabled('test-source')).toBe(true);
+    });
+
+    it('should report as NOT disabled if expired', async () => {
+        mockAdapter.storageGet.mockResolvedValue(Date.now() - 1000);
+        expect(await manager.isDisabled('test-source')).toBe(false);
     });
 });

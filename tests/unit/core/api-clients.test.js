@@ -16,11 +16,15 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { XmdbApiClient, ImdbApiDevClient } from '../../../src/core/api-clients.js';
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../../src/core/api-clients.js';
 import * as configModule from '../../../src/core/config.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 beforeEach(() => {
-    vi.spyOn(configModule, 'CONFIG', 'get').mockReturnValue({ xmdbApiKey: 'test-key' });
+    vi.spyOn(configModule, 'CONFIG', 'get').mockReturnValue({
+        xmdbApiKey: 'test-xmdb-key',
+        omdbApiKey: 'test-omdb-key'
+    });
 });
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
@@ -34,17 +38,15 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             _resolveFetch = resolve;
         });
 
-        const mockAdapter = {
+        const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockRejectedValueOnce(error).mockReturnValue(slowPromise),
-            storageGet: vi.fn().mockResolvedValue(null),
-            storageSet: vi.fn().mockResolvedValue(undefined),
-        };
+        });
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
             disable: vi.fn().mockResolvedValue(undefined),
         };
 
-        const client = new XmdbApiClient(mockDisabledManager, mockAdapter);
+        const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: (k) => 'key' });
 
         // Trigger first fetch that fails and disables the client
         const p1 = client.queuedFetch('url1').catch(e => e);
@@ -58,11 +60,122 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         expect(err2.message).toBe('Client Disabled');
         expect(mockDisabledManager.disable).toHaveBeenCalled();
     });
+
+    it('should return null on fetch error and log warning', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        
+        const result = await client.fetch('Some Title');
+        expect(result).toBeNull();
+    });
+
+    it('should return null if search returns no match', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ results: [] }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        const result = await client.fetch('Unknown');
+        expect(result).toBeNull();
+    });
+});
+
+describe('XmdbApiClient', () => {
+    it('should handle search with results', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                results: [{ type: 'title', id: 'm1', title: 'Movie 1', year: 2020 }]
+            }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        const result = await client.search('Movie 1');
+        expect(result.id).toBe('m1');
+    });
+
+    it('should return null if no search results found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ results: [] }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        expect(await client.search('Movie 1')).toBeNull();
+    });
+
+    it('should return null if search results have no titles', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ results: [{ type: 'person', name: 'Someone' }] }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        expect(await client.search('Movie 1')).toBeNull();
+    });
+
+    it('should return null if details fetch fails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValueOnce({ results: [{ type: 'title', id: 'm1' }] })
+                         .mockResolvedValueOnce({ error: 'not found' }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        expect(await client.fetch('Movie 1')).toBeNull();
+    });
+
+    it('should return null if no API key is set', async () => {
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, {}, { get: (k) => 'YOUR_XMDB_API_KEY' });
+        const result = await client.search('Movie 1');
+        expect(result).toBeNull();
+    });
+});
+
+describe('OmdbApiClient', () => {
+    it('should fetch details correctly', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbRating: '8.0',
+                imdbID: 'tt123',
+                Year: '2022',
+                Title: 'OMDB Movie'
+            }),
+        });
+        const client = new OmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        
+        expect(result.rating).toBe(8.0);
+        expect(result.imdbId).toBe('tt123');
+    });
+
+    it('should parse ratings from OMDB correctly', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbRating: '8.0',
+                Ratings: [
+                    { Source: 'Rotten Tomatoes', Value: '90%' },
+                    { Source: 'Metacritic', Value: '85/100' }
+                ],
+                imdbID: 'tt123',
+                Title: 'OMDB Movie'
+            }),
+        });
+        const client = new OmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        
+        expect(result.rtRating).toBe(90);
+        expect(result.mcRating).toBe(85);
+    });
+
+    it('should return null on OMDB False response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
+        });
+        const client = new OmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, { get: (k) => 'key' });
+        const result = await client.getDetails({ title: 'Unknown' }, 'Unknown');
+        expect(result).toBeNull();
+    });
 });
 
 describe('ImdbApiDevClient', () => {
     it('should match near years (fuzzy matching)', async () => {
-        const mockAdapter = {
+        const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 titles: [
                     { id: 'tt1', title: 'Wrong Year', startYear: 2020 },
@@ -70,14 +183,20 @@ describe('ImdbApiDevClient', () => {
                     { id: 'tt3', title: 'Far Year', startYear: 2025 },
                 ],
             }),
-            storageGet: vi.fn().mockResolvedValue(null),
-            storageSet: vi.fn().mockResolvedValue(undefined),
-        };
+        });
         const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
 
         // Request for 2023 should match 2022
         const result = await client.search('Some Movie', '2023');
         expect(result.id).toBe('tt2');
         expect(result.startYear).toBe(2022);
+    });
+
+    it('should return null if no titles found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ titles: [] }),
+        });
+        const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
+        expect(await client.search('Unknown')).toBeNull();
     });
 });

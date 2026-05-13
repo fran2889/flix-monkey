@@ -15,21 +15,13 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { vi } from 'vitest';
 
-export class Logger {
-    #prefix = '[FlixMonkey]';
-
-    warn(message, ...args) {
-        console.warn(`${this.#prefix} ${message}`, ...args);
-    }
-
-    error(message, ...args) {
-        console.error(`${this.#prefix} ${message}`, ...args);
-    }
-
-    info(message, ...args) {
-        console.info(`${this.#prefix} ${message}`, ...args);
-    }
+export function createMockAdapter(overrides = {}) {
+    return {
+        httpFetch: vi.fn().mockResolvedValue({}),
+        storageGet: vi.fn().mockResolvedValue(null),
+        storageSet: vi.fn().mockResolvedValue(undefined),
+        ...overrides,
+    };
 }
-
-export const logger = new Logger();
