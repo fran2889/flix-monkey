@@ -19,14 +19,7 @@ import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION } from './constants.js';
 import { CONFIG } from './config.js';
-
-const createClientLogger = clientName => ({
-    search: (title, year) =>
-        console.warn(`[FlixMonkey] Searching ${clientName} for title: "${title}"${year ? ` (${year})` : ''}`),
-    fetchDetails: (id, title) => console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
-    notFound: title => console.warn(`[FlixMonkey] No search results found in ${clientName} for: "${title}"`),
-    failed: message => console.warn(`[FlixMonkey] ${clientName} failed: ${message}`),
-});
+import { logger } from './logger.js';
 
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
@@ -58,8 +51,8 @@ class BaseApiClient {
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, durationMs);
-        console.warn(
-            `[FlixMonkey] ${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
+        logger.warn(
+            `${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
         );
     }
 
@@ -89,7 +82,7 @@ class BaseApiClient {
             }
             return titleObj;
         } catch (err) {
-            console.warn(`[FlixMonkey] ${this.constructor.name} failed: ${err.message}`);
+            logger.warn(`${this.constructor.name} failed: ${err.message}`);
             return null;
         }
     }
@@ -104,8 +97,6 @@ class BaseApiClient {
 }
 
 export class XmdbApiClient extends BaseApiClient {
-    #logger = createClientLogger('XMDB');
-
     constructor(disabledManager, adapter) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
@@ -118,15 +109,15 @@ export class XmdbApiClient extends BaseApiClient {
     async search(displayTitle, domYear) {
         if (!CONFIG.xmdbApiKey || CONFIG.xmdbApiKey === 'YOUR_XMDB_API_KEY') return null;
         const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
-        this.#logger.search(displayTitle, domYear);
+        logger.warn(`Searching XMDB for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            this.#logger.notFound(displayTitle);
+            logger.warn(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.#logger.notFound(displayTitle);
+            logger.warn(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         return domYear
@@ -135,7 +126,7 @@ export class XmdbApiClient extends BaseApiClient {
     }
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        this.#logger.fetchDetails(id, displayTitle);
+        logger.warn(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
         const detailsParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error) return null;
@@ -152,8 +143,6 @@ export class XmdbApiClient extends BaseApiClient {
 }
 
 export class OmdbApiClient extends BaseApiClient {
-    #logger = createClientLogger('OMDB');
-
     constructor(disabledManager, adapter) {
         super(new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter), ApiSource.OMDB, disabledManager, adapter);
     }
@@ -166,10 +155,10 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t, year: y }, _displayTitle) {
         const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t });
         if (y) params.set('y', y);
-        this.#logger.fetchDetails(t, _displayTitle);
+        logger.warn(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.#logger.notFound(t);
+            logger.warn(`No search results found in OMDB for: "${t}"`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
@@ -186,8 +175,6 @@ export class OmdbApiClient extends BaseApiClient {
 }
 
 export class ImdbApiDevClient extends BaseApiClient {
-    #logger = createClientLogger('IMDb API Dev');
-
     constructor(disabledManager, adapter) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.IMDBAPI], null, adapter),
@@ -199,10 +186,10 @@ export class ImdbApiDevClient extends BaseApiClient {
 
     async search(displayTitle, domYear) {
         const searchParams = new URLSearchParams({ query: displayTitle });
-        this.#logger.search(displayTitle, domYear);
+        logger.warn(`Searching IMDb API Dev for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
-            this.#logger.notFound(displayTitle);
+            logger.warn(`No search results found in IMDb API Dev for: "${displayTitle}"`);
             return null;
         }
         if (domYear) {
@@ -214,7 +201,7 @@ export class ImdbApiDevClient extends BaseApiClient {
     }
 
     async getDetails(match, displayTitle) {
-        this.#logger.fetchDetails(match.id, match.title ?? displayTitle);
+        logger.warn(`Fetching IMDb API Dev details for ID: ${match.id} ("${match.title ?? displayTitle}")`);
         return new Title({
             apiTitle: match.title ?? null,
             imdbId: match.id,

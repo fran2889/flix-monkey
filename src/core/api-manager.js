@@ -19,6 +19,7 @@ import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js
 import { ApiSource } from './constants.js';
 import { Title } from './title.js';
 import { CONFIG } from './config.js';
+import { logger } from './logger.js';
 
 export class ApiClientManager {
     #cache;
@@ -45,7 +46,7 @@ export class ApiClientManager {
 
     async resetDisabledClients() {
         await this.#disabledManager.resetAll();
-        console.warn('[FlixMonkey] All disabled API clients re-enabled.');
+        logger.warn('All disabled API clients re-enabled.');
     }
 
     async getData(displayTitle, domYear) {
@@ -69,8 +70,8 @@ export class ApiClientManager {
 
         if (!bestData) {
             if (attempted) {
-                console.warn(
-                    `[FlixMonkey] Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
+                logger.warn(
+                    `Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using any configured client.`
                 );
                 await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
             }

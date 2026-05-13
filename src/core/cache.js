@@ -18,6 +18,7 @@
 import { DAYS_TO_MS } from './constants.js';
 import { Title } from './title.js';
 import { CONFIG } from './config.js';
+import { logger } from './logger.js';
 
 export class CacheManager {
     #storageKey = 'fm_cache';
@@ -73,6 +74,6 @@ export class CacheManager {
         const blob = await this.#loadCacheData();
         const count = Object.keys(blob).length;
         await this.#adapter.storageSet(this.#storageKey, '{}');
-        console.warn(`[FlixMonkey] Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
+        logger.warn(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }
