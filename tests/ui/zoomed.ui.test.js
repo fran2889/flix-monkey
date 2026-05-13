@@ -18,6 +18,7 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
+import { ConfigManager } from '../../src/core/config-manager.js';
 
 describe('Zoomed UI Surface', () => {
     let surfaceManager, _overlayRenderer;
@@ -34,7 +35,7 @@ describe('Zoomed UI Surface', () => {
 
     beforeEach(() => {
         surfaceManager = new SurfaceManager();
-        _overlayRenderer = new OverlayRenderer();
+        _overlayRenderer = new OverlayRenderer(new ConfigManager());
     });
 
     it('should discover the active bob-container', () => {

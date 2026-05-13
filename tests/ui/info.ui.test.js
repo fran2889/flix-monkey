@@ -18,6 +18,7 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
+import { ConfigManager } from '../../src/core/config-manager.js';
 
 describe('Info UI Surface (Modal)', () => {
     let surfaceManager, overlayRenderer;
@@ -33,7 +34,7 @@ describe('Info UI Surface (Modal)', () => {
 
     beforeEach(() => {
         surfaceManager = new SurfaceManager();
-        overlayRenderer = new OverlayRenderer();
+        overlayRenderer = new OverlayRenderer(new ConfigManager());
     });
 
     it('should discover title in the preview modal', () => {

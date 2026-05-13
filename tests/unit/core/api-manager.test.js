@@ -18,11 +18,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
+import { ConfigManager } from '../../../src/core/config-manager.js';
 
 describe('ApiClientManager', () => {
+    const mockConfig = new ConfigManager();
+
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
-        const manager = new ApiClientManager(mockCache, {}, {}, []);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, []);
         const result = await manager.getData('Some Title', '2023');
         expect(result.apiTitle).toBe('Cached Movie');
         expect(mockCache.read).toHaveBeenCalled();
@@ -34,7 +37,7 @@ describe('ApiClientManager', () => {
             isDisabled: vi.fn().mockResolvedValue(false),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, [mockClient]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [mockClient]);
         const result = await manager.getData('Some Title', '2023');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
@@ -46,7 +49,7 @@ describe('ApiClientManager', () => {
             isDisabled: vi.fn().mockResolvedValue(false),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Backup Movie' })),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, [client1, client2]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1, client2]);
 
         const result = await manager.getData('Some Title', '2023');
         expect(result.apiTitle).toBe('Backup Movie');
@@ -57,7 +60,7 @@ describe('ApiClientManager', () => {
     it('should cache "Not Found" result if all clients fail', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const client1 = { isDisabled: vi.fn().mockResolvedValue(false), fetch: vi.fn().mockResolvedValue(null) };
-        const manager = new ApiClientManager(mockCache, {}, {}, [client1]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1]);
 
         const result = await manager.getData('Unknown Movie', '2023');
         expect(result).toBeNull();

@@ -17,10 +17,11 @@
  */
 import { describe, it, expect } from 'vitest';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
+import { ConfigManager } from '../../../src/core/config-manager.js';
 
 describe('Overlay', () => {
     it('should create an overlay element', () => {
-        const overlay = new OverlayRenderer();
+        const overlay = new OverlayRenderer(new ConfigManager());
         expect(overlay).toBeDefined();
     });
 });

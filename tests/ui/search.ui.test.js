@@ -18,6 +18,7 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
+import { ConfigManager } from '../../src/core/config-manager.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -31,7 +32,7 @@ describe('Search UI Surface', () => {
     beforeEach(() => {
         document.body.innerHTML = _fixtureHtml;
         surfaceManager = new SurfaceManager();
-        _overlayRenderer = new OverlayRenderer();
+        _overlayRenderer = new OverlayRenderer(new ConfigManager());
     });
 
     it('should discover both gallery cards and suggestion items', () => {

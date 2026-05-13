@@ -22,6 +22,8 @@ import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
 import { Title } from './title.js';
 import { NAVIGATION_DEBOUNCE_MS } from './constants.js';
+import { ConfigManager } from './config-manager.js';
+import { initConfig } from './config.js';
 
 class FlixMonkeyApp {
     #cache;
@@ -102,10 +104,13 @@ class FlixMonkeyApp {
 }
 
 export function startApp(adapter) {
-    const cache = new CacheManager(adapter);
+    const configManager = new ConfigManager(adapter.configGet);
+    initConfig(adapter.configGet);
+
+    const cache = new CacheManager(adapter, configManager);
     const disabledManager = new DisabledClientsManager(adapter);
-    const api = new ApiClientManager(cache, disabledManager, adapter);
-    const renderer = new OverlayRenderer();
+    const api = new ApiClientManager(cache, disabledManager, adapter, configManager);
+    const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager();
     window.fmApi = api;
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces);

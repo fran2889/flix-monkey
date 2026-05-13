@@ -17,15 +17,16 @@
  */
 import { DAYS_TO_MS } from './constants.js';
 import { Title } from './title.js';
-import { CONFIG } from './config.js';
 import { logger } from './logger.js';
 
 export class CacheManager {
     #storageKey = 'fm_cache';
     #adapter;
+    #config;
 
-    constructor(adapter) {
+    constructor(adapter, config) {
         this.#adapter = adapter;
+        this.#config = config;
     }
 
     #getCacheKey(displayTitle, domYear) {
@@ -42,11 +43,13 @@ export class CacheManager {
 
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === -1 ? Infinity : days * DAYS_TO_MS);
-        if (!titleObj.hasRating) return getTtlMs(CONFIG.cacheTtlNoRating);
-        if (!titleObj.year) return getTtlMs(CONFIG.cacheTtlRatedNewYear);
+        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating', 1));
+        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear', 30));
         const currentYear = new Date().getFullYear();
         const isOldRelease = currentYear - titleObj.year > 1;
-        const ttlDays = isOldRelease ? CONFIG.cacheTtlRatedOldYear : CONFIG.cacheTtlRatedNewYear;
+        const ttlDays = isOldRelease
+            ? this.#config.getInt('cacheTtlRatedOldYear', -1)
+            : this.#config.getInt('cacheTtlRatedNewYear', 30);
         return getTtlMs(ttlDays);
     }
 

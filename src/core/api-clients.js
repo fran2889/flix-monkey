@@ -18,7 +18,6 @@
 import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION } from './constants.js';
-import { CONFIG } from './config.js';
 import { logger } from './logger.js';
 
 function parseRatings(ratings, sourcePattern) {
@@ -32,12 +31,18 @@ class BaseApiClient {
     #source;
     #disabledManager;
     #adapter;
+    #config;
 
-    constructor(queue, source, disabledManager, adapter) {
+    constructor(queue, source, disabledManager, adapter, config) {
         this.#queue = queue;
         this.#source = source;
         this.#disabledManager = disabledManager;
         this.#adapter = adapter;
+        this.#config = config;
+    }
+
+    get config() {
+        return this.#config;
     }
 
     get source() {
@@ -97,18 +102,20 @@ class BaseApiClient {
 }
 
 export class XmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter) {
+    constructor(disabledManager, adapter, config) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
             ApiSource.XMDB,
             disabledManager,
-            adapter
+            adapter,
+            config
         );
     }
 
     async search(displayTitle, domYear) {
-        if (!CONFIG.xmdbApiKey || CONFIG.xmdbApiKey === 'YOUR_XMDB_API_KEY') return null;
-        const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
+        const apiKey = this.config.get('xmdbApiKey');
+        if (!apiKey || apiKey === 'YOUR_XMDB_API_KEY') return null;
+        const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
         logger.warn(`Searching XMDB for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
@@ -127,7 +134,8 @@ export class XmdbApiClient extends BaseApiClient {
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
         logger.warn(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
-        const detailsParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey });
+        const apiKey = this.config.get('xmdbApiKey');
+        const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error) return null;
         const { rating, ratings, year, title } = detailsJson;
@@ -143,17 +151,25 @@ export class XmdbApiClient extends BaseApiClient {
 }
 
 export class OmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter) {
-        super(new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter), ApiSource.OMDB, disabledManager, adapter);
+    constructor(disabledManager, adapter, config) {
+        super(
+            new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter),
+            ApiSource.OMDB,
+            disabledManager,
+            adapter,
+            config
+        );
     }
 
     async search(displayTitle, domYear) {
-        if (!CONFIG.omdbApiKey || CONFIG.omdbApiKey === 'YOUR_OMDB_API_KEY') return null;
+        const apiKey = this.config.get('omdbApiKey');
+        if (!apiKey || apiKey === 'YOUR_OMDB_API_KEY') return null;
         return { title: displayTitle, year: domYear };
     }
 
     async getDetails({ title: t, year: y }, _displayTitle) {
-        const params = new URLSearchParams({ apikey: CONFIG.omdbApiKey, t });
+        const apiKey = this.config.get('omdbApiKey');
+        const params = new URLSearchParams({ apikey: apiKey, t });
         if (y) params.set('y', y);
         logger.warn(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
@@ -175,12 +191,13 @@ export class OmdbApiClient extends BaseApiClient {
 }
 
 export class ImdbApiDevClient extends BaseApiClient {
-    constructor(disabledManager, adapter) {
+    constructor(disabledManager, adapter, config) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.IMDBAPI], null, adapter),
             ApiSource.IMDBAPI,
             disabledManager,
-            adapter
+            adapter,
+            config
         );
     }
 

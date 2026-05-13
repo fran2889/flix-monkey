@@ -15,12 +15,15 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { CONFIG } from './config.js';
-
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
+    #config;
+
+    constructor(config) {
+        this.#config = config;
+    }
 
     injectStyles() {
         const cornerStyles = {
@@ -29,7 +32,8 @@ export class OverlayRenderer {
             'bottom-left': 'bottom:6px;left:6px;',
             'bottom-right': 'bottom:6px;right:6px;',
         };
-        const positionCss = cornerStyles[CONFIG.overlayCorner] ?? cornerStyles['top-left'];
+        const corner = this.#config.get('overlayCorner', 'top-left');
+        const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const style = document.createElement('style');
         style.textContent = `
             .${this.#OVERLAY_CLASS} {
@@ -61,7 +65,7 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-na { color: #aaa; }
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
-        if (CONFIG.overlayCorner.includes('left')) {
+        if (corner.includes('left')) {
             style.textContent += `\n            .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
         }
         style.textContent += `
@@ -120,13 +124,13 @@ export class OverlayRenderer {
             rows.push(this.#createSearchRatingRow('IMDb'));
         }
 
-        if (CONFIG.showRtRating && rtRating) {
+        if (this.#config.get('showRtRating', true) && rtRating) {
             const formattedRt = this.#formatPercentRating(rtRating);
             rows.push(this.#createRatingRow('RT', formattedRt, 'fm-rt'));
             titleParts.push(`RT: ${formattedRt}`);
         }
 
-        if (CONFIG.showMcRating && mcRating) {
+        if (this.#config.get('showMcRating', true) && mcRating) {
             const formattedMc = this.#formatPercentRating(mcRating);
             rows.push(this.#createRatingRow('MC', formattedMc, 'fm-mc'));
             titleParts.push(`MC: ${formattedMc}`);
@@ -174,12 +178,12 @@ export class OverlayRenderer {
     }
 
     applyFade(container, titleObj, fadeable) {
-        if (!fadeable || !CONFIG.enableFadeUnderRating) {
+        if (!fadeable || !this.#config.get('enableFadeUnderRating', false)) {
             container.classList.remove('fm-faded');
             return;
         }
         const { rating } = titleObj ?? {};
-        if (typeof rating === 'number' && rating < CONFIG.fadeRatingThreshold) {
+        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold', 6.0)) {
             container.classList.add('fm-faded');
         } else {
             container.classList.remove('fm-faded');

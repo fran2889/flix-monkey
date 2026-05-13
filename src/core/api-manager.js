@@ -18,28 +18,29 @@
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
 import { ApiSource } from './constants.js';
 import { Title } from './title.js';
-import { CONFIG } from './config.js';
 import { logger } from './logger.js';
 
 export class ApiClientManager {
     #cache;
     #clients;
     #disabledManager;
+    #config;
 
-    constructor(cacheManager, disabledManager, adapter, clients = []) {
+    constructor(cacheManager, disabledManager, adapter, config, clients = []) {
         this.#cache = cacheManager;
         this.#disabledManager = disabledManager;
+        this.#config = config;
         this.#clients = clients;
 
         if (this.#clients.length === 0) {
-            const configuredClients = (CONFIG.apiClients ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
+            const configuredClients = (this.#config.get('apiClients') ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
             const clientMap = {
                 [ApiSource.XMDB]: XmdbApiClient,
                 [ApiSource.OMDB]: OmdbApiClient,
                 [ApiSource.IMDBAPI]: ImdbApiDevClient,
             };
             configuredClients.forEach(name => {
-                if (clientMap[name]) this.#clients.push(new clientMap[name](this.#disabledManager, adapter));
+                if (clientMap[name]) this.#clients.push(new clientMap[name](this.#disabledManager, adapter, this.#config));
             });
         }
     }
