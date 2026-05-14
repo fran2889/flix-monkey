@@ -19,7 +19,7 @@
         "test:unit": "vitest run tests/unit",
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run tests/integration",
-        "audit": "npm audit"
+        "audit": "npm audit --audit-level=high"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
