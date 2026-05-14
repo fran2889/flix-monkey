@@ -19,10 +19,12 @@
         "test:unit": "vitest run tests/unit",
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run tests/integration",
+        "test:e2e": "playwright test tests/e2e",
         "audit": "npm audit --audit-level=high"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.60.0",
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@testing-library/dom": "^10.4.1",
