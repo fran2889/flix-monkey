@@ -62,7 +62,7 @@ const allConfigs = [
     {
         _target: 'firefox',
         input: 'src/targets/extension/content.js',
-        output: { file: 'dist/firefox/content.js', format: 'iife' },
+        output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
         plugins: [
             ...sharedPlugins(),
             copyStatic([
@@ -75,13 +75,13 @@ const allConfigs = [
     {
         _target: 'firefox',
         input: 'src/targets/extension/options.js',
-        output: { file: 'dist/firefox/options.js', format: 'iife' },
+        output: { file: 'dist/firefox/options.js', format: 'iife', sourcemap: true },
         plugins: sharedPlugins(),
     },
     {
         _target: 'chrome',
         input: 'src/targets/extension/content.js',
-        output: { file: 'dist/chrome/content.js', format: 'iife' },
+        output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
         plugins: [
             ...sharedPlugins(),
             copyStatic([
@@ -94,7 +94,7 @@ const allConfigs = [
     {
         _target: 'chrome',
         input: 'src/targets/extension/options.js',
-        output: { file: 'dist/chrome/options.js', format: 'iife' },
+        output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
         plugins: sharedPlugins(),
     },
 ];
