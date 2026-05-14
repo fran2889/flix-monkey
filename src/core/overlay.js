@@ -20,12 +20,20 @@ export class OverlayRenderer {
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
     #config;
+    static #stylesInjected = false;
+
+    /** @internal for testing only */
+    static resetInternalState() {
+        OverlayRenderer.#stylesInjected = false;
+    }
 
     constructor(config) {
         this.#config = config;
     }
 
     injectStyles() {
+        if (OverlayRenderer.#stylesInjected) return;
+        OverlayRenderer.#stylesInjected = true;
         const cornerStyles = {
             'top-left': 'top:6px;left:6px;',
             'top-right': 'top:6px;right:6px;',

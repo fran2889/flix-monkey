@@ -16,9 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { startApp } from '../../../src/core/app.js';
+import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { NAVIGATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
@@ -46,7 +47,7 @@ describe('App', () => {
         vi.restoreAllMocks();
         document.body.innerHTML = '';
         global.MutationObserver = ActualMutationObserver;
-        delete history._fmPatched;
+        FlixMonkeyApp.resetInternalState();
     });
 
     it('should initialize and hold state', () => {
@@ -97,7 +98,7 @@ describe('App', () => {
 
         // Verify that subsequent discoveries while a request is in-flight do not trigger new lookups
         window.history.pushState({}, '', '/new');
-        vi.advanceTimersByTime(300);
+        vi.advanceTimersByTime(NAVIGATION_DEBOUNCE_MS + 100);
 
         await Promise.resolve();
         expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(3);
@@ -118,16 +119,26 @@ describe('App', () => {
         await Promise.resolve();
         spy.mockClear();
 
+        // Change DOM to ensure a new card is discovered upon navigation
+        document.body.innerHTML = `
+        <div class="title-card">
+            <div class="fallback-text">New Test</div>
+        </div>
+    `;
+
         window.history.pushState({}, '', '/new-page');
         expect(spy).not.toHaveBeenCalled();
 
         window.history.pushState({}, '', '/another-page');
         expect(spy).not.toHaveBeenCalled();
 
-        vi.advanceTimersByTime(300);
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length === 0) throw new Error('Not called');
-        });
+        vi.advanceTimersByTime(5000);
+        await vi.waitFor(
+            () => {
+                if (spy.mock.calls.length === 0) throw new Error('Not called');
+            },
+            { timeout: 2000 }
+        );
         expect(spy).toHaveBeenCalled();
         spy.mockRestore();
     });

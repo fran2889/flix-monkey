@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { initConfig } from '../../src/core/config';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { hasCredentials } from './setup';
 import { XmdbApiClient } from '../../src/core/api-clients';
@@ -31,7 +30,6 @@ describe('api-clients integration', () => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
         };
-        initConfig(getter);
         configManager = new ConfigManager(getter);
     });
     if (!hasCredentials(credentials)) {

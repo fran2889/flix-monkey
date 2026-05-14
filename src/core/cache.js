@@ -77,6 +77,6 @@ export class CacheManager {
         const blob = await this.#loadCacheData();
         const count = Object.keys(blob).length;
         await this.#adapter.storageSet(this.#storageKey, '{}');
-        logger.warn(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
+        logger.info(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }

@@ -39,4 +39,9 @@ export class PlatformAdapter {
     registerMenuCommand(_label, _fn) {
         throw new Error('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
     }
+
+    /** @abstract */
+    get configGet() {
+        return null;
+    }
 }

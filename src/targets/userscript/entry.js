@@ -16,11 +16,12 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { UserscriptAdapter } from '../../platform/userscript.js';
-import { initConfig } from '../../core/config.js';
 import { CONFIG_FIELDS, CONFIG_DEFAULTS } from '../../core/config-fields.js';
 import { startApp } from '../../core/app.js';
 
 ('use strict');
+
+let apiInstance = null;
 
 const adapter = new UserscriptAdapter();
 
@@ -70,14 +71,15 @@ GM_config.init({
     fields: buildGmConfigFields(CONFIG_FIELDS),
     events: {
         init: () => {
-            initConfig(key => {
+            adapter.configGet = key => {
                 try {
                     return GM_config.get(key);
                 } catch {
                     return CONFIG_DEFAULTS[key];
                 }
-            });
+            };
             const { api, cache } = startApp(adapter);
+            apiInstance = api;
 
             adapter.registerMenuCommand('FlixMonkey Settings', () => GM_config.open());
             adapter.registerMenuCommand('Clear Cache', () => {
@@ -104,7 +106,7 @@ GM_config.init({
             }
         },
         save: () => {
-            if (window.fmApi) window.fmApi.resetDisabledClients();
+            if (apiInstance) apiInstance.resetDisabledClients();
             GM_config.close();
             window.location.reload();
         },

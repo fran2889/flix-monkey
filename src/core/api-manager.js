@@ -33,26 +33,35 @@ export class ApiClientManager {
         this.#clients = clients;
 
         if (this.#clients.length === 0) {
-            const configuredClients = (this.#config.get('apiClients') ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
-            const clientMap = {
-                [ApiSource.XMDB]: XmdbApiClient,
-                [ApiSource.OMDB]: OmdbApiClient,
-                [ApiSource.IMDBAPI]: ImdbApiDevClient,
-            };
-            configuredClients.forEach(name => {
-                if (clientMap[name]) this.#clients.push(new clientMap[name](this.#disabledManager, adapter, this.#config));
-            });
+            this.#clients = ApiClientManager.#createClientsFromConfig(this.#config, this.#disabledManager, adapter);
         }
+    }
+
+    static #createClientsFromConfig(config, disabledManager, adapter) {
+        const configuredClients = (config.get('apiClients') ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
+        const clientMap = {
+            [ApiSource.XMDB]: XmdbApiClient,
+            [ApiSource.OMDB]: OmdbApiClient,
+            [ApiSource.IMDBAPI]: ImdbApiDevClient,
+        };
+
+        const clients = [];
+        configuredClients.forEach(name => {
+            if (clientMap[name]) {
+                clients.push(new clientMap[name](disabledManager, adapter, config));
+            }
+        });
+        return clients;
     }
 
     async resetDisabledClients() {
         await this.#disabledManager.resetAll();
-        logger.warn('All disabled API clients re-enabled.');
+        logger.info('All disabled API clients re-enabled.');
     }
 
     async clearCache() {
         await this.#cache.clear();
-        logger.warn('API cache cleared.');
+        logger.info('API cache cleared.');
     }
 
     async getData(displayTitle, domYear) {

@@ -19,7 +19,6 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
-import { initConfig as _initConfig } from '../../src/core/config.js';
 import fs from 'fs';
 import path from 'path';
 

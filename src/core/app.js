@@ -23,17 +23,14 @@ import { SurfaceManager } from './surfaces.js';
 import { Title } from './title.js';
 import { NAVIGATION_DEBOUNCE_MS } from './constants.js';
 import { ConfigManager } from './config-manager.js';
-import { initConfig } from './config.js';
 
-class FlixMonkeyApp {
-    #cache;
+export class FlixMonkeyApp {
     #api;
     #renderer;
     #surfaces;
     #inFlight = new Map();
 
     constructor(cache, api, renderer, surfaces) {
-        this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
@@ -48,8 +45,6 @@ class FlixMonkeyApp {
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
             promise = (async () => {
-                const cached = await this.#cache.read(displayTitle, domYear);
-                if (cached !== null) return cached;
                 return await this.#api.getData(displayTitle, domYear);
             })().finally(() => this.#inFlight.delete(dedupKey));
             this.#inFlight.set(dedupKey, promise);
@@ -69,19 +64,35 @@ class FlixMonkeyApp {
         });
     }
 
+    static #isNavigationPatched = false;
+    static #originalPushState = history.pushState;
+    static #originalReplaceState = history.replaceState;
+
+    /** @internal for testing only */
+    static resetInternalState() {
+        FlixMonkeyApp.#isNavigationPatched = false;
+        history.pushState = FlixMonkeyApp.#originalPushState;
+        history.replaceState = FlixMonkeyApp.#originalReplaceState;
+        OverlayRenderer.resetInternalState();
+    }
+
     #initNavigationObservers() {
-        if (history._fmPatched) return;
-        history._fmPatched = true;
-        const { pushState, replaceState } = history;
+        if (FlixMonkeyApp.#isNavigationPatched) return;
+        FlixMonkeyApp.#isNavigationPatched = true;
 
         history.pushState = (...args) => {
-            pushState.apply(history, args);
-            setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS);
+            FlixMonkeyApp.#originalPushState.apply(history, args);
+            setTimeout(() => {
+                this.decorateRoot(document);
+            }, NAVIGATION_DEBOUNCE_MS);
         };
         history.replaceState = (...args) => {
-            replaceState.apply(history, args);
-            setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS);
+            FlixMonkeyApp.#originalReplaceState.apply(history, args);
+            setTimeout(() => {
+                this.decorateRoot(document);
+            }, NAVIGATION_DEBOUNCE_MS);
         };
+
         window.addEventListener('popstate', () =>
             setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS)
         );
@@ -105,14 +116,16 @@ class FlixMonkeyApp {
 
 export function startApp(adapter) {
     const configManager = new ConfigManager(adapter.configGet);
-    initConfig(adapter.configGet);
 
     const cache = new CacheManager(adapter, configManager);
     const disabledManager = new DisabledClientsManager(adapter);
     const api = new ApiClientManager(cache, disabledManager, adapter, configManager);
     const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager();
-    window.fmApi = api;
+    /*global process*/
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        window.fmApi = api;
+    }
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
     app.init();
     return { api, cache };
