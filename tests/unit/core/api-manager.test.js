@@ -111,4 +111,25 @@ describe('ApiClientManager', () => {
         await manager.clearCache();
         expect(mockCache.clear).toHaveBeenCalled();
     });
+
+    it('should log on successful data retrieval', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockClient = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Logged Movie' })),
+            source: 'test-source',
+        };
+        // Ensure the title object has a source
+        const title = new Title({ apiTitle: 'Logged Movie' });
+        title.source = 'test-source';
+        mockClient.fetch.mockResolvedValue(title);
+
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [mockClient]);
+
+        const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+        await manager.getData('Logged Movie', '2023');
+
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[FlixMonkey] Successfully retrieved ratings for "Logged Movie" (2023) from test-source.'));
+        consoleSpy.mockRestore();
+    });
 });

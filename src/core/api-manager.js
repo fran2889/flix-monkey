@@ -102,6 +102,7 @@ export class ApiClientManager {
         }
 
         await this.#cache.write(displayTitle, domYear, bestData);
+        logger.info(`Successfully retrieved ratings for "${displayTitle}"${domYear ? ` (${domYear})` : ''} from ${bestData.source}.`);
         return bestData;
     }
 }
