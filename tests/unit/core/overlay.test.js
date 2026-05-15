@@ -24,4 +24,37 @@ describe('Overlay', () => {
         const overlay = new OverlayRenderer(new ConfigManager());
         expect(overlay).toBeDefined();
     });
+
+    it('should inject loading overlay and then replace it with ratings overlay', () => {
+        const config = new ConfigManager();
+        const overlayRenderer = new OverlayRenderer(config);
+        const container = document.createElement('div');
+
+        // 1. Inject loading overlay
+        overlayRenderer.injectLoadingOverlay(container, 'Test Movie');
+
+        // Verify loading overlay is present
+        const loadingElement = container.querySelector('.fm-loading');
+        expect(loadingElement).not.toBeNull();
+        expect(loadingElement.textContent).toContain('⏳');
+        expect(overlayRenderer.isLoading(container)).toBe(true);
+
+        // 2. Replace with ratings overlay
+        const mockTitleObj = {
+            rating: 8.5,
+            imdbUrl: 'https://imdb.com/title/tt1234567/',
+            imdbId: 'tt1234567',
+        };
+        overlayRenderer.injectOverlay(container, mockTitleObj);
+
+        // Verify loading overlay is removed
+        expect(container.querySelector('.fm-loading')).toBeNull();
+        expect(overlayRenderer.isLoading(container)).toBe(false);
+
+        // Verify ratings overlay is present
+        const ratingElement = container.querySelector('.fm-rating-overlay');
+        expect(ratingElement).not.toBeNull();
+        expect(ratingElement.textContent).toContain('8.5');
+        expect(overlayRenderer.hasOverlay(container)).toBe(true);
+    });
 });

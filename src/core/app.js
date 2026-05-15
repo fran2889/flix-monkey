@@ -45,6 +45,10 @@ export class FlixMonkeyApp {
         this.#renderer.ensureRelative(container);
         this.#renderer.injectLoadingOverlay(container, displayTitle);
 
+        // Yield to the event loop so the browser can paint the loading overlay
+        // before executing potentially synchronous microtasks (like cache reads in GM)
+        await new Promise(resolve => setTimeout(resolve, 0));
+
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
             promise = (async () => {

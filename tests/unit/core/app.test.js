@@ -197,6 +197,7 @@ describe('App', () => {
 
         // Wait for the next tick to allow the app to initialize and call decorateRoot
         await Promise.resolve();
+        vi.runAllTimers();
 
         const card = document.querySelector('.title-card');
         expect(card.querySelector('.fm-loading')).not.toBeNull();
