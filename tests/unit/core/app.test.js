@@ -171,4 +171,47 @@ describe('App', () => {
         expect(spy).toHaveBeenCalled();
         spy.mockRestore();
     });
+
+    it('should inject loading overlay while fetching', async () => {
+        const mockAdapter = {
+            storageGet: vi.fn().mockResolvedValue(null),
+            storageSet: vi.fn(),
+            httpFetch: vi.fn(),
+            configGet: vi.fn().mockReturnValue(null),
+        };
+
+        document.body.innerHTML = `
+        <div class="title-card">
+            <div class="fallback-text">Test Title</div>
+        </div>
+    `;
+
+        let resolveApi;
+        const apiPromise = new Promise(resolve => {
+            resolveApi = resolve;
+        });
+
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(apiPromise);
+
+        startApp(mockAdapter);
+
+        // Wait for the next tick to allow the app to initialize and call decorateRoot
+        await Promise.resolve();
+
+        const card = document.querySelector('.title-card');
+        expect(card.querySelector('.fm-loading')).not.toBeNull();
+
+        resolveApi({ apiTitle: 'Test Title' });
+        await apiPromise;
+
+        // Give it a moment to finish processing
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(card.querySelector('.fm-loading')).toBeNull();
+        expect(card.querySelector('.fm-rating-overlay')).not.toBeNull();
+    });
 });

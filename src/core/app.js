@@ -42,6 +42,9 @@ export class FlixMonkeyApp {
         const domYear = this.#surfaces.extractYear(container);
         const dedupKey = `${displayTitle.toLowerCase()}_${domYear ?? ''}`;
 
+        this.#renderer.ensureRelative(container);
+        this.#renderer.injectLoadingOverlay(container, displayTitle);
+
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
             promise = (async () => {
@@ -52,7 +55,6 @@ export class FlixMonkeyApp {
 
         const data = await promise;
         if (!this.#renderer.hasOverlay(container)) {
-            this.#renderer.ensureRelative(container);
             this.#renderer.injectOverlay(container, data ?? Title.notFound(displayTitle));
             this.#renderer.applyFade(container, data, fadeable);
         }
