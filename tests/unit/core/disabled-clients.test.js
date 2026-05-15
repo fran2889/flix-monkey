@@ -35,12 +35,9 @@ describe('core/disabled-clients', () => {
     it('should disable a source and store expiry', async () => {
         const now = Date.now();
         await manager.disable('test-source', 1000);
-        
-        expect(mockAdapter.storageSet).toHaveBeenCalledWith(
-            'fm_disabled_test-source',
-            expect.any(String)
-        );
-        
+
+        expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm_disabled_test-source', expect.any(String));
+
         const expiry = Number.parseInt(mockAdapter.storageSet.mock.calls[0][1], 10);
         expect(expiry).toBeGreaterThanOrEqual(now + 1000);
     });

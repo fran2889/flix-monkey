@@ -20,7 +20,7 @@ import { CONFIG_DEFAULTS } from './config-fields.js';
 export class ConfigManager {
     #getter;
 
-    constructor(getterFn = (key) => CONFIG_DEFAULTS[key]) {
+    constructor(getterFn = key => CONFIG_DEFAULTS[key]) {
         this.#getter = getterFn;
     }
 

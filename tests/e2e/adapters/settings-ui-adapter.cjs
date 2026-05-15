@@ -1,3 +1,20 @@
+/**
+ * Copyright (C) 2026 Fran
+ *
+ * This file is part of FlixMonkey.
+ *
+ * FlixMonkey is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * FlixMonkey is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
+ */
 const TestAdapter = require('../adapter.cjs');
 
 /**
@@ -84,10 +101,7 @@ class SettingsUIAdapter extends TestAdapter {
         }, selector);
 
         if (type === 'checkbox') {
-            const current = await this.page.evaluate(
-                sel => document.querySelector(sel).checked,
-                selector,
-            );
+            const current = await this.page.evaluate(sel => document.querySelector(sel).checked, selector);
             if (current !== value) {
                 await this.page.click(selector);
             }
@@ -104,10 +118,9 @@ class SettingsUIAdapter extends TestAdapter {
     async save() {
         await this.page.click('#saveBtn');
         // Wait for "Saved!" status text (disappears after 2 s)
-        await this.page.waitForFunction(
-            () => document.getElementById('status')?.textContent?.trim() !== '',
-            { timeout: 3000 },
-        );
+        await this.page.waitForFunction(() => document.getElementById('status')?.textContent?.trim() !== '', {
+            timeout: 3000,
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -120,10 +133,7 @@ class SettingsUIAdapter extends TestAdapter {
      * @returns {Promise<Record<string, unknown>>}
      */
     async readStorage(keys) {
-        return this.page.evaluate(
-            ks => new Promise(resolve => chrome.storage.local.get(ks, resolve)),
-            keys,
-        );
+        return this.page.evaluate(ks => new Promise(resolve => chrome.storage.local.get(ks, resolve)), keys);
     }
 
     /**
@@ -132,10 +142,7 @@ class SettingsUIAdapter extends TestAdapter {
      * @param {Record<string, unknown>} values
      */
     async writeStorage(values) {
-        await this.page.evaluate(
-            vals => new Promise(resolve => chrome.storage.local.set(vals, resolve)),
-            values,
-        );
+        await this.page.evaluate(vals => new Promise(resolve => chrome.storage.local.set(vals, resolve)), values);
     }
 
     // -------------------------------------------------------------------------
@@ -173,7 +180,7 @@ class SettingsUIAdapter extends TestAdapter {
         }
         throw new Error(
             'SettingsUIAdapter: extensionId not provided and could not be auto-detected. ' +
-                'Pass the extension ID as the second constructor argument.',
+                'Pass the extension ID as the second constructor argument.'
         );
     }
 }

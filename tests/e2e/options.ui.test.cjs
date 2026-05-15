@@ -1,19 +1,19 @@
 /**
- * Options UI E2E tests
+ * Copyright (C) 2026 Fran
  *
- * These tests run against a real Chrome browser (connected via CDP) that has
- * the FlixMonkey Chrome extension loaded.  They verify that the options page
- * renders correctly and that changes made through the UI are persisted to
- * chrome.storage.local.
+ * This file is part of FlixMonkey.
  *
- * Prerequisites
- * -------------
- * 1. Build the extension:       npm run build:chrome
- * 2. Launch Chrome with CDP:    chrome --remote-debugging-port=9222
- *                                      --load-extension=dist/chrome
- * 3. Set FLIXMONKEY_EXT_ID env var to the extension's ID, OR leave it unset
- *    and the adapter will attempt to auto-detect it from open pages.
- * 4. Run:                       npm run test:e2e
+ * FlixMonkey is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * FlixMonkey is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
 const { test, expect } = require('@playwright/test');

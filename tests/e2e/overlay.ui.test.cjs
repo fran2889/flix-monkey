@@ -37,6 +37,9 @@ test.describe('Netflix UI Overlays', () => {
         bobSurface = new BobSurface(adapter);
         previewModalSurface = new PreviewModalSurface(adapter);
 
+        // Navigate first to avoid access denied
+        await adapter.navigate('https://www.netflix.com/browse');
+
         // Pre-seed some ratings to avoid real API calls and ensure deterministic behavior
         await adapter.setExtensionSettings({
             cache: {
@@ -46,25 +49,25 @@ test.describe('Netflix UI Overlays', () => {
             showRtRating: false,
             showMcRating: false,
         });
+        // Reload to ensure settings take effect
+        await page.reload();
     });
 
     test('Browse Cards: verify overlay visibility on /browse', async () => {
-        // Navigate to browse page
-        await adapter.navigate('https://www.netflix.com/browse');
-
-        // Find the first title card
+        // Find the title cards and verify existence
         const cards = browseSurface.getTitleCards();
-        const firstCard = cards.first();
-        await expect(firstCard).toBeVisible();
+        await expect(cards.first()).toBeVisible();
+        expect(await cards.count()).toBeGreaterThan(0);
 
         // Get overlay and verify it loads
+        const firstCard = cards.first();
         const overlay = browseSurface.getOverlay(firstCard);
         await overlay.waitForLoaded();
         await expect(overlay.locator()).toBeVisible();
 
         // Verify we have a valid rating
         const imdbValue = await overlay.getImdbValue();
-        expect(imdbValue).toBeGreaterThan(0);
+        expect(imdbValue).toBe(9.3);
     });
 
     test('Search Results: verify overlay visibility for "Godfather"', async () => {
@@ -73,8 +76,12 @@ test.describe('Netflix UI Overlays', () => {
 
         // Get search results
         const results = searchSurface.getResults();
+        await expect(results.first()).toBeVisible();
+        expect(await results.count()).toBeGreaterThan(0);
+
+        // Identity Verification: verify title matches
         const firstResult = results.first();
-        await expect(firstResult).toBeVisible();
+        await expect(firstResult).toContainText('The Godfather');
 
         // Get overlay and verify it loads (should match cached tt0068646)
         const overlay = searchSurface.getOverlay(firstResult);
@@ -86,13 +93,12 @@ test.describe('Netflix UI Overlays', () => {
     });
 
     test('Hover (Bob): verify overlay in Bob container', async () => {
-        await adapter.navigate('https://www.netflix.com/browse');
-
         const cards = browseSurface.getTitleCards();
-        const firstCard = cards.first();
-        await expect(firstCard).toBeVisible();
+        await expect(cards.first()).toBeVisible();
+        expect(await cards.count()).toBeGreaterThan(0);
 
         // Trigger hover to open Bob container
+        const firstCard = cards.first();
         await bobSurface.triggerHover(firstCard);
 
         // Get overlay from Bob container
@@ -101,17 +107,16 @@ test.describe('Netflix UI Overlays', () => {
         await expect(overlay.locator()).toBeVisible();
 
         const imdbValue = await overlay.getImdbValue();
-        expect(imdbValue).toBeGreaterThan(0);
+        expect(imdbValue).toBe(9.3);
     });
 
     test('Preview Modal: verify overlay in modal', async () => {
-        await adapter.navigate('https://www.netflix.com/browse');
-
         const cards = browseSurface.getTitleCards();
-        const firstCard = cards.first();
-        await expect(firstCard).toBeVisible();
+        await expect(cards.first()).toBeVisible();
+        expect(await cards.count()).toBeGreaterThan(0);
 
         // Open preview modal
+        const firstCard = cards.first();
         await previewModalSurface.open(firstCard);
 
         // Get overlay from modal
@@ -120,6 +125,6 @@ test.describe('Netflix UI Overlays', () => {
         await expect(overlay.locator()).toBeVisible();
 
         const imdbValue = await overlay.getImdbValue();
-        expect(imdbValue).toBeGreaterThan(0);
+        expect(imdbValue).toBe(9.3);
     });
 });

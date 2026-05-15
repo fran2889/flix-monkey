@@ -10,7 +10,9 @@ Thumbs.db
 
 # Node.js
 .env
-.worktrees/
 coverage/
 dist/
 node_modules/
+test-results/
+
+.worktrees/

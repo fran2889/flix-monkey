@@ -22,7 +22,7 @@ export default [
     js.configs.recommended,
     // 1. Base configuration and rules for all JS files
     {
-        files: ['**/*.js'],
+        files: ['**/*.{js,cjs}'],
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
@@ -31,7 +31,7 @@ export default [
     },
     // 2. Browser & WebExtension globals (src, tests)
     {
-        files: ['src/**/*.js', 'tests/**/*.js'],
+        files: ['src/**/*.js', 'tests/**/*.{js,cjs}'],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -43,7 +43,7 @@ export default [
     },
     // 3. Vitest globals (tests)
     {
-        files: ['tests/**/*.js'],
+        files: ['tests/**/*.{js,cjs}'],
         languageOptions: {
             globals: {
                 ...globals.vitest,
@@ -52,7 +52,7 @@ export default [
     },
     // 4. Node.js globals (scripts, configs, tests)
     {
-        files: ['scripts/**/*.js', '*.config.js', 'tests/**/*.js'],
+        files: ['scripts/**/*.js', '*.config.js', '*.config.cjs', 'tests/**/*.{js,cjs}'],
         languageOptions: {
             globals: {
                 ...globals.node,
@@ -61,7 +61,7 @@ export default [
     },
     // 5. License header enforcement - src and tests only (isolated block)
     {
-        files: ['{src,tests}/**/*.js'],
+        files: ['{src,tests}/**/*.{js,cjs}'],
         plugins: { headers },
         rules: {
             'headers/header-format': [
