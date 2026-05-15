@@ -31,9 +31,11 @@ class TestAdapter {
     async evaluate(func) {
         return await this.page.evaluate(func);
     }
+    // eslint-disable-next-line no-unused-vars
     async triggerExtensionCommand(command) {
         throw new Error('Not implemented');
     }
+    // eslint-disable-next-line no-unused-vars
     async setExtensionSettings(settings) {
         throw new Error('Not implemented');
     }

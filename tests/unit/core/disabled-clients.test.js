@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 
@@ -53,7 +53,7 @@ describe('core/disabled-clients', () => {
     });
 
     it('should reset all disabled clients and return their list', async () => {
-        mockAdapter.storageGet.mockImplementation(async (key) => {
+        mockAdapter.storageGet.mockImplementation(async key => {
             if (key === 'fm_disabled_xmdb') return (Date.now() + 5000).toString();
             if (key === 'fm_disabled_omdb') return '0';
             return '0';

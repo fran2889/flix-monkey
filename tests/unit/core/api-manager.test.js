@@ -130,7 +130,11 @@ describe('ApiClientManager', () => {
         const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
         await manager.getData('Logged Movie', '2023');
 
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[FlixMonkey] Successfully retrieved ratings for "Logged Movie" (2023) from test-source.'));
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.stringContaining(
+                '[FlixMonkey] Successfully retrieved ratings for "Logged Movie" (2023) from test-source.'
+            )
+        );
         consoleSpy.mockRestore();
     });
 });

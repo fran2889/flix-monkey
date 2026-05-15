@@ -17,6 +17,7 @@
  */
 const TestAdapter = require('../adapter.cjs');
 class UserscriptAdapter extends TestAdapter {
+    // eslint-disable-next-line no-unused-vars
     async triggerExtensionCommand(command) {
         /* Logic to trigger GM command */
     }
@@ -25,7 +26,7 @@ class UserscriptAdapter extends TestAdapter {
             try {
                 localStorage.setItem('flix-config', JSON.stringify(s));
             } catch (e) {
-                console.warn('UserscriptAdapter: localStorage access denied, skipping setting configuration.');
+                console.warn('UserscriptAdapter: localStorage access denied, skipping setting configuration.', e);
             }
         }, settings);
     }
