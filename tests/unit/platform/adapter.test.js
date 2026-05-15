@@ -44,4 +44,10 @@ describe('PlatformAdapter', () => {
             'PlatformAdapter: registerMenuCommand() must be implemented by subclass'
         );
     });
+
+    it('should allow setting and getting configGet', () => {
+        const fn = () => 'test';
+        adapter.configGet = fn;
+        expect(adapter.configGet).toBe(fn);
+    });
 });

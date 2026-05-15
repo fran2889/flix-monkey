@@ -41,7 +41,11 @@ export class PlatformAdapter {
     }
 
     /** @abstract */
+    set configGet(fn) {
+        this._configGet = fn;
+    }
+
     get configGet() {
-        return null;
+        return this._configGet;
     }
 }
