@@ -51,4 +51,17 @@ describe('core/disabled-clients', () => {
         mockAdapter.storageGet.mockResolvedValue(Date.now() - 1000);
         expect(await manager.isDisabled('test-source')).toBe(false);
     });
+
+    it('should reset all disabled clients and return their list', async () => {
+        mockAdapter.storageGet.mockImplementation(async (key) => {
+            if (key === 'fm_disabled_xmdb') return (Date.now() + 5000).toString();
+            if (key === 'fm_disabled_omdb') return '0';
+            return '0';
+        });
+
+        const reenabled = await manager.resetAll();
+        expect(reenabled).toEqual(['xmdb']);
+        expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm_disabled_xmdb', '0');
+        expect(mockAdapter.storageSet).not.toHaveBeenCalledWith('fm_disabled_omdb', '0');
+    });
 });

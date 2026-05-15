@@ -42,8 +42,17 @@ export class DisabledClientsManager {
     }
 
     async resetAll() {
+        const sources = Object.values(ApiSource);
+        const disabled = [];
         await Promise.all(
-            Object.values(ApiSource).map(source => this.#adapter.storageSet(`fm_disabled_${source}`, '0'))
+            sources.map(async source => {
+                const isDisabled = await this.isDisabled(source);
+                if (isDisabled) {
+                    disabled.push(source);
+                    await this.#adapter.storageSet(`fm_disabled_${source}`, '0');
+                }
+            })
         );
+        return disabled;
     }
 }

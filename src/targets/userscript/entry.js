@@ -88,9 +88,13 @@ GM_config.init({
                 }
             });
             adapter.registerMenuCommand('Reset Disabled Clients', () => {
-                if (confirm('Are you sure you want to re-enable all failing API endpoints?')) {
-                    api.resetDisabledClients().then(() => alert('All API endpoints have been re-enabled.'));
-                }
+                api.resetDisabledClients().then(reenabled => {
+                    if (reenabled.length > 0) {
+                        alert(`Re-enabled API clients: ${reenabled.join(', ')}`);
+                    } else {
+                        alert('No disabled API clients found to re-enable.');
+                    }
+                });
             });
         },
         open: function (doc, win, frame) {
@@ -106,7 +110,13 @@ GM_config.init({
             }
         },
         save: () => {
-            if (apiInstance) apiInstance.resetDisabledClients();
+            if (apiInstance) {
+                apiInstance.resetDisabledClients().then(reenabled => {
+                    if (reenabled.length > 0) {
+                        console.info(`Re-enabled API clients on save: ${reenabled.join(', ')}`);
+                    }
+                });
+            }
             GM_config.close();
             window.location.reload();
         },
