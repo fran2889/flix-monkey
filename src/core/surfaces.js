@@ -30,12 +30,6 @@ export class SurfaceManager {
             fadeable: true,
         },
         {
-            titleSelectors: '[data-uia="search-suggestion-item-link"]',
-            getTitle: el => el.textContent?.trim() ?? null,
-            containerSel: '[data-uia="search-suggestion-item"]',
-            fadeable: true,
-        },
-        {
             titleSelectors: '.bob-title',
             getTitle: el => el.textContent?.trim() ?? null,
             containerSel: '.bob-container',

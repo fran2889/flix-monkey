@@ -35,7 +35,7 @@ describe('Search UI Surface', () => {
         _overlayRenderer = new OverlayRenderer(new ConfigManager());
     });
 
-    it('should discover both gallery cards and suggestion items', () => {
+    it('should discover gallery cards but ignore suggestion items', () => {
         const surfaces = surfaceManager.discover(document.body);
         expect(surfaces.length).toBeGreaterThan(0);
 
@@ -44,7 +44,8 @@ describe('Search UI Surface', () => {
         // Find at least one suggestion item (or parent container)
         const hasSuggestion = surfaces.some(s => s.container.matches('[data-uia="search-suggestion-item"]'));
 
-        expect(hasGallery || hasSuggestion).toBe(true);
+        expect(hasGallery).toBe(true);
+        expect(hasSuggestion).toBe(false); // All suggestions (text links) should be ignored
     });
 
     it('should extract titles from search attributes', () => {
