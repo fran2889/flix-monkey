@@ -17,21 +17,24 @@
  */
 const OverlayComponent = require('./overlay-component.cjs');
 
-class BrowseSurface {
+class SearchSurface {
     constructor(adapter) {
         this.adapter = adapter;
         this.page = adapter.page;
     }
-    async clickPlay() {
-        await this.adapter.click('.play-button');
+
+    async searchFor(query) {
+        const url = `https://www.netflix.com/search?q=${encodeURIComponent(query)}`;
+        await this.adapter.navigate(url);
+        await this.page.waitForSelector('[data-uia="search-gallery-video-card"]', { timeout: 10000 });
     }
 
-    getTitleCards() {
-        return this.page.locator('.title-card');
+    async getResults() {
+        return this.page.locator('[data-uia="search-gallery-video-card"]');
     }
 
     getOverlay(cardLocator) {
         return new OverlayComponent(this.page, cardLocator);
     }
 }
-module.exports = BrowseSurface;
+module.exports = SearchSurface;
