@@ -21,6 +21,7 @@ class PreviewModalSurface {
     constructor(adapter) {
         this.adapter = adapter;
         this.page = adapter.page;
+        this.containerSelector = '.previewModal';
     }
 
     async open(cardLocator) {
@@ -30,13 +31,14 @@ class PreviewModalSurface {
         } else {
             await cardLocator.click();
         }
-        const previewModal = this.page.locator('.previewModal');
+        const previewModal = this.page.locator(this.containerSelector);
         await previewModal.waitFor({ state: 'visible', timeout: 10000 });
         await this.page.locator('.previewModal--player-titleTreatmentWrapper').waitFor({ state: 'attached' });
+        return previewModal;
     }
 
     getOverlay() {
-        return new OverlayComponent(this.page.locator('.previewModal'));
+        return new OverlayComponent(this.page.locator(this.containerSelector));
     }
 }
 

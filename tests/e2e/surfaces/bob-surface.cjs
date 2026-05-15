@@ -21,18 +21,20 @@ class BobSurface {
     constructor(adapter) {
         this.adapter = adapter;
         this.page = adapter.page;
+        this.containerSelector = '.bob-container';
     }
 
     async triggerHover(cardLocator) {
         await cardLocator.hover();
-        const bobContainer = this.page.locator('.bob-container');
+        const bobContainer = this.page.locator(this.containerSelector);
         await bobContainer.waitFor({ state: 'visible', timeout: 5000 });
+        // Wait for Netflix scaling/fade animation to settle
         await this.page.waitForTimeout(500);
         return bobContainer;
     }
 
     getOverlay() {
-        return new OverlayComponent(this.page.locator('.bob-container'));
+        return new OverlayComponent(this.page.locator(this.containerSelector));
     }
 }
 
