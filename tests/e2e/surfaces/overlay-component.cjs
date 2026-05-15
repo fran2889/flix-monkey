@@ -16,8 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 class OverlayComponent {
-    constructor(page, container) {
-        this.page = page;
+    constructor(container) {
         this.container = container;
         this.selector = '.fm-rating-overlay';
     }
@@ -27,21 +26,15 @@ class OverlayComponent {
     }
 
     async waitForLoaded() {
-        // Wait for overlay to exist and NOT have the loading class
-        const loc = this.locator();
-        await loc.waitFor({ state: 'visible', timeout: 5000 });
-        await this.page.waitForFunction(
-            (sel, parent) => {
-                const el = parent.querySelector(sel);
-                return el && !el.classList.contains('fm-loading');
-            },
-            this.selector,
-            await this.container.elementHandle()
-        );
+        // Wait for the specific version of the overlay that is NOT loading.
+        // This is more robust than elementHandle as it survives re-renders and element replacement.
+        await this.container.locator(`${this.selector}:not(.fm-loading)`).waitFor({ state: 'visible', timeout: 5000 });
     }
 
     async getImdbValue() {
         const text = await this.locator().textContent();
+        if (!text) return null;
+
         // Regex to find decimal or integer (e.g. "8.5" or "8")
         const match = text.match(/IMDb\s+([\d.]+)/i);
         return match ? parseFloat(match[1]) : null;

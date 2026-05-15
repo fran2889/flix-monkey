@@ -21,20 +21,21 @@ class SearchSurface {
     constructor(adapter) {
         this.adapter = adapter;
         this.page = adapter.page;
+        this.cardSelector = '[data-uia="search-gallery-video-card"]';
     }
 
     async searchFor(query) {
         const url = `https://www.netflix.com/search?q=${encodeURIComponent(query)}`;
         await this.adapter.navigate(url);
-        await this.page.waitForSelector('[data-uia="search-gallery-video-card"]', { timeout: 10000 });
+        await this.page.waitForSelector(this.cardSelector, { timeout: 10000 });
     }
 
-    async getResults() {
-        return this.page.locator('[data-uia="search-gallery-video-card"]');
+    getResults() {
+        return this.page.locator(this.cardSelector);
     }
 
     getOverlay(cardLocator) {
-        return new OverlayComponent(this.page, cardLocator);
+        return new OverlayComponent(cardLocator);
     }
 }
 module.exports = SearchSurface;

@@ -21,17 +21,22 @@ class BrowseSurface {
     constructor(adapter) {
         this.adapter = adapter;
         this.page = adapter.page;
+        this.cardSelector = '.title-card';
     }
-    async clickPlay() {
-        await this.adapter.click('.play-button');
+    async clickPlay(cardLocator) {
+        if (cardLocator) {
+            await cardLocator.locator('.play-button').click();
+        } else {
+            await this.adapter.click('.play-button');
+        }
     }
 
     getTitleCards() {
-        return this.page.locator('.title-card');
+        return this.page.locator(this.cardSelector);
     }
 
     getOverlay(cardLocator) {
-        return new OverlayComponent(this.page, cardLocator);
+        return new OverlayComponent(cardLocator);
     }
 }
 module.exports = BrowseSurface;
