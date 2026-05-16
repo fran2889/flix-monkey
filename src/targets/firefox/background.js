@@ -27,10 +27,10 @@ const HTTP_TIMEOUT = 8000;
 browser.runtime.onMessage.addListener(async msg => {
     if (msg.type !== 'FM_FETCH') return;
     const { url, options = {} } = msg;
-    const { responseType = 'json' } = options;
+    const { responseType = 'json', timeout = HTTP_TIMEOUT } = options;
     const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), HTTP_TIMEOUT);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     try {
         const res = await fetch(url, {
             signal: controller.signal,

@@ -78,4 +78,14 @@ describe('UserscriptAdapter', () => {
 
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('timeout');
     });
+
+    it('httpFetch should pass timeout to GM_xmlhttpRequest', async () => {
+        const customTimeout = 5432;
+        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
+            onload({ status: 200, response: {} });
+        });
+
+        await adapter.httpFetch('http://example.com', { timeout: customTimeout });
+        expect(GM_xmlhttpRequest).toHaveBeenCalledWith(expect.objectContaining({ timeout: customTimeout }));
+    });
 });

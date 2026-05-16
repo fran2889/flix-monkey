@@ -69,4 +69,22 @@ describe('WebExtensionAdapter', () => {
             expect(e.status).toBe(404);
         }
     });
+
+    it('httpFetch should pass timeout to background', async () => {
+        const customTimeout = 3000;
+        browser.runtime.sendMessage.mockResolvedValue({ data: {} });
+
+        await adapter.httpFetch('https://api.example.com', { timeout: customTimeout });
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith(
+            expect.objectContaining({
+                options: expect.objectContaining({ timeout: customTimeout }),
+            })
+        );
+    });
+
+    it('registerMenuCommand should be a no-op', () => {
+        expect(typeof adapter.registerMenuCommand).toBe('function');
+        // Should not throw
+        adapter.registerMenuCommand('label', () => {});
+    });
 });

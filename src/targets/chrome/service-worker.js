@@ -27,10 +27,10 @@ const HTTP_TIMEOUT = 8000;
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type !== 'FM_FETCH') return false;
     const { url, options = {} } = msg;
-    const { responseType = 'json' } = options;
+    const { responseType = 'json', timeout = HTTP_TIMEOUT } = options;
     const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), HTTP_TIMEOUT);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     fetch(url, {
         signal: controller.signal,
         headers: { 'User-Agent': ua, 'Accept-Language': 'en-US,en;q=0.9' },
