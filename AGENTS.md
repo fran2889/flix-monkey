@@ -114,7 +114,10 @@ class PlatformAdapter {
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format.
 
-**Allowed types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `chore`.
+- **Format:** `type: description`
+- **Case:** Use imperative form (e.g., "feat: add feature" instead of "feat: added feature").
+- **Types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `chore`.
+- **Post-Task Protocol:** Once a task is complete, always print a suggested commit message in a copy-friendly format.
 
 ## Pull Request Guidelines
 
