@@ -16,17 +16,18 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 - **Dev tooling**: Rollup, ESLint (flat config), Prettier
 - **Package manager**: npm
 
-## Setup
+## Setup Commands
 
 ```bash
 npm install
 ```
 
-## Development Workflow
+## Development & Build Workflow
 
 1. Edit source files in `src/`.
-2. Run the build to generate distribution artifacts in `dist/`.
-3. Run lint and format to ensure code quality.
+2. Build artifacts: `npm run build`
+3. Run lint/format: `npm run lint && npm run format`
+4. Run tests: `npm test` (or use `vitest` directly for targeted runs).
 
 ### Build Scripts
 
@@ -36,14 +37,14 @@ npm install
 | `npm run build:userscript` | Build only the userscript                       |
 | `npm run build:firefox`    | Build only the Firefox extension                |
 | `npm run build:chrome`     | Build only the Chrome extension                 |
-| `npm run lint`             | Lint `src/` modules and legacy script           |
+| `npm run lint`             | Lint `src/`, `tests/`, and configuration files  |
 | `npm run format`           | Format with Prettier                            |
 
-### Loading for Testing
+### Testing Instructions
 
-- **Userscript**: Point your userscript manager at `dist/FlixMonkey.user.js`.
-- **Firefox**: Load `dist/firefox/` as a temporary add-on in `about:debugging`.
-- **Chrome**: Load `dist/chrome/` as an unpacked extension in `chrome://extensions`.
+- **Unit/Integration/UI**: Run `npm test` to execute all suites.
+- **Filtering**: Use `npx vitest -t "test name"` to focus on specific tests.
+- **Fixtures**: UI tests utilize `tests/fixtures/*.html` to mock Netflix DOM states.
 
 ## Architecture
 
@@ -63,8 +64,10 @@ Platform-agnostic business logic.
 | `request-queue.js`    | Handles rate limiting and cross-tab synchronization      |
 | `overlay.js`          | UI rendering of the rating badges                        |
 | `surfaces.js`         | DOM discovery logic for Netflix UI elements              |
-| `config.js`           | Reactive configuration object                            |
+| `config-manager.js`   | Reactive configuration object                            |
 | `config-fields.js`    | Single source of truth for settings definitions          |
+| `logger.js`           | Centralized logging utility                              |
+| `utils.js`            | Shared helper functions                                  |
 | `title.js`            | Pure data class representing a movie/show                |
 | `constants.js`        | Shared constants and enumerations                        |
 
@@ -100,31 +103,17 @@ class PlatformAdapter {
 }
 ```
 
-## Code Style
+## Code Style & Conventions
 
 - **ES modules**: Use `import`/`export` in all `src/` files.
-- **Async/Await**: All storage and network operations are asynchronous.
+- **Async/Await**: Mandatory for storage/network operations.
 - **Private Fields**: Use `#field` for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
-- **Conventional Commits**: Strictly enforced for all changes.
-- **Tooling Preference**: Prefer using IntelliJ IDEA MCP tools over standard text tools for file operations and codebase exploration.
-- **Post-Task Protocol**: Always print the suggested commit message once the task is complete.
-
-## Commit Messages
-
-Use [Conventional Commits](https://www.conventionalcommits.org/) format.
-
-- **Format:** `type: description`
-- **Case:** Use imperative form (e.g., "feat: add feature" instead of "feat: added feature").
-- **Types:** `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `chore`.
-- **Post-Task Protocol:** Once a task is complete, always print a suggested commit message in a copy-friendly format.
-
-## Pull Request Guidelines
-
-- `npm run build` must pass.
-- `npm run lint` and `npm run format` must pass.
-- Logic changes should be accompanied by a version bump in `package.json`.
-- The legacy `FlixMonkey.user.js` in the root is preserved for now but should not be the primary target of new features.
+- **Conventional Commits**: Strictly enforced. Use `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+- **Testing**: Business logic changes must add or update test validating the new logic, unless trivial.
+- **Documentation**: README must be updated if the change is user-facing or affects a documented functionality.
+- **IntelliJ MCP**: Prefer IntelliJ IDEA tools for refactoring and navigation.
+- **Protocol**: Always print a suggested commit message at the end of a task.
 
 ## Common Gotchas
 
