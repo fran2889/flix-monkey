@@ -143,14 +143,14 @@ export class XmdbApiClient extends BaseApiClient {
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error) return null;
-        const { rating, ratings, year, title } = detailsJson;
+        const { rating, ratings, year, title, metacritic } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
             imdbId: id,
             year,
             rating,
             rtRating: parseRatings(ratings, /Rotten Tomatoes/i),
-            mcRating: parseRatings(ratings, /Metacritic/i),
+            mcRating: metacritic ?? parseRatings(ratings, /Metacritic/i),
         });
     }
 }
@@ -224,13 +224,14 @@ export class ImdbApiDevClient extends BaseApiClient {
 
     async getDetails(match, displayTitle) {
         logger.info(`Fetching IMDb API Dev details for ID: ${match.id} ("${match.title ?? displayTitle}")`);
+        const { details } = await this.queuedFetch(`https://api.imdbapi.dev/movie/${match.id}`, 1);
         return new Title({
             apiTitle: match.title ?? null,
             imdbId: match.id,
             year: match.startYear,
             rating: match.rating?.aggregateRating,
             rtRating: null,
-            mcRating: match.metacritic?.score ?? null,
+            mcRating: details?.ratings?.metacritic?.score ?? match.metacritic?.score ?? null,
         });
     }
 }
