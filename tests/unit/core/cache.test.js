@@ -30,6 +30,8 @@ describe('CacheManager', () => {
         adapter = {
             storageGet: vi.fn(),
             storageSet: vi.fn(),
+            storageDelete: vi.fn(),
+            storageGetKeys: vi.fn(),
         };
         config = new ConfigManager();
         cacheManager = new CacheManager(adapter, config);
@@ -46,32 +48,31 @@ describe('CacheManager', () => {
     });
 
     it('should write data to storage', async () => {
-        adapter.storageGet.mockResolvedValue(JSON.stringify({}));
+        adapter.storageGet.mockResolvedValue(null);
         const title = new Title({ apiTitle: 'Test Title' });
         await cacheManager.write('Test Title', '2023', title);
 
-        expect(adapter.storageSet).toHaveBeenCalledWith('fm_cache', expect.stringContaining('Test Title'));
+        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title_2023', expect.stringContaining('Test Title'));
     });
 
     it('should clear cache', async () => {
-        adapter.storageGet.mockResolvedValue(JSON.stringify({ key1: {} }));
+        adapter.storageGetKeys.mockResolvedValue(['fmc:key1']);
         await cacheManager.clear();
-        expect(adapter.storageSet).toHaveBeenCalledWith('fm_cache', '{}');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:key1');
     });
 
     it('should write and read cache entry', async () => {
         const titleData = { displayTitle: 'Test Title', year: 2026, rating: '8.0' };
         const titleObj = new Title(titleData);
-        adapter.storageGet.mockResolvedValue('{}');
-
-        await cacheManager.write('Test Title', 2026, titleObj);
-        expect(adapter.storageSet).toHaveBeenCalled();
-
         adapter.storageGet.mockResolvedValue(
             JSON.stringify({
-                test_title_2026: { data: titleObj, expires: Date.now() + 10000 },
+                data: titleObj,
+                expires: Date.now() + 10000,
             })
         );
+
+        await cacheManager.write('Test Title', 2026, titleObj);
+        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title_2026', expect.any(String));
 
         const result = await cacheManager.read('Test Title', 2026);
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
@@ -87,7 +88,8 @@ describe('CacheManager', () => {
         const titleObj = new Title(titleData);
         adapter.storageGet.mockResolvedValue(
             JSON.stringify({
-                old_title_2020: { data: titleObj, expires: now - 1000 },
+                data: titleObj,
+                expires: now - 1000,
             })
         );
 

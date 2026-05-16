@@ -20,7 +20,7 @@ import { Title } from './title.js';
 import { logger } from './logger.js';
 
 export class CacheManager {
-    #storageKey = 'fm_cache';
+    #prefix = 'fmc:';
     #adapter;
     #config;
 
@@ -30,15 +30,8 @@ export class CacheManager {
     }
 
     #getCacheKey(displayTitle, domYear) {
-        return `${displayTitle.toLowerCase().replace(/\s+/g, '_')}${domYear ? `_${domYear}` : ''}`;
-    }
-
-    async #loadCacheData() {
-        try {
-            return JSON.parse((await this.#adapter.storageGet(this.#storageKey)) ?? '{}');
-        } catch {
-            return {};
-        }
+        const slug = `${displayTitle.toLowerCase().replace(/\s+/g, '_')}${domYear ? `_${domYear}` : ''}`;
+        return `${this.#prefix}${slug}`;
     }
 
     #calculateTtl(titleObj) {
@@ -54,29 +47,34 @@ export class CacheManager {
     }
 
     async read(displayTitle, domYear) {
-        const entry = (await this.#loadCacheData())[this.#getCacheKey(displayTitle, domYear)];
-        if (!entry) return null;
-        return Date.now() > entry.expires ? null : Title.fromJSON(entry.data);
+        const key = this.#getCacheKey(displayTitle, domYear);
+        const raw = await this.#adapter.storageGet(key);
+        if (!raw) return null;
+        try {
+            const entry = JSON.parse(raw);
+            return Date.now() > entry.expires ? null : Title.fromJSON(entry.data);
+        } catch {
+            return null;
+        }
     }
 
     async write(displayTitle, domYear, titleObj) {
-        const blob = await this.#loadCacheData();
+        const key = this.#getCacheKey(displayTitle, domYear);
         const now = Date.now();
-        Object.keys(blob).forEach(k => {
-            if (now > blob[k].expires) delete blob[k];
-        });
         const ttl = this.#calculateTtl(titleObj);
-        blob[this.#getCacheKey(displayTitle, domYear)] = {
+        const entry = {
             data: titleObj,
             expires: ttl === Infinity ? Infinity : now + ttl,
         };
-        await this.#adapter.storageSet(this.#storageKey, JSON.stringify(blob));
+        await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
 
     async clear() {
-        const blob = await this.#loadCacheData();
-        const count = Object.keys(blob).length;
-        await this.#adapter.storageSet(this.#storageKey, '{}');
+        const keys = await this.#adapter.storageGetKeys(this.#prefix);
+        const count = keys.length;
+        for (const key of keys) {
+            await this.#adapter.storageDelete(key);
+        }
         logger.info(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }
