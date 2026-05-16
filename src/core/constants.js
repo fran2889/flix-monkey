@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
-export const NAVIGATION_DEBOUNCE_MS = 800;
+export const DECORATION_DEBOUNCE_MS = 250;
 export const CLIENT_DISABLE_DURATION = 3600000;
 
 export const ApiSource = Object.freeze({

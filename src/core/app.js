@@ -21,19 +21,24 @@ import { ApiClientManager } from './api-manager.js';
 import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
 import { Title } from './title.js';
-import { NAVIGATION_DEBOUNCE_MS } from './constants.js';
+import { DECORATION_DEBOUNCE_MS } from './constants.js';
 import { ConfigManager } from './config-manager.js';
+import { debounce, runIdle } from './utils.js';
 
 export class FlixMonkeyApp {
     #api;
     #renderer;
     #surfaces;
     #inFlight = new Map();
+    #debouncedDecorate;
 
     constructor(cache, api, renderer, surfaces) {
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
+        this.#debouncedDecorate = debounce(() => {
+            runIdle(() => this.decorateRoot(document));
+        }, DECORATION_DEBOUNCE_MS);
     }
 
     async #decorateContainer(container, displayTitle, fadeable) {
@@ -88,27 +93,20 @@ export class FlixMonkeyApp {
 
         history.pushState = (...args) => {
             FlixMonkeyApp.#originalPushState.apply(history, args);
-            setTimeout(() => {
-                this.decorateRoot(document);
-            }, NAVIGATION_DEBOUNCE_MS);
+            this.#debouncedDecorate();
         };
         history.replaceState = (...args) => {
             FlixMonkeyApp.#originalReplaceState.apply(history, args);
-            setTimeout(() => {
-                this.decorateRoot(document);
-            }, NAVIGATION_DEBOUNCE_MS);
+            this.#debouncedDecorate();
         };
 
-        window.addEventListener('popstate', () =>
-            setTimeout(() => this.decorateRoot(document), NAVIGATION_DEBOUNCE_MS)
-        );
+        window.addEventListener('popstate', () => this.#debouncedDecorate());
 
         const observer = new MutationObserver(mutations => {
-            mutations.forEach(({ addedNodes }) => {
-                addedNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) this.decorateRoot(node);
-                });
-            });
+            const hasElements = mutations.some(m =>
+                Array.from(m.addedNodes).some(n => n.nodeType === Node.ELEMENT_NODE)
+            );
+            if (hasElements) this.#debouncedDecorate();
         });
         observer.observe(document.body, { childList: true, subtree: true });
     }

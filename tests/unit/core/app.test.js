@@ -19,7 +19,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
-import { NAVIGATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
+import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
@@ -98,7 +98,7 @@ describe('App', () => {
 
         // Verify that subsequent discoveries while a request is in-flight do not trigger new lookups
         window.history.pushState({}, '', '/new');
-        vi.advanceTimersByTime(NAVIGATION_DEBOUNCE_MS + 100);
+        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
 
         await Promise.resolve();
         expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(3);
