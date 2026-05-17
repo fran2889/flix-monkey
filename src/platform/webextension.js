@@ -45,8 +45,4 @@ export class WebExtensionAdapter extends PlatformAdapter {
         }
         return response.data;
     }
-
-    registerMenuCommand(_label, _fn) {
-        // No-op for web extensions
-    }
 }

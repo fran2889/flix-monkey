@@ -93,10 +93,4 @@ describe('WebExtensionAdapter', () => {
             })
         );
     });
-
-    it('registerMenuCommand should be a no-op', () => {
-        expect(typeof adapter.registerMenuCommand).toBe('function');
-        // Should not throw
-        adapter.registerMenuCommand('label', () => {});
-    });
 });

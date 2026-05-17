@@ -47,11 +47,6 @@ export class PlatformAdapter {
         throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
     }
 
-    /** @abstract */
-    registerMenuCommand(_label, _fn) {
-        throw new FlixMonkeyError('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
-    }
-
     set configGet(fn) {
         this._configGet = fn;
     }

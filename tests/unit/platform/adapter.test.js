@@ -51,12 +51,6 @@ describe('PlatformAdapter', () => {
         );
     });
 
-    it('should throw an error if registerMenuCommand is not implemented', () => {
-        expect(() => adapter.registerMenuCommand('label', () => {})).toThrow(
-            'PlatformAdapter: registerMenuCommand() must be implemented by subclass'
-        );
-    });
-
     it('should allow setting and getting configGet', () => {
         const fn = () => 'test';
         adapter.configGet = fn;
