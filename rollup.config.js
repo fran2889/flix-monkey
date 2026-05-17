@@ -12,6 +12,7 @@ const USERSCRIPT_BANNER = `// ==UserScript==
 // @version      ${version}
 // @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
 // @author       fran
+// @license      GPL-3.0-or-later
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -59,7 +60,15 @@ const allConfigs = [
         _target: 'userscript',
         input: 'src/targets/userscript/entry.js',
         output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
-        plugins: sharedPlugins(),
+        plugins: [
+            ...sharedPlugins(),
+            {
+                name: 'strip-license-header',
+                transform(code) {
+                    return code.replace(/\/\*\*[\s\S]*?Copyright \(C\) 2026 Fran[\s\S]*?\*\/\n/g, '');
+                },
+            },
+        ],
     },
     {
         _target: 'firefox',
