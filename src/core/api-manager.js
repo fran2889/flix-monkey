@@ -22,36 +22,35 @@ import { logger } from './logger.js';
 
 export class ApiClientManager {
     #cache;
-    #clients;
+    #client;
     #disabledManager;
     #config;
 
-    constructor(cacheManager, disabledManager, adapter, config, clients = []) {
+    constructor(cacheManager, disabledManager, adapter, config, client = null) {
         this.#cache = cacheManager;
         this.#disabledManager = disabledManager;
         this.#config = config;
-        this.#clients = clients;
+        this.#client = client;
 
-        if (this.#clients.length === 0) {
-            this.#clients = ApiClientManager.#createClientsFromConfig(this.#config, this.#disabledManager, adapter);
+        if (!this.#client) {
+            this.#client = ApiClientManager.#createClientFromConfig(this.#config, this.#disabledManager, adapter);
         }
     }
 
-    static #createClientsFromConfig(config, disabledManager, adapter) {
-        const configuredClients = (config.get('apiClients') ?? 'imdbapi').split(',').map(c => c.trim().toLowerCase());
+    getClient() {
+        return this.#client;
+    }
+
+    static #createClientFromConfig(config, disabledManager, adapter) {
+        const provider = (config.get('apiClient') ?? 'imdbapi').trim().toLowerCase();
         const clientMap = {
             [ApiSource.XMDB]: XmdbApiClient,
             [ApiSource.OMDB]: OmdbApiClient,
             [ApiSource.IMDBAPI]: ImdbApiDevClient,
         };
 
-        const clients = [];
-        configuredClients.forEach(name => {
-            if (clientMap[name]) {
-                clients.push(new clientMap[name](disabledManager, adapter, config));
-            }
-        });
-        return clients;
+        const ClientClass = clientMap[provider] ?? ImdbApiDevClient;
+        return new ClientClass(disabledManager, adapter, config);
     }
 
     async resetDisabledClients() {
@@ -73,43 +72,19 @@ export class ApiClientManager {
         const cached = await this.#cache.read(displayTitle, domYear);
         if (cached !== null) return cached;
 
-        let bestData = null;
-        let attempted = false;
+        const status = await this.#client.getStatus();
+        if (!status.healthy) return null;
 
-        const clientStatuses = await Promise.all(
-            this.#clients.map(async client => ({
-                client,
-                status: await client.getStatus(),
-            }))
-        );
-
-        const healthyClients = clientStatuses.filter(s => s.status.healthy).map(s => s.client);
-
-        for (const client of healthyClients) {
-            attempted = true;
-            const data = await client.fetch(displayTitle, domYear);
-            if (!data) continue;
-            if (data.isBetterThan(bestData)) {
-                bestData = data;
-                break;
-            }
-            bestData ??= data;
-        }
-
-        if (!bestData) {
-            if (attempted) {
-                logger.warn(
-                    `Total failure: No ratings found for "${displayTitle}"${domYear ? ` (${domYear})` : ''} using ${healthyClients.length} healthy clients.`
-                );
-                await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
-            }
+        const data = await this.#client.fetch(displayTitle, domYear);
+        if (!data) {
+            await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
             return null;
         }
 
-        await this.#cache.write(displayTitle, domYear, bestData);
+        await this.#cache.write(displayTitle, domYear, data);
         logger.info(
-            `Successfully retrieved ratings for "${displayTitle}"${domYear ? ` (${domYear})` : ''} from ${bestData.source}.`
+            `Successfully retrieved ratings for "${displayTitle}"${domYear ? ` (${domYear})` : ''} from ${data.source}.`
         );
-        return bestData;
+        return data;
     }
 }

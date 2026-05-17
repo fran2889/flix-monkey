@@ -19,54 +19,58 @@ import { describe, it, expect, vi } from 'vitest';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
+import { ImdbApiDevClient } from '../../../src/core/api-clients.js';
 
 describe('ApiClientManager', () => {
     const mockConfig = new ConfigManager();
 
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, []);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, null);
         const result = await manager.getData('Some Title', '2023');
         expect(result.apiTitle).toBe('Cached Movie');
         expect(mockCache.read).toHaveBeenCalled();
     });
 
-    it('should iterate through clients and return the first result', async () => {
+    it('should only initialize the single selected client', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const config = { get: (_key) => 'imdbapi' };
+        const manager = new ApiClientManager(mockCache, {}, {}, config, null);
+        const client = manager.getClient();
+        expect(client instanceof ImdbApiDevClient).toBe(true);
+    });
+
+    it('should fetch and return result from client', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const mockClient = {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [mockClient]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
         const result = await manager.getData('Some Title', '2023');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
 
-    it('should fail over to next client if first returns null', async () => {
+    it('should handle fail if client returns null', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client1 = {
+        const client = {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(null),
         };
-        const client2 = {
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Backup Movie' })),
-        };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1, client2]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
         const result = await manager.getData('Some Title', '2023');
-        expect(result.apiTitle).toBe('Backup Movie');
-        expect(client1.fetch).toHaveBeenCalled();
-        expect(client2.fetch).toHaveBeenCalled();
+        expect(result).toBeNull();
+        expect(client.fetch).toHaveBeenCalled();
     });
 
-    it('should cache "Not Found" result if all clients fail', async () => {
+    it('should cache "Not Found" result if client fails', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client1 = {
+        const client = {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(null),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [client1]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
         const result = await manager.getData('Unknown Movie', '2023');
         expect(result).toBeNull();
@@ -80,27 +84,22 @@ describe('ApiClientManager', () => {
         );
     });
 
-    it('should skip unhealthy clients', async () => {
+    it('should skip unhealthy client', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const unhealthyClient = {
             getStatus: vi.fn().mockResolvedValue({ healthy: false }),
             fetch: vi.fn(),
         };
-        const healthyClient = {
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Healthy Result' })),
-        };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [unhealthyClient, healthyClient]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, unhealthyClient);
 
         const result = await manager.getData('Test Movie', '2023');
-        expect(result.apiTitle).toBe('Healthy Result');
+        expect(result).toBeNull();
         expect(unhealthyClient.fetch).not.toHaveBeenCalled();
-        expect(healthyClient.fetch).toHaveBeenCalled();
     });
 
     it('should reset all disabled clients and return the list of re-enabled ones', async () => {
         const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue(['xmdb', 'omdb']) };
-        const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, []);
+        const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, {});
         const reenabled = await manager.resetDisabledClients();
         expect(mockDisabledManager.resetAll).toHaveBeenCalled();
         expect(reenabled).toEqual(['xmdb', 'omdb']);
@@ -108,7 +107,7 @@ describe('ApiClientManager', () => {
 
     it('should clear the cache', async () => {
         const mockCache = { clear: vi.fn().mockResolvedValue() };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, []);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, {});
         await manager.clearCache();
         expect(mockCache.clear).toHaveBeenCalled();
     });
@@ -120,12 +119,11 @@ describe('ApiClientManager', () => {
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Logged Movie' })),
             source: 'test-source',
         };
-        // Ensure the title object has a source
         const title = new Title({ apiTitle: 'Logged Movie' });
         title.source = 'test-source';
         mockClient.fetch.mockResolvedValue(title);
 
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, [mockClient]);
+        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
 
         const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
         await manager.getData('Logged Movie', '2023');

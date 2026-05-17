@@ -31,11 +31,16 @@ export const CONFIG_FIELDS = [
         title: 'Open Movie Database API key. Get API key at https://www.omdbapi.com/apikey.aspx',
     },
     {
-        key: 'apiClients',
-        label: 'API Fallback Order',
-        type: 'text',
+        key: 'apiClient',
+        label: 'API Provider',
+        type: 'select',
+        options: [
+            { label: 'IMDb API', value: 'imdbapi' },
+            { label: 'OMDB', value: 'omdb' },
+            { label: 'XMDB', value: 'xmdb' }
+        ],
         default: 'imdbapi',
-        title: 'Comma-separated list of APIs to try in order: imdbapi, xmdb, omdb. IMDb API does not require a key.',
+        title: 'Choose the primary API provider for ratings.',
     },
     {
         key: 'overlayCorner',
