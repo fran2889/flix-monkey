@@ -33,6 +33,18 @@ describe('PlatformAdapter', () => {
         );
     });
 
+    it('should throw an error if storageDelete is not implemented', async () => {
+        await expect(adapter.storageDelete('key')).rejects.toThrow(
+            'PlatformAdapter: storageDelete() must be implemented by subclass'
+        );
+    });
+
+    it('should throw an error if storageGetKeys is not implemented', async () => {
+        await expect(adapter.storageGetKeys('prefix')).rejects.toThrow(
+            'PlatformAdapter: storageGetKeys() must be implemented by subclass'
+        );
+    });
+
     it('should throw an error if httpFetch is not implemented', async () => {
         await expect(adapter.httpFetch('url', {})).rejects.toThrow(
             'PlatformAdapter: httpFetch() must be implemented by subclass'

@@ -28,6 +28,15 @@ export class WebExtensionAdapter extends PlatformAdapter {
         await browser.storage.local.set({ [key]: value });
     }
 
+    async storageDelete(key) {
+        await browser.storage.local.remove(key);
+    }
+
+    async storageGetKeys(prefix) {
+        const all = await browser.storage.local.get(null);
+        return Object.keys(all).filter(key => key.startsWith(prefix));
+    }
+
     async httpFetch(url, options = {}) {
         const response = await browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
         if (response.error) {

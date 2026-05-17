@@ -39,6 +39,18 @@ describe('UserscriptAdapter', () => {
         expect(GM_setValue).toHaveBeenCalledWith('key', 'value');
     });
 
+    it('storageDelete should call GM_deleteValue', async () => {
+        await adapter.storageDelete('key');
+        expect(GM_deleteValue).toHaveBeenCalledWith('key');
+    });
+
+    it('storageGetKeys should call GM_listValues and filter by prefix', async () => {
+        GM_listValues.mockReturnValue(['fmc:1', 'other:2', 'fmc:3']);
+        const result = await adapter.storageGetKeys('fmc:');
+        expect(GM_listValues).toHaveBeenCalled();
+        expect(result).toEqual(['fmc:1', 'fmc:3']);
+    });
+
     it('registerMenuCommand should call GM_registerMenuCommand', () => {
         const fn = vi.fn();
         adapter.registerMenuCommand('test-label', fn);

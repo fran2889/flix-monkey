@@ -28,6 +28,15 @@ export class UserscriptAdapter extends PlatformAdapter {
         GM_setValue(key, value);
     }
 
+    async storageDelete(key) {
+        GM_deleteValue(key);
+    }
+
+    async storageGetKeys(prefix) {
+        const keys = GM_listValues();
+        return keys.filter(key => key.startsWith(prefix));
+    }
+
     async httpFetch(url, { responseType = 'json', timeout = HTTP_TIMEOUT } = {}) {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({

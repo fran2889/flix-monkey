@@ -31,6 +31,16 @@ export class PlatformAdapter {
     }
 
     /** @abstract */
+    async storageDelete(_key) {
+        throw new Error('PlatformAdapter: storageDelete() must be implemented by subclass');
+    }
+
+    /** @abstract */
+    async storageGetKeys(_prefix) {
+        throw new Error('PlatformAdapter: storageGetKeys() must be implemented by subclass');
+    }
+
+    /** @abstract */
     async httpFetch(_url, _options) {
         throw new Error('PlatformAdapter: httpFetch() must be implemented by subclass');
     }
@@ -40,7 +50,6 @@ export class PlatformAdapter {
         throw new Error('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
     }
 
-    /** @abstract */
     set configGet(fn) {
         this._configGet = fn;
     }

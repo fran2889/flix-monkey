@@ -14,6 +14,8 @@ const userscriptGlobals = {
     GM_xmlhttpRequest: 'readonly',
     GM_getValue: 'readonly',
     GM_setValue: 'readonly',
+    GM_deleteValue: 'readonly',
+    GM_listValues: 'readonly',
     GM_registerMenuCommand: 'readonly',
     GM_config: 'readonly',
 };

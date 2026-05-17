@@ -21,7 +21,7 @@ import browser from 'webextension-polyfill';
 
 vi.mock('webextension-polyfill', () => ({
     default: {
-        storage: { local: { get: vi.fn(), set: vi.fn() } },
+        storage: { local: { get: vi.fn(), set: vi.fn(), remove: vi.fn() } },
         runtime: { sendMessage: vi.fn() },
     },
 }));
@@ -44,6 +44,18 @@ describe('WebExtensionAdapter', () => {
     it('storageSet should call storage.local.set', async () => {
         await adapter.storageSet('key', 'value');
         expect(browser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
+    });
+
+    it('storageDelete should call storage.local.remove', async () => {
+        await adapter.storageDelete('key');
+        expect(browser.storage.local.remove).toHaveBeenCalledWith('key');
+    });
+
+    it('storageGetKeys should call storage.local.get(null) and filter by prefix', async () => {
+        browser.storage.local.get.mockResolvedValue({ 'fmc:1': 'v1', 'other:2': 'v2', 'fmc:3': 'v3' });
+        const result = await adapter.storageGetKeys('fmc:');
+        expect(browser.storage.local.get).toHaveBeenCalledWith(null);
+        expect(result.sort()).toEqual(['fmc:1', 'fmc:3'].sort());
     });
 
     it('httpFetch should send message to background and return data', async () => {
