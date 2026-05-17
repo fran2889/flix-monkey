@@ -121,22 +121,22 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey || apiKey === 'YOUR_XMDB_API_KEY') return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        logger.info(`Searching XMDB for title: "${displayTitle}"`);
+        logger.debug(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            logger.info(`No search results found in XMDB for: "${displayTitle}"`);
+            logger.debug(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            logger.info(`No search results found in XMDB for: "${displayTitle}"`);
+            logger.debug(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         return titleResults[0];
     }
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        logger.info(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
+        logger.debug(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
@@ -173,10 +173,10 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t }, _displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        logger.info(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
+        logger.debug(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            logger.info(`No search results found in OMDB for: "${t}"`);
+            logger.debug(`No search results found in OMDB for: "${t}"`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
@@ -205,17 +205,17 @@ export class ImdbApiDevClient extends BaseApiClient {
 
     async search(displayTitle) {
         const searchParams = new URLSearchParams({ query: displayTitle });
-        logger.info(`Searching IMDb API Dev for title: "${displayTitle}"`);
+        logger.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
-            logger.info(`No search results found in IMDb API Dev for: "${displayTitle}"`);
+            logger.debug(`No search results found in IMDb API Dev for: "${displayTitle}"`);
             return null;
         }
         return titles[0];
     }
 
     async getDetails(match, displayTitle) {
-        logger.info(`Fetching IMDb API Dev details for ID: ${match.id} ("${match.title ?? displayTitle}")`);
+        logger.debug(`Fetching IMDb API Dev details for ID: ${match.id} ("${match.title ?? displayTitle}")`);
         const { details } = await this.queuedFetch(`https://api.imdbapi.dev/movie/${match.id}`, 1);
         return new Title({
             apiTitle: match.title ?? null,

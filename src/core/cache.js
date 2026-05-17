@@ -76,6 +76,6 @@ export class CacheManager {
         for (const key of keys) {
             await this.#adapter.storageDelete(key);
         }
-        logger.info(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
+        logger.debug(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }

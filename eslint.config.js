@@ -6,7 +6,7 @@ const commonRules = {
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-console': ['warn', { allow: ['debug', 'info', 'warn', 'error'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 };
 

@@ -19,16 +19,20 @@
 export class Logger {
     #prefix = '[FlixMonkey]';
 
+    debug(message, ...args) {
+        console.debug(`${this.#prefix} ${message}`, ...args);
+    }
+
+    info(message, ...args) {
+        console.info(`${this.#prefix} ${message}`, ...args);
+    }
+
     warn(message, ...args) {
         console.warn(`${this.#prefix} ${message}`, ...args);
     }
 
     error(message, ...args) {
         console.error(`${this.#prefix} ${message}`, ...args);
-    }
-
-    info(message, ...args) {
-        console.info(`${this.#prefix} ${message}`, ...args);
     }
 }
 

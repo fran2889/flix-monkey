@@ -46,4 +46,11 @@ describe('core/logger', () => {
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test info');
         spy.mockRestore();
     });
+
+    it('should log debug', () => {
+        const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+        logger.debug('test debug');
+        expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug');
+        spy.mockRestore();
+    });
 });
