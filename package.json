@@ -20,7 +20,8 @@
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run tests/integration",
         "test:e2e": "playwright test tests/e2e",
-        "audit": "npm audit --audit-level=high"
+        "audit": "npm audit --audit-level=high",
+        "clean": "npx rimraf dist coverage"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
