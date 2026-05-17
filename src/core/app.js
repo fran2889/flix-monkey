@@ -125,10 +125,6 @@ export function startApp(adapter) {
     const api = new ApiClientManager(cache, disabledManager, adapter, configManager);
     const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager();
-    /*global process*/
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-        window.fmApi = api;
-    }
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
     app.init();
     return { api, cache };

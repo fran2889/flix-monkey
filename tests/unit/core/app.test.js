@@ -59,7 +59,6 @@ describe('App', () => {
         const { api, cache } = startApp(mockAdapter);
         expect(api).toBeDefined();
         expect(cache).toBeDefined();
-        expect(window.fmApi).toBe(api);
     });
 
     it('should discover titles in JSDOM', () => {
