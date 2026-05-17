@@ -42,6 +42,7 @@ export class OverlayRenderer {
         };
         const corner = this.#config.get('overlayCorner', 'top-left');
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
+        const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
         const style = document.createElement('style');
         style.textContent = `
             .${this.#OVERLAY_CLASS} {
@@ -49,8 +50,11 @@ export class OverlayRenderer {
                 ${positionCss}
                 z-index: 9999;
                 display: flex;
-                flex-direction: column;
-                gap: 3px;
+                flex-direction: ${flexDirection};
+                gap: 4px;
+                pointer-events: none;
+            }
+            .${this.#OVERLAY_CLASS} > * {
                 background: rgba(0,0,0,0.72);
                 font-family: Arial, sans-serif;
                 font-size: 12px;
@@ -63,9 +67,11 @@ export class OverlayRenderer {
                 white-space: nowrap;
                 pointer-events: all;
                 transition: background 0.15s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
             }
-            .${this.#OVERLAY_CLASS}:hover { background: rgba(0,0,0,0.92); }
-            .${this.#OVERLAY_CLASS} .fm-row { display: flex; align-items: center; gap: 4px; }
+            .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
             .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
             .${this.#OVERLAY_CLASS} .fm-rt { color: #fa320a; }
             .${this.#OVERLAY_CLASS} .fm-mc { color: #6ac; }
@@ -83,8 +89,22 @@ export class OverlayRenderer {
         document.head.appendChild(style);
     }
 
-    #createRatingRow(label, value, className = '') {
-        return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-value">${value}</span></div>`;
+    #createRatingElement(label, value, className = '') {
+        const el = document.createElement('div');
+        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-value">${value}</span>`;
+        return el;
+    }
+
+    #createMissingRatingElement(label, className = '') {
+        const el = document.createElement('div');
+        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-na">N/A</span>`;
+        return el;
+    }
+
+    #createSearchRatingElement(label, className = '') {
+        const el = document.createElement('div');
+        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-search">🔍</span>`;
+        return el;
     }
 
     #formatImdbRating(rating) {
@@ -97,14 +117,6 @@ export class OverlayRenderer {
         return `${rating}%`;
     }
 
-    #createMissingRatingRow(label, className = '') {
-        return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-na">N/A</span></div>`;
-    }
-
-    #createSearchRatingRow(label, className = '') {
-        return `<div class="fm-row"><span class="fm-label ${className}">${label}</span><span class="fm-search">🔍</span></div>`;
-    }
-
     #buildTooltip(titleParts, imdbId) {
         if (titleParts.length) return `${titleParts.join(' · ')} – click to open IMDb`;
         if (imdbId) return 'No ratings available – click to open IMDb';
@@ -112,63 +124,65 @@ export class OverlayRenderer {
     }
 
     #createOverlay(titleObj) {
-        const a = document.createElement('a');
-        a.className = this.#OVERLAY_CLASS;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.href = titleObj.imdbUrl;
+        const container = document.createElement('div');
+        container.className = this.#OVERLAY_CLASS;
 
-        const rows = [];
-        const titleParts = [];
         const { rating, imdbId, rtRating, mcRating } = titleObj;
 
+        // IMDb (Interactive Link)
+        const imdbLink = document.createElement('a');
+        imdbLink.target = '_blank';
+        imdbLink.rel = 'noopener noreferrer';
+        imdbLink.href = titleObj.imdbUrl;
+        imdbLink.addEventListener('click', e => e.stopPropagation());
+
+        const titleParts = [];
         if (rating) {
-            const formattedRating = this.#formatImdbRating(rating);
-            rows.push(this.#createRatingRow('IMDb', formattedRating));
-            titleParts.push(`IMDb: ${formattedRating}`);
+            const formatted = this.#formatImdbRating(rating);
+            imdbLink.appendChild(this.#createRatingElement('IMDb', formatted));
+            titleParts.push(`IMDb: ${formatted}`);
         } else if (imdbId) {
-            rows.push(this.#createMissingRatingRow('IMDb'));
+            imdbLink.appendChild(this.#createMissingRatingElement('IMDb'));
         } else {
-            rows.push(this.#createSearchRatingRow('IMDb'));
+            imdbLink.appendChild(this.#createSearchRatingElement('IMDb'));
         }
+        container.appendChild(imdbLink);
 
+        // RT
         if (this.#config.get('showRtRating', true) && rtRating) {
-            const formattedRt = this.#formatPercentRating(rtRating);
-            rows.push(this.#createRatingRow('RT', formattedRt, 'fm-rt'));
-            titleParts.push(`RT: ${formattedRt}`);
+            const formatted = this.#formatPercentRating(rtRating);
+            container.appendChild(this.#createRatingElement('RT', formatted, 'fm-rt'));
+            titleParts.push(`RT: ${formatted}`);
         }
 
+        // MC
         if (this.#config.get('showMcRating', true) && mcRating) {
-            const formattedMc = this.#formatPercentRating(mcRating);
-            rows.push(this.#createRatingRow('MC', formattedMc, 'fm-mc'));
-            titleParts.push(`MC: ${formattedMc}`);
+            const formatted = this.#formatPercentRating(mcRating);
+            container.appendChild(this.#createRatingElement('MC', formatted, 'fm-mc'));
+            titleParts.push(`MC: ${formatted}`);
         }
 
-        a.innerHTML = rows.join('');
-        a.title = this.#buildTooltip(titleParts, imdbId);
-        a.addEventListener('click', e => e.stopPropagation());
-        return a;
+        container.title = this.#buildTooltip(titleParts, imdbId);
+        return container;
     }
 
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
 
-    #createLoadingOverlay(displayTitle) {
-        const a = document.createElement('a');
-        a.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.href = `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle)}`;
-        a.innerHTML = `<div class="fm-row"><span class="fm-label">IMDb</span><span class="fm-search">⏳</span></div>`;
-        a.title = 'Fetching ratings… click to search IMDb';
-        a.addEventListener('click', e => e.stopPropagation());
-        return a;
+    #createLoadingOverlay(_displayTitle) {
+        const container = document.createElement('div');
+        container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
+        const el = document.createElement('div');
+        el.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-search">⏳</span>`;
+        container.appendChild(el);
+        container.title = 'Fetching ratings… click to search IMDb';
+        return container;
     }
 
-    injectLoadingOverlay(container, displayTitle) {
+    injectLoadingOverlay(container, _displayTitle) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(this.#createLoadingOverlay(displayTitle));
+        container.appendChild(this.#createLoadingOverlay(_displayTitle));
     }
 
     isLoading(container) {

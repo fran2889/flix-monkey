@@ -68,7 +68,9 @@ describe('Browse UI Surface', () => {
         expect(overlay).not.toBeNull();
         expect(overlay.classList.contains('fm-loading')).toBe(false);
         expect(overlay.textContent).toContain('8.5');
-        expect(overlay.getAttribute('href')).toBe(titleObj.imdbUrl);
+        const link = overlay.querySelector('a');
+        expect(link).not.toBeNull();
+        expect(link.getAttribute('href')).toBe(titleObj.imdbUrl);
     });
 
     it('should apply fading for low ratings', () => {

@@ -25,21 +25,21 @@ describe('Overlay', () => {
         expect(overlay).toBeDefined();
     });
 
-    it('should inject loading overlay and then replace it with ratings overlay', () => {
-        const config = new ConfigManager();
-        const overlayRenderer = new OverlayRenderer(config);
+    it('should inject loading overlay', () => {
+        const overlayRenderer = new OverlayRenderer(new ConfigManager());
         const container = document.createElement('div');
-
-        // 1. Inject loading overlay
         overlayRenderer.injectLoadingOverlay(container, 'Test Movie');
-
-        // Verify loading overlay is present
         const loadingElement = container.querySelector('.fm-loading');
         expect(loadingElement).not.toBeNull();
         expect(loadingElement.textContent).toContain('⏳');
         expect(overlayRenderer.isLoading(container)).toBe(true);
+    });
 
-        // 2. Replace with ratings overlay
+    it('should replace loading overlay with ratings overlay', () => {
+        const overlayRenderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        overlayRenderer.injectLoadingOverlay(container, 'Test Movie');
+
         const mockTitleObj = {
             rating: 8.5,
             imdbUrl: 'https://imdb.com/title/tt1234567/',
@@ -47,14 +47,34 @@ describe('Overlay', () => {
         };
         overlayRenderer.injectOverlay(container, mockTitleObj);
 
-        // Verify loading overlay is removed
         expect(container.querySelector('.fm-loading')).toBeNull();
         expect(overlayRenderer.isLoading(container)).toBe(false);
-
-        // Verify ratings overlay is present
-        const ratingElement = container.querySelector('.fm-rating-overlay');
-        expect(ratingElement).not.toBeNull();
-        expect(ratingElement.textContent).toContain('8.5');
+        expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
         expect(overlayRenderer.hasOverlay(container)).toBe(true);
+    });
+
+    it('should display all three ratings when provided', () => {
+        const overlayRenderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+
+        const mockTitleObj = {
+            rating: 8.5,
+            rtRating: 90,
+            mcRating: 80,
+            imdbUrl: 'https://imdb.com/title/tt1234567/',
+            imdbId: 'tt1234567',
+        };
+        overlayRenderer.injectOverlay(container, mockTitleObj);
+
+        const ratingElement = container.querySelector('.fm-rating-overlay');
+        expect(ratingElement.textContent).toContain('8.5');
+        expect(ratingElement.textContent).toContain('90%');
+        expect(ratingElement.textContent).toContain('80%');
+
+        const labels = ratingElement.querySelectorAll('.fm-label');
+        const labelTexts = Array.from(labels).map(l => l.textContent);
+        expect(labelTexts).toContain('IMDb');
+        expect(labelTexts).toContain('RT');
+        expect(labelTexts).toContain('MC');
     });
 });

@@ -172,6 +172,43 @@ describe('App', () => {
         spy.mockRestore();
     });
 
+    it('should trigger new decoration when a container is replaced', async () => {
+        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
+
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Original Title</div>
+            </div>
+        `;
+
+        startApp(mockAdapter);
+        await vi.waitFor(() => {
+            if (spy.mock.calls.length < 1) throw new Error('Not called yet');
+        });
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        // Simulate replacement of container
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Original Title</div>
+            </div>
+        `;
+
+        mockMutationObserverInstance.trigger([
+            {
+                addedNodes: [document.querySelector('.title-card')],
+            },
+        ]);
+
+        await vi.waitFor(() => {
+            if (spy.mock.calls.length < 2) throw new Error('Not called second time');
+        });
+
+        expect(spy).toHaveBeenCalledTimes(2);
+        spy.mockRestore();
+    });
+
     it('should inject loading overlay while fetching', async () => {
         const mockAdapter = {
             storageGet: vi.fn().mockResolvedValue(null),
