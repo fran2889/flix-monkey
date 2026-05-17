@@ -17,6 +17,17 @@
  */
 
 /**
+ * Custom error class for FlixMonkey.
+ */
+export class FlixMonkeyError extends Error {
+    constructor(message, status = null) {
+        super(message);
+        this.name = 'FlixMonkeyError';
+        this.status = status;
+    }
+}
+
+/**
  * Creates a debounced function that delays invoking func until after wait milliseconds
  * have elapsed since the last time the debounced function was invoked.
  *

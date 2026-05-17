@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { FlixMonkeyError } from '../core/utils.js';
+
 /**
  * Base class for platform adapters.
  * All methods must be implemented by subclasses.
@@ -22,32 +24,32 @@
 export class PlatformAdapter {
     /** @abstract */
     async storageGet(_key) {
-        throw new Error('PlatformAdapter: storageGet() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
     }
 
     /** @abstract */
     async storageSet(_key, _value) {
-        throw new Error('PlatformAdapter: storageSet() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: storageSet() must be implemented by subclass');
     }
 
     /** @abstract */
     async storageDelete(_key) {
-        throw new Error('PlatformAdapter: storageDelete() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: storageDelete() must be implemented by subclass');
     }
 
     /** @abstract */
     async storageGetKeys(_prefix) {
-        throw new Error('PlatformAdapter: storageGetKeys() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: storageGetKeys() must be implemented by subclass');
     }
 
     /** @abstract */
     async httpFetch(_url, _options) {
-        throw new Error('PlatformAdapter: httpFetch() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
     }
 
     /** @abstract */
     registerMenuCommand(_label, _fn) {
-        throw new Error('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
+        throw new FlixMonkeyError('PlatformAdapter: registerMenuCommand() must be implemented by subclass');
     }
 
     set configGet(fn) {

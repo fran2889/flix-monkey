@@ -17,6 +17,7 @@
  */
 import browser from 'webextension-polyfill';
 import { PlatformAdapter } from './adapter.js';
+import { FlixMonkeyError } from '../core/utils.js';
 
 export class WebExtensionAdapter extends PlatformAdapter {
     async storageGet(key) {
@@ -40,7 +41,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
     async httpFetch(url, options = {}) {
         const response = await browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
         if (response.error) {
-            throw Object.assign(new Error(response.error), { status: response.status });
+            throw new FlixMonkeyError(response.error, response.status);
         }
         return response.data;
     }
