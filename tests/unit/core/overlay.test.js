@@ -73,8 +73,8 @@ describe('Overlay', () => {
 
         const labels = ratingElement.querySelectorAll('.fm-label');
         const labelTexts = Array.from(labels).map(l => l.textContent);
-        expect(labelTexts).toContain('IMDb');
-        expect(labelTexts).toContain('RT');
-        expect(labelTexts).toContain('MC');
+        expect(labelTexts).toContain('IMDb ');
+        expect(labelTexts).toContain('RT ');
+        expect(labelTexts).toContain('MC ');
     });
 });

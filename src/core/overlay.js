@@ -91,19 +91,19 @@ export class OverlayRenderer {
 
     #createRatingElement(label, value, className = '') {
         const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-value">${value}</span>`;
+        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-value">${value}</span>`;
         return el;
     }
 
     #createMissingRatingElement(label, className = '') {
         const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-na">N/A</span>`;
+        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-na">N/A</span>`;
         return el;
     }
 
     #createSearchRatingElement(label, className = '') {
         const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label}</span><span class="fm-search">🔍</span>`;
+        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-search">🔍</span>`;
         return el;
     }
 
