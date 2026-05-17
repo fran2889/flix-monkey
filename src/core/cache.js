@@ -52,7 +52,8 @@ export class CacheManager {
         if (!raw) return null;
         try {
             const entry = JSON.parse(raw);
-            return Date.now() > entry.expires ? null : Title.fromJSON(entry.data);
+            const expired = entry.expires !== null && Date.now() > entry.expires;
+            return expired ? null : Title.fromJSON(entry.data);
         } catch {
             return null;
         }
@@ -64,7 +65,7 @@ export class CacheManager {
         const ttl = this.#calculateTtl(titleObj);
         const entry = {
             data: titleObj,
-            expires: ttl === Infinity ? Infinity : now + ttl,
+            expires: ttl === Infinity ? null : now + ttl,
         };
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }

@@ -97,4 +97,32 @@ describe('CacheManager', () => {
         expect(result).toBeNull();
         vi.useRealTimers();
     });
+
+    it('should store indefinite TTL as null in storage', async () => {
+        const titleData = { displayTitle: 'Indefinite Title', hasRating: true, year: 1900 };
+        const titleObj = new Title(titleData);
+
+        // Configure to return -1 for TTL
+        config.getInt = vi.fn().mockReturnValue(-1);
+
+        await cacheManager.write('Indefinite Title', null, titleObj);
+
+        const setCall = adapter.storageSet.mock.calls.find(call => call[0] === 'fmc:indefinite_title');
+        const entry = JSON.parse(setCall[1]);
+        expect(entry.expires).toBeNull();
+    });
+
+    it('should return valid entry for indefinite cache expiration (null)', async () => {
+        const titleData = { displayTitle: 'Indefinite Title' };
+        const titleObj = new Title(titleData);
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                data: titleObj,
+                expires: null,
+            })
+        );
+
+        const result = await cacheManager.read('Indefinite Title', null);
+        expect(result.displayTitle).toEqual(titleObj.displayTitle);
+    });
 });
