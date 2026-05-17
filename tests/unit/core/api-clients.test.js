@@ -190,13 +190,12 @@ describe('OmdbApiClient', () => {
 });
 
 describe('ImdbApiDevClient', () => {
-    it('should match near years (fuzzy matching)', async () => {
+    it('should return the first title result', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 titles: [
-                    { id: 'tt1', title: 'Wrong Year', startYear: 2020 },
-                    { id: 'tt2', title: 'Close Year', startYear: 2022 },
-                    { id: 'tt3', title: 'Far Year', startYear: 2025 },
+                    { id: 'tt1', title: 'First Movie' },
+                    { id: 'tt2', title: 'Second Movie' },
                 ],
             }),
         });
