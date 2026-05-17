@@ -94,14 +94,14 @@ describe('App', () => {
         });
 
         // Verify that concurrent discoveries are deduplicated into a single API/cache lookup
-        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(2);
+        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(1);
 
         // Verify that subsequent discoveries while a request is in-flight do not trigger new lookups
         window.history.pushState({}, '', '/new');
         vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
 
         await Promise.resolve();
-        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(3);
+        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(2);
         getDataSpy.mockRestore();
     });
 

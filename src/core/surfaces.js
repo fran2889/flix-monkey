@@ -86,11 +86,4 @@ export class SurfaceManager {
         });
         return results;
     }
-
-    extractYear(el) {
-        const yearEl = el.querySelector('.year, [data-year], .releaseYear');
-        if (!yearEl) return null;
-        const m = yearEl.textContent.match(/\d{4}/);
-        return m?.[0] ?? null;
-    }
 }

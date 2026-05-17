@@ -27,14 +27,14 @@ describe('ApiClientManager', () => {
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, null);
-        const result = await manager.getData('Some Title', '2023');
+        const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Cached Movie');
         expect(mockCache.read).toHaveBeenCalled();
     });
 
     it('should only initialize the single selected client', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const config = { get: (_key) => 'imdbapi' };
+        const config = { get: _key => 'imdbapi' };
         const manager = new ApiClientManager(mockCache, {}, {}, config, null);
         const client = manager.getClient();
         expect(client instanceof ImdbApiDevClient).toBe(true);
@@ -47,7 +47,7 @@ describe('ApiClientManager', () => {
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
-        const result = await manager.getData('Some Title', '2023');
+        const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
 
@@ -59,7 +59,7 @@ describe('ApiClientManager', () => {
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
-        const result = await manager.getData('Some Title', '2023');
+        const result = await manager.getData('Some Title');
         expect(result).toBeNull();
         expect(client.fetch).toHaveBeenCalled();
     });
@@ -72,11 +72,10 @@ describe('ApiClientManager', () => {
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
-        const result = await manager.getData('Unknown Movie', '2023');
+        const result = await manager.getData('Unknown Movie');
         expect(result).toBeNull();
         expect(mockCache.write).toHaveBeenCalledWith(
             'Unknown Movie',
-            '2023',
             expect.objectContaining({
                 apiTitle: null,
                 rating: null,
@@ -92,7 +91,7 @@ describe('ApiClientManager', () => {
         };
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, unhealthyClient);
 
-        const result = await manager.getData('Test Movie', '2023');
+        const result = await manager.getData('Test Movie');
         expect(result).toBeNull();
         expect(unhealthyClient.fetch).not.toHaveBeenCalled();
     });
@@ -126,12 +125,10 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
 
         const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-        await manager.getData('Logged Movie', '2023');
+        await manager.getData('Logged Movie');
 
         expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringContaining(
-                '[FlixMonkey] Successfully retrieved ratings for "Logged Movie" (2023) from test-source.'
-            )
+            expect.stringContaining('[FlixMonkey] Successfully retrieved ratings for "Logged Movie" from test-source.')
         );
         consoleSpy.mockRestore();
     });

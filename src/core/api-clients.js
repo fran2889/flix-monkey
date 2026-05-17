@@ -80,10 +80,10 @@ class BaseApiClient {
         }
     }
 
-    async fetch(displayTitle, domYear) {
+    async fetch(displayTitle) {
         if (await this.isDisabled()) return null;
         try {
-            const match = await this.search(displayTitle, domYear);
+            const match = await this.search(displayTitle);
             if (!match) return null;
             const titleObj = await this.getDetails(match, displayTitle);
             if (titleObj) {
@@ -97,7 +97,7 @@ class BaseApiClient {
         }
     }
 
-    async search(_displayTitle, _domYear) {
+    async search(_displayTitle) {
         throw new Error('Not implemented');
     }
 
@@ -117,11 +117,11 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
-    async search(displayTitle, domYear) {
+    async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey || apiKey === 'YOUR_XMDB_API_KEY') return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        logger.info(`Searching XMDB for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
+        logger.info(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
             logger.info(`No search results found in XMDB for: "${displayTitle}"`);
@@ -132,9 +132,7 @@ export class XmdbApiClient extends BaseApiClient {
             logger.info(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
-        return domYear
-            ? (titleResults.find(r => String(r.year) === String(domYear)) ?? titleResults[0])
-            : titleResults[0];
+        return titleResults[0];
     }
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
@@ -166,16 +164,15 @@ export class OmdbApiClient extends BaseApiClient {
         );
     }
 
-    async search(displayTitle, domYear) {
+    async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         if (!apiKey || apiKey === 'YOUR_OMDB_API_KEY') return null;
-        return { title: displayTitle, year: domYear };
+        return { title: displayTitle };
     }
 
-    async getDetails({ title: t, year: y }, _displayTitle) {
+    async getDetails({ title: t }, _displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        if (y) params.set('y', y);
         logger.info(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
@@ -206,18 +203,13 @@ export class ImdbApiDevClient extends BaseApiClient {
         );
     }
 
-    async search(displayTitle, domYear) {
+    async search(displayTitle) {
         const searchParams = new URLSearchParams({ query: displayTitle });
-        logger.info(`Searching IMDb API Dev for title: "${displayTitle}"${domYear ? ` (${domYear})` : ''}`);
+        logger.info(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
             logger.info(`No search results found in IMDb API Dev for: "${displayTitle}"`);
             return null;
-        }
-        if (domYear) {
-            const targetYear = Number.parseInt(domYear);
-            const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
-            if (nearYear) return nearYear;
         }
         return titles[0];
     }

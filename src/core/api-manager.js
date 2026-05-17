@@ -68,23 +68,21 @@ export class ApiClientManager {
         logger.info('API cache cleared.');
     }
 
-    async getData(displayTitle, domYear) {
-        const cached = await this.#cache.read(displayTitle, domYear);
+    async getData(displayTitle) {
+        const cached = await this.#cache.read(displayTitle);
         if (cached !== null) return cached;
 
         const status = await this.#client.getStatus();
         if (!status.healthy) return null;
 
-        const data = await this.#client.fetch(displayTitle, domYear);
+        const data = await this.#client.fetch(displayTitle);
         if (!data) {
-            await this.#cache.write(displayTitle, domYear, Title.notFound(displayTitle));
+            await this.#cache.write(displayTitle, Title.notFound(displayTitle));
             return null;
         }
 
-        await this.#cache.write(displayTitle, domYear, data);
-        logger.info(
-            `Successfully retrieved ratings for "${displayTitle}"${domYear ? ` (${domYear})` : ''} from ${data.source}.`
-        );
+        await this.#cache.write(displayTitle, data);
+        logger.info(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
         return data;
     }
 }

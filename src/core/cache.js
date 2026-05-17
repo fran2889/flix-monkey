@@ -29,8 +29,8 @@ export class CacheManager {
         this.#config = config;
     }
 
-    #getCacheKey(displayTitle, domYear) {
-        const slug = `${displayTitle.toLowerCase().replace(/\s+/g, '_')}${domYear ? `_${domYear}` : ''}`;
+    #getCacheKey(displayTitle) {
+        const slug = `${displayTitle.toLowerCase().replace(/\s+/g, '_')}`;
         return `${this.#prefix}${slug}`;
     }
 
@@ -46,8 +46,8 @@ export class CacheManager {
         return getTtlMs(ttlDays);
     }
 
-    async read(displayTitle, domYear) {
-        const key = this.#getCacheKey(displayTitle, domYear);
+    async read(displayTitle) {
+        const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;
         try {
@@ -59,8 +59,8 @@ export class CacheManager {
         }
     }
 
-    async write(displayTitle, domYear, titleObj) {
-        const key = this.#getCacheKey(displayTitle, domYear);
+    async write(displayTitle, titleObj) {
+        const key = this.#getCacheKey(displayTitle);
         const now = Date.now();
         const ttl = this.#calculateTtl(titleObj);
         const entry = {

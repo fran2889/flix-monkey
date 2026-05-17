@@ -202,10 +202,8 @@ describe('ImdbApiDevClient', () => {
         });
         const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
 
-        // Request for 2023 should match 2022
-        const result = await client.search('Some Movie', '2023');
-        expect(result.id).toBe('tt2');
-        expect(result.startYear).toBe(2022);
+        const result = await client.search('Some Movie');
+        expect(result.id).toBe('tt1');
     });
 
     it('should return null if no titles found', async () => {

@@ -43,16 +43,16 @@ describe('CacheManager', () => {
 
     it('should return null when cache is empty', async () => {
         adapter.storageGet.mockResolvedValue(null);
-        const result = await cacheManager.read('Some Title', '2023');
+        const result = await cacheManager.read('Some Title');
         expect(result).toBeNull();
     });
 
     it('should write data to storage', async () => {
         adapter.storageGet.mockResolvedValue(null);
         const title = new Title({ apiTitle: 'Test Title' });
-        await cacheManager.write('Test Title', '2023', title);
+        await cacheManager.write('Test Title', title);
 
-        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title_2023', expect.stringContaining('Test Title'));
+        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.stringContaining('Test Title'));
     });
 
     it('should clear cache', async () => {
@@ -71,10 +71,10 @@ describe('CacheManager', () => {
             })
         );
 
-        await cacheManager.write('Test Title', 2026, titleObj);
-        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title_2026', expect.any(String));
+        await cacheManager.write('Test Title', titleObj);
+        expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.any(String));
 
-        const result = await cacheManager.read('Test Title', 2026);
+        const result = await cacheManager.read('Test Title');
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
         expect(result.year).toEqual(titleObj.year);
     });
@@ -93,7 +93,7 @@ describe('CacheManager', () => {
             })
         );
 
-        const result = await cacheManager.read('Old Title', 2020);
+        const result = await cacheManager.read('Old Title');
         expect(result).toBeNull();
         vi.useRealTimers();
     });
@@ -105,7 +105,7 @@ describe('CacheManager', () => {
         // Configure to return -1 for TTL
         config.getInt = vi.fn().mockReturnValue(-1);
 
-        await cacheManager.write('Indefinite Title', null, titleObj);
+        await cacheManager.write('Indefinite Title', titleObj);
 
         const setCall = adapter.storageSet.mock.calls.find(call => call[0] === 'fmc:indefinite_title');
         const entry = JSON.parse(setCall[1]);
@@ -122,7 +122,7 @@ describe('CacheManager', () => {
             })
         );
 
-        const result = await cacheManager.read('Indefinite Title', null);
+        const result = await cacheManager.read('Indefinite Title');
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
     });
 });
