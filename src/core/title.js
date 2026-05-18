@@ -55,10 +55,6 @@ export class Title {
             : `https://www.imdb.com/find/?q=${encodeURIComponent(this.displayTitle ?? '')}`;
     }
 
-    isBetterThan(other) {
-        return !!this.rating && !other?.rating;
-    }
-
     static fromJSON(obj) {
         return new Title(obj ?? {});
     }

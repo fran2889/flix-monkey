@@ -30,18 +30,6 @@ describe('Title', () => {
         expect(t3.imdbUrl).toBe('https://www.imdb.com/find/?q=');
     });
 
-    it('should identify better title with isBetterThan', () => {
-        const t1 = new Title({ rating: 8.0 });
-        const t2 = new Title({ rating: null });
-
-        expect(t1.isBetterThan(t2)).toBe(true);
-        expect(t2.isBetterThan(t1)).toBe(false);
-        expect(t1.isBetterThan(null)).toBe(true);
-
-        const t3 = new Title({ rating: 7.0 });
-        expect(t1.isBetterThan(t3)).toBe(false); // only better if other has NO rating
-    });
-
     it('should create from JSON', () => {
         const title = Title.fromJSON({ displayTitle: 'JSON Title' });
         expect(title.displayTitle).toBe('JSON Title');
