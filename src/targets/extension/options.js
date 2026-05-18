@@ -44,8 +44,13 @@ CONFIG_FIELDS.forEach(f => {
         input = document.createElement('select');
         f.options.forEach(opt => {
             const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
+            if (Array.isArray(opt)) {
+                option.value = opt[0];
+                option.textContent = opt[1];
+            } else {
+                option.value = opt;
+                option.textContent = opt;
+            }
             input.appendChild(option);
         });
     } else if (f.type === 'checkbox') {

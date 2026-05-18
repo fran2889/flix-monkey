@@ -35,9 +35,9 @@ export const CONFIG_FIELDS = [
         label: 'API Provider',
         type: 'select',
         options: [
-            { label: 'IMDb API', value: 'imdbapi' },
-            { label: 'OMDB', value: 'omdb' },
-            { label: 'XMDB', value: 'xmdb' },
+            ['imdbapi', 'IMDb API'],
+            ['omdb', 'OMDB'],
+            ['xmdb', 'XMDB'],
         ],
         default: 'imdbapi',
         title: 'Choose the primary API provider for ratings.',
