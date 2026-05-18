@@ -19,8 +19,40 @@ import { describe, it, expect } from 'vitest';
 import { Title } from '../../../src/core/title.js';
 
 describe('Title', () => {
-    it('should manage title updates', () => {
-        const title = new Title('Test Title');
-        expect(title).toBeDefined();
+    it('should generate correct imdbUrl', () => {
+        const t1 = new Title({ imdbId: 'tt123' });
+        expect(t1.imdbUrl).toBe('https://www.imdb.com/title/tt123/');
+
+        const t2 = new Title({ displayTitle: 'Movie Name' });
+        expect(t2.imdbUrl).toBe('https://www.imdb.com/find/?q=Movie%20Name');
+
+        const t3 = new Title({ displayTitle: null });
+        expect(t3.imdbUrl).toBe('https://www.imdb.com/find/?q=');
+    });
+
+    it('should identify better title with isBetterThan', () => {
+        const t1 = new Title({ rating: 8.0 });
+        const t2 = new Title({ rating: null });
+
+        expect(t1.isBetterThan(t2)).toBe(true);
+        expect(t2.isBetterThan(t1)).toBe(false);
+        expect(t1.isBetterThan(null)).toBe(true);
+
+        const t3 = new Title({ rating: 7.0 });
+        expect(t1.isBetterThan(t3)).toBe(false); // only better if other has NO rating
+    });
+
+    it('should create from JSON', () => {
+        const title = Title.fromJSON({ displayTitle: 'JSON Title' });
+        expect(title.displayTitle).toBe('JSON Title');
+
+        const title2 = Title.fromJSON(null);
+        expect(title2).toBeInstanceOf(Title);
+    });
+
+    it('should create notFound title', () => {
+        const title = Title.notFound('Missing Movie');
+        expect(title.displayTitle).toBe('Missing Movie');
+        expect(title.rating).toBeNull();
     });
 });

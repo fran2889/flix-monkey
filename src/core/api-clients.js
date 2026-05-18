@@ -26,7 +26,7 @@ function parseRatings(ratings, sourcePattern) {
     return entry?.value ?? entry?.Value ?? null;
 }
 
-class BaseApiClient {
+export class BaseApiClient {
     #queue;
     #source;
     #disabledManager;

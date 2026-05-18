@@ -111,6 +111,14 @@ describe('ApiClientManager', () => {
         expect(mockCache.clear).toHaveBeenCalled();
     });
 
+    it('should handle resetDisabledClients when no clients are re-enabled', async () => {
+        const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue([]) };
+        const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, {});
+        const reenabled = await manager.resetDisabledClients();
+        expect(mockDisabledManager.resetAll).toHaveBeenCalled();
+        expect(reenabled).toEqual([]);
+    });
+
     it('should log on successful data retrieval', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const mockClient = {

@@ -251,4 +251,30 @@ describe('App', () => {
         expect(card.querySelector('.fm-loading')).toBeNull();
         expect(card.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
+
+    it('should trigger decoration on replaceState', async () => {
+        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(null);
+
+        startApp(mockAdapter);
+
+        // Initial decoration from init()
+        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+        await vi.runAllTimersAsync();
+
+        const callCountAfterInit = getDataSpy.mock.calls.length;
+
+        // Add a NEW title card so it's not skipped by the "already has overlay" check
+        document.body.innerHTML += `
+            <div class="title-card" id="new-card">
+                <div class="fallback-text">New Title</div>
+            </div>
+        `;
+
+        window.history.replaceState({}, '', '/replaced');
+        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+        await vi.runAllTimersAsync();
+
+        expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+    });
 });

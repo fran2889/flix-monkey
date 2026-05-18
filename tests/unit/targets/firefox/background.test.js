@@ -19,6 +19,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('Firefox Background Script', () => {
     let messageListener;
+    let actionListener;
 
     beforeEach(async () => {
         vi.resetModules();
@@ -31,13 +32,33 @@ describe('Firefox Background Script', () => {
                         messageListener = fn;
                     }),
                 },
+                openOptionsPage: vi.fn(),
             },
-            action: { onClicked: { addListener: vi.fn() } },
+            action: {
+                onClicked: {
+                    addListener: vi.fn(fn => {
+                        actionListener = fn;
+                    }),
+                },
+            },
         };
 
-        global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+        global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
+        global.AbortController = class {
+            constructor() {
+                this.signal = { aborted: false };
+            }
+            abort() {
+                this.signal.aborted = true;
+            }
+        };
 
         await import('../../../../src/targets/firefox/background.js');
+    });
+
+    it('should ignore non-FM_FETCH messages', async () => {
+        const result = await messageListener({ type: 'OTHER' });
+        expect(result).toBeUndefined();
     });
 
     it('should respect custom timeout in options', async () => {
@@ -66,5 +87,61 @@ describe('Firefox Background Script', () => {
 
         await vi.advanceTimersByTimeAsync(customTimeout + 10);
         expect(fetchOptions.signal.aborted).toBe(true);
+    });
+
+    it('should handle successful JSON response', async () => {
+        const mockData = { test: 'data' };
+        global.fetch.mockResolvedValue({
+            ok: true,
+            json: async () => mockData,
+        });
+
+        const result = await messageListener({
+            type: 'FM_FETCH',
+            url: 'http://api.com',
+            options: { responseType: 'json' },
+        });
+
+        expect(result).toEqual({ data: mockData });
+    });
+
+    it('should handle successful text response', async () => {
+        const mockData = 'plain text';
+        global.fetch.mockResolvedValue({
+            ok: true,
+            text: async () => mockData,
+        });
+
+        const result = await messageListener({
+            type: 'FM_FETCH',
+            url: 'http://api.com',
+            options: { responseType: 'text' },
+        });
+
+        expect(result).toEqual({ data: mockData });
+    });
+
+    it('should handle HTTP error response', async () => {
+        global.fetch.mockResolvedValue({
+            ok: false,
+            status: 404,
+        });
+
+        const result = await messageListener({ type: 'FM_FETCH', url: 'http://api.com' });
+
+        expect(result).toEqual({ error: 'HTTP 404', status: 404 });
+    });
+
+    it('should handle fetch exception', async () => {
+        global.fetch.mockRejectedValue(new Error('Network error'));
+
+        const result = await messageListener({ type: 'FM_FETCH', url: 'http://api.com' });
+
+        expect(result).toEqual({ error: 'Network error' });
+    });
+
+    it('should open options page when action icon is clicked', () => {
+        actionListener();
+        expect(browser.runtime.openOptionsPage).toHaveBeenCalled();
     });
 });

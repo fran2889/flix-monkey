@@ -100,4 +100,22 @@ describe('UserscriptAdapter', () => {
         await adapter.httpFetch('http://example.com', { timeout: customTimeout });
         expect(GM_xmlhttpRequest).toHaveBeenCalledWith(expect.objectContaining({ timeout: customTimeout }));
     });
+
+    it('httpFetch should resolve with text when responseType is not json', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
+            onload({ status: 200, responseText: 'plain text' });
+        });
+
+        const result = await adapter.httpFetch('http://example.com', { responseType: 'text' });
+        expect(result).toBe('plain text');
+    });
+
+    it('httpFetch should resolve with JSON.parse(responseText) if response is missing', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
+            onload({ status: 200, response: null, responseText: '{"data":"parsed"}' });
+        });
+
+        const result = await adapter.httpFetch('http://example.com');
+        expect(result).toEqual({ data: 'parsed' });
+    });
 });

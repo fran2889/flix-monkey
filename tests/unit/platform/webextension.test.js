@@ -93,4 +93,10 @@ describe('WebExtensionAdapter', () => {
             })
         );
     });
+
+    it('storageGet should return null if key is not found', async () => {
+        browser.storage.local.get.mockResolvedValue({});
+        const result = await adapter.storageGet('nonexistent');
+        expect(result).toBeNull();
+    });
 });

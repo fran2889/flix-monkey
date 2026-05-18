@@ -53,6 +53,43 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         expect(mockDisabledManager.disable).toHaveBeenCalled();
     });
 
+    it('should NOT disable itself on 5xx error', async () => {
+        const error = new Error('HTTP 500');
+        error.status = 500;
+
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockRejectedValueOnce(error),
+        });
+        const mockDisabledManager = {
+            isDisabled: vi.fn().mockResolvedValue(false),
+            disable: vi.fn().mockResolvedValue(undefined),
+        };
+
+        const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: _k => 'key' });
+
+        await expect(client.queuedFetch('url1')).rejects.toThrow('HTTP 500');
+        expect(mockDisabledManager.disable).not.toHaveBeenCalled();
+    });
+
+    it('should return healthy status when not disabled', async () => {
+        const mockDisabledManager = {
+            isDisabled: vi.fn().mockResolvedValue(false),
+        };
+        const client = new XmdbApiClient(mockDisabledManager, {}, {});
+        const status = await client.getStatus();
+        expect(status).toEqual({ healthy: true });
+    });
+
+    it('should return unhealthy status when disabled', async () => {
+        const mockDisabledManager = {
+            isDisabled: vi.fn().mockResolvedValue(true),
+        };
+        const client = new XmdbApiClient(mockDisabledManager, {}, {});
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
+        expect(status.reason).toBeDefined();
+    });
+
     it('should return null on fetch error and log warning', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
@@ -73,6 +110,12 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             get: _k => 'key',
         });
         const result = await client.fetch('Unknown');
+        expect(result).toBeNull();
+    });
+
+    it('should return null if client is disabled', async () => {
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(true) }, {}, {});
+        const result = await client.fetch('Movie 1');
         expect(result).toBeNull();
     });
 });
@@ -109,6 +152,23 @@ describe('XmdbApiClient', () => {
             get: _k => 'key',
         });
         expect(await client.search('Movie 1')).toBeNull();
+    });
+
+    it('should handle details with Metacritic rating in ratings array', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi
+                .fn()
+                .mockResolvedValueOnce({ results: [{ type: 'title', id: 'm1' }] })
+                .mockResolvedValueOnce({
+                    title: 'Movie 1',
+                    ratings: [{ source: 'Metacritic', value: '88/100' }],
+                }),
+        });
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, {
+            get: _k => 'key',
+        });
+        const result = await client.fetch('Movie 1');
+        expect(result.mcRating).toBe(88);
     });
 
     it('should return null if details fetch fails', async () => {
@@ -153,6 +213,31 @@ describe('OmdbApiClient', () => {
 
         expect(result.rating).toBe(8.0);
         expect(result.imdbId).toBe('tt123');
+    });
+
+    it('should return null if no API key is set', async () => {
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            {},
+            { get: _k => 'YOUR_OMDB_API_KEY' }
+        );
+        const result = await client.search('Movie 1');
+        expect(result).toBeNull();
+    });
+
+    it('should handle missing or invalid Year', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                Year: 'invalid',
+                Title: 'OMDB Movie',
+            }),
+        });
+        const client = new OmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, {
+            get: _k => 'key',
+        });
+        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        expect(result.year).toBeNull();
     });
 
     it('should parse ratings from OMDB correctly', async () => {
@@ -211,5 +296,42 @@ describe('ImdbApiDevClient', () => {
         });
         const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
         expect(await client.search('Unknown')).toBeNull();
+    });
+
+    it('should handle details and ratings fallback', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                details: {
+                    ratings: {
+                        metacritic: { score: 75 },
+                    },
+                },
+            }),
+        });
+        const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
+        const result = await client.getDetails({ id: 'tt1', title: 'Movie' }, 'Movie');
+        expect(result.mcRating).toBe(75);
+    });
+
+    it('should use match ratings if details ratings missing', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({}),
+        });
+        const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
+        const result = await client.getDetails(
+            { id: 'tt1', title: 'Movie', metacritic: { score: 80 }, rating: { aggregateRating: 7.5 } },
+            'Movie'
+        );
+        expect(result.mcRating).toBe(80);
+        expect(result.rating).toBe(7.5);
+    });
+
+    it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
+        const { BaseApiClient } = await import('../../../src/core/api-clients.js');
+        class DummyClient extends BaseApiClient {}
+        const dummy = new DummyClient({}, {}, {});
+
+        await expect(dummy.search('title')).rejects.toThrow('Not implemented');
+        await expect(dummy.getDetails({}, 'title')).rejects.toThrow('Not implemented');
     });
 });

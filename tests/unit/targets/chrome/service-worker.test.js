@@ -19,6 +19,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('Chrome Service Worker', () => {
     let messageListener;
+    let actionListener;
 
     beforeEach(async () => {
         vi.resetModules();
@@ -31,13 +32,33 @@ describe('Chrome Service Worker', () => {
                         messageListener = fn;
                     }),
                 },
+                openOptionsPage: vi.fn(),
             },
-            action: { onClicked: { addListener: vi.fn() } },
+            action: {
+                onClicked: {
+                    addListener: vi.fn(fn => {
+                        actionListener = fn;
+                    }),
+                },
+            },
         };
 
-        global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+        global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
+        global.AbortController = class {
+            constructor() {
+                this.signal = { aborted: false };
+            }
+            abort() {
+                this.signal.aborted = true;
+            }
+        };
 
         await import('../../../../src/targets/chrome/service-worker.js');
+    });
+
+    it('should ignore non-FM_FETCH messages', () => {
+        const result = messageListener({ type: 'OTHER' }, {}, vi.fn());
+        expect(result).toBe(false);
     });
 
     it('should respect custom timeout in options', async () => {
@@ -71,5 +92,84 @@ describe('Chrome Service Worker', () => {
 
         await vi.advanceTimersByTimeAsync(customTimeout + 10);
         expect(fetchOptions.signal.aborted).toBe(true);
+    });
+
+    it('should handle successful JSON response', async () => {
+        const sendResponse = vi.fn();
+        const mockData = { test: 'data' };
+        global.fetch.mockResolvedValue({
+            ok: true,
+            json: async () => mockData,
+        });
+
+        messageListener(
+            { type: 'FM_FETCH', url: 'http://api.com', options: { responseType: 'json' } },
+            {},
+            sendResponse
+        );
+
+        // We need to wait for the microtasks (promises) to resolve
+        await vi.runAllTimersAsync();
+        await Promise.resolve(); // then(...)
+        await Promise.resolve(); // await res.json()
+        await Promise.resolve(); // next tick
+
+        expect(sendResponse).toHaveBeenCalledWith({ data: mockData });
+    });
+
+    it('should handle successful text response', async () => {
+        const sendResponse = vi.fn();
+        const mockData = 'plain text';
+        global.fetch.mockResolvedValue({
+            ok: true,
+            text: async () => mockData,
+        });
+
+        messageListener(
+            { type: 'FM_FETCH', url: 'http://api.com', options: { responseType: 'text' } },
+            {},
+            sendResponse
+        );
+
+        await vi.runAllTimersAsync();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(sendResponse).toHaveBeenCalledWith({ data: mockData });
+    });
+
+    it('should handle HTTP error response', async () => {
+        const sendResponse = vi.fn();
+        global.fetch.mockResolvedValue({
+            ok: false,
+            status: 404,
+        });
+
+        messageListener({ type: 'FM_FETCH', url: 'http://api.com' }, {}, sendResponse);
+
+        await vi.runAllTimersAsync();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(sendResponse).toHaveBeenCalledWith({ error: 'HTTP 404', status: 404 });
+    });
+
+    it('should handle fetch exception', async () => {
+        const sendResponse = vi.fn();
+        global.fetch.mockRejectedValue(new Error('Network error'));
+
+        messageListener({ type: 'FM_FETCH', url: 'http://api.com' }, {}, sendResponse);
+
+        await vi.runAllTimersAsync();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(sendResponse).toHaveBeenCalledWith({ error: 'Network error' });
+    });
+
+    it('should open options page when action icon is clicked', () => {
+        actionListener();
+        expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
     });
 });

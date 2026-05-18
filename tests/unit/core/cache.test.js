@@ -37,10 +37,6 @@ describe('CacheManager', () => {
         cacheManager = new CacheManager(adapter, config);
     });
 
-    it('should initialize correctly', () => {
-        expect(cacheManager).toBeInstanceOf(CacheManager);
-    });
-
     it('should return null when cache is empty', async () => {
         adapter.storageGet.mockResolvedValue(null);
         const result = await cacheManager.read('Some Title');
@@ -124,5 +120,11 @@ describe('CacheManager', () => {
 
         const result = await cacheManager.read('Indefinite Title');
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
+    });
+
+    it('should return null when JSON parsing fails in read', async () => {
+        adapter.storageGet.mockResolvedValue('invalid-json{');
+        const result = await cacheManager.read('Some Title');
+        expect(result).toBeNull();
     });
 });
