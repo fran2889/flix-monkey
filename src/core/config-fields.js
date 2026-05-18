@@ -37,7 +37,7 @@ export const CONFIG_FIELDS = [
         options: [
             { label: 'IMDb API', value: 'imdbapi' },
             { label: 'OMDB', value: 'omdb' },
-            { label: 'XMDB', value: 'xmdb' }
+            { label: 'XMDB', value: 'xmdb' },
         ],
         default: 'imdbapi',
         title: 'Choose the primary API provider for ratings.',
@@ -98,6 +98,13 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '6.0',
         title: 'Titles with IMDb rating below this value will be faded.',
+    },
+    {
+        key: 'debug',
+        label: 'Enable debug logging',
+        type: 'checkbox',
+        default: false,
+        title: 'Output debug logs to console.',
     },
 ];
 

@@ -23,6 +23,7 @@ import { SurfaceManager } from './surfaces.js';
 import { Title } from './title.js';
 import { DECORATION_DEBOUNCE_MS } from './constants.js';
 import { ConfigManager } from './config-manager.js';
+import { logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
 
 export class FlixMonkeyApp {
@@ -126,6 +127,7 @@ export function startApp(adapter) {
     const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager();
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
+    logger.setConfig(configManager);
     app.init();
     return { api, cache };
 }

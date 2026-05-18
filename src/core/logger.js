@@ -18,9 +18,20 @@
 
 export class Logger {
     #prefix = '[FlixMonkey]';
+    #config;
+
+    constructor(config) {
+        this.#config = config;
+    }
+
+    setConfig(config) {
+        this.#config = config;
+    }
 
     debug(message, ...args) {
-        console.debug(`${this.#prefix} ${message}`, ...args);
+        if (this.#config.get('debug') === true) {
+            console.debug(`${this.#prefix} ${message}`, ...args);
+        }
     }
 
     info(message, ...args) {
@@ -36,4 +47,4 @@ export class Logger {
     }
 }
 
-export const logger = new Logger();
+export const logger = new Logger({ get: () => false });

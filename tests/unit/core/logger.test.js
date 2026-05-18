@@ -47,10 +47,19 @@ describe('core/logger', () => {
         spy.mockRestore();
     });
 
-    it('should log debug', () => {
+    it('should log debug when enabled', () => {
         const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+        logger.setConfig({ get: () => true });
         logger.debug('test debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug');
+        spy.mockRestore();
+    });
+
+    it('should not log debug when disabled', () => {
+        const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+        logger.setConfig({ get: () => false });
+        logger.debug('test debug');
+        expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
     });
 });
