@@ -4,15 +4,15 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
-const { version } = pkg;
+const { name, homepage, version, description, author, license } = pkg;
 
 const USERSCRIPT_BANNER = `// ==UserScript==
-// @name         FlixMonkey
-// @namespace    https://github.com/fran/FlixMonkey
+// @name         ${name}
+// @namespace    ${homepage}
 // @version      ${version}
-// @description  Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners
-// @author       fran
-// @license      GPL-3.0-or-later
+// @description  ${description}
+// @author       ${author}
+// @license      ${license}
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -41,13 +41,15 @@ function copyStatic(files) {
     };
 }
 
-function injectManifestVersion(srcPath, destPath) {
+function injectManifestMetadata(srcPath, destPath) {
     return {
-        name: 'inject-manifest-version',
+        name: 'inject-manifest-metadata',
         generateBundle() {
             mkdirSync(path.dirname(destPath), { recursive: true });
             const manifest = JSON.parse(readFileSync(srcPath, 'utf8'));
+            manifest.name = name;
             manifest.version = version;
+            manifest.description = description;
             writeFileSync(destPath, JSON.stringify(manifest, null, 2) + '\n');
         },
     };
@@ -80,7 +82,7 @@ const allConfigs = [
                 ['src/targets/firefox/background.js', 'dist/firefox/background.js'],
                 ['src/targets/extension/options.html', 'dist/firefox/options.html'],
             ]),
-            injectManifestVersion('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
+            injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
         ],
     },
     {
@@ -99,7 +101,7 @@ const allConfigs = [
                 ['src/targets/chrome/service-worker.js', 'dist/chrome/service-worker.js'],
                 ['src/targets/extension/options.html', 'dist/chrome/options.html'],
             ]),
-            injectManifestVersion('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
+            injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
         ],
     },
     {
