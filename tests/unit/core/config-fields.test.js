@@ -71,6 +71,8 @@ describe('core/config-fields', () => {
                     expect(field.validate('-1')).toBeNull();
                     expect(typeof field.validate('-2')).toBe('string');
                     expect(typeof field.validate('not-a-number')).toBe('string');
+                    expect(typeof field.validate('5.5')).toBe('string');
+                    expect(typeof field.validate(' ')).toBe('string');
                 }
             }
         });

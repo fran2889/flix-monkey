@@ -111,4 +111,32 @@ export const SETTINGS_STYLES = `
     color: #aaa;
     min-height: 18px;
 }
+.fm-settings-container .fm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.fm-settings-container .fm-modal-content {
+    background: #141414;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.fm-settings-container .fm-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 `;

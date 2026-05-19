@@ -73,6 +73,7 @@ export const CONFIG_FIELDS = [
         default: '-1',
         title: 'Cache duration for titles older than 1 year with ratings. -1 = forever.',
         validate: val => {
+            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
             return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
         },
@@ -84,6 +85,7 @@ export const CONFIG_FIELDS = [
         default: '30',
         title: 'Cache duration for titles released within the last year with ratings.',
         validate: val => {
+            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
             return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
         },
@@ -95,6 +97,7 @@ export const CONFIG_FIELDS = [
         default: '1',
         title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
         validate: val => {
+            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
             return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
         },
@@ -113,6 +116,7 @@ export const CONFIG_FIELDS = [
         default: '6.0',
         title: 'Titles with IMDb rating below this value will be faded.',
         validate: val => {
+            if (typeof val === 'string' && val.trim() === '') return 'Must be a number between 0 and 10';
             const n = Number(val);
             return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Must be a number between 0 and 10';
         },
