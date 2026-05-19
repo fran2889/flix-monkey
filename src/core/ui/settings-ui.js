@@ -90,6 +90,7 @@ export class SettingsUI {
         const saveBtn = document.createElement('button');
         saveBtn.id = 'fm-saveBtn';
         saveBtn.textContent = 'Save';
+        saveBtn.onclick = () => this.save();
         actionsDiv.appendChild(saveBtn);
 
         container.appendChild(actionsDiv);
@@ -97,6 +98,59 @@ export class SettingsUI {
         const statusDiv = document.createElement('div');
         statusDiv.id = 'fm-status';
         container.appendChild(statusDiv);
+    }
+
+    _validate() {
+        let hasErrors = false;
+        this.fields.forEach(field => {
+            const input = document.getElementById(`fm-${field.key}`);
+            if (!input) return;
+
+            const errorMsg = field.validate ? field.validate(input.value) : null;
+            let errorEl = input.parentElement.querySelector('.error-message');
+
+            if (errorMsg) {
+                hasErrors = true;
+                if (!errorEl) {
+                    errorEl = document.createElement('div');
+                    errorEl.className = 'error-message';
+                    input.parentElement.appendChild(errorEl);
+                }
+                errorEl.textContent = errorMsg;
+                input.classList.add('error');
+            } else {
+                if (errorEl) {
+                    errorEl.remove();
+                }
+                input.classList.remove('error');
+            }
+        });
+        return !hasErrors;
+    }
+
+    async save() {
+        const isValid = this._validate();
+        const statusDiv = document.getElementById('fm-status');
+
+        if (!isValid) {
+            statusDiv.textContent = 'Please fix errors before saving.';
+            statusDiv.style.color = 'red';
+            return;
+        }
+
+        const values = {};
+        this.fields.forEach(field => {
+            const input = document.getElementById(`fm-${field.key}`);
+            if (field.type === 'checkbox') {
+                values[field.key] = input.checked;
+            } else {
+                values[field.key] = input.value;
+            }
+        });
+
+        await this.adapter.storageSetMany(values);
+        statusDiv.textContent = 'Saved!';
+        statusDiv.style.color = 'green';
     }
 
     _injectStyles() {

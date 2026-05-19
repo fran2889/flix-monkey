@@ -32,6 +32,7 @@ describe('SettingsUI', () => {
                 apiClient: 'omdb',
                 showRtRating: false,
             }),
+            storageSetMany: vi.fn().mockResolvedValue(),
         };
         settingsUI = new SettingsUI(adapter);
         container = document.createElement('div');
@@ -88,5 +89,33 @@ describe('SettingsUI', () => {
         await settingsUI.render(container);
         expect(container.querySelector('#fm-saveBtn')).toBeDefined();
         expect(container.querySelector('#fm-status')).toBeDefined();
+    });
+
+    it('should not save when validation fails', async () => {
+        await settingsUI.render(container);
+        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
+        apiKeyInput.value = '';
+
+        const saveBtn = container.querySelector('#fm-saveBtn');
+        await saveBtn.click();
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(container.querySelector('#fm-status').textContent).toBe('Please fix errors before saving.');
+    });
+
+    it('should save when validation passes', async () => {
+        await settingsUI.render(container);
+        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
+        apiKeyInput.value = 'new-api-key';
+
+        const saveBtn = container.querySelector('#fm-saveBtn');
+        await saveBtn.click();
+
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(
+            expect.objectContaining({
+                xmdbApiKey: 'new-api-key',
+            })
+        );
+        expect(container.querySelector('#fm-status').textContent).toBe('Saved!');
     });
 });
