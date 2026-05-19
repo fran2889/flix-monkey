@@ -101,6 +101,29 @@ describe('Overlay UI Interactions', () => {
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 
+    it('should set correct pointer-events for overlay elements', () => {
+        const renderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        const titleObj = {
+            rating: 8.0,
+            rtRating: 90,
+            imdbUrl: 'http://imdb.com',
+        };
+        renderer.injectStyles();
+        renderer.injectOverlay(container, titleObj);
+
+        const overlay = container.querySelector('.fm-rating-overlay');
+        const rtRating = overlay.querySelector('.fm-rt').parentElement;
+
+        // Check styles
+        const overlayStyle = getComputedStyle(overlay);
+        const rtStyle = getComputedStyle(rtRating);
+
+        expect(overlayStyle.pointerEvents).toBe('none');
+        expect(rtStyle.pointerEvents).toBe('auto'); // Children default to 'auto'
+        expect(rtStyle.cursor).toBe('default');
+    });
+
     it('should NOT apply fade when disabled in config', () => {
         const config = new ConfigManager(key => {
             if (key === 'enableFadeUnderRating') return false;

@@ -62,14 +62,18 @@ export class OverlayRenderer {
                 line-height: 1;
                 padding: 4px 6px;
                 border-radius: 4px;
-                cursor: pointer;
+                cursor: default;
                 text-decoration: none;
                 white-space: nowrap;
-                pointer-events: all;
+                pointer-events: auto;
                 transition: background 0.15s;
                 display: flex;
                 align-items: center;
                 gap: 4px;
+            }
+            .${this.#OVERLAY_CLASS} a {
+                pointer-events: auto;
+                cursor: pointer;
             }
             .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
             .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
