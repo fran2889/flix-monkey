@@ -45,8 +45,9 @@ describe('SettingsUI', () => {
         CONFIG_FIELDS.forEach(field => {
             const label = Array.from(container.querySelectorAll('label')).find(el => el.textContent === field.label);
             expect(label, `Label for ${field.key} not found`).toBeDefined();
+            expect(label.htmlFor).toBe(`fm-${field.key}`);
 
-            const input = container.querySelector(`[name="${field.key}"]`);
+            const input = container.querySelector(`[id="fm-${field.key}"]`);
             expect(input, `Input for ${field.key} not found`).toBeDefined();
 
             if (field.type === 'select') {
@@ -62,30 +63,30 @@ describe('SettingsUI', () => {
     it('should populate fields with values from adapter', async () => {
         await settingsUI.render(container);
 
-        expect(container.querySelector('[name="xmdbApiKey"]').value).toBe('test-xmdb-key');
-        expect(container.querySelector('[name="omdbApiKey"]').value).toBe('test-omdb-key');
-        expect(container.querySelector('[name="apiClient"]').value).toBe('omdb');
-        expect(container.querySelector('[name="showRtRating"]').checked).toBe(false);
+        expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe('test-xmdb-key');
+        expect(container.querySelector('[id="fm-omdbApiKey"]').value).toBe('test-omdb-key');
+        expect(container.querySelector('[id="fm-apiClient"]').value).toBe('omdb');
+        expect(container.querySelector('[id="fm-showRtRating"]').checked).toBe(false);
     });
 
     it('should populate fields with default values if adapter returns nothing', async () => {
-        adapter.storageGetAll.mockResolvedValue({});
+        adapter.storageGetAll.mockResolvedValue(null);
         await settingsUI.render(container);
 
         const xmdbField = CONFIG_FIELDS.find(f => f.key === 'xmdbApiKey');
-        expect(container.querySelector('[name="xmdbApiKey"]').value).toBe(xmdbField.default);
+        expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe(xmdbField.default);
     });
 
     it('should inject styles into the document', async () => {
         await settingsUI.render(container);
         const style = document.head.querySelector('style#flixmonkey-settings-styles');
         expect(style).toBeDefined();
-        expect(style.textContent).toContain('.field');
+        expect(style.textContent).toContain('.fm-settings-container');
     });
 
     it('should render a save button and status placeholder', async () => {
         await settingsUI.render(container);
-        expect(container.querySelector('#saveBtn')).toBeDefined();
-        expect(container.querySelector('#status')).toBeDefined();
+        expect(container.querySelector('#fm-saveBtn')).toBeDefined();
+        expect(container.querySelector('#fm-status')).toBeDefined();
     });
 });

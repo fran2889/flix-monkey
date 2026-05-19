@@ -16,10 +16,13 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 export const SETTINGS_STYLES = `
-* {
+.fm-settings-container {
     box-sizing: border-box;
 }
-body {
+.fm-settings-container * {
+    box-sizing: border-box;
+}
+.fm-settings-container {
     background: #141414;
     color: #fff;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -27,19 +30,19 @@ body {
     padding: 25px;
     min-width: 480px;
 }
-h1 {
+.fm-settings-container h1 {
     color: #e50914;
     font-size: 24px;
     margin: 0 0 25px;
     text-align: center;
     font-weight: bold;
 }
-.field {
+.fm-settings-container .field {
     display: flex;
     align-items: center;
     margin-bottom: 12px;
 }
-.field label {
+.fm-settings-container .field label {
     flex: 0 0 200px;
     text-align: right;
     padding-right: 15px;
@@ -47,8 +50,8 @@ h1 {
     font-size: 14px;
     cursor: default;
 }
-.field input[type='text'],
-.field select {
+.fm-settings-container .field input[type='text'],
+.fm-settings-container .field select {
     flex: 0 0 220px;
     background: #333;
     color: #fff;
@@ -58,16 +61,16 @@ h1 {
     font-size: 14px;
     outline: none;
 }
-.field input[type='text']:focus,
-.field select:focus {
+.fm-settings-container .field input[type='text']:focus,
+.fm-settings-container .field select:focus {
     border-color: #e50914;
 }
-.field input[type='checkbox'] {
+.fm-settings-container .field input[type='checkbox'] {
     width: 16px;
     height: 16px;
     cursor: pointer;
 }
-.actions {
+.fm-settings-container .actions {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -76,7 +79,7 @@ h1 {
     flex-wrap: wrap;
     position: relative;
 }
-button {
+.fm-settings-container button {
     padding: 8px 20px;
     border: none;
     border-radius: 4px;
@@ -85,23 +88,23 @@ button {
     cursor: pointer;
     transition: background 0.2s;
 }
-#saveBtn {
+.fm-settings-container #fm-saveBtn {
     background: #e50914;
     color: #fff;
 }
-#saveBtn:hover {
+.fm-settings-container #fm-saveBtn:hover {
     background: #f40612;
 }
-.secondary {
+.fm-settings-container .secondary {
     background: transparent;
     color: #ccc;
     border: 1px solid #555;
 }
-.secondary:hover {
+.fm-settings-container .secondary:hover {
     background: #333;
     color: #fff;
 }
-#status {
+.fm-settings-container #fm-status {
     text-align: center;
     margin-top: 10px;
     font-size: 13px;

@@ -19,14 +19,16 @@ import { CONFIG_FIELDS } from '../config-fields.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 export class SettingsUI {
-    constructor(adapter) {
+    constructor(adapter, fields = CONFIG_FIELDS) {
         this.adapter = adapter;
+        this.fields = fields;
     }
 
     async render(container) {
         this._injectStyles();
-        const settings = await this.adapter.storageGetAll();
+        const settings = (await this.adapter.storageGetAll()) || {};
 
+        container.className = 'fm-settings-container';
         container.innerHTML = '';
 
         const title = document.createElement('h1');
@@ -34,10 +36,10 @@ export class SettingsUI {
         container.appendChild(title);
 
         const fieldsContainer = document.createElement('div');
-        fieldsContainer.id = 'fields';
+        fieldsContainer.id = 'fm-fields';
         container.appendChild(fieldsContainer);
 
-        CONFIG_FIELDS.forEach(field => {
+        this.fields.forEach(field => {
             const fieldDiv = document.createElement('div');
             fieldDiv.className = 'field';
 
@@ -45,6 +47,7 @@ export class SettingsUI {
             label.className = 'field-label';
             label.textContent = field.label;
             label.title = field.title || '';
+            label.htmlFor = `fm-${field.key}`;
             fieldDiv.appendChild(label);
 
             let input;
@@ -76,7 +79,7 @@ export class SettingsUI {
             }
 
             input.name = field.key;
-            input.id = field.key;
+            input.id = `fm-${field.key}`;
             fieldDiv.appendChild(input);
             fieldsContainer.appendChild(fieldDiv);
         });
@@ -85,14 +88,14 @@ export class SettingsUI {
         actionsDiv.className = 'actions';
 
         const saveBtn = document.createElement('button');
-        saveBtn.id = 'saveBtn';
+        saveBtn.id = 'fm-saveBtn';
         saveBtn.textContent = 'Save';
         actionsDiv.appendChild(saveBtn);
 
         container.appendChild(actionsDiv);
 
         const statusDiv = document.createElement('div');
-        statusDiv.id = 'status';
+        statusDiv.id = 'fm-status';
         container.appendChild(statusDiv);
     }
 
