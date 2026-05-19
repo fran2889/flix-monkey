@@ -41,9 +41,22 @@ describe('WebExtensionAdapter', () => {
         expect(result).toBe('value');
     });
 
+    it('storageGetAll should call storage.local.get(null)', async () => {
+        browser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
+        const result = await adapter.storageGetAll();
+        expect(browser.storage.local.get).toHaveBeenCalledWith(null);
+        expect(result).toEqual({ k1: 'v1', k2: 'v2' });
+    });
+
     it('storageSet should call storage.local.set', async () => {
         await adapter.storageSet('key', 'value');
         expect(browser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
+    });
+
+    it('storageSetMany should call storage.local.set with values', async () => {
+        const values = { k1: 'v1', k2: 'v2' };
+        await adapter.storageSetMany(values);
+        expect(browser.storage.local.set).toHaveBeenCalledWith(values);
     });
 
     it('storageDelete should call storage.local.remove', async () => {

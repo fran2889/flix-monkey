@@ -18,6 +18,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserscriptAdapter } from '../../../src/platform/userscript.js';
 import { setupUserscriptMocks } from '../../mocks/platform.js';
+import { FlixMonkeyError } from '../../../src/core/utils.js';
 
 describe('UserscriptAdapter', () => {
     let adapter;
@@ -34,9 +35,25 @@ describe('UserscriptAdapter', () => {
         expect(result).toBe('test-value');
     });
 
+    it('storageGetAll should call GM_listValues and GM_getValue for each key', async () => {
+        GM_listValues.mockReturnValue(['key1', 'key2']);
+        GM_getValue.mockImplementation(key => `val-${key}`);
+        const result = await adapter.storageGetAll();
+        expect(GM_listValues).toHaveBeenCalled();
+        expect(GM_getValue).toHaveBeenCalledWith('key1');
+        expect(GM_getValue).toHaveBeenCalledWith('key2');
+        expect(result).toEqual({ key1: 'val-key1', key2: 'val-key2' });
+    });
+
     it('storageSet should call GM_setValue', async () => {
         await adapter.storageSet('key', 'value');
         expect(GM_setValue).toHaveBeenCalledWith('key', 'value');
+    });
+
+    it('storageSetMany should call GM_setValue for each entry', async () => {
+        await adapter.storageSetMany({ k1: 'v1', k2: 'v2' });
+        expect(GM_setValue).toHaveBeenCalledWith('k1', 'v1');
+        expect(GM_setValue).toHaveBeenCalledWith('k2', 'v2');
     });
 
     it('storageDelete should call GM_deleteValue', async () => {
@@ -72,6 +89,7 @@ describe('UserscriptAdapter', () => {
             onload({ status: 404 });
         });
 
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('HTTP 404');
     });
 
@@ -80,6 +98,7 @@ describe('UserscriptAdapter', () => {
             onerror();
         });
 
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('network error');
     });
 
@@ -88,6 +107,7 @@ describe('UserscriptAdapter', () => {
             ontimeout();
         });
 
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('timeout');
     });
 

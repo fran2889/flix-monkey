@@ -72,10 +72,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '-1',
         title: 'Cache duration for titles older than 1 year with ratings. -1 = forever.',
-        validate: val =>
-            !isNaN(parseInt(val, 10)) && (parseInt(val, 10) >= 0 || parseInt(val, 10) === -1)
-                ? null
-                : 'Must be -1 or a positive integer',
+        validate: val => {
+            const n = Number(val);
+            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
+        },
     },
     {
         key: 'cacheTtlRatedNewYear',
@@ -83,10 +83,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '30',
         title: 'Cache duration for titles released within the last year with ratings.',
-        validate: val =>
-            !isNaN(parseInt(val, 10)) && (parseInt(val, 10) >= 0 || parseInt(val, 10) === -1)
-                ? null
-                : 'Must be -1 or a positive integer',
+        validate: val => {
+            const n = Number(val);
+            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
+        },
     },
     {
         key: 'cacheTtlNoRating',
@@ -94,10 +94,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '1',
         title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
-        validate: val =>
-            !isNaN(parseInt(val, 10)) && (parseInt(val, 10) >= 0 || parseInt(val, 10) === -1)
-                ? null
-                : 'Must be -1 or a positive integer',
+        validate: val => {
+            const n = Number(val);
+            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
+        },
     },
     {
         key: 'enableFadeUnderRating',
@@ -112,10 +112,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '6.0',
         title: 'Titles with IMDb rating below this value will be faded.',
-        validate: val =>
-            !isNaN(parseFloat(val)) && parseFloat(val) >= 0.0 && parseFloat(val) <= 10.0
-                ? null
-                : 'Must be a number between 0 and 10',
+        validate: val => {
+            const n = Number(val);
+            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Must be a number between 0 and 10';
+        },
     },
     {
         key: 'debug',

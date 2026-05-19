@@ -16,6 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { PlatformAdapter } from './adapter.js';
+import { FlixMonkeyError } from '../core/utils.js';
 
 const HTTP_TIMEOUT = 8000;
 
@@ -71,11 +72,11 @@ export class UserscriptAdapter extends PlatformAdapter {
                             resolve(responseText);
                         }
                     } else {
-                        reject(Object.assign(new Error(`HTTP ${status}`), { status }));
+                        reject(new FlixMonkeyError(`HTTP ${status}`, status));
                     }
                 },
-                onerror: () => reject(new Error('network error')),
-                ontimeout: () => reject(new Error('timeout')),
+                onerror: () => reject(new FlixMonkeyError('network error')),
+                ontimeout: () => reject(new FlixMonkeyError('timeout')),
             });
         });
     }
