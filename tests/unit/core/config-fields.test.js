@@ -48,6 +48,34 @@ describe('core/config-fields', () => {
         });
     });
 
+    it('should return null on valid input and error message on invalid input for validate functions', () => {
+        CONFIG_FIELDS.forEach(field => {
+            if (field.validate) {
+                if (field.key === 'xmdbApiKey' || field.key === 'omdbApiKey') {
+                    expect(field.validate('valid-key')).toBeNull();
+                    expect(typeof field.validate('')).toBe('string');
+                } else if (field.key === 'fadeRatingThreshold') {
+                    expect(field.validate('5.0')).toBeNull();
+                    expect(field.validate('10.0')).toBeNull();
+                    expect(field.validate('0.0')).toBeNull();
+                    expect(typeof field.validate('-1.0')).toBe('string');
+                    expect(typeof field.validate('11.0')).toBe('string');
+                    expect(typeof field.validate('not-a-number')).toBe('string');
+                } else if (
+                    field.key === 'cacheTtlRatedOldYear' ||
+                    field.key === 'cacheTtlRatedNewYear' ||
+                    field.key === 'cacheTtlNoRating'
+                ) {
+                    expect(field.validate('0')).toBeNull();
+                    expect(field.validate('30')).toBeNull();
+                    expect(field.validate('-1')).toBeNull();
+                    expect(typeof field.validate('-2')).toBe('string');
+                    expect(typeof field.validate('not-a-number')).toBe('string');
+                }
+            }
+        });
+    });
+
     it('should not have duplicate keys', () => {
         const keys = CONFIG_FIELDS.map(f => f.key);
         const uniqueKeys = new Set(keys);

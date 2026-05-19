@@ -28,8 +28,18 @@ export class PlatformAdapter {
     }
 
     /** @abstract */
+    async storageGetAll() {
+        throw new FlixMonkeyError('PlatformAdapter: storageGetAll() must be implemented by subclass');
+    }
+
+    /** @abstract */
     async storageSet(_key, _value) {
         throw new FlixMonkeyError('PlatformAdapter: storageSet() must be implemented by subclass');
+    }
+
+    /** @abstract */
+    async storageSetMany(_values) {
+        throw new FlixMonkeyError('PlatformAdapter: storageSetMany() must be implemented by subclass');
     }
 
     /** @abstract */

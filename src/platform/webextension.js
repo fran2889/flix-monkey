@@ -25,8 +25,16 @@ export class WebExtensionAdapter extends PlatformAdapter {
         return result[key] ?? null;
     }
 
+    async storageGetAll() {
+        return await browser.storage.local.get(null);
+    }
+
     async storageSet(key, value) {
         await browser.storage.local.set({ [key]: value });
+    }
+
+    async storageSetMany(values) {
+        await browser.storage.local.set(values);
     }
 
     async storageDelete(key) {

@@ -24,8 +24,23 @@ export class UserscriptAdapter extends PlatformAdapter {
         return GM_getValue(key) ?? null;
     }
 
+    async storageGetAll() {
+        const keys = GM_listValues();
+        const all = {};
+        for (const key of keys) {
+            all[key] = GM_getValue(key);
+        }
+        return all;
+    }
+
     async storageSet(key, value) {
         GM_setValue(key, value);
+    }
+
+    async storageSetMany(values) {
+        for (const [key, value] of Object.entries(values)) {
+            GM_setValue(key, value);
+        }
     }
 
     async storageDelete(key) {
