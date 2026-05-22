@@ -27,7 +27,7 @@ export const SETTINGS_STYLES = `
     color: #fff;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 25px;
+    padding: 10px 25px 25px;
     min-width: 480px;
 }
 .fm-settings-container h1 {
@@ -96,13 +96,13 @@ export const SETTINGS_STYLES = `
     background: #f40612;
 }
 .fm-settings-container .secondary {
-    background: transparent;
-    color: #ccc;
-    border: 1px solid #555;
+    background: #e1e1e1;
+    color: #333;
+    border: 1px solid #8f8f8f;
 }
 .fm-settings-container .secondary:hover {
-    background: #333;
-    color: #fff;
+    background: #d5d5d5;
+    color: #000;
 }
 .fm-settings-container #fm-status {
     text-align: center;
@@ -111,32 +111,52 @@ export const SETTINGS_STYLES = `
     color: #aaa;
     min-height: 18px;
 }
-.fm-settings-container .fm-modal-overlay {
+.fm-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
+    z-index: 2147483647 !important;
 }
 
-.fm-settings-container .fm-modal-content {
+.fm-modal-content {
     background: #141414;
     border: 1px solid #555;
     border-radius: 5px;
     padding: 20px;
     max-width: 500px;
     width: 100%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-.fm-settings-container .fm-modal-header {
+.fm-modal-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 20px;
+    position: relative;
+}
+.fm-modal-title {
+    color: #e50914;
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+}
+.fm-modal-close {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+}
+.fm-modal-close:hover {
+    color: #fff;
 }
 `;

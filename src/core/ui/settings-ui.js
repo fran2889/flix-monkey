@@ -93,6 +93,20 @@ export class SettingsUI {
         saveBtn.onclick = () => this.save();
         actionsDiv.appendChild(saveBtn);
 
+        const clearBtn = document.createElement('button');
+        clearBtn.id = 'fm-clearCacheBtn';
+        clearBtn.className = 'secondary';
+        clearBtn.textContent = 'Clear Cache';
+        clearBtn.onclick = () => this.clearCache();
+        actionsDiv.appendChild(clearBtn);
+
+        const resetBtn = document.createElement('button');
+        resetBtn.id = 'fm-resetClientsBtn';
+        resetBtn.className = 'secondary';
+        resetBtn.textContent = 'Reset Disabled Clients';
+        resetBtn.onclick = () => this.resetClients();
+        actionsDiv.appendChild(resetBtn);
+
         container.appendChild(actionsDiv);
 
         const statusDiv = document.createElement('div');
@@ -151,6 +165,24 @@ export class SettingsUI {
         await this.adapter.storageSetMany(values);
         statusDiv.textContent = 'Saved!';
         statusDiv.style.color = 'green';
+    }
+
+    async clearCache() {
+        if (window.confirm('Clear all cached ratings?')) {
+            await this.adapter.storageSetMany({ fm_cache: '{}' });
+            const statusDiv = document.getElementById('fm-status');
+            statusDiv.textContent = 'Cache cleared.';
+            statusDiv.style.color = 'green';
+        }
+    }
+
+    async resetClients() {
+        if (window.confirm('Re-enable all disabled API clients?')) {
+            await this.adapter.storageSetMany({ fm_disabled_clients: '[]' });
+            const statusDiv = document.getElementById('fm-status');
+            statusDiv.textContent = 'API clients re-enabled.';
+            statusDiv.style.color = 'green';
+        }
     }
 
     _injectStyles() {

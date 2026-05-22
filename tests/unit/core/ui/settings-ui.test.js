@@ -118,4 +118,41 @@ describe('SettingsUI', () => {
         );
         expect(container.querySelector('#fm-status').textContent).toBe('Saved!');
     });
+
+    it('should clear cache when clicking Clear Cache and confirmed', async () => {
+        window.confirm = vi.fn(() => true);
+        await settingsUI.render(container);
+        const clearBtn = container.querySelector('#fm-clearCacheBtn');
+        await clearBtn.click();
+
+        expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith({ fm_cache: '{}' });
+        expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
+    });
+
+    it('should NOT clear cache if NOT confirmed', async () => {
+        window.confirm = vi.fn(() => false);
+        await settingsUI.render(container);
+        const clearBtn = container.querySelector('#fm-clearCacheBtn');
+        await clearBtn.click();
+
+        expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+    });
+
+    it('should reset disabled clients when clicking Reset Disabled Clients', async () => {
+        window.confirm = vi.fn(() => true);
+        await settingsUI.render(container);
+        const resetBtn = container.querySelector('#fm-resetClientsBtn');
+        await resetBtn.click();
+
+        expect(window.confirm).toHaveBeenCalledWith('Re-enable all failing API endpoints?');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(
+            expect.objectContaining({
+                fm_disabled_imdbapi: '0',
+                fm_disabled_omdb: '0',
+            })
+        );
+        expect(container.querySelector('#fm-status').textContent).toBe('API clients re-enabled.');
+    });
 });

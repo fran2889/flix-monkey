@@ -18,10 +18,6 @@
 import { WebExtensionAdapter } from '../../platform/webextension.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 
-async function init() {
-    const adapter = new WebExtensionAdapter();
-    const ui = new SettingsUI(adapter);
-    await ui.render(document.body);
-}
-
-init();
+const adapter = new WebExtensionAdapter();
+const ui = new SettingsUI(adapter);
+ui.render(document.body);
