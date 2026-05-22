@@ -147,49 +147,52 @@ describe('Surfaces', () => {
         expect(results).toEqual([]);
     });
 
-    it('should handle edge cases in getTitle fallbacks', () => {
-        const surfaces = new SurfaceManager();
+    describe('getTitle fallbacks and edge cases', () => {
+        it('should skip discover when textContent is empty', () => {
+            const surfaces = new SurfaceManager();
+            document.body.innerHTML = '<div class="title-card"><div class="fallback-text"></div></div>';
+            const results = surfaces.discover(document.body);
+            expect(results).toHaveLength(0);
+        });
 
-        // 1. textContent missing
-        document.body.innerHTML = '<div class="title-card"><div class="fallback-text"></div></div>';
-        // title will be "" which is falsy, so it should be skipped
-        const r1 = surfaces.discover(document.body);
-        expect(r1).toHaveLength(0);
+        it('should skip discover when textContent is null', () => {
+            const mockEl = {
+                textContent: null,
+                closest: () => document.body,
+                parentElement: document.body,
+                getAttribute: () => null,
+            };
+            const mockRoot = {
+                querySelectorAll: () => [mockEl],
+            };
+            const surfaces = new SurfaceManager();
+            const results = surfaces.discover(mockRoot);
+            expect(results).toHaveLength(0);
+        });
 
-        // 2. textContent is null
-        // We can't easily set textContent to null in JSDOM, but we can mock root querySelectorAll
-        const mockEl = {
-            textContent: null,
-            closest: () => document.body,
-            parentElement: document.body,
-            getAttribute: () => null,
-        };
-        const mockRoot = {
-            querySelectorAll: () => [mockEl],
-        };
-        const surfacesMocked = new SurfaceManager();
-        // Since getTitle uses el.textContent?.trim() ?? null, it should return null
-        // and if (!title) return; will skip it.
-        const rMocked = surfacesMocked.discover(mockRoot);
-        expect(rMocked).toHaveLength(0);
+        it('should fallback to previewModal h3 tag text', () => {
+            const surfaces = new SurfaceManager();
+            document.body.innerHTML = `
+                <div class="previewModal">
+                    <h3>H3 Title</h3>
+                </div>
+            `;
+            const results = surfaces.discover(document.body);
+            expect(results).toHaveLength(1);
+            expect(results[0].title).toBe('H3 Title');
+        });
 
-        // 3. previewModal h3 fallback
-        document.body.innerHTML = `
-            <div class="previewModal">
-                <h3>H3 Title</h3>
-            </div>
-        `;
-        const r2 = surfaces.discover(document.body);
-        expect(r2[0].title).toBe('H3 Title');
-
-        // 4. jawBone text fallback
-        document.body.innerHTML = `
-            <div class="jawBone">
-                <div class="image-fallback-text">Fallback Title</div>
-            </div>
-        `;
-        const r3 = surfaces.discover(document.body);
-        expect(r3[0].title).toBe('Fallback Title');
+        it('should fallback to jawBone image-fallback-text content', () => {
+            const surfaces = new SurfaceManager();
+            document.body.innerHTML = `
+                <div class="jawBone">
+                    <div class="image-fallback-text">Fallback Title</div>
+                </div>
+            `;
+            const results = surfaces.discover(document.body);
+            expect(results).toHaveLength(1);
+            expect(results[0].title).toBe('Fallback Title');
+        });
     });
 
     it('should handle missing container', () => {

@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {
-    it('should have a valid structure for all fields', () => {
-        CONFIG_FIELDS.forEach(field => {
+    describe('field structures', () => {
+        it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', field => {
             expect(field).toHaveProperty('key');
             expect(field).toHaveProperty('label');
             expect(field).toHaveProperty('type');
@@ -48,33 +48,50 @@ describe('core/config-fields', () => {
         });
     });
 
-    it('should return null on valid input and error message on invalid input for validate functions', () => {
-        CONFIG_FIELDS.forEach(field => {
-            if (field.validate) {
-                if (field.key === 'xmdbApiKey' || field.key === 'omdbApiKey') {
-                    expect(field.validate('valid-key')).toBeNull();
-                    expect(typeof field.validate('')).toBe('string');
-                } else if (field.key === 'fadeRatingThreshold') {
-                    expect(field.validate('5.0')).toBeNull();
-                    expect(field.validate('10.0')).toBeNull();
-                    expect(field.validate('0.0')).toBeNull();
-                    expect(typeof field.validate('-1.0')).toBe('string');
-                    expect(typeof field.validate('11.0')).toBe('string');
-                    expect(typeof field.validate('not-a-number')).toBe('string');
-                } else if (
-                    field.key === 'cacheTtlRatedOldYear' ||
-                    field.key === 'cacheTtlRatedNewYear' ||
-                    field.key === 'cacheTtlNoRating'
-                ) {
-                    expect(field.validate('0')).toBeNull();
-                    expect(field.validate('30')).toBeNull();
-                    expect(field.validate('-1')).toBeNull();
-                    expect(typeof field.validate('-2')).toBe('string');
-                    expect(typeof field.validate('not-a-number')).toBe('string');
-                    expect(typeof field.validate('5.5')).toBe('string');
-                    expect(typeof field.validate(' ')).toBe('string');
-                }
-            }
+    describe('validate functions', () => {
+        describe.each(['xmdbApiKey', 'omdbApiKey'])('%s validation', key => {
+            let field;
+            beforeEach(() => {
+                field = CONFIG_FIELDS.find(f => f.key === key);
+            });
+
+            it('should accept valid key', () => {
+                expect(field.validate('valid-key')).toBeNull();
+            });
+
+            it('should reject empty key', () => {
+                expect(typeof field.validate('')).toBe('string');
+            });
+        });
+
+        describe('fadeRatingThreshold validation', () => {
+            let field;
+            beforeEach(() => {
+                field = CONFIG_FIELDS.find(f => f.key === 'fadeRatingThreshold');
+            });
+
+            it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
+                expect(field.validate(val)).toBeNull();
+            });
+
+            it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
+                expect(typeof field.validate(val)).toBe('string');
+            });
+        });
+
+        describe.each(['cacheTtlRatedOldYear', 'cacheTtlRatedNewYear', 'cacheTtlNoRating'])('%s validation', key => {
+            let field;
+            beforeEach(() => {
+                field = CONFIG_FIELDS.find(f => f.key === key);
+            });
+
+            it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {
+                expect(field.validate(val)).toBeNull();
+            });
+
+            it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {
+                expect(typeof field.validate(val)).toBe('string');
+            });
         });
     });
 
@@ -84,8 +101,8 @@ describe('core/config-fields', () => {
         expect(uniqueKeys.size).toBe(keys.length);
     });
 
-    it('should have defaults matching the field type', () => {
-        CONFIG_FIELDS.forEach(field => {
+    describe('field defaults alignment with types', () => {
+        it.each(CONFIG_FIELDS)('should have default value matching type for field "$key"', field => {
             if (field.type === 'checkbox') {
                 expect(typeof field.default).toBe('boolean');
             } else if (field.type === 'text' || field.type === 'select') {

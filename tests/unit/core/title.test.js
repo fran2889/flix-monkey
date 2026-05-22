@@ -19,23 +19,39 @@ import { describe, it, expect } from 'vitest';
 import { Title } from '../../../src/core/title.js';
 
 describe('Title', () => {
-    it('should generate correct imdbUrl', () => {
-        const t1 = new Title({ imdbId: 'tt123' });
-        expect(t1.imdbUrl).toBe('https://www.imdb.com/title/tt123/');
-
-        const t2 = new Title({ displayTitle: 'Movie Name' });
-        expect(t2.imdbUrl).toBe('https://www.imdb.com/find/?q=Movie%20Name');
-
-        const t3 = new Title({ displayTitle: null });
-        expect(t3.imdbUrl).toBe('https://www.imdb.com/find/?q=');
+    describe('imdbUrl generation', () => {
+        it.each([
+            {
+                props: { imdbId: 'tt123' },
+                expected: 'https://www.imdb.com/title/tt123/',
+                description: 'imdbId is provided',
+            },
+            {
+                props: { displayTitle: 'Movie Name' },
+                expected: 'https://www.imdb.com/find/?q=Movie%20Name',
+                description: 'displayTitle is provided',
+            },
+            {
+                props: { displayTitle: null },
+                expected: 'https://www.imdb.com/find/?q=',
+                description: 'displayTitle is null',
+            },
+        ])('should generate correct URL when $description', ({ props, expected }) => {
+            const title = new Title(props);
+            expect(title.imdbUrl).toBe(expected);
+        });
     });
 
-    it('should create from JSON', () => {
-        const title = Title.fromJSON({ displayTitle: 'JSON Title' });
-        expect(title.displayTitle).toBe('JSON Title');
+    describe('fromJSON creation', () => {
+        it('should create a Title instance with properties from JSON object', () => {
+            const title = Title.fromJSON({ displayTitle: 'JSON Title' });
+            expect(title.displayTitle).toBe('JSON Title');
+        });
 
-        const title2 = Title.fromJSON(null);
-        expect(title2).toBeInstanceOf(Title);
+        it('should create a Title instance when JSON is null', () => {
+            const title = Title.fromJSON(null);
+            expect(title).toBeInstanceOf(Title);
+        });
     });
 
     it('should create notFound title', () => {

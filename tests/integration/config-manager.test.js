@@ -20,10 +20,10 @@ import { ConfigManager } from '../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../src/core/config-fields.js';
 
 describe('ConfigManager Integration', () => {
-    it('should integrate with CONFIG_DEFAULTS for all keys', () => {
-        const config = new ConfigManager();
-        Object.keys(CONFIG_DEFAULTS).forEach(key => {
-            expect(config.get(key)).toBe(CONFIG_DEFAULTS[key]);
+    describe('CONFIG_DEFAULTS integration', () => {
+        it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
+            const config = new ConfigManager();
+            expect(config.get(key)).toBe(expectedValue);
         });
     });
 

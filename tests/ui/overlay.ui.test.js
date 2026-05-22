@@ -92,11 +92,19 @@ describe('Overlay UI Interactions', () => {
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
 
-        // Below threshold
         renderer.applyFade(container, { rating: 6.0 }, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
+    });
 
-        // Above threshold
+    it('should NOT apply fade when rating is above or equal to threshold', () => {
+        const config = new ConfigManager(key => {
+            if (key === 'enableFadeUnderRating') return true;
+            if (key === 'fadeRatingThreshold') return 7.5;
+            return undefined;
+        });
+        const renderer = new OverlayRenderer(config);
+        const container = document.createElement('div');
+
         renderer.applyFade(container, { rating: 8.0 }, true);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });

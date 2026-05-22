@@ -73,7 +73,7 @@ describe('Browse UI Surface', () => {
         expect(link.getAttribute('href')).toBe(titleObj.imdbUrl);
     });
 
-    it('should apply fading for low ratings', () => {
+    it('should apply fading for low ratings below threshold', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container } = surfaces[0];
 
@@ -87,6 +87,19 @@ describe('Browse UI Surface', () => {
 
         localRenderer.applyFade(container, { rating: 7.0 }, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
+    });
+
+    it('should NOT apply fading for low ratings equal or above threshold', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        const { container } = surfaces[0];
+
+        // Set threshold high to ensure fading
+        const mockConfig = new ConfigManager(key => {
+            if (key === 'enableFadeUnderRating') return true;
+            if (key === 'fadeRatingThreshold') return 9.0;
+            return null;
+        });
+        const localRenderer = new OverlayRenderer(mockConfig);
 
         localRenderer.applyFade(container, { rating: 9.5 }, true);
         expect(container.classList.contains('fm-faded')).toBe(false);
