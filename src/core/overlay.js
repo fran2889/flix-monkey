@@ -133,6 +133,12 @@ export class OverlayRenderer {
 
         const { rating, imdbId, rtRating, mcRating } = titleObj;
 
+        // Helper to add click handler for propagation
+        const addStopPropagation = el => {
+            el.addEventListener('click', e => e.stopPropagation());
+            return el;
+        };
+
         // IMDb (Interactive Link)
         const imdbLink = document.createElement('a');
         imdbLink.target = '_blank';
@@ -155,14 +161,14 @@ export class OverlayRenderer {
         // RT
         if (this.#config.get('showRtRating', true) && rtRating) {
             const formatted = this.#formatPercentRating(rtRating);
-            container.appendChild(this.#createRatingElement('RT', formatted, 'fm-rt'));
+            container.appendChild(addStopPropagation(this.#createRatingElement('RT', formatted, 'fm-rt')));
             titleParts.push(`RT: ${formatted}`);
         }
 
         // MC
         if (this.#config.get('showMcRating', true) && mcRating) {
             const formatted = this.#formatPercentRating(mcRating);
-            container.appendChild(this.#createRatingElement('MC', formatted, 'fm-mc'));
+            container.appendChild(addStopPropagation(this.#createRatingElement('MC', formatted, 'fm-mc')));
             titleParts.push(`MC: ${formatted}`);
         }
 

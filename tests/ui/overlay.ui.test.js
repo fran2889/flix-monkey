@@ -179,6 +179,30 @@ describe('Overlay UI Interactions', () => {
         expect(spy).toHaveBeenCalled();
     });
 
+    it('should stop propagation on RT and MC rating clicks', () => {
+        const renderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        const titleObj = {
+            rating: 8.5,
+            rtRating: 90,
+            mcRating: 80,
+            imdbUrl: 'http://imdb.com',
+            imdbId: 'tt1',
+        };
+        renderer.injectOverlay(container, titleObj);
+
+        const overlay = container.querySelector('.fm-rating-overlay');
+        const rtRatingEl = overlay.querySelector('.fm-rt').parentElement;
+        const mcRatingEl = overlay.querySelector('.fm-mc').parentElement;
+
+        [rtRatingEl, mcRatingEl].forEach(el => {
+            const event = new MouseEvent('click', { bubbles: true });
+            const spy = vi.spyOn(event, 'stopPropagation');
+            el.dispatchEvent(event);
+            expect(spy).toHaveBeenCalled();
+        });
+    });
+
     it('should inject loading overlay', () => {
         const renderer = new OverlayRenderer(new ConfigManager());
         const container = document.createElement('div');
