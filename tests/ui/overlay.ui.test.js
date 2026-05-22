@@ -232,6 +232,29 @@ describe('Overlay UI Interactions', () => {
         expect(labelTexts).toContain('MC ');
     });
 
+    it('should show 🔍 when imdbId is missing', () => {
+        const renderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        renderer.injectOverlay(container, { rating: null, imdbId: null });
+        expect(container.querySelector('.fm-search')).not.toBeNull();
+        expect(container.querySelector('.fm-search').textContent).toBe('🔍');
+    });
+
+    it.each([
+        ['Normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · RT: 85% – click to open IMDb'],
+        [
+            'No ratings but IMDb ID present',
+            { rating: null, imdbId: 'tt1' },
+            'No ratings available – click to open IMDb',
+        ],
+        ['Missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search'],
+    ])('should build correct tooltips for %s', (_, titleObj, expectedTitle) => {
+        const renderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        renderer.injectOverlay(container, titleObj);
+        expect(container.querySelector('.fm-rating-overlay').title).toBe(expectedTitle);
+    });
+
     it('should show N/A when imdbId is present but rating is missing', () => {
         const renderer = new OverlayRenderer(new ConfigManager());
         const container = document.createElement('div');
