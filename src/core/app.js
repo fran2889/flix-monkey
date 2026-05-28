@@ -28,18 +28,28 @@ import { debounce, runIdle } from './utils.js';
 
 export class FlixMonkeyApp {
     #api;
+    #cache;
     #renderer;
     #surfaces;
     #inFlight = new Map();
     #debouncedDecorate;
 
     constructor(cache, api, renderer, surfaces) {
+        this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
         this.#debouncedDecorate = debounce(() => {
             runIdle(() => this.decorateRoot(document));
         }, DECORATION_DEBOUNCE_MS);
+    }
+
+    async clearCache() {
+        await this.#cache.clear();
+    }
+
+    async resetDisabledClients() {
+        return await this.#api.resetDisabledClients();
     }
 
     async #decorateContainer(container, displayTitle, fadeable) {
@@ -51,7 +61,9 @@ export class FlixMonkeyApp {
         this.#renderer.injectLoadingOverlay(container, displayTitle);
 
         // Yield to the event loop so the browser can paint the loading overlay
-        // before executing potentially synchronous microtasks (like cache reads in GM)
+        // before executing potentially synchronous microtasks. GM storage APIs
+        // (like GM_getValue) can be synchronously blocking in some userscript managers,
+        // which is the reason for the explicit yield before cache reads.
         await new Promise(resolve => setTimeout(resolve, 0));
 
         let promise = this.#inFlight.get(dedupKey);
@@ -119,7 +131,7 @@ export class FlixMonkeyApp {
 }
 
 export function startApp(adapter) {
-    const configManager = new ConfigManager(adapter.configGet);
+    const configManager = new ConfigManager(adapter);
 
     const cache = new CacheManager(adapter, configManager);
     const disabledManager = new DisabledClientsManager(adapter);
@@ -129,5 +141,8 @@ export function startApp(adapter) {
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
     logger.setConfig(configManager);
     app.init();
-    return { api, cache };
+    return {
+        clearCache: () => app.clearCache(),
+        resetDisabledClients: () => app.resetDisabledClients(),
+    };
 }

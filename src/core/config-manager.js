@@ -18,15 +18,21 @@
 import { CONFIG_DEFAULTS } from './config-fields.js';
 
 export class ConfigManager {
+    #adapter;
     #getter;
 
-    constructor(getterFn = key => CONFIG_DEFAULTS[key]) {
-        this.#getter = getterFn;
+    constructor(source = key => CONFIG_DEFAULTS[key]) {
+        if (typeof source === 'function') {
+            this.#getter = source;
+        } else {
+            this.#adapter = source;
+        }
     }
 
     get(key, fallback) {
         try {
-            return this.#getter(key) ?? fallback ?? CONFIG_DEFAULTS[key];
+            const val = this.#adapter ? this.#adapter.configGet(key) : this.#getter(key);
+            return val !== undefined && val !== null ? val : (fallback ?? CONFIG_DEFAULTS[key]);
         } catch {
             return fallback ?? CONFIG_DEFAULTS[key];
         }

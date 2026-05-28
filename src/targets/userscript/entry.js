@@ -20,12 +20,8 @@ import { startApp } from '../../core/app.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { Modal } from '../../core/ui/modal.js';
 
-('use strict');
-
 const adapter = new UserscriptAdapter();
-const { api, cache } = startApp(adapter);
-
-adapter.configGet = async key => await adapter.storageGet(key);
+const app = startApp(adapter);
 
 adapter.registerMenuCommand('FlixMonkey Settings', () => {
     const modal = new Modal('FlixMonkey Settings');
@@ -38,13 +34,13 @@ adapter.registerMenuCommand('FlixMonkey Settings', () => {
 
 adapter.registerMenuCommand('Clear Cache', async () => {
     if (confirm('Are you sure you want to clear the FlixMonkey cache?')) {
-        await cache.clear();
+        await app.clearCache();
         alert('Cache cleared.');
     }
 });
 
 adapter.registerMenuCommand('Reset Disabled Clients', async () => {
-    const reenabled = await api.resetDisabledClients();
+    const reenabled = await app.resetDisabledClients();
     if (reenabled.length > 0) {
         alert(`Re-enabled API clients: ${reenabled.join(', ')}`);
     } else {

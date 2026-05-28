@@ -17,14 +17,15 @@
  */
 import browser from 'webextension-polyfill';
 import { WebExtensionAdapter } from '../../platform/webextension.js';
-import { CONFIG_DEFAULTS } from '../../core/config-fields.js';
 import { startApp } from '../../core/app.js';
 
 (async () => {
     const adapter = new WebExtensionAdapter();
     const stored = await browser.storage.local.get(null);
-    adapter.configGet = key => stored[key] ?? CONFIG_DEFAULTS[key];
+    adapter.setConfigData(stored);
 
+    // Register storage listener BEFORE starting the app to ensure any configuration changes
+    // are reflected in the 'stored' object which the adapter uses for synchronous reads.
     browser.storage.onChanged.addListener(changes => {
         Object.entries(changes).forEach(([k, v]) => {
             stored[k] = v.newValue;
