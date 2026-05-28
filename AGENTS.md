@@ -97,7 +97,11 @@ All platform-specific code must go through the `adapter` instance:
 ```js
 class PlatformAdapter {
     async storageGet(key)
+    async storageGetAll()
     async storageSet(key, value)
+    async storageSetMany(obj)
+    async storageDelete(key)
+    async storageGetKeys(prefix)
     async httpFetch(url, options)
     registerMenuCommand(label, fn)
 }
