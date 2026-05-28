@@ -93,22 +93,29 @@ export class OverlayRenderer {
         document.head.appendChild(style);
     }
 
-    #createRatingElement(label, value, className = '') {
+    #createBadgeElement(label, value, labelClassName = '', valueClassName = '') {
         const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-value">${value}</span>`;
+        const spanLabel = document.createElement('span');
+        spanLabel.className = labelClassName ? `fm-label ${labelClassName}` : 'fm-label';
+        spanLabel.textContent = `${label} `;
+        const spanValue = document.createElement('span');
+        spanValue.className = valueClassName;
+        spanValue.textContent = value;
+        el.appendChild(spanLabel);
+        el.appendChild(spanValue);
         return el;
+    }
+
+    #createRatingElement(label, value, className = '') {
+        return this.#createBadgeElement(label, value, className, 'fm-value');
     }
 
     #createMissingRatingElement(label, className = '') {
-        const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-na">N/A</span>`;
-        return el;
+        return this.#createBadgeElement(label, 'N/A', className, 'fm-na');
     }
 
     #createSearchRatingElement(label, className = '') {
-        const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label ${className}">${label} </span><span class="fm-search">🔍</span>`;
-        return el;
+        return this.#createBadgeElement(label, '🔍', className, 'fm-search');
     }
 
     #formatImdbRating(rating) {
@@ -183,9 +190,7 @@ export class OverlayRenderer {
     #createLoadingOverlay(_displayTitle) {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
-        const el = document.createElement('div');
-        el.innerHTML = `<span class="fm-label">IMDb</span><span class="fm-search">⏳</span>`;
-        container.appendChild(el);
+        container.appendChild(this.#createBadgeElement('IMDb', '⏳', '', 'fm-search'));
         container.title = 'Fetching ratings… click to search IMDb';
         return container;
     }

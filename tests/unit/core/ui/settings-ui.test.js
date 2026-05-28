@@ -146,13 +146,8 @@ describe('SettingsUI', () => {
         const resetBtn = container.querySelector('#fm-resetClientsBtn');
         await resetBtn.click();
 
-        expect(window.confirm).toHaveBeenCalledWith('Re-enable all failing API endpoints?');
-        expect(adapter.storageSetMany).toHaveBeenCalledWith(
-            expect.objectContaining({
-                fm_disabled_imdbapi: '0',
-                fm_disabled_omdb: '0',
-            })
-        );
+        expect(window.confirm).toHaveBeenCalledWith('Re-enable all disabled API clients?');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith({ fm_disabled_clients: '[]' });
         expect(container.querySelector('#fm-status').textContent).toBe('API clients re-enabled.');
     });
 });

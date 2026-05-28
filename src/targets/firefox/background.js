@@ -15,11 +15,19 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { validateDomain } from '../extension/domains.js';
+
 const HTTP_TIMEOUT = 8000;
 
 browser.runtime.onMessage.addListener(async msg => {
     if (msg.type !== 'FM_FETCH') return;
     const { url, options = {} } = msg;
+
+    const validation = validateDomain(url);
+    if (!validation.valid) {
+        return { error: validation.error };
+    }
+
     const { responseType = 'json', timeout = HTTP_TIMEOUT } = options;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);

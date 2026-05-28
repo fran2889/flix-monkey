@@ -78,10 +78,7 @@ const allConfigs = [
         output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
         plugins: [
             ...sharedPlugins(),
-            copyStatic([
-                ['src/targets/firefox/background.js', 'dist/firefox/background.js'],
-                ['src/targets/extension/options.html', 'dist/firefox/options.html'],
-            ]),
+            copyStatic([['src/targets/extension/options.html', 'dist/firefox/options.html']]),
             injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
         ],
     },
@@ -92,15 +89,18 @@ const allConfigs = [
         plugins: sharedPlugins(),
     },
     {
+        _target: 'firefox',
+        input: 'src/targets/firefox/background.js',
+        output: { file: 'dist/firefox/background.js', format: 'iife', sourcemap: true },
+        plugins: sharedPlugins(),
+    },
+    {
         _target: 'chrome',
         input: 'src/targets/extension/content.js',
         output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
         plugins: [
             ...sharedPlugins(),
-            copyStatic([
-                ['src/targets/chrome/service-worker.js', 'dist/chrome/service-worker.js'],
-                ['src/targets/extension/options.html', 'dist/chrome/options.html'],
-            ]),
+            copyStatic([['src/targets/extension/options.html', 'dist/chrome/options.html']]),
             injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
         ],
     },
@@ -108,6 +108,12 @@ const allConfigs = [
         _target: 'chrome',
         input: 'src/targets/extension/options.js',
         output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
+        plugins: sharedPlugins(),
+    },
+    {
+        _target: 'chrome',
+        input: 'src/targets/chrome/service-worker.js',
+        output: { file: 'dist/chrome/service-worker.js', format: 'iife', sourcemap: true },
         plugins: sharedPlugins(),
     },
 ];

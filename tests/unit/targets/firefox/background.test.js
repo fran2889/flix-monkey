@@ -61,11 +61,21 @@ describe('Firefox Background Script', () => {
         expect(result).toBeUndefined();
     });
 
+    it('should reject requests to disallowed domains', async () => {
+        const result = await messageListener({ type: 'FM_FETCH', url: 'http://malicious.com' });
+        expect(result).toEqual({ error: 'Domain not allowed' });
+    });
+
+    it('should handle invalid URLs', async () => {
+        const result = await messageListener({ type: 'FM_FETCH', url: 'not-a-url' });
+        expect(result).toEqual({ error: 'Invalid URL' });
+    });
+
     it('should respect custom timeout in options', async () => {
         const customTimeout = 1234;
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
-        messageListener({ type: 'FM_FETCH', url: 'http://api.com', options: { timeout: customTimeout } });
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
 
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), customTimeout);
         setTimeoutSpy.mockRestore();
@@ -73,14 +83,14 @@ describe('Firefox Background Script', () => {
 
     it('should fall back to default HTTP_TIMEOUT (8000ms)', async () => {
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-        messageListener({ type: 'FM_FETCH', url: 'http://api.com', options: {} });
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} });
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);
         setTimeoutSpy.mockRestore();
     });
 
     it('should actually abort fetch when timer fires', async () => {
         const customTimeout = 500;
-        messageListener({ type: 'FM_FETCH', url: 'http://api.com', options: { timeout: customTimeout } });
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
 
         const fetchOptions = global.fetch.mock.calls[0][1];
         expect(fetchOptions.signal.aborted).toBe(false);
@@ -98,7 +108,7 @@ describe('Firefox Background Script', () => {
 
         const result = await messageListener({
             type: 'FM_FETCH',
-            url: 'http://api.com',
+            url: 'https://xmdbapi.com',
             options: { responseType: 'json' },
         });
 
@@ -114,7 +124,7 @@ describe('Firefox Background Script', () => {
 
         const result = await messageListener({
             type: 'FM_FETCH',
-            url: 'http://api.com',
+            url: 'https://xmdbapi.com',
             options: { responseType: 'text' },
         });
 
@@ -127,7 +137,7 @@ describe('Firefox Background Script', () => {
             status: 404,
         });
 
-        const result = await messageListener({ type: 'FM_FETCH', url: 'http://api.com' });
+        const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
         expect(result).toEqual({ error: 'HTTP 404', status: 404 });
     });
@@ -135,7 +145,7 @@ describe('Firefox Background Script', () => {
     it('should handle fetch exception', async () => {
         global.fetch.mockRejectedValue(new Error('Network error'));
 
-        const result = await messageListener({ type: 'FM_FETCH', url: 'http://api.com' });
+        const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
         expect(result).toEqual({ error: 'Network error' });
     });
