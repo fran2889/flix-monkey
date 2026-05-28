@@ -73,7 +73,10 @@ export class ApiClientManager {
         if (cached !== null) return cached;
 
         const status = await this.#client.getStatus();
-        if (!status.healthy) return null;
+        if (!status.healthy) {
+            await this.#cache.write(displayTitle, Title.notFound(displayTitle));
+            return null;
+        }
 
         const data = await this.#client.fetch(displayTitle);
         if (!data) {

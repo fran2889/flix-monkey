@@ -50,7 +50,9 @@ export class RequestQueue {
         this.#isProcessing = true;
 
         while (this.#queue.length > 0) {
-            this.#queue.sort((a, b) => b.priority - a.priority);
+            if (this.#queue.length > 1) {
+                this.#queue.sort((a, b) => b.priority - a.priority);
+            }
 
             const now = Date.now();
             let lastGlobal = 0;

@@ -30,7 +30,10 @@ export class CacheManager {
     }
 
     #getCacheKey(displayTitle) {
-        const slug = `${displayTitle.toLowerCase().replace(/\s+/g, '_')}`;
+        const slug = displayTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_|_$/g, '');
         return `${this.#prefix}${slug}`;
     }
 

@@ -43,8 +43,7 @@ export class OverlayRenderer {
         const corner = this.#config.get('overlayCorner', 'top-left');
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
-        const style = document.createElement('style');
-        style.textContent = `
+        let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
                 ${positionCss}
@@ -84,12 +83,14 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
         if (corner.includes('left')) {
-            style.textContent += `\n            .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+            cssText += `\n            .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
         }
-        style.textContent += `
+        cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
         `;
+        const style = document.createElement('style');
+        style.textContent = cssText;
         document.head.appendChild(style);
     }
 
