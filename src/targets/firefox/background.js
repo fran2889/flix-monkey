@@ -19,6 +19,9 @@ import { validateDomain } from '../extension/domains.js';
 
 const HTTP_TIMEOUT = 8000;
 
+// Firefox-only background script.
+// Uses bare 'browser' global which is available in Firefox's non-bundled background environment.
+// For Chrome compatibility, use the bundled service-worker.js instead.
 browser.runtime.onMessage.addListener(async msg => {
     if (msg.type !== 'FM_FETCH') return;
     const { url, options = {} } = msg;

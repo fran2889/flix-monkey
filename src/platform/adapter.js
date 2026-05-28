@@ -57,11 +57,19 @@ export class PlatformAdapter {
         throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
     }
 
-    set configGet(fn) {
-        this._configGet = fn;
+    /**
+     * Synchronously gets a configuration value.
+     * @abstract
+     */
+    configGet(_key) {
+        throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
     }
 
-    get configGet() {
-        return this._configGet;
+    /**
+     * Registers a menu command in the platform (if supported).
+     * Defaults to no-op.
+     */
+    registerMenuCommand(_label, _fn) {
+        // No-op by default
     }
 }

@@ -20,6 +20,12 @@ import { PlatformAdapter } from './adapter.js';
 import { FlixMonkeyError } from '../core/utils.js';
 
 export class WebExtensionAdapter extends PlatformAdapter {
+    #configData = {};
+
+    setConfigData(data) {
+        this.#configData = data;
+    }
+
     async storageGet(key) {
         const result = await browser.storage.local.get(key);
         return result[key] ?? null;
@@ -47,10 +53,21 @@ export class WebExtensionAdapter extends PlatformAdapter {
     }
 
     async httpFetch(url, options = {}) {
-        const response = await browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
+        const timeout = options.timeout ?? 10000;
+        const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new FlixMonkeyError('background relay timeout')), timeout)
+        );
+
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
         if (response.error) {
             throw new FlixMonkeyError(response.error, response.status);
         }
         return response.data;
+    }
+
+    configGet(key) {
+        return this.#configData[key];
     }
 }
