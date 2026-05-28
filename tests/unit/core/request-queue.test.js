@@ -20,6 +20,9 @@ import { RequestQueue } from '../../../src/core/request-queue.js';
 
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
+        // Use a large artificial interval to ensure the second request stays queued.
+        // The first request starts processing immediately (leaving the queue),
+        // so clearing the queue will abort exactly 1 pending request.
         const queue = new RequestQueue(999999);
         const _p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
         const _p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});

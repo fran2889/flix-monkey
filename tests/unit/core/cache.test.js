@@ -18,7 +18,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CacheManager } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
-import { _DAYS_TO_MS } from '../../../src/core/constants.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 
 describe('CacheManager', () => {
