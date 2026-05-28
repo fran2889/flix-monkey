@@ -103,6 +103,7 @@ class PlatformAdapter {
     async storageDelete(key)
     async storageGetKeys(prefix)
     async httpFetch(url, options)
+    configGet(key)
     registerMenuCommand(label, fn)
 }
 ```
