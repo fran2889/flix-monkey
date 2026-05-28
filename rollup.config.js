@@ -67,7 +67,10 @@ const allConfigs = [
             {
                 name: 'strip-license-header',
                 transform(code) {
-                    return code.replace(/\/\*\*[\s\S]*?Copyright \(C\) 2026 Fran[\s\S]*?\*\/\n/g, '');
+                    return code.replace(
+                        /\/\*\*(?:(?!\*\/)[\s\S])*?GNU General Public License(?:(?!\*\/)[\s\S])*?\*\/\n?/g,
+                        ''
+                    );
                 },
             },
         ],

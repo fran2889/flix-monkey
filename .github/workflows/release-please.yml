@@ -22,7 +22,14 @@ jobs:
               id: release
               with:
                   config-file: release-please-config.json
+            - name: Install dependencies
+              if: ${{ steps.release.outputs.release_created }}
+              run: npm ci
+            - name: Build artifacts
+              if: ${{ steps.release.outputs.release_created }}
+              run: npm run build
             - name: Upload artifacts
+              if: ${{ steps.release.outputs.release_created }}
               uses: actions/upload-artifact@v4
               with:
                   name: artifacts
