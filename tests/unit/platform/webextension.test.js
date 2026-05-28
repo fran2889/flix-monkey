@@ -112,4 +112,14 @@ describe('WebExtensionAdapter', () => {
         const result = await adapter.storageGet('nonexistent');
         expect(result).toBeNull();
     });
+
+    it('configGet should return value from configData', () => {
+        adapter.setConfigData({ key: 'value' });
+        expect(adapter.configGet('key')).toBe('value');
+    });
+
+    it('configGet should return undefined if key is missing', () => {
+        adapter.setConfigData({});
+        expect(adapter.configGet('missing')).toBeUndefined();
+    });
 });

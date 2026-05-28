@@ -56,9 +56,9 @@ describe('App', () => {
             storageSet: vi.fn(),
             httpFetch: vi.fn(),
         };
-        const { api, cache } = startApp(mockAdapter);
-        expect(api).toBeDefined();
-        expect(cache).toBeDefined();
+        const app = startApp(mockAdapter);
+        expect(app.clearCache).toBeDefined();
+        expect(app.resetDisabledClients).toBeDefined();
     });
 
     it('should discover titles in JSDOM', () => {
@@ -241,14 +241,11 @@ describe('App', () => {
         resolveApi({ apiTitle: 'Test Title' });
         await apiPromise;
 
-        // Give it a moment to finish processing
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
+        // Wait for the app to finish processing and update the UI
+        await vi.waitFor(() => {
+            expect(card.querySelector('.fm-loading')).toBeNull();
+        });
 
-        expect(card.querySelector('.fm-loading')).toBeNull();
         expect(card.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
 

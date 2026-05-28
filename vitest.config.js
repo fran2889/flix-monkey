@@ -4,7 +4,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         exclude: ['**/node_modules/**', '**/dist/**'],
-        globals: true,
+        globals: false,
         setupFiles: ['./tests/setup.js'],
         coverage: {
             thresholds: { lines: 80, functions: 80 },

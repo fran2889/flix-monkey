@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { vi } from 'vitest';
+
 export const browser = {
     runtime: {
         getManifest: vi.fn(),

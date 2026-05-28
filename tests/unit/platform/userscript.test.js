@@ -138,4 +138,11 @@ describe('UserscriptAdapter', () => {
         const result = await adapter.httpFetch('http://example.com');
         expect(result).toEqual({ data: 'parsed' });
     });
+
+    it('configGet should call GM_getValue', () => {
+        GM_getValue.mockReturnValue('val');
+        const result = adapter.configGet('key');
+        expect(GM_getValue).toHaveBeenCalledWith('key');
+        expect(result).toBe('val');
+    });
 });

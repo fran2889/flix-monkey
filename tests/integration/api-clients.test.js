@@ -47,7 +47,7 @@ describe('api-clients integration', () => {
 
         it('should fetch real data from XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather', '1972');
+            const result = await client.fetch('The Godfather');
             expect(result).toBeDefined();
             expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
             expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();
@@ -56,7 +56,7 @@ describe('api-clients integration', () => {
 
         it('should fetch real data from OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather', '1972');
+            const result = await client.fetch('The Godfather');
             expect(result).toBeDefined();
             expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
             expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();
@@ -66,7 +66,7 @@ describe('api-clients integration', () => {
 
         it('should fetch real data from IMDb API Dev', async () => {
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather', '1972');
+            const result = await client.fetch('The Godfather');
             expect(result).toBeDefined();
             expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
             expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();

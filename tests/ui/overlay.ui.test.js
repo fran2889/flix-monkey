@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
 
@@ -164,6 +164,14 @@ describe('Overlay UI Interactions', () => {
         // but it should handle explicit style.position.
         renderer.ensureRelative(container);
         expect(container.style.position).toBe('relative');
+    });
+
+    it('should NOT change position if already non-static', () => {
+        const renderer = new OverlayRenderer(new ConfigManager());
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        renderer.ensureRelative(container);
+        expect(container.style.position).toBe('absolute');
     });
 
     it('should stop propagation on IMDb link click', () => {
