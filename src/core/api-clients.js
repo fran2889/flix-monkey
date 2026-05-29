@@ -204,7 +204,7 @@ export class ImdbApiDevClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        const searchParams = new URLSearchParams({ query: displayTitle });
+        const searchParams = new URLSearchParams({ query: displayTitle, limit: 5 });
         logger.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
@@ -214,18 +214,22 @@ export class ImdbApiDevClient extends BaseApiClient {
         return titles[0];
     }
 
-    async getDetails({ id, title: searchResultTitle, ...match }, displayTitle) {
-        logger.debug(`Fetching IMDb API Dev details for ID: ${id} ("${searchResultTitle ?? displayTitle}")`);
-        const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/movie/${id}`, 1);
+    async getDetails(match, displayTitle) {
+        const { id } = match;
+        logger.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
+        const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
         if (!detailsJson || detailsJson.error) return null;
-        const { title, startYear, rating, details, metacritic } = detailsJson;
+
+        // API returns `primaryTitle` per the Swagger spec
+        const { primaryTitle, startYear, rating, metacritic } = detailsJson;
+
         return new Title({
-            apiTitle: details?.title ?? title ?? searchResultTitle ?? null,
+            apiTitle: primaryTitle ?? null,
             imdbId: id,
-            year: details?.startYear ?? startYear ?? match.startYear,
-            rating: details?.ratings?.aggregateRating ?? rating?.aggregateRating ?? match.rating?.aggregateRating,
+            year: startYear,
+            rating: rating?.aggregateRating ?? null,
             rtRating: null,
-            mcRating: details?.ratings?.metacritic?.score ?? metacritic?.score ?? match.metacritic?.score ?? null,
+            mcRating: metacritic?.score ?? null,
         });
     }
 }

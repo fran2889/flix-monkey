@@ -279,8 +279,8 @@ describe('ImdbApiDevClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 titles: [
-                    { id: 'tt1', title: 'First Movie' },
-                    { id: 'tt2', title: 'Second Movie' },
+                    { id: 'tt1', primaryTitle: 'First Movie' },
+                    { id: 'tt2', primaryTitle: 'Second Movie' },
                 ],
             }),
         });
@@ -298,32 +298,35 @@ describe('ImdbApiDevClient', () => {
         expect(await client.search('Unknown')).toBeNull();
     });
 
-    it('should handle details and ratings fallback', async () => {
+    it('should handle details and ratings', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
-                details: {
-                    ratings: {
-                        metacritic: { score: 75 },
-                    },
-                },
+                primaryTitle: 'Movie',
+                startYear: 2026,
+                rating: { aggregateRating: 8.5 },
+                metacritic: { score: 75 },
             }),
         });
         const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
-        const result = await client.getDetails({ id: 'tt1', title: 'Movie' }, 'Movie');
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
+        expect(result.apiTitle).toBe('Movie');
+        expect(result.year).toBe(2026);
+        expect(result.rating).toBe(8.5);
         expect(result.mcRating).toBe(75);
     });
 
-    it('should use match ratings if details ratings missing', async () => {
+    it('should handle missing optional fields', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({}),
+            httpFetch: vi.fn().mockResolvedValue({
+                primaryTitle: 'Movie',
+            }),
         });
         const client = new ImdbApiDevClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter);
-        const result = await client.getDetails(
-            { id: 'tt1', title: 'Movie', metacritic: { score: 80 }, rating: { aggregateRating: 7.5 } },
-            'Movie'
-        );
-        expect(result.mcRating).toBe(80);
-        expect(result.rating).toBe(7.5);
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
+        expect(result.apiTitle).toBe('Movie');
+        expect(result.year).toBeNull();
+        expect(result.rating).toBeNull();
+        expect(result.mcRating).toBeNull();
     });
 
     it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {

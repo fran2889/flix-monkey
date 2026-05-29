@@ -81,11 +81,11 @@ export class UserscriptAdapter extends PlatformAdapter {
         });
     }
 
-    registerMenuCommand(label, fn) {
-        GM_registerMenuCommand(label, fn);
-    }
-
     configGet(key) {
         return GM_getValue(key);
+    }
+
+    registerMenuCommand(label, fn) {
+        GM_registerMenuCommand(label, fn);
     }
 }
