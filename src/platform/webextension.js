@@ -19,6 +19,8 @@ import browser from 'webextension-polyfill';
 import { PlatformAdapter } from './adapter.js';
 import { FlixMonkeyError } from '../core/utils.js';
 
+const DEFAULT_FETCH_TIMEOUT_MILLIS = 10000;
+
 export class WebExtensionAdapter extends PlatformAdapter {
     #configData = {};
 
@@ -53,7 +55,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
     }
 
     async httpFetch(url, options = {}) {
-        const timeout = options.timeout ?? 10000;
+        const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT_MILLIS;
         const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
         const timeoutPromise = new Promise((_, reject) =>
