@@ -141,14 +141,14 @@ export class XmdbApiClient extends BaseApiClient {
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error) return null;
-        const { rating, ratings, year, title, metacritic } = detailsJson;
+        const { rating, release_year, title, metascore } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
             imdbId: id,
-            year,
+            year: release_year,
             rating,
-            rtRating: parseRatings(ratings, /Rotten Tomatoes/i),
-            mcRating: metacritic ?? parseRatings(ratings, /Metacritic/i),
+            rtRating: null,
+            mcRating: metascore ?? null,
         });
     }
 }

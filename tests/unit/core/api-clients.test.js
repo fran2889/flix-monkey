@@ -161,13 +161,15 @@ describe('XmdbApiClient', () => {
                 .mockResolvedValueOnce({ results: [{ type: 'title', id: 'm1' }] })
                 .mockResolvedValueOnce({
                     title: 'Movie 1',
-                    ratings: [{ source: 'Metacritic', value: '88/100' }],
+                    release_year: 2020,
+                    metascore: 88,
                 }),
         });
         const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, mockAdapter, {
             get: _k => 'key',
         });
         const result = await client.fetch('Movie 1');
+        expect(result.year).toBe(2020);
         expect(result.mcRating).toBe(88);
     });
 

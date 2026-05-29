@@ -11,7 +11,7 @@ function zipDirectory(sourceDir, outPath) {
         const archive = archiver('zip', { zlib: { level: 9 } });
 
         output.on('close', () => {
-            console.log(`Created ${outPath} (${archive.pointer()} total bytes)`);
+            console.info(`Created ${outPath} (${archive.pointer()} total bytes)`);
             resolve();
         });
 
@@ -46,7 +46,7 @@ async function main() {
         }
 
         if (!packaged) {
-            console.log('No extension directories found to package.');
+            console.warn('No extension directories found to package.');
         }
     } catch (error) {
         console.error('Packaging failed:', error);

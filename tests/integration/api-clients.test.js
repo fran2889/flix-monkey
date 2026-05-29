@@ -20,8 +20,34 @@ import { hasCredentials } from './setup';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../src/core/api-clients';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { ConfigManager } from '../../src/core/config-manager';
+import { Title } from '../../src/core/title';
+import { ApiSource } from '../../src/core/constants';
 
 const credentials = ['XMDB_API_KEY', 'OMDB_API_KEY'];
+
+const DISPLAY_TITLE = 'The Godfather';
+
+function expectImdbRating(rating, label = 'IMDb rating') {
+    expect(rating, `${label} missing`).toBeTypeOf('number');
+    expect(rating, `${label} out of range`).toBeGreaterThan(0);
+    expect(rating, `${label} out of range`).toBeLessThanOrEqual(10);
+}
+
+function expectPercentageRating(rating, label) {
+    expect(rating, `${label} missing`).toBeTypeOf('number');
+    expect(rating, `${label} out of range`).toBeGreaterThanOrEqual(0);
+    expect(rating, `${label} out of range`).toBeLessThanOrEqual(100);
+}
+
+function expectCommonTitleFields(result, source, displayTitle = DISPLAY_TITLE) {
+    expect(result).toBeInstanceOf(Title);
+    expect(result.displayTitle).toBe(displayTitle);
+    expect(result.apiTitle).toContain('Godfather');
+    expect(result.imdbId).toMatch(/^tt\d+$/);
+    expect(result.year).toBe(1972);
+    expect(result.source).toBe(source);
+    expectImdbRating(result.rating);
+}
 
 describe('api-clients integration', () => {
     let configManager;
@@ -47,30 +73,26 @@ describe('api-clients integration', () => {
 
         it('should fetch real data from XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather');
-            expect(result).toBeDefined();
-            expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
-            expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();
-            // Note: XMDB might not always have Metacritic, based on the previous observation
+            const result = await client.fetch(DISPLAY_TITLE);
+            expectCommonTitleFields(result, ApiSource.XMDB);
+            expectPercentageRating(result.mcRating, 'XMDB Metacritic');
+            expect(result.rtRating).toBeNull();
         });
 
         it('should fetch real data from OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather');
-            expect(result).toBeDefined();
-            expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
-            expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();
-            expect(result.mcRating, `Metacritic missing for ${client.source}`).toBeDefined();
-            expect(result.rtRating, `Rotten Tomatoes missing for ${client.source}`).toBeDefined();
+            const result = await client.fetch(DISPLAY_TITLE);
+            expectCommonTitleFields(result, ApiSource.OMDB);
+            expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
+            expectPercentageRating(result.mcRating, 'OMDB Metacritic');
         });
 
         it('should fetch real data from IMDb API Dev', async () => {
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather');
-            expect(result).toBeDefined();
-            expect(result.apiTitle ?? 'The Godfather').toContain('Godfather');
-            expect(result.rating, `Rating missing for ${client.source}`).toBeDefined();
-            expect(result.mcRating, `Metacritic missing for ${client.source}`).toBeDefined();
+            const result = await client.fetch(DISPLAY_TITLE);
+            expectCommonTitleFields(result, ApiSource.IMDBAPI);
+            expectPercentageRating(result.mcRating, 'IMDb API Dev Metacritic');
+            expect(result.rtRating).toBeNull();
         });
     }
 });
