@@ -17,8 +17,7 @@
  */
 import { PlatformAdapter } from './adapter.js';
 import { FlixMonkeyError } from '../core/utils.js';
-
-const HTTP_TIMEOUT = 8000;
+import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
 
 export class UserscriptAdapter extends PlatformAdapter {
     async storageGet(key) {
@@ -53,7 +52,7 @@ export class UserscriptAdapter extends PlatformAdapter {
         return keys.filter(key => key.startsWith(prefix));
     }
 
-    async httpFetch(url, { responseType = 'json', timeout = HTTP_TIMEOUT } = {}) {
+    async httpFetch(url, { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = {}) {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: 'GET',

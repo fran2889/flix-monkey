@@ -90,7 +90,7 @@ describe('Chrome Service Worker', () => {
         setTimeoutSpy.mockRestore();
     });
 
-    it('should fall back to default HTTP_TIMEOUT (8000ms)', async () => {
+    it('should fall back to DEFAULT_FETCH_TIMEOUT (8000ms)', async () => {
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
         messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} }, {}, vi.fn());
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);

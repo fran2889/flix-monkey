@@ -18,6 +18,7 @@
 export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 export const DECORATION_DEBOUNCE_MS = 250;
 export const CLIENT_DISABLE_DURATION = 60 * 60 * 1000; // 1 hour
+export const DEFAULT_FETCH_TIMEOUT = 8000;
 
 export const ApiSource = Object.freeze({
     XMDB: 'xmdb',

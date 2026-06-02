@@ -16,8 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { validateDomain } from '../extension/domains.js';
-
-const HTTP_TIMEOUT = 8000;
+import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
 
 // Firefox-only background script.
 // Uses bare 'browser' global which is available in Firefox's non-bundled background environment.
@@ -31,7 +30,7 @@ browser.runtime.onMessage.addListener(async msg => {
         return { error: validation.error };
     }
 
-    const { responseType = 'json', timeout = HTTP_TIMEOUT } = options;
+    const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     try {

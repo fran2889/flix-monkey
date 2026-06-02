@@ -16,8 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { validateDomain } from '../extension/domains.js';
-
-const HTTP_TIMEOUT = 8000;
+import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type !== 'FM_FETCH') return false;
@@ -29,7 +28,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         return false;
     }
 
-    const { responseType = 'json', timeout = HTTP_TIMEOUT } = options;
+    const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     fetch(url, {
