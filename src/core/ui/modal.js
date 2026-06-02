@@ -24,12 +24,13 @@ export class Modal {
         this.overlay.innerHTML = `
             <div class="fm-modal-content">
                 <div class="fm-modal-header">
-                    <h2 class="fm-modal-title">${this.title}</h2>
+                    <h2 class="fm-modal-title"></h2>
                     <button class="fm-modal-close">×</button>
                 </div>
                 <div class="fm-modal-body"></div>
             </div>
         `;
+        this.overlay.querySelector('.fm-modal-title').textContent = this.title;
 
         this.overlay.querySelector('.fm-modal-close').onclick = () => this.close();
         document.body.appendChild(this.overlay);
