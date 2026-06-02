@@ -71,8 +71,11 @@ export default [
                 {
                     source: 'file',
                     path: 'LICENSE_HEADER.template',
-                    variables: {
-                        year: new Date().getFullYear().toString(),
+                    patterns: {
+                        year: {
+                            pattern: '20\\d{2}(?:-\\d{4})?',
+                            defaultValue: new Date().getFullYear().toString(),
+                        },
                     },
                 },
             ],
