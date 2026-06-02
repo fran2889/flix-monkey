@@ -17,7 +17,7 @@
         "build:chrome": "rollup -c --environment TARGET:chrome && node scripts/package.js",
         "build": "rollup -c && node scripts/package.js",
         "dev": "rollup -cw",
-        "test": "vitest",
+        "test": "vitest run",
         "test:coverage": "vitest run --coverage",
         "test:unit": "vitest run tests/unit",
         "test:ui": "vitest run tests/ui",
