@@ -77,7 +77,6 @@ jobs:
     test-integration:
         runs-on: ubuntu-latest
         needs: install
-        if: ${{ secrets.OMDB_API_KEY != '' && secrets.XMDB_API_KEY != '' }}
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v4
@@ -131,6 +130,10 @@ jobs:
 
     merge-gate:
         runs-on: ubuntu-latest
+        if: always()
         needs: [lint-and-audit, build, test-unit, test-integration, test-ui, test-coverage]
         steps:
+            - name: Check for failures
+              if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+              run: exit 1
             - run: echo "All required jobs succeeded!"
