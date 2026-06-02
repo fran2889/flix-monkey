@@ -28,15 +28,6 @@ jobs:
             - name: Build artifacts
               if: ${{ steps.release.outputs.release_created }}
               run: npm run build
-            - name: Upload artifacts
-              if: ${{ steps.release.outputs.release_created }}
-              uses: actions/upload-artifact@v4
-              with:
-                  name: artifacts
-                  path: |
-                      dist/*.zip
-                      dist/*.xpi
-                      dist/*.user.js
             - name: Upload to Release
               if: ${{ steps.release.outputs.release_created }}
               run: gh release upload "${{ steps.release.outputs.tag_name }}" dist/*.zip dist/*.xpi dist/*.user.js
