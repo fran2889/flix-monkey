@@ -34,7 +34,7 @@ The browser extensions provide a more seamless integration and better performanc
     5. Select the extracted `chrome` folder (or `dist/chrome` if built from source).
     6. Ensure the extension is toggled **On**.
 2. **Firefox**:
-    1. Download the latest `firefox.zip` or `.xpi` from the [Releases page](https://github.com/fran/FlixMonkey/releases) and extract it (or build from source).
+    1. Download the latest `.xpi` from the [Releases page](https://github.com/fran/FlixMonkey/releases) (or build from source).
     2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
     3. Click the **Load Temporary Add-on...** button.
     4. Select the `manifest.json` file inside the extracted `firefox` folder (or `dist/firefox/manifest.json` if built from source).
