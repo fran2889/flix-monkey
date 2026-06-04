@@ -28,6 +28,6 @@ export const ApiSource = Object.freeze({
 
 export const RATE_LIMITS = {
     [ApiSource.XMDB]: 1500,
-    [ApiSource.OMDB]: 0,
+    [ApiSource.OMDB]: 250,
     [ApiSource.IMDBAPI]: 1000,
 };
