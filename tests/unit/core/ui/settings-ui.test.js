@@ -20,12 +20,14 @@ import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
 
 describe('SettingsUI', () => {
-    let adapter;
+    let mockAdapter;
     let settingsUI;
     let container;
+    let mockCacheManager;
+    let mockDisabledClientsManager;
 
     beforeEach(() => {
-        adapter = {
+        mockAdapter = {
             storageGetAll: vi.fn().mockResolvedValue({
                 xmdbApiKey: 'test-xmdb-key',
                 omdbApiKey: 'test-omdb-key',
@@ -34,7 +36,13 @@ describe('SettingsUI', () => {
             }),
             storageSetMany: vi.fn().mockResolvedValue(),
         };
-        settingsUI = new SettingsUI(adapter);
+        mockCacheManager = {
+            clear: vi.fn().mockResolvedValue(),
+        };
+        mockDisabledClientsManager = {
+            resetAll: vi.fn().mockResolvedValue([]),
+        };
+        settingsUI = new SettingsUI(mockAdapter, undefined, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
         document.body.innerHTML = '';
         document.body.appendChild(container);
@@ -71,7 +79,7 @@ describe('SettingsUI', () => {
     });
 
     it('should populate fields with default values if adapter returns nothing', async () => {
-        adapter.storageGetAll.mockResolvedValue(null);
+        mockAdapter.storageGetAll.mockResolvedValue(null);
         await settingsUI.render(container);
 
         const xmdbField = CONFIG_FIELDS.find(f => f.key === 'xmdbApiKey');
@@ -99,7 +107,7 @@ describe('SettingsUI', () => {
         const saveBtn = container.querySelector('#fm-saveBtn');
         await saveBtn.click();
 
-        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
         expect(container.querySelector('#fm-status').textContent).toBe('Please fix errors before saving.');
     });
 
@@ -111,7 +119,7 @@ describe('SettingsUI', () => {
         const saveBtn = container.querySelector('#fm-saveBtn');
         await saveBtn.click();
 
-        expect(adapter.storageSetMany).toHaveBeenCalledWith(
+        expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
             expect.objectContaining({
                 xmdbApiKey: 'new-api-key',
             })
@@ -123,10 +131,11 @@ describe('SettingsUI', () => {
         window.confirm = vi.fn(() => true);
         await settingsUI.render(container);
         const clearBtn = container.querySelector('#fm-clearCacheBtn');
-        await clearBtn.click();
+        clearBtn.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
-        expect(adapter.storageSetMany).toHaveBeenCalledWith({ fm_cache: '{}' });
+        expect(mockCacheManager.clear).toHaveBeenCalled();
         expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
     });
 
@@ -134,20 +143,22 @@ describe('SettingsUI', () => {
         window.confirm = vi.fn(() => false);
         await settingsUI.render(container);
         const clearBtn = container.querySelector('#fm-clearCacheBtn');
-        await clearBtn.click();
+        clearBtn.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
-        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(container.querySelector('#fm-status').textContent).toBe('');
     });
 
-    it('should reset disabled clients when clicking Reset Disabled Clients', async () => {
+    it('should reset clients when clicking Reset Disabled Clients and confirmed', async () => {
         window.confirm = vi.fn(() => true);
         await settingsUI.render(container);
         const resetBtn = container.querySelector('#fm-resetClientsBtn');
-        await resetBtn.click();
+        resetBtn.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(window.confirm).toHaveBeenCalledWith('Re-enable all disabled API clients?');
-        expect(adapter.storageSetMany).toHaveBeenCalledWith({ fm_disabled_clients: '[]' });
+        expect(mockDisabledClientsManager.resetAll).toHaveBeenCalled();
         expect(container.querySelector('#fm-status').textContent).toBe('API clients re-enabled.');
     });
 });

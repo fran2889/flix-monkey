@@ -17,7 +17,14 @@
  */
 import { WebExtensionAdapter } from '../../platform/webextension.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
+import { ConfigManager } from '../../core/config-manager.js';
+import { CacheManager } from '../../core/cache.js';
+import { DisabledClientsManager } from '../../core/disabled-clients.js';
 
 const adapter = new WebExtensionAdapter();
-const ui = new SettingsUI(adapter);
+const config = new ConfigManager(adapter);
+const cacheManager = new CacheManager(adapter, config);
+const disabledClientsManager = new DisabledClientsManager(adapter);
+
+const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
 ui.render(document.body);

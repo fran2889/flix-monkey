@@ -23,6 +23,14 @@ describe('SettingsUI Component', () => {
         storageGetAll: vi.fn().mockResolvedValue({}),
         storageSetMany: vi.fn().mockResolvedValue({}),
     };
+    const mockManagers = {
+        cacheManager: {
+            clear: vi.fn().mockResolvedValue(undefined),
+        },
+        disabledClientsManager: {
+            resetAll: vi.fn().mockResolvedValue([]),
+        },
+    };
 
     beforeEach(() => {
         document.head.innerHTML = '';
@@ -32,7 +40,12 @@ describe('SettingsUI Component', () => {
 
     it('should render the settings container and inject styles', async () => {
         const container = document.getElementById('container');
-        const ui = new SettingsUI(mockAdapter);
+        const ui = new SettingsUI(
+            mockAdapter,
+            undefined,
+            mockManagers.cacheManager,
+            mockManagers.disabledClientsManager
+        );
         await ui.render(container);
 
         expect(container.classList.contains('fm-settings-container')).toBe(true);
@@ -41,7 +54,12 @@ describe('SettingsUI Component', () => {
 
     it('should render title, fields, and action buttons', async () => {
         const container = document.getElementById('container');
-        const ui = new SettingsUI(mockAdapter);
+        const ui = new SettingsUI(
+            mockAdapter,
+            undefined,
+            mockManagers.cacheManager,
+            mockManagers.disabledClientsManager
+        );
         await ui.render(container);
 
         expect(container.querySelector('h1').textContent).toBe('FlixMonkey Settings');

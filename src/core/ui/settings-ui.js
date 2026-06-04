@@ -19,10 +19,15 @@ import { CONFIG_FIELDS } from '../config-fields.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 export class SettingsUI {
-    constructor(adapter, fields = CONFIG_FIELDS) {
+    constructor(adapter, fields = CONFIG_FIELDS, cacheManager, disabledClientsManager) {
         this.adapter = adapter;
         this.fields = fields;
+        this.#cacheManager = cacheManager;
+        this.#disabledClientsManager = disabledClientsManager;
     }
+
+    #cacheManager;
+    #disabledClientsManager;
 
     async render(container) {
         this._injectStyles();
@@ -169,7 +174,7 @@ export class SettingsUI {
 
     async clearCache() {
         if (window.confirm('Clear all cached ratings?')) {
-            await this.adapter.storageSetMany({ fm_cache: '{}' });
+            await this.#cacheManager.clear();
             const statusDiv = document.getElementById('fm-status');
             statusDiv.textContent = 'Cache cleared.';
             statusDiv.style.color = 'green';
@@ -178,7 +183,7 @@ export class SettingsUI {
 
     async resetClients() {
         if (window.confirm('Re-enable all disabled API clients?')) {
-            await this.adapter.storageSetMany({ fm_disabled_clients: '[]' });
+            await this.#disabledClientsManager.resetAll();
             const statusDiv = document.getElementById('fm-status');
             statusDiv.textContent = 'API clients re-enabled.';
             statusDiv.style.color = 'green';

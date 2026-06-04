@@ -170,10 +170,10 @@ export class OmdbApiClient extends BaseApiClient {
         return { title: displayTitle };
     }
 
-    async getDetails({ title: t }, _displayTitle) {
+    async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        logger.debug(`Fetching OMDB details for title: "${t}"${_displayTitle ? ` ("${_displayTitle}")` : ''}`);
+        logger.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
             logger.debug(`No search results found in OMDB for: "${t}"`);

@@ -20,7 +20,6 @@ const USERSCRIPT_BANNER = `// ==UserScript==
 // @grant        GM_deleteValue
 // @grant        GM_listValues
 // @grant        GM_registerMenuCommand
-// @require      https://openuserjs.org/src/libs/sizzle/GM_config.js
 // @connect      www.omdbapi.com
 // @connect      xmdbapi.com
 // @connect      api.imdbapi.dev
