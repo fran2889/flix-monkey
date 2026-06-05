@@ -77,9 +77,7 @@ export class CacheManager {
     async clear() {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
-        for (const key of keys) {
-            await this.#adapter.storageDelete(key);
-        }
+        await Promise.all(keys.map(key => this.#adapter.storageDelete(key)));
         logger.debug(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }
