@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../src/core/config-fields.js';
+import { logger } from '../../src/core/logger.js';
 
 describe('ConfigManager Integration', () => {
     describe('CONFIG_DEFAULTS integration', () => {
@@ -28,15 +29,19 @@ describe('ConfigManager Integration', () => {
     });
 
     it('should handle errors in the getter function and fall back', () => {
+        const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
         const throwingGetter = () => {
             throw new Error('Adapter error');
         };
         const config = new ConfigManager(throwingGetter);
 
-        // Should fall back to global default when getter throws
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
-        // Should fall back to provided fallback when getter throws
         expect(config.get('overlayCorner', 'top-left')).toBe('top-left');
+        expect(warnSpy).toHaveBeenCalledWith(
+            'ConfigManager.get error, using fallback',
+            expect.objectContaining({ key: 'overlayCorner' })
+        );
+        warnSpy.mockRestore();
     });
 
     it('should handle null/undefined from getter and fall back to CONFIG_DEFAULTS', () => {
