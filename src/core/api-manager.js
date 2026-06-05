@@ -83,14 +83,16 @@ export class ApiClientManager {
 
         const status = await this.#client.getStatus();
         if (!status.healthy) {
-            await this.#cache.write(displayTitle, Title.notFound(displayTitle));
-            return null;
+            const notFound = Title.notFound(displayTitle);
+            await this.#cache.write(displayTitle, notFound);
+            return notFound;
         }
 
         const data = await this.#client.fetch(displayTitle);
         if (!data) {
-            await this.#cache.write(displayTitle, Title.notFound(displayTitle));
-            return null;
+            const notFound = Title.notFound(displayTitle);
+            await this.#cache.write(displayTitle, notFound);
+            return notFound;
         }
 
         await this.#cache.write(displayTitle, data);

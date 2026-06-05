@@ -20,7 +20,6 @@ import { DisabledClientsManager } from './disabled-clients.js';
 import { ApiClientManager } from './api-manager.js';
 import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
-import { Title } from './title.js';
 import { DECORATION_DEBOUNCE_MS } from './constants.js';
 import { ConfigManager } from './config-manager.js';
 import { logger } from './logger.js';
@@ -88,7 +87,7 @@ export class FlixMonkeyApp {
 
         const data = await promise;
         if (!this.#renderer.hasOverlay(container)) {
-            this.#renderer.injectOverlay(container, data ?? Title.notFound(displayTitle));
+            this.#renderer.injectOverlay(container, data);
             this.#renderer.applyFade(container, data, fadeable);
         }
     }

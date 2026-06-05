@@ -247,7 +247,7 @@ describe('App', () => {
 
     it('should trigger decoration on replaceState', async () => {
         const mockAdapter = createMockAdapter();
-        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(null);
+        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
 
         appRef = startApp(mockAdapter);
 

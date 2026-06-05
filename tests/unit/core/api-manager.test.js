@@ -69,7 +69,9 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
         const result = await manager.getData('Some Title');
-        expect(result).toBeNull();
+        expect(result).not.toBeNull();
+        expect(result.hasRating).toBe(false);
+        expect(result.displayTitle).toBe('Some Title');
         expect(client.fetch).toHaveBeenCalled();
     });
 
@@ -82,7 +84,7 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
 
         const result = await manager.getData('Unknown Movie');
-        expect(result).toBeNull();
+        expect(result.hasRating).toBe(false);
         expect(mockCache.write).toHaveBeenCalledWith(
             'Unknown Movie',
             expect.objectContaining({
@@ -101,7 +103,8 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, unhealthyClient);
 
         const result = await manager.getData('Test Movie');
-        expect(result).toBeNull();
+        expect(result).not.toBeNull();
+        expect(result.hasRating).toBe(false);
         expect(unhealthyClient.fetch).not.toHaveBeenCalled();
     });
 
