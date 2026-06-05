@@ -58,7 +58,8 @@ export class RequestQueue {
             let lastGlobal = 0;
             if (this.#globalSyncKey && this.#adapter) {
                 const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                lastGlobal = str ? parseInt(str, 10) : 0;
+                const parsed = parseInt(str, 10);
+                lastGlobal = Number.isNaN(parsed) ? 0 : parsed;
             }
 
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));

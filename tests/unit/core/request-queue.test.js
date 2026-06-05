@@ -78,4 +78,15 @@ describe('RequestQueue', () => {
 
         expect(results).toEqual(['first', 'high', 'low']);
     });
+
+    it('should fall back to 0 when stored timestamp is not a valid number', async () => {
+        const mockAdapter = {
+            storageGet: vi.fn().mockResolvedValue('corrupted'),
+            storageSet: vi.fn(),
+        };
+        const queue = new RequestQueue(100, 'sync-key', mockAdapter);
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+        await queue.enqueue('url', 0, fetchFn, 'json');
+        expect(fetchFn).toHaveBeenCalledOnce();
+    });
 });
