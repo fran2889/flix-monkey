@@ -33,6 +33,9 @@ export class FlixMonkeyApp {
     #surfaces;
     #inFlight = new Map();
     #debouncedDecorate;
+    #observer = null;
+    #initialised = false;
+    #boundDisconnect = null;
 
     constructor(cache, api, renderer, surfaces) {
         this.#cache = cache;
@@ -42,6 +45,15 @@ export class FlixMonkeyApp {
         this.#debouncedDecorate = debounce(() => {
             runIdle(() => this.decorateRoot(document));
         }, DECORATION_DEBOUNCE_MS);
+    }
+
+    disconnect() {
+        this.#observer?.disconnect();
+        this.#observer = null;
+        if (this.#boundDisconnect) {
+            window.removeEventListener('beforeunload', this.#boundDisconnect);
+            this.#boundDisconnect = null;
+        }
     }
 
     async clearCache() {
@@ -114,19 +126,28 @@ export class FlixMonkeyApp {
 
         window.addEventListener('popstate', () => this.#debouncedDecorate());
 
-        const observer = new MutationObserver(mutations => {
-            const hasElements = mutations.some(m =>
-                Array.from(m.addedNodes).some(n => n.nodeType === Node.ELEMENT_NODE)
-            );
-            if (hasElements) this.#debouncedDecorate();
+        this.#observer = new MutationObserver(mutations => {
+            try {
+                const hasElements = mutations.some(m =>
+                    Array.from(m.addedNodes).some(n => n.nodeType === Node.ELEMENT_NODE)
+                );
+                if (hasElements) this.#debouncedDecorate();
+            } catch (err) {
+                logger.error('Mutation handler error', err);
+            }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
     init() {
+        // #initialised is never reset — one app instance, one lifetime.
+        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
+        this.#initialised = true;
         this.#renderer.injectStyles();
         this.#initNavigationObservers();
         this.decorateRoot(document);
+        this.#boundDisconnect = () => this.disconnect();
+        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 }
 
@@ -144,5 +165,6 @@ export function startApp(adapter) {
     return {
         clearCache: () => app.clearCache(),
         resetDisabledClients: () => app.resetDisabledClients(),
+        disconnect: () => app.disconnect(),
     };
 }
