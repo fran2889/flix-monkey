@@ -32,6 +32,9 @@ export class RequestQueue {
     enqueue(url, priority, fetchFn, responseType) {
         return new Promise((resolve, reject) => {
             this.#queue.push({ url, priority, resolve, reject, fetchFn, responseType });
+            if (this.#queue.length > 1) {
+                this.#queue.sort((a, b) => b.priority - a.priority);
+            }
             this.#process();
         });
     }
@@ -50,10 +53,6 @@ export class RequestQueue {
         this.#isProcessing = true;
 
         while (this.#queue.length > 0) {
-            if (this.#queue.length > 1) {
-                this.#queue.sort((a, b) => b.priority - a.priority);
-            }
-
             const now = Date.now();
             let lastGlobal = 0;
             if (this.#globalSyncKey && this.#adapter) {
