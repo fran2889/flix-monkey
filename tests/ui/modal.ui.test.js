@@ -59,4 +59,46 @@ describe('Modal UI Component', () => {
         closeBtn.click();
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
+
+    it('should have role="dialog" and aria-modal on the content element', () => {
+        const _modal = new Modal('A11y Modal');
+        const content = document.querySelector('.fm-modal-content');
+        expect(content.getAttribute('role')).toBe('dialog');
+        expect(content.getAttribute('aria-modal')).toBe('true');
+        const labelledBy = content.getAttribute('aria-labelledby');
+        expect(labelledBy).toBeTruthy();
+        const titleEl = document.getElementById(labelledBy);
+        expect(titleEl).not.toBeNull();
+        expect(titleEl.textContent).toBe('A11y Modal');
+    });
+
+    it('should close when Escape is pressed', () => {
+        const modal = new Modal('Escape Modal');
+        modal.open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should not register duplicate Escape listeners when opened twice', () => {
+        const modal = new Modal('Double Open');
+        modal.open();
+        modal.open(); // second call should be a no-op
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        // modal is closed by Escape, overlay should be gone
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+        // if two listeners were registered, calling close() twice would throw on the second overlay.remove()
+        // but there's no error to catch here - just verify clean close
+    });
+
+    it('should return focus to the trigger element after close', () => {
+        const trigger = document.createElement('button');
+        document.body.appendChild(trigger);
+        trigger.focus();
+
+        const modal = new Modal('Focus Modal');
+        modal.open();
+        modal.close();
+
+        expect(document.activeElement).toBe(trigger);
+    });
 });

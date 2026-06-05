@@ -17,21 +17,24 @@
  */
 
 export class Modal {
+    #returnFocus = null;
+    #escHandler = null;
+
     constructor(title) {
         this.title = title;
+        const titleId = `fm-modal-title-${crypto.randomUUID()}`;
         this.overlay = document.createElement('div');
         this.overlay.className = 'fm-modal-overlay';
         this.overlay.innerHTML = `
-            <div class="fm-modal-content">
+            <div class="fm-modal-content" role="dialog" aria-modal="true" aria-labelledby="${titleId}" tabindex="-1">
                 <div class="fm-modal-header">
-                    <h2 class="fm-modal-title"></h2>
+                    <h2 class="fm-modal-title" id="${titleId}"></h2>
                     <button class="fm-modal-close">×</button>
                 </div>
                 <div class="fm-modal-body"></div>
             </div>
         `;
         this.overlay.querySelector('.fm-modal-title').textContent = this.title;
-
         this.overlay.querySelector('.fm-modal-close').onclick = () => this.close();
         document.body.appendChild(this.overlay);
     }
@@ -41,10 +44,22 @@ export class Modal {
     }
 
     open() {
+        if (this.#escHandler) return;
+        this.#returnFocus = document.activeElement;
         this.overlay.style.display = 'flex';
+        this.overlay.querySelector('.fm-modal-content').focus();
+        this.#escHandler = e => {
+            if (e.key === 'Escape') this.close();
+        };
+        document.addEventListener('keydown', this.#escHandler);
     }
 
     close() {
+        if (this.#escHandler) {
+            document.removeEventListener('keydown', this.#escHandler);
+            this.#escHandler = null;
+        }
         this.overlay.remove();
+        this.#returnFocus?.focus();
     }
 }
