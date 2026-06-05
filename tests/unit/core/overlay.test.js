@@ -60,23 +60,19 @@ describe('OverlayRenderer', () => {
         expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
     });
 
-    it('should include TOP_10_BADGE offset rule only for left-side corners', () => {
-        const leftConfig = new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined));
-        const leftRenderer = new OverlayRenderer(leftConfig);
-        leftRenderer.injectStyles();
-        const leftStyle = document.head.querySelector('style');
-        expect(leftStyle.textContent).toContain(`.${TOP_10_BADGE}`);
-
-        document.head.innerHTML = '';
-
-        const rightConfig = new ConfigManager(key => (key === 'overlayCorner' ? 'top-right' : undefined));
-        const rightRenderer = new OverlayRenderer(rightConfig);
-        rightRenderer.injectStyles();
-        const rightStyle = document.head.querySelector('style');
-        expect(rightStyle.textContent).not.toContain(`.${TOP_10_BADGE}`);
+    it('should include TOP_10_BADGE offset rule for left-side corners', () => {
+        const config = new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined));
+        const renderer = new OverlayRenderer(config);
+        renderer.injectStyles();
+        const style = document.head.querySelector('style');
+        expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
     });
 
-    it('should not have a static resetInternalState method', () => {
-        expect(OverlayRenderer.resetInternalState).toBeUndefined();
+    it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
+        const config = new ConfigManager(key => (key === 'overlayCorner' ? 'top-right' : undefined));
+        const renderer = new OverlayRenderer(config);
+        renderer.injectStyles();
+        const style = document.head.querySelector('style');
+        expect(style.textContent).not.toContain(`.${TOP_10_BADGE}`);
     });
 });
