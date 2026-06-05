@@ -58,6 +58,7 @@ export class CacheManager {
             const expired = entry.expires !== null && Date.now() > entry.expires;
             return expired ? null : Title.fromJSON(entry.data);
         } catch {
+            logger.warn('Cache entry corrupt, treating as miss', { key });
             return null;
         }
     }

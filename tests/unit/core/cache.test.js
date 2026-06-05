@@ -19,6 +19,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CacheManager } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
+import { logger } from '../../../src/core/logger.js';
 
 describe('CacheManager', () => {
     let adapter;
@@ -121,9 +122,14 @@ describe('CacheManager', () => {
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
     });
 
-    it('should return null when JSON parsing fails in read', async () => {
+    it('should return null and log a warning when JSON parsing fails in read', async () => {
+        const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
         adapter.storageGet.mockResolvedValue('invalid-json{');
+
         const result = await cacheManager.read('Some Title');
+
         expect(result).toBeNull();
+        expect(warnSpy).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', { key: 'fmc:some_title' });
+        warnSpy.mockRestore();
     });
 });

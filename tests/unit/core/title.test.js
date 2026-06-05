@@ -48,9 +48,15 @@ describe('Title', () => {
             expect(title.displayTitle).toBe('JSON Title');
         });
 
-        it('should create a Title instance when JSON is null', () => {
+        it('should return null when JSON is null', () => {
             const title = Title.fromJSON(null);
-            expect(title).toBeInstanceOf(Title);
+            expect(title).toBeNull();
+        });
+
+        it('should return null for non-object input', () => {
+            expect(Title.fromJSON(null)).toBeNull();
+            expect(Title.fromJSON('string')).toBeNull();
+            expect(Title.fromJSON(42)).toBeNull();
         });
     });
 

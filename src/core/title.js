@@ -56,7 +56,8 @@ export class Title {
     }
 
     static fromJSON(obj) {
-        return new Title(obj ?? {});
+        if (!obj || typeof obj !== 'object') return null;
+        return new Title(obj);
     }
 
     static notFound(displayTitle) {
