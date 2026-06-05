@@ -182,4 +182,24 @@ describe('SettingsUI', () => {
 
         expect(saveBtn.disabled).toBe(false);
     });
+
+    it('should pass input.checked (not input.value) to validate for checkbox fields', async () => {
+        const validateFn = vi.fn().mockReturnValue(null);
+        const checkboxField = {
+            key: 'testCheckbox',
+            label: 'Test Checkbox',
+            type: 'checkbox',
+            default: false,
+            validate: validateFn,
+        };
+        const ui = new SettingsUI(mockAdapter, [checkboxField], mockCacheManager, mockDisabledClientsManager);
+        await ui.render(container);
+
+        const input = container.querySelector('#fm-testCheckbox');
+        input.checked = true;
+
+        ui._validate();
+
+        expect(validateFn).toHaveBeenCalledWith(true);
+    });
 });

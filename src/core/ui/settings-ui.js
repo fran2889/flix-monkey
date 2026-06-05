@@ -126,7 +126,8 @@ export class SettingsUI {
             const input = document.getElementById(`fm-${field.key}`);
             if (!input) return;
 
-            const errorMsg = field.validate ? field.validate(input.value) : null;
+            const fieldValue = input.type === 'checkbox' ? input.checked : input.value;
+            const errorMsg = field.validate ? field.validate(fieldValue) : null;
             let errorEl = input.parentElement.querySelector('.error-message');
 
             if (errorMsg) {
