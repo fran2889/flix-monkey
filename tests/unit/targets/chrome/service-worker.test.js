@@ -61,18 +61,20 @@ describe('Chrome Service Worker', () => {
         expect(result).toBe(false);
     });
 
-    it('should reject requests to disallowed domains', () => {
+    it('should reject requests to disallowed domains', async () => {
         const sendResponse = vi.fn();
         const result = messageListener({ type: 'FM_FETCH', url: 'http://malicious.com' }, {}, sendResponse);
+        expect(result).toBe(true);
+        await Promise.resolve();
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Domain not allowed' });
-        expect(result).toBe(false);
     });
 
-    it('should handle invalid URLs', () => {
+    it('should handle invalid URLs', async () => {
         const sendResponse = vi.fn();
         const result = messageListener({ type: 'FM_FETCH', url: 'not-a-url' }, {}, sendResponse);
+        expect(result).toBe(true);
+        await Promise.resolve();
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Invalid URL' });
-        expect(result).toBe(false);
     });
 
     it('should respect custom timeout in options', async () => {

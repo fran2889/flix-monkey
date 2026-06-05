@@ -16,18 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { handleFetchMessage } from '../extension/fetch-proxy.js';
-import { validateDomain } from '../extension/domains.js';
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type !== 'FM_FETCH') return false;
     const { url, options = {} } = msg;
-
-    const validation = validateDomain(url);
-    if (!validation.valid) {
-        sendResponse({ error: validation.error });
-        return false;
-    }
-
     handleFetchMessage(url, options).then(sendResponse);
     return true; // keep message channel open for async sendResponse
 });
