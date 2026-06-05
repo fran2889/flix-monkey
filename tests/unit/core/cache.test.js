@@ -20,6 +20,7 @@ import { CacheManager } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { logger } from '../../../src/core/logger.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('CacheManager', () => {
     let adapter;
@@ -27,12 +28,12 @@ describe('CacheManager', () => {
     let config;
 
     beforeEach(() => {
-        adapter = {
+        adapter = createMockAdapter({
             storageGet: vi.fn(),
             storageSet: vi.fn(),
             storageDelete: vi.fn(),
             storageGetKeys: vi.fn(),
-        };
+        });
         config = new ConfigManager();
         cacheManager = new CacheManager(adapter, config);
     });

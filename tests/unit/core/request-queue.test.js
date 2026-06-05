@@ -17,6 +17,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { RequestQueue } from '../../../src/core/request-queue.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
@@ -33,12 +34,12 @@ describe('RequestQueue', () => {
 
     it('should synchronize across instances using storage', async () => {
         let sharedTime = Date.now().toString();
-        const mockAdapter = {
+        const mockAdapter = createMockAdapter({
             storageGet: vi.fn(async () => sharedTime),
             storageSet: vi.fn(async (k, v) => {
                 sharedTime = v;
             }),
-        };
+        });
 
         const interval = 100;
         const queue1 = new RequestQueue(interval, 'sync-key', mockAdapter);
@@ -80,10 +81,7 @@ describe('RequestQueue', () => {
     });
 
     it('should fall back to 0 when stored timestamp is not a valid number', async () => {
-        const mockAdapter = {
-            storageGet: vi.fn().mockResolvedValue('corrupted'),
-            storageSet: vi.fn(),
-        };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('corrupted') });
         const queue = new RequestQueue(100, 'sync-key', mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');

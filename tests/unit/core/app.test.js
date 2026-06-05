@@ -21,6 +21,7 @@ import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { logger } from '../../../src/core/logger.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
@@ -55,11 +56,7 @@ describe('App', () => {
     });
 
     it('should initialize and hold state', () => {
-        const mockAdapter = {
-            storageGet: vi.fn().mockResolvedValue({}),
-            storageSet: vi.fn(),
-            httpFetch: vi.fn(),
-        };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);
         expect(appRef.clearCache).toBeDefined();
         expect(appRef.resetDisabledClients).toBeDefined();
@@ -78,7 +75,7 @@ describe('App', () => {
     });
 
     it('should deduplicate in-flight requests for the same title', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter();
 
         // Initialize DOM with multiple containers sharing the same title
         document.body.innerHTML = `
@@ -109,7 +106,7 @@ describe('App', () => {
     });
 
     it('should debounce navigation events', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -147,7 +144,7 @@ describe('App', () => {
     });
 
     it('should respond to DOM mutations', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
 
         appRef = startApp(mockAdapter);
@@ -176,7 +173,7 @@ describe('App', () => {
     });
 
     it('should trigger new decoration when a container is replaced', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter();
         const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
 
         document.body.innerHTML = `
@@ -213,12 +210,7 @@ describe('App', () => {
     });
 
     it('should inject loading overlay while fetching', async () => {
-        const mockAdapter = {
-            storageGet: vi.fn().mockResolvedValue(null),
-            storageSet: vi.fn(),
-            httpFetch: vi.fn(),
-            configGet: vi.fn().mockReturnValue(null),
-        };
+        const mockAdapter = createMockAdapter({ configGet: vi.fn().mockReturnValue(null) });
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -254,7 +246,7 @@ describe('App', () => {
     });
 
     it('should trigger decoration on replaceState', async () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter();
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(null);
 
         appRef = startApp(mockAdapter);
@@ -293,7 +285,7 @@ describe('App', () => {
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
         appRef = startApp(mockAdapter);
@@ -307,7 +299,7 @@ describe('App', () => {
     });
 
     it('should disconnect the MutationObserver when disconnect() is called', () => {
-        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);
 
         const disconnectSpy = vi.spyOn(mockMutationObserverInstance, 'disconnect');

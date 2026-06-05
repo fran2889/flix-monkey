@@ -22,6 +22,8 @@ export function createMockAdapter(overrides = {}) {
         httpFetch: vi.fn().mockResolvedValue({}),
         storageGet: vi.fn().mockResolvedValue(null),
         storageSet: vi.fn().mockResolvedValue(undefined),
+        storageDelete: vi.fn().mockResolvedValue(undefined),
+        storageGetKeys: vi.fn().mockResolvedValue([]),
         ...overrides,
     };
 }
