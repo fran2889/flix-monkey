@@ -22,9 +22,11 @@ import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
 
 export class WebExtensionAdapter extends PlatformAdapter {
     #configData = {};
+    #configLoaded = false;
 
     setConfigData(data) {
         this.#configData = data;
+        this.#configLoaded = true;
     }
 
     async storageGet(key) {
@@ -68,7 +70,10 @@ export class WebExtensionAdapter extends PlatformAdapter {
         return response.data;
     }
 
+    // setConfigData() must be called first (after reading browser.storage.local).
+    // Returns undefined for all keys until then; ConfigManager falls back to CONFIG_DEFAULTS.
     configGet(key) {
+        if (!this.#configLoaded) return undefined;
         return this.#configData[key];
     }
 }

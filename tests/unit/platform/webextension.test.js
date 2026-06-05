@@ -122,4 +122,10 @@ describe('WebExtensionAdapter', () => {
         adapter.setConfigData({});
         expect(adapter.configGet('missing')).toBeUndefined();
     });
+
+    it('configGet should return undefined for all keys before setConfigData is called', () => {
+        const freshAdapter = new WebExtensionAdapter();
+        expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
+        expect(freshAdapter.configGet('xmdbApiKey')).toBeUndefined();
+    });
 });
