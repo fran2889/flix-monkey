@@ -160,6 +160,7 @@ export function startApp(adapter) {
         clearCache: () => app.clearCache(),
         resetDisabledClients: () => app.resetDisabledClients(),
         disconnect: () => app.disconnect(),
+        refreshStyles: () => renderer.injectStyles(),
     };
 }
 

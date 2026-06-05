@@ -40,17 +40,22 @@ describe('OverlayRenderer', () => {
         renderer.injectStyles();
         const styles = document.head.querySelectorAll('style');
         expect(styles).toHaveLength(1);
+        expect(document.head.querySelector('#fm-overlay-styles')).not.toBeNull();
     });
 
-    it('should allow two separate instances to each inject styles independently', () => {
-        const rendererA = new OverlayRenderer(new ConfigManager());
-        const rendererB = new OverlayRenderer(new ConfigManager());
+    it('should update the existing style tag when injectStyles is called again', () => {
+        const configLeft = new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined));
+        const configRight = new ConfigManager(key => (key === 'overlayCorner' ? 'top-right' : undefined));
+        const rendererA = new OverlayRenderer(configLeft);
+        const rendererB = new OverlayRenderer(configRight);
 
         rendererA.injectStyles();
         expect(document.head.querySelectorAll('style')).toHaveLength(1);
+        expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('left:6px');
 
         rendererB.injectStyles();
-        expect(document.head.querySelectorAll('style')).toHaveLength(2);
+        expect(document.head.querySelectorAll('style')).toHaveLength(1);
+        expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('right:6px');
     });
 
     it('should use TOP_10_BADGE constant in injected CSS', () => {

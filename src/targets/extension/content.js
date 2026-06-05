@@ -26,10 +26,17 @@ import { startApp } from '../../core/app.js';
 
     // Register storage listener BEFORE starting the app to ensure any configuration changes
     // are reflected in the 'stored' object which the adapter uses for synchronous reads.
+    // The ref wrapper avoids a temporal dead zone: the listener closure captures the object,
+    // and app is assigned into it synchronously before any storage events can fire.
+    const appRef = { app: null };
     browser.storage.onChanged.addListener(changes => {
         Object.entries(changes).forEach(([k, v]) => {
             stored[k] = v.newValue;
         });
+        if ('overlayCorner' in changes) {
+            appRef.app?.refreshStyles();
+        }
     });
-    startApp(adapter);
+
+    appRef.app = startApp(adapter);
 })();

@@ -22,15 +22,13 @@ export class OverlayRenderer {
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
     #config;
-    #stylesInjected = false;
 
     constructor(config) {
         this.#config = config;
     }
 
     injectStyles() {
-        if (this.#stylesInjected) return;
-        this.#stylesInjected = true;
+        const existing = document.getElementById('fm-overlay-styles');
         const cornerStyles = {
             'top-left': 'top:6px;left:6px;',
             'top-right': 'top:6px;right:6px;',
@@ -86,9 +84,14 @@ export class OverlayRenderer {
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
         `;
-        const style = document.createElement('style');
-        style.textContent = cssText;
-        document.head.appendChild(style);
+        if (existing) {
+            existing.textContent = cssText;
+        } else {
+            const style = document.createElement('style');
+            style.id = 'fm-overlay-styles';
+            style.textContent = cssText;
+            document.head.appendChild(style);
+        }
     }
 
     #createBadgeElement(label, value, labelClassName = '', valueClassName = '') {
