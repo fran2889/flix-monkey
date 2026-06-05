@@ -15,37 +15,14 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { validateDomain } from '../extension/domains.js';
-import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
+import { handleFetchMessage } from '../extension/fetch-proxy.js';
 
 // Firefox-only background script.
-// Uses bare 'browser' global which is available in Firefox's non-bundled background environment.
-// For Chrome compatibility, use the bundled service-worker.js instead.
+// Uses bare 'browser' global available in Firefox's non-bundled background environment.
 browser.runtime.onMessage.addListener(async msg => {
     if (msg.type !== 'FM_FETCH') return;
     const { url, options = {} } = msg;
-
-    const validation = validateDomain(url);
-    if (!validation.valid) {
-        return { error: validation.error };
-    }
-
-    const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    try {
-        const res = await fetch(url, {
-            signal: controller.signal,
-            headers: { 'Accept-Language': 'en-US,en;q=0.9' },
-        });
-        clearTimeout(timeoutId);
-        if (!res.ok) return { error: `HTTP ${res.status}`, status: res.status };
-        const data = responseType === 'json' ? await res.json() : await res.text();
-        return { data };
-    } catch (err) {
-        clearTimeout(timeoutId);
-        return { error: err.message };
-    }
+    return handleFetchMessage(url, options);
 });
 
 browser.action.onClicked.addListener(() => {
