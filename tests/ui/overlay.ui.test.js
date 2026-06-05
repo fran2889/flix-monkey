@@ -23,7 +23,6 @@ describe('Overlay UI Interactions', () => {
     beforeEach(() => {
         document.head.innerHTML = '';
         document.body.innerHTML = '';
-        OverlayRenderer.resetInternalState();
     });
 
     it('should inject styles into head', () => {

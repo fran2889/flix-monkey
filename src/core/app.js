@@ -108,7 +108,6 @@ export class FlixMonkeyApp {
         FlixMonkeyApp.#isNavigationPatched = false;
         history.pushState = FlixMonkeyApp.#originalPushState;
         history.replaceState = FlixMonkeyApp.#originalReplaceState;
-        OverlayRenderer.resetInternalState();
     }
 
     #initNavigationObservers() {

@@ -15,25 +15,22 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { TOP_10_BADGE } from './constants.js';
+
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
     #config;
-    static #stylesInjected = false;
-
-    /** @internal for testing only */
-    static resetInternalState() {
-        OverlayRenderer.#stylesInjected = false;
-    }
+    #stylesInjected = false;
 
     constructor(config) {
         this.#config = config;
     }
 
     injectStyles() {
-        if (OverlayRenderer.#stylesInjected) return;
-        OverlayRenderer.#stylesInjected = true;
+        if (this.#stylesInjected) return;
+        this.#stylesInjected = true;
         const cornerStyles = {
             'top-left': 'top:6px;left:6px;',
             'top-right': 'top:6px;right:6px;',
@@ -83,7 +80,7 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
         if (corner.includes('left')) {
-            cssText += `\n            .title-card-top-10 .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+            cssText += `\n            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
