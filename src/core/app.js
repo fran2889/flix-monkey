@@ -25,6 +25,11 @@ import { ConfigManager } from './config-manager.js';
 import { logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
 
+let _appStarted = false;
+let _navigationPatched = false;
+const _originalPushState = history.pushState;
+const _originalReplaceState = history.replaceState;
+
 export class FlixMonkeyApp {
     #api;
     #cache;
@@ -98,28 +103,16 @@ export class FlixMonkeyApp {
         });
     }
 
-    static #isNavigationPatched = false;
-    static #originalPushState = history.pushState;
-    static #originalReplaceState = history.replaceState;
-
-    /** @internal for testing only */
-    static resetInternalState() {
-        FlixMonkeyApp.#isNavigationPatched = false;
-        history.pushState = FlixMonkeyApp.#originalPushState;
-        history.replaceState = FlixMonkeyApp.#originalReplaceState;
-        ApiClientManager._resetForTest();
-    }
-
     #initNavigationObservers() {
-        if (FlixMonkeyApp.#isNavigationPatched) return;
-        FlixMonkeyApp.#isNavigationPatched = true;
+        if (_navigationPatched) return;
+        _navigationPatched = true;
 
         history.pushState = (...args) => {
-            FlixMonkeyApp.#originalPushState.apply(history, args);
+            _originalPushState.apply(history, args);
             this.#debouncedDecorate();
         };
         history.replaceState = (...args) => {
-            FlixMonkeyApp.#originalReplaceState.apply(history, args);
+            _originalReplaceState.apply(history, args);
             this.#debouncedDecorate();
         };
 
@@ -151,8 +144,10 @@ export class FlixMonkeyApp {
 }
 
 export function startApp(adapter) {
-    const configManager = new ConfigManager(adapter);
+    if (_appStarted) throw new Error('startApp already called');
+    _appStarted = true;
 
+    const configManager = new ConfigManager(adapter);
     const cache = new CacheManager(adapter, configManager);
     const disabledManager = new DisabledClientsManager(adapter);
     const api = new ApiClientManager(cache, disabledManager, adapter, configManager);
@@ -166,4 +161,12 @@ export function startApp(adapter) {
         resetDisabledClients: () => app.resetDisabledClients(),
         disconnect: () => app.disconnect(),
     };
+}
+
+/** @internal for testing only */
+export function _resetStartedForTest() {
+    _appStarted = false;
+    _navigationPatched = false;
+    history.pushState = _originalPushState;
+    history.replaceState = _originalReplaceState;
 }

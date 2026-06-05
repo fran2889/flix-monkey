@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
@@ -23,15 +23,6 @@ import { ImdbApiDevClient } from '../../../src/core/api-clients.js';
 
 describe('ApiClientManager', () => {
     const mockConfig = new ConfigManager();
-
-    beforeEach(() => {
-        ApiClientManager._resetForTest();
-    });
-
-    it('should throw if instantiated more than once', () => {
-        new ApiClientManager({}, {}, {}, mockConfig, {});
-        expect(() => new ApiClientManager({}, {}, {}, mockConfig, {})).toThrow('ApiClientManager already instantiated');
-    });
 
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };

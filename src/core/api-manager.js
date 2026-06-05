@@ -21,16 +21,12 @@ import { Title } from './title.js';
 import { logger } from './logger.js';
 
 export class ApiClientManager {
-    static #created = false;
-
     #cache;
     #client;
     #disabledManager;
     #config;
 
     constructor(cacheManager, disabledManager, adapter, config, client = null) {
-        if (ApiClientManager.#created) throw new Error('ApiClientManager already instantiated');
-        ApiClientManager.#created = true;
         this.#cache = cacheManager;
         this.#disabledManager = disabledManager;
         this.#config = config;
@@ -39,11 +35,6 @@ export class ApiClientManager {
         if (!this.#client) {
             this.#client = ApiClientManager.#createClientFromConfig(this.#config, this.#disabledManager, adapter);
         }
-    }
-
-    /** @internal for testing only */
-    static _resetForTest() {
-        ApiClientManager.#created = false;
     }
 
     getClient() {

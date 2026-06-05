@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
+import { startApp, FlixMonkeyApp, _resetStartedForTest } from '../../../src/core/app.js';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
@@ -52,7 +52,7 @@ describe('App', () => {
         vi.restoreAllMocks();
         document.body.innerHTML = '';
         global.MutationObserver = ActualMutationObserver;
-        FlixMonkeyApp.resetInternalState();
+        _resetStartedForTest();
     });
 
     it('should initialize and hold state', () => {
@@ -282,6 +282,12 @@ describe('App', () => {
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         app.disconnect();
+    });
+
+    it('should throw if startApp is called twice', () => {
+        const mockAdapter = createMockAdapter();
+        appRef = startApp(mockAdapter);
+        expect(() => startApp(mockAdapter)).toThrow('startApp already called');
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
