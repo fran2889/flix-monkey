@@ -56,6 +56,11 @@ function injectManifestMetadata(srcPath, destPath) {
 
 const target = process.env.TARGET;
 
+const VALID_TARGETS = ['userscript', 'firefox', 'chrome'];
+if (target && !VALID_TARGETS.includes(target)) {
+    throw new Error(`Unknown TARGET "${target}". Valid values: ${VALID_TARGETS.join(', ')}`);
+}
+
 const allConfigs = [
     {
         _target: 'userscript',
