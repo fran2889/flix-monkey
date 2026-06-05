@@ -34,7 +34,7 @@ export class SettingsUI {
         const settings = (await this.adapter.storageGetAll()) || {};
 
         container.className = 'fm-settings-container';
-        container.innerHTML = '';
+        container.replaceChildren();
 
         const title = document.createElement('h1');
         title.textContent = 'FlixMonkey Settings';
@@ -167,9 +167,15 @@ export class SettingsUI {
             }
         });
 
-        await this.adapter.storageSetMany(values);
-        statusDiv.textContent = 'Saved!';
-        statusDiv.style.color = 'green';
+        const saveBtn = document.getElementById('fm-saveBtn');
+        saveBtn.disabled = true;
+        try {
+            await this.adapter.storageSetMany(values);
+            statusDiv.textContent = 'Saved!';
+            statusDiv.style.color = 'green';
+        } finally {
+            saveBtn.disabled = false;
+        }
     }
 
     async clearCache() {

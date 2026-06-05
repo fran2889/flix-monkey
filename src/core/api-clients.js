@@ -75,7 +75,8 @@ export class BaseApiClient {
                 responseType
             );
         } catch (err) {
-            if (err.status >= 400 && err.status < 500) await this.disable();
+            const status = err?.status;
+            if (status >= 400 && status < 500) await this.disable();
             throw err;
         }
     }

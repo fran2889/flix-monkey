@@ -15,7 +15,12 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { logger } from './logger.js';
+
 export class SurfaceManager {
+    // Surface priority order: title-card → search → bob → previewModal → jawBone.
+    // A container matched by an earlier surface is added to `seen` and skipped by
+    // all later surfaces, so declaration order determines which definition "wins".
     #SURFACES = [
         {
             titleSelectors: '.title-card .fallback-text',
@@ -78,7 +83,13 @@ export class SurfaceManager {
             titleEls.forEach(titleEl => {
                 const title = surface.getTitle(titleEl);
                 if (!title) return;
-                const container = titleEl.closest(surface.containerSel) ?? titleEl.parentElement;
+                let container = titleEl.closest(surface.containerSel);
+                if (!container) {
+                    logger.debug('Surface container selector failed, falling back to parentElement', {
+                        selector: surface.containerSel,
+                    });
+                    container = titleEl.parentElement;
+                }
                 if (!container || seen.has(container)) return;
                 seen.add(container);
                 results.push({ container, title, fadeable: surface.fadeable ?? false });

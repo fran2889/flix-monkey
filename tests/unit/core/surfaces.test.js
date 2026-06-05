@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { logger } from '../../../src/core/logger.js';
 
 describe('Surfaces', () => {
     it('should return empty array when no titles found', () => {
@@ -109,6 +110,7 @@ describe('Surfaces', () => {
     });
 
     it('should fall back to parent element if container selector not found', () => {
+        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
         const surfaces = new SurfaceManager();
         document.body.innerHTML = `
             <div class="not-a-container">
@@ -119,6 +121,10 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan Title');
         expect(results[0].container.className).toBe('not-a-container');
+        expect(debugSpy).toHaveBeenCalledWith('Surface container selector failed, falling back to parentElement', {
+            selector: '.bob-container',
+        });
+        debugSpy.mockRestore();
     });
 
     it('should de-duplicate containers', () => {

@@ -31,3 +31,5 @@ export const RATE_LIMITS = {
     [ApiSource.OMDB]: 250,
     [ApiSource.IMDBAPI]: 1000,
 };
+
+export const TOP_10_BADGE = 'title-card-top-10';

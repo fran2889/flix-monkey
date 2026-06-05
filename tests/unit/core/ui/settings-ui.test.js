@@ -161,4 +161,25 @@ describe('SettingsUI', () => {
         expect(mockDisabledClientsManager.resetAll).toHaveBeenCalled();
         expect(container.querySelector('#fm-status').textContent).toBe('API clients re-enabled.');
     });
+
+    it('should disable the save button while saving and re-enable it after', async () => {
+        let resolveStorage;
+        mockAdapter.storageSetMany = vi.fn().mockReturnValue(
+            new Promise(resolve => {
+                resolveStorage = resolve;
+            })
+        );
+
+        await settingsUI.render(container);
+        const saveBtn = container.querySelector('#fm-saveBtn');
+
+        const savePromise = settingsUI.save();
+
+        expect(saveBtn.disabled).toBe(true);
+
+        resolveStorage();
+        await savePromise;
+
+        expect(saveBtn.disabled).toBe(false);
+    });
 });

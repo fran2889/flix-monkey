@@ -20,12 +20,15 @@ import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
+import { logger } from '../../../src/core/logger.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
+    let appRef = null;
     const ActualMutationObserver = global.MutationObserver;
 
     beforeEach(() => {
+        appRef = null;
         vi.useFakeTimers();
         document.body.innerHTML = '';
 
@@ -43,6 +46,7 @@ describe('App', () => {
     });
 
     afterEach(() => {
+        appRef?.disconnect();
         vi.useRealTimers();
         vi.restoreAllMocks();
         document.body.innerHTML = '';
@@ -56,9 +60,9 @@ describe('App', () => {
             storageSet: vi.fn(),
             httpFetch: vi.fn(),
         };
-        const app = startApp(mockAdapter);
-        expect(app.clearCache).toBeDefined();
-        expect(app.resetDisabledClients).toBeDefined();
+        appRef = startApp(mockAdapter);
+        expect(appRef.clearCache).toBeDefined();
+        expect(appRef.resetDisabledClients).toBeDefined();
     });
 
     it('should discover titles in JSDOM', () => {
@@ -86,7 +90,7 @@ describe('App', () => {
 
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Resolved' });
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
 
         await vi.waitFor(() => {
             if (getDataSpy.mock.calls.length === 0) throw new Error('Not called yet');
@@ -114,7 +118,7 @@ describe('App', () => {
     `;
         const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
         await Promise.resolve();
         spy.mockClear();
 
@@ -146,7 +150,7 @@ describe('App', () => {
         const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
         const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
         await Promise.resolve();
         spy.mockClear();
 
@@ -181,7 +185,7 @@ describe('App', () => {
             </div>
         `;
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
         await vi.waitFor(() => {
             if (spy.mock.calls.length < 1) throw new Error('Not called yet');
         });
@@ -229,7 +233,7 @@ describe('App', () => {
 
         vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(apiPromise);
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
 
         // Wait for the next tick to allow the app to initialize and call decorateRoot
         await Promise.resolve();
@@ -253,7 +257,7 @@ describe('App', () => {
         const mockAdapter = { storageGet: vi.fn().mockResolvedValue(null), storageSet: vi.fn(), httpFetch: vi.fn() };
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(null);
 
-        startApp(mockAdapter);
+        appRef = startApp(mockAdapter);
 
         // Initial decoration from init()
         vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
@@ -273,5 +277,41 @@ describe('App', () => {
         await vi.runAllTimersAsync();
 
         expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+    });
+
+    it('should throw if init() is called twice on the same instance', () => {
+        const mockRenderer = {
+            injectStyles: vi.fn(),
+            hasOverlay: vi.fn().mockReturnValue(false),
+            isLoading: vi.fn().mockReturnValue(false),
+        };
+        const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces);
+        app.init();
+        expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
+        app.disconnect();
+    });
+
+    it('should catch and log errors thrown in the mutation handler', () => {
+        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+
+        appRef = startApp(mockAdapter);
+
+        // addedNodes: null causes Array.from(null) to throw inside the handler
+        expect(() => {
+            mockMutationObserverInstance.trigger([{ addedNodes: null }]);
+        }).not.toThrow();
+
+        expect(logSpy).toHaveBeenCalledWith('Mutation handler error', expect.any(Error));
+    });
+
+    it('should disconnect the MutationObserver when disconnect() is called', () => {
+        const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.fn(), httpFetch: vi.fn() };
+        appRef = startApp(mockAdapter);
+
+        const disconnectSpy = vi.spyOn(mockMutationObserverInstance, 'disconnect');
+        appRef.disconnect();
+        expect(disconnectSpy).toHaveBeenCalled();
     });
 });
