@@ -61,70 +61,68 @@ if (target && !VALID_TARGETS.includes(target)) {
     throw new Error(`Unknown TARGET "${target}". Valid values: ${VALID_TARGETS.join(', ')}`);
 }
 
-const allConfigs = [
-    {
-        _target: 'userscript',
-        input: 'src/targets/userscript/entry.js',
-        output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
-        plugins: [
-            ...sharedPlugins(),
-            {
-                name: 'strip-license-header',
-                transform(code) {
-                    return code.replace(
-                        /\/\*\*(?:(?!\*\/)[\s\S])*?GNU General Public License(?:(?!\*\/)[\s\S])*?\*\/\n?/g,
-                        ''
-                    );
+const configsByTarget = {
+    userscript: [
+        {
+            input: 'src/targets/userscript/entry.js',
+            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
+            plugins: [
+                ...sharedPlugins(),
+                {
+                    name: 'strip-license-header',
+                    transform(code) {
+                        return code.replace(
+                            /\/\*\*(?:(?!\*\/)[\s\S])*?GNU General Public License(?:(?!\*\/)[\s\S])*?\*\/\n?/g,
+                            ''
+                        );
+                    },
                 },
-            },
-        ],
-    },
-    {
-        _target: 'firefox',
-        input: 'src/targets/extension/content.js',
-        output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
-        plugins: [
-            ...sharedPlugins(),
-            copyStatic([['src/targets/extension/options.html', 'dist/firefox/options.html']]),
-            injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
-        ],
-    },
-    {
-        _target: 'firefox',
-        input: 'src/targets/extension/options.js',
-        output: { file: 'dist/firefox/options.js', format: 'iife', sourcemap: true },
-        plugins: sharedPlugins(),
-    },
-    {
-        _target: 'firefox',
-        input: 'src/targets/firefox/background.js',
-        output: { file: 'dist/firefox/background.js', format: 'iife', sourcemap: true },
-        plugins: sharedPlugins(),
-    },
-    {
-        _target: 'chrome',
-        input: 'src/targets/extension/content.js',
-        output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
-        plugins: [
-            ...sharedPlugins(),
-            copyStatic([['src/targets/extension/options.html', 'dist/chrome/options.html']]),
-            injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
-        ],
-    },
-    {
-        _target: 'chrome',
-        input: 'src/targets/extension/options.js',
-        output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
-        plugins: sharedPlugins(),
-    },
-    {
-        _target: 'chrome',
-        input: 'src/targets/chrome/service-worker.js',
-        output: { file: 'dist/chrome/service-worker.js', format: 'iife', sourcemap: true },
-        plugins: sharedPlugins(),
-    },
-];
+            ],
+        },
+    ],
+    firefox: [
+        {
+            input: 'src/targets/extension/content.js',
+            output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
+            plugins: [
+                ...sharedPlugins(),
+                copyStatic([['src/targets/extension/options.html', 'dist/firefox/options.html']]),
+                injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
+            ],
+        },
+        {
+            input: 'src/targets/extension/options.js',
+            output: { file: 'dist/firefox/options.js', format: 'iife', sourcemap: true },
+            plugins: sharedPlugins(),
+        },
+        {
+            input: 'src/targets/firefox/background.js',
+            output: { file: 'dist/firefox/background.js', format: 'iife', sourcemap: true },
+            plugins: sharedPlugins(),
+        },
+    ],
+    chrome: [
+        {
+            input: 'src/targets/extension/content.js',
+            output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
+            plugins: [
+                ...sharedPlugins(),
+                copyStatic([['src/targets/extension/options.html', 'dist/chrome/options.html']]),
+                injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
+            ],
+        },
+        {
+            input: 'src/targets/extension/options.js',
+            output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
+            plugins: sharedPlugins(),
+        },
+        {
+            input: 'src/targets/chrome/service-worker.js',
+            output: { file: 'dist/chrome/service-worker.js', format: 'iife', sourcemap: true },
+            plugins: sharedPlugins(),
+        },
+    ],
+};
 
-export default target
-    ? allConfigs.filter(c => c._target === target).map(({ _target, ...rest }) => rest)
-    : allConfigs.map(({ _target, ...rest }) => rest);
+const targets = target ? [target] : Object.keys(configsByTarget);
+export default targets.flatMap(t => configsByTarget[t]);
