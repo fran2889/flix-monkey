@@ -168,13 +168,13 @@ export class SettingsUI {
         });
 
         const saveBtn = document.getElementById('fm-saveBtn');
-        saveBtn.disabled = true;
+        if (saveBtn) saveBtn.disabled = true;
         try {
             await this.adapter.storageSetMany(values);
             statusDiv.textContent = 'Saved!';
             statusDiv.style.color = 'green';
         } finally {
-            saveBtn.disabled = false;
+            if (saveBtn) saveBtn.disabled = false;
         }
     }
 
