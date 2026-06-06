@@ -76,7 +76,7 @@ export class BaseApiClient {
             );
         } catch (err) {
             const status = err?.status;
-            if (status >= 400 && status < 500) await this.disable();
+            if (Number.isInteger(status) && status >= 400 && status < 500) await this.disable();
             throw err;
         }
     }
