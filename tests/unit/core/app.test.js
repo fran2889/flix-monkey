@@ -344,4 +344,26 @@ describe('App', () => {
         appRef.disconnect();
         expect(disconnectSpy).toHaveBeenCalled();
     });
+
+    it('should call decorateRoot on mutation target rather than full document when nodes are added', async () => {
+        const parent = document.createElement('div');
+        document.body.appendChild(parent);
+
+        appRef = startApp(createMockAdapter());
+        await Promise.resolve();
+
+        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+
+        // Trigger mutation on parent, with target set
+        mockMutationObserverInstance.trigger([{ addedNodes: [parent], target: parent }]);
+
+        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+        await vi.runAllTimersAsync();
+
+        // discover should be called with parent, not document
+        const roots = discoverSpy.mock.calls.map(c => c[0]);
+        expect(roots.some(r => r === parent)).toBe(true);
+
+        discoverSpy.mockRestore();
+    });
 });

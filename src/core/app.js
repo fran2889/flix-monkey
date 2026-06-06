@@ -33,6 +33,7 @@ export class FlixMonkeyApp {
     #renderer;
     #surfaces;
     #inFlight = new Map();
+    #pendingRoots = new Set();
     #debouncedDecorate;
     #observer = null;
     #initialised = false;
@@ -48,7 +49,9 @@ export class FlixMonkeyApp {
         this.#renderer = renderer;
         this.#surfaces = surfaces;
         this.#debouncedDecorate = debounce(() => {
-            runIdle(() => this.decorateRoot(document));
+            const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
+            this.#pendingRoots.clear();
+            runIdle(() => roots.forEach(root => this.decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
     }
 
@@ -133,12 +136,15 @@ export class FlixMonkeyApp {
 
         this.#observer = new MutationObserver(mutations => {
             try {
-                const hasElements = mutations.some(m => {
+                let hasElements = false;
+                for (const m of mutations) {
                     for (const n of m.addedNodes) {
-                        if (n.nodeType === Node.ELEMENT_NODE) return true;
+                        if (n.nodeType === Node.ELEMENT_NODE) {
+                            hasElements = true;
+                            this.#pendingRoots.add(m.target);
+                        }
                     }
-                    return false;
-                });
+                }
                 if (hasElements) this.#debouncedDecorate();
             } catch (err) {
                 logger.error('Mutation handler error', err);
