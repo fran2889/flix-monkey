@@ -209,4 +209,70 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].container).toBe(document.body); // parentElement of .bob-title is body
     });
+
+    describe('previewModal fallback selectors', () => {
+        it.each([
+            [
+                '<div class="previewModal"><div class="previewModal--wrapper"><img alt="Wrapper Title" src="..."></div></div>',
+                'Wrapper Title',
+            ],
+            ['<div class="previewModal"><img alt="Direct Modal Title" src="..."></div>', 'Direct Modal Title'],
+            [
+                '<div class="previewModal"><div data-uia="previewModal-title">Data UIA Title</div></div>',
+                'Data UIA Title',
+            ],
+            ['<div class="previewModal"><h3 class="previewModal--boxarttitle">Boxart Title</h3></div>', 'Boxart Title'],
+        ])('should discover previewModal with html: %s', (html, expectedTitle) => {
+            const surfaces = new SurfaceManager();
+            document.body.innerHTML = html;
+            const results = surfaces.discover(document.body);
+            expect(results).toHaveLength(1);
+            expect(results[0].title).toBe(expectedTitle);
+            expect(results[0].container.className).toBe('previewModal');
+            expect(results[0].fadeable).toBe(false);
+        });
+    });
+
+    describe('jawBone / detail-view fallback selectors', () => {
+        it.each([
+            [
+                '<div class="jawBoneContainer"><img alt="JawBone Container Title" src="..."></div>',
+                'JawBone Container Title',
+                'jawBoneContainer',
+            ],
+            [
+                '<div class="jawBoneContainer"><div class="image-fallback-text">JawBone Container Fallback</div></div>',
+                'JawBone Container Fallback',
+                'jawBoneContainer',
+            ],
+            [
+                '<div class="previewModal--detailsMetadata"><img alt="Details Metadata Title" src="..."></div>',
+                'Details Metadata Title',
+                'previewModal--detailsMetadata',
+            ],
+            [
+                '<div class="previewModal--detailsMetadata"><h3>Details H3 Title</h3></div>',
+                'Details H3 Title',
+                'previewModal--detailsMetadata',
+            ],
+            [
+                '<div class="previewModal--detailsMetadata"><div class="title">Details Title Class</div></div>',
+                'Details Title Class',
+                'previewModal--detailsMetadata',
+            ],
+            [
+                '<div class="previewModal--detailsMetadata"><div data-uia="previewModal-title">Details Data UIA</div></div>',
+                'Details Data UIA',
+                'previewModal--detailsMetadata',
+            ],
+        ])('should discover jawBone/detail surface with html: %s', (html, expectedTitle, expectedContainerClass) => {
+            const surfaces = new SurfaceManager();
+            document.body.innerHTML = html;
+            const results = surfaces.discover(document.body);
+            expect(results).toHaveLength(1);
+            expect(results[0].title).toBe(expectedTitle);
+            expect(results[0].container.className).toBe(expectedContainerClass);
+            expect(results[0].fadeable).toBe(false);
+        });
+    });
 });
