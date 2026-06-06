@@ -19,16 +19,11 @@ import { UserscriptAdapter } from '../../platform/userscript.js';
 import { startApp } from '../../core/app.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { Modal } from '../../core/ui/modal.js';
-import { ConfigManager } from '../../core/config-manager.js';
-import { CacheManager } from '../../core/cache.js';
-import { DisabledClientsManager } from '../../core/disabled-clients.js';
 
 const adapter = new UserscriptAdapter();
 const app = startApp(adapter);
 
-const config = new ConfigManager(adapter);
-const cacheManager = new CacheManager(adapter, config);
-const disabledClientsManager = new DisabledClientsManager(adapter);
+const { cacheManager, disabledManager: disabledClientsManager } = app;
 
 adapter.registerMenuCommand('FlixMonkey Settings', () => {
     const modal = new Modal('FlixMonkey Settings');

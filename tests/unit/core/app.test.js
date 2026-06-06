@@ -290,6 +290,14 @@ describe('App', () => {
         expect(() => startApp(mockAdapter)).toThrow('startApp already called');
     });
 
+    it('should expose cacheManager and disabledManager on the startApp return value', () => {
+        appRef = startApp(createMockAdapter());
+        expect(appRef.cacheManager).toBeDefined();
+        expect(typeof appRef.cacheManager.clear).toBe('function');
+        expect(appRef.disabledManager).toBeDefined();
+        expect(typeof appRef.disabledManager.resetAll).toBe('function');
+    });
+
     it('should catch and log errors thrown in the mutation handler', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});

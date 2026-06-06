@@ -174,6 +174,8 @@ export function startApp(adapter) {
         resetDisabledClients: () => app.resetDisabledClients(),
         disconnect: () => app.disconnect(),
         refreshStyles: () => renderer.injectStyles(),
+        cacheManager: cache,
+        disabledManager: disabledManager,
     };
 }
 
