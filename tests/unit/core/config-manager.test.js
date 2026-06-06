@@ -15,50 +15,46 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../../src/core/config-fields.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('ConfigManager', () => {
-    it('should use default values when no getter is provided', () => {
-        const config = new ConfigManager();
+    it('should return CONFIG_DEFAULTS when adapter returns undefined', () => {
+        const config = new ConfigManager(createMockAdapter());
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
     });
 
-    it('should use provided getter function', () => {
-        const getter = vi.fn().mockReturnValue('bottom-right');
-        const config = new ConfigManager(getter);
+    it('should return value from adapter.configGet', () => {
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'bottom-right' : undefined) })
+        );
         expect(config.get('overlayCorner')).toBe('bottom-right');
-        expect(getter).toHaveBeenCalledWith('overlayCorner');
     });
 
-    it('should use fallback when getter returns null/undefined', () => {
-        const getter = vi.fn().mockReturnValue(null);
-        const config = new ConfigManager(getter);
+    it('should return explicit fallback when adapter returns null', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }));
         expect(config.get('nonExistentKey', 'fallback')).toBe('fallback');
     });
 
-    it('should handle integer conversion', () => {
-        const getter = vi.fn().mockReturnValue('42');
-        const config = new ConfigManager(getter);
+    it('should parse integer via getInt', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => '42' }));
         expect(config.getInt('someInt', 0)).toBe(42);
     });
 
     it('should return fallback for invalid integer', () => {
-        const getter = vi.fn().mockReturnValue('not-a-number');
-        const config = new ConfigManager(getter);
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }));
         expect(config.getInt('someInt', 10)).toBe(10);
     });
 
-    it('should handle float conversion', () => {
-        const getter = vi.fn().mockReturnValue('3.14');
-        const config = new ConfigManager(getter);
+    it('should parse float via getFloat', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => '3.14' }));
         expect(config.getFloat('someFloat', 0)).toBe(3.14);
     });
 
     it('should return fallback for invalid float', () => {
-        const getter = vi.fn().mockReturnValue('not-a-number');
-        const config = new ConfigManager(getter);
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }));
         expect(config.getFloat('someFloat', 2.5)).toBe(2.5);
     });
 });

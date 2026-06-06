@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { TOP_10_BADGE } from '../../../src/core/constants.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -27,7 +28,7 @@ describe('OverlayRenderer', () => {
     });
 
     it('should inject styles into document head', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         renderer.injectStyles();
         const style = document.head.querySelector('style');
         expect(style).not.toBeNull();
@@ -35,7 +36,7 @@ describe('OverlayRenderer', () => {
     });
 
     it('should inject styles only once per instance', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         renderer.injectStyles();
         renderer.injectStyles();
         const styles = document.head.querySelectorAll('style');
@@ -44,8 +45,12 @@ describe('OverlayRenderer', () => {
     });
 
     it('should update the existing style tag when injectStyles is called again', () => {
-        const configLeft = new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined));
-        const configRight = new ConfigManager(key => (key === 'overlayCorner' ? 'top-right' : undefined));
+        const configLeft = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-left' : undefined) })
+        );
+        const configRight = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-right' : undefined) })
+        );
         const rendererA = new OverlayRenderer(configLeft);
         const rendererB = new OverlayRenderer(configRight);
 
@@ -59,14 +64,16 @@ describe('OverlayRenderer', () => {
     });
 
     it('should use TOP_10_BADGE constant in injected CSS', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         renderer.injectStyles();
         const style = document.head.querySelector('style');
         expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
     });
 
     it('should include TOP_10_BADGE offset rule for left-side corners', () => {
-        const config = new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined));
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-left' : undefined) })
+        );
         const renderer = new OverlayRenderer(config);
         renderer.injectStyles();
         const style = document.head.querySelector('style');
@@ -74,7 +81,9 @@ describe('OverlayRenderer', () => {
     });
 
     it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
-        const config = new ConfigManager(key => (key === 'overlayCorner' ? 'top-right' : undefined));
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-right' : undefined) })
+        );
         const renderer = new OverlayRenderer(config);
         renderer.injectStyles();
         const style = document.head.querySelector('style');

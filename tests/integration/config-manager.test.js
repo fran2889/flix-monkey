@@ -19,22 +19,25 @@ import { describe, it, expect, vi } from 'vitest';
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../src/core/config-fields.js';
 import { logger } from '../../src/core/logger.js';
+import { createMockAdapter } from '../mocks/adapter.js';
 
 describe('ConfigManager Integration', () => {
     describe('CONFIG_DEFAULTS integration', () => {
         it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
-            const config = new ConfigManager();
+            const config = new ConfigManager(createMockAdapter());
             expect(config.get(key)).toBe(expectedValue);
         });
     });
 
-    it('should handle errors in the getter function and fall back', () => {
+    it('should handle errors in configGet and fall back', () => {
         const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
-        const throwingGetter = () => {
-            throw new Error('Adapter error');
-        };
-        const config = new ConfigManager(throwingGetter);
-
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: () => {
+                    throw new Error('Adapter error');
+                },
+            })
+        );
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
         expect(config.get('overlayCorner', 'top-left')).toBe('top-left');
         expect(warnSpy).toHaveBeenCalledWith(
@@ -44,30 +47,27 @@ describe('ConfigManager Integration', () => {
         warnSpy.mockRestore();
     });
 
-    it('should handle null/undefined from getter and fall back to CONFIG_DEFAULTS', () => {
-        const nullGetter = () => null;
-        const config = new ConfigManager(nullGetter);
+    it('should fall back to CONFIG_DEFAULTS when configGet returns null', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }));
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
     });
 
-    it('should handle non-string values from getter correctly', () => {
-        const weirdGetter = key => {
-            if (key === 'someInt') return 42;
-            if (key === 'someFloat') return 1.5;
-            return undefined;
-        };
-        const config = new ConfigManager(weirdGetter);
+    it('should handle non-string values from configGet', () => {
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => (key === 'someInt' ? 42 : key === 'someFloat' ? 1.5 : undefined),
+            })
+        );
         expect(config.getInt('someInt')).toBe(42);
         expect(config.getFloat('someFloat')).toBe(1.5);
     });
 
-    it('should handle falsy but valid values (like 0 or empty string)', () => {
-        const falsyGetter = key => {
-            if (key === 'zero') return 0;
-            if (key === 'empty') return '';
-            return undefined;
-        };
-        const config = new ConfigManager(falsyGetter);
+    it('should handle falsy but valid values (0 and empty string)', () => {
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => (key === 'zero' ? 0 : key === 'empty' ? '' : undefined),
+            })
+        );
         expect(config.get('zero')).toBe(0);
         expect(config.get('empty')).toBe('');
         expect(config.getInt('zero', 10)).toBe(0);

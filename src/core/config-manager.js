@@ -20,19 +20,14 @@ import { logger } from './logger.js';
 
 export class ConfigManager {
     #adapter;
-    #getter;
 
-    constructor(source = key => CONFIG_DEFAULTS[key]) {
-        if (typeof source === 'function') {
-            this.#getter = source;
-        } else {
-            this.#adapter = source;
-        }
+    constructor(adapter) {
+        this.#adapter = adapter;
     }
 
     get(key, fallback) {
         try {
-            const val = this.#adapter ? this.#adapter.configGet(key) : this.#getter(key);
+            const val = this.#adapter.configGet(key);
             return val !== undefined && val !== null ? val : (fallback ?? CONFIG_DEFAULTS[key]);
         } catch (err) {
             logger.warn('ConfigManager.get error, using fallback', { key, err });

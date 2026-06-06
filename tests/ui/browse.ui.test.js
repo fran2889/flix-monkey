@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
+import { createMockAdapter } from '../mocks/adapter.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -32,7 +33,7 @@ describe('Browse UI Surface', () => {
     beforeEach(() => {
         document.body.innerHTML = _fixtureHtml;
         surfaceManager = new SurfaceManager();
-        overlayRenderer = new OverlayRenderer(new ConfigManager());
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         // Ensure styles are injected for position checks if needed
         overlayRenderer.injectStyles();
     });
@@ -78,11 +79,15 @@ describe('Browse UI Surface', () => {
         const { container } = surfaces[0];
 
         // Set threshold high to ensure fading
-        const mockConfig = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return true;
-            if (key === 'fadeRatingThreshold') return 9.0;
-            return null;
-        });
+        const mockConfig = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return true;
+                    if (key === 'fadeRatingThreshold') return 9.0;
+                    return null;
+                },
+            })
+        );
         const localRenderer = new OverlayRenderer(mockConfig);
 
         localRenderer.applyFade(container, { rating: 7.0 }, true);
@@ -94,11 +99,15 @@ describe('Browse UI Surface', () => {
         const { container } = surfaces[0];
 
         // Set threshold high to ensure fading
-        const mockConfig = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return true;
-            if (key === 'fadeRatingThreshold') return 9.0;
-            return null;
-        });
+        const mockConfig = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return true;
+                    if (key === 'fadeRatingThreshold') return 9.0;
+                    return null;
+                },
+            })
+        );
         const localRenderer = new OverlayRenderer(mockConfig);
 
         localRenderer.applyFade(container, { rating: 9.5 }, true);

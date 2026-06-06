@@ -21,9 +21,10 @@ import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { ImdbApiDevClient } from '../../../src/core/api-clients.js';
 import { logger } from '../../../src/core/logger.js';
+import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('ApiClientManager', () => {
-    const mockConfig = new ConfigManager();
+    const mockConfig = new ConfigManager(createMockAdapter());
 
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };

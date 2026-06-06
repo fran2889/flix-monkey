@@ -34,7 +34,7 @@ describe('CacheManager', () => {
             storageDelete: vi.fn(),
             storageGetKeys: vi.fn(),
         });
-        config = new ConfigManager();
+        config = new ConfigManager(createMockAdapter());
         cacheManager = new CacheManager(adapter, config);
     });
 

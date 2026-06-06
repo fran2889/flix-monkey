@@ -21,6 +21,7 @@ import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../src/core/a
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { ConfigManager } from '../../src/core/config-manager';
 import { Title } from '../../src/core/title';
+import { createMockAdapter } from '../mocks/adapter.js';
 import { ApiSource } from '../../src/core/constants';
 
 const credentials = ['XMDB_API_KEY', 'OMDB_API_KEY'];
@@ -56,7 +57,7 @@ describe('api-clients integration', () => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
         };
-        configManager = new ConfigManager(getter);
+        configManager = new ConfigManager(createMockAdapter({ configGet: getter }));
     });
     if (!hasCredentials(credentials)) {
         it.skip('should fetch real data from APIs', async () => {});

@@ -18,6 +18,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
+import { createMockAdapter } from '../mocks/adapter.js';
 
 describe('Overlay UI Interactions', () => {
     beforeEach(() => {
@@ -26,7 +27,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should inject styles into head', () => {
-        const config = new ConfigManager();
+        const config = new ConfigManager(createMockAdapter());
         const renderer = new OverlayRenderer(config);
         renderer.injectStyles();
         const style = document.head.querySelector('style');
@@ -35,10 +36,14 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should use different corner styles based on config', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'overlayCorner') return 'bottom-right';
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'overlayCorner') return 'bottom-right';
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         renderer.injectStyles();
         const style = document.head.querySelector('style');
@@ -47,11 +52,15 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should respect showRtRating/showMcRating config', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'showRtRating') return false;
-            if (key === 'showMcRating') return false;
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'showRtRating') return false;
+                    if (key === 'showMcRating') return false;
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
         const titleObj = {
@@ -69,7 +78,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should build correct tooltip', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         const titleObj = {
             rating: 8.2,
@@ -83,11 +92,15 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should apply fade when rating is below threshold', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return true;
-            if (key === 'fadeRatingThreshold') return 7.5;
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return true;
+                    if (key === 'fadeRatingThreshold') return 7.5;
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
 
@@ -96,11 +109,15 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should NOT apply fade when rating is above or equal to threshold', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return true;
-            if (key === 'fadeRatingThreshold') return 7.5;
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return true;
+                    if (key === 'fadeRatingThreshold') return 7.5;
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
 
@@ -109,7 +126,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should set correct pointer-events for overlay elements', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         const titleObj = {
             rating: 8.0,
@@ -132,10 +149,14 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should NOT apply fade when disabled in config', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return false;
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return false;
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
 
@@ -144,10 +165,14 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should NOT apply fade when container is not fadeable', () => {
-        const config = new ConfigManager(key => {
-            if (key === 'enableFadeUnderRating') return true;
-            return undefined;
-        });
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'enableFadeUnderRating') return true;
+                    return undefined;
+                },
+            })
+        );
         const renderer = new OverlayRenderer(config);
         const container = document.createElement('div');
 
@@ -156,7 +181,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should ensure container has non-static position', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         container.style.position = 'static';
         // Note: JSDOM might not support getComputedStyle perfectly for all cases,
@@ -166,7 +191,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should NOT change position if already non-static', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         container.style.position = 'absolute';
         renderer.ensureRelative(container);
@@ -174,7 +199,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should stop propagation on IMDb link click', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         renderer.injectOverlay(container, { imdbUrl: 'http://imdb.com' });
 
@@ -187,7 +212,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should stop propagation on RT and MC rating clicks', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         const titleObj = {
             rating: 8.5,
@@ -211,7 +236,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should inject loading overlay', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         renderer.injectLoadingOverlay(container, 'Test Movie');
         const loadingElement = container.querySelector('.fm-loading');
@@ -221,7 +246,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should replace loading overlay with ratings overlay', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         renderer.injectLoadingOverlay(container, 'Test Movie');
 
@@ -239,7 +264,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should display all three ratings when provided', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
 
         const mockTitleObj = {
@@ -264,7 +289,7 @@ describe('Overlay UI Interactions', () => {
     });
 
     it('should show 🔍 when imdbId is missing', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         renderer.injectOverlay(container, { rating: null, imdbId: null });
         expect(container.querySelector('.fm-search')).not.toBeNull();
@@ -280,14 +305,14 @@ describe('Overlay UI Interactions', () => {
         ],
         ['Missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search'],
     ])('should build correct tooltips for %s', (_, titleObj, expectedTitle) => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         renderer.injectOverlay(container, titleObj);
         expect(container.querySelector('.fm-rating-overlay').title).toBe(expectedTitle);
     });
 
     it('should show N/A when imdbId is present but rating is missing', () => {
-        const renderer = new OverlayRenderer(new ConfigManager());
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
 
         const mockTitleObj = {
