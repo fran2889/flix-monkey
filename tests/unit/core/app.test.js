@@ -304,6 +304,30 @@ describe('App', () => {
         expect(logSpy).toHaveBeenCalledWith('Mutation handler error', expect.any(Error));
     });
 
+    it('should log errors thrown by decorateContainer rather than propagating them', async () => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Boom Movie</div>
+            </div>
+        `;
+        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('boom'));
+
+        appRef = startApp(createMockAdapter());
+
+        await Promise.resolve();
+        vi.runAllTimers();
+        await vi.runAllTimersAsync();
+
+        await vi.waitFor(
+            () => {
+                expect(logSpy).toHaveBeenCalledWith('decorateContainer failed', expect.any(Error));
+            },
+            { timeout: 2000 }
+        );
+        logSpy.mockRestore();
+    });
+
     it('should disconnect the MutationObserver when disconnect() is called', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);

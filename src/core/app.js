@@ -99,7 +99,9 @@ export class FlixMonkeyApp {
 
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
-            this.#decorateContainer(container, title, fadeable);
+            this.#decorateContainer(container, title, fadeable).catch(err =>
+                logger.error('decorateContainer failed', err)
+            );
         });
     }
 
