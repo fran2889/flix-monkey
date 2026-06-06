@@ -21,9 +21,11 @@ import { createMockAdapter } from '../../mocks/adapter.js';
 
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
-        // Use a large artificial interval to ensure the second request stays queued.
-        // The first request starts processing immediately (leaving the queue),
-        // so clearing the queue will abort exactly 1 pending request.
+        // Timing assumption: the first enqueued item enters #process() synchronously
+        // before the first `await`, which removes it from the queue. The second item
+        // remains queued because the large interval (999999ms) causes #process to wait.
+        // clear() therefore finds exactly 1 item to abort.
+        // If #process() ever defers its first dequeue past an await, this count changes.
         const queue = new RequestQueue(999999);
         const _p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
         const _p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
