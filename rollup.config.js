@@ -54,6 +54,8 @@ function injectManifestMetadata(srcPath, destPath) {
     };
 }
 
+const LICENSE_BLOCK_RE = /^\/\*\*[\s\S]*?GNU General Public License[\s\S]*?\*\//;
+
 const target = process.env.TARGET;
 
 const VALID_TARGETS = ['userscript', 'firefox', 'chrome'];
@@ -71,10 +73,7 @@ const configsByTarget = {
                 {
                     name: 'strip-license-header',
                     transform(code) {
-                        return code.replace(
-                            /\/\*\*(?:(?!\*\/)[\s\S])*?GNU General Public License(?:(?!\*\/)[\s\S])*?\*\/\n?/g,
-                            ''
-                        );
+                        return code.replace(LICENSE_BLOCK_RE, '');
                     },
                 },
             ],
