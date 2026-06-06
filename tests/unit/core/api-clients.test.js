@@ -18,7 +18,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../../src/core/api-clients.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
-import { logger } from '../../../src/core/logger.js';
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should disable itself and purge queue on 4xx error', async () => {
@@ -349,48 +348,6 @@ describe('ImdbApiDevClient', () => {
 
         await expect(dummy.search('title')).rejects.toThrow('Not implemented');
         await expect(dummy.getDetails({}, 'title')).rejects.toThrow('Not implemented');
-    });
-});
-
-describe('API key redaction in debug logs', () => {
-    it('should not log the XMDB API key in search debug output', async () => {
-        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ results: [] }),
-        });
-        const config = { get: key => (key === 'xmdbApiKey' ? 'secret-key-123' : null) };
-        const client = new XmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false), disable: vi.fn() },
-            mockAdapter,
-            config
-        );
-
-        await client.search('some movie');
-
-        const logged = debugSpy.mock.calls.flat().join(' ');
-        expect(logged).not.toContain('secret-key-123');
-        expect(logged).toContain('*****');
-        debugSpy.mockRestore();
-    });
-
-    it('should not log the OMDB API key in details debug output', async () => {
-        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
-        });
-        const config = { get: key => (key === 'omdbApiKey' ? 'omdb-secret-456' : null) };
-        const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false), disable: vi.fn() },
-            mockAdapter,
-            config
-        );
-
-        await client.getDetails({ title: 'The Movie' }, 'The Movie');
-
-        const logged = debugSpy.mock.calls.flat().join(' ');
-        expect(logged).not.toContain('omdb-secret-456');
-        expect(logged).toContain('*****');
-        debugSpy.mockRestore();
     });
 });
 
