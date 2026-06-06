@@ -18,6 +18,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
+import { createMockAdapter } from '../../../mocks/adapter.js';
 
 describe('SettingsUI', () => {
     let mockAdapter;
@@ -202,5 +203,21 @@ describe('SettingsUI', () => {
         ui._validate();
 
         expect(validateFn).toHaveBeenCalledWith(true);
+    });
+
+    it('should scope element queries to its own container', async () => {
+        const adapter = createMockAdapter({ storageGetAll: vi.fn().mockResolvedValue({}), setConfigData: vi.fn() });
+        const container1 = document.createElement('div');
+        const container2 = document.createElement('div');
+        document.body.append(container1, container2);
+        const ui1 = new SettingsUI(adapter, undefined, { clear: vi.fn() }, { resetAll: vi.fn() });
+        const ui2 = new SettingsUI(adapter, undefined, { clear: vi.fn() }, { resetAll: vi.fn() });
+        await ui1.render(container1);
+        await ui2.render(container2);
+        const statusInContainer1 = container1.querySelector('[id="fm-status"]');
+        const statusInContainer2 = container2.querySelector('[id="fm-status"]');
+        expect(statusInContainer1).not.toBeNull();
+        expect(statusInContainer2).not.toBeNull();
+        expect(statusInContainer1).not.toBe(statusInContainer2);
     });
 });

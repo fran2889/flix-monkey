@@ -28,8 +28,10 @@ export class SettingsUI {
 
     #cacheManager;
     #disabledClientsManager;
+    #container = null;
 
     async render(container) {
+        this.#container = container;
         this._injectStyles();
         const settings = (await this.adapter.storageGetAll()) || {};
         this.adapter.setConfigData(settings);
@@ -123,7 +125,7 @@ export class SettingsUI {
     _validate() {
         let hasErrors = false;
         this.fields.forEach(field => {
-            const input = document.getElementById(`fm-${field.key}`);
+            const input = this.#container.querySelector(`#fm-${field.key}`);
             if (!input) return;
 
             const fieldValue = input.type === 'checkbox' ? input.checked : input.value;
@@ -151,7 +153,7 @@ export class SettingsUI {
 
     async save() {
         const isValid = this._validate();
-        const statusDiv = document.getElementById('fm-status');
+        const statusDiv = this.#container.querySelector('#fm-status');
 
         if (!isValid) {
             statusDiv.textContent = 'Please fix errors before saving.';
@@ -161,7 +163,7 @@ export class SettingsUI {
 
         const values = {};
         this.fields.forEach(field => {
-            const input = document.getElementById(`fm-${field.key}`);
+            const input = this.#container.querySelector(`#fm-${field.key}`);
             if (field.type === 'checkbox') {
                 values[field.key] = input.checked;
             } else {
@@ -169,7 +171,7 @@ export class SettingsUI {
             }
         });
 
-        const saveBtn = document.getElementById('fm-saveBtn');
+        const saveBtn = this.#container.querySelector('#fm-saveBtn');
         if (saveBtn) saveBtn.disabled = true;
         try {
             await this.adapter.storageSetMany(values);
@@ -183,7 +185,7 @@ export class SettingsUI {
     async clearCache() {
         if (window.confirm('Clear all cached ratings?')) {
             await this.#cacheManager.clear();
-            const statusDiv = document.getElementById('fm-status');
+            const statusDiv = this.#container.querySelector('#fm-status');
             statusDiv.textContent = 'Cache cleared.';
             statusDiv.style.color = 'green';
         }
@@ -192,7 +194,7 @@ export class SettingsUI {
     async resetClients() {
         if (window.confirm('Re-enable all disabled API clients?')) {
             await this.#disabledClientsManager.resetAll();
-            const statusDiv = document.getElementById('fm-status');
+            const statusDiv = this.#container.querySelector('#fm-status');
             statusDiv.textContent = 'API clients re-enabled.';
             statusDiv.style.color = 'green';
         }
