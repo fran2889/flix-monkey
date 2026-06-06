@@ -87,4 +87,19 @@ describe('RequestQueue', () => {
         await queue.enqueue('url', 0, fetchFn, 'json');
         expect(fetchFn).toHaveBeenCalledOnce();
     });
+
+    it('should read global storage only once per request when no wait is needed', async () => {
+        const mockAdapter = createMockAdapter({
+            storageGet: vi.fn().mockResolvedValue('0'),
+            storageSet: vi.fn().mockResolvedValue(undefined),
+        });
+        const queue = new RequestQueue(0, 'sync-key', mockAdapter);
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+
+        await queue.enqueue('url1', 0, fetchFn, 'json');
+        await queue.enqueue('url2', 0, fetchFn, 'json');
+
+        // With interval=0 and no wait needed, storageGet should be called once per request
+        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(2);
+    });
 });

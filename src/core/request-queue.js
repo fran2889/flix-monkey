@@ -64,9 +64,11 @@ export class RequestQueue {
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
                 await new Promise(r => setTimeout(r, wait));
+                // Re-read storage after waiting, then restart loop
                 continue;
             }
 
+            // No wait needed — fire immediately without re-reading storage
             this.#lastLocalReqTime = Date.now();
             if (this.#globalSyncKey && this.#adapter) {
                 await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
