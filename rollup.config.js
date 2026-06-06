@@ -65,7 +65,7 @@ const configsByTarget = {
     userscript: [
         {
             input: 'src/targets/userscript/entry.js',
-            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
+            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER, sourcemap: 'inline' },
             plugins: [
                 ...sharedPlugins(),
                 {
