@@ -82,7 +82,7 @@ export class ApiClientManager {
         }
 
         await this.#cache.write(displayTitle, data);
-        logger.info(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
+        logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
         return data;
     }
 }

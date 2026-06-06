@@ -20,6 +20,7 @@ import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { ImdbApiDevClient } from '../../../src/core/api-clients.js';
+import { logger } from '../../../src/core/logger.js';
 
 describe('ApiClientManager', () => {
     const mockConfig = new ConfigManager();
@@ -128,12 +129,12 @@ describe('ApiClientManager', () => {
 
         const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
 
-        const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
         await manager.getData('Logged Movie');
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-            expect.stringContaining('[FlixMonkey] Successfully retrieved ratings for "Logged Movie" from test-source.')
+        expect(debugSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from test-source.')
         );
-        consoleSpy.mockRestore();
+        debugSpy.mockRestore();
     });
 });
