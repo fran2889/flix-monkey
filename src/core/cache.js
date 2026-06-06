@@ -17,16 +17,17 @@
  */
 import { DAYS_TO_MS } from './constants.js';
 import { Title } from './title.js';
-import { logger } from './logger.js';
 
 export class CacheManager {
     #prefix = 'fmc:';
     #adapter;
     #config;
+    #logger;
 
-    constructor(adapter, config) {
+    constructor(adapter, config, logger) {
         this.#adapter = adapter;
         this.#config = config;
+        this.#logger = logger;
     }
 
     #getCacheKey(displayTitle) {
@@ -58,7 +59,7 @@ export class CacheManager {
             const expired = entry.expires !== null && Date.now() > entry.expires;
             return expired ? null : Title.fromJSON(entry.data);
         } catch {
-            logger.warn('Cache entry corrupt, treating as miss', { key });
+            this.#logger.warn('Cache entry corrupt, treating as miss', { key });
             return null;
         }
     }
@@ -78,6 +79,6 @@ export class CacheManager {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
         await Promise.all(keys.map(key => this.#adapter.storageDelete(key)));
-        logger.debug(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
+        this.#logger.debug(`Cache cleared – removed ${count} entr${count === 1 ? 'y' : 'ies'}.`);
     }
 }

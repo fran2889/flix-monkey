@@ -18,28 +18,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
-import { ConfigManager } from '../../../src/core/config-manager.js';
-import { ImdbApiDevClient } from '../../../src/core/api-clients.js';
-import { logger } from '../../../src/core/logger.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 describe('ApiClientManager', () => {
-    const mockConfig = new ConfigManager(createMockAdapter());
-
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, null);
+        const manager = new ApiClientManager(mockCache, {}, {}, createMockLogger());
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Cached Movie');
         expect(mockCache.read).toHaveBeenCalled();
-    });
-
-    it('should only initialize the single selected client', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const config = { get: _key => 'imdbapi' };
-        const manager = new ApiClientManager(mockCache, {}, {}, config, null);
-        const client = manager.getClient();
-        expect(client instanceof ImdbApiDevClient).toBe(true);
     });
 
     it('should fetch and return result from client', async () => {
@@ -48,7 +35,7 @@ describe('ApiClientManager', () => {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
@@ -59,8 +46,7 @@ describe('ApiClientManager', () => {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(null),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
-
+        const manager = new ApiClientManager(mockCache, {}, client, createMockLogger());
         const result = await manager.getData('Some Title');
         expect(result).not.toBeNull();
         expect(result.hasRating).toBe(false);
@@ -74,16 +60,12 @@ describe('ApiClientManager', () => {
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(null),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, client);
-
+        const manager = new ApiClientManager(mockCache, {}, client, createMockLogger());
         const result = await manager.getData('Unknown Movie');
         expect(result.hasRating).toBe(false);
         expect(mockCache.write).toHaveBeenCalledWith(
             'Unknown Movie',
-            expect.objectContaining({
-                apiTitle: null,
-                rating: null,
-            })
+            expect.objectContaining({ apiTitle: null, rating: null })
         );
     });
 
@@ -93,17 +75,15 @@ describe('ApiClientManager', () => {
             getStatus: vi.fn().mockResolvedValue({ healthy: false }),
             fetch: vi.fn(),
         };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, unhealthyClient);
-
+        const manager = new ApiClientManager(mockCache, {}, unhealthyClient, createMockLogger());
         const result = await manager.getData('Test Movie');
-        expect(result).not.toBeNull();
         expect(result.hasRating).toBe(false);
         expect(unhealthyClient.fetch).not.toHaveBeenCalled();
     });
 
     it('should reset all disabled clients and return the list of re-enabled ones', async () => {
         const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue(['xmdb', 'omdb']) };
-        const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, {});
+        const manager = new ApiClientManager({}, mockDisabledManager, {}, createMockLogger());
         const reenabled = await manager.resetDisabledClients();
         expect(mockDisabledManager.resetAll).toHaveBeenCalled();
         expect(reenabled).toEqual(['xmdb', 'omdb']);
@@ -111,31 +91,24 @@ describe('ApiClientManager', () => {
 
     it('should handle resetDisabledClients when no clients are re-enabled', async () => {
         const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue([]) };
-        const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, {});
+        const manager = new ApiClientManager({}, mockDisabledManager, {}, createMockLogger());
         const reenabled = await manager.resetDisabledClients();
-        expect(mockDisabledManager.resetAll).toHaveBeenCalled();
         expect(reenabled).toEqual([]);
     });
 
     it('should log on successful data retrieval', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const mockClient = {
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Logged Movie' })),
-            source: 'test-source',
-        };
         const title = new Title({ apiTitle: 'Logged Movie' });
         title.source = 'test-source';
-        mockClient.fetch.mockResolvedValue(title);
-
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, mockClient);
-
-        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
+        const mockClient = {
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(title),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
         await manager.getData('Logged Movie');
-
-        expect(debugSpy).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from test-source.')
         );
-        debugSpy.mockRestore();
     });
 });

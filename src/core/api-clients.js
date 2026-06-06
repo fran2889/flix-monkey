@@ -18,7 +18,6 @@
 import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION } from './constants.js';
-import { logger } from './logger.js';
 
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
@@ -32,13 +31,15 @@ export class BaseApiClient {
     #disabledManager;
     #adapter;
     #config;
+    #logger;
 
-    constructor(queue, source, disabledManager, adapter, config) {
+    constructor(queue, source, disabledManager, adapter, config, logger) {
         this.#queue = queue;
         this.#source = source;
         this.#disabledManager = disabledManager;
         this.#adapter = adapter;
         this.#config = config;
+        this.#logger = logger;
     }
 
     get config() {
@@ -47,6 +48,10 @@ export class BaseApiClient {
 
     get source() {
         return this.#source;
+    }
+
+    get logger() {
+        return this.#logger;
     }
 
     async isDisabled() {
@@ -63,7 +68,9 @@ export class BaseApiClient {
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, durationMs);
-        logger.warn(`${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`);
+        this.#logger?.warn(
+            `${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
+        );
     }
 
     async queuedFetch(url, priority = 0, responseType = 'json') {
@@ -93,7 +100,7 @@ export class BaseApiClient {
             }
             return titleObj;
         } catch (err) {
-            logger.warn(`${this.constructor.name} failed: ${err.message}`);
+            this.#logger?.warn(`${this.constructor.name} failed: ${err.message}`);
             return null;
         }
     }
@@ -108,13 +115,14 @@ export class BaseApiClient {
 }
 
 export class XmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config) {
+    constructor(disabledManager, adapter, config, logger) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
             ApiSource.XMDB,
             disabledManager,
             adapter,
-            config
+            config,
+            logger
         );
     }
 
@@ -122,22 +130,22 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        logger.debug(`Searching XMDB for title: "${displayTitle}"`);
+        this.logger?.debug(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            logger.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            logger.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         return titleResults[0];
     }
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        logger.debug(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
+        this.logger?.debug(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
@@ -155,13 +163,14 @@ export class XmdbApiClient extends BaseApiClient {
 }
 
 export class OmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config) {
+    constructor(disabledManager, adapter, config, logger) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter),
             ApiSource.OMDB,
             disabledManager,
             adapter,
-            config
+            config,
+            logger
         );
     }
 
@@ -174,10 +183,10 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        logger.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
+        this.logger?.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            logger.debug(`No search results found in OMDB for: "${t}"`);
+            this.logger?.debug(`No search results found in OMDB for: "${t}"`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
@@ -194,22 +203,23 @@ export class OmdbApiClient extends BaseApiClient {
 }
 
 export class ImdbApiDevClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config) {
+    constructor(disabledManager, adapter, config, logger) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.IMDBAPI], null, adapter),
             ApiSource.IMDBAPI,
             disabledManager,
             adapter,
-            config
+            config,
+            logger
         );
     }
 
     async search(displayTitle) {
         const searchParams = new URLSearchParams({ query: displayTitle, limit: 5 });
-        logger.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
+        this.logger?.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
-            logger.debug(`No search results found in IMDb API Dev for: "${displayTitle}"`);
+            this.logger?.debug(`No search results found in IMDb API Dev for: "${displayTitle}"`);
             return null;
         }
         return titles[0];
@@ -217,7 +227,7 @@ export class ImdbApiDevClient extends BaseApiClient {
 
     async getDetails(match, displayTitle) {
         const { id } = match;
-        logger.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
+        this.logger?.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
         const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
         if (!detailsJson || detailsJson.error) return null;
 

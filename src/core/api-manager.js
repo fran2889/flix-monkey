@@ -15,50 +15,31 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
-import { ApiSource } from './constants.js';
 import { Title } from './title.js';
-import { logger } from './logger.js';
 
 export class ApiClientManager {
     #cache;
     #client;
     #disabledManager;
-    #config;
+    #logger;
 
-    constructor(cacheManager, disabledManager, adapter, config, client = null) {
-        this.#cache = cacheManager;
+    constructor(cache, disabledManager, client, logger) {
+        this.#cache = cache;
         this.#disabledManager = disabledManager;
-        this.#config = config;
         this.#client = client;
-
-        if (!this.#client) {
-            this.#client = ApiClientManager.#createClientFromConfig(this.#config, this.#disabledManager, adapter);
-        }
+        this.#logger = logger;
     }
 
     getClient() {
         return this.#client;
     }
 
-    static #createClientFromConfig(config, disabledManager, adapter) {
-        const provider = (config.get('apiClient') ?? 'imdbapi').trim().toLowerCase();
-        const clientMap = {
-            [ApiSource.XMDB]: XmdbApiClient,
-            [ApiSource.OMDB]: OmdbApiClient,
-            [ApiSource.IMDBAPI]: ImdbApiDevClient,
-        };
-
-        const ClientClass = clientMap[provider] ?? ImdbApiDevClient;
-        return new ClientClass(disabledManager, adapter, config);
-    }
-
     async resetDisabledClients() {
         const reenabled = await this.#disabledManager.resetAll();
         if (reenabled.length > 0) {
-            logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
+            this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
         } else {
-            logger.info('No disabled API clients found to re-enable.');
+            this.#logger.info('No disabled API clients found to re-enable.');
         }
         return reenabled;
     }
@@ -82,7 +63,7 @@ export class ApiClientManager {
         }
 
         await this.#cache.write(displayTitle, data);
-        logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
+        this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
         return data;
     }
 }

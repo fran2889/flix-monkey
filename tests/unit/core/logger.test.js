@@ -16,49 +16,51 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { logger } from '../../../src/core/logger.js';
+import { Logger } from '../../../src/core/logger.js';
 
 describe('core/logger', () => {
-    it('should log without crashing', () => {
+    function makeLogger(debugVal = false) {
+        return new Logger({ configGet: key => (key === 'debug' ? debugVal : undefined) });
+    }
+
+    it('should log warn without crashing', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        logger.warn('test warning');
+        makeLogger().warn('test warning');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test warning');
         spy.mockRestore();
     });
 
     it('should handle multiple arguments', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        logger.warn('test', { foo: 'bar' });
+        makeLogger().warn('test', { foo: 'bar' });
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test', { foo: 'bar' });
         spy.mockRestore();
     });
 
     it('should log errors', () => {
         const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        logger.error('test error');
+        makeLogger().error('test error');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test error');
         spy.mockRestore();
     });
 
     it('should log info', () => {
         const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
-        logger.info('test info');
+        makeLogger().info('test info');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test info');
         spy.mockRestore();
     });
 
-    it('should log debug when enabled', () => {
+    it('should log debug when adapter returns true', () => {
         const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-        logger.setConfig({ get: () => true });
-        logger.debug('test debug');
+        makeLogger(true).debug('test debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug');
         spy.mockRestore();
     });
 
-    it('should not log debug when disabled', () => {
+    it('should not log debug when adapter returns false', () => {
         const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
-        logger.setConfig({ get: () => false });
-        logger.debug('test debug');
+        makeLogger(false).debug('test debug');
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
     });

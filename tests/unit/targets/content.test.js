@@ -44,7 +44,6 @@ vi.mock('webextension-polyfill', () => ({
 
 vi.mock('../../../src/core/app.js', () => ({
     startApp: vi.fn(() => mockAppHandle),
-    _resetStartedForTest: vi.fn(),
 }));
 
 describe('content.js entry point', () => {

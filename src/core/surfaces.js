@@ -15,9 +15,12 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { logger } from './logger.js';
-
 export class SurfaceManager {
+    #logger;
+    constructor(logger) {
+        this.#logger = logger;
+    }
+
     // Surface priority order: title-card → search → bob → previewModal → jawBone.
     // A container matched by an earlier surface is added to `seen` and skipped by
     // all later surfaces, so declaration order determines which definition "wins".
@@ -85,7 +88,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = titleEl.closest(surface.containerSel);
                 if (!container) {
-                    logger.debug('Surface container selector failed, falling back to parentElement', {
+                    this.#logger.debug('Surface container selector failed, falling back to parentElement', {
                         selector: surface.containerSel,
                     });
                     container = titleEl.parentElement;

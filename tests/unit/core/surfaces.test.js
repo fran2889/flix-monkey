@@ -15,20 +15,20 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
-import { logger } from '../../../src/core/logger.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 describe('Surfaces', () => {
     it('should return empty array when no titles found', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = '<div>No titles here</div>';
         const results = surfaces.discover(document.body);
         expect(results).toEqual([]);
     });
 
     it('should discover title card surfaces', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div class="title-card">
                 <div class="fallback-text">My Movie</div>
@@ -42,7 +42,7 @@ describe('Surfaces', () => {
     });
 
     it('should discover search video card surfaces', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div data-uia="search-gallery-video-card" aria-label="Search Result Title"></div>
         `;
@@ -53,7 +53,7 @@ describe('Surfaces', () => {
     });
 
     it('should discover bob container surfaces', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div class="bob-container">
                 <div class="bob-title">Bob Movie</div>
@@ -66,7 +66,7 @@ describe('Surfaces', () => {
     });
 
     it('should discover preview modal surfaces (img alt)', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div class="previewModal">
                 <div class="previewModal--player-titleTreatmentWrapper">
@@ -82,7 +82,7 @@ describe('Surfaces', () => {
     });
 
     it('should discover jawbone surfaces', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div class="jawBone">
                 <img alt="Jawbone Title" src="...">
@@ -96,7 +96,7 @@ describe('Surfaces', () => {
     });
 
     it('should handle missing title text/alt', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
             <div class="title-card">
                 <div class="fallback-text">  </div>
@@ -110,8 +110,8 @@ describe('Surfaces', () => {
     });
 
     it('should fall back to parent element if container selector not found', () => {
-        const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {});
-        const surfaces = new SurfaceManager();
+        const mockLogger = createMockLogger();
+        const surfaces = new SurfaceManager(mockLogger);
         document.body.innerHTML = `
             <div class="not-a-container">
                 <div class="bob-title">Orphan Title</div>
@@ -121,14 +121,16 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan Title');
         expect(results[0].container.className).toBe('not-a-container');
-        expect(debugSpy).toHaveBeenCalledWith('Surface container selector failed, falling back to parentElement', {
-            selector: '.bob-container',
-        });
-        debugSpy.mockRestore();
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            'Surface container selector failed, falling back to parentElement',
+            {
+                selector: '.bob-container',
+            }
+        );
     });
 
     it('should de-duplicate containers', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         // Construct a case where multiple selectors might find the same container
         // Though in reality they are mostly mutually exclusive, we can test the logic
         document.body.innerHTML = `
@@ -143,7 +145,7 @@ describe('Surfaces', () => {
     });
 
     it('should handle querySelectorAll errors gracefully', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         const mockRoot = {
             querySelectorAll: () => {
                 throw new Error('Selection failed');
@@ -155,7 +157,7 @@ describe('Surfaces', () => {
 
     describe('getTitle fallbacks and edge cases', () => {
         it('should skip discover when textContent is empty', () => {
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = '<div class="title-card"><div class="fallback-text"></div></div>';
             const results = surfaces.discover(document.body);
             expect(results).toHaveLength(0);
@@ -171,13 +173,13 @@ describe('Surfaces', () => {
             const mockRoot = {
                 querySelectorAll: () => [mockEl],
             };
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             const results = surfaces.discover(mockRoot);
             expect(results).toHaveLength(0);
         });
 
         it('should fallback to previewModal h3 tag text', () => {
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = `
                 <div class="previewModal">
                     <h3>H3 Title</h3>
@@ -189,7 +191,7 @@ describe('Surfaces', () => {
         });
 
         it('should fallback to jawBone image-fallback-text content', () => {
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = `
                 <div class="jawBone">
                     <div class="image-fallback-text">Fallback Title</div>
@@ -202,7 +204,7 @@ describe('Surfaces', () => {
     });
 
     it('should handle missing container', () => {
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         // Mock a title element that doesn't have a closest container
         document.body.innerHTML = '<div class="bob-title">No Container</div>';
         const results = surfaces.discover(document.body);
@@ -223,7 +225,7 @@ describe('Surfaces', () => {
             ],
             ['<div class="previewModal"><h3 class="previewModal--boxarttitle">Boxart Title</h3></div>', 'Boxart Title'],
         ])('should discover previewModal with html: %s', (html, expectedTitle) => {
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = html;
             const results = surfaces.discover(document.body);
             expect(results).toHaveLength(1);
@@ -266,7 +268,7 @@ describe('Surfaces', () => {
                 'previewModal--detailsMetadata',
             ],
         ])('should discover jawBone/detail surface with html: %s', (html, expectedTitle, expectedContainerClass) => {
-            const surfaces = new SurfaceManager();
+            const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = html;
             const results = surfaces.discover(document.body);
             expect(results).toHaveLength(1);

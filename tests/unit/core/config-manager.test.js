@@ -19,42 +19,59 @@ import { describe, it, expect } from 'vitest';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../../src/core/config-fields.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 describe('ConfigManager', () => {
     it('should return CONFIG_DEFAULTS when adapter returns undefined', () => {
-        const config = new ConfigManager(createMockAdapter());
+        const config = new ConfigManager(createMockAdapter(), createMockLogger());
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
     });
 
     it('should return value from adapter.configGet', () => {
         const config = new ConfigManager(
-            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'bottom-right' : undefined) })
+            createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'bottom-right' : undefined) }),
+            createMockLogger()
         );
         expect(config.get('overlayCorner')).toBe('bottom-right');
     });
 
     it('should return explicit fallback when adapter returns null', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => null }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }), createMockLogger());
         expect(config.get('nonExistentKey', 'fallback')).toBe('fallback');
     });
 
     it('should parse integer via getInt', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => '42' }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => '42' }), createMockLogger());
         expect(config.getInt('someInt', 0)).toBe(42);
     });
 
     it('should return fallback for invalid integer', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
         expect(config.getInt('someInt', 10)).toBe(10);
     });
 
     it('should parse float via getFloat', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => '3.14' }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => '3.14' }), createMockLogger());
         expect(config.getFloat('someFloat', 0)).toBe(3.14);
     });
 
     it('should return fallback for invalid float', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
         expect(config.getFloat('someFloat', 2.5)).toBe(2.5);
+    });
+
+    it('should call injected logger.warn when configGet throws', () => {
+        const mockLogger = createMockLogger();
+        const adapter = createMockAdapter({
+            configGet: () => {
+                throw new Error('oops');
+            },
+        });
+        const config = new ConfigManager(adapter, mockLogger);
+        config.get('someKey');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            'ConfigManager.get error, using fallback',
+            expect.objectContaining({ key: 'someKey' })
+        );
     });
 });

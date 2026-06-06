@@ -16,13 +16,14 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { CONFIG_DEFAULTS } from './config-fields.js';
-import { logger } from './logger.js';
 
 export class ConfigManager {
     #adapter;
+    #logger;
 
-    constructor(adapter) {
+    constructor(adapter, logger) {
         this.#adapter = adapter;
+        this.#logger = logger;
     }
 
     get(key, fallback) {
@@ -30,7 +31,7 @@ export class ConfigManager {
             const val = this.#adapter.configGet(key);
             return val !== undefined && val !== null ? val : (fallback ?? CONFIG_DEFAULTS[key]);
         } catch (err) {
-            logger.warn('ConfigManager.get error, using fallback', { key, err });
+            this.#logger.warn('ConfigManager.get error, using fallback', { key, err });
             return fallback ?? CONFIG_DEFAULTS[key];
         }
     }

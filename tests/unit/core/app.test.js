@@ -16,12 +16,13 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { startApp, FlixMonkeyApp, _resetStartedForTest } from '../../../src/core/app.js';
+import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
-import { logger } from '../../../src/core/logger.js';
+import { Logger } from '../../../src/core/logger.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
@@ -52,7 +53,6 @@ describe('App', () => {
         vi.restoreAllMocks();
         document.body.innerHTML = '';
         global.MutationObserver = ActualMutationObserver;
-        _resetStartedForTest();
     });
 
     it('should initialize and hold state', () => {
@@ -68,7 +68,7 @@ describe('App', () => {
             <div class="fallback-text">Movie Title</div>
         </div>
     `;
-        const surfaces = new SurfaceManager();
+        const surfaces = new SurfaceManager(createMockLogger());
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Movie Title');
@@ -278,16 +278,10 @@ describe('App', () => {
             isLoading: vi.fn().mockReturnValue(false),
         };
         const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
-        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces);
+        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces, createMockLogger());
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         app.disconnect();
-    });
-
-    it('should throw if startApp is called twice', () => {
-        const mockAdapter = createMockAdapter();
-        appRef = startApp(mockAdapter);
-        expect(() => startApp(mockAdapter)).toThrow('startApp already called');
     });
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
@@ -300,7 +294,7 @@ describe('App', () => {
 
     it('should catch and log errors thrown in the mutation handler', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
-        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
         appRef = startApp(mockAdapter);
 
@@ -318,7 +312,7 @@ describe('App', () => {
                 <div class="fallback-text">Boom Movie</div>
             </div>
         `;
-        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
         vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('boom'));
 
         appRef = startApp(createMockAdapter());
@@ -342,7 +336,7 @@ describe('App', () => {
                 <div class="fallback-text">Hanging Film</div>
             </div>
         `;
-        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
         vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(new Promise(() => {})); // never resolves
 
         appRef = startApp(createMockAdapter());

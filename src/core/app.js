@@ -20,18 +20,18 @@ import { DisabledClientsManager } from './disabled-clients.js';
 import { ApiClientManager } from './api-manager.js';
 import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
-import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
+import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
 import { ConfigManager } from './config-manager.js';
-import { logger } from './logger.js';
+import { Logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
-
-let _appStarted = false;
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
 
 export class FlixMonkeyApp {
     #api;
     #cache;
     #renderer;
     #surfaces;
+    #logger;
     #inFlight = new Map();
     #pendingRoots = new Set();
     #debouncedDecorate;
@@ -43,11 +43,12 @@ export class FlixMonkeyApp {
     #originalReplaceState = null;
     #popstateHandler = null;
 
-    constructor(cache, api, renderer, surfaces) {
+    constructor(cache, api, renderer, surfaces, logger) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
+        this.#logger = logger;
         this.#debouncedDecorate = debounce(() => {
             const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
             this.#pendingRoots.clear();
@@ -113,7 +114,7 @@ export class FlixMonkeyApp {
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
             this.#decorateContainer(container, title, fadeable).catch(err =>
-                logger.error('decorateContainer failed', err)
+                this.#logger.error('decorateContainer failed', err)
             );
         });
     }
@@ -150,7 +151,7 @@ export class FlixMonkeyApp {
                 }
                 if (hasElements) this.#debouncedDecorate();
             } catch (err) {
-                logger.error('Mutation handler error', err);
+                this.#logger.error('Mutation handler error', err);
             }
         });
         this.#observer.observe(document.body, { childList: true, subtree: true });
@@ -168,18 +169,27 @@ export class FlixMonkeyApp {
     }
 }
 
-export function startApp(adapter) {
-    if (_appStarted) throw new Error('startApp already called');
-    _appStarted = true;
+function createApiClient(config, disabledManager, adapter, logger) {
+    const provider = (config.get('apiClient') ?? 'imdbapi').trim().toLowerCase();
+    const clientMap = {
+        [ApiSource.XMDB]: XmdbApiClient,
+        [ApiSource.OMDB]: OmdbApiClient,
+        [ApiSource.IMDBAPI]: ImdbApiDevClient,
+    };
+    const ClientClass = clientMap[provider] ?? ImdbApiDevClient;
+    return new ClientClass(disabledManager, adapter, config, logger);
+}
 
-    const configManager = new ConfigManager(adapter);
-    const cache = new CacheManager(adapter, configManager);
+export function startApp(adapter) {
+    const logger = new Logger(adapter);
+    const configManager = new ConfigManager(adapter, logger);
+    const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
-    const api = new ApiClientManager(cache, disabledManager, adapter, configManager);
+    const client = createApiClient(configManager, disabledManager, adapter, logger);
+    const api = new ApiClientManager(cache, disabledManager, client, logger);
     const renderer = new OverlayRenderer(configManager);
-    const surfaces = new SurfaceManager();
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces);
-    logger.setConfig(configManager);
+    const surfaces = new SurfaceManager(logger);
+    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, logger);
     app.init();
     return {
         clearCache: () => app.clearCache(),
@@ -189,9 +199,4 @@ export function startApp(adapter) {
         cacheManager: cache,
         disabledManager: disabledManager,
     };
-}
-
-/** @internal for testing only */
-export function _resetStartedForTest() {
-    _appStarted = false;
 }

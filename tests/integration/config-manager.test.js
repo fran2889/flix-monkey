@@ -15,48 +15,47 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS } from '../../src/core/config-fields.js';
-import { logger } from '../../src/core/logger.js';
 import { createMockAdapter } from '../mocks/adapter.js';
+import { createMockLogger } from '../mocks/logger.js';
 
 describe('ConfigManager Integration', () => {
     describe('CONFIG_DEFAULTS integration', () => {
         it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
-            const config = new ConfigManager(createMockAdapter());
+            const config = new ConfigManager(createMockAdapter(), createMockLogger());
             expect(config.get(key)).toBe(expectedValue);
         });
     });
 
     it('should handle errors in configGet and fall back', () => {
-        const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+        const mockLogger = createMockLogger();
         const config = new ConfigManager(
             createMockAdapter({
                 configGet: () => {
                     throw new Error('Adapter error');
                 },
-            })
+            }),
+            mockLogger
         );
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
         expect(config.get('overlayCorner', 'top-left')).toBe('top-left');
-        expect(warnSpy).toHaveBeenCalledWith(
+        expect(mockLogger.warn).toHaveBeenCalledWith(
             'ConfigManager.get error, using fallback',
             expect.objectContaining({ key: 'overlayCorner' })
         );
-        warnSpy.mockRestore();
     });
 
     it('should fall back to CONFIG_DEFAULTS when configGet returns null', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => null }));
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }), createMockLogger());
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
     });
 
     it('should handle non-string values from configGet', () => {
         const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => (key === 'someInt' ? 42 : key === 'someFloat' ? 1.5 : undefined),
-            })
+            createMockAdapter({ configGet: key => (key === 'someInt' ? 42 : key === 'someFloat' ? 1.5 : undefined) }),
+            createMockLogger()
         );
         expect(config.getInt('someInt')).toBe(42);
         expect(config.getFloat('someFloat')).toBe(1.5);
@@ -64,9 +63,8 @@ describe('ConfigManager Integration', () => {
 
     it('should handle falsy but valid values (0 and empty string)', () => {
         const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => (key === 'zero' ? 0 : key === 'empty' ? '' : undefined),
-            })
+            createMockAdapter({ configGet: key => (key === 'zero' ? 0 : key === 'empty' ? '' : undefined) }),
+            createMockLogger()
         );
         expect(config.get('zero')).toBe(0);
         expect(config.get('empty')).toBe('');
