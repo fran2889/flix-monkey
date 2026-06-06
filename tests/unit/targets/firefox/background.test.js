@@ -150,6 +150,15 @@ describe('Firefox Background Script', () => {
         expect(result).toEqual({ error: 'Network error' });
     });
 
+    it('should ignore messages from external senders', async () => {
+        // browser.runtime.id is undefined in test env — sender.id must match it
+        const result = await messageListener(
+            { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
+            { id: 'some-other-extension-id' }
+        );
+        expect(result).toBeUndefined();
+    });
+
     it('should open options page when action icon is clicked', () => {
         actionListener();
         expect(browser.runtime.openOptionsPage).toHaveBeenCalled();

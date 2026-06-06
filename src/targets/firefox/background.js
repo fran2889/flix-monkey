@@ -19,7 +19,8 @@ import { handleFetchMessage } from '../extension/fetch-proxy.js';
 
 // Firefox-only background script.
 // Uses bare 'browser' global available in Firefox's non-bundled background environment.
-browser.runtime.onMessage.addListener(async msg => {
+browser.runtime.onMessage.addListener(async (msg, sender) => {
+    if (sender?.id !== browser.runtime.id) return;
     if (msg.type !== 'FM_FETCH') return;
     const { url, options = {} } = msg;
     return handleFetchMessage(url, options);
