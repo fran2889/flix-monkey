@@ -50,6 +50,16 @@ function expectCommonTitleFields(result, source, displayTitle = DISPLAY_TITLE) {
     expectImdbRating(result.rating);
 }
 
+const adapter = {
+    httpFetch: async (url, options) => {
+        const response = await fetch(url, options);
+        return await response.json();
+    },
+    storageGet: async () => '0',
+    storageSet: async () => {},
+};
+const disabledManager = new DisabledClientsManager(adapter);
+
 describe('api-clients integration', () => {
     let configManager;
     beforeAll(() => {
@@ -59,41 +69,28 @@ describe('api-clients integration', () => {
         };
         configManager = new ConfigManager(createMockAdapter({ configGet: getter }));
     });
-    if (!hasCredentials(credentials)) {
-        it.skip('should fetch real data from APIs', async () => {});
-    } else {
-        const adapter = {
-            httpFetch: async (url, options) => {
-                const response = await fetch(url, options);
-                return await response.json();
-            },
-            storageGet: async () => '0',
-            storageSet: async () => {},
-        };
-        const disabledManager = new DisabledClientsManager(adapter);
 
-        it('should fetch real data from XMDB', async () => {
-            const client = new XmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(DISPLAY_TITLE);
-            expectCommonTitleFields(result, ApiSource.XMDB);
-            expectPercentageRating(result.mcRating, 'XMDB Metacritic');
-            expect(result.rtRating).toBeNull();
-        });
+    it.skipIf(!hasCredentials(credentials))('should fetch real data from XMDB', async () => {
+        const client = new XmdbApiClient(disabledManager, adapter, configManager);
+        const result = await client.fetch(DISPLAY_TITLE);
+        expectCommonTitleFields(result, ApiSource.XMDB);
+        expectPercentageRating(result.mcRating, 'XMDB Metacritic');
+        expect(result.rtRating).toBeNull();
+    });
 
-        it('should fetch real data from OMDB', async () => {
-            const client = new OmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(DISPLAY_TITLE);
-            expectCommonTitleFields(result, ApiSource.OMDB);
-            expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
-            expectPercentageRating(result.mcRating, 'OMDB Metacritic');
-        });
+    it.skipIf(!hasCredentials(credentials))('should fetch real data from OMDB', async () => {
+        const client = new OmdbApiClient(disabledManager, adapter, configManager);
+        const result = await client.fetch(DISPLAY_TITLE);
+        expectCommonTitleFields(result, ApiSource.OMDB);
+        expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
+        expectPercentageRating(result.mcRating, 'OMDB Metacritic');
+    });
 
-        it('should fetch real data from IMDb API Dev', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(DISPLAY_TITLE);
-            expectCommonTitleFields(result, ApiSource.IMDBAPI);
-            expectPercentageRating(result.mcRating, 'IMDb API Dev Metacritic');
-            expect(result.rtRating).toBeNull();
-        });
-    }
+    it.skipIf(!hasCredentials(credentials))('should fetch real data from IMDb API Dev', async () => {
+        const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+        const result = await client.fetch(DISPLAY_TITLE);
+        expectCommonTitleFields(result, ApiSource.IMDBAPI);
+        expectPercentageRating(result.mcRating, 'IMDb API Dev Metacritic');
+        expect(result.rtRating).toBeNull();
+    });
 });
