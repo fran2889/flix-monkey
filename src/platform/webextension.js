@@ -64,6 +64,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
         );
 
         const response = await Promise.race([fetchPromise, timeoutPromise]);
+        if (!response) throw new FlixMonkeyError('empty background response');
         if (response.error) {
             throw new FlixMonkeyError(response.error, response.status);
         }

@@ -128,4 +128,9 @@ describe('WebExtensionAdapter', () => {
         expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
         expect(freshAdapter.configGet('xmdbApiKey')).toBeUndefined();
     });
+
+    it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
+        browser.runtime.sendMessage.mockResolvedValue(undefined);
+        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
+    });
 });
