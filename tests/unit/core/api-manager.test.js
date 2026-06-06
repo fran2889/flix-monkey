@@ -107,13 +107,6 @@ describe('ApiClientManager', () => {
         expect(reenabled).toEqual(['xmdb', 'omdb']);
     });
 
-    it('should clear the cache', async () => {
-        const mockCache = { clear: vi.fn().mockResolvedValue() };
-        const manager = new ApiClientManager(mockCache, {}, {}, mockConfig, {});
-        await manager.clearCache();
-        expect(mockCache.clear).toHaveBeenCalled();
-    });
-
     it('should handle resetDisabledClients when no clients are re-enabled', async () => {
         const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue([]) };
         const manager = new ApiClientManager({}, mockDisabledManager, {}, mockConfig, {});
