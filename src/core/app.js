@@ -26,9 +26,6 @@ import { logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
 
 let _appStarted = false;
-let _navigationPatched = false;
-const _originalPushState = history.pushState;
-const _originalReplaceState = history.replaceState;
 
 export class FlixMonkeyApp {
     #api;
@@ -40,6 +37,10 @@ export class FlixMonkeyApp {
     #observer = null;
     #initialised = false;
     #boundDisconnect = null;
+    #navigationPatched = false;
+    #originalPushState = null;
+    #originalReplaceState = null;
+    #popstateHandler = null;
 
     constructor(cache, api, renderer, surfaces) {
         this.#cache = cache;
@@ -57,6 +58,12 @@ export class FlixMonkeyApp {
         if (this.#boundDisconnect) {
             window.removeEventListener('beforeunload', this.#boundDisconnect);
             this.#boundDisconnect = null;
+        }
+        if (this.#navigationPatched) {
+            history.pushState = this.#originalPushState;
+            history.replaceState = this.#originalReplaceState;
+            window.removeEventListener('popstate', this.#popstateHandler);
+            this.#navigationPatched = false;
         }
     }
 
@@ -106,19 +113,23 @@ export class FlixMonkeyApp {
     }
 
     #initNavigationObservers() {
-        if (_navigationPatched) return;
-        _navigationPatched = true;
+        if (this.#navigationPatched) return;
+        this.#navigationPatched = true;
+
+        this.#originalPushState = history.pushState;
+        this.#originalReplaceState = history.replaceState;
 
         history.pushState = (...args) => {
-            _originalPushState.apply(history, args);
+            this.#originalPushState.apply(history, args);
             this.#debouncedDecorate();
         };
         history.replaceState = (...args) => {
-            _originalReplaceState.apply(history, args);
+            this.#originalReplaceState.apply(history, args);
             this.#debouncedDecorate();
         };
 
-        window.addEventListener('popstate', () => this.#debouncedDecorate());
+        this.#popstateHandler = () => this.#debouncedDecorate();
+        window.addEventListener('popstate', this.#popstateHandler);
 
         this.#observer = new MutationObserver(mutations => {
             try {
@@ -169,7 +180,4 @@ export function startApp(adapter) {
 /** @internal for testing only */
 export function _resetStartedForTest() {
     _appStarted = false;
-    _navigationPatched = false;
-    history.pushState = _originalPushState;
-    history.replaceState = _originalReplaceState;
 }
