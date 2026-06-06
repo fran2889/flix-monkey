@@ -32,7 +32,7 @@ export class SettingsUI {
     async render(container) {
         this._injectStyles();
         const settings = (await this.adapter.storageGetAll()) || {};
-        this.adapter.setConfigData?.(settings);
+        this.adapter.setConfigData(settings);
 
         container.className = 'fm-settings-container';
         container.replaceChildren();

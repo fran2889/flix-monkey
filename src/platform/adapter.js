@@ -72,4 +72,7 @@ export class PlatformAdapter {
     registerMenuCommand(_label, _fn) {
         // No-op by default
     }
+
+    /** No-op by default; WebExtensionAdapter overrides to pre-load config. */
+    setConfigData(_data) {}
 }

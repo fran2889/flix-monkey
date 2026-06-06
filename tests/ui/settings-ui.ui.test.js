@@ -22,6 +22,7 @@ describe('SettingsUI Component', () => {
     const mockAdapter = {
         storageGetAll: vi.fn().mockResolvedValue({}),
         storageSetMany: vi.fn().mockResolvedValue({}),
+        setConfigData: vi.fn(),
     };
     const mockManagers = {
         cacheManager: {
