@@ -206,11 +206,7 @@ describe('XmdbApiClient', () => {
     });
 
     it('should return null if no API key is set', async () => {
-        const client = new XmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            {},
-            { get: _k => 'YOUR_XMDB_API_KEY' }
-        );
+        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, {}, { get: _k => '' });
         const result = await client.search('Movie 1');
         expect(result).toBeNull();
     });
@@ -237,11 +233,7 @@ describe('OmdbApiClient', () => {
     });
 
     it('should return null if no API key is set', async () => {
-        const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            {},
-            { get: _k => 'YOUR_OMDB_API_KEY' }
-        );
+        const client = new OmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(false) }, {}, { get: _k => '' });
         const result = await client.search('Movie 1');
         expect(result).toBeNull();
     });
@@ -399,5 +391,25 @@ describe('API key redaction in debug logs', () => {
         expect(logged).not.toContain('omdb-secret-456');
         expect(logged).toContain('*****');
         debugSpy.mockRestore();
+    });
+});
+
+describe('sentinel key guard', () => {
+    it('should return null from XmdbApiClient.search when apiKey is empty string', async () => {
+        const mockAdapter = createMockAdapter();
+        const config = { get: () => '' };
+        const client = new XmdbApiClient({}, mockAdapter, config);
+        const result = await client.search('some movie');
+        expect(result).toBeNull();
+        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
+    });
+
+    it('should return null from OmdbApiClient.search when apiKey is empty string', async () => {
+        const mockAdapter = createMockAdapter();
+        const config = { get: () => '' };
+        const client = new OmdbApiClient({}, mockAdapter, config);
+        const result = await client.search('some movie');
+        expect(result).toBeNull();
+        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
     });
 });

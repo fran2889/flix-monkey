@@ -120,7 +120,7 @@ export class XmdbApiClient extends BaseApiClient {
 
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
-        if (!apiKey || apiKey === 'YOUR_XMDB_API_KEY') return null;
+        if (!apiKey) return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
         const searchUrl = `https://xmdbapi.com/api/v1/search?${searchParams}`;
         logger.debug(`Searching XMDB: ${searchUrl.replace(/apiKey=[^&]+/, 'apiKey=*****')}`);
@@ -168,7 +168,7 @@ export class OmdbApiClient extends BaseApiClient {
 
     async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
-        if (!apiKey || apiKey === 'YOUR_OMDB_API_KEY') return null;
+        if (!apiKey) return null;
         return { title: displayTitle };
     }
 
