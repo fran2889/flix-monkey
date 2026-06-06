@@ -122,8 +122,9 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey || apiKey === 'YOUR_XMDB_API_KEY') return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        logger.debug(`Searching XMDB for title: "${displayTitle}"`);
-        const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
+        const searchUrl = `https://xmdbapi.com/api/v1/search?${searchParams}`;
+        logger.debug(`Searching XMDB: ${searchUrl.replace(/apiKey=[^&]+/, 'apiKey=*****')}`);
+        const { results } = await this.queuedFetch(searchUrl, 0);
         if (!results?.length) {
             logger.debug(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
@@ -174,8 +175,11 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        logger.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
-        const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
+        const omdbUrl = `https://www.omdbapi.com/?${params}`;
+        logger.debug(
+            `Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}: ${omdbUrl.replace(/apikey=[^&]+/i, 'apikey=*****')}`
+        );
+        const json = await this.queuedFetch(omdbUrl, 1);
         if (json.Response === 'False') {
             logger.debug(`No search results found in OMDB for: "${t}"`);
             return null;
