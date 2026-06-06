@@ -23,19 +23,36 @@ export class Modal {
     constructor(title) {
         this.title = title;
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
+
         this.overlay = document.createElement('div');
         this.overlay.className = 'fm-modal-overlay';
-        this.overlay.innerHTML = `
-            <div class="fm-modal-content" role="dialog" aria-modal="true" aria-labelledby="${titleId}" tabindex="-1">
-                <div class="fm-modal-header">
-                    <h2 class="fm-modal-title" id="${titleId}"></h2>
-                    <button class="fm-modal-close">×</button>
-                </div>
-                <div class="fm-modal-body"></div>
-            </div>
-        `;
-        this.overlay.querySelector('.fm-modal-title').textContent = this.title;
-        this.overlay.querySelector('.fm-modal-close').onclick = () => this.close();
+
+        const content = document.createElement('div');
+        content.className = 'fm-modal-content';
+        content.setAttribute('role', 'dialog');
+        content.setAttribute('aria-modal', 'true');
+        content.setAttribute('aria-labelledby', titleId);
+        content.setAttribute('tabindex', '-1');
+
+        const header = document.createElement('div');
+        header.className = 'fm-modal-header';
+
+        const heading = document.createElement('h2');
+        heading.className = 'fm-modal-title';
+        heading.id = titleId;
+        heading.textContent = this.title;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'fm-modal-close';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = () => this.close();
+
+        const body = document.createElement('div');
+        body.className = 'fm-modal-body';
+
+        header.append(heading, closeBtn);
+        content.append(header, body);
+        this.overlay.appendChild(content);
         document.body.appendChild(this.overlay);
     }
 
