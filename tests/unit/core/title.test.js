@@ -65,4 +65,58 @@ describe('Title', () => {
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.rating).toBeNull();
     });
+
+    describe('hasRating', () => {
+        it('should be true when rating is 0', () => {
+            expect(new Title({ rating: 0 }).hasRating).toBe(true);
+        });
+        it('should be true when rtRating is "0%"', () => {
+            expect(new Title({ rtRating: '0%' }).hasRating).toBe(true);
+        });
+        it('should be true when mcRating is "0/100"', () => {
+            expect(new Title({ mcRating: '0/100' }).hasRating).toBe(true);
+        });
+        it('should be false when all ratings are null', () => {
+            expect(new Title({}).hasRating).toBe(false);
+        });
+    });
+
+    describe('rating normalization', () => {
+        it.each([
+            ['N/A', null],
+            ['', null],
+            [null, null],
+            [undefined, null],
+            ['8.5', 8.5],
+            [0, 0],
+        ])('normalizes rating %s → %s', (input, expected) => {
+            expect(new Title({ rating: input }).rating).toBe(expected);
+        });
+
+        it.each([
+            ['90%', 90],
+            ['0%', 0],
+            ['N/A', null],
+            ['', null],
+            [null, null],
+            ['8.5/10', 8], // parseInt stops at non-digit
+        ])('normalizes rtRating %s → %s', (input, expected) => {
+            expect(new Title({ rtRating: input }).rtRating).toBe(expected);
+        });
+
+        it.each([
+            ['85/100', 85],
+            ['0/100', 0],
+            ['N/A', null],
+            ['', null],
+            [null, null],
+            ['abc', null],
+        ])('normalizes mcRating %s → %s', (input, expected) => {
+            expect(new Title({ mcRating: input }).mcRating).toBe(expected);
+        });
+
+        it('parses year from open-ended range string', () => {
+            expect(new Title({ year: '2020–' }).year).toBe(2020);
+        });
+    });
 });

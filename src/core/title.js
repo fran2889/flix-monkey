@@ -46,7 +46,7 @@ export class Title {
     }
 
     get hasRating() {
-        return !!(this.rating || this.rtRating || this.mcRating);
+        return this.rating !== null || this.rtRating !== null || this.mcRating !== null;
     }
 
     get imdbUrl() {
@@ -65,7 +65,7 @@ export class Title {
     }
 
     #normalizeRating(val, converter) {
-        if (!val || val === 'N/A') return null;
+        if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter ? converter(val) : val;
     }
 }
