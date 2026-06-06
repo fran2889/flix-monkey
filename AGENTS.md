@@ -31,20 +31,27 @@ npm install
 
 ### Build Scripts
 
-| Command                    | Description                                     |
-| -------------------------- | ----------------------------------------------- |
-| `npm run build`            | Build all targets (userscript, firefox, chrome) |
-| `npm run build:userscript` | Build only the userscript                       |
-| `npm run build:firefox`    | Build only the Firefox extension                |
-| `npm run build:chrome`     | Build only the Chrome extension                 |
-| `npm run lint`             | Lint `src/`, `tests/`, and configuration files  |
-| `npm run format`           | Format with Prettier                            |
+| Command                    | Description                                           |
+| -------------------------- | ----------------------------------------------------- |
+| `npm run build`            | Build all targets (userscript, firefox, chrome)       |
+| `npm run build:userscript` | Build only the userscript                             |
+| `npm run build:firefox`    | Build only the Firefox extension                      |
+| `npm run build:chrome`     | Build only the Chrome extension                       |
+| `npm run dev`              | Watch mode — rebuild on file changes                  |
+| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and config files   |
+| `npm run lint:fix`         | Lint with auto-fix                                    |
+| `npm run format`           | Format all JS, HTML, JSON, and Markdown with Prettier |
+| `npm run format:check`     | Check formatting without writing                      |
+| `npm run clean`            | Remove `dist/` and `coverage/`                        |
 
 ### Testing Instructions
 
-- **Unit/Integration/UI**: Run `npm test` to execute all suites.
-- **Filtering**: Use `npx vitest -t "test name"` to focus on specific tests.
-- **Fixtures**: UI tests utilize `tests/fixtures/*.html` to mock Netflix DOM states.
+- **All suites**: `npm test`
+- **By category**: `npm run test:unit`, `npm run test:ui`, `npm run test:integration`
+- **With coverage**: `npm run test:coverage`
+- **Filtering by name**: `npx vitest -t "test name"`
+- **Fixtures**: UI tests use `tests/fixtures/*.html` to mock Netflix DOM states.
+- **Mocks**: Shared mock helpers live in `tests/mocks/` (adapter, logger, platform, browser APIs).
 
 ## Architecture
 
@@ -71,6 +78,14 @@ Platform-agnostic business logic.
 | `title.js`            | Pure data class representing a movie/show                |
 | `constants.js`        | Shared constants and enumerations                        |
 
+**`src/core/ui/`** — Shared UI components used across targets:
+
+| Module           | Responsibility                                        |
+| ---------------- | ----------------------------------------------------- |
+| `modal.js`       | Accessible modal dialog component                     |
+| `settings-ui.js` | Settings panel built from `config-fields` definitions |
+| `styles.js`      | Shared CSS injected into the page                     |
+
 ### 2. Platform (`src/platform/`)
 
 Implementation of the `PlatformAdapter` interface.
@@ -86,7 +101,7 @@ Implementation of the `PlatformAdapter` interface.
 Entry points and platform-specific manifests.
 
 - `userscript/`: `entry.js` (GM_config wiring)
-- `extension/`: Shared extension logic (`content.js`, `options.html`, `options.js`)
+- `extension/`: Shared extension logic — `content.js`, `options.html`, `options.js`, `domains.js` (allowlist + URL validation), `fetch-proxy.js` (background fetch handler used by both Firefox and Chrome)
 - `firefox/`: Firefox manifest and `background.js` proxy
 - `chrome/`: Chrome manifest and `service-worker.js` proxy
 
@@ -104,7 +119,8 @@ class PlatformAdapter {
     async storageGetKeys(prefix)
     async httpFetch(url, options)
     configGet(key)
-    registerMenuCommand(label, fn)
+    registerMenuCommand(label, fn)  // no-op default; override if platform supports it
+    setConfigData(data)             // no-op default; WebExtensionAdapter overrides to pre-load config
 }
 ```
 
