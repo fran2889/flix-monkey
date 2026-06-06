@@ -336,6 +336,26 @@ describe('App', () => {
         logSpy.mockRestore();
     });
 
+    it('should remove inFlight entry and log error if API call hangs past timeout', async () => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Hanging Film</div>
+            </div>
+        `;
+        const logSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(new Promise(() => {})); // never resolves
+
+        appRef = startApp(createMockAdapter());
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        // Advance past INFLIGHT_TIMEOUT_MS (30000ms)
+        await vi.advanceTimersByTimeAsync(31_000);
+
+        expect(logSpy).toHaveBeenCalledWith('decorateContainer failed', expect.any(Error));
+        logSpy.mockRestore();
+    });
+
     it('should disconnect the MutationObserver when disconnect() is called', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);

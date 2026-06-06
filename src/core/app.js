@@ -20,7 +20,7 @@ import { DisabledClientsManager } from './disabled-clients.js';
 import { ApiClientManager } from './api-manager.js';
 import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
-import { DECORATION_DEBOUNCE_MS } from './constants.js';
+import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
 import { ConfigManager } from './config-manager.js';
 import { logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
@@ -94,9 +94,12 @@ export class FlixMonkeyApp {
 
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
-            promise = (async () => {
-                return await this.#api.getData(displayTitle);
-            })().finally(() => this.#inFlight.delete(dedupKey));
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS)
+            );
+            promise = Promise.race([this.#api.getData(displayTitle), timeoutPromise]).finally(() =>
+                this.#inFlight.delete(dedupKey)
+            );
             this.#inFlight.set(dedupKey, promise);
         }
 
