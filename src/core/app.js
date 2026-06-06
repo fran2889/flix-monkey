@@ -81,7 +81,7 @@ export class FlixMonkeyApp {
         const dedupKey = displayTitle.toLowerCase();
 
         this.#renderer.ensureRelative(container);
-        this.#renderer.injectLoadingOverlay(container, displayTitle);
+        this.#renderer.injectLoadingOverlay(container);
 
         // Yield to the event loop so the browser can paint the loading overlay
         // before executing potentially synchronous microtasks. GM storage APIs

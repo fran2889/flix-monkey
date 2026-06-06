@@ -188,7 +188,7 @@ export class OverlayRenderer {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
 
-    #createLoadingOverlay(_displayTitle) {
+    #createLoadingOverlay() {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
         container.appendChild(this.#createBadgeElement('IMDb', '⏳', '', 'fm-search'));
@@ -196,9 +196,9 @@ export class OverlayRenderer {
         return container;
     }
 
-    injectLoadingOverlay(container, _displayTitle) {
+    injectLoadingOverlay(container) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(this.#createLoadingOverlay(_displayTitle));
+        container.appendChild(this.#createLoadingOverlay());
     }
 
     isLoading(container) {
