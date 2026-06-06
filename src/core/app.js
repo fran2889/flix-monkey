@@ -133,9 +133,12 @@ export class FlixMonkeyApp {
 
         this.#observer = new MutationObserver(mutations => {
             try {
-                const hasElements = mutations.some(m =>
-                    Array.from(m.addedNodes).some(n => n.nodeType === Node.ELEMENT_NODE)
-                );
+                const hasElements = mutations.some(m => {
+                    for (const n of m.addedNodes) {
+                        if (n.nodeType === Node.ELEMENT_NODE) return true;
+                    }
+                    return false;
+                });
                 if (hasElements) this.#debouncedDecorate();
             } catch (err) {
                 logger.error('Mutation handler error', err);
