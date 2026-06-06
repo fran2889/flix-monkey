@@ -35,6 +35,7 @@ describe('SettingsUI', () => {
                 showRtRating: false,
             }),
             storageSetMany: vi.fn().mockResolvedValue(),
+            setConfigData: vi.fn(),
         };
         mockCacheManager = {
             clear: vi.fn().mockResolvedValue(),
