@@ -29,6 +29,10 @@ adapter.registerMenuCommand('FlixMonkey Settings', () => {
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
     const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
+    ui.onSave = () => {
+        modal.close();
+        window.location.reload();
+    };
     ui.render(container).then(() => {
         modal.open();
     });

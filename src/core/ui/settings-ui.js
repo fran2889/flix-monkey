@@ -29,6 +29,7 @@ export class SettingsUI {
     #cacheManager;
     #disabledClientsManager;
     #container = null;
+    onSave = null;
 
     async render(container) {
         this.#container = container;
@@ -177,6 +178,7 @@ export class SettingsUI {
             await this.adapter.storageSetMany(values);
             statusDiv.textContent = 'Saved!';
             statusDiv.style.color = 'green';
+            await this.onSave?.();
         } finally {
             if (saveBtn) saveBtn.disabled = false;
         }

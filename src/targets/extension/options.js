@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import browser from 'webextension-polyfill';
 import { WebExtensionAdapter } from '../../platform/webextension.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { ConfigManager } from '../../core/config-manager.js';
@@ -27,4 +28,9 @@ const cacheManager = new CacheManager(adapter, config);
 const disabledClientsManager = new DisabledClientsManager(adapter);
 
 const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
+ui.onSave = async () => {
+    const tabs = await browser.tabs.query({ url: '*://*.netflix.com/*' });
+    await Promise.all(tabs.map(tab => browser.tabs.reload(tab.id)));
+    window.close();
+};
 ui.render(document.body);

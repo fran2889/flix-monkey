@@ -17,11 +17,17 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Module-level spy captured by the hoisted vi.mock() factory.
+// Module-level spies captured by the hoisted vi.mock() factories.
 let renderSpy;
+let capturedInstance;
+let tabsQuerySpy;
+let tabsReloadSpy;
 
 vi.mock('../../../src/core/ui/settings-ui.js', () => ({
     SettingsUI: class {
+        constructor() {
+            capturedInstance = this;
+        }
         render(...args) {
             return renderSpy(...args);
         }
@@ -40,6 +46,10 @@ vi.mock('webextension-polyfill', () => ({
         runtime: {
             sendMessage: vi.fn().mockResolvedValue({ data: {} }),
             id: 'test-extension-id',
+        },
+        tabs: {
+            query: (...args) => tabsQuerySpy(...args),
+            reload: (...args) => tabsReloadSpy(...args),
         },
     },
 }));
@@ -66,13 +76,29 @@ describe('options.js entry point', () => {
     beforeEach(async () => {
         vi.resetModules();
 
-        // Provide a fresh spy for each test run.
+        capturedInstance = null;
         renderSpy = vi.fn().mockResolvedValue(undefined);
+        tabsQuerySpy = vi.fn().mockResolvedValue([{ id: 1 }, { id: 42 }]);
+        tabsReloadSpy = vi.fn().mockResolvedValue(undefined);
 
         await import('../../../src/targets/extension/options.js');
     });
 
     it('should call SettingsUI.render with document.body', () => {
         expect(renderSpy).toHaveBeenCalledWith(document.body);
+    });
+
+    it('should wire onSave to reload Netflix tabs and close the window', async () => {
+        const closeSpy = vi.spyOn(window, 'close').mockImplementation(() => {});
+
+        expect(capturedInstance.onSave).toBeTypeOf('function');
+        await capturedInstance.onSave();
+
+        expect(tabsQuerySpy).toHaveBeenCalledWith({ url: '*://*.netflix.com/*' });
+        expect(tabsReloadSpy).toHaveBeenCalledWith(1);
+        expect(tabsReloadSpy).toHaveBeenCalledWith(42);
+        expect(closeSpy).toHaveBeenCalled();
+
+        closeSpy.mockRestore();
     });
 });

@@ -205,6 +205,40 @@ describe('SettingsUI', () => {
         expect(validateFn).toHaveBeenCalledWith(true);
     });
 
+    it('should call onSave callback after successful save', async () => {
+        await settingsUI.render(container);
+        const onSave = vi.fn().mockResolvedValue(undefined);
+        settingsUI.onSave = onSave;
+
+        await settingsUI.save();
+
+        expect(onSave).toHaveBeenCalledOnce();
+    });
+
+    it('should not call onSave callback when validation fails', async () => {
+        await settingsUI.render(container);
+        const onSave = vi.fn();
+        settingsUI.onSave = onSave;
+
+        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
+        apiKeyInput.value = '';
+
+        await settingsUI.save();
+
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it('should not call onSave callback when storageSetMany throws', async () => {
+        mockAdapter.storageSetMany.mockRejectedValue(new Error('storage error'));
+        await settingsUI.render(container);
+        const onSave = vi.fn();
+        settingsUI.onSave = onSave;
+
+        await expect(settingsUI.save()).rejects.toThrow('storage error');
+
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
     it('should scope element queries to its own container', async () => {
         const adapter = createMockAdapter({ storageGetAll: vi.fn().mockResolvedValue({}), setConfigData: vi.fn() });
         const container1 = document.createElement('div');
