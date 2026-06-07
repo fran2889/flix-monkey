@@ -52,14 +52,14 @@ describe('core/logger', () => {
     });
 
     it('should log debug when adapter returns true', () => {
-        const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         makeLogger(true).debug('test debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug');
         spy.mockRestore();
     });
 
     it('should not log debug when adapter returns false', () => {
-        const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         makeLogger(false).debug('test debug');
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
