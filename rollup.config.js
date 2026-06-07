@@ -28,6 +28,23 @@ const USERSCRIPT_BANNER = `// ==UserScript==
 
 const sharedPlugins = () => [resolve(), commonjs()];
 
+function asciiEscape() {
+    return {
+        name: 'ascii-escape',
+        renderChunk(code) {
+            return {
+                code: code.replace(/\P{ASCII}/gu, ch => {
+                    const cp = ch.codePointAt(0);
+                    if (cp <= 0xffff) return `\\u${cp.toString(16).padStart(4, '0')}`;
+                    const hi = Math.floor((cp - 0x10000) / 0x400) + 0xd800;
+                    const lo = ((cp - 0x10000) % 0x400) + 0xdc00;
+                    return `\\u${hi.toString(16).padStart(4, '0')}\\u${lo.toString(16).padStart(4, '0')}`;
+                }),
+            };
+        },
+    };
+}
+
 function copyStatic(files) {
     return {
         name: 'copy-static',
@@ -67,7 +84,7 @@ const configsByTarget = {
     userscript: [
         {
             input: 'src/targets/userscript/entry.js',
-            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER, sourcemap: 'inline' },
+            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
             plugins: [
                 ...sharedPlugins(),
                 {
@@ -76,6 +93,7 @@ const configsByTarget = {
                         return code.replace(LICENSE_BLOCK_RE, '');
                     },
                 },
+                asciiEscape(),
             ],
         },
     ],
