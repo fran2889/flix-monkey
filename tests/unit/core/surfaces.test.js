@@ -44,7 +44,7 @@ describe('Surfaces', () => {
     it('should discover search video card surfaces', () => {
         const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
-            <div data-uia="search-gallery-video-card" aria-label="Search Result Title"></div>
+            <div data-uia="standard-card" aria-label="Search Result Title"></div>
         `;
         const results = surfaces.discover(document.body);
         expect(results).toHaveLength(1);
@@ -68,7 +68,7 @@ describe('Surfaces', () => {
     it('should discover preview modal surfaces (img alt)', () => {
         const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
-            <div class="previewModal">
+            <div class="previewModal--player_container">
                 <div class="previewModal--player-titleTreatmentWrapper">
                     <img alt="Modal Title" src="...">
                 </div>
@@ -77,7 +77,7 @@ describe('Surfaces', () => {
         const results = surfaces.discover(document.body);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Modal Title');
-        expect(results[0].container.className).toBe('previewModal');
+        expect(results[0].container.className).toBe('previewModal--player_container');
         expect(results[0].fadeable).toBe(false);
     });
 
@@ -134,7 +134,7 @@ describe('Surfaces', () => {
         // Construct a case where multiple selectors might find the same container
         // Though in reality they are mostly mutually exclusive, we can test the logic
         document.body.innerHTML = `
-            <div class="previewModal">
+            <div class="previewModal--player_container">
                 <img alt="Title 1" src="...">
                 <h3 class="previewModal--boxarttitle">Title 2</h3>
             </div>
@@ -178,16 +178,16 @@ describe('Surfaces', () => {
             expect(results).toHaveLength(0);
         });
 
-        it('should fallback to previewModal h3 tag text', () => {
+        it('should fallback to data-uia previewModal-title text', () => {
             const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = `
-                <div class="previewModal">
-                    <h3>H3 Title</h3>
+                <div class="previewModal--player_container">
+                    <div data-uia="previewModal-title">Data Title</div>
                 </div>
             `;
             const results = surfaces.discover(document.body);
             expect(results).toHaveLength(1);
-            expect(results[0].title).toBe('H3 Title');
+            expect(results[0].title).toBe('Data Title');
         });
 
         it('should fallback to jawBone image-fallback-text content', () => {
@@ -215,22 +215,32 @@ describe('Surfaces', () => {
     describe('previewModal fallback selectors', () => {
         it.each([
             [
-                '<div class="previewModal"><div class="previewModal--wrapper"><img alt="Wrapper Title" src="..."></div></div>',
-                'Wrapper Title',
+                '<div class="previewModal--player_container"><img alt="Player Title" src="..."></div>',
+                'Player Title',
+                'previewModal--player_container',
             ],
-            ['<div class="previewModal"><img alt="Direct Modal Title" src="..."></div>', 'Direct Modal Title'],
             [
-                '<div class="previewModal"><div data-uia="previewModal-title">Data UIA Title</div></div>',
-                'Data UIA Title',
+                '<div class="previewModal--player_container"><div class="previewModal--player-titleTreatmentWrapper"><img alt="Treatment Title" src="..."></div></div>',
+                'Treatment Title',
+                'previewModal--player_container',
             ],
-            ['<div class="previewModal"><h3 class="previewModal--boxarttitle">Boxart Title</h3></div>', 'Boxart Title'],
-        ])('should discover previewModal with html: %s', (html, expectedTitle) => {
+            [
+                '<div class="previewModal--player_container"><div data-uia="previewModal-title">Data UIA Title</div></div>',
+                'Data UIA Title',
+                'previewModal--player_container',
+            ],
+            [
+                '<div class="previewModal--player_container"><h3 class="previewModal--boxarttitle">Boxart Title</h3></div>',
+                'Boxart Title',
+                'previewModal--player_container',
+            ],
+        ])('should discover previewModal with html: %s', (html, expectedTitle, expectedContainerClass) => {
             const surfaces = new SurfaceManager(createMockLogger());
             document.body.innerHTML = html;
             const results = surfaces.discover(document.body);
             expect(results).toHaveLength(1);
             expect(results[0].title).toBe(expectedTitle);
-            expect(results[0].container.className).toBe('previewModal');
+            expect(results[0].container.className).toBe(expectedContainerClass);
             expect(results[0].fadeable).toBe(false);
         });
     });

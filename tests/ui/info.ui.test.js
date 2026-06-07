@@ -27,8 +27,8 @@ describe('Info UI Surface (Modal)', () => {
     beforeAll(() => {
         // Inject a minimal modal structure
         document.body.innerHTML = `
-        <div class="previewModal">
-            <h3 data-uia="previewModal-title">Beef</h3>
+        <div class="previewModal--player_container">
+            <div data-uia="previewModal-title">Beef</div>
         </div>
     `;
     });
@@ -41,7 +41,9 @@ describe('Info UI Surface (Modal)', () => {
     it('should discover title in the preview modal', () => {
         const surfaces = surfaceManager.discover(document.body);
         const modal = surfaces.find(s =>
-            s.container.matches('.previewModal, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata')
+            s.container.matches(
+                '.previewModal--player_container, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata'
+            )
         );
 
         expect(modal).toBeDefined();
@@ -52,7 +54,9 @@ describe('Info UI Surface (Modal)', () => {
     it('should inject overlay into modal container', () => {
         const surfaces = surfaceManager.discover(document.body);
         const modal = surfaces.find(s =>
-            s.container.matches('.previewModal, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata')
+            s.container.matches(
+                '.previewModal--player_container, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata'
+            )
         );
 
         overlayRenderer.injectOverlay(modal.container, { rating: 7.8, imdbUrl: 'https://www.imdb.com/title/tt789/' });

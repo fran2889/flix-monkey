@@ -32,9 +32,9 @@ export class SurfaceManager {
             fadeable: true,
         },
         {
-            titleSelectors: '[data-uia="search-gallery-video-card"]',
+            titleSelectors: '[data-uia="standard-card"]',
             getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
-            containerSel: '[data-uia="search-gallery-video-card"]',
+            containerSel: '[data-uia="standard-card"]',
             fadeable: true,
         },
         {
@@ -46,14 +46,12 @@ export class SurfaceManager {
         {
             titleSelectors: [
                 '.previewModal--player-titleTreatmentWrapper img[alt]',
-                '.previewModal--wrapper img[alt]',
-                '.previewModal img[alt]',
+                '.previewModal--player_container img[alt]',
                 '[data-uia="previewModal-title"]',
                 '.previewModal--boxarttitle',
-                '.previewModal h3',
             ].join(','),
             getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
-            containerSel: '.previewModal',
+            containerSel: '.previewModal--player_container',
             fadeable: false,
         },
         {

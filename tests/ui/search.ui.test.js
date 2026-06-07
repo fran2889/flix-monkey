@@ -41,7 +41,7 @@ describe('Search UI Surface', () => {
         expect(surfaces.length).toBeGreaterThan(0);
 
         // Find at least one gallery card
-        const hasGallery = surfaces.some(s => s.container.matches('[data-uia="search-gallery-video-card"]'));
+        const hasGallery = surfaces.some(s => s.container.matches('[data-uia="standard-card"]'));
         // Find at least one suggestion item (or parent container)
         const hasSuggestion = surfaces.some(s => s.container.matches('[data-uia="search-suggestion-item"]'));
 
