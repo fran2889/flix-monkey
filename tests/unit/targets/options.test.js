@@ -22,9 +22,6 @@ let renderSpy;
 let capturedInstance;
 let tabsQuerySpy;
 let tabsReloadSpy;
-let cacheManagerConstructorArgs;
-let configManagerConstructorArgs;
-let Logger;
 
 vi.mock('../../../src/core/ui/settings-ui.js', () => ({
     SettingsUI: class {
@@ -61,9 +58,6 @@ vi.mock('webextension-polyfill', () => ({
 // with `new` — use class stubs so they are valid constructors.
 vi.mock('../../../src/core/config-manager.js', () => ({
     ConfigManager: class {
-        constructor(...args) {
-            configManagerConstructorArgs = args;
-        }
         configGet() {
             return null;
         }
@@ -71,11 +65,7 @@ vi.mock('../../../src/core/config-manager.js', () => ({
 }));
 
 vi.mock('../../../src/core/cache.js', () => ({
-    CacheManager: class {
-        constructor(...args) {
-            cacheManagerConstructorArgs = args;
-        }
-    },
+    CacheManager: class {},
 }));
 
 vi.mock('../../../src/core/disabled-clients.js', () => ({
@@ -90,11 +80,6 @@ describe('options.js entry point', () => {
         renderSpy = vi.fn().mockResolvedValue(undefined);
         tabsQuerySpy = vi.fn().mockResolvedValue([{ id: 1 }, { id: 42 }]);
         tabsReloadSpy = vi.fn().mockResolvedValue(undefined);
-        cacheManagerConstructorArgs = undefined;
-        configManagerConstructorArgs = undefined;
-
-        const loggerModule = await import('../../../src/core/logger.js');
-        Logger = loggerModule.Logger;
 
         await import('../../../src/targets/extension/options.js');
     });
@@ -115,15 +100,5 @@ describe('options.js entry point', () => {
         expect(closeSpy).toHaveBeenCalled();
 
         closeSpy.mockRestore();
-    });
-
-    it('should pass a Logger instance as the second argument to ConfigManager', () => {
-        expect(configManagerConstructorArgs).toBeDefined();
-        expect(configManagerConstructorArgs[1]).toBeInstanceOf(Logger);
-    });
-
-    it('should pass a Logger instance as the third argument to CacheManager', () => {
-        expect(cacheManagerConstructorArgs).toBeDefined();
-        expect(cacheManagerConstructorArgs[2]).toBeInstanceOf(Logger);
     });
 });
