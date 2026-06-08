@@ -201,6 +201,10 @@ export class OverlayRenderer {
         container.appendChild(this.#createLoadingOverlay());
     }
 
+    removeLoadingOverlay(container) {
+        container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
+    }
+
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }

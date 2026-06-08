@@ -104,10 +104,14 @@ export class FlixMonkeyApp {
             this.#inFlight.set(dedupKey, promise);
         }
 
-        const data = await promise;
-        if (!this.#renderer.hasOverlay(container)) {
-            this.#renderer.injectOverlay(container, data);
-            this.#renderer.applyFade(container, data, fadeable);
+        try {
+            const data = await promise;
+            if (!this.#renderer.hasOverlay(container)) {
+                this.#renderer.injectOverlay(container, data);
+                this.#renderer.applyFade(container, data, fadeable);
+            }
+        } finally {
+            this.#renderer.removeLoadingOverlay(container);
         }
     }
 

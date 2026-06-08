@@ -245,6 +245,28 @@ describe('App', () => {
         expect(card.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
 
+    it('should remove the loading overlay when getData rejects', async () => {
+        const mockAdapter = createMockAdapter({ configGet: vi.fn().mockReturnValue(null) });
+
+        document.body.innerHTML = `
+        <div class="title-card">
+            <div class="fallback-text">Failing Title</div>
+        </div>
+    `;
+
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('API failure'));
+
+        appRef = startApp(mockAdapter);
+
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        const card = document.querySelector('.title-card');
+        await vi.waitFor(() => {
+            expect(card.querySelector('.fm-loading')).toBeNull();
+        });
+    });
+
     it('should trigger decoration on replaceState', async () => {
         const mockAdapter = createMockAdapter();
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
