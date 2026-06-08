@@ -27,6 +27,7 @@ describe('Chrome Service Worker', () => {
 
         global.chrome = {
             runtime: {
+                id: 'test-ext',
                 onMessage: {
                     addListener: vi.fn(fn => {
                         messageListener = fn;
@@ -57,13 +58,17 @@ describe('Chrome Service Worker', () => {
     });
 
     it('should ignore non-FM_FETCH messages', () => {
-        const result = messageListener({ type: 'OTHER' }, {}, vi.fn());
+        const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
         expect(result).toBe(false);
     });
 
     it('should reject requests to disallowed domains', async () => {
         const sendResponse = vi.fn();
-        const result = messageListener({ type: 'FM_FETCH', url: 'http://malicious.com' }, {}, sendResponse);
+        const result = messageListener(
+            { type: 'FM_FETCH', url: 'http://malicious.com' },
+            { id: 'test-ext' },
+            sendResponse
+        );
         expect(result).toBe(true);
         await Promise.resolve();
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Domain not allowed' });
@@ -71,7 +76,7 @@ describe('Chrome Service Worker', () => {
 
     it('should handle invalid URLs', async () => {
         const sendResponse = vi.fn();
-        const result = messageListener({ type: 'FM_FETCH', url: 'not-a-url' }, {}, sendResponse);
+        const result = messageListener({ type: 'FM_FETCH', url: 'not-a-url' }, { id: 'test-ext' }, sendResponse);
         expect(result).toBe(true);
         await Promise.resolve();
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Invalid URL' });
@@ -84,7 +89,7 @@ describe('Chrome Service Worker', () => {
 
         messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } },
-            {},
+            { id: 'test-ext' },
             sendResponse
         );
 
@@ -94,7 +99,7 @@ describe('Chrome Service Worker', () => {
 
     it('should fall back to DEFAULT_FETCH_TIMEOUT (8000ms)', async () => {
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} }, {}, vi.fn());
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} }, { id: 'test-ext' }, vi.fn());
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);
         setTimeoutSpy.mockRestore();
     });
@@ -103,7 +108,7 @@ describe('Chrome Service Worker', () => {
         const customTimeout = 500;
         messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } },
-            {},
+            { id: 'test-ext' },
             vi.fn()
         );
 
@@ -124,7 +129,7 @@ describe('Chrome Service Worker', () => {
 
         messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'json' } },
-            {},
+            { id: 'test-ext' },
             sendResponse
         );
 
@@ -147,7 +152,7 @@ describe('Chrome Service Worker', () => {
 
         messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'text' } },
-            {},
+            { id: 'test-ext' },
             sendResponse
         );
 
@@ -166,7 +171,7 @@ describe('Chrome Service Worker', () => {
             status: 404,
         });
 
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, {}, sendResponse);
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 
         await vi.runAllTimersAsync();
         await Promise.resolve();
@@ -179,7 +184,7 @@ describe('Chrome Service Worker', () => {
         const sendResponse = vi.fn();
         global.fetch.mockRejectedValue(new Error('Network error'));
 
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, {}, sendResponse);
+        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 
         await vi.runAllTimersAsync();
         await Promise.resolve();
@@ -191,5 +196,18 @@ describe('Chrome Service Worker', () => {
     it('should open options page when action icon is clicked', () => {
         actionListener();
         expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+    });
+
+    it('should reject FM_FETCH messages from a foreign sender', () => {
+        const fetchSpy = vi.spyOn(global, 'fetch');
+        const sendResponse = vi.fn();
+        const result = messageListener(
+            { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
+            { id: 'other-extension' },
+            sendResponse
+        );
+        expect(result).toBe(false);
+        expect(fetchSpy).not.toHaveBeenCalled();
+        fetchSpy.mockRestore();
     });
 });
