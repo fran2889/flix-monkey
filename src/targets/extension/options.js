@@ -17,14 +17,16 @@
  */
 import browser from 'webextension-polyfill';
 import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { Logger } from '../../core/logger.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { ConfigManager } from '../../core/config-manager.js';
 import { CacheManager } from '../../core/cache.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 
 const adapter = new WebExtensionAdapter();
-const config = new ConfigManager(adapter);
-const cacheManager = new CacheManager(adapter, config);
+const logger = new Logger(adapter);
+const config = new ConfigManager(adapter, logger);
+const cacheManager = new CacheManager(adapter, config, logger);
 const disabledClientsManager = new DisabledClientsManager(adapter);
 
 const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
