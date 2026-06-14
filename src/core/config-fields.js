@@ -22,7 +22,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '',
         title: 'Free movie and TV data API. Get API key at https://xmdbapi.com/api-key',
-        validate: val => (val && val.length > 0 ? null : 'XMDB API Key is required'),
+        validate: (val, allValues) => {
+            if (allValues?.apiClient !== 'xmdb') return null;
+            return val && val.length > 0 ? null : 'XMDB API Key is required';
+        },
     },
     {
         key: 'omdbApiKey',
@@ -30,7 +33,10 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '',
         title: 'Open Movie Database API key. Get API key at https://www.omdbapi.com/apikey.aspx',
-        validate: val => (val && val.length > 0 ? null : 'OMDB API Key is required'),
+        validate: (val, allValues) => {
+            if (allValues?.apiClient !== 'omdb') return null;
+            return val && val.length > 0 ? null : 'OMDB API Key is required';
+        },
     },
     {
         key: 'apiClient',

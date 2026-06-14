@@ -125,12 +125,18 @@ export class SettingsUI {
 
     _validate() {
         let hasErrors = false;
+        const allValues = {};
+        this.fields.forEach(field => {
+            const input = this.#container.querySelector(`#fm-${field.key}`);
+            if (!input) return;
+            allValues[field.key] = input.type === 'checkbox' ? input.checked : input.value;
+        });
         this.fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
             if (!input) return;
 
             const fieldValue = input.type === 'checkbox' ? input.checked : input.value;
-            const errorMsg = field.validate ? field.validate(fieldValue) : null;
+            const errorMsg = field.validate ? field.validate(fieldValue, allValues) : null;
             let errorEl = input.parentElement.querySelector('.error-message');
 
             if (errorMsg) {

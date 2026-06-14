@@ -49,18 +49,25 @@ describe('core/config-fields', () => {
     });
 
     describe('validate functions', () => {
-        describe.each(['xmdbApiKey', 'omdbApiKey'])('%s validation', key => {
+        describe.each([
+            ['xmdbApiKey', 'xmdb'],
+            ['omdbApiKey', 'omdb'],
+        ])('%s validation', (key, provider) => {
             let field;
             beforeEach(() => {
                 field = CONFIG_FIELDS.find(f => f.key === key);
             });
 
-            it('should accept valid key', () => {
-                expect(field.validate('valid-key')).toBeNull();
+            it('should accept valid key when provider is selected', () => {
+                expect(field.validate('valid-key', { apiClient: provider })).toBeNull();
             });
 
-            it('should reject empty key', () => {
-                expect(typeof field.validate('')).toBe('string');
+            it('should reject empty key when provider is selected', () => {
+                expect(typeof field.validate('', { apiClient: provider })).toBe('string');
+            });
+
+            it('should accept empty key when provider is not selected', () => {
+                expect(field.validate('', { apiClient: 'imdbapi' })).toBeNull();
             });
         });
 

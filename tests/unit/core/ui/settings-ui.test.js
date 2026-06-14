@@ -103,8 +103,8 @@ describe('SettingsUI', () => {
 
     it('should not save when validation fails', async () => {
         await settingsUI.render(container);
-        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
-        apiKeyInput.value = '';
+        container.querySelector('[id="fm-apiClient"]').value = 'xmdb';
+        container.querySelector('[id="fm-xmdbApiKey"]').value = '';
 
         const saveBtn = container.querySelector('#fm-saveBtn');
         await saveBtn.click();
@@ -202,7 +202,7 @@ describe('SettingsUI', () => {
 
         ui._validate();
 
-        expect(validateFn).toHaveBeenCalledWith(true);
+        expect(validateFn).toHaveBeenCalledWith(true, expect.any(Object));
     });
 
     it('should call onSave callback after successful save', async () => {
@@ -220,8 +220,8 @@ describe('SettingsUI', () => {
         const onSave = vi.fn();
         settingsUI.onSave = onSave;
 
-        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
-        apiKeyInput.value = '';
+        container.querySelector('[id="fm-apiClient"]').value = 'xmdb';
+        container.querySelector('[id="fm-xmdbApiKey"]').value = '';
 
         await settingsUI.save();
 
