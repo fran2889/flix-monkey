@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "@commitlint/cli": "^20.5.3",
-        "@commitlint/config-conventional": "^20.5.3",
+        "@commitlint/config-conventional": "^21.0.2",
         "@eslint/js": "^10.0.1",
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.0",
