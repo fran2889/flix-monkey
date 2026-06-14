@@ -50,7 +50,7 @@
         "webextension-polyfill": "^0.12.0"
     },
     "engines": {
-        "node": ">= 22"
+        "node": ">= 24"
     },
     "lint-staged": {
         "**/*.{js,cjs,ts,jsx,tsx}": [

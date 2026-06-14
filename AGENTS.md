@@ -13,7 +13,7 @@ This file is for AI agents. For human contributor guidelines, see [CONTRIBUTING.
 The project uses a **Platform Adapter** pattern to abstract differences between `GM_*` (userscript) and `browser.*` (WebExtension) APIs.
 
 - **Language**: JavaScript (ES2022), `"type": "module"` throughout
-- **Runtime**: Node.js >= 22
+- **Runtime**: Node.js >= 24
 - **Bundler**: Rollup
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
