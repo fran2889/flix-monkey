@@ -1,18 +1,23 @@
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { name, homepage, version, description, author, license } = pkg;
 
-const USERSCRIPT_BANNER = `// ==UserScript==
+async function userscriptBanner() {
+    const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
+    const iconBase64 = iconBuffer.toString('base64');
+    return `// ==UserScript==
 // @name         ${name}
 // @namespace    ${homepage}
 // @version      ${version}
 // @description  ${description}
 // @author       ${author}
 // @license      ${license}
+// @icon         data:image/png;base64,${iconBase64}
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -25,6 +30,7 @@ const USERSCRIPT_BANNER = `// ==UserScript==
 // @connect      api.imdbapi.dev
 // @run-at       document-idle
 // ==/UserScript==`;
+}
 
 const sharedPlugins = () => [resolve(), commonjs()];
 
@@ -57,6 +63,26 @@ function copyStatic(files) {
     };
 }
 
+const ICON_SIZES = [16, 32, 48, 128];
+
+function resizeIcons(srcPath, destDir) {
+    return {
+        name: 'resize-icons',
+        async writeBundle() {
+            const iconsDir = path.join(destDir, 'icons');
+            mkdirSync(iconsDir, { recursive: true });
+            await Promise.all(
+                ICON_SIZES.map(size =>
+                    sharp(srcPath)
+                        .resize(size, size)
+                        .png()
+                        .toFile(path.join(iconsDir, `icon-${size}.png`))
+                )
+            );
+        },
+    };
+}
+
 function injectManifestMetadata(srcPath, destPath) {
     return {
         name: 'inject-manifest-metadata',
@@ -66,6 +92,9 @@ function injectManifestMetadata(srcPath, destPath) {
             manifest.name = name;
             manifest.version = version;
             manifest.description = description;
+            const iconsBlock = Object.fromEntries(ICON_SIZES.map(size => [String(size), `icons/icon-${size}.png`]));
+            manifest.icons = iconsBlock;
+            manifest.action = { ...manifest.action, default_icon: iconsBlock };
             writeFileSync(destPath, JSON.stringify(manifest, null, 2) + '\n');
         },
     };
@@ -84,7 +113,7 @@ const configsByTarget = {
     userscript: [
         {
             input: 'src/targets/userscript/entry.js',
-            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: USERSCRIPT_BANNER },
+            output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: userscriptBanner },
             plugins: [
                 ...sharedPlugins(),
                 {
@@ -105,6 +134,7 @@ const configsByTarget = {
                 ...sharedPlugins(),
                 copyStatic([['src/targets/extension/options.html', 'dist/firefox/options.html']]),
                 injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
+                resizeIcons('src/assets/icons/icon.png', 'dist/firefox'),
             ],
         },
         {
@@ -126,6 +156,7 @@ const configsByTarget = {
                 ...sharedPlugins(),
                 copyStatic([['src/targets/extension/options.html', 'dist/chrome/options.html']]),
                 injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
+                resizeIcons('src/assets/icons/icon.png', 'dist/chrome'),
             ],
         },
         {

@@ -6,7 +6,16 @@ const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
 
 function verifyDistFiles(dir, target) {
-    const required = ['manifest.json', 'content.js', 'options.html', 'options.js'];
+    const required = [
+        'manifest.json',
+        'content.js',
+        'options.html',
+        'options.js',
+        'icons/icon-16.png',
+        'icons/icon-32.png',
+        'icons/icon-48.png',
+        'icons/icon-128.png',
+    ];
     const bgFile = target === 'firefox' ? 'background.js' : 'service-worker.js';
     for (const file of [...required, bgFile]) {
         const filePath = path.join(dir, file);
