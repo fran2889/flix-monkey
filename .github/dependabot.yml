@@ -13,3 +13,19 @@ updates:
       directory: /
       schedule:
           interval: weekly
+      groups:
+          npm-patch:
+              patterns:
+                  - '*'
+              update-types:
+                  - patch
+          npm-minor:
+              patterns:
+                  - '*'
+              update-types:
+                  - minor
+          npm-major:
+              patterns:
+                  - '*'
+              update-types:
+                  - major
