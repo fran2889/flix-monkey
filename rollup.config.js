@@ -92,6 +92,7 @@ function injectManifestMetadata(srcPath, destPath) {
             manifest.name = name;
             manifest.version = version;
             manifest.description = description;
+            manifest.homepage_url = homepage;
             const iconsBlock = Object.fromEntries(ICON_SIZES.map(size => [String(size), `icons/icon-${size}.png`]));
             manifest.icons = iconsBlock;
             manifest.action = { ...manifest.action, default_icon: iconsBlock };

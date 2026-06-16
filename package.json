@@ -4,7 +4,7 @@
     "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
     "author": "fran",
     "license": "GPL-3.0-or-later",
-    "homepage": "https://github.com/fran/FlixMonkey",
+    "homepage": "https://github.com/fran2889/flix-monkey",
     "type": "module",
     "scripts": {
         "prepare": "husky",
