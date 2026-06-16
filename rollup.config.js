@@ -10,26 +10,16 @@ const { name, homepage, version, description, author, license } = pkg;
 async function userscriptBanner() {
     const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
     const iconBase64 = iconBuffer.toString('base64');
-    return `// ==UserScript==
-// @name         ${name}
-// @namespace    ${homepage}
-// @version      ${version}
-// @description  ${description}
-// @author       ${author}
-// @license      ${license}
-// @icon         data:image/png;base64,${iconBase64}
-// @match        https://www.netflix.com/*
-// @grant        GM_xmlhttpRequest
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @grant        GM_deleteValue
-// @grant        GM_listValues
-// @grant        GM_registerMenuCommand
-// @connect      www.omdbapi.com
-// @connect      xmdbapi.com
-// @connect      api.imdbapi.dev
-// @run-at       document-idle
-// ==/UserScript==`;
+    const template = readFileSync('src/targets/userscript/metadata.js', 'utf8');
+    return template
+        .replace('__NAME__', name)
+        .replace(/__HOMEPAGE__/g, homepage)
+        .replace('__VERSION__', version)
+        .replace('__DESCRIPTION__', description)
+        .replace('__AUTHOR__', author)
+        .replace('__LICENSE__', license)
+        .replace('__ICON__', `data:image/png;base64,${iconBase64}`)
+        .trimEnd();
 }
 
 const sharedPlugins = () => [resolve(), commonjs()];
