@@ -60,9 +60,17 @@ describe('Title', () => {
         });
     });
 
-    it('should create notFound title', () => {
+    it('should create notFound title with default null source', () => {
         const title = Title.notFound('Missing Movie');
         expect(title.displayTitle).toBe('Missing Movie');
+        expect(title.rating).toBeNull();
+        expect(title.source).toBeNull();
+    });
+
+    it('should create notFound title with provided source', () => {
+        const title = Title.notFound('Missing Movie', 'omdb');
+        expect(title.displayTitle).toBe('Missing Movie');
+        expect(title.source).toBe('omdb');
         expect(title.rating).toBeNull();
     });
 

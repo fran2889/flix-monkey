@@ -50,14 +50,17 @@ export class CacheManager {
         return getTtlMs(ttlDays);
     }
 
-    async read(displayTitle) {
+    async read(displayTitle, activeSource) {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;
         try {
             const entry = JSON.parse(raw);
             const expired = entry.expires !== null && Date.now() > entry.expires;
-            return expired ? null : Title.fromJSON(entry.data);
+            if (expired) return null;
+            const titleObj = Title.fromJSON(entry.data);
+            if (!titleObj.hasRating && titleObj.source !== activeSource) return null;
+            return titleObj;
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key });
             return null;

@@ -45,25 +45,28 @@ export class ApiClientManager {
     }
 
     async getData(displayTitle) {
-        const cached = await this.#cache.read(displayTitle);
+        const source = this.#client.source;
+        const cached = await this.#cache.read(displayTitle, source);
         if (cached !== null) return cached;
 
         const status = await this.#client.getStatus();
         if (!status.healthy) {
-            const notFound = Title.notFound(displayTitle);
-            await this.#cache.write(displayTitle, notFound);
-            return notFound;
+            return Title.notFound(displayTitle, source);
         }
 
-        const data = await this.#client.fetch(displayTitle);
-        if (!data) {
-            const notFound = Title.notFound(displayTitle);
-            await this.#cache.write(displayTitle, notFound);
-            return notFound;
+        try {
+            const data = await this.#client.fetch(displayTitle);
+            if (!data) {
+                const notFound = Title.notFound(displayTitle, source);
+                await this.#cache.write(displayTitle, notFound);
+                return notFound;
+            }
+            await this.#cache.write(displayTitle, data);
+            this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
+            return data;
+        } catch (err) {
+            this.#logger.warn(`Failed to fetch ratings for "${displayTitle}": ${err.message}`);
+            return Title.notFound(displayTitle, source);
         }
-
-        await this.#cache.write(displayTitle, data);
-        this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
-        return data;
     }
 }

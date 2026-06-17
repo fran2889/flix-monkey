@@ -94,7 +94,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, {}, createMockLogger());
+        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger());
         const status = await client.getStatus();
         expect(status).toEqual({ healthy: true });
     });
@@ -103,13 +103,13 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(true),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, {}, createMockLogger());
+        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger());
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
         expect(status.reason).toBeDefined();
     });
 
-    it('should return null on fetch error and log warning', async () => {
+    it('should throw when fetch encounters an error', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
         });
@@ -122,8 +122,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             createMockLogger()
         );
 
-        const result = await client.fetch('Some Title');
-        expect(result).toBeNull();
+        await expect(client.fetch('Some Title')).rejects.toThrow('Network error');
     });
 
     it('should return null if search returns no match', async () => {
@@ -222,12 +221,9 @@ describe('XmdbApiClient', () => {
         expect(result.mcRating).toBe(88);
     });
 
-    it('should return null if details fetch fails', async () => {
+    it('should throw if details fetch returns an error', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi
-                .fn()
-                .mockResolvedValueOnce({ results: [{ type: 'title', id: 'm1' }] })
-                .mockResolvedValueOnce({ error: 'not found' }),
+            httpFetch: vi.fn().mockResolvedValueOnce({ error: 'not found' }),
         });
         const client = new XmdbApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -237,18 +233,18 @@ describe('XmdbApiClient', () => {
             },
             createMockLogger()
         );
-        expect(await client.fetch('Movie 1')).toBeNull();
+        await expect(client.getDetails({ id: 'm1' }, 'Movie 1')).rejects.toThrow();
     });
 
-    it('should return null if no API key is set', async () => {
+    it('should return unhealthy status when API key is missing', async () => {
         const client = new XmdbApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            {},
-            { get: _k => '' },
+            createMockAdapter(),
+            { get: () => '' },
             createMockLogger()
         );
-        const result = await client.search('Movie 1');
-        expect(result).toBeNull();
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
     });
 });
 
@@ -277,15 +273,15 @@ describe('OmdbApiClient', () => {
         expect(result.imdbId).toBe('tt123');
     });
 
-    it('should return null if no API key is set', async () => {
+    it('should return unhealthy status when API key is missing', async () => {
         const client = new OmdbApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            {},
-            { get: _k => '' },
+            createMockAdapter(),
+            { get: () => '' },
             createMockLogger()
         );
-        const result = await client.search('Movie 1');
-        expect(result).toBeNull();
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
     });
 
     it('should handle missing or invalid Year', async () => {
@@ -427,6 +423,19 @@ describe('ImdbApiDevClient', () => {
         expect(result.mcRating).toBeNull();
     });
 
+    it('should throw if details fetch returns an error', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ error: 'server error' }),
+        });
+        const client = new ImdbApiDevClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        await expect(client.getDetails({ id: 'tt1' }, 'Movie')).rejects.toThrow();
+    });
+
     it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
         const { BaseApiClient } = await import('../../../src/core/api-clients.js');
         class DummyClient extends BaseApiClient {}
@@ -434,25 +443,5 @@ describe('ImdbApiDevClient', () => {
 
         await expect(dummy.search('title')).rejects.toThrow('Not implemented');
         await expect(dummy.getDetails({}, 'title')).rejects.toThrow('Not implemented');
-    });
-});
-
-describe('sentinel key guard', () => {
-    it('should return null from XmdbApiClient.search when apiKey is empty string', async () => {
-        const mockAdapter = createMockAdapter();
-        const config = { get: () => '' };
-        const client = new XmdbApiClient({}, mockAdapter, config, createMockLogger());
-        const result = await client.search('some movie');
-        expect(result).toBeNull();
-        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
-    });
-
-    it('should return null from OmdbApiClient.search when apiKey is empty string', async () => {
-        const mockAdapter = createMockAdapter();
-        const config = { get: () => '' };
-        const client = new OmdbApiClient({}, mockAdapter, config, createMockLogger());
-        const result = await client.search('some movie');
-        expect(result).toBeNull();
-        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
     });
 });
