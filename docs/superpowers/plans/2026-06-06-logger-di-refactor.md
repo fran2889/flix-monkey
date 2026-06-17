@@ -1,6 +1,6 @@
 # Logger DI Refactor Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Eliminate the module-level `logger` singleton and two-phase init; make `Logger` a fully-injected constructor dependency consistent with all other objects in the graph.
 
@@ -39,7 +39,7 @@
 
 - Create: `tests/mocks/logger.js`
 
-- [ ] **Step 1: Create the file**
+- [x] **Step 1: Create the file**
 
 ```js
 import { vi } from 'vitest';
@@ -54,7 +54,7 @@ export function createMockLogger() {
 }
 ```
 
-- [ ] **Step 2: Run full test suite to confirm it's still green**
+- [x] **Step 2: Run full test suite to confirm it's still green**
 
 ```bash
 npm test
@@ -62,7 +62,7 @@ npm test
 
 Expected: all tests pass (no source changes yet).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/mocks/logger.js
@@ -79,7 +79,7 @@ git commit -m "test(mocks): add createMockLogger utility"
 - Modify: `tests/unit/core/logger.test.js`
 - Modify: `src/core/app.js` (remove `logger.setConfig` call)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace the entire content of `tests/unit/core/logger.test.js`:
 
@@ -136,7 +136,7 @@ describe('core/logger', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/logger.test.js
@@ -144,7 +144,7 @@ npx vitest run tests/unit/core/logger.test.js
 
 Expected: FAIL — `Logger` constructor does not accept an adapter-shaped object.
 
-- [ ] **Step 3: Update `src/core/logger.js`**
+- [x] **Step 3: Update `src/core/logger.js`**
 
 Replace the entire file:
 
@@ -180,7 +180,7 @@ export class Logger {
 export const logger = new Logger({ configGet: () => false });
 ```
 
-- [ ] **Step 4: Remove the dead `logger.setConfig(configManager)` call from `src/core/app.js`**
+- [x] **Step 4: Remove the dead `logger.setConfig(configManager)` call from `src/core/app.js`**
 
 In `startApp`, delete the line:
 
@@ -188,7 +188,7 @@ In `startApp`, delete the line:
 logger.setConfig(configManager);
 ```
 
-- [ ] **Step 5: Run the logger tests to verify they pass**
+- [x] **Step 5: Run the logger tests to verify they pass**
 
 ```bash
 npx vitest run tests/unit/core/logger.test.js
@@ -196,7 +196,7 @@ npx vitest run tests/unit/core/logger.test.js
 
 Expected: all 6 tests PASS.
 
-- [ ] **Step 6: Run full suite to confirm nothing regressed**
+- [x] **Step 6: Run full suite to confirm nothing regressed**
 
 ```bash
 npm test
@@ -204,7 +204,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/logger.js tests/unit/core/logger.test.js src/core/app.js
@@ -221,7 +221,7 @@ git commit -m "refactor(logger): constructor takes adapter, removes setConfig an
 - Modify: `src/core/app.js`
 - Modify: `tests/unit/core/config-manager.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add this test to `tests/unit/core/config-manager.test.js` (after existing imports, add `createMockLogger` import; add the test inside the `describe` block):
 
@@ -250,7 +250,7 @@ it('should call injected logger.warn when configGet throws', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/config-manager.test.js
@@ -258,7 +258,7 @@ npx vitest run tests/unit/core/config-manager.test.js
 
 Expected: FAIL — `mockLogger.warn` not called (code uses module-level logger, not injected one).
 
-- [ ] **Step 3: Update `src/core/config-manager.js`**
+- [x] **Step 3: Update `src/core/config-manager.js`**
 
 Replace constructor and add field:
 
@@ -300,7 +300,7 @@ export class ConfigManager {
 
 (Remove the `import { logger } from './logger.js'` line — it no longer exists in this file.)
 
-- [ ] **Step 4: Update `src/core/app.js` — pass logger to ConfigManager**
+- [x] **Step 4: Update `src/core/app.js` — pass logger to ConfigManager**
 
 In `startApp`, change:
 
@@ -316,25 +316,25 @@ const configManager = new ConfigManager(adapter, logger);
 
 (`logger` here is still the bridge singleton imported at the top of app.js.)
 
-- [ ] **Step 5: Update all `new ConfigManager(...)` calls in `tests/unit/core/config-manager.test.js`**
+- [x] **Step 5: Update all `new ConfigManager(...)` calls in `tests/unit/core/config-manager.test.js`**
 
 Each existing `new ConfigManager(createMockAdapter(...))` call becomes `new ConfigManager(createMockAdapter(...), createMockLogger())`. There are 7 such calls. Update them all.
 
-- [ ] **Step 6: Update `new ConfigManager(...)` calls in `tests/unit/core/api-manager.test.js`**
+- [x] **Step 6: Update `new ConfigManager(...)` calls in `tests/unit/core/api-manager.test.js`**
 
 `const mockConfig = new ConfigManager(createMockAdapter());`
 becomes: `const mockConfig = new ConfigManager(createMockAdapter(), createMockLogger());`
 
 Also add `import { createMockLogger } from '../../mocks/logger.js'` to that file.
 
-- [ ] **Step 7: Update `new ConfigManager(...)` in `tests/unit/core/cache.test.js`**
+- [x] **Step 7: Update `new ConfigManager(...)` in `tests/unit/core/cache.test.js`**
 
 `config = new ConfigManager(createMockAdapter());`
 becomes: `config = new ConfigManager(createMockAdapter(), createMockLogger());`
 
 Also add `import { createMockLogger } from '../../mocks/logger.js'` to that file.
 
-- [ ] **Step 8: Update `tests/integration/config-manager.test.js`**
+- [x] **Step 8: Update `tests/integration/config-manager.test.js`**
 
 This file imports the singleton `logger` and creates `ConfigManager` without logger. Update it:
 
@@ -370,7 +370,7 @@ it('should handle errors in configGet and fall back', () => {
 });
 ```
 
-- [ ] **Step 9: Run config-manager tests to verify they pass**
+- [x] **Step 9: Run config-manager tests to verify they pass**
 
 ```bash
 npx vitest run tests/unit/core/config-manager.test.js tests/integration/config-manager.test.js
@@ -378,7 +378,7 @@ npx vitest run tests/unit/core/config-manager.test.js tests/integration/config-m
 
 Expected: all tests PASS.
 
-- [ ] **Step 10: Run full suite**
+- [x] **Step 10: Run full suite**
 
 ```bash
 npm test
@@ -386,7 +386,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/core/config-manager.js src/core/app.js tests/unit/core/config-manager.test.js tests/integration/config-manager.test.js tests/unit/core/api-manager.test.js tests/unit/core/cache.test.js
@@ -403,7 +403,7 @@ git commit -m "refactor(config-manager): inject logger via constructor"
 - Modify: `src/core/app.js`
 - Modify: `tests/unit/core/cache.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/cache.test.js`, update the existing test "should return null and log a warning when JSON parsing fails in read" to use an injected mock logger instead of spying on the module singleton. Also update `beforeEach` to construct `CacheManager` with a logger.
 
@@ -446,7 +446,7 @@ describe('CacheManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify the logger spy test fails**
+- [x] **Step 2: Run to verify the logger spy test fails**
 
 ```bash
 npx vitest run tests/unit/core/cache.test.js
@@ -454,7 +454,7 @@ npx vitest run tests/unit/core/cache.test.js
 
 Expected: "should return null and log a warning when JSON parsing fails in read" FAILS — `mockLogger.warn` not called (code still uses module-level logger).
 
-- [ ] **Step 3: Update `src/core/cache.js`**
+- [x] **Step 3: Update `src/core/cache.js`**
 
 Add `#logger` field and update constructor. Replace the import and constructor:
 
@@ -480,13 +480,13 @@ Replace all uses of `logger.warn(...)` and `logger.debug(...)` in the file body 
 
 Remove the `import { logger } from './logger.js';` line.
 
-- [ ] **Step 4: Update `src/core/app.js` — pass logger to CacheManager**
+- [x] **Step 4: Update `src/core/app.js` — pass logger to CacheManager**
 
 ```js
 const cache = new CacheManager(adapter, configManager, logger);
 ```
 
-- [ ] **Step 5: Run cache tests to verify they pass**
+- [x] **Step 5: Run cache tests to verify they pass**
 
 ```bash
 npx vitest run tests/unit/core/cache.test.js
@@ -494,7 +494,7 @@ npx vitest run tests/unit/core/cache.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Run full suite**
+- [x] **Step 6: Run full suite**
 
 ```bash
 npm test
@@ -502,7 +502,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/cache.js src/core/app.js tests/unit/core/cache.test.js
@@ -519,7 +519,7 @@ git commit -m "refactor(cache): inject logger via constructor"
 - Modify: `src/core/app.js`
 - Modify: `tests/unit/core/surfaces.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/surfaces.test.js`, update the fallback test to use an injected mock logger. Change the import and the affected test:
 
@@ -552,7 +552,7 @@ it('should fall back to parent element if container selector not found', () => {
 
 Remove `import { logger } from '../../../src/core/logger.js'` from the test file.
 
-- [ ] **Step 2: Run to verify the fallback test fails**
+- [x] **Step 2: Run to verify the fallback test fails**
 
 ```bash
 npx vitest run tests/unit/core/surfaces.test.js
@@ -560,7 +560,7 @@ npx vitest run tests/unit/core/surfaces.test.js
 
 Expected: fallback test FAILS — `mockLogger.debug` not called.
 
-- [ ] **Step 3: Update `src/core/surfaces.js`**
+- [x] **Step 3: Update `src/core/surfaces.js`**
 
 Add `#logger` field and update constructor:
 
@@ -577,13 +577,13 @@ export class SurfaceManager {
 
 Remove `import { logger } from './logger.js';`.
 
-- [ ] **Step 4: Update `src/core/app.js` — pass logger to SurfaceManager**
+- [x] **Step 4: Update `src/core/app.js` — pass logger to SurfaceManager**
 
 ```js
 const surfaces = new SurfaceManager(logger);
 ```
 
-- [ ] **Step 5: Update `app.test.js` line 72 — `SurfaceManager` constructed directly in a test**
+- [x] **Step 5: Update `app.test.js` line 72 — `SurfaceManager` constructed directly in a test**
 
 ```js
 import { createMockLogger } from '../../mocks/logger.js';
@@ -591,7 +591,7 @@ import { createMockLogger } from '../../mocks/logger.js';
 const surfaces = new SurfaceManager(createMockLogger());
 ```
 
-- [ ] **Step 6: Run surfaces tests**
+- [x] **Step 6: Run surfaces tests**
 
 ```bash
 npx vitest run tests/unit/core/surfaces.test.js
@@ -599,7 +599,7 @@ npx vitest run tests/unit/core/surfaces.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 7: Run full suite**
+- [x] **Step 7: Run full suite**
 
 ```bash
 npm test
@@ -607,7 +607,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/surfaces.js src/core/app.js tests/unit/core/surfaces.test.js tests/unit/core/app.test.js
@@ -625,7 +625,7 @@ git commit -m "refactor(surfaces): inject logger via constructor"
 
 (startApp doesn't call client constructors directly yet — that happens in Task 7.)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/api-clients.test.js`, add `createMockLogger` import and update constructor calls to pass a logger as the final argument:
 
@@ -639,7 +639,7 @@ import { createMockLogger } from '../../mocks/logger.js';
 For every `new XmdbApiClient(mockDisabledManager, mockAdapter, config)` call, add logger as the 4th arg:
 `new XmdbApiClient(mockDisabledManager, mockAdapter, config, createMockLogger())`
 
-- [ ] **Step 2: Run to verify tests still pass (logger is optional until implementation)**
+- [x] **Step 2: Run to verify tests still pass (logger is optional until implementation)**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
@@ -647,7 +647,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: tests PASS (extra arg is currently ignored — confirm this). If they fail for another reason, investigate before proceeding.
 
-- [ ] **Step 3: Update `src/core/api-clients.js` — add logger to BaseApiClient**
+- [x] **Step 3: Update `src/core/api-clients.js` — add logger to BaseApiClient**
 
 Add `#logger` to `BaseApiClient`. Update its constructor:
 
@@ -725,7 +725,7 @@ export class ImdbApiDevClient extends BaseApiClient {
 
 Remove `import { logger } from './logger.js';` from the file.
 
-- [ ] **Step 4: Run api-clients tests**
+- [x] **Step 4: Run api-clients tests**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
@@ -733,7 +733,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Run full suite**
+- [x] **Step 5: Run full suite**
 
 ```bash
 npm test
@@ -741,7 +741,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -758,7 +758,7 @@ git commit -m "refactor(api-clients): inject logger via constructor"
 - Modify: `src/core/app.js`
 - Modify: `tests/unit/core/api-manager.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace `tests/unit/core/api-manager.test.js` with the updated version. Key changes:
 
@@ -868,7 +868,7 @@ describe('ApiClientManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js
@@ -876,7 +876,7 @@ npx vitest run tests/unit/core/api-manager.test.js
 
 Expected: FAIL — constructor signature mismatch.
 
-- [ ] **Step 3: Update `src/core/api-manager.js`**
+- [x] **Step 3: Update `src/core/api-manager.js`**
 
 Remove the `static #createClientFromConfig`, `adapter`, `config` fields; simplify to `(cache, disabledManager, client, logger)`:
 
@@ -935,7 +935,7 @@ export class ApiClientManager {
 }
 ```
 
-- [ ] **Step 4: Add `createApiClient` function and update `startApp` in `src/core/app.js`**
+- [x] **Step 4: Add `createApiClient` function and update `startApp` in `src/core/app.js`**
 
 Add the following imports at the top of `app.js` (alongside existing ones):
 
@@ -968,7 +968,7 @@ const api = new ApiClientManager(cache, disabledManager, client, logger);
 
 Remove the old `const api = new ApiClientManager(cache, disabledManager, adapter, configManager);` line.
 
-- [ ] **Step 5: Run api-manager tests**
+- [x] **Step 5: Run api-manager tests**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js
@@ -976,7 +976,7 @@ npx vitest run tests/unit/core/api-manager.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Run full suite**
+- [x] **Step 6: Run full suite**
 
 ```bash
 npm test
@@ -984,7 +984,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/api-manager.js src/core/app.js tests/unit/core/api-manager.test.js
@@ -1000,7 +1000,7 @@ git commit -m "refactor(api-manager): inject logger and client via constructor, 
 - Modify: `src/core/app.js` (`FlixMonkeyApp` class only)
 - Modify: `tests/unit/core/app.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/app.test.js`, update the direct `FlixMonkeyApp` constructor call to pass logger:
 
@@ -1012,7 +1012,7 @@ import { createMockLogger } from '../../mocks/logger.js';
 const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces, createMockLogger());
 ```
 
-- [ ] **Step 2: Run to verify the test fails**
+- [x] **Step 2: Run to verify the test fails**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "should throw if init"
@@ -1020,7 +1020,7 @@ npx vitest run tests/unit/core/app.test.js -t "should throw if init"
 
 Expected: FAIL — constructor still has 4 params.
 
-- [ ] **Step 3: Update `FlixMonkeyApp` constructor in `src/core/app.js`**
+- [x] **Step 3: Update `FlixMonkeyApp` constructor in `src/core/app.js`**
 
 Add `#logger` private field and update constructor:
 
@@ -1058,13 +1058,13 @@ export class FlixMonkeyApp {
 
 Replace all `logger.error(...)` and `logger.debug(...)` calls inside `FlixMonkeyApp` methods with `this.#logger.error(...)` and `this.#logger.debug(...)`.
 
-- [ ] **Step 4: Update `startApp` to pass logger to `FlixMonkeyApp`**
+- [x] **Step 4: Update `startApp` to pass logger to `FlixMonkeyApp`**
 
 ```js
 const app = new FlixMonkeyApp(cache, api, renderer, surfaces, logger);
 ```
 
-- [ ] **Step 5: Run app tests**
+- [x] **Step 5: Run app tests**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
@@ -1072,7 +1072,7 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Run full suite**
+- [x] **Step 6: Run full suite**
 
 ```bash
 npm test
@@ -1080,7 +1080,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -1099,7 +1099,7 @@ This task removes all remaining module-level mutable state. After this task, no 
 - Modify: `src/core/app.js` — create `new Logger(adapter)`, remove `import { logger }`, remove `_appStarted` / `_resetStartedForTest`
 - Modify: `tests/unit/core/app.test.js` — remove `_resetStartedForTest`; update logger spy to `Logger.prototype`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `tests/unit/core/app.test.js`:
 
@@ -1127,7 +1127,7 @@ afterEach(() => {
 const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 ```
 
-- [ ] **Step 2: Run to verify failing tests**
+- [x] **Step 2: Run to verify failing tests**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
@@ -1135,7 +1135,7 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: several FAIL — `_resetStartedForTest` not found, `logger` singleton import fails.
 
-- [ ] **Step 3: Update `src/core/logger.js` — remove singleton**
+- [x] **Step 3: Update `src/core/logger.js` — remove singleton**
 
 Replace the entire file (singleton export line removed):
 
@@ -1168,7 +1168,7 @@ export class Logger {
 }
 ```
 
-- [ ] **Step 4: Update `src/core/app.js` — wire logger from adapter, remove singleton import and module state**
+- [x] **Step 4: Update `src/core/app.js` — wire logger from adapter, remove singleton import and module state**
 
 Replace `import { logger } from './logger.js'` with `import { Logger } from './logger.js'`.
 
@@ -1209,7 +1209,7 @@ export function startApp(adapter) {
 
 (Remove the old `if (_appStarted) throw ...` guard and the `_appStarted = true` line.)
 
-- [ ] **Step 5: Run app tests**
+- [x] **Step 5: Run app tests**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
@@ -1217,7 +1217,7 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Run full suite**
+- [x] **Step 6: Run full suite**
 
 ```bash
 npm test
@@ -1231,7 +1231,7 @@ grep -r "from './logger.js'" src/ && grep -r "from '../core/logger.js'" src/
 
 Expected: only `import { Logger }` lines appear — no `import { logger }` (lowercase).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/logger.js src/core/app.js tests/unit/core/app.test.js
@@ -1242,7 +1242,7 @@ git commit -m "refactor(app): wire Logger from adapter in startApp, remove singl
 
 ## Self-Check
 
-- [ ] Run `npm test` one final time; confirm all tests pass with no skips.
-- [ ] Confirm no `setConfig` references remain: `grep -r "setConfig" src/`
-- [ ] Confirm no `_appStarted` or `_resetStartedForTest` references remain: `grep -r "_appStarted\|_resetStartedForTest" src/ tests/`
-- [ ] Confirm no lowercase `logger` singleton imports remain in `src/`: `grep -rn "import { logger" src/`
+- [x] Run `npm test` one final time; confirm all tests pass with no skips.
+- [x] Confirm no `setConfig` references remain: `grep -r "setConfig" src/`
+- [x] Confirm no `_appStarted` or `_resetStartedForTest` references remain: `grep -r "_appStarted\|_resetStartedForTest" src/ tests/`
+- [x] Confirm no lowercase `logger` singleton imports remain in `src/`: `grep -rn "import { logger" src/`

@@ -1,6 +1,6 @@
 # Critical Bug Fixes B1/B2/B3 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Fix three production bugs — Chrome sender-validation gap (B3), missing logger crash in options page (B1), and persistent loading spinner on API rejection (B2) — each with a targeted test.
 
@@ -31,7 +31,7 @@
 - Modify: `src/targets/chrome/service-worker.js`
 - Modify: `tests/unit/targets/chrome/service-worker.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Open `tests/unit/targets/chrome/service-worker.test.js`.
 
@@ -129,7 +129,7 @@ it('should reject FM_FETCH messages from a foreign sender', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/targets/chrome/service-worker.test.js
@@ -137,7 +137,7 @@ npx vitest run tests/unit/targets/chrome/service-worker.test.js
 
 Expected: the new test FAILS (sender check not yet implemented, so the fetch IS triggered), and existing tests still pass. If existing tests now fail (domain/URL checks return wrong thing), confirm that `chrome.runtime.id` was added and sender args updated correctly.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
 Open `src/targets/chrome/service-worker.js`. The current content is:
 
@@ -162,7 +162,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 ```
 
-- [ ] **Step 4: Run all tests to verify green**
+- [x] **Step 4: Run all tests to verify green**
 
 ```bash
 npx vitest run tests/unit/targets/chrome/service-worker.test.js
@@ -178,7 +178,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/chrome/service-worker.js tests/unit/targets/chrome/service-worker.test.js
@@ -194,7 +194,7 @@ git commit -m "fix(chrome): validate sender identity in service worker message l
 - Modify: `src/targets/extension/options.js`
 - Modify: `tests/unit/targets/options.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Open `tests/unit/targets/options.test.js`.
 
@@ -267,7 +267,7 @@ it('should pass a Logger instance as the second argument to ConfigManager', () =
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 npx vitest run tests/unit/targets/options.test.js
@@ -275,7 +275,7 @@ npx vitest run tests/unit/targets/options.test.js
 
 Expected: the two new tests FAIL (`cacheManagerConstructorArgs[2]` is `undefined`). Existing tests still pass.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
 Open `src/targets/extension/options.js`. Replace the current content with:
 
@@ -320,7 +320,7 @@ ui.onSave = async () => {
 ui.render(document.body);
 ```
 
-- [ ] **Step 4: Run the tests to verify green**
+- [x] **Step 4: Run the tests to verify green**
 
 ```bash
 npx vitest run tests/unit/targets/options.test.js
@@ -336,7 +336,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/extension/options.js tests/unit/targets/options.test.js
@@ -353,7 +353,7 @@ git commit -m "fix(options): pass Logger to ConfigManager and CacheManager const
 - Modify: `src/core/app.js`
 - Modify: `tests/unit/core/app.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Open `tests/unit/core/app.test.js`. Add this test inside the existing `describe('App', ...)` block, after the existing `'should inject loading overlay while fetching'` test:
 
@@ -382,7 +382,7 @@ it('should remove the loading overlay when getData rejects', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "should remove the loading overlay when getData rejects"
@@ -390,7 +390,7 @@ npx vitest run tests/unit/core/app.test.js -t "should remove the loading overlay
 
 Expected: FAIL — `.fm-loading` is still present after the rejection because no cleanup happens.
 
-- [ ] **Step 3: Add `removeLoadingOverlay` to OverlayRenderer**
+- [x] **Step 3: Add `removeLoadingOverlay` to OverlayRenderer**
 
 Open `src/core/overlay.js`. After the existing `injectLoadingOverlay` method (around line 202), add:
 
@@ -417,7 +417,7 @@ isLoading(container) {
 }
 ```
 
-- [ ] **Step 4: Add try/finally in `#decorateContainer`**
+- [x] **Step 4: Add try/finally in `#decorateContainer`**
 
 Open `src/core/app.js`. Find the `#decorateContainer` method. Replace the block from the `const data = await promise;` line through the `applyFade` call with a try/finally:
 
@@ -447,7 +447,7 @@ try {
 
 `removeLoadingOverlay` is a no-op on the success path because `injectOverlay` already removes the loading overlay (see `overlay.js` — `injectOverlay` calls `container.querySelector('.fm-rating-overlay')?.remove()` which covers the loading overlay too since it has the same base class). The finally call is safe in both paths.
 
-- [ ] **Step 5: Run the tests to verify green**
+- [x] **Step 5: Run the tests to verify green**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
@@ -463,7 +463,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/overlay.js src/core/app.js tests/unit/core/app.test.js

@@ -1,6 +1,6 @@
 # Review Fixes 2 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Address the six remaining `[fix]` items from the code review that were not covered by the first quick-fixes batch.
 
@@ -48,7 +48,7 @@ lastGlobal = str ? parseInt(str, 10) : 0;
 
 If `str` is a non-numeric string (corrupted storage), `parseInt` returns `NaN`. The wait calculation on line 64 then produces `NaN`, which fails the `> 0` check silently — bypassing cross-tab rate limiting for the rest of the session.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add this test at the end of the `describe('RequestQueue', ...)` block in `tests/unit/core/request-queue.test.js`:
 
@@ -65,7 +65,7 @@ it('should fall back to 0 when stored timestamp is not a valid number', async ()
 });
 ```
 
-- [ ] **Step 2: Run the failing test**
+- [x] **Step 2: Run the failing test**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js -t "should fall back to 0"
@@ -75,7 +75,7 @@ Expected: test hangs or fails (the rate limiter treats `NaN` as 0 via `NaN > 0 =
 
 > **Note:** Because `NaN > 0` is `false`, the queue may dispatch the request immediately even without the fix, making this a "guard against future breakage" rather than a currently failing test. The test still belongs in the suite; run `npm test` after the fix to ensure it passes.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
 In `src/core/request-queue.js`, replace line 61:
 
@@ -99,7 +99,7 @@ if (this.#globalSyncKey && this.#adapter) {
 }
 ```
 
-- [ ] **Step 4: Run all request-queue tests**
+- [x] **Step 4: Run all request-queue tests**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js
@@ -107,7 +107,7 @@ npx vitest run tests/unit/core/request-queue.test.js
 
 Expected: all 4 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/request-queue.js tests/unit/core/request-queue.test.js
@@ -127,7 +127,7 @@ git commit -m "fix(request-queue): isNaN guard for stored timestamp"
 
 `WebExtensionAdapter.configGet` accesses `this.#configData[key]` directly. Before `setConfigData()` is called, `#configData` is `{}`, so `configGet` silently returns `undefined` for all keys. Adding an explicit `#configLoaded` flag makes this behaviour intentional rather than an invisible side-effect.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/platform/webextension.test.js`, add a new test inside the `describe('WebExtensionAdapter', ...)` block, after the existing `configGet` tests:
 
@@ -139,7 +139,7 @@ it('configGet should return undefined for all keys before setConfigData is calle
 });
 ```
 
-- [ ] **Step 2: Run the failing test**
+- [x] **Step 2: Run the failing test**
 
 ```bash
 npx vitest run tests/unit/platform/webextension.test.js -t "before setConfigData"
@@ -147,7 +147,7 @@ npx vitest run tests/unit/platform/webextension.test.js -t "before setConfigData
 
 Expected: passes (current code already returns `undefined` from empty `{}`). The test documents the contract; the production change makes the early-return explicit.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
 In `src/platform/webextension.js`, update the class to add `#configLoaded`, update `setConfigData`, and update `configGet`:
 
@@ -174,7 +174,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
 
 Only `#configLoaded`, `setConfigData`, and `configGet` change. All other methods (`storageGet`, `storageSet`, etc.) remain untouched.
 
-- [ ] **Step 4: Run all WebExtensionAdapter tests**
+- [x] **Step 4: Run all WebExtensionAdapter tests**
 
 ```bash
 npx vitest run tests/unit/platform/webextension.test.js
@@ -182,7 +182,7 @@ npx vitest run tests/unit/platform/webextension.test.js
 
 Expected: all 12 tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/platform/webextension.js tests/unit/platform/webextension.test.js
@@ -205,7 +205,7 @@ Each `ApiClientManager` creates its own `RequestQueue` instances. A second insta
 
 Because `app.test.js` creates a new `ApiClientManager` (via `startApp()`) for each test, the guard also needs to be reset in `FlixMonkeyApp.resetInternalState()` — the central test teardown hook already used by `app.test.js`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/api-manager.test.js`, add a `beforeEach` reset and a new test at the top of the `describe` block, right after the imports:
 
@@ -234,7 +234,7 @@ describe('ApiClientManager', () => {
 
 Note: `_resetForTest` does not exist yet — the test will fail at import time or throw `TypeError` when called.
 
-- [ ] **Step 2: Run the failing test**
+- [x] **Step 2: Run the failing test**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js -t "should throw if instantiated more than once"
@@ -242,7 +242,7 @@ npx vitest run tests/unit/core/api-manager.test.js -t "should throw if instantia
 
 Expected: FAIL — `ApiClientManager._resetForTest is not a function`.
 
-- [ ] **Step 3: Apply the fix to api-manager.js**
+- [x] **Step 3: Apply the fix to api-manager.js**
 
 In `src/core/api-manager.js`, add the static guard and reset method. The constructor block becomes:
 
@@ -277,7 +277,7 @@ export class ApiClientManager {
 }
 ```
 
-- [ ] **Step 4: Update app.js to reset the guard in resetInternalState()**
+- [x] **Step 4: Update app.js to reset the guard in resetInternalState()**
 
 `ApiClientManager` is already imported at the top of `src/core/app.js` (line 20). Only the method body needs to change:
 
@@ -291,7 +291,7 @@ static resetInternalState() {
 }
 ```
 
-- [ ] **Step 5: Run all api-manager and app tests**
+- [x] **Step 5: Run all api-manager and app tests**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js tests/unit/core/app.test.js
@@ -299,7 +299,7 @@ npx vitest run tests/unit/core/api-manager.test.js tests/unit/core/app.test.js
 
 Expected: all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api-manager.js src/core/app.js tests/unit/core/api-manager.test.js
@@ -319,7 +319,7 @@ git commit -m "fix(api-manager): prevent multiple ApiClientManager instantiation
 
 The `catch` block in `ConfigManager.get()` (line 36) silently returns a fallback for any error — storage unavailability, missing keys, and programming errors are all indistinguishable. Adding a `logger.warn` call makes silent degradation visible in the extension's debug logs.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/integration/config-manager.test.js`, update the existing "should handle errors in the getter function and fall back" test. The test currently does not assert logging:
 
@@ -364,7 +364,7 @@ import { CONFIG_DEFAULTS } from '../../src/core/config-fields.js';
 import { logger } from '../../src/core/logger.js';
 ```
 
-- [ ] **Step 2: Run the failing test**
+- [x] **Step 2: Run the failing test**
 
 ```bash
 npx vitest run tests/integration/config-manager.test.js -t "should handle errors in the getter function and fall back"
@@ -372,7 +372,7 @@ npx vitest run tests/integration/config-manager.test.js -t "should handle errors
 
 Expected: FAIL — `warnSpy` is not called because the catch block has no logging yet.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
 In `src/core/config-manager.js`, add the logger import and update the catch block:
 
@@ -416,7 +416,7 @@ export class ConfigManager {
 }
 ```
 
-- [ ] **Step 4: Run all config-manager tests**
+- [x] **Step 4: Run all config-manager tests**
 
 ```bash
 npx vitest run tests/integration/config-manager.test.js
@@ -424,7 +424,7 @@ npx vitest run tests/integration/config-manager.test.js
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/config-manager.js tests/integration/config-manager.test.js
@@ -451,7 +451,7 @@ export default target
 
 If `TARGET=typo`, the filter returns `[]`. Rollup exits silently with no output and no error — a confusing failure mode. A guard after line 57 makes an unrecognised value a hard error.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `rollup.config.js`, add the validation block immediately after line 57 (`const target = process.env.TARGET;`):
 
@@ -464,7 +464,7 @@ if (target && !VALID_TARGETS.includes(target)) {
 }
 ```
 
-- [ ] **Step 2: Verify the guard fires**
+- [x] **Step 2: Verify the guard fires**
 
 ```bash
 TARGET=typo npm run build 2>&1 | head -5
@@ -476,7 +476,7 @@ Expected output contains:
 Error: Unknown TARGET "typo". Valid values: userscript, firefox, chrome
 ```
 
-- [ ] **Step 3: Verify normal build still works**
+- [x] **Step 3: Verify normal build still works**
 
 ```bash
 npm run build
@@ -484,7 +484,7 @@ npm run build
 
 Expected: builds all three targets without error.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add rollup.config.js
@@ -506,7 +506,7 @@ git commit -m "build: fail fast on unrecognised TARGET env var"
 
 `createMockAdapter` only stubs `httpFetch`, `storageGet`, and `storageSet`. Tests that need `storageDelete` or `storageGetKeys` build their own inline objects. Several other tests also create inline adapter objects for these three methods — duplicating the factory. This task consolidates them all.
 
-- [ ] **Step 1: Expand createMockAdapter**
+- [x] **Step 1: Expand createMockAdapter**
 
 Replace the entire body of `tests/mocks/adapter.js` (keep the license header) with:
 
@@ -525,7 +525,7 @@ export function createMockAdapter(overrides = {}) {
 }
 ```
 
-- [ ] **Step 2: Migrate cache.test.js**
+- [x] **Step 2: Migrate cache.test.js**
 
 In `tests/unit/core/cache.test.js`:
 
@@ -565,7 +565,7 @@ beforeEach(() => {
 
 The overrides preserve the existing per-test behaviour of calling `.mockResolvedValue(...)` on each mock after setup.
 
-- [ ] **Step 3: Migrate app.test.js**
+- [x] **Step 3: Migrate app.test.js**
 
 In `tests/unit/core/app.test.js`:
 
@@ -667,7 +667,7 @@ const mockAdapter = { storageGet: vi.fn().mockResolvedValue({}), storageSet: vi.
 const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
 ```
 
-- [ ] **Step 4: Migrate request-queue.test.js**
+- [x] **Step 4: Migrate request-queue.test.js**
 
 In `tests/unit/core/request-queue.test.js`:
 
@@ -708,7 +708,7 @@ const mockAdapter = {
 const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('corrupted') });
 ```
 
-- [ ] **Step 5: Run the full test suite**
+- [x] **Step 5: Run the full test suite**
 
 ```bash
 npm test
@@ -716,7 +716,7 @@ npm test
 
 Expected: all tests pass. Coverage threshold met.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/mocks/adapter.js tests/unit/core/app.test.js tests/unit/core/cache.test.js tests/unit/core/request-queue.test.js
@@ -727,6 +727,6 @@ git commit -m "test: expand createMockAdapter and migrate inline adapter mocks"
 
 ## Final verification
 
-- [ ] Run `npm test` — all suites green, coverage above threshold
-- [ ] Run `npm run lint` — no lint errors
-- [ ] Run `npm run build` — all three targets build cleanly
+- [x] Run `npm test` — all suites green, coverage above threshold
+- [x] Run `npm run lint` — no lint errors
+- [x] Run `npm run build` — all three targets build cleanly

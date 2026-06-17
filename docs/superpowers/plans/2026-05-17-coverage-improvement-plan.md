@@ -6,10 +6,10 @@ This plan addresses identified coverage gaps in `flix-monkey`, prioritizing high
 
 _Focus: Stabilizing the extension lifecycle._
 
-- [ ] **Commit 1: Chrome Service Worker Tests**
+- [x] **Commit 1: Chrome Service Worker Tests**
     - Target: `src/targets/chrome/service-worker.js`
     - Test File: `tests/unit/targets/chrome/service-worker.test.js`
-- [ ] **Commit 2: Firefox Background Script Tests**
+- [x] **Commit 2: Firefox Background Script Tests**
     - Target: `src/targets/firefox/background.js`
     - Test File: `tests/unit/targets/firefox/background.test.js`
 
@@ -17,10 +17,10 @@ _Focus: Stabilizing the extension lifecycle._
 
 _Focus: Resolving logic gaps in UI and configuration management._
 
-- [ ] **Commit 3: Surface Logic Expansion**
+- [x] **Commit 3: Surface Logic Expansion**
     - Target: `src/core/surfaces.js`
     - Test File: `tests/unit/core/surfaces.test.js` (Extend coverage for missing branches)
-- [ ] **Commit 4: Configuration Manager Integration Tests**
+- [x] **Commit 4: Configuration Manager Integration Tests**
     - Target: `src/core/config-manager.js`
     - Test File: `tests/integration/config-manager.test.js` (Increase statement/branch coverage)
 
@@ -28,9 +28,9 @@ _Focus: Resolving logic gaps in UI and configuration management._
 
 _Focus: Improving robustness of the core logic._
 
-- [ ] **Commit 5: API Client Edge-Case Testing**
+- [x] **Commit 5: API Client Edge-Case Testing**
     - Target: `src/core/api-clients.js`
     - Test File: `tests/unit/core/api-clients.test.js` (Specifically target uncovered branching)
-- [ ] **Commit 6: Overlay Interaction Testing**
+- [x] **Commit 6: Overlay Interaction Testing**
     - Target: `src/core/overlay.js`
     - Test File: `tests/ui/overlay.ui.test.js` (Ensure interaction states are covered)

@@ -1,6 +1,6 @@
 # Review Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Address 30 actionable findings from the 2026-06-06 full code review across correctness, security, architecture, code quality, performance, testing, and build.
 
@@ -64,7 +64,7 @@
 
 **Files:** `src/core/title.js`, `tests/unit/core/title.test.js`
 
-- [ ] **Add normalization tests** to `tests/unit/core/title.test.js` after the existing `describe` blocks:
+- [x] **Add normalization tests** to `tests/unit/core/title.test.js` after the existing `describe` blocks:
 
 ```js
 describe('hasRating', () => {
@@ -122,7 +122,7 @@ describe('rating normalization', () => {
 });
 ```
 
-- [ ] **Run tests — expect failures:**
+- [x] **Run tests — expect failures:**
 
 ```bash
 npx vitest run tests/unit/core/title.test.js
@@ -130,7 +130,7 @@ npx vitest run tests/unit/core/title.test.js
 
 Expected: `hasRating` tests for `0` values fail.
 
-- [ ] **Fix `hasRating` in `src/core/title.js` line 48:**
+- [x] **Fix `hasRating` in `src/core/title.js` line 48:**
 
 Replace:
 
@@ -148,13 +148,13 @@ get hasRating() {
 }
 ```
 
-- [ ] **Run tests — expect all pass:**
+- [x] **Run tests — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/title.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/title.js tests/unit/core/title.test.js
@@ -167,7 +167,7 @@ git commit -m "fix(title): use null checks in hasRating; add normalization tests
 
 **Files:** `src/core/app.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Add test** to `tests/unit/core/app.test.js` inside `describe('App', ...)`:
+- [x] **Add test** to `tests/unit/core/app.test.js` inside `describe('App', ...)`:
 
 ```js
 it('should log errors thrown by decorateContainer rather than propagating them', async () => {
@@ -188,13 +188,13 @@ it('should log errors thrown by decorateContainer rather than propagating them',
 });
 ```
 
-- [ ] **Run — expect failure:**
+- [x] **Run — expect failure:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "should log errors"
 ```
 
-- [ ] **Fix in `src/core/app.js` — update `decorateRoot` method:**
+- [x] **Fix in `src/core/app.js` — update `decorateRoot` method:**
 
 Replace:
 
@@ -218,13 +218,13 @@ decorateRoot(root) {
 }
 ```
 
-- [ ] **Run — expect pass:**
+- [x] **Run — expect pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -237,7 +237,7 @@ git commit -m "fix(app): catch errors from decorateContainer; add unhandled-reje
 
 **Files:** `src/platform/webextension.js`, `tests/unit/platform/webextension.test.js`
 
-- [ ] **Add test** to `tests/unit/platform/webextension.test.js` inside `describe('WebExtensionAdapter', ...)`:
+- [x] **Add test** to `tests/unit/platform/webextension.test.js` inside `describe('WebExtensionAdapter', ...)`:
 
 ```js
 it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
@@ -246,13 +246,13 @@ it('httpFetch should throw FlixMonkeyError when background returns undefined', a
 });
 ```
 
-- [ ] **Run — expect failure:**
+- [x] **Run — expect failure:**
 
 ```bash
 npx vitest run tests/unit/platform/webextension.test.js -t "returns undefined"
 ```
 
-- [ ] **Fix in `src/platform/webextension.js` — update `httpFetch` after the `Promise.race`:**
+- [x] **Fix in `src/platform/webextension.js` — update `httpFetch` after the `Promise.race`:**
 
 Replace:
 
@@ -269,13 +269,13 @@ if (!response) throw new FlixMonkeyError('empty background response');
 if (response.error) {
 ```
 
-- [ ] **Run — expect pass:**
+- [x] **Run — expect pass:**
 
 ```bash
 npx vitest run tests/unit/platform/webextension.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/platform/webextension.js tests/unit/platform/webextension.test.js
@@ -288,7 +288,7 @@ git commit -m "fix(webextension): guard httpFetch against null background respon
 
 **Files:** `src/targets/firefox/background.js`, `tests/unit/targets/firefox/background.test.js`
 
-- [ ] **Add test** to `tests/unit/targets/firefox/background.test.js` — update the `beforeEach` to expose `messageListener` with the sender argument, then add:
+- [x] **Add test** to `tests/unit/targets/firefox/background.test.js` — update the `beforeEach` to expose `messageListener` with the sender argument, then add:
 
 ```js
 it('should ignore messages from external senders', async () => {
@@ -303,13 +303,13 @@ it('should ignore messages from external senders', async () => {
 
 Note: `browser.runtime.id` is `undefined` in the test environment. The guard `sender.id !== browser.runtime.id` will be `'some-other-extension-id' !== undefined` → `true` → return. Existing tests pass `undefined` as sender (no second arg), so `sender.id` is `undefined === undefined` → `false` → proceed. Verify existing tests still pass.
 
-- [ ] **Run — expect new test fails (message currently processes regardless of sender):**
+- [x] **Run — expect new test fails (message currently processes regardless of sender):**
 
 ```bash
 npx vitest run tests/unit/targets/firefox/background.test.js -t "external senders"
 ```
 
-- [ ] **Fix in `src/targets/firefox/background.js`:**
+- [x] **Fix in `src/targets/firefox/background.js`:**
 
 Replace:
 
@@ -326,13 +326,13 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type !== 'FM_FETCH') return;
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/targets/firefox/background.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/targets/firefox/background.js tests/unit/targets/firefox/background.test.js
@@ -345,7 +345,7 @@ git commit -m "fix(background): validate sender.id in Firefox message listener"
 
 **Files:** `src/core/ui/modal.js`, `tests/ui/modal.ui.test.js`
 
-- [ ] **Run existing modal tests to establish a baseline:**
+- [x] **Run existing modal tests to establish a baseline:**
 
 ```bash
 npx vitest run tests/ui/modal.ui.test.js
@@ -353,7 +353,7 @@ npx vitest run tests/ui/modal.ui.test.js
 
 All should pass.
 
-- [ ] **Replace the constructor body in `src/core/ui/modal.js`:**
+- [x] **Replace the constructor body in `src/core/ui/modal.js`:**
 
 Replace everything from `this.overlay.innerHTML = ...` through `this.overlay.querySelector('.fm-modal-close').onclick = () => this.close();`:
 
@@ -395,13 +395,13 @@ constructor(title) {
 }
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/ui/modal.ui.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/ui/modal.js
@@ -414,7 +414,7 @@ git commit -m "fix(modal): replace innerHTML template with createElement calls"
 
 **Files:** `src/core/api-clients.js`, `tests/unit/core/api-clients.test.js`
 
-- [ ] **Add tests** to `tests/unit/core/api-clients.test.js`. First add the debug spy helper and a `describe` block for key redaction. Find where `XmdbApiClient` tests are and add:
+- [x] **Add tests** to `tests/unit/core/api-clients.test.js`. First add the debug spy helper and a `describe` block for key redaction. Find where `XmdbApiClient` tests are and add:
 
 ```js
 describe('API key redaction in debug logs', () => {
@@ -462,13 +462,13 @@ describe('API key redaction in debug logs', () => {
 
 Also add `import { logger } from '../../../src/core/logger.js';` at the top of the test file if not already imported.
 
-- [ ] **Run — expect failures:**
+- [x] **Run — expect failures:**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js -t "API key redaction"
 ```
 
-- [ ] **Fix in `src/core/api-clients.js`** — update the three `logger.debug` calls that log URLs containing API keys.
+- [x] **Fix in `src/core/api-clients.js`** — update the three `logger.debug` calls that log URLs containing API keys.
 
 In `XmdbApiClient.search` (after building `searchParams`), replace:
 
@@ -519,13 +519,13 @@ logger.debug(`Fetching OMDB details: ${omdbUrl.replace(/apikey=[^&]+/i, 'apikey=
 const json = await this.queuedFetch(omdbUrl, 1);
 ```
 
-- [ ] **Run — expect pass:**
+- [x] **Run — expect pass:**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -538,20 +538,20 @@ git commit -m "fix(api-clients): redact API keys from debug log URLs"
 
 **Files:** `src/platform/adapter.js`, `src/core/ui/settings-ui.js`
 
-- [ ] **Run existing tests to establish baseline:**
+- [x] **Run existing tests to establish baseline:**
 
 ```bash
 npx vitest run tests/unit/platform/adapter.test.js tests/ui/settings-ui.ui.test.js
 ```
 
-- [ ] **Add `setConfigData` to `src/platform/adapter.js`** after `registerMenuCommand`:
+- [x] **Add `setConfigData` to `src/platform/adapter.js`** after `registerMenuCommand`:
 
 ```js
 /** No-op by default; WebExtensionAdapter overrides to pre-load config. */
 setConfigData(_data) {}
 ```
 
-- [ ] **Remove the optional chain in `src/core/ui/settings-ui.js` line 35:**
+- [x] **Remove the optional chain in `src/core/ui/settings-ui.js` line 35:**
 
 Replace:
 
@@ -565,13 +565,13 @@ With:
 this.adapter.setConfigData(settings);
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/platform/adapter.test.js tests/ui/settings-ui.ui.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/platform/adapter.js src/core/ui/settings-ui.js
@@ -584,7 +584,7 @@ git commit -m "refactor(adapter): add setConfigData no-op; remove optional chain
 
 **Files:** `src/core/api-manager.js`, `tests/unit/core/api-manager.test.js`
 
-- [ ] **Delete the `clearCache` method** from `src/core/api-manager.js` (lines 66–69):
+- [x] **Delete the `clearCache` method** from `src/core/api-manager.js` (lines 66–69):
 
 Remove:
 
@@ -595,15 +595,15 @@ async clearCache() {
 }
 ```
 
-- [ ] **Remove the `clearCache` test** from `tests/unit/core/api-manager.test.js` — delete the entire `it('should clear the cache', ...)` block (lines 110–115).
+- [x] **Remove the `clearCache` test** from `tests/unit/core/api-manager.test.js` — delete the entire `it('should clear the cache', ...)` block (lines 110–115).
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/api-manager.js tests/unit/core/api-manager.test.js
@@ -616,13 +616,13 @@ git commit -m "refactor(api-manager): remove dead clearCache method"
 
 **Files:** `src/core/app.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Run existing tests to establish baseline:**
+- [x] **Run existing tests to establish baseline:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Update `src/core/app.js`** — make the following changes:
+- [x] **Update `src/core/app.js`** — make the following changes:
 
 **1.** Remove `_navigationPatched`, `_originalPushState`, `_originalReplaceState` from the module-level declarations. Keep only `_appStarted`:
 
@@ -702,13 +702,13 @@ export function _resetStartedForTest() {
 }
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -721,7 +721,7 @@ git commit -m "refactor(app): move _navigationPatched to instance field; capture
 
 **Files:** `src/core/app.js`, `src/targets/userscript/entry.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Add test** to `tests/unit/core/app.test.js`:
+- [x] **Add test** to `tests/unit/core/app.test.js`:
 
 ```js
 it('should expose cacheManager and disabledManager on the startApp return value', () => {
@@ -733,13 +733,13 @@ it('should expose cacheManager and disabledManager on the startApp return value'
 });
 ```
 
-- [ ] **Run — expect failure:**
+- [x] **Run — expect failure:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "expose cacheManager"
 ```
 
-- [ ] **Update `startApp` return value in `src/core/app.js`:**
+- [x] **Update `startApp` return value in `src/core/app.js`:**
 
 Replace:
 
@@ -765,7 +765,7 @@ return {
 };
 ```
 
-- [ ] **Update `src/targets/userscript/entry.js`** — remove the three duplicate instantiations and use managers from `startApp`:
+- [x] **Update `src/targets/userscript/entry.js`** — remove the three duplicate instantiations and use managers from `startApp`:
 
 Replace:
 
@@ -795,13 +795,13 @@ import { CacheManager } from '../../core/cache.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js src/targets/userscript/entry.js tests/unit/core/app.test.js
@@ -814,7 +814,7 @@ git commit -m "refactor(entry): reuse cache and disabled managers from startApp 
 
 **Files:** `src/core/api-clients.js`, `tests/unit/core/api-clients.test.js`
 
-- [ ] **Verify the existing test** `'should NOT disable itself on a network error with no status property'` at line 74 of `tests/unit/core/api-clients.test.js`. It already covers this case. Run it:
+- [x] **Verify the existing test** `'should NOT disable itself on a network error with no status property'` at line 74 of `tests/unit/core/api-clients.test.js`. It already covers this case. Run it:
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js -t "no status property"
@@ -822,7 +822,7 @@ npx vitest run tests/unit/core/api-clients.test.js -t "no status property"
 
 If it passes, the bug is already partially handled. We tighten the guard regardless.
 
-- [ ] **Fix in `src/core/api-clients.js`** — update the catch block in `queuedFetch`:
+- [x] **Fix in `src/core/api-clients.js`** — update the catch block in `queuedFetch`:
 
 Replace:
 
@@ -838,13 +838,13 @@ const status = err?.status;
 if (Number.isInteger(status) && status >= 400 && status < 500) await this.disable();
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/api-clients.js
@@ -857,7 +857,7 @@ git commit -m "fix(api-clients): guard queuedFetch against non-integer status"
 
 **Files:** `src/core/ui/settings-ui.js`, `tests/unit/core/ui/settings-ui.test.js`
 
-- [ ] **Add test** to `tests/unit/core/ui/settings-ui.test.js`. If the file does not have a test for isolation, add:
+- [x] **Add test** to `tests/unit/core/ui/settings-ui.test.js`. If the file does not have a test for isolation, add:
 
 ```js
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -888,13 +888,13 @@ describe('SettingsUI', () => {
 });
 ```
 
-- [ ] **Run — expect pass** (the test verifies DOM structure, not isolation yet):
+- [x] **Run — expect pass** (the test verifies DOM structure, not isolation yet):
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js
 ```
 
-- [ ] **Update `src/core/ui/settings-ui.js`**:
+- [x] **Update `src/core/ui/settings-ui.js`**:
 
 **1.** Add `#container` private field after the existing private fields:
 
@@ -941,13 +941,13 @@ In `resetClients()`:
 const statusDiv = this.#container.querySelector('#fm-status');
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js tests/ui/settings-ui.ui.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -960,7 +960,7 @@ git commit -m "refactor(settings-ui): scope element queries to container"
 
 **Files:** `src/core/api-manager.js`, `tests/unit/core/api-manager.test.js`
 
-- [ ] **Update the existing log test** in `tests/unit/core/api-manager.test.js`. The test `'should log on successful data retrieval'` currently spies on `console.info`. Update it to verify `console.debug` is called instead:
+- [x] **Update the existing log test** in `tests/unit/core/api-manager.test.js`. The test `'should log on successful data retrieval'` currently spies on `console.info`. Update it to verify `console.debug` is called instead:
 
 Replace:
 
@@ -991,13 +991,13 @@ expect(debugSpy).toHaveBeenCalledWith(
 debugSpy.mockRestore();
 ```
 
-- [ ] **Run — expect failure** (currently logs to info, not debug):
+- [x] **Run — expect failure** (currently logs to info, not debug):
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js -t "log on successful"
 ```
 
-- [ ] **Fix in `src/core/api-manager.js` line 90** — change `logger.info` to `logger.debug`:
+- [x] **Fix in `src/core/api-manager.js` line 90** — change `logger.info` to `logger.debug`:
 
 Replace:
 
@@ -1011,13 +1011,13 @@ With:
 logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/api-manager.js tests/unit/core/api-manager.test.js
@@ -1030,7 +1030,7 @@ git commit -m "fix(api-manager): demote per-fetch success log from info to debug
 
 **Files:** `src/core/api-clients.js`, `src/core/config-fields.js`, `tests/unit/core/api-clients.test.js`
 
-- [ ] **Add tests** to `tests/unit/core/api-clients.test.js`:
+- [x] **Add tests** to `tests/unit/core/api-clients.test.js`:
 
 ```js
 describe('sentinel key guard', () => {
@@ -1054,9 +1054,9 @@ describe('sentinel key guard', () => {
 });
 ```
 
-- [ ] **Run — expect pass** (empty string is already falsy so the existing guard `!apiKey` already catches it). These should pass. If they do, skip the "expect failure" step.
+- [x] **Run — expect pass** (empty string is already falsy so the existing guard `!apiKey` already catches it). These should pass. If they do, skip the "expect failure" step.
 
-- [ ] **Update `src/core/config-fields.js`** — change the `default` for `xmdbApiKey` and `omdbApiKey` from placeholder strings to empty string:
+- [x] **Update `src/core/config-fields.js`** — change the `default` for `xmdbApiKey` and `omdbApiKey` from placeholder strings to empty string:
 
 Replace:
 
@@ -1082,7 +1082,7 @@ With:
 default: '',
 ```
 
-- [ ] **Update `src/core/api-clients.js`** — remove the redundant sentinel string checks:
+- [x] **Update `src/core/api-clients.js`** — remove the redundant sentinel string checks:
 
 In `XmdbApiClient.search`, replace:
 
@@ -1108,13 +1108,13 @@ With:
 if (!apiKey) return null;
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/api-clients.js src/core/config-fields.js tests/unit/core/api-clients.test.js
@@ -1129,7 +1129,7 @@ git commit -m "fix(api-clients): replace magic key sentinels with empty-string c
 
 > **This task must land before Task 16.** Task 16 migrates ~40 test call sites to use this mock.
 
-- [ ] **Rewrite `tests/mocks/adapter.js`** in full:
+- [x] **Rewrite `tests/mocks/adapter.js`** in full:
 
 ```js
 /**
@@ -1181,13 +1181,13 @@ export function createMockAdapter(overrides = {}) {
 }
 ```
 
-- [ ] **Run all tests — expect all pass** (existing call sites used overrides spread, so the interface is unchanged):
+- [x] **Run all tests — expect all pass** (existing call sites used overrides spread, so the interface is unchanged):
 
 ```bash
 npm test
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/mocks/adapter.js
@@ -1202,7 +1202,7 @@ git commit -m "test(mocks): extend PlatformAdapter; support configGet override"
 
 > **Requires Task 15 to be complete.**
 
-- [ ] **Rewrite `src/core/config-manager.js`:**
+- [x] **Rewrite `src/core/config-manager.js`:**
 
 ```js
 /**
@@ -1243,7 +1243,7 @@ export class ConfigManager {
 }
 ```
 
-- [ ] **Rewrite `tests/unit/core/config-manager.test.js`:**
+- [x] **Rewrite `tests/unit/core/config-manager.test.js`:**
 
 ```js
 /**
@@ -1295,7 +1295,7 @@ describe('ConfigManager', () => {
 });
 ```
 
-- [ ] **Rewrite `tests/integration/config-manager.test.js`:**
+- [x] **Rewrite `tests/integration/config-manager.test.js`:**
 
 ```js
 /**
@@ -1363,7 +1363,7 @@ describe('ConfigManager Integration', () => {
 });
 ```
 
-- [ ] **Update `tests/unit/core/api-manager.test.js` line 25:**
+- [x] **Update `tests/unit/core/api-manager.test.js` line 25:**
 
 Replace:
 
@@ -1379,7 +1379,7 @@ const mockConfig = new ConfigManager(createMockAdapter());
 
 Add import at top: `import { createMockAdapter } from '../../mocks/adapter.js';`
 
-- [ ] **Update `tests/unit/core/cache.test.js` line 37:**
+- [x] **Update `tests/unit/core/cache.test.js` line 37:**
 
 Replace:
 
@@ -1395,7 +1395,7 @@ config = new ConfigManager(createMockAdapter());
 
 Add import: `import { createMockAdapter } from '../../mocks/adapter.js';`
 
-- [ ] **Update `tests/unit/core/overlay.test.js`** — replace all `new ConfigManager()` and `new ConfigManager(key => ...)` calls:
+- [x] **Update `tests/unit/core/overlay.test.js`** — replace all `new ConfigManager()` and `new ConfigManager(key => ...)` calls:
 
 - `new ConfigManager()` → `new ConfigManager(createMockAdapter())`
 - `new ConfigManager(key => (key === 'overlayCorner' ? 'top-left' : undefined))` → `new ConfigManager(createMockAdapter({ configGet: key => key === 'overlayCorner' ? 'top-left' : undefined }))`
@@ -1403,25 +1403,25 @@ Add import: `import { createMockAdapter } from '../../mocks/adapter.js';`
 
 Add import: `import { createMockAdapter } from '../../mocks/adapter.js';`
 
-- [ ] **Update `tests/ui/info.ui.test.js`, `tests/ui/search.ui.test.js`, `tests/ui/zoomed.ui.test.js`** — each has one `new ConfigManager()`:
+- [x] **Update `tests/ui/info.ui.test.js`, `tests/ui/search.ui.test.js`, `tests/ui/zoomed.ui.test.js`** — each has one `new ConfigManager()`:
 
 Replace `new ConfigManager()` with `new ConfigManager(createMockAdapter())` and add `import { createMockAdapter } from '../mocks/adapter.js';`
 
-- [ ] **Update `tests/ui/browse.ui.test.js`** — three uses:
+- [x] **Update `tests/ui/browse.ui.test.js`** — three uses:
 
 - `new ConfigManager()` → `new ConfigManager(createMockAdapter())`
 - `new ConfigManager(key => { ... })` (two instances with overlayCorner/fadeThreshold logic) → `new ConfigManager(createMockAdapter({ configGet: key => { ... } }))`
 
 Add import: `import { createMockAdapter } from '../mocks/adapter.js';`
 
-- [ ] **Update `tests/ui/overlay.ui.test.js`** — ~15 uses:
+- [x] **Update `tests/ui/overlay.ui.test.js`** — ~15 uses:
 
 Pattern: `new ConfigManager()` → `new ConfigManager(createMockAdapter())`
 Pattern: `new ConfigManager(key => { ... })` → `new ConfigManager(createMockAdapter({ configGet: key => { ... } }))`
 
 Add import: `import { createMockAdapter } from '../mocks/adapter.js';`
 
-- [ ] **Update `tests/integration/api-clients.test.js`** — update `beforeAll`:
+- [x] **Update `tests/integration/api-clients.test.js`** — update `beforeAll`:
 
 Replace:
 
@@ -1437,7 +1437,7 @@ configManager = new ConfigManager(createMockAdapter({ configGet: getter }));
 
 Add import: `import { createMockAdapter } from '../mocks/adapter.js';`
 
-- [ ] **Update `src/targets/extension/options.js` line 25:**
+- [x] **Update `src/targets/extension/options.js` line 25:**
 
 Replace:
 
@@ -1453,13 +1453,13 @@ const config = new ConfigManager(adapter);
 
 This line is already the adapter form — **no change needed** since `WebExtensionAdapter` implements `configGet`.
 
-- [ ] **Run all tests — expect all pass:**
+- [x] **Run all tests — expect all pass:**
 
 ```bash
 npm test
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/config-manager.js \
@@ -1483,13 +1483,13 @@ git commit -m "refactor(config-manager): constructor always takes a PlatformAdap
 
 **Files:** `src/core/overlay.js`, `src/core/app.js`, `tests/unit/core/overlay.test.js`
 
-- [ ] **Run existing overlay tests to establish baseline:**
+- [x] **Run existing overlay tests to establish baseline:**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js
 ```
 
-- [ ] **Update `src/core/overlay.js`** — remove `_displayTitle` from both methods:
+- [x] **Update `src/core/overlay.js`** — remove `_displayTitle` from both methods:
 
 Replace:
 
@@ -1519,7 +1519,7 @@ injectLoadingOverlay(container) {
     container.appendChild(this.#createLoadingOverlay());
 ```
 
-- [ ] **Update call site in `src/core/app.js` line 77:**
+- [x] **Update call site in `src/core/app.js` line 77:**
 
 Replace:
 
@@ -1533,15 +1533,15 @@ With:
 this.#renderer.injectLoadingOverlay(container);
 ```
 
-- [ ] **Update any test calls** in `tests/unit/core/overlay.test.js` that pass a second argument to `injectLoadingOverlay` — remove the argument.
+- [x] **Update any test calls** in `tests/unit/core/overlay.test.js` that pass a second argument to `injectLoadingOverlay` — remove the argument.
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/overlay.js src/core/app.js tests/unit/core/overlay.test.js
@@ -1554,13 +1554,13 @@ git commit -m "refactor(overlay): remove unused displayTitle param from loading 
 
 **Files:** `src/core/app.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Run mutation observer test to establish baseline:**
+- [x] **Run mutation observer test to establish baseline:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "DOM mutations"
 ```
 
-- [ ] **Update the MutationObserver callback in `src/core/app.js`:**
+- [x] **Update the MutationObserver callback in `src/core/app.js`:**
 
 Replace:
 
@@ -1579,13 +1579,13 @@ const hasElements = mutations.some(m => {
 });
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js
@@ -1598,7 +1598,7 @@ git commit -m "perf(app): replace Array.from in MutationObserver with for...of"
 
 **Files:** `src/core/app.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Add test** to `tests/unit/core/app.test.js`:
+- [x] **Add test** to `tests/unit/core/app.test.js`:
 
 ```js
 it('should call decorateRoot on mutation target rather than full document when nodes are added', async () => {
@@ -1639,13 +1639,13 @@ Also add `SurfaceManager` to the imports at top of `app.test.js`:
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 ```
 
-- [ ] **Run — expect failure:**
+- [x] **Run — expect failure:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "mutation target"
 ```
 
-- [ ] **Update `src/core/app.js`**:
+- [x] **Update `src/core/app.js`**:
 
 **1.** Add `#pendingRoots` instance field:
 
@@ -1686,13 +1686,13 @@ this.#observer = new MutationObserver(mutations => {
 
 **4.** Navigation events (pushState, replaceState, popstate) don't add to `#pendingRoots`, so they naturally fall back to `[document]` when the debounce fires. No change needed there.
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -1705,7 +1705,7 @@ git commit -m "perf(app): pass addedNode parents to decorateRoot instead of full
 
 **Files:** `src/core/request-queue.js`, `tests/unit/core/request-queue.test.js`
 
-- [ ] **Add test** to `tests/unit/core/request-queue.test.js`:
+- [x] **Add test** to `tests/unit/core/request-queue.test.js`:
 
 ```js
 it('should read global storage only once per request when no wait is needed', async () => {
@@ -1724,13 +1724,13 @@ it('should read global storage only once per request when no wait is needed', as
 });
 ```
 
-- [ ] **Run — may already pass or fail depending on current behaviour:**
+- [x] **Run — may already pass or fail depending on current behaviour:**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js -t "once per request"
 ```
 
-- [ ] **Update `src/core/request-queue.js` — refactor `#process`:**
+- [x] **Update `src/core/request-queue.js` — refactor `#process`:**
 
 Replace the while loop body:
 
@@ -1802,13 +1802,13 @@ while (this.#queue.length > 0) {
 
 Note: the structure is identical but the comment makes the intent explicit. The actual reduction in storage reads comes from the fact that `continue` causes the loop to re-read at the top (after a wait), while the no-wait path proceeds directly. For a sequence of requests with `interval=0`, each iteration reads once and fires.
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/request-queue.js tests/unit/core/request-queue.test.js
@@ -1821,13 +1821,13 @@ git commit -m "perf(request-queue): read global storage timestamp once per proce
 
 **Files:** `src/core/app.js`, `src/core/constants.js`, `tests/unit/core/app.test.js`
 
-- [ ] **Add constant to `src/core/constants.js`:**
+- [x] **Add constant to `src/core/constants.js`:**
 
 ```js
 export const INFLIGHT_TIMEOUT_MS = 30_000;
 ```
 
-- [ ] **Add test** to `tests/unit/core/app.test.js`:
+- [x] **Add test** to `tests/unit/core/app.test.js`:
 
 ```js
 it('should remove inFlight entry and log error if API call hangs past timeout', async () => {
@@ -1851,13 +1851,13 @@ it('should remove inFlight entry and log error if API call hangs past timeout', 
 });
 ```
 
-- [ ] **Run — expect failure:**
+- [x] **Run — expect failure:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js -t "hangs past timeout"
 ```
 
-- [ ] **Update `src/core/app.js`** — add the import and update `#decorateContainer`:
+- [x] **Update `src/core/app.js`** — add the import and update `#decorateContainer`:
 
 Add import at top:
 
@@ -1892,13 +1892,13 @@ if (!promise) {
 }
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/core/app.js src/core/constants.js tests/unit/core/app.test.js
@@ -1911,7 +1911,7 @@ git commit -m "perf(app): add safety timeout to #inFlight entries"
 
 **New file:** `tests/unit/targets/content.test.js`
 
-- [ ] **Create `tests/unit/targets/content.test.js`:**
+- [x] **Create `tests/unit/targets/content.test.js`:**
 
 ```js
 /**
@@ -1992,13 +1992,13 @@ describe('content.js entry point', () => {
 });
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/targets/content.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/unit/targets/content.test.js
@@ -2011,7 +2011,7 @@ git commit -m "test(content): add smoke test for content.js entry point"
 
 **New file:** `tests/unit/targets/options.test.js`
 
-- [ ] **Create `tests/unit/targets/options.test.js`:**
+- [x] **Create `tests/unit/targets/options.test.js`:**
 
 ```js
 /**
@@ -2068,13 +2068,13 @@ describe('options.js entry point', () => {
 });
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/targets/options.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/unit/targets/options.test.js
@@ -2087,7 +2087,7 @@ git commit -m "test(options): add smoke test for options.js entry point"
 
 **Files:** `tests/integration/api-clients.test.js`
 
-- [ ] **Replace the conditional pattern** in `tests/integration/api-clients.test.js`. Find:
+- [x] **Replace the conditional pattern** in `tests/integration/api-clients.test.js`. Find:
 
 ```js
 if (!hasCredentials(credentials)) {
@@ -2140,13 +2140,13 @@ it.skipIf(!hasCredentials(credentials))('should fetch real data from IMDb API De
 });
 ```
 
-- [ ] **Run — expect all pass (credential tests skip if no keys):**
+- [x] **Run — expect all pass (credential tests skip if no keys):**
 
 ```bash
 npx vitest run tests/integration/api-clients.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/integration/api-clients.test.js
@@ -2159,7 +2159,7 @@ git commit -m "test(integration): use it.skipIf for credential-gated tests"
 
 **Files:** `tests/unit/core/request-queue.test.js`
 
-- [ ] **Update the `'should clear queue'` test** — it already has a comment but expand it:
+- [x] **Update the `'should clear queue'` test** — it already has a comment but expand it:
 
 Replace:
 
@@ -2183,13 +2183,13 @@ it('should clear queue', async () => {
     const queue = new RequestQueue(999999);
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/unit/core/request-queue.test.js
@@ -2202,7 +2202,7 @@ git commit -m "test(request-queue): document timing assumption in clear() test"
 
 **Files:** `tests/unit/core/surfaces.test.js`
 
-- [ ] **Add parameterised tests** for alternate selectors. Append to `tests/unit/core/surfaces.test.js`:
+- [x] **Add parameterised tests** for alternate selectors. Append to `tests/unit/core/surfaces.test.js`:
 
 ```js
 describe('previewModal fallback selectors', () => {
@@ -2254,13 +2254,13 @@ describe('jawBone fallback selectors', () => {
 });
 ```
 
-- [ ] **Run — expect all pass:**
+- [x] **Run — expect all pass:**
 
 ```bash
 npx vitest run tests/unit/core/surfaces.test.js
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add tests/unit/core/surfaces.test.js
@@ -2273,13 +2273,13 @@ git commit -m "test(surfaces): add tests for fallback selectors per surface"
 
 **Files:** `rollup.config.js`
 
-- [ ] **Run build to establish baseline:**
+- [x] **Run build to establish baseline:**
 
 ```bash
 npm run build:userscript
 ```
 
-- [ ] **Find the userscript output config** in `rollup.config.js` — the block with `format: 'iife'`. Add `sourcemap: 'inline'`:
+- [x] **Find the userscript output config** in `rollup.config.js` — the block with `format: 'iife'`. Add `sourcemap: 'inline'`:
 
 ```js
 output: {
@@ -2290,7 +2290,7 @@ output: {
 },
 ```
 
-- [ ] **Build and verify** the output file contains a source map comment:
+- [x] **Build and verify** the output file contains a source map comment:
 
 ```bash
 npm run build:userscript
@@ -2299,7 +2299,7 @@ grep -c "sourceMappingURL=data:application/json" dist/FlixMonkey.user.js
 
 Expected: `1`
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add rollup.config.js
@@ -2312,7 +2312,7 @@ git commit -m "build(rollup): add inline source map for userscript bundle"
 
 **Files:** `rollup.config.js`
 
-- [ ] **Find the `strip-license-header` plugin** in `rollup.config.js`. It defines a regex inside the `transform` function. Hoist it to module level and anchor it to the start of the file.
+- [x] **Find the `strip-license-header` plugin** in `rollup.config.js`. It defines a regex inside the `transform` function. Hoist it to module level and anchor it to the start of the file.
 
 Locate the plugin definition (looks like):
 
@@ -2340,7 +2340,7 @@ const LICENSE_BLOCK_RE = /^\/\*\*[\s\S]*?GNU General Public License[\s\S]*?\*\//
 },
 ```
 
-- [ ] **Build and verify the userscript has no duplicate license headers:**
+- [x] **Build and verify the userscript has no duplicate license headers:**
 
 ```bash
 npm run build:userscript
@@ -2349,7 +2349,7 @@ grep -c "GNU General Public License" dist/FlixMonkey.user.js
 
 Expected: `1` (only the prepended banner, not per-module headers).
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add rollup.config.js
@@ -2362,7 +2362,7 @@ git commit -m "build(rollup): hoist and tighten strip-license-header regex"
 
 **Files:** `scripts/package.js`
 
-- [ ] **Read `scripts/package.js`** to find where each extension directory is zipped, then add a verification step before each zip call.
+- [x] **Read `scripts/package.js`** to find where each extension directory is zipped, then add a verification step before each zip call.
 
 Add a helper function near the top of `scripts/package.js` (after the imports):
 
@@ -2393,13 +2393,13 @@ verifyDistFiles(firefoxDir, 'firefox');
 // ... existing zip code
 ```
 
-- [ ] **Build and verify no errors on a complete build:**
+- [x] **Build and verify no errors on a complete build:**
 
 ```bash
 npm run build
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add scripts/package.js
@@ -2412,19 +2412,19 @@ git commit -m "build(package): verify required dist files before zipping"
 
 **New files:** `.nvmrc`, `.npmrc`
 
-- [ ] **Create `.nvmrc`:**
+- [x] **Create `.nvmrc`:**
 
 ```
 22
 ```
 
-- [ ] **Create `.npmrc`** (or append to existing):
+- [x] **Create `.npmrc`** (or append to existing):
 
 ```
 engine-strict=true
 ```
 
-- [ ] **Verify current Node version satisfies the requirement:**
+- [x] **Verify current Node version satisfies the requirement:**
 
 ```bash
 node --version
@@ -2432,13 +2432,13 @@ node --version
 
 Expected: `v22.x.x` or higher.
 
-- [ ] **Run tests to confirm nothing is broken:**
+- [x] **Run tests to confirm nothing is broken:**
 
 ```bash
 npm test
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add .nvmrc .npmrc
@@ -2451,7 +2451,7 @@ git commit -m "build: add .nvmrc and engine-strict to enforce Node >= 22"
 
 After all 30 tasks:
 
-- [ ] **Run full test suite:**
+- [x] **Run full test suite:**
 
 ```bash
 npm test
@@ -2459,7 +2459,7 @@ npm test
 
 All tests pass.
 
-- [ ] **Run full build:**
+- [x] **Run full build:**
 
 ```bash
 npm run build
@@ -2467,7 +2467,7 @@ npm run build
 
 No errors; `dist/` contains `FlixMonkey.user.js`, `firefox/`, `chrome/`, and the zip archives.
 
-- [ ] **Run lint:**
+- [x] **Run lint:**
 
 ```bash
 npm run lint

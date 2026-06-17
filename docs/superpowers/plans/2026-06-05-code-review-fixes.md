@@ -1,6 +1,6 @@
 # Code Review Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Fix all actionable items from the 2026-06-05 full codebase review — 3 real bugs, 6 design/test weaknesses, and 3 tooling tweaks — one commit per issue.
 
@@ -45,7 +45,7 @@
 
 `getData` returns `null` on both miss paths but writes `Title.notFound()` to cache. On a cache hit that `Title` is returned — inconsistent contract. Fix: always return the `Title.notFound` object.
 
-- [ ] **Step 1: Update the two miss-path returns in `api-manager.js`**
+- [x] **Step 1: Update the two miss-path returns in `api-manager.js`**
 
 In `src/core/api-manager.js`, replace the `getData` method body (lines 80–99):
 
@@ -74,7 +74,7 @@ async getData(displayTitle) {
 }
 ```
 
-- [ ] **Step 2: Remove the null-coalescing fallback in `app.js`**
+- [x] **Step 2: Remove the null-coalescing fallback in `app.js`**
 
 In `src/core/app.js`, `#decorateContainer` at the line that calls `injectOverlay` (currently line 91):
 
@@ -93,7 +93,7 @@ import { Title } from './title.js';
 
 Delete it entirely. (Verify no other usage of `Title` remains in `app.js`.)
 
-- [ ] **Step 3: Update tests that expected `null` on miss**
+- [x] **Step 3: Update tests that expected `null` on miss**
 
 In `tests/unit/core/api-manager.test.js`, update the three affected tests:
 
@@ -144,7 +144,7 @@ it('should skip unhealthy client', async () => {
 });
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 npx vitest run tests/unit/core/api-manager.test.js tests/unit/core/app.test.js
@@ -152,7 +152,7 @@ npx vitest run tests/unit/core/api-manager.test.js tests/unit/core/app.test.js
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-manager.js src/core/app.js tests/unit/core/api-manager.test.js
@@ -167,7 +167,7 @@ git commit -m "fix(api-manager): return Title.notFound instead of null on getDat
 
 - Modify: `src/targets/chrome/service-worker.js:18-20` (imports), `src/targets/chrome/service-worker.js:24-29` (pre-validation block)
 
-- [ ] **Step 1: Remove the pre-validation block**
+- [x] **Step 1: Remove the pre-validation block**
 
 In `src/targets/chrome/service-worker.js`, the listener currently reads:
 
@@ -207,7 +207,7 @@ chrome.action.onClicked.addListener(() => {
 });
 ```
 
-- [ ] **Step 2: Run the service-worker tests**
+- [x] **Step 2: Run the service-worker tests**
 
 ```bash
 npx vitest run tests/unit/targets/chrome/service-worker.test.js
@@ -215,7 +215,7 @@ npx vitest run tests/unit/targets/chrome/service-worker.test.js
 
 Expected: all pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/chrome/service-worker.js
@@ -232,7 +232,7 @@ git commit -m "fix(chrome): remove redundant domain pre-validation from service-
 
 The fix belongs in `SettingsUI.render()` — that is where `storageGetAll()` is called, so it is the right place to initialize the adapter's synchronous config reads. The adapter's `setConfigData` method may not exist on all adapter types (e.g., the userscript adapter does not have it), so use optional chaining.
 
-- [ ] **Step 1: Call `setConfigData` after `storageGetAll` in `render()`**
+- [x] **Step 1: Call `setConfigData` after `storageGetAll` in `render()`**
 
 In `src/core/ui/settings-ui.js`, in the `render` method, after the `storageGetAll` call (currently line 34):
 
@@ -245,7 +245,7 @@ const settings = (await this.adapter.storageGetAll()) || {};
 this.adapter.setConfigData?.(settings);
 ```
 
-- [ ] **Step 2: Run the settings-ui tests**
+- [x] **Step 2: Run the settings-ui tests**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js tests/ui/settings-ui.ui.test.js
@@ -253,7 +253,7 @@ npx vitest run tests/unit/core/ui/settings-ui.test.js tests/ui/settings-ui.ui.te
 
 Expected: all pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js
@@ -273,7 +273,7 @@ git commit -m "fix(options): initialise adapter config data after storage load"
 
 `ApiClientManager` carries a `static #created` flag and `_resetForTest()` backdoor. `FlixMonkeyApp` carries static navigation-patching state and `resetInternalState()`. Both belong at the module level in `app.js`.
 
-- [ ] **Step 1: Remove singleton flag from `ApiClientManager`**
+- [x] **Step 1: Remove singleton flag from `ApiClientManager`**
 
 In `src/core/api-manager.js`, remove these lines:
 
@@ -307,7 +307,7 @@ constructor(cacheManager, disabledManager, adapter, config, client = null) {
 }
 ```
 
-- [ ] **Step 2: Move singleton and navigation state to module level in `app.js`**
+- [x] **Step 2: Move singleton and navigation state to module level in `app.js`**
 
 In `src/core/app.js`:
 
@@ -406,7 +406,7 @@ export function _resetStartedForTest() {
 }
 ```
 
-- [ ] **Step 3: Update `api-manager.test.js`**
+- [x] **Step 3: Update `api-manager.test.js`**
 
 Remove the `beforeEach` that called `ApiClientManager._resetForTest()` and the singleton-throw test:
 
@@ -423,7 +423,7 @@ it('should throw if instantiated more than once', () => {
 });
 ```
 
-- [ ] **Step 4: Update `app.test.js`**
+- [x] **Step 4: Update `app.test.js`**
 
 1. Update the import at the top:
 
@@ -457,7 +457,7 @@ it('should throw if startApp is called twice', () => {
 });
 ```
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 ```bash
 npm test
@@ -465,7 +465,7 @@ npm test
 
 Expected: all tests pass. The singleton test in `api-manager.test.js` is gone; the new `startApp` throws test passes.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api-manager.js src/core/app.js tests/unit/core/api-manager.test.js tests/unit/core/app.test.js
@@ -483,7 +483,7 @@ git commit -m "refactor(api-manager): move singleton guard to startApp module le
 
 `_validate()` passes `input.value` to field validators. For checkboxes `input.value` is always `"on"` — should be `input.checked`.
 
-- [ ] **Step 1: Write a failing test**
+- [x] **Step 1: Write a failing test**
 
 In `tests/unit/core/ui/settings-ui.test.js`, add a new test at the end of the `describe` block:
 
@@ -509,7 +509,7 @@ it('should pass input.checked (not input.value) to validate for checkbox fields'
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js -t "should pass input.checked"
@@ -517,7 +517,7 @@ npx vitest run tests/unit/core/ui/settings-ui.test.js -t "should pass input.chec
 
 Expected: FAIL — `validateFn` was called with `"on"` not `true`.
 
-- [ ] **Step 3: Fix `_validate()` in `settings-ui.js`**
+- [x] **Step 3: Fix `_validate()` in `settings-ui.js`**
 
 In `src/core/ui/settings-ui.js`, in the `_validate` method, replace the single validate call line:
 
@@ -530,7 +530,7 @@ const fieldValue = input.type === 'checkbox' ? input.checked : input.value;
 const errorMsg = field.validate ? field.validate(fieldValue) : null;
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js
@@ -538,7 +538,7 @@ npx vitest run tests/unit/core/ui/settings-ui.test.js
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -555,7 +555,7 @@ git commit -m "fix(settings-ui): pass input.checked for checkbox field validatio
 
 Three adapter methods are missing from the shared test fixture, causing silent fallbacks in tests that call them.
 
-- [ ] **Step 1: Add missing methods to `createMockAdapter`**
+- [x] **Step 1: Add missing methods to `createMockAdapter`**
 
 In `tests/mocks/adapter.js`, replace the returned object:
 
@@ -575,7 +575,7 @@ export function createMockAdapter(overrides = {}) {
 }
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 ```bash
 npm test
@@ -583,7 +583,7 @@ npm test
 
 Expected: all tests pass. No test should regress; some previously-silently-broken config reads now exercise real mock methods.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/mocks/adapter.js
@@ -598,7 +598,7 @@ git commit -m "test(mocks): add storageGetAll, storageSetMany, configGet to crea
 
 - Modify: `src/core/cache.js:77-84`
 
-- [ ] **Step 1: Replace the serial loop with `Promise.all`**
+- [x] **Step 1: Replace the serial loop with `Promise.all`**
 
 In `src/core/cache.js`, replace the `clear()` method body:
 
@@ -611,7 +611,7 @@ async clear() {
 }
 ```
 
-- [ ] **Step 2: Run the cache tests**
+- [x] **Step 2: Run the cache tests**
 
 ```bash
 npx vitest run tests/unit/core/cache.test.js
@@ -619,7 +619,7 @@ npx vitest run tests/unit/core/cache.test.js
 
 Expected: all pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/cache.js
@@ -634,7 +634,7 @@ git commit -m "perf(cache): delete entries in parallel in CacheManager.clear"
 
 - Modify: `src/core/request-queue.js:32-36` (enqueue), `src/core/request-queue.js:52-55` (#process)
 
-- [ ] **Step 1: Move the sort from `#process` to `enqueue`**
+- [x] **Step 1: Move the sort from `#process` to `enqueue`**
 
 In `src/core/request-queue.js`:
 
@@ -663,7 +663,7 @@ if (this.#queue.length > 1) {
 
 The `#process` `while` loop now starts directly with the `Date.now()` read after the `while (this.#queue.length > 0)` check.
 
-- [ ] **Step 2: Run the request-queue tests**
+- [x] **Step 2: Run the request-queue tests**
 
 ```bash
 npx vitest run tests/unit/core/request-queue.test.js
@@ -671,7 +671,7 @@ npx vitest run tests/unit/core/request-queue.test.js
 
 Expected: all pass, including priority-ordering tests.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/request-queue.js
@@ -687,7 +687,7 @@ git commit -m "perf(request-queue): sort on enqueue instead of on every iteratio
 - Modify: `src/core/ui/modal.js`
 - Modify: `tests/ui/modal.ui.test.js`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add three tests to `tests/ui/modal.ui.test.js` (before the closing `});`):
 
@@ -721,7 +721,7 @@ it('should return focus to the trigger element after close', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```bash
 npx vitest run tests/ui/modal.ui.test.js -t "role=\"dialog\""
@@ -731,7 +731,7 @@ npx vitest run tests/ui/modal.ui.test.js -t "return focus"
 
 Expected: all three FAIL.
 
-- [ ] **Step 3: Rewrite `modal.js`**
+- [x] **Step 3: Rewrite `modal.js`**
 
 Replace the entire `src/core/ui/modal.js` class body with:
 
@@ -783,7 +783,7 @@ export class Modal {
 }
 ```
 
-- [ ] **Step 4: Run all modal tests**
+- [x] **Step 4: Run all modal tests**
 
 ```bash
 npx vitest run tests/ui/modal.ui.test.js
@@ -791,7 +791,7 @@ npx vitest run tests/ui/modal.ui.test.js
 
 Expected: all pass including the three new ones.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/modal.js tests/ui/modal.ui.test.js
@@ -811,7 +811,7 @@ git commit -m "feat(modal): add keyboard accessibility and ARIA roles"
 
 Currently `injectStyles()` uses an instance flag `#stylesInjected` and always appends a new `<style>` tag. The fix replaces the instance flag with a DOM-id check so any call updates rather than duplicates the tag. Then `content.js` calls `refreshStyles()` when the corner setting changes.
 
-- [ ] **Step 1: Write a failing test for idempotent update**
+- [x] **Step 1: Write a failing test for idempotent update**
 
 In `tests/unit/core/overlay.test.js`, replace the existing "should allow two separate instances" test with a test for the new idempotent behavior, and add an update test:
 
@@ -845,7 +845,7 @@ it('should inject styles only once per instance', () => {
 });
 ```
 
-- [ ] **Step 2: Run the overlay tests to verify the new test fails**
+- [x] **Step 2: Run the overlay tests to verify the new test fails**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js -t "should update the existing"
@@ -853,7 +853,7 @@ npx vitest run tests/unit/core/overlay.test.js -t "should update the existing"
 
 Expected: FAIL — second renderer appends a second tag instead of updating.
 
-- [ ] **Step 3: Rewrite `injectStyles()` in `overlay.js`**
+- [x] **Step 3: Rewrite `injectStyles()` in `overlay.js`**
 
 Remove the `#stylesInjected` field and rewrite `injectStyles()`:
 
@@ -933,7 +933,7 @@ injectStyles() {
 }
 ```
 
-- [ ] **Step 4: Expose `refreshStyles` from `startApp` in `app.js`**
+- [x] **Step 4: Expose `refreshStyles` from `startApp` in `app.js`**
 
 In `src/core/app.js`, update the `startApp` return value:
 
@@ -946,7 +946,7 @@ return {
 };
 ```
 
-- [ ] **Step 5: Update `content.js` to re-inject styles on corner change**
+- [x] **Step 5: Update `content.js` to re-inject styles on corner change**
 
 In `src/targets/extension/content.js`, capture the `startApp` return value and call `refreshStyles()` when `overlayCorner` changes:
 
@@ -976,7 +976,7 @@ import { startApp } from '../../core/app.js';
 })();
 ```
 
-- [ ] **Step 6: Run the overlay tests and full suite**
+- [x] **Step 6: Run the overlay tests and full suite**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js
@@ -985,7 +985,7 @@ npm test
 
 Expected: all pass including the new update test.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/overlay.js src/core/app.js src/targets/extension/content.js tests/unit/core/overlay.test.js
@@ -1000,7 +1000,7 @@ git commit -m "fix(overlay): make injectStyles idempotent; re-inject on corner c
 
 - Modify: `eslint.config.js:9`
 
-- [ ] **Step 1: Change `no-console` from `warn` to `error`**
+- [x] **Step 1: Change `no-console` from `warn` to `error`**
 
 In `eslint.config.js`, in `commonRules`:
 
@@ -1012,7 +1012,7 @@ In `eslint.config.js`, in `commonRules`:
 'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error'] }],
 ```
 
-- [ ] **Step 2: Run lint to confirm no violations**
+- [x] **Step 2: Run lint to confirm no violations**
 
 ```bash
 npm run lint
@@ -1020,7 +1020,7 @@ npm run lint
 
 Expected: exits 0 with no `no-console` errors. The `allow` list already covers all logger-style console methods; only bare `console.log` calls would be flagged, and there should be none in `src/`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add eslint.config.js
@@ -1035,7 +1035,7 @@ git commit -m "build(eslint): promote no-console from warn to error"
 
 - Modify: `vitest.config.js:10`
 
-- [ ] **Step 1: Verify current coverage clears 90%**
+- [x] **Step 1: Verify current coverage clears 90%**
 
 ```bash
 npm test -- --coverage
@@ -1043,7 +1043,7 @@ npm test -- --coverage
 
 Check the output table. Both `lines` and `functions` rows should already show ≥ 90%. If either is below 90%, do **not** raise the threshold — investigate which files are under-covered first.
 
-- [ ] **Step 2: Raise thresholds in `vitest.config.js`**
+- [x] **Step 2: Raise thresholds in `vitest.config.js`**
 
 ```js
 // Before:
@@ -1057,7 +1057,7 @@ coverage: {
 },
 ```
 
-- [ ] **Step 3: Run tests to confirm they still pass with the new thresholds**
+- [x] **Step 3: Run tests to confirm they still pass with the new thresholds**
 
 ```bash
 npm test -- --coverage
@@ -1065,7 +1065,7 @@ npm test -- --coverage
 
 Expected: exits 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add vitest.config.js
@@ -1082,7 +1082,7 @@ git commit -m "build(vitest): raise coverage thresholds to 90%"
 
 Replace the `_target` piggyback pattern with a plain object keyed by target name.
 
-- [ ] **Step 1: Rewrite the config export section**
+- [x] **Step 1: Rewrite the config export section**
 
 In `rollup.config.js`, replace the `allConfigs` array and the `export default` at the bottom with:
 
@@ -1154,7 +1154,7 @@ const targets = target ? [target] : Object.keys(configsByTarget);
 export default targets.flatMap(t => configsByTarget[t]);
 ```
 
-- [ ] **Step 2: Verify the build still works**
+- [x] **Step 2: Verify the build still works**
 
 ```bash
 npm run build
@@ -1162,7 +1162,7 @@ npm run build
 
 Expected: `dist/` artifacts are produced for all three targets with no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add rollup.config.js

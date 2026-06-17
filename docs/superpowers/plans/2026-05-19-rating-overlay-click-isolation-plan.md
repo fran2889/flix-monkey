@@ -1,6 +1,6 @@
 # Rating Overlay Click Isolation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Correct the interaction model of the rating overlay so that RT and MC ratings are non-interactive and do not pass click events to the Netflix UI layer.
 
@@ -17,7 +17,7 @@
 - Modify: `src/core/overlay.js`
 - Test: `tests/ui/overlay.ui.test.js`
 
-- [ ] **Step 1: Modify CSS in `src/core/overlay.js`**
+- [x] **Step 1: Modify CSS in `src/core/overlay.js`**
 
 Change the `injectStyles` method to set `pointer-events: none` on the container and update the children's `pointer-events`.
 
@@ -79,15 +79,15 @@ Revised CSS plan:
             }
 ```
 
-- [ ] **Step 2: Update existing UI tests**
+- [x] **Step 2: Update existing UI tests**
 
 Verify that clicking RT/MC ratings in a test environment does not trigger navigation, while clicking the IMDb rating still works.
 
-- [ ] **Step 3: Run tests to verify they pass**
+- [x] **Step 3: Run tests to verify they pass**
 
 Run: `npm test tests/ui/overlay.ui.test.js`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/overlay.js tests/ui/overlay.ui.test.js

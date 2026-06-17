@@ -1,6 +1,6 @@
 # Quick Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Apply six independent sets of targeted fixes across the codebase, each delivered as its own PR.
 
@@ -43,7 +43,7 @@
 
 - Modify: `src/core/app.js`
 
-- [ ] **Step 1: Add private fields and `disconnect()` method**
+- [x] **Step 1: Add private fields and `disconnect()` method**
 
     In `src/core/app.js`, add `#observer = null` and `#initialised = false` to the field declarations, and add the `disconnect()` method to the class body:
 
@@ -59,7 +59,7 @@
     }
     ```
 
-- [ ] **Step 2: Store observer reference and wrap handler in try/catch**
+- [x] **Step 2: Store observer reference and wrap handler in try/catch**
 
     In `#initNavigationObservers()`, replace the local `observer` variable with `this.#observer` and wrap the handler body in try/catch:
 
@@ -77,7 +77,7 @@
     this.#observer.observe(document.body, { childList: true, subtree: true });
     ```
 
-- [ ] **Step 3: Guard `init()` and wire `beforeunload`**
+- [x] **Step 3: Guard `init()` and wire `beforeunload`**
 
     Replace the existing `init()` body:
 
@@ -92,7 +92,7 @@
     }
     ```
 
-- [ ] **Step 4: Expose `disconnect` from `startApp()`**
+- [x] **Step 4: Expose `disconnect` from `startApp()`**
 
     In `startApp()`, add `disconnect` to the returned object:
 
@@ -110,7 +110,7 @@
 
 - Modify: `tests/unit/core/app.test.js`
 
-- [ ] **Step 1: Add `appRef` to track app instance across tests**
+- [x] **Step 1: Add `appRef` to track app instance across tests**
 
     Add `let appRef = null;` to the `describe` block scope (alongside `mockMutationObserverInstance`). In `beforeEach`, reset it to `null`. In `afterEach`, call `appRef?.disconnect()` before `FlixMonkeyApp.resetInternalState()`. In every test that calls `startApp(...)`, assign the return value to `appRef`.
 
@@ -165,7 +165,7 @@
     // (replace any use of `app` with `appRef`)
     ```
 
-- [ ] **Step 2: Add test — `init()` throws on double-call**
+- [x] **Step 2: Add test — `init()` throws on double-call**
 
     ```js
     it('should throw if init() is called twice on the same instance', () => {
@@ -182,7 +182,7 @@
     });
     ```
 
-- [ ] **Step 3: Add `logger` import to `app.test.js`**
+- [x] **Step 3: Add `logger` import to `app.test.js`**
 
     Add to the import block at the top of `tests/unit/core/app.test.js`:
 
@@ -190,7 +190,7 @@
     import { logger } from '../../../src/core/logger.js';
     ```
 
-- [ ] **Step 4: Add test — mutation handler errors are caught**
+- [x] **Step 4: Add test — mutation handler errors are caught**
 
     ```js
     it('should catch and log errors thrown in the mutation handler', () => {
@@ -210,7 +210,7 @@
 
     Add `import { logger } from '../../../src/core/logger.js';` to the imports at the top of the test file.
 
-- [ ] **Step 5: Add test — `disconnect()` disconnects the observer**
+- [x] **Step 5: Add test — `disconnect()` disconnects the observer**
 
     ```js
     it('should disconnect the MutationObserver when disconnect() is called', () => {
@@ -223,7 +223,7 @@
     });
     ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
     ```bash
     npx vitest run tests/unit/core/app.test.js
@@ -231,7 +231,7 @@
 
     Expected: all tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
     ```bash
     git add src/core/app.js tests/unit/core/app.test.js
@@ -252,7 +252,7 @@
 - Modify: `src/core/api-clients.js`
 - Modify: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
     In `tests/unit/core/api-clients.test.js`, inside `describe('BaseApiClient (via XmdbApiClient)')`, add:
 
@@ -276,7 +276,7 @@
     });
     ```
 
-- [ ] **Step 2: Run test to confirm it fails**
+- [x] **Step 2: Run test to confirm it fails**
 
     ```bash
     npx vitest run tests/unit/core/api-clients.test.js -t "should NOT disable itself on a network error"
@@ -284,7 +284,7 @@
 
     Expected: FAIL — `disable` is unexpectedly called because `undefined >= 400` is `false`, so actually this test may already pass. Run it to confirm the current behaviour before changing anything.
 
-- [ ] **Step 3: Apply the fix**
+- [x] **Step 3: Apply the fix**
 
     In `src/core/api-clients.js`, in the `catch` block of `queuedFetch` (around line 77), replace:
 
@@ -299,7 +299,7 @@
     if (status >= 400 && status < 500) await this.disable();
     ```
 
-- [ ] **Step 4: Run all api-clients tests**
+- [x] **Step 4: Run all api-clients tests**
 
     ```bash
     npx vitest run tests/unit/core/api-clients.test.js
@@ -307,7 +307,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
     ```bash
     git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -330,7 +330,7 @@
 - Modify: `tests/unit/core/cache.test.js`
 - Modify: `tests/unit/core/title.test.js`
 
-- [ ] **Step 1: Update cache test to assert warning is logged**
+- [x] **Step 1: Update cache test to assert warning is logged**
 
     In `tests/unit/core/cache.test.js`, add `import { logger } from '../../../src/core/logger.js';` to the imports. Then find the existing test `'should return null when JSON parsing fails in read'` and replace it:
 
@@ -347,7 +347,7 @@
     });
     ```
 
-- [ ] **Step 2: Run updated test to confirm it fails**
+- [x] **Step 2: Run updated test to confirm it fails**
 
     ```bash
     npx vitest run tests/unit/core/cache.test.js -t "should return null and log a warning"
@@ -355,7 +355,7 @@
 
     Expected: FAIL — `warnSpy` is not called.
 
-- [ ] **Step 3: Add warning to `cache.js`**
+- [x] **Step 3: Add warning to `cache.js`**
 
     In `src/core/cache.js`, in the `catch` block of `read()` (around line 60), replace:
 
@@ -374,7 +374,7 @@
     }
     ```
 
-- [ ] **Step 4: Run cache tests**
+- [x] **Step 4: Run cache tests**
 
     ```bash
     npx vitest run tests/unit/core/cache.test.js
@@ -382,7 +382,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 5: Add failing test for `Title.fromJSON` validation**
+- [x] **Step 5: Add failing test for `Title.fromJSON` validation**
 
     In `tests/unit/core/title.test.js`, inside `describe('fromJSON creation')`, add:
 
@@ -394,7 +394,7 @@
     });
     ```
 
-- [ ] **Step 6: Run to confirm it fails**
+- [x] **Step 6: Run to confirm it fails**
 
     ```bash
     npx vitest run tests/unit/core/title.test.js -t "should return null for non-object input"
@@ -402,7 +402,7 @@
 
     Expected: FAIL — currently `Title.fromJSON(null)` returns `new Title({})` (not null).
 
-- [ ] **Step 7: Add guard to `Title.fromJSON`**
+- [x] **Step 7: Add guard to `Title.fromJSON`**
 
     In `src/core/title.js`, replace:
 
@@ -421,7 +421,7 @@
     }
     ```
 
-- [ ] **Step 8: Run all title and cache tests**
+- [x] **Step 8: Run all title and cache tests**
 
     ```bash
     npx vitest run tests/unit/core/title.test.js tests/unit/core/cache.test.js
@@ -429,7 +429,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
     ```bash
     git add src/core/cache.js src/core/title.js tests/unit/core/cache.test.js tests/unit/core/title.test.js
@@ -451,7 +451,7 @@
 - Modify: `src/core/surfaces.js`
 - Modify: `tests/unit/core/surfaces.test.js`
 
-- [ ] **Step 1: Add `TOP_10_BADGE` to `constants.js`**
+- [x] **Step 1: Add `TOP_10_BADGE` to `constants.js`**
 
     In `src/core/constants.js`, append at the end of the file:
 
@@ -459,7 +459,7 @@
     export const TOP_10_BADGE = 'title-card-top-10';
     ```
 
-- [ ] **Step 2: Update surfaces test to assert fallback warning is logged**
+- [x] **Step 2: Update surfaces test to assert fallback warning is logged**
 
     In `tests/unit/core/surfaces.test.js`, add `import { logger } from '../../../src/core/logger.js';` to the imports. Then find the existing test `'should fall back to parent element if container selector not found'` and extend it to also verify the log:
 
@@ -483,7 +483,7 @@
     });
     ```
 
-- [ ] **Step 3: Run to confirm test fails**
+- [x] **Step 3: Run to confirm test fails**
 
     ```bash
     npx vitest run tests/unit/core/surfaces.test.js -t "should fall back to parent element"
@@ -491,7 +491,7 @@
 
     Expected: FAIL — debug log is not emitted yet.
 
-- [ ] **Step 4: Add fallback warning to `surfaces.js`**
+- [x] **Step 4: Add fallback warning to `surfaces.js`**
 
     In `src/core/surfaces.js`, add `import { logger } from './logger.js';` at the top (after the license header). Then in `discover()`, replace the line:
 
@@ -511,7 +511,7 @@
     }
     ```
 
-- [ ] **Step 5: Add priority comment above `#SURFACES`**
+- [x] **Step 5: Add priority comment above `#SURFACES`**
 
     In `src/core/surfaces.js`, add a comment block immediately above the `#SURFACES = [` line:
 
@@ -522,7 +522,7 @@
     #SURFACES = [
     ```
 
-- [ ] **Step 6: Run all surfaces tests**
+- [x] **Step 6: Run all surfaces tests**
 
     ```bash
     npx vitest run tests/unit/core/surfaces.test.js
@@ -530,7 +530,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
     ```bash
     git add src/core/constants.js src/core/surfaces.js tests/unit/core/surfaces.test.js
@@ -552,7 +552,7 @@
 - Modify: `src/core/app.js`
 - Modify: `tests/ui/overlay.ui.test.js`
 
-- [ ] **Step 1: Add failing test for independent style injection per instance**
+- [x] **Step 1: Add failing test for independent style injection per instance**
 
     In `tests/ui/overlay.ui.test.js`, add a new test inside the `describe` block:
 
@@ -567,7 +567,7 @@
     });
     ```
 
-- [ ] **Step 2: Run to confirm test fails**
+- [x] **Step 2: Run to confirm test fails**
 
     ```bash
     npx vitest run tests/ui/overlay.ui.test.js -t "should inject styles independently"
@@ -575,7 +575,7 @@
 
     Expected: FAIL — static field means the second `injectStyles()` is skipped, only one `<style>` element is created.
 
-- [ ] **Step 3: Change `#stylesInjected` to instance-level in `overlay.js`**
+- [x] **Step 3: Change `#stylesInjected` to instance-level in `overlay.js`**
 
     Replace the static field declaration:
 
@@ -611,7 +611,7 @@
     }
     ```
 
-- [ ] **Step 4: Use `TOP_10_BADGE` constant in CSS template**
+- [x] **Step 4: Use `TOP_10_BADGE` constant in CSS template**
 
     Add the import at the top of `src/core/overlay.js`:
 
@@ -629,7 +629,7 @@
     cssText += `\n            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
     ```
 
-- [ ] **Step 5: Remove `OverlayRenderer.resetInternalState()` call from `app.js`**
+- [x] **Step 5: Remove `OverlayRenderer.resetInternalState()` call from `app.js`**
 
     In `src/core/app.js`, in `FlixMonkeyApp.resetInternalState()`, remove the call:
 
@@ -652,7 +652,7 @@
 
     The `OverlayRenderer` import in `app.js` must stay — `startApp()` still uses it to construct `new OverlayRenderer(configManager)`.
 
-- [ ] **Step 6: Update `overlay.ui.test.js` `beforeEach`**
+- [x] **Step 6: Update `overlay.ui.test.js` `beforeEach`**
 
     Remove the `OverlayRenderer.resetInternalState()` call — it no longer exists. The `document.head.innerHTML = ''` already handles cleanup:
 
@@ -664,7 +664,7 @@
     });
     ```
 
-- [ ] **Step 7: Run all overlay and app tests**
+- [x] **Step 7: Run all overlay and app tests**
 
     ```bash
     npx vitest run tests/ui/overlay.ui.test.js tests/unit/core/app.test.js
@@ -672,7 +672,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
     ```bash
     git add src/core/overlay.js src/core/app.js tests/ui/overlay.ui.test.js
@@ -689,7 +689,7 @@
 - Modify: `src/core/ui/settings-ui.js`
 - Modify: `tests/unit/core/ui/settings-ui.test.js`
 
-- [ ] **Step 1: Add failing test for Save button disabled during write**
+- [x] **Step 1: Add failing test for Save button disabled during write**
 
     In `tests/unit/core/ui/settings-ui.test.js`, add:
 
@@ -716,7 +716,7 @@
     });
     ```
 
-- [ ] **Step 2: Run to confirm test fails**
+- [x] **Step 2: Run to confirm test fails**
 
     ```bash
     npx vitest run tests/unit/core/ui/settings-ui.test.js -t "should disable the save button"
@@ -724,7 +724,7 @@
 
     Expected: FAIL — button is never disabled.
 
-- [ ] **Step 3: Apply `replaceChildren()` and save button guard in `settings-ui.js`**
+- [x] **Step 3: Apply `replaceChildren()` and save button guard in `settings-ui.js`**
 
     Replace `container.innerHTML = ''` (line 37) with:
 
@@ -767,7 +767,7 @@
     }
     ```
 
-- [ ] **Step 4: Run all settings-ui tests**
+- [x] **Step 4: Run all settings-ui tests**
 
     ```bash
     npx vitest run tests/unit/core/ui/settings-ui.test.js
@@ -775,7 +775,7 @@
 
     Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
     ```bash
     git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -797,7 +797,7 @@
 - Modify: `src/targets/firefox/background.js`
 - Modify: `src/targets/chrome/service-worker.js`
 
-- [ ] **Step 1: Create `fetch-proxy.js`**
+- [x] **Step 1: Create `fetch-proxy.js`**
 
     Create `src/targets/extension/fetch-proxy.js` with the full fetch handler extracted from both background files:
 
@@ -847,7 +847,7 @@
     }
     ```
 
-- [ ] **Step 2: Slim down `background.js`**
+- [x] **Step 2: Slim down `background.js`**
 
     Replace the entire contents of `src/targets/firefox/background.js` with:
 
@@ -884,7 +884,7 @@
     });
     ```
 
-- [ ] **Step 3: Slim down `service-worker.js`**
+- [x] **Step 3: Slim down `service-worker.js`**
 
     Replace the entire contents of `src/targets/chrome/service-worker.js` with:
 
@@ -920,7 +920,7 @@
     });
     ```
 
-- [ ] **Step 4: Run all background and service-worker tests**
+- [x] **Step 4: Run all background and service-worker tests**
 
     ```bash
     npx vitest run tests/unit/targets/firefox/background.test.js tests/unit/targets/chrome/service-worker.test.js
@@ -928,7 +928,7 @@
 
     Expected: all pass. The tests use `vi.resetModules()` and mock `global.fetch` / `global.AbortController`, which `fetch-proxy.js` uses — the mock chain still works.
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
     ```bash
     npm test
@@ -936,7 +936,7 @@
 
     Expected: all tests pass, coverage thresholds met.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
     ```bash
     git add src/targets/extension/fetch-proxy.js src/targets/firefox/background.js src/targets/chrome/service-worker.js

@@ -1,6 +1,6 @@
 # Refined Linting and License Scoping Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Restrict license header enforcement to `src/` and `tests/` while maintaining code quality rules across all project files.
 
@@ -13,9 +13,10 @@
 ### Task 1: Refactor ESLint Configuration
 
 **Files:**
+
 - Modify: `eslint.config.js`
 
-- [ ] **Step 1: Isolate the license header rule**
+- [x] **Step 1: Isolate the license header rule**
 
 Update `eslint.config.js` to split the shared configuration into a general block and a header-specific block.
 
@@ -94,7 +95,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 2: Verify configuration with a dry run**
+- [x] **Step 2: Verify configuration with a dry run**
 
 Run: `npx eslint --print-config src/core/app.js | grep headers`
 Expected: Should show the `headers/header-format` rule.
@@ -102,12 +103,12 @@ Expected: Should show the `headers/header-format` rule.
 Run: `npx eslint --print-config scripts/package.js | grep headers`
 Expected: Should NOT show the `headers/header-format` rule.
 
-- [ ] **Step 3: Run project linting**
+- [x] **Step 3: Run project linting**
 
 Run: `npm run lint`
 Expected: PASS (assuming existing files already have headers).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add eslint.config.js
@@ -117,10 +118,11 @@ git commit -m "chore: restrict license headers to src and tests directories"
 ### Task 3: Cleanup and Final Pass
 
 **Files:**
+
 - Modify: `eslint.config.js`
 - Modify: Various files with `no-unused-vars` errors.
 
-- [ ] **Step 1: Update ESLint to ignore variables starting with underscore**
+- [x] **Step 1: Update ESLint to ignore variables starting with underscore**
 
 Update `eslint.config.js` to include `varsIgnorePattern: '^_'`.
 
@@ -131,16 +133,16 @@ Update `eslint.config.js` to include `varsIgnorePattern: '^_'`.
         },
 ```
 
-- [ ] **Step 2: Fix all remaining linting errors**
+- [x] **Step 2: Fix all remaining linting errors**
 
 Remove unused imports and variables, or prefix them with `_` if they are intentional.
 
-- [ ] **Step 3: Run final linting**
+- [x] **Step 3: Run final linting**
 
 Run: `npm run lint`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .
