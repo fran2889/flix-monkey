@@ -1,6 +1,6 @@
 # Consolidated Configuration UI Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Unify the settings UI for both extension and userscript targets into a single shared engine with validation support.
 
@@ -19,7 +19,7 @@
 - Modify: `src/platform/userscript.js`
 - Modify: `src/platform/webextension.js`
 
-- [ ] **Step 1: Add validation functions to `CONFIG_FIELDS`**
+- [x] **Step 1: Add validation functions to `CONFIG_FIELDS`**
 
 Modify `src/core/config-fields.js` to add `validate` functions to relevant fields (API keys, threshold, cache TTLs).
 
@@ -38,7 +38,7 @@ Modify `src/core/config-fields.js` to add `validate` functions to relevant field
 },
 ```
 
-- [ ] **Step 2: Add abstract storage methods to `PlatformAdapter`**
+- [x] **Step 2: Add abstract storage methods to `PlatformAdapter`**
 
 Modify `src/platform/adapter.js` to add `storageGetAll` and `storageSetMany`.
 
@@ -54,7 +54,7 @@ async storageSetMany(_values) {
 }
 ```
 
-- [ ] **Step 3: Implement storage methods in `UserscriptAdapter`**
+- [x] **Step 3: Implement storage methods in `UserscriptAdapter`**
 
 Modify `src/platform/userscript.js`.
 
@@ -73,7 +73,7 @@ async storageSetMany(values) {
 }
 ```
 
-- [ ] **Step 4: Implement storage methods in `WebExtensionAdapter`**
+- [x] **Step 4: Implement storage methods in `WebExtensionAdapter`**
 
 Modify `src/platform/webextension.js`.
 
@@ -87,7 +87,7 @@ async storageSetMany(values) {
 }
 ```
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
 
 ```bash
 git add src/core/config-fields.js src/platform/adapter.js src/platform/userscript.js src/platform/webextension.js
@@ -104,11 +104,11 @@ git commit -m "refactor: prepare config fields and adapters for unified UI"
 - Create: `src/core/ui/settings-ui.js`
 - Create: `tests/unit/core/ui/settings-ui.test.js`
 
-- [ ] **Step 1: Create shared CSS**
+- [x] **Step 1: Create shared CSS**
 
 Create `src/core/ui/styles.js` containing the "Netflix-dark" theme as a template literal.
 
-- [ ] **Step 2: Write failing test for basic rendering**
+- [x] **Step 2: Write failing test for basic rendering**
 
 Create `tests/unit/core/ui/settings-ui.test.js`.
 
@@ -127,13 +127,13 @@ describe('SettingsUI Rendering', () => {
 });
 ```
 
-- [ ] **Step 3: Implement basic `SettingsUI.render`**
+- [x] **Step 3: Implement basic `SettingsUI.render`**
 
 Create `src/core/ui/settings-ui.js`. Implement the `render` method that builds labels and inputs based on `CONFIG_FIELDS`.
 
-- [ ] **Step 4: Run tests and verify PASS**
+- [x] **Step 4: Run tests and verify PASS**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/styles.js src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -149,19 +149,19 @@ git commit -m "feat(core): implement basic settings UI rendering"
 - Modify: `src/core/ui/settings-ui.js`
 - Modify: `tests/unit/core/ui/settings-ui.test.js`
 
-- [ ] **Step 1: Write failing test for validation**
+- [x] **Step 1: Write failing test for validation**
 
 Add a test case to `tests/unit/core/ui/settings-ui.test.js` that mock-fails a `validate` function and checks for an error message in the DOM.
 
-- [ ] **Step 2: Implement validation logic in `save()`**
+- [x] **Step 2: Implement validation logic in `save()`**
 
 Update `SettingsUI` to iterate over inputs, call `validate()`, and stop/show errors if any fail.
 
-- [ ] **Step 3: Implement `storageSetMany` call on success**
+- [x] **Step 3: Implement `storageSetMany` call on success**
 
-- [ ] **Step 4: Run tests and verify PASS**
+- [x] **Step 4: Run tests and verify PASS**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -177,17 +177,17 @@ git commit -m "feat(core): add validation and saving to SettingsUI"
 - Create: `src/core/ui/modal.js`
 - Create: `tests/unit/core/ui/modal.test.js`
 
-- [ ] **Step 1: Write failing test for Modal**
+- [x] **Step 1: Write failing test for Modal**
 
 Create `tests/unit/core/ui/modal.test.js`. Verify it creates an overlay and can be closed.
 
-- [ ] **Step 2: Implement `Modal` class**
+- [x] **Step 2: Implement `Modal` class**
 
 Create `src/core/ui/modal.js`. It should create a fixed overlay with a title and a close button. It should have a `getContentContainer()` method.
 
-- [ ] **Step 3: Run tests and verify PASS**
+- [x] **Step 3: Run tests and verify PASS**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/modal.js tests/unit/core/ui/modal.test.js
@@ -204,12 +204,12 @@ git commit -m "feat(core): implement shared modal utility"
 - Modify: `src/targets/extension/options.html`
 - Modify: `src/targets/userscript/entry.js`
 
-- [ ] **Step 1: Update Extension options**
+- [x] **Step 1: Update Extension options**
 
 Modify `src/targets/extension/options.js` to use `SettingsUI`.
 Modify `src/targets/extension/options.html` to be a minimal container.
 
-- [ ] **Step 2: Update Userscript entry point**
+- [x] **Step 2: Update Userscript entry point**
 
 Modify `src/targets/userscript/entry.js`.
 
@@ -217,9 +217,9 @@ Modify `src/targets/userscript/entry.js`.
 - Replace `GM_config.open()` with `new Modal(...)` + `new SettingsUI(...)`.
 - Update menu commands.
 
-- [ ] **Step 3: Perform manual smoke tests**
+- [x] **Step 3: Perform manual smoke tests**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/targets/extension/ src/targets/userscript/entry.js

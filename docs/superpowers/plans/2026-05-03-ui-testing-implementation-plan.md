@@ -1,6 +1,6 @@
 # UI Testing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement high-fidelity UI integration tests for Netflix Browse, Search, Zoomed (Hover), and Info (Modal) surfaces using HTML snapshots.
 
@@ -13,6 +13,7 @@
 ### Task 1: Fixture Harvesting
 
 **Files:**
+
 - Create: `tests/fixtures/netflix-browse.html`
 - Create: `tests/fixtures/netflix-search.html`
 - Create: `tests/fixtures/netflix-hover.html`
@@ -48,6 +49,7 @@ git commit -m "test: add high-fidelity netflix html fixtures"
 ### Task 2: Browse Surface UI Tests
 
 **Files:**
+
 - Create: `tests/ui/browse.ui.test.js`
 
 - [x] **Step 1: Write the Browse UI test**
@@ -57,6 +59,7 @@ git commit -m "test: add high-fidelity netflix html fixtures"
 ### Task 3: Search Surface UI Tests
 
 **Files:**
+
 - Create: `tests/ui/search.ui.test.js`
 
 - [x] **Step 1: Write the Search UI test**
@@ -66,6 +69,7 @@ git commit -m "test: add high-fidelity netflix html fixtures"
 ### Task 4: Zoomed (Hover) Surface UI Tests
 
 **Files:**
+
 - Create: `tests/ui/zoomed.ui.test.js`
 
 - [x] **Step 1: Write the Zoomed UI test**
@@ -75,6 +79,7 @@ git commit -m "test: add high-fidelity netflix html fixtures"
 ### Task 5: Info (Modal) Surface UI Tests
 
 **Files:**
+
 - Create: `tests/ui/info.ui.test.js`
 
 - [x] **Step 1: Write the Info UI test**

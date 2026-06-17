@@ -1,6 +1,6 @@
 # Netflix UI E2E Test Expansion Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Provide comprehensive E2E coverage for FlixMonkey rating overlays across Browse, Search, Hover, and Preview Modal surfaces.
 
@@ -13,9 +13,10 @@
 ### Task 1: Create `OverlayComponent`
 
 **Files:**
+
 - Create: `tests/e2e/surfaces/overlay-component.cjs`
 
-- [ ] **Step 1: Implement `OverlayComponent` class**
+- [x] **Step 1: Implement `OverlayComponent` class**
 
 ```javascript
 /**
@@ -62,7 +63,7 @@ class OverlayComponent {
 module.exports = OverlayComponent;
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add tests/e2e/surfaces/overlay-component.cjs
@@ -74,10 +75,11 @@ git commit -m "test(e2e): add OverlayComponent for unified rating verification"
 ### Task 2: Expand `BrowseSurface` and Implement `SearchSurface`
 
 **Files:**
+
 - Modify: `tests/e2e/surfaces/browse-surface.cjs`
 - Create: `tests/e2e/surfaces/search-surface.cjs`
 
-- [ ] **Step 1: Update `BrowseSurface` to support `OverlayComponent`**
+- [x] **Step 1: Update `BrowseSurface` to support `OverlayComponent`**
 
 ```javascript
 const OverlayComponent = require('./overlay-component.cjs');
@@ -103,7 +105,7 @@ class BrowseSurface {
 module.exports = BrowseSurface;
 ```
 
-- [ ] **Step 2: Implement `SearchSurface`**
+- [x] **Step 2: Implement `SearchSurface`**
 
 ```javascript
 const OverlayComponent = require('./overlay-component.cjs');
@@ -131,7 +133,7 @@ class SearchSurface {
 module.exports = SearchSurface;
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/e2e/surfaces/browse-surface.cjs tests/e2e/surfaces/search-surface.cjs
@@ -143,10 +145,11 @@ git commit -m "test(e2e): expand BrowseSurface and add SearchSurface"
 ### Task 3: Implement `BobSurface` and `PreviewModalSurface`
 
 **Files:**
+
 - Create: `tests/e2e/surfaces/bob-surface.cjs`
 - Create: `tests/e2e/surfaces/preview-modal-surface.cjs`
 
-- [ ] **Step 1: Implement `BobSurface` (Hover)**
+- [x] **Step 1: Implement `BobSurface` (Hover)**
 
 ```javascript
 const OverlayComponent = require('./overlay-component.cjs');
@@ -174,7 +177,7 @@ class BobSurface {
 module.exports = BobSurface;
 ```
 
-- [ ] **Step 2: Implement `PreviewModalSurface` (Modal)**
+- [x] **Step 2: Implement `PreviewModalSurface` (Modal)**
 
 ```javascript
 const OverlayComponent = require('./overlay-component.cjs');
@@ -193,7 +196,7 @@ class PreviewModalSurface {
         } else {
             await cardLocator.click();
         }
-        
+
         const modal = this.page.locator('.previewModal');
         await modal.waitFor({ state: 'visible', timeout: 10000 });
         // Wait for title treatment to be visible (indicates modal loaded)
@@ -207,7 +210,7 @@ class PreviewModalSurface {
 module.exports = PreviewModalSurface;
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/e2e/surfaces/bob-surface.cjs tests/e2e/surfaces/preview-modal-surface.cjs
@@ -219,9 +222,10 @@ git commit -m "test(e2e): add BobSurface and PreviewModalSurface"
 ### Task 4: Comprehensive E2E Overlay Suite
 
 **Files:**
+
 - Create: `tests/e2e/overlay.ui.test.cjs`
 
-- [ ] **Step 1: Implement the main E2E test suite**
+- [x] **Step 1: Implement the main E2E test suite**
 
 ```javascript
 const { test, expect } = require('@playwright/test');
@@ -239,23 +243,23 @@ test.describe('Netflix UI Overlays', () => {
         // Pre-seed some ratings to avoid real API calls and ensure deterministic behavior
         // Using localStorage for UserscriptAdapter (as seen in its implementation)
         await adapter.setExtensionSettings({
-            'cache': {
-                'tt0111161': { rating: 9.3, title: 'The Shawshank Redemption', year: '1994', fetchedAt: Date.now() },
-                'tt0068646': { rating: 9.2, title: 'The Godfather', year: '1972', fetchedAt: Date.now() }
+            cache: {
+                tt0111161: { rating: 9.3, title: 'The Shawshank Redemption', year: '1994', fetchedAt: Date.now() },
+                tt0068646: { rating: 9.2, title: 'The Godfather', year: '1972', fetchedAt: Date.now() },
             },
-            'showRtRating': false,
-            'showMcRating': false
+            showRtRating: false,
+            showMcRating: false,
         });
     });
 
     test('should show overlay on browse cards', async () => {
         const browse = new BrowseSurface(adapter);
         await adapter.navigate('https://www.netflix.com/browse');
-        
+
         const cards = await browse.getTitleCards();
         const firstCard = cards.first();
         const overlay = browse.getOverlay(firstCard);
-        
+
         await overlay.waitForLoaded();
         expect(await overlay.isVisible()).toBe(true);
     });
@@ -263,11 +267,11 @@ test.describe('Netflix UI Overlays', () => {
     test('should show overlay in search results', async () => {
         const search = new SearchSurface(adapter);
         await search.searchFor('Godfather');
-        
+
         const results = await search.getResults();
         const firstResult = results.first();
         const overlay = search.getOverlay(firstResult);
-        
+
         await overlay.waitForLoaded();
         expect(await overlay.isVisible()).toBe(true);
     });
@@ -276,13 +280,13 @@ test.describe('Netflix UI Overlays', () => {
         const browse = new BrowseSurface(adapter);
         const bob = new BobSurface(adapter);
         await adapter.navigate('https://www.netflix.com/browse');
-        
+
         const cards = await browse.getTitleCards();
         const firstCard = cards.first();
-        
+
         await bob.triggerHover(firstCard);
         const overlay = bob.getOverlay();
-        
+
         await overlay.waitForLoaded();
         expect(await overlay.isVisible()).toBe(true);
     });
@@ -291,25 +295,25 @@ test.describe('Netflix UI Overlays', () => {
         const browse = new BrowseSurface(adapter);
         const modal = new PreviewModalSurface(adapter);
         await adapter.navigate('https://www.netflix.com/browse');
-        
+
         const cards = await browse.getTitleCards();
         const firstCard = cards.first();
-        
+
         await modal.open(firstCard);
         const overlay = modal.getOverlay();
-        
+
         await overlay.waitForLoaded();
         expect(await overlay.isVisible()).toBe(true);
     });
 });
 ```
 
-- [ ] **Step 2: Run the new suite (Manual verification required as it needs local Chrome)**
+- [x] **Step 2: Run the new suite (Manual verification required as it needs local Chrome)**
 
 Run: `npx playwright test tests/e2e/overlay.ui.test.cjs`
 Expected: PASS (Assuming Chrome is running with `--remote-debugging-port=9222`)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/e2e/overlay.ui.test.cjs
