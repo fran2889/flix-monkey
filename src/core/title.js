@@ -60,8 +60,8 @@ export class Title {
         return new Title(obj);
     }
 
-    static notFound(displayTitle) {
-        return new Title({ displayTitle });
+    static notFound(displayTitle, source = null) {
+        return new Title({ displayTitle, source });
     }
 
     #normalizeRating(val, converter) {

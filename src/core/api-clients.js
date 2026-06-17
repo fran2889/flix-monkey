@@ -90,19 +90,14 @@ export class BaseApiClient {
 
     async fetch(displayTitle) {
         if (await this.isDisabled()) return null;
-        try {
-            const match = await this.search(displayTitle);
-            if (!match) return null;
-            const titleObj = await this.getDetails(match, displayTitle);
-            if (titleObj) {
-                titleObj.displayTitle = displayTitle;
-                titleObj.source = this.#source;
-            }
-            return titleObj;
-        } catch (err) {
-            this.#logger?.warn(`${this.constructor.name} failed: ${err.message}`);
-            return null;
+        const match = await this.search(displayTitle);
+        if (!match) return null;
+        const titleObj = await this.getDetails(match, displayTitle);
+        if (titleObj) {
+            titleObj.displayTitle = displayTitle;
+            titleObj.source = this.#source;
         }
+        return titleObj;
     }
 
     async search(_displayTitle) {
@@ -126,9 +121,14 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
+    async getStatus() {
+        const apiKey = this.config.get('xmdbApiKey');
+        if (!apiKey) return { healthy: false, reason: 'No API key configured' };
+        return super.getStatus();
+    }
+
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
-        if (!apiKey) return null;
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
         this.logger?.debug(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
@@ -149,7 +149,9 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
-        if (!detailsJson || detailsJson.error) return null;
+        if (!detailsJson || detailsJson.error) {
+            throw new Error(`XMDB details request failed for ID: ${id}`);
+        }
         const { rating, release_year, title, metascore } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
@@ -174,9 +176,13 @@ export class OmdbApiClient extends BaseApiClient {
         );
     }
 
-    async search(displayTitle) {
+    async getStatus() {
         const apiKey = this.config.get('omdbApiKey');
-        if (!apiKey) return null;
+        if (!apiKey) return { healthy: false, reason: 'No API key configured' };
+        return super.getStatus();
+    }
+
+    async search(displayTitle) {
         return { title: displayTitle };
     }
 
@@ -229,7 +235,9 @@ export class ImdbApiDevClient extends BaseApiClient {
         const { id } = match;
         this.logger?.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
         const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
-        if (!detailsJson || detailsJson.error) return null;
+        if (!detailsJson || detailsJson.error) {
+            throw new Error(`IMDb API Dev details request failed for ID: ${id}`);
+        }
 
         // API returns `primaryTitle` per the Swagger spec
         const { primaryTitle, startYear, rating, metacritic } = detailsJson;
