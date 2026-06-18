@@ -22,11 +22,37 @@ import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { ConfigManager } from '../../src/core/config-manager';
 import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
-import { ApiSource } from '../../src/core/constants';
+import { ApiSource, TitleType } from '../../src/core/constants';
 
-const credentials = ['XMDB_API_KEY', 'OMDB_API_KEY'];
+const xmdbCreds = ['XMDB_API_KEY'];
+const omdbCreds = ['OMDB_API_KEY'];
 
-const DISPLAY_TITLE = 'The Godfather';
+const adapter = {
+    httpFetch: async (url, options) => {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const body = await response.text();
+            const err = new Error(`HTTP ${response.status}: ${body}`);
+            err.status = response.status;
+            throw err;
+        }
+        return await response.json();
+    },
+    storageGet: async () => '0',
+    storageSet: async () => {},
+};
+const disabledManager = new DisabledClientsManager(adapter);
+
+function expectCommonTitleFields(result, source, { displayTitle, apiTitleContains, imdbId, year, type }) {
+    expect(result).toBeInstanceOf(Title);
+    expect(result.displayTitle).toBe(displayTitle);
+    if (apiTitleContains) expect(result.apiTitle).toContain(apiTitleContains);
+    expect(result.imdbId).toBe(imdbId);
+    if (year !== undefined) expect(result.year).toBe(year);
+    expect(result.source).toBe(source);
+    if (type !== undefined) expect(result.type).toBe(type);
+    expectImdbRating(result.rating);
+}
 
 function expectImdbRating(rating, label = 'IMDb rating') {
     expect(rating, `${label} missing`).toBeTypeOf('number');
@@ -40,57 +66,187 @@ function expectPercentageRating(rating, label) {
     expect(rating, `${label} out of range`).toBeLessThanOrEqual(100);
 }
 
-function expectCommonTitleFields(result, source, displayTitle = DISPLAY_TITLE) {
-    expect(result).toBeInstanceOf(Title);
-    expect(result.displayTitle).toBe(displayTitle);
-    expect(result.apiTitle).toContain('Godfather');
-    expect(result.imdbId).toMatch(/^tt\d+$/);
-    expect(result.year).toBe(1972);
-    expect(result.source).toBe(source);
-    expectImdbRating(result.rating);
-}
-
-const adapter = {
-    httpFetch: async (url, options) => {
-        const response = await fetch(url, options);
-        return await response.json();
-    },
-    storageGet: async () => '0',
-    storageSet: async () => {},
-};
-const disabledManager = new DisabledClientsManager(adapter);
-
 describe('api-clients integration', () => {
     let configManager;
+    let badKeyConfigManager;
+
     beforeAll(() => {
         const getter = key => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
         };
         configManager = new ConfigManager(createMockAdapter({ configGet: getter }));
+        badKeyConfigManager = new ConfigManager(createMockAdapter({ configGet: () => 'badkey123' }));
     });
 
-    it.skipIf(!hasCredentials(credentials))('should fetch real data from XMDB', async () => {
-        const client = new XmdbApiClient(disabledManager, adapter, configManager);
-        const result = await client.fetch(DISPLAY_TITLE);
-        expectCommonTitleFields(result, ApiSource.XMDB);
-        expectPercentageRating(result.mcRating, 'XMDB Metacritic');
-        expect(result.rtRating).toBeNull();
+    describe('movie with all ratings', () => {
+        const TITLE = 'The Godfather';
+        const common = {
+            displayTitle: TITLE,
+            apiTitleContains: 'Godfather',
+            imdbId: 'tt0068646',
+            year: 1972,
+            type: TitleType.MOVIE,
+        };
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.XMDB, common);
+            expectPercentageRating(result.mcRating, 'XMDB Metacritic');
+            expect(result.rtRating).toBeNull();
+        });
+
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.OMDB, common);
+            expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
+            expectPercentageRating(result.mcRating, 'OMDB Metacritic');
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
+            expectPercentageRating(result.mcRating, 'IMDBAPI Metacritic');
+            expect(result.rtRating).toBeNull();
+        });
     });
 
-    it.skipIf(!hasCredentials(credentials))('should fetch real data from OMDB', async () => {
-        const client = new OmdbApiClient(disabledManager, adapter, configManager);
-        const result = await client.fetch(DISPLAY_TITLE);
-        expectCommonTitleFields(result, ApiSource.OMDB);
-        expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
-        expectPercentageRating(result.mcRating, 'OMDB Metacritic');
+    describe('TV show', () => {
+        const TITLE = 'Stranger Things';
+        const common = {
+            displayTitle: TITLE,
+            apiTitleContains: 'Stranger',
+            imdbId: 'tt4574334',
+            year: 2016,
+            type: TitleType.SERIES,
+        };
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.XMDB, common);
+        });
+
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.OMDB, common);
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
+        });
     });
 
-    it.skipIf(!hasCredentials(credentials))('should fetch real data from IMDb API Dev', async () => {
-        const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-        const result = await client.fetch(DISPLAY_TITLE);
-        expectCommonTitleFields(result, ApiSource.IMDBAPI);
-        expectPercentageRating(result.mcRating, 'IMDb API Dev Metacritic');
-        expect(result.rtRating).toBeNull();
+    describe('invalid title search', () => {
+        const TITLE = 'xyznonexistenttitle12345';
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            expect(await client.search(TITLE)).toBeNull();
+        });
+
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.getDetails({ title: TITLE }, TITLE);
+            expect(result).toBeNull();
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            expect(await client.search(TITLE)).toBeNull();
+        });
+    });
+
+    describe('invalid ID details', () => {
+        const INVALID_ID = 'tt0000000';
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.getDetails({ id: INVALID_ID }, 'nonexistent');
+            expect(result).toBeNull();
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            await expect(client.getDetails({ id: INVALID_ID }, 'nonexistent')).rejects.toThrow();
+        });
+    });
+
+    describe('invalid API key', () => {
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, badKeyConfigManager);
+            await expect(client.search('The Godfather')).rejects.toThrow();
+        });
+
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, badKeyConfigManager);
+            await expect(client.getDetails({ title: 'The Godfather' }, 'The Godfather')).rejects.toThrow();
+        });
+    });
+
+    describe('non-ASCII title', () => {
+        const TITLE = 'Amélie';
+        const common = {
+            displayTitle: TITLE,
+            imdbId: 'tt0211915',
+            type: TitleType.MOVIE,
+        };
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.XMDB, common);
+        });
+
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.OMDB, common);
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
+        });
+    });
+
+    describe('foreign original title', () => {
+        const TITLE = 'La Vita è Bella';
+        const EXPECTED_IMDB_ID = 'tt0118799';
+        const common = {
+            displayTitle: TITLE,
+            imdbId: EXPECTED_IMDB_ID,
+            year: 1997,
+            type: TitleType.MOVIE,
+        };
+
+        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.XMDB, common);
+        });
+
+        // OMDB does not reliably resolve original foreign-language titles.
+        // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
+        // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
+        it.skipIf(!hasCredentials(omdbCreds))('OMDB — does not resolve to expected ID', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expect(result).toBeInstanceOf(Title);
+            expect(result.imdbId).not.toBe(EXPECTED_IMDB_ID);
+        });
+
+        it('IMDBAPI', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
+        });
     });
 });
