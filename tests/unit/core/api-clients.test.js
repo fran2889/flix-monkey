@@ -221,19 +221,106 @@ describe('XmdbApiClient', () => {
         expect(result.mcRating).toBe(88);
     });
 
-    it('should throw if details fetch returns an error', async () => {
+    it('should return null if details fetch returns an error', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValueOnce({ error: 'not found' }),
         });
         const client = new XmdbApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            { get: _k => 'key' },
             createMockLogger()
         );
-        await expect(client.getDetails({ id: 'm1' }, 'Movie 1')).rejects.toThrow();
+        const result = await client.getDetails({ id: 'm1' }, 'Movie 1');
+        expect(result).toBeNull();
+    });
+
+    it('should map title_type to TitleType in getDetails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi
+                .fn()
+                .mockResolvedValueOnce({ results: [{ type: 'title', id: 'tt1' }] })
+                .mockResolvedValueOnce({
+                    id: 'tt1',
+                    title: 'Movie 1',
+                    title_type: 'Movie',
+                    release_year: 2020,
+                    rating: 8.0,
+                }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.fetch('Movie 1');
+        expect(result.type).toBe('movie');
+    });
+
+    it('should map TV Series title_type to series', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi
+                .fn()
+                .mockResolvedValueOnce({ results: [{ type: 'title', id: 'tt2' }] })
+                .mockResolvedValueOnce({
+                    id: 'tt2',
+                    title: 'Show 1',
+                    title_type: 'TV Series',
+                    release_year: 2020,
+                    rating: 8.0,
+                }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.fetch('Show 1');
+        expect(result.type).toBe('series');
+    });
+
+    it('should return null for unknown title_type', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi
+                .fn()
+                .mockResolvedValueOnce({ results: [{ type: 'title', id: 'tt3' }] })
+                .mockResolvedValueOnce({
+                    id: 'tt3',
+                    title: 'Short 1',
+                    title_type: 'Short Film',
+                    release_year: 2020,
+                }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.fetch('Short 1');
+        expect(result.type).toBeNull();
+    });
+
+    it('should return null when details response has no title', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValueOnce({
+                id: 'tt0000000',
+                title: null,
+                title_type: null,
+                release_year: null,
+                rating: null,
+            }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt0000000' }, 'nonexistent');
+        expect(result).toBeNull();
     });
 
     it('should return unhealthy status when API key is missing', async () => {
@@ -331,6 +418,48 @@ describe('OmdbApiClient', () => {
         expect(result.mcRating).toBe(85);
     });
 
+    it('should map Type to TitleType in getDetails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbRating: '8.0',
+                imdbID: 'tt123',
+                Year: '2022',
+                Title: 'OMDB Movie',
+                Type: 'movie',
+            }),
+        });
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        expect(result.type).toBe('movie');
+    });
+
+    it('should map series Type to series', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbRating: '8.0',
+                imdbID: 'tt456',
+                Year: '2020',
+                Title: 'OMDB Show',
+                Type: 'series',
+            }),
+        });
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ title: 'OMDB Show' }, 'OMDB Show');
+        expect(result.type).toBe('series');
+    });
+
     it('should return null on OMDB False response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
@@ -421,6 +550,46 @@ describe('ImdbApiDevClient', () => {
         expect(result.year).toBeNull();
         expect(result.rating).toBeNull();
         expect(result.mcRating).toBeNull();
+    });
+
+    it('should map type to TitleType in getDetails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                id: 'tt1',
+                primaryTitle: 'Movie',
+                type: 'movie',
+                startYear: 2026,
+                rating: { aggregateRating: 8.5 },
+            }),
+        });
+        const client = new ImdbApiDevClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
+        expect(result.type).toBe('movie');
+    });
+
+    it('should map tvSeries type to series', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                id: 'tt2',
+                primaryTitle: 'Show',
+                type: 'tvSeries',
+                startYear: 2020,
+                rating: { aggregateRating: 7.0 },
+            }),
+        });
+        const client = new ImdbApiDevClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt2' }, 'Show');
+        expect(result.type).toBe('series');
     });
 
     it('should throw if details fetch returns an error', async () => {

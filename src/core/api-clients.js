@@ -17,12 +17,24 @@
  */
 import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
-import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION } from './constants.js';
+import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION, TitleType } from './constants.js';
 
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
     const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
     return entry?.value ?? entry?.Value ?? null;
+}
+
+const TITLE_TYPE_MAP = {
+    Movie: TitleType.MOVIE,
+    movie: TitleType.MOVIE,
+    'TV Series': TitleType.SERIES,
+    series: TitleType.SERIES,
+    tvSeries: TitleType.SERIES,
+};
+
+function mapTitleType(apiValue) {
+    return TITLE_TYPE_MAP[apiValue] ?? null;
 }
 
 export class BaseApiClient {
@@ -149,10 +161,10 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
-        if (!detailsJson || detailsJson.error) {
-            throw new Error(`XMDB details request failed for ID: ${id}`);
+        if (!detailsJson || detailsJson.error || !detailsJson.title) {
+            return null;
         }
-        const { rating, release_year, title, metascore } = detailsJson;
+        const { rating, release_year, title, metascore, title_type } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
             imdbId: id,
@@ -160,6 +172,7 @@ export class XmdbApiClient extends BaseApiClient {
             rating,
             rtRating: null,
             mcRating: metascore ?? null,
+            type: mapTitleType(title_type),
         });
     }
 }
@@ -195,7 +208,7 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger?.debug(`No search results found in OMDB for: "${t}"`);
             return null;
         }
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
+        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         return new Title({
             apiTitle: apiTitle ?? null,
@@ -204,6 +217,7 @@ export class OmdbApiClient extends BaseApiClient {
             rating: imdbRating,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
+            type: mapTitleType(apiType),
         });
     }
 }
@@ -239,8 +253,7 @@ export class ImdbApiDevClient extends BaseApiClient {
             throw new Error(`IMDb API Dev details request failed for ID: ${id}`);
         }
 
-        // API returns `primaryTitle` per the Swagger spec
-        const { primaryTitle, startYear, rating, metacritic } = detailsJson;
+        const { primaryTitle, startYear, rating, metacritic, type } = detailsJson;
 
         return new Title({
             apiTitle: primaryTitle ?? null,
@@ -249,6 +262,7 @@ export class ImdbApiDevClient extends BaseApiClient {
             rating: rating?.aggregateRating ?? null,
             rtRating: null,
             mcRating: metacritic?.score ?? null,
+            type: mapTitleType(type),
         });
     }
 }
