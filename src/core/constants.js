@@ -34,3 +34,8 @@ export const RATE_LIMITS = {
 };
 
 export const TOP_10_BADGE = 'title-card-top-10';
+
+export const TitleType = Object.freeze({
+    MOVIE: 'movie',
+    SERIES: 'series',
+});
