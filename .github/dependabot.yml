@@ -8,6 +8,8 @@ updates:
           github-actions:
               patterns:
                   - '*'
+      cooldown:
+          default-days: 10
 
     - package-ecosystem: npm
       directory: /
@@ -29,3 +31,8 @@ updates:
                   - '*'
               update-types:
                   - major
+      cooldown:
+          default-days: 10
+          semver-patch-days: 5
+          semver-minor-days: 10
+          semver-major-days: 20
