@@ -87,7 +87,7 @@ export class Title {
         this.type = type ?? null;
     }
 
-    /** @returns {boolean} `true` if at least one rating (IMDb, RT, or Metacritic) is present. */
+    /** @returns {boolean} `true` if at least one rating (IMDb, Metacritic, or RT) is present. */
     get hasRating() {
         return this.rating !== null || this.rtRating !== null || this.mcRating !== null;
     }

@@ -4,7 +4,7 @@ This file is for AI agents. For human contributor guidelines, see [CONTRIBUTING.
 
 ## Project Overview
 
-**FlixMonkey** is a multi-target browser extension and userscript that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails and banners. A shared ES module codebase in `src/` is bundled by Rollup into three distribution targets:
+**FlixMonkey** is a multi-target browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix thumbnails and banners. A shared ES module codebase in `src/` is bundled by Rollup into three distribution targets:
 
 1. **Userscript** — Tampermonkey/Violentmonkey/Greasemonkey (`dist/FlixMonkey.user.js`)
 2. **Firefox Extension** — MV3 WebExtension (`dist/firefox/`)
