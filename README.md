@@ -1,6 +1,6 @@
 # FlixMonkey
 
-A multi-platform browser extension and userscript that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails, hover cards, and preview modals.
+A multi-platform browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix thumbnails, hover cards, and preview modals.
 
 ## Overview
 
@@ -8,7 +8,7 @@ FlixMonkey enriches your Netflix browsing experience by displaying aggregated ra
 
 The project is available as a **Chrome Extension**, **Firefox Add-on**, and a **Tampermonkey/Violentmonkey Userscript**. All versions share a common core and provide a feature-equivalent experience.
 
-By default, it uses a free public IMDb API for ratings. Optional keys for OMDB and XMDB unlock Rotten Tomatoes and Metacritic scores.
+By default, it uses a free public IMDb API for ratings. Optional keys for OMDB and XMDB unlock Metacritic and Rotten Tomatoes scores.
 
 ---
 
@@ -54,8 +54,8 @@ Displays a compact badge in your chosen corner on:
 ### Supported Scores
 
 - **IMDb** rating (0.0–10.0)
-- **Rotten Tomatoes** score (0–100, requires OMDB key)
 - **Metacritic** score (0–100)
+- **Rotten Tomatoes** score (0–100, requires OMDB key)
 
 ### Interactive Badges
 
@@ -86,7 +86,7 @@ Access settings to customize your experience:
 | -------------------- | ---------- | ------------------------------------------------------------------------------------------ |
 | **Overlay Position** | `top-left` | Corner where the rating badge appears.                                                     |
 | **API Client**       | `imdbapi`  | The primary API service to query for ratings.                                              |
-| **OMDB API Key**     | `Optional` | Provides RT/Metacritic scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
+| **OMDB API Key**     | `Optional` | Provides Metacritic/RT scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
 | **XMDB API Key**     | `Optional` | Additional movie/TV database. [Get a free key here](https://xmdbapi.com/api-key).          |
 
 ### Cache Management
