@@ -6,9 +6,9 @@ This file is for AI agents. For human contributor guidelines, see [CONTRIBUTING.
 
 **FlixMonkey** is a multi-target browser extension and userscript that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails and banners. A shared ES module codebase in `src/` is bundled by Rollup into three distribution targets:
 
-1. **Userscript** — Tampermonkey/Violentmonkey/Greasemonkey (`dist/FlixMonkey.user.js`)
-2. **Firefox Extension** — MV3 WebExtension (`dist/firefox/`)
-3. **Chrome Extension** — MV3 WebExtension (`dist/chrome/`)
+1. **Userscript**: Tampermonkey/Violentmonkey/Greasemonkey (`dist/FlixMonkey.user.js`)
+2. **Firefox Extension**: MV3 WebExtension (`dist/firefox/`)
+3. **Chrome Extension**: MV3 WebExtension (`dist/chrome/`)
 
 The project uses a **Platform Adapter** pattern to abstract differences between `GM_*` (userscript) and `browser.*` (WebExtension) APIs.
 
@@ -43,7 +43,7 @@ Husky git hooks are installed automatically via the `prepare` script.
 | `npm run build:userscript` | Build only the userscript                                      |
 | `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`           |
 | `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`            |
-| `npm run dev`              | Watch mode — rebuild on file changes                           |
+| `npm run dev`              | Watch mode: rebuild on file changes                            |
 | `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.*`            |
 | `npm run lint:fix`         | Lint with auto-fix                                             |
 | `npm run format`           | Format `src/`, `tests/` JS, `src/` HTML, root JSON/MD/YML/HTML |
@@ -108,7 +108,7 @@ tests/
 Integration tests in `tests/integration/` make live HTTP requests to external
 APIs. They run only via `npm run test:integration` (the dedicated
 `vitest.integration.config.js`) and on the nightly `Nightly Integration`
-workflow — never in per-PR CI. They require `XMDB_API_KEY` and `OMDB_API_KEY`
+workflow: never in per-PR CI. They require `XMDB_API_KEY` and `OMDB_API_KEY`
 in the environment: locally via a `.env` file (loaded by
 `tests/integration/setup.js` through `dotenv`), and in CI via repository Actions
 secrets. If either key is missing the suite **fails fast** with a clear error
@@ -129,7 +129,7 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | `disabled-clients.js` | Tracks failing API clients to avoid redundant requests (1-hour lockout)  |
 | `request-queue.js`    | Rate limiting and cross-tab synchronization via `fm_last_req` in storage |
 | `overlay.js`          | DOM rendering of rating badges on Netflix thumbnails and banners         |
-| `surfaces.js`         | Netflix DOM discovery — locates thumbnails, banners, and modal elements  |
+| `surfaces.js`         | Netflix DOM discovery: locates thumbnails, banners, and modal elements   |
 | `config-manager.js`   | Reactive configuration object; dispatches change events                  |
 | `config-fields.js`    | Single source of truth for all settings definitions and defaults         |
 | `logger.js`           | Centralized logging; honours the `debug` config flag                     |
@@ -137,7 +137,7 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | `title.js`            | Pure data class representing a movie/show title                          |
 | `constants.js`        | Shared constants: timing values, `ApiSource` enum, `RATE_LIMITS`         |
 
-**`src/core/ui/`** — Shared UI components:
+**`src/core/ui/`**: Shared UI components
 
 | Module           | Responsibility                                        |
 | ---------------- | ----------------------------------------------------- |
@@ -149,17 +149,17 @@ Platform-agnostic business logic. All modules are pure ES modules.
 
 Implementations of the `PlatformAdapter` abstract interface.
 
-| Module            | Responsibility                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------------- |
-| `adapter.js`      | Abstract base class; all methods throw `FlixMonkeyError` if not overridden                          |
-| `userscript.js`   | `UserscriptAdapter` — implements all methods using `GM_*` APIs                                      |
-| `webextension.js` | `WebExtensionAdapter` — implements all methods using `browser.*` APIs (via `webextension-polyfill`) |
+| Module            | Responsibility                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| `adapter.js`      | Abstract base class; all methods throw `FlixMonkeyError` if not overridden                         |
+| `userscript.js`   | `UserscriptAdapter`: implements all methods using `GM_*` APIs                                      |
+| `webextension.js` | `WebExtensionAdapter`: implements all methods using `browser.*` APIs (via `webextension-polyfill`) |
 
 ### 3. Targets (`src/targets/`)
 
 Entry points and platform-specific files.
 
-**`src/targets/extension/`** — Shared between Firefox and Chrome:
+**`src/targets/extension/`**: Shared between Firefox and Chrome
 
 | File             | Role                                                                                   |
 | ---------------- | -------------------------------------------------------------------------------------- |
@@ -171,17 +171,17 @@ Entry points and platform-specific files.
 
 **`src/targets/firefox/`**:
 
-- `manifest.json` — Firefox MV3 manifest (uses `"background": { "scripts": [...] }`)
-- `background.js` — Background page that imports `fetch-proxy.js`
+- `manifest.json`: Firefox MV3 manifest (uses `"background": { "scripts": [...] }`)
+- `background.js`: Background page that imports `fetch-proxy.js`
 
 **`src/targets/chrome/`**:
 
-- `manifest.json` — Chrome MV3 manifest (uses `"background": { "service_worker": ... }`)
-- `service-worker.js` — Service worker that imports `fetch-proxy.js`
+- `manifest.json`: Chrome MV3 manifest (uses `"background": { "service_worker": ... }`)
+- `service-worker.js`: Service worker that imports `fetch-proxy.js`
 
 **`src/targets/userscript/`**:
 
-- `entry.js` — Userscript entry; wires GM_config and starts the app
+- `entry.js`: Userscript entry; wires GM_config and starts the app
 
 ## Platform Adapter Interface
 
@@ -189,7 +189,7 @@ All platform-specific I/O must go through the `adapter` instance. All abstract m
 
 ```js
 class PlatformAdapter {
-    // All abstract — must be implemented:
+    // All abstract; must be implemented:
     async storageGet(key)           // Returns stored value or undefined
     async storageGetAll()           // Returns all key/value pairs as object
     async storageSet(key, value)    // Stores a single key/value
@@ -199,7 +199,7 @@ class PlatformAdapter {
     async httpFetch(url, options)   // Makes an HTTP request via the platform mechanism
     configGet(key)                  // Synchronous config read (must be implemented)
 
-    // Optional — no-op defaults provided:
+    // Optional; no-op defaults provided:
     registerMenuCommand(label, fn)  // Registers a UI menu entry (userscript only)
     setConfigData(data)             // Pre-loads config data (WebExtensionAdapter overrides this)
 }
@@ -233,7 +233,7 @@ class PlatformAdapter {
 | `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request                               |
 | `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)                         |
 | `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                                 |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI }` — canonical client names                   |
+| `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI }`: canonical client names                    |
 | `RATE_LIMITS`             | object        | Per-client minimum interval in ms: XMDB 1500, OMDB 250, IMDBAPI 1000 |
 | `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements                  |
 
@@ -243,18 +243,20 @@ class PlatformAdapter {
 - **Async/Await**: Mandatory for storage and network operations.
 - **Private fields**: Use `#field` syntax for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
-- **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this — a missing or malformed header is a lint error.
+- **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this: a missing or malformed header is a lint error.
 - **Conventional Commits**: Enforced by `commitlint` via a Husky `commit-msg` hook. Format: `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 - **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).
 - **Testing**: Business logic changes must add or update tests covering the new logic.
 - **README**: Update if the change is user-facing or affects documented functionality.
 - **Protocol**: Always print a suggested commit message at the end of a task.
+- **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
+- **Prose style**: Use the Oxford comma: "a, b, and c".
 
 ## Branches & Pull Requests
 
 ### Branch Naming
 
-`type/kebab-case-slug` — `type` matches a Conventional Commits type (see above), slug is 2–4 words.
+`type/kebab-case-slug`: `type` matches a Conventional Commits type (see above), slug is 2–4 words.
 
 ```
 feat/add-metacritic-fallback
@@ -287,7 +289,7 @@ Skip sections that don't apply:
 - <How to verify: test commands, manual steps, or "covered by existing tests">
 
 ## Breaking Changes
-- <Only if applicable — describe what breaks and migration steps>
+- <Only if applicable: describe what breaks and migration steps>
 ```
 
 ### Pre-submission Checklist
@@ -311,7 +313,7 @@ npm run build && npm test
 - **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS`. Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
 - **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `constants.js`.
-- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, and `description`. Do not hardcode these — they are injected from `package.json` at build time.
+- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, and `description`. Do not hardcode these: they are injected from `package.json` at build time.
 - **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.js` for application logging, not raw `console` calls in `src/`.
-- **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract — it throws if not implemented. Every adapter must implement it.
-- **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment — a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
+- **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract: it throws if not implemented. Every adapter must implement it.
+- **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment: a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
