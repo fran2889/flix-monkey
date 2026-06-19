@@ -62,6 +62,7 @@ export class Title {
         rtRating = null,
         mcRating = null,
         source = null,
+        type = null,
     } = {}) {
         this.displayTitle = displayTitle;
         this.apiTitle = apiTitle;
@@ -80,6 +81,7 @@ export class Title {
             return m ? Number.parseInt(m[1], 10) : null;
         });
         this.source = source ?? null;
+        this.type = type ?? null;
     }
 
     /** @returns {boolean} `true` if at least one rating (IMDb, RT, or Metacritic) is present. */
