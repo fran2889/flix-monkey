@@ -25,6 +25,7 @@
  * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0–100); coerced to integer.
  * @property {number|string|null} [mcRating=null] - Metacritic score (0–100); leading digits extracted, coerced to integer.
  * @property {string|null} [source=null] - API source that produced this title (an `ApiSource` value).
+ * @property {string|null} [type=null] - Title type (e.g. `"movie"`, `"series"`).
  */
 
 /**
@@ -51,6 +52,8 @@ export class Title {
     mcRating;
     /** @type {string|null} */
     source;
+    /** @type {string|null} */
+    type;
 
     /** @param {TitleOptions} [options] */
     constructor({
