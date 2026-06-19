@@ -8,6 +8,10 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: nightly-integration
+    cancel-in-progress: false
+
 jobs:
     test-integration:
         runs-on: ubuntu-latest
