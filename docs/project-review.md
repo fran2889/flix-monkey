@@ -1,4 +1,4 @@
-# FlixMonkey — Project Quality Review
+# FlixMonkey: Project Quality Review
 
 **Reviewed:** 2026-06-07  
 **Version:** 0.10.0  
@@ -16,19 +16,19 @@ A well-structured, intentionally designed browser extension with a clean platfor
 
 **Rating: 9 / 10**
 
-The Platform Adapter pattern is the project's strongest design choice. All platform-specific code is cleanly isolated behind a stable interface (`PlatformAdapter`), letting the entire `src/core/` layer be platform-agnostic and fully testable under jsdom. The separation is respected throughout — no direct `GM_*` or `browser.*` calls leak into core code.
+The Platform Adapter pattern is the project's strongest design choice. All platform-specific code is cleanly isolated behind a stable interface (`PlatformAdapter`), letting the entire `src/core/` layer be platform-agnostic and fully testable under jsdom. The separation is respected throughout: no direct `GM_*` or `browser.*` calls leak into core code.
 
 Module boundaries are tight and responsibilities are single. `CacheManager`, `DisabledClientsManager`, `RequestQueue`, and `ApiClientManager` each do exactly one thing. The `startApp()` factory in `app.js` is a clean composition root, and exposing only a narrow facade (`clearCache`, `resetDisabledClients`, `disconnect`, `refreshStyles`) from it is good encapsulation.
 
 **Issues:**
 
-- **Single client, no fallback chain.** `ApiClientManager` holds one `client` instance chosen at startup. If XMDB is configured but gets disabled, the user gets `notFound` for every title until they manually reset — there is no fallback to IMDb API. The architecture could support a client list with ordered fallback, but currently it doesn't.
-- **`ApiClientManager.getClient()` breaks encapsulation** without any production call site — it exists only for test introspection. `src/core/api-manager.js:33`.
+- **Single client, no fallback chain.** `ApiClientManager` holds one `client` instance chosen at startup. If XMDB is configured but gets disabled, the user gets `notFound` for every title until they manually reset: there is no fallback to IMDb API. The architecture could support a client list with ordered fallback, but currently it doesn't.
+- **`ApiClientManager.getClient()` breaks encapsulation** without any production call site: it exists only for test introspection. `src/core/api-manager.js:33`.
 - **`startApp()` re-reads `apiClient` config only at init time.** Changing the provider in settings requires a reload, which the options page does trigger. By design, but undocumented.
 
 ---
 
-## 2. Core — API Layer
+## 2. Core: API Layer
 
 **Rating: 8.5 / 10**
 
@@ -38,7 +38,7 @@ The `BaseApiClient` hierarchy is clean. Constructor injection of all dependencie
 
 **Issues:**
 
-- **OMDB `search()` is a no-op** — it returns the display title unchanged (`{ title: displayTitle }`) instead of calling a search endpoint. `OmdbApiClient.getDetails` then queries OMDB with `t=displayTitle`, which does fuzzy matching. For titles where the Netflix display name diverges from the OMDB canonical name (e.g. "The Witcher: Blood Origin" vs. "Witcher Blood Origin"), this silently returns wrong results. `src/core/api-clients.js:179–181`.
+- **OMDB `search()` is a no-op**: it returns the display title unchanged (`{ title: displayTitle }`) instead of calling a search endpoint. `OmdbApiClient.getDetails` then queries OMDB with `t=displayTitle`, which does fuzzy matching. For titles where the Netflix display name diverges from the OMDB canonical name (e.g. "The Witcher: Blood Origin" vs. "Witcher Blood Origin"), this silently returns wrong results. `src/core/api-clients.js:179–181`.
 - **`parseRatings` is a module-level private function** shared by `OmdbApiClient` only. It's not exported and not tested in isolation; its `source` field dual-key lookup (`r.source || r.Source`) handles inconsistent OMDB capitalization but isn't documented.
 - **`XmdbApiClient` creates its `RequestQueue` with a hardcoded `'fm_last_req'` storage key** that is different from the OMDB and IMDb queues (which pass `null`). If a user switches providers without clearing state, the old rate-limit timestamp could still throttle the new queue unnecessarily, though only XMDB actually uses cross-tab sync.
 
@@ -60,7 +60,7 @@ The cross-tab rate-limit sync via storage is a clever solution to a real problem
 
 ---
 
-## 3. Core — Application Lifecycle
+## 3. Core: Application Lifecycle
 
 **Rating: 8 / 10**
 
@@ -76,7 +76,7 @@ The cross-tab rate-limit sync via storage is a clever solution to a real problem
 
 ---
 
-## 4. Core — DOM Layer
+## 4. Core: DOM Layer
 
 **Rating: 8.5 / 10**
 
@@ -92,12 +92,12 @@ Solid. Badge creation uses DOM APIs correctly (no `innerHTML`). The `injectStyle
 
 **Issues:**
 
-- **RT and MC badges have no links.** IMDb gets a clickable `<a>` with an IMDb URL; RT and MC scores are plain `<div>` elements. This is a usability gap, particularly for RT where a direct link would be natural.
-- **`injectStyles()` reads `overlayCorner` synchronously** via `config.get()`. If the corner was changed since the style tag was last written, a call to `refreshStyles()` correctly updates it. But `injectStyles()` is also called at `init()`, before `setConfigData()` is called for extensions — meaning the first style injection uses defaults, then `refreshStyles()` is not called because `overlayCorner` isn't in the `storage.onChanged` batch at startup. In practice this works because `setConfigData()` happens before `startApp()`, but the timing assumption is fragile.
+- **MC and RT badges have no links.** IMDb gets a clickable `<a>` with an IMDb URL; MC and RT scores are plain `<div>` elements. This is a usability gap, particularly for RT where a direct link would be natural.
+- **`injectStyles()` reads `overlayCorner` synchronously** via `config.get()`. If the corner was changed since the style tag was last written, a call to `refreshStyles()` correctly updates it. But `injectStyles()` is also called at `init()`, before `setConfigData()` is called for extensions: meaning the first style injection uses defaults, then `refreshStyles()` is not called because `overlayCorner` isn't in the `storage.onChanged` batch at startup. In practice this works because `setConfigData()` happens before `startApp()`, but the timing assumption is fragile.
 
 ---
 
-## 5. Core — Config & Cache
+## 5. Core: Config & Cache
 
 **Rating: 9 / 10**
 
@@ -105,7 +105,7 @@ Solid. Badge creation uses DOM APIs correctly (no `innerHTML`). The `injectStyle
 
 `CacheManager` handles TTL correctly, including `Infinity` for "cache forever" (`-1` days). The slug-based key generation is practical, though different titles can collide to the same slug (e.g. "The Movie!" and "the movie" both → `the_movie`). For a ratings cache this is acceptable (worst case: stale hit).
 
-**Issue — `cacheTtlNoRating` applied to "disabled client" result** (see API layer section above).
+**Issue: `cacheTtlNoRating` applied to "disabled client" result** (see API layer section above).
 
 ---
 
@@ -117,7 +117,7 @@ The adapter design is sound. Abstract base with throwing defaults ensures subcla
 
 **Issues:**
 
-- **`UserscriptAdapter.configGet(key)`** calls `GM_getValue(key)` directly, which returns the raw stored value. For booleans this means the stored value may be the string `"true"` if it was ever written as a string by an older version. `WebExtensionAdapter.configGet()` returns the value directly from the parsed storage object, so booleans come back as booleans. This asymmetry can cause `value === true` checks to fail on userscript. `ConfigManager` doesn't normalize types. Downstream code like `Logger.debug`: `if (this.#adapter.configGet('debug') === true)` — the strict equality would fail if `GM_getValue` returns `"true"`. `src/core/logger.js:28`.
+- **`UserscriptAdapter.configGet(key)`** calls `GM_getValue(key)` directly, which returns the raw stored value. For booleans this means the stored value may be the string `"true"` if it was ever written as a string by an older version. `WebExtensionAdapter.configGet()` returns the value directly from the parsed storage object, so booleans come back as booleans. This asymmetry can cause `value === true` checks to fail on userscript. `ConfigManager` doesn't normalize types. Downstream code like `Logger.debug`: `if (this.#adapter.configGet('debug') === true)`: the strict equality would fail if `GM_getValue` returns `"true"`. `src/core/logger.js:28`.
 
 - **`WebExtensionAdapter.httpFetch` timeout fires a `reject` after the race has already settled.** The timer is never cleared on success. This creates a dangling `setTimeout` per request. Low impact, but a `clearTimeout` after the race would be cleaner. `src/platform/webextension.js:62–64`.
 
@@ -142,7 +142,7 @@ const config = new ConfigManager(adapter); // logger missing → undefined
 const cacheManager = new CacheManager(adapter, config); // logger missing → undefined
 ```
 
-Both constructors accept `logger` as their third argument. When the user clicks **Clear Cache** in the options page, `CacheManager.clear()` calls `this.#logger.debug(...)` — `this.#logger` is `undefined`, so this throws `TypeError: Cannot read properties of undefined (reading 'debug')`. The cache is cleared (the `Promise.all` completes before the log line) but the error propagates and the status message is never set. Similarly, if a corrupt cache entry is encountered in `CacheManager.read()`, the `warn` call crashes. `src/targets/extension/options.js:26–28`.
+Both constructors accept `logger` as their third argument. When the user clicks **Clear Cache** in the options page, `CacheManager.clear()` calls `this.#logger.debug(...)`: `this.#logger` is `undefined`, so this throws `TypeError: Cannot read properties of undefined (reading 'debug')`. The cache is cleared (the `Promise.all` completes before the log line) but the error propagates and the status message is never set. Similarly, if a corrupt cache entry is encountered in `CacheManager.read()`, the `warn` call crashes. `src/targets/extension/options.js:26–28`.
 
 ### `fetch-proxy.js` / `domains.js`
 
@@ -166,11 +166,11 @@ Correct. Sender validation is present.
 
 ### `settings-ui.js`
 
-**Issue — inconsistent access modifier style.** `adapter`, `fields`, and `onSave` are public class fields. `#cacheManager` and `#disabledClientsManager` use proper private syntax. `_validate()` and `_injectStyles()` use underscore convention for "private" instead of `#`. This is inconsistent within a single class that otherwise uses `#` throughout the codebase.
+**Issue: inconsistent access modifier style.** `adapter`, `fields`, and `onSave` are public class fields. `#cacheManager` and `#disabledClientsManager` use proper private syntax. `_validate()` and `_injectStyles()` use underscore convention for "private" instead of `#`. This is inconsistent within a single class that otherwise uses `#` throughout the codebase.
 
-**Issue — `SettingsUI` calls `adapter.setConfigData(settings)` inside `render()`** (`line 38`). This mutates the adapter's config state as a side effect of rendering the UI. If `render()` is called multiple times (e.g., re-opening settings without a page reload), it re-reads storage and re-sets config, which is fine, but it's a surprising hidden side effect. The config-loading responsibility arguably belongs outside `SettingsUI`.
+**Issue: `SettingsUI` calls `adapter.setConfigData(settings)` inside `render()`** (`line 38`). This mutates the adapter's config state as a side effect of rendering the UI. If `render()` is called multiple times (e.g., re-opening settings without a page reload), it re-reads storage and re-sets config, which is fine, but it's a surprising hidden side effect. The config-loading responsibility arguably belongs outside `SettingsUI`.
 
-**Issue — no feedback when `clearCache` or `resetClients` fails.** Both methods `await` the operation with no try/catch. An exception would leave the status div unchanged and potentially propagate silently.
+**Issue: no feedback when `clearCache` or `resetClients` fails.** Both methods `await` the operation with no try/catch. An exception would leave the status div unchanged and potentially propagate silently.
 
 ### `modal.js`
 
@@ -190,18 +190,18 @@ Coverage is genuinely high (97% statements, 92% branches) with thresholds enforc
 
 - `app.test.js` covers all significant lifecycle scenarios including inflight deduplication, timeout, DOM mutation, and double-init.
 - `request-queue.test.js` tests cross-instance storage sync with a mock adapter.
-- Integration tests use `it.skipIf(!hasCredentials(...))` — correct pattern for optional credential-gated tests.
+- Integration tests use `it.skipIf(!hasCredentials(...))`: correct pattern for optional credential-gated tests.
 - `chrome/service-worker.test.js` covers the full message dispatch path including domain validation.
 
 **Issues:**
 
 - **`options.js` has no test file.** It's the entry point for the options page, contains the logger-missing bug described above, and handles user-facing interactions (Clear Cache, Reset Clients). `tests/unit/targets/options.test.js` does not exist.
 
-- **`content.js` test** (`tests/unit/targets/content.test.js`) exists but only verifies that `startApp` is called — it doesn't exercise the `storage.onChanged` listener or the `refreshStyles` path.
+- **`content.js` test** (`tests/unit/targets/content.test.js`) exists but only verifies that `startApp` is called: it doesn't exercise the `storage.onChanged` listener or the `refreshStyles` path.
 
 - **No test for the `overlayCorner` → `refreshStyles()` flow** in `content.js`. This is a regression risk since it's the only setting that triggers a style refresh without a reload.
 
-- **Coverage gaps** (`app.js:75–79` = the `disconnect()` navigation cleanup) are not tested — `popstate` handler removal is not asserted.
+- **Coverage gaps** (`app.js:75–79` = the `disconnect()` navigation cleanup) are not tested: `popstate` handler removal is not asserted.
 
 - **The `integration/api-clients.test.js` has a wrong import path** (`from './setup'` instead of `'./setup.js'`) and imports from `'../../src/...'` relative to the integration directory instead of `'../../../src/...'`. This likely works due to jsdom module resolution but is fragile.
 
@@ -226,7 +226,7 @@ The build pipeline is well thought out:
 
 - **`vitest.config.js` coverage thresholds** are set at 90%/90% for lines/functions but the actual coverage is ~98%/93%. The thresholds could be tightened to prevent regressions.
 
-- **No `release-please` action file** in `.github/` was found — the `release-please-config.json` exists at the root but there's no corresponding CI workflow to actually run it. Manual releases are needed.
+- **No `release-please` action file** in `.github/` was found: the `release-please-config.json` exists at the root but there's no corresponding CI workflow to actually run it. Manual releases are needed.
 
 - **`dotenv` is listed as a dev dependency** but no `.env` usage was found in `src/` or `scripts/`. Likely used only in the integration test setup (`tests/integration/setup.js`). This is fine but worth a comment.
 
@@ -238,7 +238,7 @@ The build pipeline is well thought out:
 
 - **No `innerHTML`** anywhere in the codebase. All DOM construction uses `createElement`/`textContent`/`appendChild`. XSS risk is effectively eliminated.
 - **Domain allowlist in `fetch-proxy.js`** prevents the background proxy from being used as an open relay.
-- **API keys are stored in `browser.storage.local`** (not `sync`), which is correct — keys are sensitive and shouldn't roam across profiles.
+- **API keys are stored in `browser.storage.local`** (not `sync`), which is correct: keys are sensitive and shouldn't roam across profiles.
 - **`rel="noopener noreferrer"`** on the IMDb link is correct.
 
 **Issues:**
@@ -247,7 +247,7 @@ The build pipeline is well thought out:
 
 - **API keys are passed as query parameters** (`apiKey=...`, `apikey=...`) in URLs logged at debug level. If debug logging is enabled and the user copies debug output for a bug report, the key is exposed. `src/core/api-clients.js:134, 151, 187`.
 
-- **`URL` search params include the API key before the fetch** — any intermediary (system proxy, browser history of about:blank redirects) could capture it. Passing the key as an `Authorization` header would be better, but this is an API design constraint from OMDB/XMDB.
+- **`URL` search params include the API key before the fetch**: any intermediary (system proxy, browser history of about:blank redirects) could capture it. Passing the key as an `Authorization` header would be better, but this is an API design constraint from OMDB/XMDB.
 
 ---
 
@@ -280,7 +280,7 @@ The build pipeline is well thought out:
 | Q3  | `src/platform/webextension.js:62` | Timeout in `httpFetch` never cleared; dangling `setTimeout` per request         |
 | Q4  | `src/core/api-manager.js:33`      | `getClient()` breaks encapsulation; no production caller                        |
 | Q5  | `src/core/ui/settings-ui.js:38`   | `adapter.setConfigData()` called as side effect inside `render()`               |
-| Q6  | `src/core/overlay.js`             | RT and MC badges are unlinked; only IMDb has a navigable URL                    |
+| Q6  | `src/core/overlay.js`             | MC and RT badges are unlinked; only IMDb has a navigable URL                    |
 
 ### Testing Gaps
 
@@ -296,12 +296,12 @@ The build pipeline is well thought out:
 
 These aspects stand out as genuinely well-done and worth preserving:
 
-- **Platform adapter + `startApp` factory** — clean DI composition root; zero platform bleed into core
-- **In-flight deduplication** in `#decorateContainer` — correctly prevents duplicate API calls for the same title on screen simultaneously
-- **`RequestQueue` cross-tab sync** — `fm_last_req` storage key keeps rate limits consistent across multiple Netflix tabs
-- **`CacheManager` TTL tiers** — per-age and per-rating-availability cache durations are user-configurable and sensible defaults
-- **`SurfaceManager` priority ordering** — the surface array with `seen` set cleanly handles five distinct Netflix DOM layouts
-- **`Modal` a11y** — `role="dialog"`, `aria-modal`, `aria-labelledby`, Escape handler, and focus restoration are all present
-- **No `innerHTML` anywhere** — XSS is structurally eliminated
-- **Test suite quality** — 346 tests, 32 files, 97% coverage; meaningful scenarios rather than trivial assertions
-- **License header enforcement via ESLint plugin** — ensures GPL header is present on every committed file
+- **Platform adapter + `startApp` factory**: clean DI composition root; zero platform bleed into core
+- **In-flight deduplication** in `#decorateContainer`: correctly prevents duplicate API calls for the same title on screen simultaneously
+- **`RequestQueue` cross-tab sync**: `fm_last_req` storage key keeps rate limits consistent across multiple Netflix tabs
+- **`CacheManager` TTL tiers**: per-age and per-rating-availability cache durations are user-configurable and sensible defaults
+- **`SurfaceManager` priority ordering**: the surface array with `seen` set cleanly handles five distinct Netflix DOM layouts
+- **`Modal` a11y**: `role="dialog"`, `aria-modal`, `aria-labelledby`, Escape handler, and focus restoration are all present
+- **No `innerHTML` anywhere**: XSS is structurally eliminated
+- **Test suite quality**: 346 tests, 32 files, 97% coverage; meaningful scenarios rather than trivial assertions
+- **License header enforcement via ESLint plugin**: ensures GPL header is present on every committed file

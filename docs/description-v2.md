@@ -8,16 +8,16 @@ See IMDb, Metacritic and Rotten Tomatoes ratings on Netflix titles as you browse
 
 # full description
 
-FlixMonkey shows IMDb, Rotten Tomatoes, and Metacritic ratings right where you browse Netflix: on title cards, hover previews, detail panels, and search results, so you can tell what is worth watching at a glance. Set a threshold to fade out the weak titles, and click any IMDb badge to jump straight to its IMDb page.
+FlixMonkey shows IMDb, Metacritic, and Rotten Tomatoes ratings right where you browse Netflix: on title cards, hover previews, detail panels, and search results, so you can tell what is worth watching at a glance. Set a threshold to fade out the weak titles, and click any IMDb badge to jump straight to its IMDb page.
 
 FEATURES
-• IMDb rating on matched titles, with Rotten Tomatoes and Metacritic added when available
+• IMDb rating on matched titles, with Metacritic and Rotten Tomatoes added when available
 • Click an IMDb badge to open the title on IMDb, or search IMDb by name when there is no exact match
 • Fade out titles that fall below an IMDb rating you choose
 
 RATING PROVIDERS
 OMDB is recommended: one free API key unlocks all three rating sources.
-• OMDB: IMDb, Rotten Tomatoes, and Metacritic ratings. Requires a free API key.
+• OMDB: IMDb, Metacritic, and Rotten Tomatoes ratings. Requires a free API key.
 • XMDB: IMDb and Metacritic ratings. Requires a free API key.
 • IMDb API: IMDb and Metacritic ratings. The default, since it needs no API key, but its rate limits are very low.
 

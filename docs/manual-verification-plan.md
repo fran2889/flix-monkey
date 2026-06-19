@@ -1,6 +1,6 @@
 # Manual Verification Plan
 
-**Goal:** Cover all surfaces, integration points, and behavioral contracts that automated tests cannot adequately verify — live browser interactions, cross-tab coordination, platform-specific APIs, and real-world API responses.
+**Goal:** Cover all surfaces, integration points, and behavioral contracts that automated tests cannot adequately verify: live browser interactions, cross-tab coordination, platform-specific APIs, and real-world API responses.
 
 ---
 
@@ -79,13 +79,13 @@
 
 ---
 
-## 3. Overlay Rendering — UI Surfaces
+## 3. Overlay Rendering: UI Surfaces
 
 **Verifies:** DOM injection, positioning, visual correctness, and deduplication across all Netflix surfaces.
 
 Netflix's UI surfaces are decorated in priority order: title card → standard card → bob → preview modal → jaw bone. Only the first matched surface per title is decorated.
 
-### 3.1 Browse Page — Title Cards
+### 3.1 Browse Page: Title Cards
 
 - [ ] Navigate to the Netflix browse page.
 - [ ] Verify rating overlays appear on carousel title card thumbnails.
@@ -167,7 +167,7 @@ Netflix Top 10 carousels render a large badge on the left side of tiles. For lef
 ### 4.2 OMDB API Client
 
 - [ ] Select OMDB as the provider; enter a valid OMDB API key.
-- [ ] Browse Netflix; verify IMDb, RT, and MC ratings appear (OMDB returns all three).
+- [ ] Browse Netflix; verify IMDb, MC, and RT ratings appear (OMDB returns all three).
 - [ ] Verify requests go to `www.omdbapi.com` in the Network tab.
 - [ ] Enter an invalid key; verify the client disables gracefully.
 
@@ -317,7 +317,7 @@ The background script validates that only whitelisted API domains can be proxied
 
 - [ ] Inspect the Netflix page DOM; if Netflix has updated selectors (e.g., `.title-card` no longer exists), verify the extension degrades silently (no overlays, no console crashes).
 
-### 9.4 RT/MC Toggle
+### 9.4 MC/RT Toggle
 
 - [ ] In settings, disable the "Show Rotten Tomatoes" option; save.
 - [ ] Verify RT score is no longer shown in overlays.
