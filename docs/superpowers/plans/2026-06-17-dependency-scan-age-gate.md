@@ -1,6 +1,6 @@
 # Dependency Scan & Age Gate Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add layered supply-chain defences — vulnerability scanning on PRs, cooldown periods for Dependabot updates, and npm minimum release age enforcement.
 
@@ -26,7 +26,7 @@
 
 - Create: `.github/workflows/dependency-review.yml`
 
-- [ ] **Step 1: Create the workflow file**
+- [x] **Step 1: Create the workflow file**
 
 This project SHA-pins all GitHub Actions with a `# vN` comment. Use the same pattern.
 
@@ -59,14 +59,14 @@ Key choices matching existing conventions:
 - `fail-on-severity: high` (matches `npm audit --audit-level=high` in `ci.yml`)
 - `actions/checkout` pinned to same SHA as `ci.yml`
 
-- [ ] **Step 2: Verify formatting**
+- [x] **Step 2: Verify formatting**
 
 Run: `npx prettier --check .github/workflows/dependency-review.yml`
 Expected: The file passes Prettier checks (no formatting changes needed).
 
 If it fails, run `npx prettier --write .github/workflows/dependency-review.yml` and inspect the diff.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/dependency-review.yml
@@ -81,7 +81,7 @@ git commit -m "ci: add dependency review workflow for PR vulnerability scanning"
 
 - Modify: `.github/dependabot.yml`
 
-- [ ] **Step 1: Add cooldown to both ecosystem entries**
+- [x] **Step 1: Add cooldown to both ecosystem entries**
 
 The final file should be:
 
@@ -133,12 +133,12 @@ Changes from current file:
 
 Security updates bypass cooldown automatically — this is Dependabot's built-in behaviour, no config needed.
 
-- [ ] **Step 2: Verify formatting**
+- [x] **Step 2: Verify formatting**
 
 Run: `npx prettier --check .github/dependabot.yml`
 Expected: Passes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/dependabot.yml
@@ -153,7 +153,7 @@ git commit -m "ci: add Dependabot cooldown to delay freshly published packages"
 
 - Modify: `.npmrc`
 
-- [ ] **Step 1: Add min-release-age to .npmrc**
+- [x] **Step 1: Add min-release-age to .npmrc**
 
 The file currently contains only `engine-strict=true`. Add the new line:
 
@@ -164,14 +164,14 @@ min-release-age=5
 
 `min-release-age=5` means npm refuses to install any package version published less than 5 days ago. This is a native npm 11.x feature (Node >= 24 is already required by this project's `engines` field). The value matches the Dependabot patch cooldown so local installs and Dependabot are in sync.
 
-- [ ] **Step 2: Verify npm respects the setting**
+- [x] **Step 2: Verify npm respects the setting**
 
 Run: `npm config list --location=project`
 Expected output includes: `min-release-age = 5`
 
 This confirms npm reads the `.npmrc` setting correctly.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .npmrc
@@ -184,7 +184,7 @@ git commit -m "ci: add npm min-release-age to block freshly published packages"
 
 After all three tasks, verify the full set of changes:
 
-- [ ] `npx prettier --check .github/workflows/dependency-review.yml .github/dependabot.yml` passes
-- [ ] `npm run lint` passes (no JS changes, but sanity check)
-- [ ] `npm config list --location=project` shows `min-release-age = 5`
-- [ ] `git log --oneline -3` shows three clean commits with `ci:` prefix
+- [x] `npx prettier --check .github/workflows/dependency-review.yml .github/dependabot.yml` passes
+- [x] `npm run lint` passes (no JS changes, but sanity check)
+- [x] `npm config list --location=project` shows `min-release-age = 5`
+- [x] `git log --oneline -3` shows three clean commits with `ci:` prefix
