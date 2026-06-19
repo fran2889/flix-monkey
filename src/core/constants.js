@@ -30,7 +30,7 @@ export const ApiSource = Object.freeze({
 export const RATE_LIMITS = {
     [ApiSource.XMDB]: 1500,
     [ApiSource.OMDB]: 250,
-    [ApiSource.IMDBAPI]: 1000,
+    [ApiSource.IMDBAPI]: 4000,
 };
 
 export const TOP_10_BADGE = 'title-card-top-10';

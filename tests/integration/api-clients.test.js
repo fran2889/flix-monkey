@@ -24,21 +24,24 @@ import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
 import { ApiSource, TitleType } from '../../src/core/constants';
 
-const IMDBAPI_RATE_LIMIT_MS = 1000;
-let lastImdbApiCall = 0;
-async function imdbApiRateLimit() {
-    const elapsed = Date.now() - lastImdbApiCall;
-    if (elapsed < IMDBAPI_RATE_LIMIT_MS) {
-        await new Promise(r => setTimeout(r, IMDBAPI_RATE_LIMIT_MS - elapsed));
-    }
-    lastImdbApiCall = Date.now();
-}
-
 const xmdbCreds = ['XMDB_API_KEY'];
 const omdbCreds = ['OMDB_API_KEY'];
 
+// Cloudflare enforces ~3 requests per 10s window on imdbapi.dev.
+// Each test creates a fresh client (fresh RequestQueue), so the per-client
+// rate limit doesn't help across tests. Throttle at the HTTP layer instead.
+const IMDBAPI_CF_RATE_LIMIT_MS = 4000;
+let lastImdbApiRequest = 0;
+
 const adapter = {
     httpFetch: async (url, options) => {
+        if (typeof url === 'string' && url.includes('imdbapi.dev')) {
+            const elapsed = Date.now() - lastImdbApiRequest;
+            if (elapsed < IMDBAPI_CF_RATE_LIMIT_MS) {
+                await new Promise(r => setTimeout(r, IMDBAPI_CF_RATE_LIMIT_MS - elapsed));
+            }
+            lastImdbApiRequest = Date.now();
+        }
         const response = await fetch(url, options);
         if (!response.ok) {
             const body = await response.text();
@@ -116,13 +119,12 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
             expectPercentageRating(result.mcRating, 'IMDBAPI Metacritic');
             expect(result.rtRating).toBeNull();
-        });
+        }, 15000);
     });
 
     describe('TV show', () => {
@@ -148,11 +150,10 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        });
+        }, 15000);
     });
 
     describe('invalid title search', () => {
@@ -170,10 +171,9 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             expect(await client.search(TITLE)).toBeNull();
-        });
+        }, 15000);
     });
 
     describe('invalid ID details', () => {
@@ -186,10 +186,9 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             await expect(client.getDetails({ id: INVALID_ID }, 'nonexistent')).rejects.toThrow();
-        });
+        }, 15000);
     });
 
     describe('invalid API key', () => {
@@ -225,11 +224,10 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        });
+        }, 15000);
     });
 
     describe('foreign original title', () => {
@@ -259,10 +257,9 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
-            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        });
+        }, 15000);
     });
 });
