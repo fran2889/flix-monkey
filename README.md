@@ -1,6 +1,6 @@
 # FlixMonkey
 
-A multi-platform browser extension and userscript that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails, hover cards, preview modals, and the hero billboard.
+A multi-platform browser extension and userscript that overlays IMDb, Rotten Tomatoes, and Metacritic ratings on Netflix thumbnails, hover cards, and preview modals.
 
 ## Overview
 
@@ -8,7 +8,7 @@ FlixMonkey enriches your Netflix browsing experience by displaying aggregated ra
 
 The project is available as a **Chrome Extension**, **Firefox Add-on**, and a **Tampermonkey/Violentmonkey Userscript**. All versions share a common core and provide a feature-equivalent experience.
 
-**Zero API keys needed to start.** By default, it uses the free IMDb API. Optional keys for OMDB and XMDB unlock Rotten Tomatoes and Metacritic scores.
+By default, it uses a free public IMDb API for ratings. Optional keys for OMDB and XMDB unlock Rotten Tomatoes and Metacritic scores.
 
 ---
 
@@ -19,7 +19,7 @@ The project is available as a **Chrome Extension**, **Firefox Add-on**, and a **
 Compatible with all major userscript managers. This is the easiest way to get started.
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/), [Violentmonkey](https://violentmonkey.github.io/), or [Greasemonkey](https://www.greasespot.net/).
-2. Visit the [raw script file](https://raw.githubusercontent.com/fran/FlixMonkey/main/FlixMonkey.user.js) to trigger installation.
+2. Visit the [raw script file](https://raw.githubusercontent.com/fran2889/flix-monkey/main/FlixMonkey.user.js) to trigger installation.
 3. Confirm the installation and refresh Netflix. Rating badges should appear immediately.
 
 ### Browser Extension (Chrome & Firefox)
@@ -27,14 +27,14 @@ Compatible with all major userscript managers. This is the easiest way to get st
 The browser extensions provide a more seamless integration and better performance by using background processes for network requests.
 
 1. **Chrome / Edge**:
-    1. Download the latest `chrome.zip` from the [Releases page](https://github.com/fran/FlixMonkey/releases) and extract it (or build from source).
+    1. Download the latest `chrome.zip` from the [Releases page](https://github.com/fran2889/flix-monkey/releases) and extract it (or build from source).
     2. Open your browser and navigate to `chrome://extensions/` (or `edge://extensions/` for Edge).
     3. Toggle the **Developer mode** switch in the top right corner.
     4. Click the **Load unpacked** button that appears.
     5. Select the extracted `chrome` folder (or `dist/chrome` if built from source).
     6. Ensure the extension is toggled **On**.
 2. **Firefox**:
-    1. Download the latest `.xpi` from the [Releases page](https://github.com/fran/FlixMonkey/releases) (or build from source).
+    1. Download the latest `.xpi` from the [Releases page](https://github.com/fran2889/flix-monkey/releases) (or build from source).
     2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
     3. Click the **Load Temporary Add-on...** button.
     4. Select the `manifest.json` file inside the extracted `firefox` folder (or `dist/firefox/manifest.json` if built from source).
@@ -50,7 +50,6 @@ Displays a compact badge in your chosen corner on:
 - Browse grid thumbnails
 - Hover zoom cards
 - Preview modals
-- Hero banner images
 
 ### Supported Scores
 
@@ -101,7 +100,7 @@ Use the **Clear Cache** button in the settings menu to remove all cached ratings
 - **No badges appearing?** Refresh the Netflix page or check if the extension/script is enabled in your manager.
 - **Stale ratings?** Use the **Clear Cache** button in settings.
 - **Slow performance?** Check if an API was auto-disabled. You can manually reset this via **Reset Misbehaving Clients** in settings.
-- **Still having issues?** Open a [GitHub issue](https://github.com/fran/FlixMonkey/issues) with your browser version and any console errors.
+- **Still having issues?** Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with your browser version and any console errors.
 
 ---
 
