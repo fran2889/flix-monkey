@@ -245,6 +245,54 @@ class PlatformAdapter {
 - **README**: Update if the change is user-facing or affects documented functionality.
 - **Protocol**: Always print a suggested commit message at the end of a task.
 
+## Branches & Pull Requests
+
+### Branch Naming
+
+`type/kebab-case-slug` — `type` matches a Conventional Commits type (see above), slug is 2–4 words.
+
+```
+feat/add-metacritic-fallback
+fix/cache-ttl-overflow
+docs/update-readme-setup
+test/expand-api-client-coverage
+chore/npm-audit-fix-undici
+```
+
+### PR Titles
+
+PRs are squash-merged. The title becomes the merge commit and is parsed by release-please. Use Conventional Commits format:
+
+```
+type(scope)?: description
+```
+
+- Imperative mood, lowercase, no trailing period.
+- Include scope when targeting a specific module: `fix(cache): prevent TTL overflow on negative values`.
+
+### PR Descriptions
+
+Skip sections that don't apply:
+
+```
+## Summary
+- <What changed and why, 1–3 bullets>
+
+## Test Plan
+- <How to verify: test commands, manual steps, or "covered by existing tests">
+
+## Breaking Changes
+- <Only if applicable — describe what breaks and migration steps>
+```
+
+### Pre-submission Checklist
+
+Run before opening a PR:
+
+```bash
+npm run build && npm test
+```
+
 ## Git Hooks (Husky)
 
 | Hook         | What it does                                                            |

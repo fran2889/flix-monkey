@@ -62,8 +62,11 @@ export default [
         },
     },
     // 5. License header enforcement - src and tests only (isolated block)
+    // metadata.js is a comment-only template file (no AST tokens) — the plugin
+    // cannot detect its existing header and would insert duplicates on --fix.
     {
         files: ['{src,tests}/**/*.{js,cjs}'],
+        ignores: ['src/targets/userscript/metadata.js'],
         plugins: { headers },
         rules: {
             'headers/header-format': [
