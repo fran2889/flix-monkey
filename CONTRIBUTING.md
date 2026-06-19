@@ -7,7 +7,7 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/fran/flix-monkey.git
+    git clone https://github.com/fran2889/flix-monkey.git
     cd flix-monkey
     ```
 
