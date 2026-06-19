@@ -24,6 +24,16 @@ import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
 import { ApiSource, TitleType } from '../../src/core/constants';
 
+const IMDBAPI_RATE_LIMIT_MS = 1000;
+let lastImdbApiCall = 0;
+async function imdbApiRateLimit() {
+    const elapsed = Date.now() - lastImdbApiCall;
+    if (elapsed < IMDBAPI_RATE_LIMIT_MS) {
+        await new Promise(r => setTimeout(r, IMDBAPI_RATE_LIMIT_MS - elapsed));
+    }
+    lastImdbApiCall = Date.now();
+}
+
 const xmdbCreds = ['XMDB_API_KEY'];
 const omdbCreds = ['OMDB_API_KEY'];
 
@@ -106,6 +116,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
@@ -137,6 +148,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
@@ -158,6 +170,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             expect(await client.search(TITLE)).toBeNull();
         });
@@ -173,6 +186,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             await expect(client.getDetails({ id: INVALID_ID }, 'nonexistent')).rejects.toThrow();
         });
@@ -211,6 +225,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
@@ -244,6 +259,7 @@ describe('api-clients integration', () => {
         });
 
         it('IMDBAPI', async () => {
+            await imdbApiRateLimit();
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
