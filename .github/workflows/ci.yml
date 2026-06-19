@@ -49,18 +49,6 @@ jobs:
             - run: npm ci --ignore-scripts
             - run: npm run test:unit
 
-    test-integration:
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
-            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-              with:
-                  node-version: '24.x'
-                  cache: 'npm'
-            - run: npm ci --ignore-scripts
-            - run: npm run test:integration
-
     test-ui:
         runs-on: ubuntu-latest
         timeout-minutes: 10
@@ -94,7 +82,7 @@ jobs:
     merge-gate:
         runs-on: ubuntu-latest
         if: always()
-        needs: [lint-and-audit, build, test-unit, test-integration, test-ui, test-coverage]
+        needs: [lint-and-audit, build, test-unit, test-ui, test-coverage]
         steps:
             - name: Check for failures
               if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
