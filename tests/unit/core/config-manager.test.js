@@ -74,4 +74,52 @@ describe('ConfigManager', () => {
             expect.objectContaining({ key: 'someKey' })
         );
     });
+
+    it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
+        const config = new ConfigManager(createMockAdapter(), createMockLogger());
+        expect(config.get(key)).toBe(expectedValue);
+    });
+
+    it('should use explicit fallback when configGet throws', () => {
+        const mockLogger = createMockLogger();
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: () => {
+                    throw new Error('Adapter error');
+                },
+            }),
+            mockLogger
+        );
+        expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
+        expect(config.get('overlayCorner', 'top-left')).toBe('top-left');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            'ConfigManager.get error, using fallback',
+            expect.objectContaining({ key: 'overlayCorner' })
+        );
+    });
+
+    it('should fall back to CONFIG_DEFAULTS when configGet returns null', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }), createMockLogger());
+        expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
+    });
+
+    it('should handle non-string values from configGet', () => {
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'someInt' ? 42 : key === 'someFloat' ? 1.5 : undefined) }),
+            createMockLogger()
+        );
+        expect(config.getInt('someInt')).toBe(42);
+        expect(config.getFloat('someFloat')).toBe(1.5);
+    });
+
+    it('should handle falsy but valid values (0 and empty string)', () => {
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: key => (key === 'zero' ? 0 : key === 'empty' ? '' : undefined) }),
+            createMockLogger()
+        );
+        expect(config.get('zero')).toBe(0);
+        expect(config.get('empty')).toBe('');
+        expect(config.getInt('zero', 10)).toBe(0);
+        expect(config.getFloat('zero', 10)).toBe(0);
+    });
 });

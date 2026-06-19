@@ -63,14 +63,14 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Test Suites
 
-| Command                    | What it runs                       |
-| -------------------------- | ---------------------------------- |
-| `npm test`                 | All suites                         |
-| `npm run test:unit`        | `tests/unit/**`                    |
-| `npm run test:ui`          | `tests/ui/**`                      |
-| `npm run test:integration` | `tests/integration/**`             |
-| `npm run test:coverage`    | All suites with V8 coverage report |
-| `npx vitest -t "name"`     | Filter by test name                |
+| Command                    | What it runs                          |
+| -------------------------- | ------------------------------------- |
+| `npm test`                 | `tests/unit/**` + `tests/ui/**`       |
+| `npm run test:unit`        | `tests/unit/**`                       |
+| `npm run test:ui`          | `tests/ui/**`                         |
+| `npm run test:integration` | `tests/integration/**` (nightly only) |
+| `npm run test:coverage`    | unit + ui with V8 coverage report     |
+| `npx vitest -t "name"`     | Filter by test name                   |
 
 ### Test Environment
 
@@ -99,15 +99,20 @@ tests/
   unit/                 # Unit tests mirroring src/ structure
   ui/                   # DOM-level tests using fixture HTML files
   integration/
-    setup.js            # Loads .env via dotenv for API credentials
+    setup.js              # Loads .env + fails if required API keys are missing
     api-clients.test.js
-    config-manager.test.js
-    request-queue.test.js
 ```
 
 ### Integration Tests
 
-Integration tests in `tests/integration/` make live HTTP requests to external APIs. They require a `.env` file in the project root with real API keys. The `tests/integration/setup.js` loads this file via `dotenv`. Tests that lack credentials should use `hasCredentials()` from that setup file to skip gracefully.
+Integration tests in `tests/integration/` make live HTTP requests to external
+APIs. They run only via `npm run test:integration` (the dedicated
+`vitest.integration.config.js`) and on the nightly `Nightly Integration`
+workflow — never in per-PR CI. They require `XMDB_API_KEY` and `OMDB_API_KEY`
+in the environment: locally via a `.env` file (loaded by
+`tests/integration/setup.js` through `dotenv`), and in CI via repository Actions
+secrets. If either key is missing the suite **fails fast** with a clear error
+rather than skipping. Do not mock HTTP in integration tests.
 
 ## Architecture
 
@@ -309,4 +314,4 @@ npm run build && npm test
 - **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, and `description`. Do not hardcode these — they are injected from `package.json` at build time.
 - **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.js` for application logging, not raw `console` calls in `src/`.
 - **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract — it throws if not implemented. Every adapter must implement it.
-- **Integration test credentials**: Tests in `tests/integration/` need real API keys in `.env`. Without them the tests are skipped via `hasCredentials()`. Do not mock HTTP in integration tests.
+- **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment — a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.

@@ -17,26 +17,12 @@
  */
 export const CONFIG_FIELDS = [
     {
-        key: 'xmdbApiKey',
-        label: 'XMDB API Key',
-        type: 'text',
-        default: '',
-        title: 'Free movie and TV data API. Get API key at https://xmdbapi.com/api-key',
-        validate: (val, allValues) => {
-            if (allValues?.apiClient !== 'xmdb') return null;
-            return val && val.length > 0 ? null : 'XMDB API Key is required';
-        },
-    },
-    {
-        key: 'omdbApiKey',
-        label: 'OMDB API Key',
-        type: 'text',
-        default: '',
-        title: 'Open Movie Database API key. Get API key at https://www.omdbapi.com/apikey.aspx',
-        validate: (val, allValues) => {
-            if (allValues?.apiClient !== 'omdb') return null;
-            return val && val.length > 0 ? null : 'OMDB API Key is required';
-        },
+        key: 'overlayCorner',
+        label: 'Overlay Position',
+        type: 'select',
+        options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        default: 'top-left',
+        title: 'Where the rating badge appears on thumbnails.',
     },
     {
         key: 'apiClient',
@@ -48,36 +34,78 @@ export const CONFIG_FIELDS = [
             ['xmdb', 'XMDB'],
         ],
         default: 'imdbapi',
-        title: 'Choose the primary API provider for ratings.',
+        title: 'Which service to fetch ratings from.',
     },
     {
-        key: 'overlayCorner',
-        label: 'Overlay Position',
-        type: 'select',
-        options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
-        default: 'top-left',
-        title: 'Choose where the rating badge appears on Netflix thumbnails and banners.',
+        key: 'omdbApiKey',
+        label: 'OMDB API Key',
+        labelUrl: 'https://www.omdbapi.com/apikey.aspx',
+        type: 'text',
+        default: '',
+        title: 'Required when using OMDB as API provider.',
+        validate: (val, allValues) => {
+            if (allValues?.apiClient !== 'omdb') return null;
+            return val && val.length > 0 ? null : 'OMDB API Key is required';
+        },
     },
     {
-        key: 'showRtRating',
-        label: 'Show Rotten Tomatoes',
-        type: 'checkbox',
-        default: true,
-        title: 'Display Rotten Tomatoes score when available.',
+        key: 'xmdbApiKey',
+        label: 'XMDB API Key',
+        labelUrl: 'https://xmdbapi.com/api-key',
+        type: 'text',
+        default: '',
+        title: 'Required when using XMDB as API provider.',
+        validate: (val, allValues) => {
+            if (allValues?.apiClient !== 'xmdb') return null;
+            return val && val.length > 0 ? null : 'XMDB API Key is required';
+        },
     },
     {
         key: 'showMcRating',
         label: 'Show Metacritic',
         type: 'checkbox',
         default: true,
-        title: 'Display Metacritic score when available.',
+        title: 'Show Metacritic score on thumbnails.',
+        row: 'ratings-display',
+    },
+    {
+        key: 'showRtRating',
+        label: 'Show Rotten Tomatoes',
+        type: 'checkbox',
+        default: true,
+        title: 'Show Rotten Tomatoes score on thumbnails.',
+        row: 'ratings-display',
+    },
+    {
+        key: 'enableFadeUnderRating',
+        label: 'Fade titles rated below',
+        type: 'checkbox',
+        default: false,
+        title: 'Fade titles with IMDb rating below this value.',
+        row: 'fade-settings',
+    },
+    {
+        key: 'fadeRatingThreshold',
+        label: 'Fade threshold',
+        type: 'text',
+        default: '6.0',
+        title: 'IMDb rating cutoff for fading (0–10).',
+        row: 'fade-settings',
+        labelHidden: true,
+        validate: val => {
+            if (typeof val === 'string' && val.trim() === '') return 'Must be a number between 0 and 10';
+            const n = Number(val);
+            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Must be a number between 0 and 10';
+        },
     },
     {
         key: 'cacheTtlRatedOldYear',
-        label: 'Cache Rated > 1 year (days)',
+        label: 'Rated > 1yr',
         type: 'text',
         default: '-1',
-        title: 'Cache duration for titles older than 1 year with ratings. -1 = forever.',
+        title: 'How long to cache ratings for older titles. -1 = forever.',
+        section: 'Cache Duration (days)',
+        row: 'cache-fields',
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
@@ -86,10 +114,11 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'cacheTtlRatedNewYear',
-        label: 'Cache Rated < 1 year (days)',
+        label: 'Rated < 1yr',
         type: 'text',
         default: '30',
-        title: 'Cache duration for titles released within the last year with ratings.',
+        title: 'How long to cache ratings for recent titles.',
+        row: 'cache-fields',
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
@@ -98,10 +127,11 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'cacheTtlNoRating',
-        label: 'Cache Unrated (days)',
+        label: 'Unrated',
         type: 'text',
         default: '1',
-        title: 'Cache duration for titles not found or without ratings. Use small values to retry.',
+        title: 'How long to cache titles with no rating. Use small value to retry sooner.',
+        row: 'cache-fields',
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
             const n = Number(val);
@@ -109,30 +139,12 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'enableFadeUnderRating',
-        label: 'Fade Low-Rated Titles',
-        type: 'checkbox',
-        default: false,
-        title: 'Reduce opacity of titles with IMDb rating below the threshold.',
-    },
-    {
-        key: 'fadeRatingThreshold',
-        label: 'Fade Threshold (IMDb)',
-        type: 'text',
-        default: '6.0',
-        title: 'Titles with IMDb rating below this value will be faded.',
-        validate: val => {
-            if (typeof val === 'string' && val.trim() === '') return 'Must be a number between 0 and 10';
-            const n = Number(val);
-            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Must be a number between 0 and 10';
-        },
-    },
-    {
         key: 'debug',
         label: 'Enable debug logging',
         type: 'checkbox',
         default: false,
-        title: 'Output debug logs to console.',
+        title: 'Log debug info to the browser console.',
+        row: 'debug-settings',
     },
 ];
 
