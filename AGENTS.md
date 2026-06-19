@@ -250,7 +250,7 @@ class PlatformAdapter {
 - **README**: Update if the change is user-facing or affects documented functionality.
 - **Protocol**: Always print a suggested commit message at the end of a task.
 - **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
-- **Prose style**: Use the Oxford comma: "a, b, and c".
+- **Prose style**: Use the Oxford comma: "A, B, and C".
 
 ## Branches & Pull Requests
 
