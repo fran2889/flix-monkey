@@ -127,4 +127,27 @@ describe('Title', () => {
             expect(new Title({ year: '2020–' }).year).toBe(2020);
         });
     });
+
+    describe('type field', () => {
+        it('should default to null', () => {
+            expect(new Title({}).type).toBeNull();
+        });
+
+        it('should accept a type value', () => {
+            expect(new Title({ type: 'movie' }).type).toBe('movie');
+        });
+
+        it('should normalize undefined to null', () => {
+            expect(new Title({ type: undefined }).type).toBeNull();
+        });
+
+        it('should round-trip through fromJSON', () => {
+            const title = Title.fromJSON({ displayTitle: 'Test', type: 'series' });
+            expect(title.type).toBe('series');
+        });
+
+        it('should be null on notFound titles', () => {
+            expect(Title.notFound('Missing').type).toBeNull();
+        });
+    });
 });
