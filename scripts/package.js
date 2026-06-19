@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
@@ -28,7 +28,7 @@ function verifyDistFiles(dir, target) {
 function zipDirectory(sourceDir, outPath) {
     return new Promise((resolve, reject) => {
         const output = fs.createWriteStream(outPath);
-        const archive = archiver('zip', { zlib: { level: 9 } });
+        const archive = new ZipArchive({ zlib: { level: 9 } });
 
         output.on('close', () => {
             console.info(`Created ${outPath} (${archive.pointer()} total bytes)`);
