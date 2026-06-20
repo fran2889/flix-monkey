@@ -1,35 +1,41 @@
 # GitHub repo description
 
-Browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix
+Browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix titles.
 
-# short description
+# Short description
 
-See IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix titles as you browse
+See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
-# full description
+# Full description
 
-FlixMonkey shows IMDb, Metacritic, and Rotten Tomatoes ratings directly on Netflix title cards, hover previews, detail panels, and search results, so you can see what is worth watching before you hit play. Set a threshold to fade out low-rated titles, and click the IMDb badge to jump straight to its IMDb page.
+FlixMonkey adds IMDb, Metacritic, and Rotten Tomatoes ratings directly to Netflix, helping you decide what to watch before you press play. Ratings appear on title cards, hover previews, detail panels, and search results. You can also filter out low-rated titles and quickly jump to IMDb for more details.
 
 Available as a Chrome extension, Firefox add-on, and Greasemonkey userscript.
 
-FEATURES
-• IMDb rating on matched titles, with Metacritic and Rotten Tomatoes added when available
-• Click the IMDb badge to open the title on IMDb, or search IMDb by name when there is no exact match
-• Fade out titles that fall below an IMDb rating you choose
+Features
 
-RATING PROVIDERS
-OMDB is recommended: one free API key unlocks all three rating sources.
-• OMDB: IMDb, Metacritic, and Rotten Tomatoes ratings. Requires a free API key.
-• XMDB: IMDb and Metacritic ratings. Requires a free API key.
-• IMDb API: IMDb and Metacritic ratings. The default, since it needs no API key, but its rate limits are very low.
+• View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes added when available
+• Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
+• Optionally fade out titles below a chosen IMDb rating threshold
 
-CACHING
-Ratings are stored locally, so previously loaded ratings appear instantly.
-• Titles over a year old are cached indefinitely.
-• Recent releases refresh monthly to pick up rating changes.
-• Titles with no rating are retried after a day.
-• A provider that starts failing is paused for an hour to avoid repeated failed requests.
+Rating providers
 
-LICENSE
-Licensed under GPLv3. Source code is available on GitHub.
+FlixMonkey supports multiple rating sources depending:
+
+• OMDb (recommended) — Provides IMDb, Metacritic, and Rotten Tomatoes ratings with a free API key
+• XMDb — Provides IMDb and Metacritic ratings with a free API key
+• IMDb API (default) — No API key required, but slow due to strict rate limits
+
+Caching
+
+Ratings are cached locally to keep browsing fast and reduce API usage:
+
+• Older titles (1+ year) are cached indefinitely
+• Recent titles refresh monthly to capture updated ratings
+• Unrated titles are retried after 24 hours
+• Failing providers are temporarily paused to prevent repeated errors
+
+License
+
+Licensed under GPLv3. Source code available on GitHub:
 https://github.com/fran2889/flix-monkey
