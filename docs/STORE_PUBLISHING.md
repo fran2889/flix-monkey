@@ -1,13 +1,19 @@
 # Store Publishing
 
-FlixMonkey is published automatically to the Chrome Web Store and Firefox
-Add-ons (AMO) by the `Publish to Stores` GitHub Actions workflow
-(`.github/workflows/publish-stores.yml`) after release-please cuts a release.
+FlixMonkey is published to the Chrome Web Store and Firefox Add-ons (AMO) by the
+`Publish to Stores` GitHub Actions workflow
+(`.github/workflows/publish-stores.yml`). Publishing is a **manual deployment**:
+a maintainer runs the workflow for a chosen release tag, and it reuses the
+artifacts already attached to that GitHub Release (no rebuild). A release must
+therefore exist, with its artifacts attached, before it can be published.
 
 This document covers the one-time credential setup and the AMO source-code
 build instructions.
 
 ## Build instructions (for AMO reviewers)
+
+The published add-on is the `.xpi` attached to the matching GitHub Release; the
+accompanying `FlixMonkey-source.zip` is this repository at the release tag.
 
 The submitted code is bundled by Rollup, so AMO requires the human-readable
 source. To reproduce `dist/firefox/` from the accompanying source archive:

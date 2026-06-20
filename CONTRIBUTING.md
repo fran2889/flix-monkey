@@ -63,9 +63,10 @@ If you are an AI agent, please refer to [AGENTS.md](./AGENTS.md) for specialized
 
 ## Store publishing
 
-Releases are published automatically to the Chrome Web Store and Firefox
-Add-ons by the `Publish to Stores` workflow. For the required repository
-secrets and the AMO source-build instructions, see
+Releases are published to the Chrome Web Store and Firefox Add-ons by manually
+running the `Publish to Stores` workflow for a chosen release tag; it reuses the
+artifacts attached to that GitHub Release. For the required repository secrets
+and the AMO source-build instructions, see
 [docs/STORE_PUBLISHING.md](docs/STORE_PUBLISHING.md).
 
 ## License
