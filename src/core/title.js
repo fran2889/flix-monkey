@@ -15,7 +15,47 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @typedef {Object} TitleOptions
+ * @property {string|null} [displayTitle=null] - Title as shown on the Netflix UI.
+ * @property {string|null} [apiTitle=null] - Canonical title returned by the API.
+ * @property {string|null} [imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
+ * @property {number|string|null} [year=null] - Release year; coerced to integer.
+ * @property {number|string|null} [rating=null] - IMDb rating (0–10); coerced to float.
+ * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0–100); coerced to integer.
+ * @property {number|string|null} [mcRating=null] - Metacritic score (0–100); leading digits extracted, coerced to integer.
+ * @property {string|null} [source=null] - API source that produced this title (an `ApiSource` value).
+ * @property {string|null} [type=null] - Title type (e.g. `"movie"`, `"series"`).
+ */
+
+/**
+ * Immutable-style data class representing a movie or show with its ratings.
+ *
+ * Rating values are normalised during construction: `null`, `undefined`, empty
+ * strings, and `"N/A"` are all collapsed to `null`; numeric strings are parsed
+ * to the appropriate number type per field.
+ */
 export class Title {
+    /** @type {string|null} */
+    displayTitle;
+    /** @type {string|null} */
+    apiTitle;
+    /** @type {string|null} */
+    imdbId;
+    /** @type {number|null} */
+    year;
+    /** @type {number|null} */
+    rating;
+    /** @type {number|null} */
+    rtRating;
+    /** @type {number|null} */
+    mcRating;
+    /** @type {string|null} */
+    source;
+    /** @type {string|null} */
+    type;
+
+    /** @param {TitleOptions} [options] */
     constructor({
         displayTitle = null,
         apiTitle = null,
@@ -47,25 +87,48 @@ export class Title {
         this.type = type ?? null;
     }
 
+    /** @returns {boolean} `true` if at least one rating (IMDb, RT, or Metacritic) is present. */
     get hasRating() {
         return this.rating !== null || this.rtRating !== null || this.mcRating !== null;
     }
 
+    /**
+     * @returns {string} IMDb URL for this title. Falls back to an IMDb search
+     *   URL when `imdbId` is not available.
+     */
     get imdbUrl() {
         return this.imdbId
             ? `https://www.imdb.com/title/${this.imdbId}/`
             : `https://www.imdb.com/find/?q=${encodeURIComponent(this.displayTitle ?? '')}`;
     }
 
+    /**
+     * Reconstitutes a `Title` from a plain object (e.g. a parsed cache entry).
+     *
+     * @param {Object|null} obj - Plain object with `TitleOptions` shape.
+     * @returns {Title|null} A new `Title` instance, or `null` if `obj` is falsy or not an object.
+     */
     static fromJSON(obj) {
         if (!obj || typeof obj !== 'object') return null;
         return new Title(obj);
     }
 
+    /**
+     * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
+     *
+     * @param {string} displayTitle - The Netflix display title that was searched.
+     * @param {string|null} [source=null] - API source that produced the miss.
+     * @returns {Title}
+     */
     static notFound(displayTitle, source = null) {
         return new Title({ displayTitle, source });
     }
 
+    /**
+     * @param {*} val - Raw rating value from an API response.
+     * @param {(v: *) => number|null} converter - Type-specific parser.
+     * @returns {number|null}
+     */
     #normalizeRating(val, converter) {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter ? converter(val) : val;
