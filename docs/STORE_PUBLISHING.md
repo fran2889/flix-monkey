@@ -13,7 +13,7 @@ build instructions.
 ## Build instructions (for AMO reviewers)
 
 The published add-on is the `.xpi` attached to the matching GitHub Release; the
-accompanying `FlixMonkey-source.zip` is this repository at the release tag.
+accompanying `FlixMonkey-v<version>-source.zip` is this repository at the release tag.
 
 The submitted code is bundled by Rollup, so AMO requires the human-readable
 source. To reproduce `dist/firefox/` from the accompanying source archive:

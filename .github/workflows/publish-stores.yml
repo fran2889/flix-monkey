@@ -55,7 +55,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   TAG: ${{ inputs.tag }}
-              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern 'FlixMonkey-source.zip' --dir dist
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern "FlixMonkey-$TAG-source.zip" --dir dist
             - name: Unpack the released add-on
               env:
                   TAG: ${{ inputs.tag }}
@@ -64,6 +64,7 @@ jobs:
                   unzip -o "dist/FlixMonkey-$TAG-firefox.xpi" -d dist/firefox
             - name: Publish to Firefox Add-ons
               env:
+                  TAG: ${{ inputs.tag }}
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-source.zip --approval-timeout 0
+              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0

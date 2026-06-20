@@ -92,9 +92,11 @@ before they can be published.
 When release-please cuts a release, the existing build step already produces and
 uploads the Chrome `.zip`, Firefox `.xpi`, and userscript `.user.js` to the
 GitHub Release. This design adds one step: after the build, run
-`npm run package:source` to produce `dist/FlixMonkey-source.zip` and include it
-in the same `gh release upload`. The Release then carries all four artifacts, and
-the source archive is generated once, from the exact released tag.
+`npm run package:source` to produce `dist/FlixMonkey-v<version>-source.zip` and
+include it in the same `gh release upload` (the source archive carries the
+version in its filename, matching the extension archives). The Release then
+carries all four artifacts, and the source archive is generated once, from the
+exact released tag.
 
 `package:source` stays an npm script: it needs no credentials and is genuinely
 useful to run locally (inspect what is submitted to AMO).
@@ -115,14 +117,14 @@ useful to run locally (inspect what is submitted to AMO).
 ## Firefox Job
 
 - Download the Firefox `.xpi` and the source archive from the Release:
-  `gh release download <tag> --pattern 'FlixMonkey-*-firefox.xpi' --pattern 'FlixMonkey-source.zip' --dir dist`.
+  `gh release download <tag> --pattern 'FlixMonkey-*-firefox.xpi' --pattern 'FlixMonkey-*-source.zip' --dir dist`.
 - Unzip the released `.xpi` into `dist/firefox/` so its content can be resubmitted
   unchanged (`web-ext sign` takes a `--source-dir`, not a prebuilt package; it
   re-zips for upload but the submitted content is byte-for-byte the released
   `.xpi`). AMO requires source for listed add-ons that ship a build step, hence
-  the attached `FlixMonkey-source.zip`.
+  the attached `FlixMonkey-<tag>-source.zip`.
 - Submit to AMO's **listed** channel, inlined in the workflow:
-  `npx web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-source.zip --approval-timeout 0`,
+  `npx web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-<tag>-source.zip --approval-timeout 0`,
   using `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` (mapped to `WEB_EXT_API_KEY` /
   `WEB_EXT_API_SECRET`).
 
@@ -186,7 +188,7 @@ Repository secrets: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`.
   download Release artifacts and upload to the stores; no rebuild. Store-publish
   commands inlined (no `publish:*` npm scripts).
 - `.github/workflows/release-please.yml`: add `npm run package:source` after the
-  build and include `dist/FlixMonkey-source.zip` in the `gh release upload`, so
+  build and include `dist/FlixMonkey-v<version>-source.zip` in the `gh release upload`, so
   the Release carries all four artifacts.
 - `package.json`: keep `package:source`; pin `chrome-webstore-upload-cli` and
   `web-ext` as devDependencies. No `publish:chrome` / `publish:firefox` scripts.
