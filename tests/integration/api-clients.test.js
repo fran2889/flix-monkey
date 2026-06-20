@@ -16,16 +16,12 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, beforeAll } from 'vitest';
-import { hasCredentials } from './setup';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../src/core/api-clients';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { ConfigManager } from '../../src/core/config-manager';
 import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
 import { ApiSource, TitleType } from '../../src/core/constants';
-
-const xmdbCreds = ['XMDB_API_KEY'];
-const omdbCreds = ['OMDB_API_KEY'];
 
 // Cloudflare enforces ~3 requests per 10s window on imdbapi.dev.
 // Each test creates a fresh client (fresh RequestQueue), so the per-client
@@ -102,7 +98,7 @@ describe('api-clients integration', () => {
             type: TitleType.MOVIE,
         };
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
@@ -110,7 +106,7 @@ describe('api-clients integration', () => {
             expect(result.rtRating).toBeNull();
         });
 
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+        it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
@@ -137,13 +133,13 @@ describe('api-clients integration', () => {
             type: TitleType.SERIES,
         };
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+        it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
@@ -159,12 +155,12 @@ describe('api-clients integration', () => {
     describe('invalid title search', () => {
         const TITLE = 'xyznonexistenttitle12345';
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             expect(await client.search(TITLE)).toBeNull();
         });
 
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+        it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.getDetails({ title: TITLE }, TITLE);
             expect(result).toBeNull();
@@ -179,7 +175,7 @@ describe('api-clients integration', () => {
     describe('invalid ID details', () => {
         const INVALID_ID = 'tt0000000';
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.getDetails({ id: INVALID_ID }, 'nonexistent');
             expect(result).toBeNull();
@@ -192,12 +188,12 @@ describe('api-clients integration', () => {
     });
 
     describe('invalid API key', () => {
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, badKeyConfigManager);
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
 
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+        it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, badKeyConfigManager);
             await expect(client.getDetails({ title: 'The Godfather' }, 'The Godfather')).rejects.toThrow();
         });
@@ -211,13 +207,13 @@ describe('api-clients integration', () => {
             type: TitleType.MOVIE,
         };
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB', async () => {
+        it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
@@ -240,7 +236,7 @@ describe('api-clients integration', () => {
             type: TitleType.MOVIE,
         };
 
-        it.skipIf(!hasCredentials(xmdbCreds))('XMDB', async () => {
+        it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
@@ -249,7 +245,7 @@ describe('api-clients integration', () => {
         // OMDB does not reliably resolve original foreign-language titles.
         // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
         // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
-        it.skipIf(!hasCredentials(omdbCreds))('OMDB — does not resolve to expected ID', async () => {
+        it('OMDB — does not resolve to expected ID', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expect(result).toBeInstanceOf(Title);
