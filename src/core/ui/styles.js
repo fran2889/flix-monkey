@@ -27,20 +27,24 @@ export const SETTINGS_STYLES = `
     color: #fff;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 10px 25px 25px;
+    padding: 10px 25px 20px;
     min-width: 480px;
 }
 .fm-settings-container h1 {
     color: #e50914;
     font-size: 24px;
-    margin: 0 0 25px;
+    margin: 0 0 15px;
     text-align: center;
     font-weight: bold;
+}
+.fm-settings-container #fm-fields {
+    width: fit-content;
+    margin: 0 auto;
 }
 .fm-settings-container .field {
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 .fm-settings-container .field label {
     flex: 0 0 200px;
@@ -50,9 +54,16 @@ export const SETTINGS_STYLES = `
     font-size: 14px;
     cursor: default;
 }
+.fm-settings-container .field label a {
+    color: #6bf;
+    text-decoration: none;
+}
+.fm-settings-container .field label a:hover {
+    text-decoration: underline;
+}
 .fm-settings-container .field input[type='text'],
 .fm-settings-container .field select {
-    flex: 0 0 220px;
+    flex: 0 0 200px;
     background: #333;
     color: #fff;
     border: 1px solid #555;
@@ -70,12 +81,53 @@ export const SETTINGS_STYLES = `
     height: 16px;
     cursor: pointer;
 }
+.fm-settings-container .field-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+.fm-settings-container .field-row .field {
+    margin-bottom: 0;
+    flex: none;
+    gap: 6px;
+}
+.fm-settings-container .field-row .field label {
+    flex: none;
+    text-align: left;
+    padding: 0;
+}
+.fm-settings-container .field-row .field input[type='text'] {
+    flex: none;
+    width: 50px;
+    text-align: center;
+    padding: 6px 4px;
+}
+.fm-settings-container .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+.fm-settings-container .section-header {
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 12px 0 8px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
 .fm-settings-container .actions {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    margin-top: 20px;
+    margin-top: 15px;
     flex-wrap: wrap;
     position: relative;
 }

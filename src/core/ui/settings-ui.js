@@ -48,50 +48,27 @@ export class SettingsUI {
         fieldsContainer.id = 'fm-fields';
         container.appendChild(fieldsContainer);
 
-        this.fields.forEach(field => {
-            const fieldDiv = document.createElement('div');
-            fieldDiv.className = 'field';
-
-            const label = document.createElement('label');
-            label.className = 'field-label';
-            label.textContent = field.label;
-            label.title = field.title || '';
-            label.htmlFor = `fm-${field.key}`;
-            fieldDiv.appendChild(label);
-
-            let input;
-            if (field.type === 'select') {
-                input = document.createElement('select');
-                input.className = 'field-input';
-                field.options.forEach(opt => {
-                    const option = document.createElement('option');
-                    if (Array.isArray(opt)) {
-                        option.value = opt[0];
-                        option.textContent = opt[1];
-                    } else {
-                        option.value = opt;
-                        option.textContent = opt;
-                    }
-                    input.appendChild(option);
-                });
-                input.value = settings[field.key] !== undefined ? settings[field.key] : field.default;
-            } else if (field.type === 'checkbox') {
-                input = document.createElement('input');
-                input.type = 'checkbox';
-                input.className = 'field-input';
-                input.checked = settings[field.key] !== undefined ? settings[field.key] : field.default;
-            } else {
-                input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'field-input';
-                input.value = settings[field.key] !== undefined ? settings[field.key] : field.default;
+        const groups = this._groupFields();
+        for (const group of groups) {
+            if (group.section) {
+                const header = document.createElement('div');
+                header.className = 'section-header';
+                header.textContent = group.section;
+                fieldsContainer.appendChild(header);
             }
 
-            input.name = field.key;
-            input.id = `fm-${field.key}`;
-            fieldDiv.appendChild(input);
-            fieldsContainer.appendChild(fieldDiv);
-        });
+            let parent = fieldsContainer;
+            if (group.row) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = `field-row ${group.row}`;
+                fieldsContainer.appendChild(rowDiv);
+                parent = rowDiv;
+            }
+
+            for (const field of group.fields) {
+                parent.appendChild(this._createField(field, settings));
+            }
+        }
 
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'actions';
@@ -106,6 +83,7 @@ export class SettingsUI {
         clearBtn.id = 'fm-clearCacheBtn';
         clearBtn.className = 'secondary';
         clearBtn.textContent = 'Clear Cache';
+        clearBtn.title = 'Delete all cached ratings so they are fetched again.';
         clearBtn.onclick = () => this.clearCache();
         actionsDiv.appendChild(clearBtn);
 
@@ -113,6 +91,7 @@ export class SettingsUI {
         resetBtn.id = 'fm-resetClientsBtn';
         resetBtn.className = 'secondary';
         resetBtn.textContent = 'Reset Disabled Clients';
+        resetBtn.title = 'Re-enable API providers that were turned off after repeated errors.';
         resetBtn.onclick = () => this.resetClients();
         actionsDiv.appendChild(resetBtn);
 
@@ -121,6 +100,84 @@ export class SettingsUI {
         const statusDiv = document.createElement('div');
         statusDiv.id = 'fm-status';
         container.appendChild(statusDiv);
+    }
+
+    _groupFields() {
+        const groups = [];
+        for (const field of this.fields) {
+            const last = groups[groups.length - 1];
+            if (field.row && last && last.row === field.row) {
+                last.fields.push(field);
+            } else {
+                groups.push({ row: field.row, section: field.section, fields: [field] });
+            }
+        }
+        return groups;
+    }
+
+    _createField(field, settings) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field';
+
+        const label = document.createElement('label');
+        label.className = 'field-label';
+        label.title = field.title || '';
+        label.htmlFor = `fm-${field.key}`;
+
+        if (field.labelUrl) {
+            const link = document.createElement('a');
+            link.href = field.labelUrl;
+            link.target = '_blank';
+            link.textContent = field.label;
+            label.appendChild(link);
+        } else {
+            label.textContent = field.label;
+        }
+
+        let input;
+        if (field.type === 'select') {
+            input = document.createElement('select');
+            input.className = 'field-input';
+            field.options.forEach(opt => {
+                const option = document.createElement('option');
+                if (Array.isArray(opt)) {
+                    option.value = opt[0];
+                    option.textContent = opt[1];
+                } else {
+                    option.value = opt;
+                    option.textContent = opt;
+                }
+                input.appendChild(option);
+            });
+            input.value = settings[field.key] !== undefined ? settings[field.key] : field.default;
+        } else if (field.type === 'checkbox') {
+            input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'field-input';
+            input.checked = settings[field.key] !== undefined ? settings[field.key] : field.default;
+        } else {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'field-input';
+            input.value = settings[field.key] !== undefined ? settings[field.key] : field.default;
+        }
+
+        input.name = field.key;
+        input.id = `fm-${field.key}`;
+
+        if (field.labelHidden) {
+            label.classList.add('visually-hidden');
+        }
+
+        if (field.type === 'checkbox') {
+            fieldDiv.appendChild(input);
+            fieldDiv.appendChild(label);
+        } else {
+            fieldDiv.appendChild(label);
+            fieldDiv.appendChild(input);
+        }
+
+        return fieldDiv;
     }
 
     _validate() {
