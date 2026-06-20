@@ -152,9 +152,11 @@ Repository secrets: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`.
 ## Failure Handling and Idempotency
 
 - Each store job is independent and re-runnable; failures surface per-job.
-- **Re-publish guard:** store APIs reject re-uploading an existing version. Where
-  detectable, the scripts treat "version already exists" as a non-fatal skip;
-  otherwise the job fails loudly and only the incomplete job is re-run.
+- **Duplicate version:** store APIs reject re-uploading an existing version. The
+  jobs do not add a guard for this: a re-run after a store already has the version
+  fails loudly. Because the two jobs are independent and individually re-runnable,
+  the fix is to re-run only the job that did not complete; a genuine duplicate
+  surfaces as a clear failure.
 - **No auto-rollback:** stores do not support it. A bad release is fixed by
   cutting a new patch version.
 
