@@ -13,6 +13,7 @@ Thumbs.db
 .env
 coverage/
 dist/
+web-ext-artifacts/
 node_modules/
 test-results/
 
