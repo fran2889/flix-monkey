@@ -81,7 +81,7 @@ export const CONFIG_FIELDS = [
         label: 'Fade titles rated below',
         type: 'checkbox',
         default: false,
-        title: 'Fade titles with an IMDb rating below this value.',
+        title: 'Fade titles with IMDb rating below this value.',
         row: 'fade-settings',
     },
     {
@@ -130,7 +130,7 @@ export const CONFIG_FIELDS = [
         label: 'Unrated',
         type: 'text',
         default: '1',
-        title: 'How long to cache titles with no rating found. Use small values to retry sooner.',
+        title: 'How long to cache titles with no rating. Use small value to retry sooner.',
         row: 'cache-fields',
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';

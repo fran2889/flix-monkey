@@ -83,7 +83,7 @@ export class SettingsUI {
         clearBtn.id = 'fm-clearCacheBtn';
         clearBtn.className = 'secondary';
         clearBtn.textContent = 'Clear Cache';
-        clearBtn.title = 'Delete all cached ratings so they are fetched fresh.';
+        clearBtn.title = 'Delete all cached ratings so they are fetched again.';
         clearBtn.onclick = () => this.clearCache();
         actionsDiv.appendChild(clearBtn);
 
