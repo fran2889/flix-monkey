@@ -13,7 +13,7 @@
 These were implemented under the previous (automatic) design and are reused as-is:
 
 - `chrome-webstore-upload-cli@^4.0.1` and `web-ext@^10.4.0` are in `devDependencies`.
-- `package.json` has `package:source` (`git archive --format=zip --output dist/FlixMonkey-source.zip HEAD`). It also still has `publish:chrome` and `publish:firefox` scripts, which this plan removes.
+- `package.json` has `package:source` (`git archive --format=zip --output dist/FlixMonkey-source.zip HEAD`; Task 1 versions this output filename). It also still has `publish:chrome` and `publish:firefox` scripts, which this plan removes.
 - `.gitignore` ignores `web-ext-artifacts/`.
 - `src/targets/firefox/manifest.json` sets `browser_specific_settings.gecko.id` (`flixmonkey@fran`); no manifest change needed.
 - `docs/STORE_PUBLISHING.md` and a `## Store publishing` section in `CONTRIBUTING.md` exist but describe automatic publishing; this plan updates their wording.
@@ -26,7 +26,7 @@ These were implemented under the previous (automatic) design and are reused as-i
 - **Pinned actions:** every third-party GitHub Action is pinned to a commit SHA with a trailing `# vN` comment. Reuse the SHAs already in the repo:
     - `actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6`
     - `actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6`
-- **Artifact names:** the build writes `dist/FlixMonkey-v<version>-chrome.zip` and `dist/FlixMonkey-v<version>-firefox.xpi`; the release tag is `v<version>`, so the filename for a tag `$TAG` is `FlixMonkey-$TAG-chrome.zip` / `FlixMonkey-$TAG-firefox.xpi`. The source archive is `dist/FlixMonkey-source.zip`.
+- **Artifact names:** the build writes `dist/FlixMonkey-v<version>-chrome.zip` and `dist/FlixMonkey-v<version>-firefox.xpi`; the release tag is `v<version>`, so the filename for a tag `$TAG` is `FlixMonkey-$TAG-chrome.zip` / `FlixMonkey-$TAG-firefox.xpi`. The source archive is versioned to match: `package:source` writes `dist/FlixMonkey-v<version>-source.zip` (= `FlixMonkey-$TAG-source.zip`).
 - **Chrome CLI:** `chrome-webstore-upload` with **no subcommand** both uploads and publishes; `--source` accepts a zip file. Required env: `EXTENSION_ID`, `PUBLISHER_ID`, `CLIENT_ID`, `CLIENT_SECRET`, `REFRESH_TOKEN`.
 - **Firefox CLI:** `web-ext sign` takes `--source-dir` (a directory, not a prebuilt package), `--channel listed`, `--upload-source-code <zip>`, `--approval-timeout 0` (do not block on human approval). Required env: `WEB_EXT_API_KEY` (from `AMO_JWT_ISSUER`), `WEB_EXT_API_SECRET` (from `AMO_JWT_SECRET`).
 - **Conventional Commits:** `type(scope)?: description`, imperative mood, lowercase, no trailing period. Allowed types include `ci`, `build`, `docs`, `chore`.
@@ -38,7 +38,7 @@ These were implemented under the previous (automatic) design and are reused as-i
 
 ## File Structure
 
-- `package.json` (modify): remove `publish:chrome` and `publish:firefox` scripts; keep `package:source` and the two devDependencies.
+- `package.json` (modify): remove `publish:chrome` and `publish:firefox` scripts; keep `package:source` and version its output filename (`FlixMonkey-v<version>-source.zip`); keep the two devDependencies.
 - `.github/workflows/release-please.yml` (modify): build and attach the source archive to the Release.
 - `.github/workflows/publish-stores.yml` (modify): download the released artifacts and push to the stores; no rebuild; CLIs inlined.
 - `docs/STORE_PUBLISHING.md` (modify): describe manual, artifact-reuse publishing.
@@ -46,7 +46,7 @@ These were implemented under the previous (automatic) design and are reused as-i
 
 ---
 
-## Task 1: Remove the publish npm scripts (inline in the workflow instead)
+## Task 1: Remove the publish npm scripts and version the source archive
 
 **Files:**
 
@@ -54,9 +54,9 @@ These were implemented under the previous (automatic) design and are reused as-i
 
 **Interfaces:**
 
-- Produces: a `package.json` whose `scripts` no longer contains `publish:chrome` or `publish:firefox`. `package:source` remains and is consumed by `release-please.yml` (Task 2). The `chrome-webstore-upload` and `web-ext` binaries remain available via `devDependencies` for `npx` calls in `publish-stores.yml` (Task 3).
+- Produces: a `package.json` whose `scripts` no longer contains `publish:chrome` or `publish:firefox`. `package:source` remains and now writes `dist/FlixMonkey-v<version>-source.zip` (the version in the filename matches the extension archives); it is consumed by `release-please.yml` (Task 2). The `chrome-webstore-upload` and `web-ext` binaries remain available via `devDependencies` for `npx` calls in `publish-stores.yml` (Task 3).
 
-- [ ] **Step 1: Remove the two scripts**
+- [ ] **Step 1: Remove the two publish scripts**
 
 In `package.json`, delete these two lines from the `"scripts"` object (leave `package:source` and everything else intact):
 
@@ -65,7 +65,17 @@ In `package.json`, delete these two lines from the `"scripts"` object (leave `pa
 "publish:firefox": "web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-source.zip --approval-timeout 0",
 ```
 
-- [ ] **Step 2: Verify the scripts are gone and the CLIs still resolve**
+- [ ] **Step 2: Version the source-archive filename**
+
+In `package.json`, update the `package:source` script so its output carries the version, matching the extension archives (`FlixMonkey-v<version>-chrome.zip` / `-firefox.xpi`):
+
+```json
+"package:source": "git archive --format=zip --output dist/FlixMonkey-v$npm_package_version-source.zip HEAD",
+```
+
+npm exposes the package version to scripts as `$npm_package_version`; since the release tag is `v<version>`, the output filename equals `FlixMonkey-$TAG-source.zip`.
+
+- [ ] **Step 3: Verify the scripts are correct and the source archive is versioned**
 
 Run:
 
@@ -73,18 +83,19 @@ Run:
 node -e "const s=require('./package.json').scripts; if(s['publish:chrome']||s['publish:firefox']){console.error('still present');process.exit(1)}; if(!s['package:source']){console.error('package:source missing');process.exit(1)}; console.log('ok')"
 npx --no-install chrome-webstore-upload --version
 npx --no-install web-ext --version
+rm -f dist/FlixMonkey-*source.zip && npm run package:source && ls dist/FlixMonkey-v*-source.zip
 ```
 
-Expected: prints `ok`, then a version number from each CLI (confirming they are installed and callable without the npm scripts).
+Expected: prints `ok`, then a version number from each CLI, then the listing shows `dist/FlixMonkey-v<version>-source.zip` (the version is in the filename).
 
-- [ ] **Step 3: Format and commit**
+- [ ] **Step 4: Format and commit**
 
 Run:
 
 ```bash
 npm run format
 git add package.json
-git commit -m "build: drop publish npm scripts in favor of inline workflow commands"
+git commit -m "build: drop publish npm scripts and version the source archive"
 ```
 
 ---
@@ -97,7 +108,7 @@ git commit -m "build: drop publish npm scripts in favor of inline workflow comma
 
 **Interfaces:**
 
-- Produces: when release-please cuts a release, `dist/FlixMonkey-source.zip` is built and uploaded to the Release alongside the existing `dist/*.zip dist/*.xpi dist/*.user.js`. Consumed by the Firefox job in Task 3.
+- Produces: when release-please cuts a release, `dist/FlixMonkey-v<version>-source.zip` is built and uploaded to the Release alongside the existing `dist/*.zip dist/*.xpi dist/*.user.js`. Consumed by the Firefox job in Task 3.
 
 The current job ends with the `Upload to Release` step:
 
@@ -119,7 +130,7 @@ In `.github/workflows/release-please.yml`, insert a new step **immediately befor
   run: npm run package:source
 ```
 
-`npm run package:source` writes `dist/FlixMonkey-source.zip`, which the existing `dist/*.zip` glob in `Upload to Release` then picks up alongside the Chrome zip. No change to the upload line is required.
+`npm run package:source` writes `dist/FlixMonkey-v<version>-source.zip`, which the existing `dist/*.zip` glob in `Upload to Release` then picks up alongside the Chrome zip. No change to the upload line is required.
 
 - [ ] **Step 2: Verify the YAML parses and the source step precedes the upload**
 
@@ -138,10 +149,10 @@ Run:
 
 ```bash
 npm run package:source
-unzip -l dist/FlixMonkey-source.zip | grep -E "src/|package.json" | head
+unzip -l dist/FlixMonkey-v*-source.zip | grep -E "src/|package.json" | head
 ```
 
-Expected: `dist/FlixMonkey-source.zip` is created and its listing includes `package.json` and files under `src/`.
+Expected: `dist/FlixMonkey-v<version>-source.zip` is created and its listing includes `package.json` and files under `src/`.
 
 - [ ] **Step 4: Format and commit**
 
@@ -163,7 +174,7 @@ git commit -m "ci: attach source archive to the github release"
 
 **Interfaces:**
 
-- Consumes: the Release artifacts from Task 2 (`FlixMonkey-$TAG-chrome.zip`, `FlixMonkey-$TAG-firefox.xpi`, `FlixMonkey-source.zip`); the `chrome-webstore-upload` / `web-ext` devDependencies from Task 1; repository secrets `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`.
+- Consumes: the Release artifacts from Task 2 (`FlixMonkey-$TAG-chrome.zip`, `FlixMonkey-$TAG-firefox.xpi`, `FlixMonkey-$TAG-source.zip`); the `chrome-webstore-upload` / `web-ext` devDependencies from Task 1; repository secrets `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`.
 
 - [ ] **Step 1: Replace the workflow file**
 
@@ -227,7 +238,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   TAG: ${{ inputs.tag }}
-              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern 'FlixMonkey-source.zip' --dir dist
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern "FlixMonkey-$TAG-source.zip" --dir dist
             - name: Unpack the released add-on
               env:
                   TAG: ${{ inputs.tag }}
@@ -236,9 +247,10 @@ jobs:
                   unzip -o "dist/FlixMonkey-$TAG-firefox.xpi" -d dist/firefox
             - name: Publish to Firefox Add-ons
               env:
+                  TAG: ${{ inputs.tag }}
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-source.zip --approval-timeout 0
+              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0
 ```
 
 - [ ] **Step 2: Verify the YAML parses and the rebuild steps are gone**
@@ -319,7 +331,7 @@ The `## Build instructions (for AMO reviewers)` section stays accurate (`npm ci 
 
 ```markdown
 The published add-on is the `.xpi` attached to the matching GitHub Release; the
-accompanying `FlixMonkey-source.zip` is this repository at the release tag.
+accompanying `FlixMonkey-v<version>-source.zip` is this repository at the release tag.
 ```
 
 - [ ] **Step 3: Update the `## Store publishing` section in `CONTRIBUTING.md`**
@@ -361,7 +373,7 @@ git commit -m "docs: describe manual store publishing and artifact reuse"
 These cannot be done in code and are tracked here as a handoff checklist:
 
 - [ ] Add the seven repository secrets listed in `docs/STORE_PUBLISHING.md` (`CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`).
-- [ ] Cut a release with release-please and confirm the Release carries all four artifacts (chrome `.zip`, firefox `.xpi`, userscript `.user.js`, `FlixMonkey-source.zip`).
+- [ ] Cut a release with release-please and confirm the Release carries all four artifacts (chrome `.zip`, firefox `.xpi`, userscript `.user.js`, `FlixMonkey-v<version>-source.zip`).
 - [ ] Validate end-to-end with a manual run: `Actions -> Publish to Stores -> Run workflow`, supplying that release tag. Confirm both store jobs succeed and the new version appears as "in review" in each dashboard.
 
 ---
@@ -377,7 +389,7 @@ These cannot be done in code and are tracked here as a handoff checklist:
     - Credential/manual-process docs: Task 4 plus the existing `docs/STORE_PUBLISHING.md` secrets tables.
     - `gecko.id` prerequisite: already satisfied in the repo (no task needed).
 - **Deviation from spec:** the Chrome CLI requires `PUBLISHER_ID`, so there is a fifth Chrome secret (`CHROME_PUBLISHER_ID`) beyond the spec's four; it is documented in `docs/STORE_PUBLISHING.md`. The spec's example `chrome-webstore-upload upload --auto-publish` was corrected: the CLI with no subcommand uploads and publishes, and there is no `--auto-publish` flag.
-- **Type/name consistency:** the artifact filenames (`FlixMonkey-$TAG-chrome.zip`, `FlixMonkey-$TAG-firefox.xpi`, `FlixMonkey-source.zip`), the env-var names (`EXTENSION_ID`, `PUBLISHER_ID`, `WEB_EXT_API_KEY`, etc.), the `$TAG` input, and the secret names are identical across Tasks 1 through 4 and match the spec.
+- **Type/name consistency:** the artifact filenames (`FlixMonkey-$TAG-chrome.zip`, `FlixMonkey-$TAG-firefox.xpi`, `FlixMonkey-$TAG-source.zip`), the env-var names (`EXTENSION_ID`, `PUBLISHER_ID`, `WEB_EXT_API_KEY`, etc.), the `$TAG` input, and the secret names are identical across Tasks 1 through 4 and match the spec.
 
 ```
 
