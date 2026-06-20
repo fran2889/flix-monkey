@@ -104,4 +104,19 @@ describe('RequestQueue', () => {
         // With interval=0 and no wait needed, storageGet should be called once per request
         expect(mockAdapter.storageGet).toHaveBeenCalledTimes(2);
     });
+
+    it('should resolve multiple concurrently enqueued requests', async () => {
+        const mockAdapter = createMockAdapter({ storageGet: async () => '0', storageSet: async () => {} });
+        const queue = new RequestQueue(100, null, mockAdapter);
+        const mockFetch = async () => ({ status: 200 });
+
+        const results = await Promise.all([
+            queue.enqueue('https://example.com/a', 0, mockFetch, 'json'),
+            queue.enqueue('https://example.com/b', 0, mockFetch, 'json'),
+        ]);
+
+        expect(results).toHaveLength(2);
+        expect(results[0].status).toBe(200);
+        expect(results[1].status).toBe(200);
+    });
 });
