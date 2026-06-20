@@ -19,6 +19,19 @@ import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION, TitleType } from './constants.js';
 
+/**
+ * @typedef {Object} ClientStatus
+ * @property {boolean} healthy - Whether the client is operational.
+ * @property {string} [reason] - Human-readable explanation when `healthy` is `false`.
+ */
+
+/**
+ * Extracts a rating value from an OMDB-style `Ratings` array.
+ *
+ * @param {Array<{source?: string, Source?: string, value?: string, Value?: string}>|*} ratings
+ * @param {RegExp} sourcePattern - Pattern to match against the `source`/`Source` field.
+ * @returns {string|null} The raw rating string, or `null` if not found.
+ */
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
     const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
@@ -37,14 +50,37 @@ function mapTitleType(apiValue) {
     return TITLE_TYPE_MAP[apiValue] ?? null;
 }
 
+/**
+ * Abstract base class for API clients.
+ *
+ * Implements the template-method pattern: {@link fetch} orchestrates the
+ * lookup by calling {@link search} (find a candidate) then {@link getDetails}
+ * (hydrate ratings). Subclasses override those two methods for each provider.
+ *
+ * @abstract
+ */
 export class BaseApiClient {
+    /** @type {RequestQueue} */
     #queue;
+    /** @type {string} */
     #source;
+    /** @type {DisabledClientsManager} */
     #disabledManager;
+    /** @type {PlatformAdapter} */
     #adapter;
+    /** @type {ConfigManager} */
     #config;
+    /** @type {Logger|null} */
     #logger;
 
+    /**
+     * @param {RequestQueue} queue - Rate-limited request queue for this client.
+     * @param {string} source - `ApiSource` identifier (e.g. `ApiSource.OMDB`).
+     * @param {DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {ConfigManager} config - Application configuration.
+     * @param {Logger|null} logger - Logger instance (may be `null` during tests).
+     */
     constructor(queue, source, disabledManager, adapter, config, logger) {
         this.#queue = queue;
         this.#source = source;
@@ -54,22 +90,27 @@ export class BaseApiClient {
         this.#logger = logger;
     }
 
+    /** @returns {ConfigManager} */
     get config() {
         return this.#config;
     }
 
+    /** @returns {string} The `ApiSource` identifier for this client. */
     get source() {
         return this.#source;
     }
 
+    /** @returns {Logger|null} */
     get logger() {
         return this.#logger;
     }
 
+    /** @returns {Promise<boolean>} Whether this client is temporarily disabled. */
     async isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
 
+    /** @returns {Promise<ClientStatus>} */
     async getStatus() {
         if (await this.isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -77,6 +118,12 @@ export class BaseApiClient {
         return { healthy: true };
     }
 
+    /**
+     * Disables this client, purges its queued requests, and logs a warning.
+     *
+     * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
+     * @returns {Promise<void>}
+     */
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, durationMs);
@@ -85,6 +132,15 @@ export class BaseApiClient {
         );
     }
 
+    /**
+     * Enqueues an HTTP request through the rate-limited queue.
+     * Automatically disables the client on 4xx responses.
+     *
+     * @param {string} url - Request URL.
+     * @param {number} [priority=0] - Higher values are processed first.
+     * @param {'json'|'text'} [responseType='json'] - Expected response format.
+     * @returns {Promise<*>} Parsed response body.
+     */
     async queuedFetch(url, priority = 0, responseType = 'json') {
         try {
             return await this.#queue.enqueue(
@@ -100,6 +156,13 @@ export class BaseApiClient {
         }
     }
 
+    /**
+     * Fetches ratings for a Netflix title by running the search → details pipeline.
+     *
+     * @param {string} displayTitle - Title as shown on the Netflix UI.
+     * @returns {Promise<Title|null>} Hydrated `Title` with ratings, or `null` if the client
+     *   is disabled or the title was not found.
+     */
     async fetch(displayTitle) {
         if (await this.isDisabled()) return null;
         const match = await this.search(displayTitle);
@@ -112,10 +175,29 @@ export class BaseApiClient {
         return titleObj;
     }
 
+    /**
+     * Searches the API for a title matching the Netflix display name.
+     * Subclasses must override this method.
+     *
+     * @abstract
+     * @param {string} _displayTitle - Title to search for.
+     * @returns {Promise<Object|null>} A provider-specific match object to pass to
+     *   {@link getDetails}, or `null` if no match was found.
+     */
     async search(_displayTitle) {
         throw new Error('Not implemented');
     }
 
+    /**
+     * Fetches full details and ratings for a search match.
+     * Subclasses must override this method.
+     *
+     * @abstract
+     * @param {Object} _match - Provider-specific match object from {@link search}.
+     * @param {string} _displayTitle - Original Netflix display title (for logging).
+     * @returns {Promise<Title|null>} A `Title` with ratings populated, or `null`
+     *   if details could not be retrieved.
+     */
     async getDetails(_match, _displayTitle) {
         throw new Error('Not implemented');
     }
