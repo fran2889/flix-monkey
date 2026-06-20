@@ -24,16 +24,20 @@ jobs:
                   node-version: '24'
                   cache: 'npm'
             - run: npm ci --ignore-scripts
-            - run: npm rebuild sharp
-            - run: npm run build:chrome
-            - name: Publish to Chrome Web Store
-              run: npm run publish:chrome
+            - name: Download Chrome artifact from release
               env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ inputs.tag }}
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-chrome.zip" --dir dist
+            - name: Publish to Chrome Web Store
+              env:
+                  TAG: ${{ inputs.tag }}
                   EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
                   PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
                   CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
                   CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
                   REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+              run: npx --no-install chrome-webstore-upload --source "dist/FlixMonkey-$TAG-chrome.zip"
 
     publish-firefox:
         runs-on: ubuntu-latest
@@ -47,11 +51,19 @@ jobs:
                   node-version: '24'
                   cache: 'npm'
             - run: npm ci --ignore-scripts
-            - run: npm rebuild sharp
-            - run: npm run build:firefox
-            - run: npm run package:source
+            - name: Download Firefox artifacts from release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ inputs.tag }}
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern 'FlixMonkey-source.zip' --dir dist
+            - name: Unpack the released add-on
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  mkdir -p dist/firefox
+                  unzip -o "dist/FlixMonkey-$TAG-firefox.xpi" -d dist/firefox
             - name: Publish to Firefox Add-ons
-              run: npm run publish:firefox
               env:
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code dist/FlixMonkey-source.zip --approval-timeout 0
