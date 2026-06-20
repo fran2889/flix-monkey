@@ -1,0 +1,98 @@
+name: Publish to Stores
+
+on:
+    workflow_run:
+        workflows: ['Release Please']
+        types: [completed]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: 'Release tag to publish (e.g. v1.0.2)'
+                required: true
+                type: string
+
+permissions:
+    contents: read
+    actions: read
+
+jobs:
+    resolve-release:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        if: >-
+            github.event_name == 'workflow_dispatch' ||
+            github.event.workflow_run.conclusion == 'success'
+        outputs:
+            tag: ${{ steps.info.outputs.tag }}
+            skip: ${{ steps.info.outputs.skip }}
+        steps:
+            - name: Resolve release tag
+              id: info
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_REPO: ${{ github.repository }}
+                  RUN_ID: ${{ github.event.workflow_run.id }}
+                  DISPATCH_TAG: ${{ github.event.inputs.tag }}
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                      echo "tag=$DISPATCH_TAG" >> "$GITHUB_OUTPUT"
+                      echo "skip=false" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+                  if gh run download "$RUN_ID" --name release-info --dir release-info; then
+                      tag="$(cat release-info/release-tag.txt)"
+                      echo "Publishing tag $tag"
+                      echo "tag=$tag" >> "$GITHUB_OUTPUT"
+                      echo "skip=false" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "No release-info artifact found; no release was cut. Skipping."
+                      echo "skip=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+    publish-chrome:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: resolve-release
+        if: needs.resolve-release.outputs.skip != 'true'
+        steps:
+            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              with:
+                  ref: ${{ needs.resolve-release.outputs.tag }}
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+              with:
+                  node-version: '24'
+                  cache: 'npm'
+            - run: npm ci --ignore-scripts
+            - run: npm rebuild sharp
+            - run: npm run build:chrome
+            - name: Publish to Chrome Web Store
+              run: npm run publish:chrome
+              env:
+                  EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+                  PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+                  CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+                  CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+                  REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+    publish-firefox:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: resolve-release
+        if: needs.resolve-release.outputs.skip != 'true'
+        steps:
+            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              with:
+                  ref: ${{ needs.resolve-release.outputs.tag }}
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+              with:
+                  node-version: '24'
+                  cache: 'npm'
+            - run: npm ci --ignore-scripts
+            - run: npm rebuild sharp
+            - run: npm run build:firefox
+            - run: npm run package:source
+            - name: Publish to Firefox Add-ons
+              run: npm run publish:firefox
+              env:
+                  WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+                  WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
