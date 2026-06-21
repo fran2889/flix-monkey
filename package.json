@@ -1,7 +1,7 @@
 {
     "name": "FlixMonkey",
     "version": "1.0.1",
-    "description": "Show IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix thumbnails and banners",
+    "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.",
     "author": "fran",
     "license": "GPL-3.0-or-later",
     "homepage": "https://github.com/fran2889/flix-monkey",

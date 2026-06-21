@@ -2,7 +2,8 @@
     "packages": {
         ".": {
             "release-type": "node",
-            "package-name": "FlixMonkey"
+            "package-name": "FlixMonkey",
+            "include-component-in-tag": false
         }
     }
 }
