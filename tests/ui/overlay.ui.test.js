@@ -211,7 +211,7 @@ describe('Overlay UI Interactions', () => {
         expect(spy).toHaveBeenCalled();
     });
 
-    it('should stop propagation on RT and MC rating clicks', () => {
+    it('should stop propagation on MC and RT rating clicks', () => {
         const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
         const titleObj = {
