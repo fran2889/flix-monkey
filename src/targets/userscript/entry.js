@@ -37,19 +37,3 @@ adapter.registerMenuCommand('FlixMonkey Settings', () => {
         modal.open();
     });
 });
-
-adapter.registerMenuCommand('Clear Cache', async () => {
-    if (confirm('Are you sure you want to clear the FlixMonkey cache?')) {
-        await app.clearCache();
-        alert('Cache cleared.');
-    }
-});
-
-adapter.registerMenuCommand('Reset Disabled Clients', async () => {
-    const reenabled = await app.resetDisabledClients();
-    if (reenabled.length > 0) {
-        alert(`Re-enabled API clients: ${reenabled.join(', ')}`);
-    } else {
-        alert('No disabled API clients found to re-enable.');
-    }
-});
