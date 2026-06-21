@@ -162,7 +162,7 @@ export class FlixMonkeyApp {
     }
 
     init() {
-        // #initialised is never reset — one app instance, one lifetime.
+        // #initialised is never reset: one app instance, one lifetime.
         if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
         this.#initialised = true;
         this.#renderer.injectStyles();

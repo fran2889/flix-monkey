@@ -151,7 +151,7 @@ describe('Firefox Background Script', () => {
     });
 
     it('should ignore messages from external senders', async () => {
-        // browser.runtime.id is undefined in test env — sender.id must match it
+        // browser.runtime.id is undefined in test env; sender.id must match it
         const result = await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
             { id: 'some-other-extension-id' }

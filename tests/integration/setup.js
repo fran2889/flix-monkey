@@ -27,5 +27,5 @@ const REQUIRED_KEYS = ['XMDB_API_KEY', 'OMDB_API_KEY'];
 
 const missing = REQUIRED_KEYS.filter(key => !process.env[key]);
 if (missing.length > 0) {
-    throw new Error(`Integration tests require ${REQUIRED_KEYS.join(', ')} — missing: ${missing.join(', ')}`);
+    throw new Error(`Integration tests require ${REQUIRED_KEYS.join(', ')}; missing: ${missing.join(', ')}`);
 }
