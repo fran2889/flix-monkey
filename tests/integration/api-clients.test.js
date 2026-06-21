@@ -245,7 +245,7 @@ describe('api-clients integration', () => {
         // OMDB does not reliably resolve original foreign-language titles.
         // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
         // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
-        it('OMDB — does not resolve to expected ID', async () => {
+        it('OMDB: does not resolve to expected ID', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expect(result).toBeInstanceOf(Title);

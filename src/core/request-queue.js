@@ -68,7 +68,7 @@ export class RequestQueue {
                 continue;
             }
 
-            // No wait needed — fire immediately without re-reading storage
+            // No wait needed. Fire immediately without re-reading storage
             this.#lastLocalReqTime = Date.now();
             if (this.#globalSyncKey && this.#adapter) {
                 await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
