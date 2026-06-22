@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/fran2889/flix-monkey/compare/v1.1.0...v1.1.1) (2026-06-22)
+
+
+### Miscellaneous Chores
+
+* release 1.1.1 ([#31](https://github.com/fran2889/flix-monkey/issues/31)) ([37ad552](https://github.com/fran2889/flix-monkey/commit/37ad552465d97ccbce93d3c27f899336a313b388))
+
 ## [1.1.0](https://github.com/fran2889/flix-monkey/compare/v1.0.1...v1.1.0) (2026-06-22)
 
 
