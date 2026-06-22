@@ -1,0 +1,70 @@
+name: Publish to Stores
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: 'Release tag to publish (e.g. v1.0.2)'
+                required: true
+                type: string
+
+permissions:
+    contents: read
+
+jobs:
+    publish-chrome:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              with:
+                  ref: ${{ inputs.tag }}
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+              with:
+                  node-version: '24'
+                  cache: 'npm'
+            - run: npm ci --ignore-scripts
+            - name: Download Chrome artifact from release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ inputs.tag }}
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-chrome.zip" --dir dist
+            - name: Publish to Chrome Web Store
+              env:
+                  TAG: ${{ inputs.tag }}
+                  EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+                  PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+                  CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+                  CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+                  REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+              run: npx --no-install chrome-webstore-upload --source "dist/FlixMonkey-$TAG-chrome.zip"
+
+    publish-firefox:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+              with:
+                  ref: ${{ inputs.tag }}
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+              with:
+                  node-version: '24'
+                  cache: 'npm'
+            - run: npm ci --ignore-scripts
+            - name: Download Firefox artifacts from release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ inputs.tag }}
+              run: gh release download "$TAG" --pattern "FlixMonkey-$TAG-firefox.xpi" --pattern "FlixMonkey-$TAG-source.zip" --dir dist
+            - name: Unpack the released add-on
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  mkdir -p dist/firefox
+                  unzip -o "dist/FlixMonkey-$TAG-firefox.xpi" -d dist/firefox
+            - name: Publish to Firefox Add-ons
+              env:
+                  TAG: ${{ inputs.tag }}
+                  WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+                  WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0

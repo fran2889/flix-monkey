@@ -61,6 +61,14 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 
 If you are an AI agent, please refer to [AGENTS.md](./AGENTS.md) for specialized instructions on codebase conventions, architectural patterns, and tool usage.
 
+## Store publishing
+
+Releases are published to the Chrome Web Store and Firefox Add-ons by manually
+running the `Publish to Stores` workflow for a chosen release tag; it reuses the
+artifacts attached to that GitHub Release. For the required repository secrets
+and the AMO source-build instructions, see
+[docs/STORE_PUBLISHING.md](docs/STORE_PUBLISHING.md).
+
 ## License
 
 By contributing to FlixMonkey, you agree that your contributions will be licensed under the GNU General Public License v3.0.
