@@ -31,8 +31,16 @@ jobs:
             - name: Build artifacts
               if: ${{ steps.release.outputs.release_created }}
               run: npm run build
+            - name: Build source archive
+              if: ${{ steps.release.outputs.release_created }}
+              run: npm run package:source
             - name: Upload to Release
               if: ${{ steps.release.outputs.release_created }}
               run: gh release upload "${{ steps.release.outputs.tag_name }}" dist/*.zip dist/*.xpi dist/*.user.js
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Publish Release
+              if: ${{ steps.release.outputs.release_created }}
+              run: gh release edit "${{ steps.release.outputs.tag_name }}" --draft=false
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -129,39 +129,35 @@ describe('SettingsUI', () => {
         expect(container.querySelector('#fm-status').textContent).toBe('Saved!');
     });
 
-    it('should clear cache when clicking Clear Cache and confirmed', async () => {
-        window.confirm = vi.fn(() => true);
+    it('should clear cache when clicking Clear Cache', async () => {
         await settingsUI.render(container);
         const clearBtn = container.querySelector('#fm-clearCacheBtn');
         clearBtn.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
         expect(mockCacheManager.clear).toHaveBeenCalled();
         expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
     });
 
-    it('should NOT clear cache if NOT confirmed', async () => {
-        window.confirm = vi.fn(() => false);
-        await settingsUI.render(container);
-        const clearBtn = container.querySelector('#fm-clearCacheBtn');
-        clearBtn.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        expect(window.confirm).toHaveBeenCalledWith('Clear all cached ratings?');
-        expect(container.querySelector('#fm-status').textContent).toBe('');
-    });
-
-    it('should reset clients when clicking Reset Disabled Clients and confirmed', async () => {
-        window.confirm = vi.fn(() => true);
+    it('should reset clients and list re-enabled ones when clicking Reset Disabled Clients', async () => {
+        mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
         await settingsUI.render(container);
         const resetBtn = container.querySelector('#fm-resetClientsBtn');
         resetBtn.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(window.confirm).toHaveBeenCalledWith('Re-enable all disabled API clients?');
         expect(mockDisabledClientsManager.resetAll).toHaveBeenCalled();
-        expect(container.querySelector('#fm-status').textContent).toBe('API clients re-enabled.');
+        expect(container.querySelector('#fm-status').textContent).toBe('Re-enabled API clients: omdb, tmdb');
+    });
+
+    it('should report when there are no disabled clients to re-enable', async () => {
+        mockDisabledClientsManager.resetAll.mockResolvedValue([]);
+        await settingsUI.render(container);
+        const resetBtn = container.querySelector('#fm-resetClientsBtn');
+        resetBtn.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(container.querySelector('#fm-status').textContent).toBe('No disabled API clients found to re-enable.');
     });
 
     it('should disable the save button while saving and re-enable it after', async () => {

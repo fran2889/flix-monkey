@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.1](https://github.com/fran2889/flix-monkey/compare/v1.1.0...v1.1.1) (2026-06-22)
+
+
+### Miscellaneous Chores
+
+* release 1.1.1 ([#31](https://github.com/fran2889/flix-monkey/issues/31)) ([37ad552](https://github.com/fran2889/flix-monkey/commit/37ad552465d97ccbce93d3c27f899336a313b388))
+
+## [1.1.0](https://github.com/fran2889/flix-monkey/compare/v1.0.1...v1.1.0) (2026-06-22)
+
+
+### Features
+
+* redesign options UI for compact layout ([#22](https://github.com/fran2889/flix-monkey/issues/22)) ([d476bb8](https://github.com/fran2889/flix-monkey/commit/d476bb8eb841cc3a95bdd1fe1fb6f34cb33c6d3b))
+
+
+### Bug Fixes
+
+* **deps:** bump undici from 7.27.0 to 7.28.0 ([#15](https://github.com/fran2889/flix-monkey/issues/15)) ([9d7ee80](https://github.com/fran2889/flix-monkey/commit/9d7ee8043d8f06910eedb6e9b0024dfafeec92d9))
+* expand integration tests, fix IMDBAPI rate limit, add Title.type field ([#13](https://github.com/fran2889/flix-monkey/issues/13)) ([eec6f72](https://github.com/fran2889/flix-monkey/commit/eec6f72349a4f4c47c5c0cecb7eb639a6f2fb6ed))
+* **firefox:** add required data_collection_permissions, bump min version to 140 ([3954fe7](https://github.com/fran2889/flix-monkey/commit/3954fe78b951f8da7cf23b987e6c6fb4f636d38a))
+* stop caching not-found results from disabled clients and API errors ([99beded](https://github.com/fran2889/flix-monkey/commit/99bededd3c088e6ac0bb4035fbd7bc4f3ba02a19))
+* **ui:** drop broken confirm dialogs and redundant menu items ([#28](https://github.com/fran2889/flix-monkey/issues/28)) ([09c8364](https://github.com/fran2889/flix-monkey/commit/09c8364b4212d5b874aaf0cc1c07eddd1aaadcf4))
+
 ## [1.0.1](https://github.com/fran2889/flix-monkey/compare/FlixMonkey-v1.0.0...FlixMonkey-v1.0.1) (2026-06-14)
 
 ### Bug Fixes
