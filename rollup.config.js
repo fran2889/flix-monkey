@@ -5,7 +5,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
-const { name, homepage, version, description, author, license } = pkg;
+const { name, homepage, supportSite, version, description, author, license } = pkg;
 
 async function userscriptBanner() {
     const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
@@ -73,7 +73,7 @@ function resizeIcons(srcPath, destDir) {
     };
 }
 
-function injectManifestMetadata(srcPath, destPath) {
+function injectManifestMetadata(srcPath, destPath, targetName) {
     return {
         name: 'inject-manifest-metadata',
         generateBundle() {
@@ -82,7 +82,7 @@ function injectManifestMetadata(srcPath, destPath) {
             manifest.name = name;
             manifest.version = version;
             manifest.description = description;
-            manifest.homepage_url = homepage;
+            manifest.homepage_url = targetName === 'firefox' ? supportSite : homepage;
             const iconsBlock = Object.fromEntries(ICON_SIZES.map(size => [String(size), `icons/icon-${size}.png`]));
             manifest.icons = iconsBlock;
             manifest.action = { ...manifest.action, default_icon: iconsBlock };
@@ -124,7 +124,7 @@ const configsByTarget = {
             plugins: [
                 ...sharedPlugins(),
                 copyStatic([['src/targets/extension/options.html', 'dist/firefox/options.html']]),
-                injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json'),
+                injectManifestMetadata('src/targets/firefox/manifest.json', 'dist/firefox/manifest.json', 'firefox'),
                 resizeIcons('src/assets/icons/icon.png', 'dist/firefox'),
             ],
         },
@@ -146,7 +146,7 @@ const configsByTarget = {
             plugins: [
                 ...sharedPlugins(),
                 copyStatic([['src/targets/extension/options.html', 'dist/chrome/options.html']]),
-                injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json'),
+                injectManifestMetadata('src/targets/chrome/manifest.json', 'dist/chrome/manifest.json', 'chrome'),
                 resizeIcons('src/assets/icons/icon.png', 'dist/chrome'),
             ],
         },

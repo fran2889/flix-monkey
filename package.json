@@ -5,6 +5,7 @@
     "author": "fran",
     "license": "GPL-3.0-or-later",
     "homepage": "https://github.com/fran2889/flix-monkey",
+    "supportSite": "https://github.com/fran2889/flix-monkey/issues",
     "type": "module",
     "scripts": {
         "prepare": "husky",
