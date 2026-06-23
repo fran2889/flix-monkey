@@ -24,7 +24,7 @@ import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './consta
 import { ConfigManager } from './config-manager.js';
 import { Logger } from './logger.js';
 import { debounce, runIdle } from './utils.js';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
 
 export class FlixMonkeyApp {
     #api;
@@ -174,13 +174,14 @@ export class FlixMonkeyApp {
 }
 
 function createApiClient(config, disabledManager, adapter, logger) {
-    const provider = (config.get('apiClient') ?? 'imdbapi').trim().toLowerCase();
+    const provider = (config.get('apiClient') ?? 'agregarr').trim().toLowerCase();
     const clientMap = {
+        [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
         [ApiSource.IMDBAPI]: ImdbApiDevClient,
     };
-    const ClientClass = clientMap[provider] ?? ImdbApiDevClient;
+    const ClientClass = clientMap[provider] ?? AgregarrApiClient;
     return new ClientClass(disabledManager, adapter, config, logger);
 }
 

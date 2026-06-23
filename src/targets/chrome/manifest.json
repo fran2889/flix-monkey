@@ -9,7 +9,9 @@
         "https://www.netflix.com/*",
         "https://xmdbapi.com/*",
         "https://www.omdbapi.com/*",
-        "https://api.imdbapi.dev/*"
+        "https://api.imdbapi.dev/*",
+        "https://v3.sg.media-imdb.com/*",
+        "https://api.agregarr.org/*"
     ],
     "background": {
         "service_worker": "service-worker.js"

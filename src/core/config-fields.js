@@ -29,11 +29,12 @@ export const CONFIG_FIELDS = [
         label: 'API Provider',
         type: 'select',
         options: [
+            ['agregarr', 'Agregarr'],
             ['imdbapi', 'IMDb API'],
             ['omdb', 'OMDB'],
             ['xmdb', 'XMDB'],
         ],
-        default: 'imdbapi',
+        default: 'agregarr',
         title: 'Which service to fetch ratings from.',
     },
     {

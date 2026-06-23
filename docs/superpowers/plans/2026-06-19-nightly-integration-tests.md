@@ -34,7 +34,7 @@
 
 The integration file's unique cases are: the `CONFIG_DEFAULTS` round-trip over every key, error-path with explicit fallback, null→defaults, non-string (already-numeric) values, and falsy-but-valid values (`0` / `''`). The plain null→default and logger.warn cases are already covered in the unit file and are dropped.
 
-- [ ] **Step 1: Add the migrated cases to the unit file**
+- [x] **Step 1: Add the migrated cases to the unit file**
 
 Append the following inside the existing `describe('ConfigManager', () => { ... })` block in `tests/unit/core/config-manager.test.js`, just before its closing `});` (line 77):
 
@@ -88,18 +88,18 @@ it('should handle falsy but valid values (0 and empty string)', () => {
 });
 ```
 
-- [ ] **Step 2: Delete the integration file**
+- [x] **Step 2: Delete the integration file**
 
 ```bash
 git rm tests/integration/config-manager.test.js
 ```
 
-- [ ] **Step 3: Run the unit suite to verify the migrated cases pass**
+- [x] **Step 3: Run the unit suite to verify the migrated cases pass**
 
 Run: `npx vitest run tests/unit/core/config-manager.test.js`
 Expected: PASS — all cases green, including the new `it.each` over `CONFIG_DEFAULTS`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/config-manager.test.js
@@ -122,7 +122,7 @@ git commit -m "test: move ConfigManager integration cases into unit suite"
 
 The integration test used a `mockFetch` returning `{ status: 200 }` (no real network) and a dead `it.skip` branch. Migrate only the concurrency assertion.
 
-- [ ] **Step 1: Add the migrated case to the unit file**
+- [x] **Step 1: Add the migrated case to the unit file**
 
 Append the following inside the existing `describe('RequestQueue', () => { ... })` block in `tests/unit/core/request-queue.test.js`, just before its closing `});` (line 107):
 
@@ -143,18 +143,18 @@ it('should resolve multiple concurrently enqueued requests', async () => {
 });
 ```
 
-- [ ] **Step 2: Delete the integration file**
+- [x] **Step 2: Delete the integration file**
 
 ```bash
 git rm tests/integration/request-queue.test.js
 ```
 
-- [ ] **Step 3: Run the unit suite to verify the migrated case passes**
+- [x] **Step 3: Run the unit suite to verify the migrated case passes**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.js`
 Expected: PASS — all cases green, including `should resolve multiple concurrently enqueued requests`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/request-queue.test.js
@@ -176,7 +176,7 @@ git commit -m "test: move RequestQueue concurrency case into unit suite"
 - Consumes: `process.env.XMDB_API_KEY`, `process.env.OMDB_API_KEY`.
 - Produces: `vitest.integration.config.js` — used by Task 4's `test:integration` script and Task 6's nightly workflow.
 
-- [ ] **Step 1: Rewrite `tests/integration/setup.js` as a fail-fast credential guard**
+- [x] **Step 1: Rewrite `tests/integration/setup.js` as a fail-fast credential guard**
 
 Replace the file body below the license header (keep the existing GPL header block, lines 1–17) with:
 
@@ -199,7 +199,7 @@ if (missing.length > 0) {
 
 (The `hasCredentials` export is intentionally removed; no file imports it after this task.)
 
-- [ ] **Step 2: Create `vitest.integration.config.js`**
+- [x] **Step 2: Create `vitest.integration.config.js`**
 
 This config has no license header, matching `vitest.config.js`.
 
@@ -215,7 +215,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: De-skip the API client tests**
+- [x] **Step 3: De-skip the API client tests**
 
 In `tests/integration/api-clients.test.js`:
 
@@ -228,21 +228,21 @@ Run this to confirm no `skipIf`/`hasCredentials` references remain:
 Run: `grep -n "skipIf\|hasCredentials\|xmdbCreds\|omdbCreds" tests/integration/api-clients.test.js`
 Expected: no output.
 
-- [ ] **Step 4: Verify the guard fails loudly when keys are missing**
+- [x] **Step 4: Verify the guard fails loudly when keys are missing**
 
 Run (forcing both keys empty so the guard's `.env` load cannot satisfy them):
 
 Run: `XMDB_API_KEY= OMDB_API_KEY= npx vitest run -c vitest.integration.config.js`
 Expected: FAIL — error message `Integration tests require XMDB_API_KEY, OMDB_API_KEY — missing: XMDB_API_KEY, OMDB_API_KEY`.
 
-- [ ] **Step 5: Verify the suite runs when keys are present**
+- [x] **Step 5: Verify the suite runs when keys are present**
 
 If a local `.env` with real `XMDB_API_KEY` and `OMDB_API_KEY` exists:
 
 Run: `npx vitest run -c vitest.integration.config.js`
 Expected: PASS (live API). If no local keys are available, skip this step and note it — the nightly will exercise it.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/integration/setup.js vitest.integration.config.js tests/integration/api-clients.test.js
@@ -262,7 +262,7 @@ git commit -m "test: enforce integration API keys and add integration vitest con
 - Consumes: `vitest.integration.config.js` from Task 3.
 - Produces: updated npm scripts used by CI jobs in Task 5.
 
-- [ ] **Step 1: Update the scripts**
+- [x] **Step 1: Update the scripts**
 
 In `package.json`, change these four script lines:
 
@@ -276,17 +276,17 @@ In `package.json`, change these four script lines:
 
 (`test:unit` and `test:ui` are unchanged in value; shown for placement. Only `test`, `test:integration`, and `test:coverage` change.)
 
-- [ ] **Step 2: Verify default test run excludes integration**
+- [x] **Step 2: Verify default test run excludes integration**
 
 Run: `npm test`
 Expected: PASS — runs only `tests/unit` and `tests/ui`; no integration tests appear and no credential error is thrown.
 
-- [ ] **Step 3: Verify coverage run excludes integration**
+- [x] **Step 3: Verify coverage run excludes integration**
 
 Run: `npm run test:coverage`
 Expected: PASS — coverage report generated over unit + ui; thresholds (90% lines/functions) still met; no credential error.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add package.json
@@ -306,7 +306,7 @@ git commit -m "build: scope default and coverage test scripts to unit and ui"
 - Consumes: nothing.
 - Produces: nothing consumed by later tasks.
 
-- [ ] **Step 1: Delete the `test-integration` job**
+- [x] **Step 1: Delete the `test-integration` job**
 
 Remove this entire block from `ci.yml` (lines 52–62):
 
@@ -324,7 +324,7 @@ test-integration:
         - run: npm run test:integration
 ```
 
-- [ ] **Step 2: Drop `test-integration` from the merge-gate needs**
+- [x] **Step 2: Drop `test-integration` from the merge-gate needs**
 
 Change the `merge-gate` `needs:` line from:
 
@@ -338,7 +338,7 @@ to:
 needs: [lint-and-audit, build, test-unit, test-ui, test-coverage]
 ```
 
-- [ ] **Step 3: Verify the workflow is valid YAML and no stale references remain**
+- [x] **Step 3: Verify the workflow is valid YAML and no stale references remain**
 
 Run: `grep -n "test-integration" .github/workflows/ci.yml`
 Expected: no output.
@@ -346,7 +346,7 @@ Expected: no output.
 Run: `node -e "require('js-yaml')" 2>/dev/null && npx --yes js-yaml .github/workflows/ci.yml >/dev/null && echo VALID || python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/ci.yml')); print('VALID')"`
 Expected: `VALID`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -366,7 +366,7 @@ git commit -m "ci: remove integration tests from per-PR pipeline"
 - Consumes: `npm run test:integration` (Task 4), `vitest.integration.config.js` (Task 3), Actions secrets `XMDB_API_KEY` / `OMDB_API_KEY`.
 - Produces: nothing consumed by later tasks.
 
-- [ ] **Step 1: Create `.github/workflows/nightly.yml`**
+- [x] **Step 1: Create `.github/workflows/nightly.yml`**
 
 ```yaml
 name: Nightly Integration
@@ -396,19 +396,19 @@ jobs:
                   OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
 ```
 
-- [ ] **Step 2: Verify the workflow is valid YAML**
+- [x] **Step 2: Verify the workflow is valid YAML**
 
 Run: `npx --yes js-yaml .github/workflows/nightly.yml >/dev/null && echo VALID || python3 -c "import yaml; yaml.safe_load(open('.github/workflows/nightly.yml')); print('VALID')"`
 Expected: `VALID`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/nightly.yml
 git commit -m "ci: run integration tests as a nightly workflow"
 ```
 
-- [ ] **Step 4: Manual follow-up (out of band, not a commit)**
+- [x] **Step 4: Manual follow-up (out of band, not a commit)**
 
 Add repository Actions secrets `XMDB_API_KEY` and `OMDB_API_KEY` (Settings → Secrets and variables → Actions). Until added, the nightly run fails at the credential guard by design. Optionally trigger a manual run via the workflow's `workflow_dispatch` to confirm.
 
@@ -425,7 +425,7 @@ Add repository Actions secrets `XMDB_API_KEY` and `OMDB_API_KEY` (Settings → S
 - Consumes: nothing.
 - Produces: nothing consumed by later tasks.
 
-- [ ] **Step 1: Update the Test Suites table**
+- [x] **Step 1: Update the Test Suites table**
 
 Replace the table rows so they read:
 
@@ -440,7 +440,7 @@ Replace the table rows so they read:
 | `npx vitest -t "name"`     | Filter by test name                   |
 ```
 
-- [ ] **Step 2: Update the Test Layout tree**
+- [x] **Step 2: Update the Test Layout tree**
 
 Change the `integration/` block so it lists only the two remaining files:
 
@@ -450,7 +450,7 @@ Change the `integration/` block so it lists only the two remaining files:
     api-clients.test.js
 ```
 
-- [ ] **Step 3: Rewrite the Integration Tests section**
+- [x] **Step 3: Rewrite the Integration Tests section**
 
 Replace the paragraph under `### Integration Tests` with:
 
@@ -465,7 +465,7 @@ secrets. If either key is missing the suite **fails fast** with a clear error
 rather than skipping. Do not mock HTTP in integration tests.
 ```
 
-- [ ] **Step 4: Update the integration credentials note (~line 312)**
+- [x] **Step 4: Update the integration credentials note (~line 312)**
 
 Replace the bullet:
 
@@ -473,12 +473,12 @@ Replace the bullet:
 - **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment — a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
 ```
 
-- [ ] **Step 5: Verify formatting passes**
+- [x] **Step 5: Verify formatting passes**
 
 Run: `npm run format:check`
 Expected: PASS (no formatting diffs in `AGENTS.md`). If it reports a diff, run `npm run format` and re-stage.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add AGENTS.md
@@ -489,9 +489,9 @@ git commit -m "docs: document nightly integration tests and credential enforceme
 
 ## Final Verification
 
-- [ ] Run `npm test` → unit + ui pass, no integration, no credential error.
-- [ ] Run `npm run test:coverage` → passes, thresholds met.
-- [ ] Run `XMDB_API_KEY= OMDB_API_KEY= npx vitest run -c vitest.integration.config.js` → fails with the missing-keys message.
-- [ ] Run `grep -rn "test-integration" .github/workflows/ci.yml` → no output.
-- [ ] Run `grep -rn "hasCredentials" tests/` → no output.
-- [ ] Confirm `git status` shows only intended changes.
+- [x] Run `npm test` → unit + ui pass, no integration, no credential error.
+- [x] Run `npm run test:coverage` → passes, thresholds met.
+- [x] Run `XMDB_API_KEY= OMDB_API_KEY= npx vitest run -c vitest.integration.config.js` → fails with the missing-keys message.
+- [x] Run `grep -rn "test-integration" .github/workflows/ci.yml` → no output.
+- [x] Run `grep -rn "hasCredentials" tests/` → no output.
+- [x] Confirm `git status` shows only intended changes.

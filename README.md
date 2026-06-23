@@ -4,11 +4,11 @@ A multi-platform browser extension and userscript that overlays IMDb, Metacritic
 
 ## Overview
 
-FlixMonkey enriches your Netflix browsing experience by displaying aggregated ratings from multiple sources. It fetches data from independent APIs (IMDb API, XMDB, and OMDB) with automatic fallback, caches results locally for fast subsequent lookups, and intelligently deduplicates concurrent requests for the same title.
+FlixMonkey enriches your Netflix browsing experience by displaying aggregated ratings from multiple sources. It fetches data from independent APIs (Agregarr, IMDb API, XMDB, and OMDB), caches results locally for fast subsequent lookups, and intelligently deduplicates concurrent requests for the same title.
 
 The project is available as a **Chrome Extension**, **Firefox Add-on**, and a **Tampermonkey/Violentmonkey Userscript**. All versions share a common core and provide a feature-equivalent experience.
 
-By default, it uses a free public IMDb API for ratings. Optional keys for OMDB and XMDB unlock Metacritic and Rotten Tomatoes scores.
+By default, it uses [Agregarr](https://github.com/agregarr/agregarr) for IMDb ratings (no API key needed). Optional keys for OMDB and XMDB unlock Metacritic and Rotten Tomatoes scores.
 
 ---
 
@@ -85,7 +85,7 @@ Access settings to customize your experience:
 | Option               | Default    | Description                                                                                |
 | -------------------- | ---------- | ------------------------------------------------------------------------------------------ |
 | **Overlay Position** | `top-left` | Corner where the rating badge appears.                                                     |
-| **API Client**       | `imdbapi`  | The primary API service to query for ratings.                                              |
+| **API Client**       | `agregarr` | The primary API service to query for ratings.                                              |
 | **OMDB API Key**     | `Optional` | Provides Metacritic/RT scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
 | **XMDB API Key**     | `Optional` | Additional movie/TV database. [Get a free key here](https://xmdbapi.com/api-key).          |
 
@@ -157,14 +157,14 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (IMDb API, OMDB, XMDB) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (Agregarr, IMDb API, OMDB, XMDB) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
 
 **Third-party APIs:**
 
-When enabled, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). Your use of those services is subject to their respective privacy policies. The free [IMDb API](https://api.imdbapi.dev/) used by default similarly receives only title name queries.
+By default, title lookups are resolved via [IMDb](https://www.imdb.com/) suggestions and ratings are fetched from [Agregarr](https://github.com/agregarr/agregarr). When OMDB or XMDB is selected, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). The [IMDb API](https://api.imdbapi.dev/) is also available as an alternative provider. Your use of these services is subject to their respective privacy policies.
 
 ---
 
