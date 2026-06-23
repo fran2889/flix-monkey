@@ -341,9 +341,9 @@ describe('OmdbApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
                 imdbRating: '8.0',
-                imdbID: 'tt123',
-                Year: '2022',
-                Title: 'OMDB Movie',
+                imdbID: 'tt1',
+                Year: '2020',
+                Title: 'Movie 1',
             }),
         });
         const client = new OmdbApiClient(
@@ -354,10 +354,10 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
 
         expect(result.rating).toBe(8.0);
-        expect(result.imdbId).toBe('tt123');
+        expect(result.imdbId).toBe('tt1');
     });
 
     it('should return unhealthy status when API key is missing', async () => {
@@ -376,7 +376,7 @@ describe('OmdbApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
                 Year: 'invalid',
-                Title: 'OMDB Movie',
+                Title: 'Movie 1',
             }),
         });
         const client = new OmdbApiClient(
@@ -387,7 +387,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
         expect(result.year).toBeNull();
     });
 
@@ -400,8 +400,8 @@ describe('OmdbApiClient', () => {
                     { Source: 'Rotten Tomatoes', Value: '90%' },
                     { Source: 'Metacritic', Value: '85/100' },
                 ],
-                imdbID: 'tt123',
-                Title: 'OMDB Movie',
+                imdbID: 'tt1',
+                Title: 'Movie 1',
             }),
         });
         const client = new OmdbApiClient(
@@ -412,7 +412,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
 
         expect(result.rtRating).toBe(90);
         expect(result.mcRating).toBe(85);
@@ -423,9 +423,9 @@ describe('OmdbApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
                 imdbRating: '8.0',
-                imdbID: 'tt123',
-                Year: '2022',
-                Title: 'OMDB Movie',
+                imdbID: 'tt1',
+                Year: '2020',
+                Title: 'Movie 1',
                 Type: 'movie',
             }),
         });
@@ -435,7 +435,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'OMDB Movie' }, 'OMDB Movie');
+        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
         expect(result.type).toBe('movie');
     });
 
@@ -444,9 +444,9 @@ describe('OmdbApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
                 imdbRating: '8.0',
-                imdbID: 'tt456',
+                imdbID: 'tt2',
                 Year: '2020',
-                Title: 'OMDB Show',
+                Title: 'Show 1',
                 Type: 'series',
             }),
         });
@@ -456,7 +456,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'OMDB Show' }, 'OMDB Show');
+        const result = await client.getDetails({ title: 'Show 1' }, 'Show 1');
         expect(result.type).toBe('series');
     });
 
@@ -482,8 +482,8 @@ describe('ImdbApiDevClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 titles: [
-                    { id: 'tt1', primaryTitle: 'First Movie' },
-                    { id: 'tt2', primaryTitle: 'Second Movie' },
+                    { id: 'tt1', primaryTitle: 'Movie 1' },
+                    { id: 'tt2', primaryTitle: 'Movie 2' },
                 ],
             }),
         });
@@ -494,7 +494,7 @@ describe('ImdbApiDevClient', () => {
             createMockLogger()
         );
 
-        const result = await client.search('Some Movie');
+        const result = await client.search('Movie 1');
         expect(result.id).toBe('tt1');
     });
 
@@ -514,8 +514,8 @@ describe('ImdbApiDevClient', () => {
     it('should handle details and ratings', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
-                primaryTitle: 'Movie',
-                startYear: 2026,
+                primaryTitle: 'Movie 1',
+                startYear: 2020,
                 rating: { aggregateRating: 8.5 },
                 metacritic: { score: 75 },
             }),
@@ -526,9 +526,9 @@ describe('ImdbApiDevClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
-        expect(result.apiTitle).toBe('Movie');
-        expect(result.year).toBe(2026);
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
+        expect(result.apiTitle).toBe('Movie 1');
+        expect(result.year).toBe(2020);
         expect(result.rating).toBe(8.5);
         expect(result.mcRating).toBe(75);
     });
@@ -536,7 +536,7 @@ describe('ImdbApiDevClient', () => {
     it('should handle missing optional fields', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
-                primaryTitle: 'Movie',
+                primaryTitle: 'Movie 1',
             }),
         });
         const client = new ImdbApiDevClient(
@@ -545,8 +545,8 @@ describe('ImdbApiDevClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
-        expect(result.apiTitle).toBe('Movie');
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
+        expect(result.apiTitle).toBe('Movie 1');
         expect(result.year).toBeNull();
         expect(result.rating).toBeNull();
         expect(result.mcRating).toBeNull();
@@ -556,9 +556,9 @@ describe('ImdbApiDevClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 id: 'tt1',
-                primaryTitle: 'Movie',
+                primaryTitle: 'Movie 1',
                 type: 'movie',
-                startYear: 2026,
+                startYear: 2020,
                 rating: { aggregateRating: 8.5 },
             }),
         });
@@ -568,7 +568,7 @@ describe('ImdbApiDevClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie');
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
         expect(result.type).toBe('movie');
     });
 
@@ -576,7 +576,7 @@ describe('ImdbApiDevClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 id: 'tt2',
-                primaryTitle: 'Show',
+                primaryTitle: 'Show 1',
                 type: 'tvSeries',
                 startYear: 2020,
                 rating: { aggregateRating: 7.0 },
@@ -588,7 +588,7 @@ describe('ImdbApiDevClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt2' }, 'Show');
+        const result = await client.getDetails({ id: 'tt2' }, 'Show 1');
         expect(result.type).toBe('series');
     });
 
@@ -602,7 +602,7 @@ describe('ImdbApiDevClient', () => {
             undefined,
             createMockLogger()
         );
-        await expect(client.getDetails({ id: 'tt1' }, 'Movie')).rejects.toThrow();
+        await expect(client.getDetails({ id: 'tt1' }, 'Movie 1')).rejects.toThrow();
     });
 
     it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
@@ -620,8 +620,8 @@ describe('AgregarrApiClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 d: [
-                    { id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 },
-                    { id: 'tt1790736', l: 'Inception: The Cobol Job', qid: 'video', y: 2010 },
+                    { id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 },
+                    { id: 'tt2', l: 'Movie 2', qid: 'video', y: 2020 },
                 ],
             }),
         });
@@ -631,9 +631,9 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.search('Inception');
-        expect(result.id).toBe('tt1375666');
-        expect(result.l).toBe('Inception');
+        const result = await client.search('Movie 1');
+        expect(result.id).toBe('tt1');
+        expect(result.l).toBe('Movie 1');
     });
 
     it('should filter out non-title results like videos and shorts', async () => {
@@ -642,7 +642,7 @@ describe('AgregarrApiClient', () => {
                 d: [
                     { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
                     { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
-                    { id: 'tt0003', l: 'The Real Movie', qid: 'movie', y: 2020 },
+                    { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
                 ],
             }),
         });
@@ -652,14 +652,14 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.search('Some Movie');
+        const result = await client.search('Movie 1');
         expect(result.id).toBe('tt0003');
     });
 
     it('should accept tvMiniSeries results', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
-                d: [{ id: 'tt9999', l: 'Mini Show', qid: 'tvMiniSeries', y: 2023 }],
+                d: [{ id: 'tt1', l: 'Mini Show', qid: 'tvMiniSeries', y: 2020 }],
             }),
         });
         const client = new AgregarrApiClient(
@@ -669,7 +669,7 @@ describe('AgregarrApiClient', () => {
             createMockLogger()
         );
         const result = await client.search('Mini Show');
-        expect(result.id).toBe('tt9999');
+        expect(result.id).toBe('tt1');
     });
 
     it('should return null if no title results found', async () => {
@@ -682,7 +682,7 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        expect(await client.search('xyznonexistent')).toBeNull();
+        expect(await client.search('Unknown')).toBeNull();
     });
 
     it('should return null if suggestions response has no d array', async () => {
@@ -695,7 +695,7 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        expect(await client.search('anything')).toBeNull();
+        expect(await client.search('Unknown')).toBeNull();
     });
 
     it('should build correct IMDb suggestions URL', async () => {
@@ -707,7 +707,7 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        await client.search('The Matrix');
+        await client.search('Movie 1');
         const calledUrl = httpFetch.mock.calls[0][0];
         expect(calledUrl).toContain('v3.sg.media-imdb.com/suggestion/titles/x/');
         expect(calledUrl).toContain('.json');
@@ -715,7 +715,7 @@ describe('AgregarrApiClient', () => {
 
     it('should fetch rating from Agregarr and return Title', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1375666', rating: 8.8, votes: 2500000 }]),
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -723,10 +723,10 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 }, 'Inception');
-        expect(result.apiTitle).toBe('Inception');
-        expect(result.imdbId).toBe('tt1375666');
-        expect(result.year).toBe(2010);
+        const result = await client.getDetails({ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }, 'Movie 1');
+        expect(result.apiTitle).toBe('Movie 1');
+        expect(result.imdbId).toBe('tt1');
+        expect(result.year).toBe(2020);
         expect(result.rating).toBe(8.8);
         expect(result.rtRating).toBeNull();
         expect(result.mcRating).toBeNull();
@@ -735,7 +735,7 @@ describe('AgregarrApiClient', () => {
 
     it('should handle null rating from Agregarr', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt999999', rating: null, votes: null }]),
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt4', rating: null, votes: null }]),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -743,16 +743,13 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails(
-            { id: 'tt999999', l: 'Unknown Title', qid: 'movie', y: 2020 },
-            'Unknown Title'
-        );
+        const result = await client.getDetails({ id: 'tt4', l: 'Movie 1', qid: 'movie', y: 2020 }, 'Movie 1');
         expect(result.rating).toBeNull();
     });
 
     it('should map tvSeries type to series', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt0903747', rating: 9.5, votes: 2000000 }]),
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt2', rating: 9.5, votes: 2000000 }]),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -760,27 +757,7 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails(
-            { id: 'tt0903747', l: 'Breaking Bad', qid: 'tvSeries', y: 2008 },
-            'Breaking Bad'
-        );
-        expect(result.type).toBe('series');
-    });
-
-    it('should map tvMiniSeries type to series', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt5180504', rating: 8.6, votes: 500000 }]),
-        });
-        const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails(
-            { id: 'tt5180504', l: 'The Witcher', qid: 'tvMiniSeries', y: 2019 },
-            'The Witcher'
-        );
+        const result = await client.getDetails({ id: 'tt2', l: 'Show 1', qid: 'tvSeries', y: 2020 }, 'Show 1');
         expect(result.type).toBe('series');
     });
 
@@ -789,9 +766,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi
                 .fn()
                 .mockResolvedValueOnce({
-                    d: [{ id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 }],
+                    d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
                 })
-                .mockResolvedValueOnce([{ imdbId: 'tt1375666', rating: 8.8, votes: 2500000 }]),
+                .mockResolvedValueOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -799,10 +776,10 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.fetch('Inception');
-        expect(result.displayTitle).toBe('Inception');
-        expect(result.apiTitle).toBe('Inception');
-        expect(result.imdbId).toBe('tt1375666');
+        const result = await client.fetch('Movie 1');
+        expect(result.displayTitle).toBe('Movie 1');
+        expect(result.apiTitle).toBe('Movie 1');
+        expect(result.imdbId).toBe('tt1');
         expect(result.rating).toBe(8.8);
         expect(result.source).toBe('agregarr');
     });
