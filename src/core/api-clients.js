@@ -44,6 +44,7 @@ const TITLE_TYPE_MAP = {
     'TV Series': TitleType.SERIES,
     series: TitleType.SERIES,
     tvSeries: TitleType.SERIES,
+    tvMiniSeries: TitleType.SERIES,
 };
 
 function mapTitleType(apiValue) {
