@@ -157,7 +157,7 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (Agregarr, IMDb, OMDB, XMDB) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (Agregarr, IMDb API, OMDB, XMDB) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
