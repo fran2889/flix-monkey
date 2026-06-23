@@ -1,0 +1,6 @@
+name: Title with name
+variables:
+    - name: title
+      value: Paul
+    - name: imdb_id
+      value: tt1092026

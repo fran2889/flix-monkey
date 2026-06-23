@@ -1,0 +1,25 @@
+info:
+    name: suggestion
+    type: http
+    seq: 1
+
+http:
+    method: GET
+    url: https://v3.sg.media-imdb.com/suggestion/titles/x/{{title}}.json
+    headers:
+        - name: Referer
+          value: https://www.imdb.com/
+        - name: User-Agent
+          value: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36
+    auth: inherit
+
+runtime:
+    variables:
+        - name: title
+          value: '{{title}}'
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
