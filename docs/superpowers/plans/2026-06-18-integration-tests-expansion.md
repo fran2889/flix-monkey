@@ -30,7 +30,7 @@
 - Produces: `TitleType.MOVIE` (`'movie'`), `TitleType.SERIES` (`'series'`) — used by Task 2
 - Produces: `Title` constructor accepts `type` param, exposes `this.type` — used by Tasks 2, 3
 
-- [ ] **Step 1: Write failing unit tests for `Title.type`**
+- [x] **Step 1: Write failing unit tests for `Title.type`**
 
 Add to `tests/unit/core/title.test.js`:
 
@@ -59,12 +59,12 @@ describe('type field', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm run test:unit -- --run tests/unit/core/title.test.js`
 Expected: FAIL — `type` property is undefined on Title instances.
 
-- [ ] **Step 3: Add `TitleType` to constants**
+- [x] **Step 3: Add `TitleType` to constants**
 
 In `src/core/constants.js`, add after the `TOP_10_BADGE` line:
 
@@ -75,7 +75,7 @@ export const TitleType = Object.freeze({
 });
 ```
 
-- [ ] **Step 4: Add `type` to Title constructor**
+- [x] **Step 4: Add `type` to Title constructor**
 
 In `src/core/title.js`, change the constructor destructuring to add `type = null` after `source = null`:
 
@@ -99,17 +99,17 @@ Add after the `this.source = source ?? null;` line:
 this.type = type ?? null;
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm run test:unit -- --run tests/unit/core/title.test.js`
 Expected: PASS
 
-- [ ] **Step 6: Run full unit suite to check for regressions**
+- [x] **Step 6: Run full unit suite to check for regressions**
 
 Run: `npm run test:unit -- --run`
 Expected: All tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/constants.js src/core/title.js tests/unit/core/title.test.js
@@ -130,7 +130,7 @@ git commit -m "feat: add TitleType constant and type field to Title"
 - Consumes: `TitleType` from `src/core/constants.js` (Task 1)
 - Produces: Each client's `getDetails()` returns `Title` with `type` set — used by Task 3
 
-- [ ] **Step 1: Write failing unit tests for type mapping**
+- [x] **Step 1: Write failing unit tests for type mapping**
 
 Add to `tests/unit/core/api-clients.test.js`. In the `XmdbApiClient` describe block, add:
 
@@ -314,12 +314,12 @@ it('should map tvSeries type to series', async () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm run test:unit -- --run tests/unit/core/api-clients.test.js`
 Expected: FAIL — `type` is `null` on all results, XMDB empty-title test returns a Title instead of null.
 
-- [ ] **Step 3: Add TitleType import and type mapping helper to api-clients.js**
+- [x] **Step 3: Add TitleType import and type mapping helper to api-clients.js**
 
 In `src/core/api-clients.js`, update the constants import at line 3:
 
@@ -343,7 +343,7 @@ function mapTitleType(apiValue) {
 }
 ```
 
-- [ ] **Step 4: Update XmdbApiClient.getDetails**
+- [x] **Step 4: Update XmdbApiClient.getDetails**
 
 Replace the `getDetails` method in `XmdbApiClient` (lines 147-164):
 
@@ -369,7 +369,7 @@ Replace the `getDetails` method in `XmdbApiClient` (lines 147-164):
     }
 ```
 
-- [ ] **Step 5: Update OmdbApiClient.getDetails**
+- [x] **Step 5: Update OmdbApiClient.getDetails**
 
 Replace the `getDetails` method in `OmdbApiClient` (lines 189-208):
 
@@ -397,7 +397,7 @@ Replace the `getDetails` method in `OmdbApiClient` (lines 189-208):
     }
 ```
 
-- [ ] **Step 6: Update ImdbApiDevClient.getDetails**
+- [x] **Step 6: Update ImdbApiDevClient.getDetails**
 
 Replace the `getDetails` method in `ImdbApiDevClient` (lines 234-253):
 
@@ -424,7 +424,7 @@ Replace the `getDetails` method in `ImdbApiDevClient` (lines 234-253):
     }
 ```
 
-- [ ] **Step 7: Update existing unit test that checks XMDB error throw**
+- [x] **Step 7: Update existing unit test that checks XMDB error throw**
 
 The existing test `'should throw if details fetch returns an error'` in the `XmdbApiClient` describe block mocks a response with `{ error: 'not found' }` and asserts it throws. With the new code it returns `null` instead. Update the assertion:
 
@@ -446,17 +446,17 @@ it('should return null if details fetch returns an error', async () => {
 });
 ```
 
-- [ ] **Step 8: Run tests to verify they pass**
+- [x] **Step 8: Run tests to verify they pass**
 
 Run: `npm run test:unit -- --run tests/unit/core/api-clients.test.js`
 Expected: All PASS.
 
-- [ ] **Step 9: Run full unit suite**
+- [x] **Step 9: Run full unit suite**
 
 Run: `npm run test:unit -- --run`
 Expected: All PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -476,7 +476,7 @@ git commit -m "feat: map title type in API clients, fix XMDB empty-result handli
 - Consumes: `TitleType` from `src/core/constants.js` (Task 1)
 - Consumes: API clients return `Title` with `type` set (Task 2)
 
-- [ ] **Step 1: Rewrite the integration test file**
+- [x] **Step 1: Rewrite the integration test file**
 
 Replace the full contents of `tests/integration/api-clients.test.js`:
 
@@ -735,17 +735,17 @@ describe('api-clients integration', () => {
 });
 ```
 
-- [ ] **Step 2: Run integration tests**
+- [x] **Step 2: Run integration tests**
 
 Run: `npm run test:integration -- --run`
 Expected: All 19 tests PASS (or skip gracefully if credentials are missing).
 
-- [ ] **Step 3: Run full test suite**
+- [x] **Step 3: Run full test suite**
 
 Run: `npm test -- --run`
 Expected: All suites PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/integration/api-clients.test.js
