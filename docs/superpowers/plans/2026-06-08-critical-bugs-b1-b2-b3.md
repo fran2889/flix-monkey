@@ -1,6 +1,6 @@
 # Critical Bug Fixes B1/B2/B3 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix three production bugs — Chrome sender-validation gap (B3), missing logger crash in options page (B1), and persistent loading spinner on API rejection (B2) — each with a targeted test.
 

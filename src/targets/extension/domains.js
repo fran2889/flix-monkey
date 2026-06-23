@@ -15,7 +15,13 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-export const ALLOWED_DOMAINS = ['api.imdbapi.dev', 'www.omdbapi.com', 'xmdbapi.com'];
+export const ALLOWED_DOMAINS = [
+    'api.imdbapi.dev',
+    'www.omdbapi.com',
+    'xmdbapi.com',
+    'v3.sg.media-imdb.com',
+    'api.agregarr.org',
+];
 
 export function validateDomain(url) {
     try {

@@ -1,6 +1,6 @@
 # Multi-Target Build Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [x]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [ ]`) syntax for tracking.
 
 **Goal:** Refactor FlixMonkey from a single-file IIFE userscript into three distribution targets (Tampermonkey userscript, Firefox MV3 extension, Chrome MV3 extension) built from shared ES modules using Rollup.
 
@@ -12,46 +12,47 @@
 
 ## File Map
 
-| File | Status | Purpose |
-|---|---|---|
-| `src/core/constants.js` | Create | Shared constants (extracted verbatim) |
-| `src/core/title.js` | Create | Title class (extracted verbatim) |
-| `src/core/config-fields.js` | Create | Shared field definitions for all targets |
-| `src/core/config.js` | Create | CONFIG object + initConfig() injection |
-| `src/core/request-queue.js` | Create | RequestQueue, async-migrated |
-| `src/core/disabled-clients.js` | Create | DisabledClientsManager, async-migrated |
-| `src/core/cache.js` | Create | CacheManager, async-migrated |
-| `src/core/api-clients.js` | Create | BaseApiClient + 3 subclasses, adapter-wired |
-| `src/core/api-manager.js` | Create | ApiClientManager |
-| `src/core/overlay.js` | Create | OverlayRenderer (extracted verbatim) |
-| `src/core/surfaces.js` | Create | SurfaceManager (extracted verbatim) |
-| `src/core/app.js` | Create | FlixMonkeyApp + startApp() factory |
-| `src/platform/adapter.js` | Create | PlatformAdapter base class |
-| `src/platform/userscript.js` | Create | UserscriptAdapter (GM_* wrappers) |
-| `src/platform/webextension.js` | Create | WebExtensionAdapter (browser.storage + sendMessage) |
-| `src/targets/userscript/entry.js` | Create | GM_config wiring + menu commands |
-| `src/targets/extension/content.js` | Create | Shared extension content script entry |
-| `src/targets/extension/options.html` | Create | Options page HTML (shared Firefox + Chrome) |
-| `src/targets/extension/options.js` | Create | Options page logic (shared) |
-| `src/targets/firefox/manifest.json` | Create | Firefox MV3 manifest |
-| `src/targets/firefox/background.js` | Create | Firefox HTTP proxy (~35 lines) |
-| `src/targets/chrome/manifest.json` | Create | Chrome MV3 manifest |
-| `src/targets/chrome/service-worker.js` | Create | Chrome MV3 HTTP proxy (~35 lines) |
-| `rollup.config.js` | Create | Full build config for all three targets |
-| `package.json` | Modify | Add build scripts + new dev deps, sync version to 0.10.0 |
-| `eslint.config.js` | Modify | Add sourceType:module config for src/ files |
-| `.gitignore` | Modify | Add dist/ |
+| File                                   | Status | Purpose                                                  |
+| -------------------------------------- | ------ | -------------------------------------------------------- |
+| `src/core/constants.js`                | Create | Shared constants (extracted verbatim)                    |
+| `src/core/title.js`                    | Create | Title class (extracted verbatim)                         |
+| `src/core/config-fields.js`            | Create | Shared field definitions for all targets                 |
+| `src/core/config.js`                   | Create | CONFIG object + initConfig() injection                   |
+| `src/core/request-queue.js`            | Create | RequestQueue, async-migrated                             |
+| `src/core/disabled-clients.js`         | Create | DisabledClientsManager, async-migrated                   |
+| `src/core/cache.js`                    | Create | CacheManager, async-migrated                             |
+| `src/core/api-clients.js`              | Create | BaseApiClient + 3 subclasses, adapter-wired              |
+| `src/core/api-manager.js`              | Create | ApiClientManager                                         |
+| `src/core/overlay.js`                  | Create | OverlayRenderer (extracted verbatim)                     |
+| `src/core/surfaces.js`                 | Create | SurfaceManager (extracted verbatim)                      |
+| `src/core/app.js`                      | Create | FlixMonkeyApp + startApp() factory                       |
+| `src/platform/adapter.js`              | Create | PlatformAdapter base class                               |
+| `src/platform/userscript.js`           | Create | UserscriptAdapter (GM\_\* wrappers)                      |
+| `src/platform/webextension.js`         | Create | WebExtensionAdapter (browser.storage + sendMessage)      |
+| `src/targets/userscript/entry.js`      | Create | GM_config wiring + menu commands                         |
+| `src/targets/extension/content.js`     | Create | Shared extension content script entry                    |
+| `src/targets/extension/options.html`   | Create | Options page HTML (shared Firefox + Chrome)              |
+| `src/targets/extension/options.js`     | Create | Options page logic (shared)                              |
+| `src/targets/firefox/manifest.json`    | Create | Firefox MV3 manifest                                     |
+| `src/targets/firefox/background.js`    | Create | Firefox HTTP proxy (~35 lines)                           |
+| `src/targets/chrome/manifest.json`     | Create | Chrome MV3 manifest                                      |
+| `src/targets/chrome/service-worker.js` | Create | Chrome MV3 HTTP proxy (~35 lines)                        |
+| `rollup.config.js`                     | Create | Full build config for all three targets                  |
+| `package.json`                         | Modify | Add build scripts + new dev deps, sync version to 0.10.0 |
+| `eslint.config.js`                     | Modify | Add sourceType:module config for src/ files              |
+| `.gitignore`                           | Modify | Add dist/                                                |
 
 ---
 
 ## Task 1: Install build dependencies and scaffold project
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `rollup.config.js` (stub)
 - Modify: `.gitignore` (if it exists, otherwise create)
 
- - [x] **Step 1: Install new dependencies**
+- [x] **Step 1: Install new dependencies**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -60,41 +61,41 @@ npm install --save-dev rollup @rollup/plugin-node-resolve @rollup/plugin-commonj
 
 Expected: `package-lock.json` updated, `node_modules/rollup` and `node_modules/webextension-polyfill` present.
 
- - [x] **Step 2: Sync version in package.json to 0.10.0 and add build scripts**
+- [x] **Step 2: Sync version in package.json to 0.10.0 and add build scripts**
 
 Replace the `"scripts"` block and update `"version"` in `package.json`:
 
 ```json
 {
-  "name": "flixmonkey",
-  "version": "0.10.0",
-  "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
-  "type": "module",
-  "scripts": {
-    "format": "prettier --write \"src/**/*.js\" \"src/**/*.html\"",
-    "lint": "eslint \"src/**/*.js\"",
-    "lint:fix": "eslint --fix \"src/**/*.js\"",
-    "build:userscript": "rollup -c --environment TARGET:userscript",
-    "build:firefox": "rollup -c --environment TARGET:firefox",
-    "build:chrome": "rollup -c --environment TARGET:chrome",
-    "build": "rollup -c"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@rollup/plugin-commonjs": "^28.0.0",
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "eslint": "^10.1.0",
-    "globals": "^17.4.0",
-    "prettier": "^3.8.1",
-    "rollup": "^4.0.0",
-    "webextension-polyfill": "^0.12.0"
-  }
+    "name": "flixmonkey",
+    "version": "0.10.0",
+    "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
+    "type": "module",
+    "scripts": {
+        "format": "prettier --write \"src/**/*.js\" \"src/**/*.html\"",
+        "lint": "eslint \"src/**/*.js\"",
+        "lint:fix": "eslint --fix \"src/**/*.js\"",
+        "build:userscript": "rollup -c --environment TARGET:userscript",
+        "build:firefox": "rollup -c --environment TARGET:firefox",
+        "build:chrome": "rollup -c --environment TARGET:chrome",
+        "build": "rollup -c"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@rollup/plugin-commonjs": "^28.0.0",
+        "@rollup/plugin-node-resolve": "^16.0.0",
+        "eslint": "^10.1.0",
+        "globals": "^17.4.0",
+        "prettier": "^3.8.1",
+        "rollup": "^4.0.0",
+        "webextension-polyfill": "^0.12.0"
+    }
 }
 ```
 
 Note: `webextension-polyfill` is listed under `devDependencies` because Rollup bundles it into the extension output — it is not a runtime npm dependency.
 
- - [x] **Step 3: Create a stub rollup.config.js**
+- [x] **Step 3: Create a stub rollup.config.js**
 
 This stub will be replaced in Task 16. Its purpose is to make `npm run build` runnable without errors before entry points exist.
 
@@ -103,7 +104,7 @@ This stub will be replaced in Task 16. Its purpose is to make `npm run build` ru
 export default [];
 ```
 
- - [x] **Step 4: Add dist/ to .gitignore**
+- [x] **Step 4: Add dist/ to .gitignore**
 
 Create or append to `.gitignore`:
 
@@ -112,13 +113,13 @@ node_modules/
 dist/
 ```
 
- - [x] **Step 5: Create the src/ directory tree**
+- [x] **Step 5: Create the src/ directory tree**
 
 ```bash
 mkdir -p src/core src/platform src/targets/userscript src/targets/extension src/targets/firefox src/targets/chrome
 ```
 
- - [x] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json rollup.config.js .gitignore
@@ -132,10 +133,11 @@ git commit -m "chore: add rollup build tooling and scaffold src/ structure"
 These are verbatim extractions — no logic changes, just add `export` keywords.
 
 **Files:**
+
 - Create: `src/core/constants.js`
 - Create: `src/core/title.js`
 
- - [x] **Step 1: Create src/core/constants.js**
+- [x] **Step 1: Create src/core/constants.js**
 
 ```js
 export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
@@ -163,7 +165,7 @@ export const RATE_LIMITS = {
 };
 ```
 
- - [x] **Step 2: Create src/core/title.js**
+- [x] **Step 2: Create src/core/title.js**
 
 ```js
 export class Title {
@@ -225,7 +227,7 @@ export class Title {
 }
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/constants.js src/core/title.js
@@ -237,21 +239,28 @@ git commit -m "refactor: extract constants and Title to src/core modules"
 ## Task 3: Create platform adapter interface and UserscriptAdapter
 
 **Files:**
+
 - Create: `src/platform/adapter.js`
 - Create: `src/platform/userscript.js`
 
- - [x] **Step 1: Create src/platform/adapter.js**
+- [x] **Step 1: Create src/platform/adapter.js**
 
 ```js
 export class PlatformAdapter {
-    async storageGet(_key) { throw new Error('Not implemented'); }
-    async storageSet(_key, _value) { throw new Error('Not implemented'); }
-    async httpFetch(_url, _options) { throw new Error('Not implemented'); }
+    async storageGet(_key) {
+        throw new Error('Not implemented');
+    }
+    async storageSet(_key, _value) {
+        throw new Error('Not implemented');
+    }
+    async httpFetch(_url, _options) {
+        throw new Error('Not implemented');
+    }
     registerMenuCommand(_label, _fn) {}
 }
 ```
 
- - [x] **Step 2: Create src/platform/userscript.js**
+- [x] **Step 2: Create src/platform/userscript.js**
 
 `httpFetch` is the existing `gmFetch()` body moved here. Non-2xx responses reject with an error that carries a `status` property so `BaseApiClient.queuedFetch` can decide whether to disable the client.
 
@@ -304,7 +313,7 @@ export class UserscriptAdapter extends PlatformAdapter {
 }
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/platform/adapter.js src/platform/userscript.js
@@ -318,9 +327,10 @@ git commit -m "refactor: add PlatformAdapter interface and UserscriptAdapter"
 The only changes from the original: constructor gains an `adapter` param, and the two `GM_getValue`/`GM_setValue` lines in `#process()` become `await this.#adapter.storageGet/Set(...)`.
 
 **Files:**
+
 - Create: `src/core/request-queue.js`
 
- - [x] **Step 1: Create src/core/request-queue.js**
+- [x] **Step 1: Create src/core/request-queue.js**
 
 ```js
 export class RequestQueue {
@@ -389,7 +399,7 @@ export class RequestQueue {
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/core/request-queue.js
@@ -403,9 +413,10 @@ git commit -m "refactor: extract RequestQueue to src/core, migrate storage to ad
 `isDisabled()`, `disable()`, and `resetAll()` all become `async`.
 
 **Files:**
+
 - Create: `src/core/disabled-clients.js`
 
- - [x] **Step 1: Create src/core/disabled-clients.js**
+- [x] **Step 1: Create src/core/disabled-clients.js**
 
 ```js
 import { CLIENT_DISABLE_DURATION, ApiSource } from './constants.js';
@@ -436,15 +447,13 @@ export class DisabledClientsManager {
 
     async resetAll() {
         await Promise.all(
-            Object.values(ApiSource).map(source =>
-                this.#adapter.storageSet(`fm_disabled_${source}`, '0')
-            )
+            Object.values(ApiSource).map(source => this.#adapter.storageSet(`fm_disabled_${source}`, '0'))
         );
     }
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/core/disabled-clients.js
@@ -458,9 +467,10 @@ git commit -m "refactor: extract DisabledClientsManager to src/core, migrate sto
 `read()`, `write()`, `clear()`, and `#loadCacheData()` all become `async`. `CONFIG` is imported from `./config.js` (which is created in Task 10 — Rollup resolves this at build time, not import time, so there is no circular-dependency issue during extraction).
 
 **Files:**
+
 - Create: `src/core/cache.js`
 
- - [x] **Step 1: Create src/core/cache.js**
+- [x] **Step 1: Create src/core/cache.js**
 
 ```js
 import { DAYS_TO_MS } from './constants.js';
@@ -506,7 +516,9 @@ export class CacheManager {
     async write(displayTitle, domYear, titleObj) {
         const blob = await this.#loadCacheData();
         const now = Date.now();
-        Object.keys(blob).forEach(k => { if (now > blob[k].expires) delete blob[k]; });
+        Object.keys(blob).forEach(k => {
+            if (now > blob[k].expires) delete blob[k];
+        });
         const ttl = this.#calculateTtl(titleObj);
         blob[this.#getCacheKey(displayTitle, domYear)] = {
             data: titleObj,
@@ -524,7 +536,7 @@ export class CacheManager {
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/core/cache.js
@@ -536,15 +548,17 @@ git commit -m "refactor: extract CacheManager to src/core, migrate storage to ad
 ## Task 7: Extract `src/core/api-clients.js` with async migration
 
 Key changes from the original:
+
 - `gmFetch()` is removed from `BaseApiClient`. `queuedFetch()` now calls `this.#adapter.httpFetch()` and handles 4xx → `disable()` here (previously inside `gmFetch`).
 - `isDisabled` getter becomes `async isDisabled()` method.
 - `disable()` becomes `async`.
 - All three client constructors gain an `adapter` param, which they pass to `super()` and to the `RequestQueue` they create.
 
 **Files:**
+
 - Create: `src/core/api-clients.js`
 
- - [x] **Step 1: Create src/core/api-clients.js**
+- [x] **Step 1: Create src/core/api-clients.js**
 
 ```js
 import { RequestQueue } from './request-queue.js';
@@ -556,8 +570,7 @@ import { CONFIG } from './config.js';
 const createClientLogger = clientName => ({
     search: (title, year) =>
         console.warn(`[FlixMonkey] Searching ${clientName} for title: "${title}"${year ? ` (${year})` : ''}`),
-    fetchDetails: (id, title) =>
-        console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
+    fetchDetails: (id, title) => console.warn(`[FlixMonkey] Fetching ${clientName} details for ID: ${id} ("${title}")`),
     notFound: title => console.warn(`[FlixMonkey] No search results found in ${clientName} for: "${title}"`),
     failed: message => console.warn(`[FlixMonkey] ${clientName} failed: ${message}`),
 });
@@ -654,9 +667,15 @@ export class XmdbApiClient extends BaseApiClient {
         const searchParams = new URLSearchParams({ apiKey: CONFIG.xmdbApiKey, q: displayTitle, limit: 5 });
         this.#logger.search(displayTitle, domYear);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
-        if (!results?.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!results?.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         const titleResults = results.filter(r => r.type === 'title');
-        if (!titleResults.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!titleResults.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         return domYear
             ? (titleResults.find(r => String(r.year) === String(domYear)) ?? titleResults[0])
             : titleResults[0];
@@ -696,7 +715,10 @@ export class OmdbApiClient extends BaseApiClient {
         if (y) params.set('y', y);
         this.#logger.fetchDetails(t, _displayTitle);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
-        if (json.Response === 'False') { this.#logger.notFound(t); return null; }
+        if (json.Response === 'False') {
+            this.#logger.notFound(t);
+            return null;
+        }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         return new Title({
@@ -726,7 +748,10 @@ export class ImdbApiDevClient extends BaseApiClient {
         const searchParams = new URLSearchParams({ query: displayTitle });
         this.#logger.search(displayTitle, domYear);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
-        if (!titles?.length) { this.#logger.notFound(displayTitle); return null; }
+        if (!titles?.length) {
+            this.#logger.notFound(displayTitle);
+            return null;
+        }
         if (domYear) {
             const targetYear = Number.parseInt(domYear);
             const nearYear = titles.find(t => Math.abs(t.startYear - targetYear) <= 1);
@@ -749,7 +774,7 @@ export class ImdbApiDevClient extends BaseApiClient {
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -763,9 +788,10 @@ git commit -m "refactor: extract API clients to src/core, remove gmFetch, migrat
 The constructor signature changes to `(cacheManager, disabledManager, adapter, clients = [])`. Client constructors now receive `(disabledManager, adapter)`. `resetDisabledClients()` becomes `async` because `DisabledClientsManager.resetAll()` is now async.
 
 **Files:**
+
 - Create: `src/core/api-manager.js`
 
- - [x] **Step 1: Create src/core/api-manager.js**
+- [x] **Step 1: Create src/core/api-manager.js**
 
 ```js
 import { CacheManager } from './cache.js';
@@ -834,7 +860,7 @@ export class ApiClientManager {
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/core/api-manager.js
@@ -848,10 +874,11 @@ git commit -m "refactor: extract ApiClientManager to src/core"
 Both are verbatim extractions — add imports for `CONFIG` and `export` keywords. No logic changes.
 
 **Files:**
+
 - Create: `src/core/overlay.js`
 - Create: `src/core/surfaces.js`
 
- - [x] **Step 1: Create src/core/overlay.js**
+- [x] **Step 1: Create src/core/overlay.js**
 
 ```js
 import { CONFIG } from './config.js';
@@ -1027,7 +1054,7 @@ export class OverlayRenderer {
 }
 ```
 
- - [x] **Step 2: Create src/core/surfaces.js**
+- [x] **Step 2: Create src/core/surfaces.js**
 
 ```js
 export class SurfaceManager {
@@ -1117,7 +1144,7 @@ export class SurfaceManager {
 }
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/overlay.js src/core/surfaces.js
@@ -1131,10 +1158,11 @@ git commit -m "refactor: extract OverlayRenderer and SurfaceManager to src/core"
 `config-fields.js` is the single source of truth for field definitions. `config.js` replaces the inline CONFIG object — same getters, but reads from `_configGet` which is set by `initConfig()` before `startApp()` is called.
 
 **Files:**
+
 - Create: `src/core/config-fields.js`
 - Create: `src/core/config.js`
 
- - [x] **Step 1: Create src/core/config-fields.js**
+- [x] **Step 1: Create src/core/config-fields.js**
 
 ```js
 export const CONFIG_FIELDS = [
@@ -1221,7 +1249,7 @@ export const CONFIG_FIELDS = [
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
 ```
 
- - [x] **Step 2: Create src/core/config.js**
+- [x] **Step 2: Create src/core/config.js**
 
 ```js
 import { CONFIG_DEFAULTS } from './config-fields.js';
@@ -1246,16 +1274,36 @@ const createIntConfigGetter = (key, fallback) => () => {
 };
 
 export const CONFIG = {
-    get xmdbApiKey() { return configGet('xmdbApiKey', 'YOUR_XMDB_API_KEY'); },
-    get omdbApiKey() { return configGet('omdbApiKey', 'YOUR_OMDB_API_KEY'); },
-    get overlayCorner() { return configGet('overlayCorner', 'top-left'); },
-    get showRtRating() { return configGet('showRtRating', true); },
-    get showMcRating() { return configGet('showMcRating', true); },
-    get apiClients() { return configGet('apiClients', 'imdbapi,xmdb,omdb'); },
-    get cacheTtlRatedOldYear() { return createIntConfigGetter('cacheTtlRatedOldYear', -1)(); },
-    get cacheTtlRatedNewYear() { return createIntConfigGetter('cacheTtlRatedNewYear', 30)(); },
-    get cacheTtlNoRating() { return createIntConfigGetter('cacheTtlNoRating', 1)(); },
-    get enableFadeUnderRating() { return configGet('enableFadeUnderRating', false); },
+    get xmdbApiKey() {
+        return configGet('xmdbApiKey', 'YOUR_XMDB_API_KEY');
+    },
+    get omdbApiKey() {
+        return configGet('omdbApiKey', 'YOUR_OMDB_API_KEY');
+    },
+    get overlayCorner() {
+        return configGet('overlayCorner', 'top-left');
+    },
+    get showRtRating() {
+        return configGet('showRtRating', true);
+    },
+    get showMcRating() {
+        return configGet('showMcRating', true);
+    },
+    get apiClients() {
+        return configGet('apiClients', 'imdbapi,xmdb,omdb');
+    },
+    get cacheTtlRatedOldYear() {
+        return createIntConfigGetter('cacheTtlRatedOldYear', -1)();
+    },
+    get cacheTtlRatedNewYear() {
+        return createIntConfigGetter('cacheTtlRatedNewYear', 30)();
+    },
+    get cacheTtlNoRating() {
+        return createIntConfigGetter('cacheTtlNoRating', 1)();
+    },
+    get enableFadeUnderRating() {
+        return configGet('enableFadeUnderRating', false);
+    },
     get fadeRatingThreshold() {
         const val = parseFloat(configGet('fadeRatingThreshold', '6.0'));
         return Number.isNaN(val) ? 6.0 : val;
@@ -1263,7 +1311,7 @@ export const CONFIG = {
 };
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/config-fields.js src/core/config.js
@@ -1277,10 +1325,11 @@ git commit -m "refactor: extract config system to src/core with initConfig injec
 `startApp(adapter)` is a new exported factory function. It constructs all classes, wires them together, and returns `{ api, cache }` so the entry point can attach menu commands.
 
 **Files:**
+
 - Create: `src/core/app.js`
 - Create: `src/targets/userscript/entry.js`
 
- - [x] **Step 1: Create src/core/app.js**
+- [x] **Step 1: Create src/core/app.js**
 
 ```js
 import { CacheManager } from './cache.js';
@@ -1386,7 +1435,7 @@ export function startApp(adapter) {
 }
 ```
 
- - [x] **Step 2: Create src/targets/userscript/entry.js**
+- [x] **Step 2: Create src/targets/userscript/entry.js**
 
 This file contains the full `GM_config.init()` block from the original `FlixMonkey.user.js`, adapted to use `CONFIG_FIELDS` for field generation and `initConfig` for the getter injection. The CSS block is preserved verbatim.
 
@@ -1396,7 +1445,7 @@ import { initConfig } from '../../core/config.js';
 import { CONFIG_FIELDS, CONFIG_DEFAULTS } from '../../core/config-fields.js';
 import { startApp } from '../../core/app.js';
 
-'use strict';
+('use strict');
 
 const adapter = new UserscriptAdapter();
 
@@ -1437,7 +1486,11 @@ GM_config.init({
     events: {
         init: () => {
             initConfig(key => {
-                try { return GM_config.get(key); } catch { return CONFIG_DEFAULTS[key]; }
+                try {
+                    return GM_config.get(key);
+                } catch {
+                    return CONFIG_DEFAULTS[key];
+                }
             });
             const { api, cache } = startApp(adapter);
 
@@ -1474,7 +1527,7 @@ GM_config.init({
 });
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/app.js src/targets/userscript/entry.js
@@ -1488,9 +1541,10 @@ git commit -m "refactor: extract FlixMonkeyApp and create userscript entry point
 Replace the stub `rollup.config.js` with a config that builds just the userscript. Verify the output is a valid userscript.
 
 **Files:**
+
 - Modify: `rollup.config.js`
 
- - [x] **Step 1: Replace rollup.config.js with userscript-only config**
+- [x] **Step 1: Replace rollup.config.js with userscript-only config**
 
 ```js
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'fs';
@@ -1564,7 +1618,7 @@ export default target
     : allConfigs.map(({ _target, ...rest }) => rest);
 ```
 
- - [x] **Step 2: Run the userscript build**
+- [x] **Step 2: Run the userscript build**
 
 ```bash
 npm run build:userscript
@@ -1572,13 +1626,14 @@ npm run build:userscript
 
 Expected: `dist/FlixMonkey.user.js` created. No errors. Output starts with `// ==UserScript==`.
 
- - [x] **Step 3: Verify the output header**
+- [x] **Step 3: Verify the output header**
 
 ```bash
 head -20 dist/FlixMonkey.user.js
 ```
 
 Expected output:
+
 ```
 // ==UserScript==
 // @name         FlixMonkey
@@ -1591,7 +1646,7 @@ Expected output:
     ...
 ```
 
- - [x] **Step 4: Spot-check that core class names are present in the output**
+- [x] **Step 4: Spot-check that core class names are present in the output**
 
 ```bash
 grep -c "FlixMonkeyApp\|CacheManager\|OverlayRenderer" dist/FlixMonkey.user.js
@@ -1599,7 +1654,7 @@ grep -c "FlixMonkeyApp\|CacheManager\|OverlayRenderer" dist/FlixMonkey.user.js
 
 Expected: output is `3` (each class name appears at least once).
 
- - [x] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add rollup.config.js dist/FlixMonkey.user.js
@@ -1611,9 +1666,10 @@ git commit -m "build: wire userscript Rollup config, produce dist/FlixMonkey.use
 ## Task 13: Create `src/platform/webextension.js`
 
 **Files:**
+
 - Create: `src/platform/webextension.js`
 
- - [x] **Step 1: Create src/platform/webextension.js**
+- [x] **Step 1: Create src/platform/webextension.js**
 
 ```js
 import browser from 'webextension-polyfill';
@@ -1639,7 +1695,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
 }
 ```
 
- - [x] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/platform/webextension.js
@@ -1653,10 +1709,11 @@ git commit -m "refactor: add WebExtensionAdapter using browser.storage and sendM
 `background.js` (Firefox) uses the Promise-based `browser.*` API. `service-worker.js` (Chrome) uses the callback-based `chrome.*` API and must return `true` from the listener to keep the message channel open for async responses. `USER_AGENTS` is inlined in both since these files are not bundled by Rollup.
 
 **Files:**
+
 - Create: `src/targets/firefox/background.js`
 - Create: `src/targets/chrome/service-worker.js`
 
- - [x] **Step 1: Create src/targets/firefox/background.js**
+- [x] **Step 1: Create src/targets/firefox/background.js**
 
 ```js
 const USER_AGENTS = [
@@ -1691,7 +1748,7 @@ browser.runtime.onMessage.addListener(async msg => {
 });
 ```
 
- - [x] **Step 2: Create src/targets/chrome/service-worker.js**
+- [x] **Step 2: Create src/targets/chrome/service-worker.js**
 
 ```js
 const USER_AGENTS = [
@@ -1716,7 +1773,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     })
         .then(async res => {
             clearTimeout(timeoutId);
-            if (!res.ok) { sendResponse({ error: `HTTP ${res.status}`, status: res.status }); return; }
+            if (!res.ok) {
+                sendResponse({ error: `HTTP ${res.status}`, status: res.status });
+                return;
+            }
             const data = responseType === 'json' ? await res.json() : await res.text();
             sendResponse({ data });
         })
@@ -1728,7 +1788,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 ```
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/firefox/background.js src/targets/chrome/service-worker.js
@@ -1742,11 +1802,12 @@ git commit -m "feat: add Firefox background and Chrome service-worker HTTP proxy
 The content script entry and options page are shared between Firefox and Chrome — they live in `src/targets/extension/` and are built into both `dist/firefox/` and `dist/chrome/` by Rollup.
 
 **Files:**
+
 - Create: `src/targets/extension/content.js`
 - Create: `src/targets/extension/options.html`
 - Create: `src/targets/extension/options.js`
 
- - [x] **Step 1: Create src/targets/extension/content.js**
+- [x] **Step 1: Create src/targets/extension/content.js**
 
 ```js
 import browser from 'webextension-polyfill';
@@ -1760,53 +1821,132 @@ import { startApp } from '../../core/app.js';
     const stored = await browser.storage.local.get(null);
     initConfig(key => stored[key] ?? CONFIG_DEFAULTS[key]);
     browser.storage.onChanged.addListener(changes => {
-        Object.entries(changes).forEach(([k, v]) => { stored[k] = v.newValue; });
+        Object.entries(changes).forEach(([k, v]) => {
+            stored[k] = v.newValue;
+        });
     });
     startApp(adapter);
 })();
 ```
 
- - [x] **Step 2: Create src/targets/extension/options.html**
+- [x] **Step 2: Create src/targets/extension/options.html**
 
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>FlixMonkey Settings</title>
-<style>
-  * { box-sizing: border-box; }
-  body { background: #141414; color: #fff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 25px; min-width: 480px; }
-  h1 { color: #e50914; font-size: 24px; margin: 0 0 25px; text-align: center; font-weight: bold; }
-  .field { display: flex; align-items: center; margin-bottom: 12px; }
-  .field label { flex: 0 0 200px; text-align: right; padding-right: 15px; color: #ccc; font-size: 14px; cursor: default; }
-  .field input[type="text"], .field select { flex: 0 0 220px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 6px 12px; font-size: 14px; outline: none; }
-  .field input[type="text"]:focus, .field select:focus { border-color: #e50914; }
-  .field input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
-  .actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; position: relative; }
-  button { padding: 8px 20px; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-  #saveBtn { background: #e50914; color: #fff; }
-  #saveBtn:hover { background: #f40612; }
-  .secondary { background: transparent; color: #ccc; border: 1px solid #555; }
-  .secondary:hover { background: #333; color: #fff; }
-  #status { text-align: center; margin-top: 10px; font-size: 13px; color: #aaa; min-height: 18px; }
-</style>
-</head>
-<body>
-<h1>FlixMonkey Settings</h1>
-<div id="fields"></div>
-<div class="actions">
-  <button id="saveBtn">Save</button>
-  <button class="secondary" id="clearCacheBtn">Clear Cache</button>
-  <button class="secondary" id="resetClientsBtn">Reset Disabled Clients</button>
-</div>
-<div id="status"></div>
-<script src="options.js"></script>
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <title>FlixMonkey Settings</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                background: #141414;
+                color: #fff;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 25px;
+                min-width: 480px;
+            }
+            h1 {
+                color: #e50914;
+                font-size: 24px;
+                margin: 0 0 25px;
+                text-align: center;
+                font-weight: bold;
+            }
+            .field {
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+            .field label {
+                flex: 0 0 200px;
+                text-align: right;
+                padding-right: 15px;
+                color: #ccc;
+                font-size: 14px;
+                cursor: default;
+            }
+            .field input[type='text'],
+            .field select {
+                flex: 0 0 220px;
+                background: #333;
+                color: #fff;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 6px 12px;
+                font-size: 14px;
+                outline: none;
+            }
+            .field input[type='text']:focus,
+            .field select:focus {
+                border-color: #e50914;
+            }
+            .field input[type='checkbox'] {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+            .actions {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                margin-top: 20px;
+                flex-wrap: wrap;
+                position: relative;
+            }
+            button {
+                padding: 8px 20px;
+                border: none;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            #saveBtn {
+                background: #e50914;
+                color: #fff;
+            }
+            #saveBtn:hover {
+                background: #f40612;
+            }
+            .secondary {
+                background: transparent;
+                color: #ccc;
+                border: 1px solid #555;
+            }
+            .secondary:hover {
+                background: #333;
+                color: #fff;
+            }
+            #status {
+                text-align: center;
+                margin-top: 10px;
+                font-size: 13px;
+                color: #aaa;
+                min-height: 18px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>FlixMonkey Settings</h1>
+        <div id="fields"></div>
+        <div class="actions">
+            <button id="saveBtn">Save</button>
+            <button class="secondary" id="clearCacheBtn">Clear Cache</button>
+            <button class="secondary" id="resetClientsBtn">Reset Disabled Clients</button>
+        </div>
+        <div id="status"></div>
+        <script src="options.js"></script>
+    </body>
 </html>
 ```
 
- - [x] **Step 3: Create src/targets/extension/options.js**
+- [x] **Step 3: Create src/targets/extension/options.js**
 
 `options.js` is bundled by Rollup (Task 16), so ES module imports work here.
 
@@ -1820,7 +1960,9 @@ const statusEl = document.getElementById('status');
 
 function showStatus(msg) {
     statusEl.textContent = msg;
-    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+    setTimeout(() => {
+        statusEl.textContent = '';
+    }, 2000);
 }
 
 CONFIG_FIELDS.forEach(f => {
@@ -1887,9 +2029,7 @@ document.getElementById('clearCacheBtn').addEventListener('click', async () => {
 
 document.getElementById('resetClientsBtn').addEventListener('click', async () => {
     if (!confirm('Re-enable all failing API endpoints?')) return;
-    const resets = Object.fromEntries(
-        Object.values(ApiSource).map(s => [`fm_disabled_${s}`, '0'])
-    );
+    const resets = Object.fromEntries(Object.values(ApiSource).map(s => [`fm_disabled_${s}`, '0']));
     await browser.storage.local.set(resets);
     showStatus('API clients re-enabled.');
 });
@@ -1897,7 +2037,7 @@ document.getElementById('resetClientsBtn').addEventListener('click', async () =>
 loadValues();
 ```
 
- - [x] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/targets/extension/content.js src/targets/extension/options.html src/targets/extension/options.js
@@ -1909,83 +2049,84 @@ git commit -m "feat: add shared extension content entry and options page"
 ## Task 16: Add Firefox and Chrome manifests, complete the Rollup config, and build all targets
 
 **Files:**
+
 - Create: `src/targets/firefox/manifest.json`
 - Create: `src/targets/chrome/manifest.json`
 - Modify: `rollup.config.js`
 
- - [x] **Step 1: Create src/targets/firefox/manifest.json**
+- [x] **Step 1: Create src/targets/firefox/manifest.json**
 
 ```json
 {
-  "manifest_version": 3,
-  "name": "FlixMonkey",
-  "version": "0.0.0",
-  "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
-  "permissions": ["storage"],
-  "host_permissions": [
-    "https://www.netflix.com/*",
-    "https://xmdbapi.com/*",
-    "https://www.omdbapi.com/*",
-    "https://api.imdbapi.dev/*"
-  ],
-  "background": {
-    "scripts": ["background.js"]
-  },
-  "content_scripts": [
-    {
-      "matches": ["https://www.netflix.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+    "manifest_version": 3,
+    "name": "FlixMonkey",
+    "version": "0.0.0",
+    "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
+    "permissions": ["storage"],
+    "host_permissions": [
+        "https://www.netflix.com/*",
+        "https://xmdbapi.com/*",
+        "https://www.omdbapi.com/*",
+        "https://api.imdbapi.dev/*"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.netflix.com/*"],
+            "js": ["content.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": false
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "flixmonkey@fran",
+            "strict_min_version": "109.0"
+        }
     }
-  ],
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": false
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "flixmonkey@fran",
-      "strict_min_version": "109.0"
-    }
-  }
 }
 ```
 
 Note: `"version": "0.0.0"` is a placeholder — the Rollup `injectManifestVersion` plugin overwrites it with the version from `package.json` at build time.
 
- - [x] **Step 2: Create src/targets/chrome/manifest.json**
+- [x] **Step 2: Create src/targets/chrome/manifest.json**
 
 ```json
 {
-  "manifest_version": 3,
-  "name": "FlixMonkey",
-  "version": "0.0.0",
-  "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
-  "permissions": ["storage"],
-  "host_permissions": [
-    "https://www.netflix.com/*",
-    "https://xmdbapi.com/*",
-    "https://www.omdbapi.com/*",
-    "https://api.imdbapi.dev/*"
-  ],
-  "background": {
-    "service_worker": "service-worker.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["https://www.netflix.com/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+    "manifest_version": 3,
+    "name": "FlixMonkey",
+    "version": "0.0.0",
+    "description": "Show IMDb, Rotten Tomatoes and Metacritic ratings on Netflix thumbnails and banners",
+    "permissions": ["storage"],
+    "host_permissions": [
+        "https://www.netflix.com/*",
+        "https://xmdbapi.com/*",
+        "https://www.omdbapi.com/*",
+        "https://api.imdbapi.dev/*"
+    ],
+    "background": {
+        "service_worker": "service-worker.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.netflix.com/*"],
+            "js": ["content.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": false
     }
-  ],
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": false
-  }
 }
 ```
 
- - [x] **Step 3: Update rollup.config.js with the full three-target config**
+- [x] **Step 3: Update rollup.config.js with the full three-target config**
 
 Replace the current `rollup.config.js` entirely:
 
@@ -2098,7 +2239,7 @@ export default target
     : allConfigs.map(({ _target, ...rest }) => rest);
 ```
 
- - [x] **Step 4: Run the full build**
+- [x] **Step 4: Run the full build**
 
 ```bash
 npm run build
@@ -2128,7 +2269,7 @@ ls dist/FlixMonkey.user.js dist/firefox/{content,options,background}.js dist/fir
 
 Expected: eleven paths printed, no "No such file" errors.
 
- - [x] **Step 5: Verify manifest versions were injected**
+- [x] **Step 5: Verify manifest versions were injected**
 
 ```bash
 node -e "const m=JSON.parse(require('fs').readFileSync('dist/firefox/manifest.json','utf8')); console.log(m.version);"
@@ -2137,7 +2278,7 @@ node -e "const m=JSON.parse(require('fs').readFileSync('dist/chrome/manifest.jso
 
 Expected: both print `0.10.0`.
 
- - [x] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/targets/firefox/manifest.json src/targets/chrome/manifest.json rollup.config.js
@@ -2151,9 +2292,10 @@ git commit -m "feat: add Firefox and Chrome manifests, complete Rollup config fo
 `src/` files are ES modules (`sourceType: 'module'`). The existing config's `sourceType: 'script'` and `GM_*` globals should now apply only to the original `FlixMonkey.user.js`.
 
 **Files:**
+
 - Modify: `eslint.config.js`
 
- - [x] **Step 1: Update eslint.config.js**
+- [x] **Step 1: Update eslint.config.js**
 
 ```js
 import js from '@eslint/js';
@@ -2211,7 +2353,7 @@ export default [
 ];
 ```
 
- - [x] **Step 2: Run lint against src/**
+- [x] **Step 2: Run lint against src/**
 
 ```bash
 npm run lint
@@ -2219,7 +2361,7 @@ npm run lint
 
 Expected: zero errors. There may be warnings for `console.warn` calls — those are expected and allowed by the `no-console` rule config.
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add eslint.config.js
@@ -2230,7 +2372,7 @@ git commit -m "chore: update ESLint config for src/ ES modules alongside legacy 
 
 ## Task 18: Final build verification and AGENTS.md update
 
- - [x] **Step 1: Run the full build one more time from a clean state**
+- [x] **Step 1: Run the full build one more time from a clean state**
 
 ```bash
 npm run build
@@ -2238,7 +2380,7 @@ npm run build
 
 Expected: completes without errors.
 
- - [x] **Step 2: Confirm all dist outputs are present and non-empty**
+- [x] **Step 2: Confirm all dist outputs are present and non-empty**
 
 ```bash
 wc -l dist/FlixMonkey.user.js dist/firefox/content.js dist/chrome/content.js dist/firefox/options.js dist/chrome/options.js
@@ -2246,19 +2388,20 @@ wc -l dist/FlixMonkey.user.js dist/firefox/content.js dist/chrome/content.js dis
 
 Expected: each file has at least 100 lines (the bundles include all core modules).
 
- - [x] **Step 3: Confirm manifest versions**
+- [x] **Step 3: Confirm manifest versions**
 
 ```bash
 grep '"version"' dist/firefox/manifest.json dist/chrome/manifest.json
 ```
 
 Expected:
+
 ```
 dist/firefox/manifest.json:  "version": "0.10.0",
 dist/chrome/manifest.json:  "version": "0.10.0",
 ```
 
- - [x] **Step 4: Run lint**
+- [x] **Step 4: Run lint**
 
 ```bash
 npm run lint
@@ -2266,16 +2409,17 @@ npm run lint
 
 Expected: no errors.
 
- - [x] **Step 5: Update AGENTS.md to reflect the new project structure**
+- [x] **Step 5: Update AGENTS.md to reflect the new project structure**
 
 In `AGENTS.md`, update the **Project Overview**, **Setup**, **Development Workflow**, **Scripts**, and **Architecture** sections to reflect:
+
 - The project now has a build step (`npm run build`)
 - Source lives in `src/`, output in `dist/`
 - Three build targets: userscript, firefox, chrome
 - `FlixMonkey.user.js` is the legacy source (still works standalone); `dist/FlixMonkey.user.js` is the built output going forward
 - Module-level architecture (list the new `src/core/` files and their responsibilities)
 
- - [x] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add AGENTS.md
@@ -2287,6 +2431,7 @@ git commit -m "docs: update AGENTS.md for multi-target build structure"
 ## Self-Review Notes
 
 **Spec coverage check:**
+
 - Section 1 (directory structure + build): Tasks 1, 12, 16 ✓
 - Section 2 (platform adapter): Tasks 3, 13, 14 ✓
 - Section 3 (async migration): Tasks 4, 5, 6, 7, 8 ✓

@@ -67,7 +67,7 @@ describe('core/config-fields', () => {
             });
 
             it('should accept empty key when provider is not selected', () => {
-                expect(field.validate('', { apiClient: 'imdbapi' })).toBeNull();
+                expect(field.validate('', { apiClient: 'agregarr' })).toBeNull();
             });
         });
 
