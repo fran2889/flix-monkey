@@ -1,0 +1,6 @@
+name: Title with spaces
+variables:
+    - name: title
+      value: Project%20Hail%20Mary
+    - name: imdb_id
+      value: tt12042730

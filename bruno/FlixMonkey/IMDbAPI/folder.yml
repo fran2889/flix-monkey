@@ -1,0 +1,11 @@
+info:
+    name: IMDbAPI
+    type: folder
+    seq: 3
+
+request:
+    auth: inherit
+
+docs:
+    content: See https://imdbapi.dev/
+    type: text/markdown

@@ -1,0 +1,19 @@
+info:
+    name: /movies
+    type: http
+    seq: 2
+
+http:
+    method: GET
+    url: https://xmdbapi.com/api/v1/movies/{{imdb_id}}?apiKey={{XMDB_API_KEY}}
+    params:
+        - name: apiKey
+          value: '{{XMDB_API_KEY}}'
+          type: query
+    auth: inherit
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5

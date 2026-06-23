@@ -1,0 +1,22 @@
+info:
+    name: /search/titles
+    type: http
+    seq: 1
+
+http:
+    method: GET
+    url: https://api.imdbapi.dev/search/titles?query={{title}}&limit=1
+    params:
+        - name: query
+          value: '{{title}}'
+          type: query
+        - name: limit
+          value: '1'
+          type: query
+    auth: inherit
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5

@@ -1,0 +1,11 @@
+info:
+    name: OMDB
+    type: folder
+    seq: 4
+
+request:
+    auth: inherit
+
+docs:
+    content: See https://www.omdbapi.com/
+    type: text/markdown
