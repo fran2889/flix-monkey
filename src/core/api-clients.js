@@ -365,8 +365,9 @@ export class AgregarrApiClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        const encoded = encodeURIComponent(displayTitle.toLowerCase());
-        const firstChar = encoded.charAt(0);
+        const lower = displayTitle.toLowerCase();
+        const firstChar = lower.charAt(0).normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const encoded = encodeURIComponent(lower);
         this.logger?.debug(`Searching IMDb suggestions for title: "${displayTitle}"`);
         const data = await this.queuedFetch(
             `https://v3.sg.media-imdb.com/suggestion/titles/${firstChar}/${encoded}.json`,

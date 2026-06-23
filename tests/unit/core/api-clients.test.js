@@ -806,4 +806,19 @@ describe('AgregarrApiClient', () => {
         expect(result.rating).toBe(8.8);
         expect(result.source).toBe('agregarr');
     });
+
+    it('should build correct IMDb suggestions URL for non-ASCII titles', async () => {
+        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
+        const mockAdapter = createMockAdapter({ httpFetch });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        await client.search('Élite');
+        const calledUrl = httpFetch.mock.calls[0][0];
+        expect(calledUrl).toContain('/suggestion/titles/e/');
+        expect(calledUrl).not.toContain('/suggestion/titles/%/');
+    });
 });
