@@ -349,3 +349,55 @@ export class ImdbApiDevClient extends BaseApiClient {
         });
     }
 }
+
+const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
+
+export class AgregarrApiClient extends BaseApiClient {
+    constructor(disabledManager, adapter, config, logger) {
+        super(
+            new RequestQueue(RATE_LIMITS[ApiSource.AGREGARR], null, adapter),
+            ApiSource.AGREGARR,
+            disabledManager,
+            adapter,
+            config,
+            logger
+        );
+    }
+
+    async search(displayTitle) {
+        const encoded = encodeURIComponent(displayTitle.toLowerCase());
+        const firstChar = encoded.charAt(0);
+        this.logger?.debug(`Searching IMDb suggestions for title: "${displayTitle}"`);
+        const data = await this.queuedFetch(
+            `https://v3.sg.media-imdb.com/suggestion/titles/${firstChar}/${encoded}.json`,
+            0
+        );
+        const results = data?.d;
+        if (!results?.length) {
+            this.logger?.debug(`No search results found in IMDb suggestions for: "${displayTitle}"`);
+            return null;
+        }
+        const match = results.find(r => AGREGARR_TITLE_TYPES.has(r.qid));
+        if (!match) {
+            this.logger?.debug(`No title results found in IMDb suggestions for: "${displayTitle}"`);
+            return null;
+        }
+        return match;
+    }
+
+    async getDetails(match, displayTitle) {
+        const { id, l: title, qid, y: year } = match;
+        this.logger?.debug(`Fetching Agregarr rating for ID: ${id} ("${displayTitle}")`);
+        const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
+        const entry = ratings?.[0];
+        return new Title({
+            apiTitle: title ?? null,
+            imdbId: id,
+            year: year ?? null,
+            rating: entry?.rating ?? null,
+            rtRating: null,
+            mcRating: null,
+            type: mapTitleType(qid),
+        });
+    }
+}

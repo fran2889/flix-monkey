@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../../src/core/api-clients.js';
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from '../../../src/core/api-clients.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -612,5 +612,198 @@ describe('ImdbApiDevClient', () => {
 
         await expect(dummy.search('title')).rejects.toThrow('Not implemented');
         await expect(dummy.getDetails({}, 'title')).rejects.toThrow('Not implemented');
+    });
+});
+
+describe('AgregarrApiClient', () => {
+    it('should return the first movie/series result from suggestions', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                d: [
+                    { id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 },
+                    { id: 'tt1790736', l: 'Inception: The Cobol Job', qid: 'video', y: 2010 },
+                ],
+            }),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.search('Inception');
+        expect(result.id).toBe('tt1375666');
+        expect(result.l).toBe('Inception');
+    });
+
+    it('should filter out non-title results like videos and shorts', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                d: [
+                    { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
+                    { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
+                    { id: 'tt0003', l: 'The Real Movie', qid: 'movie', y: 2020 },
+                ],
+            }),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.search('Some Movie');
+        expect(result.id).toBe('tt0003');
+    });
+
+    it('should accept tvMiniSeries results', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                d: [{ id: 'tt9999', l: 'Mini Show', qid: 'tvMiniSeries', y: 2023 }],
+            }),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.search('Mini Show');
+        expect(result.id).toBe('tt9999');
+    });
+
+    it('should return null if no title results found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        expect(await client.search('xyznonexistent')).toBeNull();
+    });
+
+    it('should return null if suggestions response has no d array', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({}),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        expect(await client.search('anything')).toBeNull();
+    });
+
+    it('should build correct IMDb suggestions URL', async () => {
+        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
+        const mockAdapter = createMockAdapter({ httpFetch });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        await client.search('The Matrix');
+        const calledUrl = httpFetch.mock.calls[0][0];
+        expect(calledUrl).toContain('v3.sg.media-imdb.com/suggestion/titles/t/');
+        expect(calledUrl).toContain('.json');
+    });
+
+    it('should fetch rating from Agregarr and return Title', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1375666', rating: 8.8, votes: 2500000 }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 }, 'Inception');
+        expect(result.apiTitle).toBe('Inception');
+        expect(result.imdbId).toBe('tt1375666');
+        expect(result.year).toBe(2010);
+        expect(result.rating).toBe(8.8);
+        expect(result.rtRating).toBeNull();
+        expect(result.mcRating).toBeNull();
+        expect(result.type).toBe('movie');
+    });
+
+    it('should handle null rating from Agregarr', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt999999', rating: null, votes: null }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails(
+            { id: 'tt999999', l: 'Unknown Title', qid: 'movie', y: 2020 },
+            'Unknown Title'
+        );
+        expect(result.rating).toBeNull();
+    });
+
+    it('should map tvSeries type to series', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt0903747', rating: 9.5, votes: 2000000 }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails(
+            { id: 'tt0903747', l: 'Breaking Bad', qid: 'tvSeries', y: 2008 },
+            'Breaking Bad'
+        );
+        expect(result.type).toBe('series');
+    });
+
+    it('should map tvMiniSeries type to series', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt5180504', rating: 8.6, votes: 500000 }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails(
+            { id: 'tt5180504', l: 'The Witcher', qid: 'tvMiniSeries', y: 2019 },
+            'The Witcher'
+        );
+        expect(result.type).toBe('series');
+    });
+
+    it('should handle full fetch flow (search + details)', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi
+                .fn()
+                .mockResolvedValueOnce({
+                    d: [{ id: 'tt1375666', l: 'Inception', qid: 'movie', y: 2010 }],
+                })
+                .mockResolvedValueOnce([{ imdbId: 'tt1375666', rating: 8.8, votes: 2500000 }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.fetch('Inception');
+        expect(result.displayTitle).toBe('Inception');
+        expect(result.apiTitle).toBe('Inception');
+        expect(result.imdbId).toBe('tt1375666');
+        expect(result.rating).toBe(8.8);
+        expect(result.source).toBe('agregarr');
     });
 });
