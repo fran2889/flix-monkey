@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce, runIdle } from '../../../src/core/utils.js';
+import { debounce, runIdle, FlixMonkeyError } from '../../../src/core/utils.js';
 
 describe('core/utils', () => {
     beforeEach(() => {
@@ -96,6 +96,45 @@ describe('core/utils', () => {
             expect(func).toHaveBeenCalled();
 
             vi.unstubAllGlobals();
+        });
+    });
+
+    describe('FlixMonkeyError', () => {
+        it('should set message and name', () => {
+            const err = new FlixMonkeyError('test error');
+            expect(err.message).toBe('test error');
+            expect(err.name).toBe('FlixMonkeyError');
+            expect(err).toBeInstanceOf(Error);
+        });
+
+        it('should set status when provided', () => {
+            const err = new FlixMonkeyError('HTTP 401', 401);
+            expect(err.status).toBe(401);
+        });
+
+        it('should default status to null', () => {
+            const err = new FlixMonkeyError('test');
+            expect(err.status).toBeNull();
+        });
+
+        it('should set body when provided', () => {
+            const err = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized');
+            expect(err.body).toBe('Unauthorized');
+        });
+
+        it('should default body to null', () => {
+            const err = new FlixMonkeyError('test', 500);
+            expect(err.body).toBeNull();
+        });
+
+        it('should set url when provided', () => {
+            const err = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized', 'https://api.example.com/foo');
+            expect(err.url).toBe('https://api.example.com/foo');
+        });
+
+        it('should default url to null', () => {
+            const err = new FlixMonkeyError('test');
+            expect(err.url).toBeNull();
         });
     });
 });
