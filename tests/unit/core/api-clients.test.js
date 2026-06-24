@@ -21,18 +21,12 @@ import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
-    it('should disable itself and purge queue on 4xx error', async () => {
+    it('should NOT disable itself on 4xx error in queuedFetch', async () => {
         const error = new Error('HTTP 403');
         error.status = 403;
 
-        // We need a slow promise to keep it in queue
-        let _resolveFetch;
-        const slowPromise = new Promise(resolve => {
-            _resolveFetch = resolve;
-        });
-
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockRejectedValueOnce(error).mockReturnValue(slowPromise),
+            httpFetch: vi.fn().mockRejectedValueOnce(error),
         });
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
@@ -41,17 +35,8 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
 
         const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: _k => 'key' }, createMockLogger());
 
-        // Trigger first fetch that fails and disables the client
-        const p1 = client.queuedFetch('url1').catch(e => e);
-
-        // Enqueue second fetch that should be purged
-        const p2 = client.queuedFetch('url2').catch(e => e);
-
-        const [err1, err2] = await Promise.all([p1, p2]);
-
-        expect(err1.status).toBe(403);
-        expect(err2.message).toBe('Client Disabled');
-        expect(mockDisabledManager.disable).toHaveBeenCalled();
+        await expect(client.queuedFetch('url1')).rejects.toThrow('HTTP 403');
+        expect(mockDisabledManager.disable).not.toHaveBeenCalled();
     });
 
     it('should NOT disable itself on 5xx error', async () => {

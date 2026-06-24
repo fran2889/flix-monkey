@@ -135,7 +135,6 @@ export class BaseApiClient {
 
     /**
      * Enqueues an HTTP request through the rate-limited queue.
-     * Automatically disables the client on 4xx responses.
      *
      * @param {string} url - Request URL.
      * @param {number} [priority=0] - Higher values are processed first.
@@ -143,18 +142,12 @@ export class BaseApiClient {
      * @returns {Promise<*>} Parsed response body.
      */
     async queuedFetch(url, priority = 0, responseType = 'json') {
-        try {
-            return await this.#queue.enqueue(
-                url,
-                priority,
-                (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
-                responseType
-            );
-        } catch (err) {
-            const status = err?.status;
-            if (Number.isInteger(status) && status >= 400 && status < 500) await this.disable();
-            throw err;
-        }
+        return this.#queue.enqueue(
+            url,
+            priority,
+            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
+            responseType
+        );
     }
 
     /**
