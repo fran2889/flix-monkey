@@ -221,12 +221,12 @@ export class XmdbApiClient extends BaseApiClient {
         this.logger?.debug(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in XMDB for: "${displayTitle}"`);
             return null;
         }
         return titleResults[0];
@@ -238,6 +238,9 @@ export class XmdbApiClient extends BaseApiClient {
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
+            this.logger?.warn(`XMDB details request returned invalid response for "${displayTitle}" (ID: ${id})`, {
+                error: detailsJson?.error ?? null,
+            });
             return null;
         }
         const { rating, release_year, title, metascore, title_type } = detailsJson;
@@ -281,7 +284,7 @@ export class OmdbApiClient extends BaseApiClient {
         this.logger?.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.debug(`No search results found in OMDB for: "${t}"`);
+            this.logger?.warn(`OMDB returned error for "${displayTitle}": ${json.Error ?? 'unknown'}`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
@@ -315,7 +318,7 @@ export class ImdbApiDevClient extends BaseApiClient {
         this.logger?.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
-            this.logger?.debug(`No search results found in IMDb API Dev for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in IMDb API Dev for: "${displayTitle}"`);
             return null;
         }
         return titles[0];
@@ -326,7 +329,10 @@ export class ImdbApiDevClient extends BaseApiClient {
         this.logger?.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
         const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
         if (!detailsJson || detailsJson.error) {
-            throw new Error(`IMDb API Dev details request failed for ID: ${id}`);
+            this.logger?.warn(`IMDb API Dev details request failed for "${displayTitle}" (ID: ${id})`, {
+                error: detailsJson?.error ?? null,
+            });
+            return null;
         }
 
         const { primaryTitle, startYear, rating, metacritic, type } = detailsJson;
@@ -363,12 +369,12 @@ export class AgregarrApiClient extends BaseApiClient {
         const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
         const results = data?.d;
         if (!results?.length) {
-            this.logger?.debug(`No search results found in IMDb suggestions for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in IMDb suggestions for: "${displayTitle}"`);
             return null;
         }
         const match = results.find(r => AGREGARR_TITLE_TYPES.has(r.qid));
         if (!match) {
-            this.logger?.debug(`No title results found in IMDb suggestions for: "${displayTitle}"`);
+            this.logger?.info(`No title results found in IMDb suggestions for: "${displayTitle}"`);
             return null;
         }
         return match;

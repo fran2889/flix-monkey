@@ -288,6 +288,24 @@ describe('XmdbApiClient', () => {
         expect(result.type).toBeNull();
     });
 
+    it('should log warn when details response has error field', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValueOnce({ error: 'not found' }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            mockLogger
+        );
+        await client.getDetails({ id: 'm1' }, 'Movie 1');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Movie 1'),
+            expect.objectContaining({ error: 'not found' })
+        );
+    });
+
     it('should return null when details response has no title', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValueOnce({
@@ -445,6 +463,21 @@ describe('OmdbApiClient', () => {
         expect(result.type).toBe('series');
     });
 
+    it('should log warn with error message on OMDB False response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ Response: 'False', Error: 'Movie not found!' }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            mockLogger
+        );
+        await client.getDetails({ title: 'Unknown' }, 'Unknown');
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Movie not found!'));
+    });
+
     it('should return null on OMDB False response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
@@ -577,17 +610,23 @@ describe('ImdbApiDevClient', () => {
         expect(result.type).toBe('series');
     });
 
-    it('should throw if details fetch returns an error', async () => {
+    it('should return null and log warn when details fetch returns an error', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({ error: 'server error' }),
         });
+        const mockLogger = createMockLogger();
         const client = new ImdbApiDevClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            mockLogger
         );
-        await expect(client.getDetails({ id: 'tt1' }, 'Movie 1')).rejects.toThrow();
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
+        expect(result).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Movie 1'),
+            expect.objectContaining({ error: 'server error' })
+        );
     });
 
     it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
