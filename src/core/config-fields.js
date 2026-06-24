@@ -143,7 +143,7 @@ export const CONFIG_FIELDS = [
         key: 'debug',
         label: 'Enable debug logging',
         type: 'checkbox',
-        default: false,
+        default: true,
         title: 'Log debug info to the browser console.',
         row: 'debug-settings',
     },
