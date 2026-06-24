@@ -65,7 +65,14 @@ export class ApiClientManager {
             this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
             return data;
         } catch (err) {
-            this.#logger.warn(`Failed to fetch ratings for "${displayTitle}": ${err.message}`);
+            const isHttpError = Number.isInteger(err.status) && err.status >= 400;
+            if (isHttpError && err.status < 500) {
+                await this.#client.disable();
+            }
+            this.#logger[isHttpError ? 'error' : 'warn'](
+                `Failed to fetch ratings for "${displayTitle}": ${err.message}`,
+                { url: err.url ?? null, status: err.status ?? null, body: err.body ?? null }
+            );
             return Title.notFound(displayTitle, source);
         }
     }

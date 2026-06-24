@@ -18,6 +18,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
+import { FlixMonkeyError } from '../../../src/core/utils.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('ApiClientManager', () => {
@@ -103,7 +104,80 @@ describe('ApiClientManager', () => {
         expect(result.displayTitle).toBe('Error Movie');
         expect(result.source).toBe('imdbapi');
         expect(mockCache.write).not.toHaveBeenCalled();
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Error Movie'));
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Error Movie'), {
+            url: null,
+            status: null,
+            body: null,
+        });
+    });
+
+    it('should disable client on 4xx HTTP error', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const error = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized', 'https://api.example.com');
+        const mockClient = {
+            source: 'xmdb',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockRejectedValue(error),
+            disable: vi.fn().mockResolvedValue(undefined),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
+        const result = await manager.getData('Test Movie');
+        expect(mockClient.disable).toHaveBeenCalled();
+        expect(result.hasRating).toBe(false);
+    });
+
+    it('should NOT disable client on 5xx HTTP error', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const error = new FlixMonkeyError('HTTP 500', 500, 'Internal Server Error', 'https://api.example.com');
+        const mockClient = {
+            source: 'xmdb',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockRejectedValue(error),
+            disable: vi.fn().mockResolvedValue(undefined),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
+        await manager.getData('Test Movie');
+        expect(mockClient.disable).not.toHaveBeenCalled();
+    });
+
+    it('should log at error level for HTTP errors with status, url, and body', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const error = new FlixMonkeyError('HTTP 403', 403, 'Forbidden', 'https://api.example.com/search');
+        const mockClient = {
+            source: 'xmdb',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockRejectedValue(error),
+            disable: vi.fn().mockResolvedValue(undefined),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
+        await manager.getData('Test Movie');
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Test Movie'), {
+            url: 'https://api.example.com/search',
+            status: 403,
+            body: 'Forbidden',
+        });
+    });
+
+    it('should log at warn level for non-HTTP errors', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const error = new Error('network error');
+        const mockClient = {
+            source: 'xmdb',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockRejectedValue(error),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
+        await manager.getData('Test Movie');
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Test Movie'), {
+            url: null,
+            status: null,
+            body: null,
+        });
+        expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it('should reset all disabled clients and return the list of re-enabled ones', async () => {
