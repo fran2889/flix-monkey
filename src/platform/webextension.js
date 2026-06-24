@@ -60,13 +60,13 @@ export class WebExtensionAdapter extends PlatformAdapter {
         const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new FlixMonkeyError('background relay timeout', null, null, url)), timeout)
+            setTimeout(() => reject(new FlixMonkeyError('background relay timeout', url)), timeout)
         );
 
         const response = await Promise.race([fetchPromise, timeoutPromise]);
-        if (!response) throw new FlixMonkeyError('empty background response', null, null, url);
+        if (!response) throw new FlixMonkeyError('empty background response', url);
         if (response.error) {
-            throw new FlixMonkeyError(response.error, response.status, response.body ?? null, url);
+            throw new FlixMonkeyError(response.error, url, response.status, response.body ?? null);
         }
         return response.data;
     }

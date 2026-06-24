@@ -20,12 +20,12 @@
  * Custom error class for FlixMonkey.
  */
 export class FlixMonkeyError extends Error {
-    constructor(message, status = null, body = null, url = null) {
+    constructor(message, url = null, status = null, body = null) {
         super(message);
         this.name = 'FlixMonkeyError';
+        this.url = url;
         this.status = status;
         this.body = body;
-        this.url = url;
     }
 }
 

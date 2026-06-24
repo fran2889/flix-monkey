@@ -239,7 +239,7 @@ export class XmdbApiClient extends BaseApiClient {
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
             this.logger?.warn(`XMDB details request returned invalid response for "${displayTitle}" (ID: ${id})`, {
-                error: detailsJson?.error ?? null,
+                response: detailsJson ?? null,
             });
             return null;
         }
@@ -284,7 +284,9 @@ export class OmdbApiClient extends BaseApiClient {
         this.logger?.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.warn(`OMDB returned error for "${displayTitle}": ${json.Error ?? 'unknown'}`);
+            this.logger?.warn(`OMDB returned error for "${displayTitle}"`, {
+                response: json,
+            });
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
@@ -330,7 +332,7 @@ export class ImdbApiDevClient extends BaseApiClient {
         const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
         if (!detailsJson || detailsJson.error) {
             this.logger?.warn(`IMDb API Dev details request failed for "${displayTitle}" (ID: ${id})`, {
-                error: detailsJson?.error ?? null,
+                response: detailsJson ?? null,
             });
             return null;
         }

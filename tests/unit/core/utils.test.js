@@ -107,8 +107,18 @@ describe('core/utils', () => {
             expect(err).toBeInstanceOf(Error);
         });
 
+        it('should set url when provided', () => {
+            const err = new FlixMonkeyError('HTTP 401', 'https://api.example.com/foo');
+            expect(err.url).toBe('https://api.example.com/foo');
+        });
+
+        it('should default url to null', () => {
+            const err = new FlixMonkeyError('test');
+            expect(err.url).toBeNull();
+        });
+
         it('should set status when provided', () => {
-            const err = new FlixMonkeyError('HTTP 401', 401);
+            const err = new FlixMonkeyError('HTTP 401', null, 401);
             expect(err.status).toBe(401);
         });
 
@@ -118,23 +128,13 @@ describe('core/utils', () => {
         });
 
         it('should set body when provided', () => {
-            const err = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized');
+            const err = new FlixMonkeyError('HTTP 401', null, 401, 'Unauthorized');
             expect(err.body).toBe('Unauthorized');
         });
 
         it('should default body to null', () => {
-            const err = new FlixMonkeyError('test', 500);
+            const err = new FlixMonkeyError('test', null, 500);
             expect(err.body).toBeNull();
-        });
-
-        it('should set url when provided', () => {
-            const err = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized', 'https://api.example.com/foo');
-            expect(err.url).toBe('https://api.example.com/foo');
-        });
-
-        it('should default url to null', () => {
-            const err = new FlixMonkeyError('test');
-            expect(err.url).toBeNull();
         });
     });
 });

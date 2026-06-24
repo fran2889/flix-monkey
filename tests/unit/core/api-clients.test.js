@@ -302,7 +302,7 @@ describe('XmdbApiClient', () => {
         await client.getDetails({ id: 'm1' }, 'Movie 1');
         expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining('Movie 1'),
-            expect.objectContaining({ error: 'not found' })
+            expect.objectContaining({ response: { error: 'not found' } })
         );
     });
 
@@ -475,7 +475,10 @@ describe('OmdbApiClient', () => {
             mockLogger
         );
         await client.getDetails({ title: 'Unknown' }, 'Unknown');
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Movie not found!'));
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Unknown'),
+            expect.objectContaining({ response: { Response: 'False', Error: 'Movie not found!' } })
+        );
     });
 
     it('should return null on OMDB False response', async () => {
@@ -625,7 +628,7 @@ describe('ImdbApiDevClient', () => {
         expect(result).toBeNull();
         expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining('Movie 1'),
-            expect.objectContaining({ error: 'server error' })
+            expect.objectContaining({ response: { error: 'server error' } })
         );
     });
 

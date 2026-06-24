@@ -113,7 +113,7 @@ describe('ApiClientManager', () => {
 
     it('should disable client on 4xx HTTP error', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const error = new FlixMonkeyError('HTTP 401', 401, 'Unauthorized', 'https://api.example.com');
+        const error = new FlixMonkeyError('HTTP 401', 'https://api.example.com', 401, 'Unauthorized');
         const mockClient = {
             source: 'xmdb',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -129,7 +129,7 @@ describe('ApiClientManager', () => {
 
     it('should NOT disable client on 5xx HTTP error', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const error = new FlixMonkeyError('HTTP 500', 500, 'Internal Server Error', 'https://api.example.com');
+        const error = new FlixMonkeyError('HTTP 500', 'https://api.example.com', 500, 'Internal Server Error');
         const mockClient = {
             source: 'xmdb',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -144,7 +144,7 @@ describe('ApiClientManager', () => {
 
     it('should log at error level for HTTP errors with status, url, and body', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const error = new FlixMonkeyError('HTTP 403', 403, 'Forbidden', 'https://api.example.com/search');
+        const error = new FlixMonkeyError('HTTP 403', 'https://api.example.com/search', 403, 'Forbidden');
         const mockClient = {
             source: 'xmdb',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
