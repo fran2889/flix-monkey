@@ -140,6 +140,7 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should include url on HTTP error', async () => {
+        expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onload }) => {
             onload({ status: 403, responseText: '' });
         });
@@ -152,6 +153,7 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should include truncated body on HTTP error', async () => {
+        expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onload }) => {
             onload({ status: 401, responseText: 'Invalid API key' });
         });
@@ -164,6 +166,7 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should truncate body to 200 characters', async () => {
+        expect.assertions(1);
         const longBody = 'x'.repeat(500);
         GM_xmlhttpRequest.mockImplementation(({ onload }) => {
             onload({ status: 500, responseText: longBody });
@@ -177,6 +180,7 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should include url on network error', async () => {
+        expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onerror }) => {
             onerror();
         });
@@ -189,6 +193,7 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should include url on timeout error', async () => {
+        expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ ontimeout }) => {
             ontimeout();
         });

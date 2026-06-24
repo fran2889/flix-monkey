@@ -135,6 +135,7 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('httpFetch should include url on HTTP error from background', async () => {
+        expect.assertions(3);
         browser.runtime.sendMessage.mockResolvedValue({ error: 'HTTP 403', status: 403, body: 'Forbidden' });
 
         try {
@@ -147,6 +148,7 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('httpFetch should include url on empty background response', async () => {
+        expect.assertions(1);
         browser.runtime.sendMessage.mockResolvedValue(undefined);
 
         try {
