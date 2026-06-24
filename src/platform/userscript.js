@@ -71,11 +71,12 @@ export class UserscriptAdapter extends PlatformAdapter {
                             resolve(responseText);
                         }
                     } else {
-                        reject(new FlixMonkeyError(`HTTP ${status}`, status));
+                        const body = responseText ? responseText.slice(0, 200) : null;
+                        reject(new FlixMonkeyError(`HTTP ${status}`, status, body, url));
                     }
                 },
-                onerror: () => reject(new FlixMonkeyError('network error')),
-                ontimeout: () => reject(new FlixMonkeyError('timeout')),
+                onerror: () => reject(new FlixMonkeyError('network error', null, null, url)),
+                ontimeout: () => reject(new FlixMonkeyError('timeout', null, null, url)),
             });
         });
     }
