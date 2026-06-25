@@ -91,37 +91,18 @@ describe('Overlay UI Interactions', () => {
         expect(overlay.title).toBe('IMDb: 8.2 · RT: 85% – click to open IMDb');
     });
 
-    it('should apply fade when rating is below threshold', () => {
-        const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 7.5;
-                    return undefined;
-                },
-            })
-        );
-        const renderer = new OverlayRenderer(config);
+    it('should add fm-faded class when shouldFade is true', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
-
-        renderer.applyFade(container, { rating: 6.0 }, true);
+        renderer.applyFade(container, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should NOT apply fade when rating is above or equal to threshold', () => {
-        const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 7.5;
-                    return undefined;
-                },
-            })
-        );
-        const renderer = new OverlayRenderer(config);
+    it('should remove fm-faded class when shouldFade is false', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         const container = document.createElement('div');
-
-        renderer.applyFade(container, { rating: 8.0 }, true);
+        container.classList.add('fm-faded');
+        renderer.applyFade(container, false);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 
@@ -146,38 +127,6 @@ describe('Overlay UI Interactions', () => {
         expect(overlayStyle.pointerEvents).toBe('none');
         expect(rtStyle.pointerEvents).toBe('auto'); // Children default to 'auto'
         expect(rtStyle.cursor).toBe('default');
-    });
-
-    it('should NOT apply fade when disabled in config', () => {
-        const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return false;
-                    return undefined;
-                },
-            })
-        );
-        const renderer = new OverlayRenderer(config);
-        const container = document.createElement('div');
-
-        renderer.applyFade(container, { rating: 5.0 }, true);
-        expect(container.classList.contains('fm-faded')).toBe(false);
-    });
-
-    it('should NOT apply fade when container is not fadeable', () => {
-        const config = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    return undefined;
-                },
-            })
-        );
-        const renderer = new OverlayRenderer(config);
-        const container = document.createElement('div');
-
-        renderer.applyFade(container, { rating: 5.0 }, false);
-        expect(container.classList.contains('fm-faded')).toBe(false);
     });
 
     it('should ensure container has non-static position', () => {
@@ -309,6 +258,64 @@ describe('Overlay UI Interactions', () => {
         const container = document.createElement('div');
         renderer.injectOverlay(container, titleObj);
         expect(container.querySelector('.fm-rating-overlay').title).toBe(expectedTitle);
+    });
+
+    it('should render fade toggle when toggleOptions provided', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        const container = document.createElement('div');
+        const titleObj = { rating: 7.0, imdbUrl: 'http://imdb.com' };
+        const toggleOptions = { state: 'auto', onClick: vi.fn() };
+        renderer.injectOverlay(container, titleObj, toggleOptions);
+
+        const toggle = container.querySelector('.fm-fade-toggle');
+        expect(toggle).not.toBeNull();
+        expect(toggle.dataset.state).toBe('auto');
+    });
+
+    it('should not render fade toggle when toggleOptions is null', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        const container = document.createElement('div');
+        const titleObj = { rating: 7.0, imdbUrl: 'http://imdb.com' };
+        renderer.injectOverlay(container, titleObj, null);
+
+        expect(container.querySelector('.fm-fade-toggle')).toBeNull();
+    });
+
+    it('should call onClick when toggle is clicked', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        const container = document.createElement('div');
+        const titleObj = { rating: 7.0, imdbUrl: 'http://imdb.com' };
+        const onClick = vi.fn();
+        renderer.injectOverlay(container, titleObj, { state: 'auto', onClick });
+
+        const toggle = container.querySelector('.fm-fade-toggle');
+        toggle.click();
+        expect(onClick).toHaveBeenCalled();
+    });
+
+    it('should stop propagation on toggle click', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        const container = document.createElement('div');
+        const titleObj = { rating: 7.0, imdbUrl: 'http://imdb.com' };
+        renderer.injectOverlay(container, titleObj, { state: 'faded', onClick: vi.fn() });
+
+        const toggle = container.querySelector('.fm-fade-toggle');
+        const event = new MouseEvent('click', { bubbles: true });
+        const spy = vi.spyOn(event, 'stopPropagation');
+        toggle.dispatchEvent(event);
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('should render toggle with correct state classes', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+
+        ['faded', 'auto', 'not-faded'].forEach(state => {
+            const container = document.createElement('div');
+            const titleObj = { rating: 7.0, imdbUrl: 'http://imdb.com' };
+            renderer.injectOverlay(container, titleObj, { state, onClick: vi.fn() });
+            const toggle = container.querySelector('.fm-fade-toggle');
+            expect(toggle.dataset.state).toBe(state);
+        });
     });
 
     it('should show N/A when imdbId is present but rating is missing', () => {

@@ -100,6 +100,14 @@ export const CONFIG_FIELDS = [
         },
     },
     {
+        key: 'enableFadeToggle',
+        label: 'Show fade toggle',
+        type: 'checkbox',
+        default: true,
+        title: 'Show per-title fade override toggle on hover.',
+        row: 'fade-toggle-settings',
+    },
+    {
         key: 'cacheTtlRatedOldYear',
         label: 'Rated > 1yr',
         type: 'text',

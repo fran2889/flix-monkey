@@ -125,4 +125,13 @@ describe('OverlayRenderer', () => {
         const percentBadges = [...overlay.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
         expect(percentBadges.length).toBe(2);
     });
+
+    it('should include fade toggle CSS in injected styles', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const style = document.head.querySelector('style');
+        expect(style.textContent).toContain('.fm-fade-toggle');
+        expect(style.textContent).toContain('.fm-toggle-track');
+        expect(style.textContent).toContain('.fm-toggle-knob');
+    });
 });

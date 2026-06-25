@@ -84,6 +84,48 @@ export class OverlayRenderer {
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
         `;
+        cssText += `
+            .fm-fade-toggle {
+                opacity: 0;
+                transition: opacity 0.15s;
+                pointer-events: none;
+                cursor: pointer;
+                padding: 0;
+                background: transparent !important;
+            }
+            .fm-fade-toggle:hover {
+                background: transparent !important;
+            }
+            .fm-toggle-track {
+                width: 48px;
+                height: 18px;
+                border-radius: 9px;
+                background: rgba(255,255,255,0.25);
+                position: relative;
+                transition: background 0.2s;
+            }
+            .fm-toggle-knob {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #fff;
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                transition: transform 0.2s;
+            }
+            .fm-fade-toggle[data-state="faded"] .fm-toggle-track { background: rgba(255,255,255,0.15); }
+            .fm-fade-toggle[data-state="auto"] .fm-toggle-track { background: rgba(255,255,255,0.25); }
+            .fm-fade-toggle[data-state="not-faded"] .fm-toggle-track { background: rgba(255,255,255,0.4); }
+            .fm-fade-toggle[data-state="faded"] .fm-toggle-knob { transform: translateX(0); }
+            .fm-fade-toggle[data-state="auto"] .fm-toggle-knob { transform: translateX(15px); }
+            .fm-fade-toggle[data-state="not-faded"] .fm-toggle-knob { transform: translateX(30px); }
+            .title-card:hover .fm-fade-toggle,
+            [data-uia="standard-card"]:hover .fm-fade-toggle {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        `;
         if (existing) {
             existing.textContent = cssText;
         } else {
@@ -135,7 +177,29 @@ export class OverlayRenderer {
         return 'Not found on IMDb – click to search';
     }
 
-    #createOverlay(titleObj) {
+    #createFadeToggle(initialState, onClick) {
+        const toggle = document.createElement('div');
+        toggle.className = 'fm-fade-toggle';
+        toggle.dataset.state = initialState;
+
+        const track = document.createElement('div');
+        track.className = 'fm-toggle-track';
+
+        const knob = document.createElement('div');
+        knob.className = 'fm-toggle-knob';
+
+        track.appendChild(knob);
+        toggle.appendChild(track);
+
+        toggle.addEventListener('click', e => {
+            e.stopPropagation();
+            onClick();
+        });
+
+        return toggle;
+    }
+
+    #createOverlay(titleObj, toggleOptions = null) {
         const container = document.createElement('div');
         container.className = this.#OVERLAY_CLASS;
 
@@ -184,6 +248,9 @@ export class OverlayRenderer {
         }
 
         container.title = this.#buildTooltip(titleParts, imdbId);
+        if (toggleOptions) {
+            container.appendChild(this.#createFadeToggle(toggleOptions.state, toggleOptions.onClick));
+        }
         return container;
     }
 
@@ -212,9 +279,9 @@ export class OverlayRenderer {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
-    injectOverlay(container, titleObj) {
+    injectOverlay(container, titleObj, toggleOptions = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(this.#createOverlay(titleObj));
+        container.appendChild(this.#createOverlay(titleObj, toggleOptions));
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
@@ -222,16 +289,7 @@ export class OverlayRenderer {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
-    applyFade(container, titleObj, fadeable) {
-        if (!fadeable || !this.#config.get('enableFadeUnderRating', false)) {
-            container.classList.remove('fm-faded');
-            return;
-        }
-        const { rating } = titleObj ?? {};
-        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold', 6.0)) {
-            container.classList.add('fm-faded');
-        } else {
-            container.classList.remove('fm-faded');
-        }
+    applyFade(container, shouldFade) {
+        container.classList.toggle('fm-faded', shouldFade);
     }
 }
