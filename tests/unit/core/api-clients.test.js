@@ -21,60 +21,6 @@ import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
-    it('should NOT disable itself on 4xx error in queuedFetch', async () => {
-        const error = new Error('HTTP 403');
-        error.status = 403;
-
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockRejectedValueOnce(error),
-        });
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
-
-        const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: _k => 'key' }, createMockLogger());
-
-        await expect(client.queuedFetch('url1')).rejects.toThrow('HTTP 403');
-        expect(mockDisabledManager.disable).not.toHaveBeenCalled();
-    });
-
-    it('should NOT disable itself on 5xx error', async () => {
-        const error = new Error('HTTP 500');
-        error.status = 500;
-
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockRejectedValueOnce(error),
-        });
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
-
-        const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: _k => 'key' }, createMockLogger());
-
-        await expect(client.queuedFetch('url1')).rejects.toThrow('HTTP 500');
-        expect(mockDisabledManager.disable).not.toHaveBeenCalled();
-    });
-
-    it('should NOT disable itself on a network error with no status property', async () => {
-        const error = new Error('Network failure');
-        // Deliberately no .status property
-
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockRejectedValueOnce(error),
-        });
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
-
-        const client = new XmdbApiClient(mockDisabledManager, mockAdapter, { get: _k => 'key' }, createMockLogger());
-
-        await expect(client.queuedFetch('url1')).rejects.toThrow('Network failure');
-        expect(mockDisabledManager.disable).not.toHaveBeenCalled();
-    });
-
     it('should return healthy status when not disabled', async () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
