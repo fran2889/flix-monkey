@@ -95,7 +95,9 @@ export class FlixMonkeyApp {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const fadeOverride = await this.#fade.getOverride(dedupKey);
-        this.#renderer.applyFade(container, this.#fade.shouldFade(fadeOverride, null, fadeable));
+        if (fadeOverride !== null) {
+            this.#renderer.applyFade(container, this.#fade.shouldFade(fadeOverride, null, fadeable));
+        }
 
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {

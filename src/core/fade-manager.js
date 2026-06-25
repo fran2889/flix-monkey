@@ -43,7 +43,7 @@ export class FadeManager {
     }
 
     shouldFade(fadeOverride, rating, fadeable) {
-        if (this.#config.get('enableFadeToggle', true) && fadeOverride !== null) {
+        if (fadeable && this.#config.get('enableFadeToggle', true) && fadeOverride !== null) {
             return fadeOverride;
         }
         if (fadeable && this.#config.get('enableFadeUnderRating', false)) {

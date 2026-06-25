@@ -169,6 +169,20 @@ describe('FadeManager', () => {
             const fm = new FadeManager(createMockAdapter(), config);
             expect(fm.shouldFade(null, null, true)).toBe(false);
         });
+
+        it('should not fade when fadeable is false even with a manual override', () => {
+            const config = new ConfigManager(
+                createMockAdapter({
+                    configGet: key => {
+                        if (key === 'enableFadeToggle') return true;
+                        return undefined;
+                    },
+                })
+            );
+            const fm = new FadeManager(createMockAdapter(), config);
+            expect(fm.shouldFade(true, 8.0, false)).toBe(false);
+            expect(fm.shouldFade(false, 3.0, false)).toBe(false);
+        });
     });
 
     describe('getToggleState', () => {

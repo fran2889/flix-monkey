@@ -191,9 +191,16 @@ export class OverlayRenderer {
         track.appendChild(knob);
         toggle.appendChild(track);
 
-        toggle.addEventListener('click', e => {
+        let clicking = false;
+        toggle.addEventListener('click', async e => {
             e.stopPropagation();
-            onClick();
+            if (clicking) return;
+            clicking = true;
+            try {
+                await onClick();
+            } finally {
+                clicking = false;
+            }
         });
 
         return toggle;
