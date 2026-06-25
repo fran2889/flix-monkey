@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
+import { FadeManager } from '../../src/core/fade-manager.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 
 describe('Zoomed UI Surface', () => {
@@ -51,7 +52,8 @@ describe('Zoomed UI Surface', () => {
         const surfaces = surfaceManager.discover(document.body);
         const bob = surfaces.find(s => s.container.classList.contains('bob-container'));
 
-        _overlayRenderer.applyFade(bob.container, { rating: 1.0 }, bob.fadeable);
+        const fade = new FadeManager(createMockAdapter(), new ConfigManager(createMockAdapter()));
+        _overlayRenderer.applyFade(bob.container, fade.shouldFade(null, 1.0, bob.fadeable));
         expect(bob.container.classList.contains('fm-faded')).toBe(false);
     });
 });

@@ -22,6 +22,7 @@ import { OverlayRenderer } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
 import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
 import { ConfigManager } from './config-manager.js';
+import { FadeManager } from './fade-manager.js';
 import { Logger } from './logger.js';
 import { debounce, runIdle, slugify } from './utils.js';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
@@ -31,6 +32,8 @@ export class FlixMonkeyApp {
     #cache;
     #renderer;
     #surfaces;
+    #fade;
+    #config;
     #logger;
     #inFlight = new Map();
     #pendingRoots = new Set();
@@ -43,11 +46,13 @@ export class FlixMonkeyApp {
     #originalReplaceState = null;
     #popstateHandler = null;
 
-    constructor(cache, api, renderer, surfaces, logger) {
+    constructor(cache, api, renderer, surfaces, fade, config, logger) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
+        this.#fade = fade;
+        this.#config = config;
         this.#logger = logger;
         this.#debouncedDecorate = debounce(() => {
             const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
@@ -87,11 +92,10 @@ export class FlixMonkeyApp {
         this.#renderer.ensureRelative(container);
         this.#renderer.injectLoadingOverlay(container);
 
-        // Yield to the event loop so the browser can paint the loading overlay
-        // before executing potentially synchronous microtasks. GM storage APIs
-        // (like GM_getValue) can be synchronously blocking in some userscript managers,
-        // which is the reason for the explicit yield before cache reads.
         await new Promise(resolve => setTimeout(resolve, 0));
+
+        const fadeOverride = await this.#fade.getOverride(dedupKey);
+        this.#renderer.applyFade(container, this.#fade.shouldFade(fadeOverride, null, fadeable));
 
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
@@ -107,12 +111,42 @@ export class FlixMonkeyApp {
         try {
             const data = await promise;
             if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
-                this.#renderer.injectOverlay(container, data);
-                this.#renderer.applyFade(container, data, fadeable);
+                const isRatingFaded = this.#fade.shouldFade(null, data?.rating, fadeable);
+                const shouldFade = this.#fade.shouldFade(fadeOverride, data?.rating, fadeable);
+
+                const enableToggle = this.#config.get('enableFadeToggle', true);
+                let toggleOptions = null;
+                if (enableToggle) {
+                    const toggleState = this.#fade.getToggleState(fadeOverride, isRatingFaded);
+                    toggleOptions = {
+                        state: toggleState,
+                        onClick: () => this.#handleToggleClick(container, dedupKey, data, fadeable),
+                    };
+                }
+
+                this.#renderer.injectOverlay(container, data, toggleOptions);
+                this.#renderer.applyFade(container, shouldFade);
             }
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
+    }
+
+    async #handleToggleClick(container, dedupKey, data, fadeable) {
+        const toggle = container.querySelector('.fm-fade-toggle');
+        if (!toggle) return;
+
+        const currentState = toggle.dataset.state;
+        const nextState = this.#fade.nextToggleState(currentState);
+
+        const overrideMap = { faded: true, 'not-faded': false, auto: null };
+        const newOverride = overrideMap[nextState];
+
+        await this.#fade.setOverride(dedupKey, newOverride);
+
+        toggle.dataset.state = nextState;
+        const shouldFade = this.#fade.shouldFade(newOverride, data?.rating, fadeable);
+        this.#renderer.applyFade(container, shouldFade);
     }
 
     decorateRoot(root) {
@@ -194,7 +228,8 @@ export function startApp(adapter) {
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager(logger);
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, logger);
+    const fade = new FadeManager(adapter, configManager);
+    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fade, configManager, logger);
     app.init();
     return {
         clearCache: () => app.clearCache(),

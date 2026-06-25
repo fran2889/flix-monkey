@@ -301,7 +301,9 @@ describe('App', () => {
             isLoading: vi.fn().mockReturnValue(false),
         };
         const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
-        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces, createMockLogger());
+        const mockFade = {};
+        const mockConfig = {};
+        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces, mockFade, mockConfig, createMockLogger());
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         app.disconnect();
@@ -456,5 +458,110 @@ describe('App', () => {
 
         expect(injectSpy).not.toHaveBeenCalled();
         injectSpy.mockRestore();
+    });
+
+    it('should apply fade override before API fetch completes', async () => {
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeToggle') return true;
+                return undefined;
+            },
+        });
+        mockAdapter.storageGet.mockImplementation(key => {
+            if (key === 'fm-fade:test title') return Promise.resolve('true');
+            return Promise.resolve(null);
+        });
+
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Test Title</div>
+            </div>
+        `;
+
+        let resolveApi;
+        const apiPromise = new Promise(resolve => {
+            resolveApi = resolve;
+        });
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(apiPromise);
+
+        appRef = startApp(mockAdapter);
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            const card = document.querySelector('.title-card');
+            expect(card.classList.contains('fm-faded')).toBe(true);
+        });
+
+        resolveApi({ rating: 9.0, imdbUrl: 'http://imdb.com' });
+        await apiPromise;
+        await vi.runAllTimersAsync();
+    });
+
+    it('should cycle toggle state on click and update fade', async () => {
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeToggle') return true;
+                return undefined;
+            },
+        });
+
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Toggle Movie</div>
+            </div>
+        `;
+
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 8.0,
+            imdbUrl: 'http://imdb.com',
+        });
+
+        appRef = startApp(mockAdapter);
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            const toggle = document.querySelector('.fm-fade-toggle');
+            expect(toggle).not.toBeNull();
+        });
+
+        const toggle = document.querySelector('.fm-fade-toggle');
+        expect(toggle.dataset.state).toBe('auto');
+
+        toggle.click();
+        await vi.runAllTimersAsync();
+        expect(toggle.dataset.state).toBe('faded');
+        expect(document.querySelector('.title-card').classList.contains('fm-faded')).toBe(true);
+    });
+
+    it('should not render toggle when enableFadeToggle is false', async () => {
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeToggle') return false;
+                return undefined;
+            },
+        });
+
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">No Toggle Movie</div>
+            </div>
+        `;
+
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 8.0,
+            imdbUrl: 'http://imdb.com',
+        });
+
+        appRef = startApp(mockAdapter);
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            expect(document.querySelector('.fm-rating-overlay')).not.toBeNull();
+        });
+
+        expect(document.querySelector('.fm-fade-toggle')).toBeNull();
     });
 });

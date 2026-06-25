@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
+import { FadeManager } from '../../src/core/fade-manager.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 import fs from 'fs';
 import path from 'path';
@@ -79,18 +80,18 @@ describe('Browse UI Surface', () => {
         const { container } = surfaces[0];
 
         // Set threshold high to ensure fading
-        const mockConfig = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 9.0;
-                    return null;
-                },
-            })
-        );
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeUnderRating') return true;
+                if (key === 'fadeRatingThreshold') return 9.0;
+                return null;
+            },
+        });
+        const mockConfig = new ConfigManager(mockAdapter);
         const localRenderer = new OverlayRenderer(mockConfig);
+        const localFade = new FadeManager(mockAdapter, mockConfig);
 
-        localRenderer.applyFade(container, { rating: 7.0 }, true);
+        localRenderer.applyFade(container, localFade.shouldFade(null, 7.0, true));
         expect(container.classList.contains('fm-faded')).toBe(true);
     });
 
@@ -99,18 +100,18 @@ describe('Browse UI Surface', () => {
         const { container } = surfaces[0];
 
         // Set threshold high to ensure fading
-        const mockConfig = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 9.0;
-                    return null;
-                },
-            })
-        );
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeUnderRating') return true;
+                if (key === 'fadeRatingThreshold') return 9.0;
+                return null;
+            },
+        });
+        const mockConfig = new ConfigManager(mockAdapter);
         const localRenderer = new OverlayRenderer(mockConfig);
+        const localFade = new FadeManager(mockAdapter, mockConfig);
 
-        localRenderer.applyFade(container, { rating: 9.5 }, true);
+        localRenderer.applyFade(container, localFade.shouldFade(null, 9.5, true));
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });
