@@ -34,7 +34,7 @@ import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION, TitleType } from './co
  */
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
-    const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
+    const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
     return entry?.value ?? entry?.Value ?? null;
 }
 
