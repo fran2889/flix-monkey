@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce, runIdle } from '../../../src/core/utils.js';
+import { debounce, runIdle, FlixMonkeyError } from '../../../src/core/utils.js';
 
 describe('core/utils', () => {
     beforeEach(() => {
@@ -96,6 +96,25 @@ describe('core/utils', () => {
             expect(func).toHaveBeenCalled();
 
             vi.unstubAllGlobals();
+        });
+    });
+
+    describe('FlixMonkeyError', () => {
+        it('should store all constructor params', () => {
+            const err = new FlixMonkeyError('HTTP 401', 'https://api.example.com/foo', 401, 'Unauthorized');
+            expect(err).toBeInstanceOf(Error);
+            expect(err.name).toBe('FlixMonkeyError');
+            expect(err.message).toBe('HTTP 401');
+            expect(err.url).toBe('https://api.example.com/foo');
+            expect(err.status).toBe(401);
+            expect(err.body).toBe('Unauthorized');
+        });
+
+        it('should default optional params to null', () => {
+            const err = new FlixMonkeyError('test error');
+            expect(err.url).toBeNull();
+            expect(err.status).toBeNull();
+            expect(err.body).toBeNull();
         });
     });
 });

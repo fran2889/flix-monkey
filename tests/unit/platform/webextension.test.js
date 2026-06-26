@@ -133,4 +133,28 @@ describe('WebExtensionAdapter', () => {
         browser.runtime.sendMessage.mockResolvedValue(undefined);
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
     });
+
+    it('httpFetch should include url on HTTP error from background', async () => {
+        expect.assertions(3);
+        browser.runtime.sendMessage.mockResolvedValue({ error: 'HTTP 403', status: 403, body: 'Forbidden' });
+
+        try {
+            await adapter.httpFetch('https://api.example.com/test');
+        } catch (e) {
+            expect(e.url).toBe('https://api.example.com/test');
+            expect(e.status).toBe(403);
+            expect(e.body).toBe('Forbidden');
+        }
+    });
+
+    it('httpFetch should include url on empty background response', async () => {
+        expect.assertions(1);
+        browser.runtime.sendMessage.mockResolvedValue(undefined);
+
+        try {
+            await adapter.httpFetch('https://api.example.com/test');
+        } catch (e) {
+            expect(e.url).toBe('https://api.example.com/test');
+        }
+    });
 });

@@ -222,7 +222,7 @@ class PlatformAdapter {
 | `cacheTtlNoRating`      | text     | `'1'`      | Cache TTL (days) for unrated/not-found titles                  |
 | `enableFadeUnderRating` | checkbox | `false`    | Fade thumbnails below the IMDb threshold                       |
 | `fadeRatingThreshold`   | text     | `'6.0'`    | IMDb rating threshold for fading                               |
-| `debug`                 | checkbox | `false`    | Enable verbose console logging                                 |
+| `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
 
 ## Constants (`constants.js`)
 

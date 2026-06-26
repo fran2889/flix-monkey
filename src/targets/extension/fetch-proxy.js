@@ -33,7 +33,10 @@ export async function handleFetchMessage(url, options = {}) {
             headers: { 'Accept-Language': 'en-US,en;q=0.9' },
         });
         clearTimeout(timeoutId);
-        if (!res.ok) return { error: `HTTP ${res.status}`, status: res.status };
+        if (!res.ok) {
+            const body = await res.text().catch(() => null);
+            return { error: `HTTP ${res.status}`, status: res.status, body: body ? body.slice(0, 200) : null };
+        }
         const data = responseType === 'json' ? await res.json() : await res.text();
         return { data };
     } catch (err) {

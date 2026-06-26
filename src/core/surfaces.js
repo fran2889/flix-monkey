@@ -86,7 +86,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = titleEl.closest(surface.containerSel);
                 if (!container) {
-                    this.#logger.debug('Surface container selector failed, falling back to parentElement', {
+                    this.#logger.warn('Surface container selector failed, falling back to parentElement', {
                         selector: surface.containerSel,
                     });
                     container = titleEl.parentElement;
