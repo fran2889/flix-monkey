@@ -90,7 +90,7 @@ describe('RequestQueue', () => {
         expect(fetchFn).toHaveBeenCalledOnce();
     });
 
-    it('should read global storage only once per request when no wait is needed', async () => {
+    it('should read global storage twice per request when no wait is needed', async () => {
         const mockAdapter = createMockAdapter({
             storageGet: vi.fn().mockResolvedValue('0'),
             storageSet: vi.fn().mockResolvedValue(undefined),
@@ -101,8 +101,8 @@ describe('RequestQueue', () => {
         await queue.enqueue('url1', 0, fetchFn, 'json');
         await queue.enqueue('url2', 0, fetchFn, 'json');
 
-        // With interval=0 and no wait needed, storageGet should be called once per request
-        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(2);
+        // Two reads per request (loop-start + pre-claim), two requests = four total
+        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(4);
     });
 
     it('should resolve multiple concurrently enqueued requests', async () => {
@@ -118,5 +118,39 @@ describe('RequestQueue', () => {
         expect(results).toHaveLength(2);
         expect(results[0].status).toBe(200);
         expect(results[1].status).toBe(200);
+    });
+
+    it('should re-read global storage before claiming timeslot on no-wait path', async () => {
+        const mockAdapter = createMockAdapter({
+            storageGet: vi.fn().mockResolvedValue('0'),
+            storageSet: vi.fn().mockResolvedValue(undefined),
+        });
+        const queue = new RequestQueue(0, 'sync-key', mockAdapter);
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+        await queue.enqueue('url', 0, fetchFn, 'json');
+        // Two reads per request: one at loop start, one pre-claim
+        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(2);
+        expect(fetchFn).toHaveBeenCalledOnce();
+    });
+
+    it('should re-loop when pre-claim read shows another tab fired recently', async () => {
+        let callCount = 0;
+        const recentTime = Date.now();
+        const staleTime = (recentTime - 2000).toString();
+        const mockAdapter = createMockAdapter({
+            storageGet: vi.fn(async () => {
+                callCount++;
+                // 2nd call is the pre-claim re-read — simulate another tab just fired
+                return callCount === 2 ? recentTime.toString() : staleTime;
+            }),
+            storageSet: vi.fn().mockResolvedValue(undefined),
+        });
+        const queue = new RequestQueue(100, 'sync-key', mockAdapter);
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+        await queue.enqueue('url', 0, fetchFn, 'json');
+        // loop1-start → stale (wait=0), pre-claim → recent (re-loop),
+        // loop2-start → stale (wait=0), pre-claim → stale (Date.now()-stale>100 → proceed)
+        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(4);
+        expect(fetchFn).toHaveBeenCalledOnce();
     });
 });
