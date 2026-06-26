@@ -30,18 +30,21 @@ export class SurfaceManager {
             getTitle: el => el.textContent?.trim() ?? null,
             containerSel: '.title-card',
             fadeable: true,
+            showToggle: false,
         },
         {
             titleSelectors: '[data-uia="standard-card"]',
             getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
             containerSel: '[data-uia="standard-card"]',
             fadeable: true,
+            showToggle: false,
         },
         {
             titleSelectors: '.bob-title',
             getTitle: el => el.textContent?.trim() ?? null,
             containerSel: '.bob-container',
             fadeable: false,
+            showToggle: true,
         },
         {
             titleSelectors: [
@@ -53,6 +56,7 @@ export class SurfaceManager {
             getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
             containerSel: '.previewModal--player_container',
             fadeable: false,
+            showToggle: false,
         },
         {
             titleSelectors: [
@@ -68,6 +72,7 @@ export class SurfaceManager {
             getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
             containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
             fadeable: false,
+            showToggle: false,
         },
     ];
 
@@ -93,7 +98,12 @@ export class SurfaceManager {
                 }
                 if (!container || seen.has(container)) return;
                 seen.add(container);
-                results.push({ container, title, fadeable: surface.fadeable ?? false });
+                results.push({
+                    container,
+                    title,
+                    fadeable: surface.fadeable ?? false,
+                    showToggle: surface.showToggle ?? false,
+                });
             });
         });
         return results;

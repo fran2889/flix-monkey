@@ -39,6 +39,7 @@ describe('Surfaces', () => {
         expect(results[0].title).toBe('My Movie');
         expect(results[0].container.className).toBe('title-card');
         expect(results[0].fadeable).toBe(true);
+        expect(results[0].showToggle).toBe(false);
     });
 
     it('should discover search video card surfaces', () => {
@@ -50,6 +51,7 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Search Result Title');
         expect(results[0].fadeable).toBe(true);
+        expect(results[0].showToggle).toBe(false);
     });
 
     it('should discover bob container surfaces', () => {
@@ -63,6 +65,7 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Bob Movie');
         expect(results[0].fadeable).toBe(false);
+        expect(results[0].showToggle).toBe(true);
     });
 
     it('should discover preview modal surfaces (img alt)', () => {
@@ -242,6 +245,7 @@ describe('Surfaces', () => {
             expect(results[0].title).toBe(expectedTitle);
             expect(results[0].container.className).toBe(expectedContainerClass);
             expect(results[0].fadeable).toBe(false);
+            expect(results[0].showToggle).toBe(false);
         });
     });
 
@@ -285,6 +289,7 @@ describe('Surfaces', () => {
             expect(results[0].title).toBe(expectedTitle);
             expect(results[0].container.className).toBe(expectedContainerClass);
             expect(results[0].fadeable).toBe(false);
+            expect(results[0].showToggle).toBe(false);
         });
     });
 });
