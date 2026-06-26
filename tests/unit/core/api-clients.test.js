@@ -113,6 +113,21 @@ describe('XmdbApiClient', () => {
         expect(await client.search('Movie 1')).toBeNull();
     });
 
+    it('should log info when no search results found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ results: [] }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            mockLogger
+        );
+        await client.search('Movie 1');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
+    });
+
     it('should return null if search results have no titles', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({ results: [{ type: 'person', name: 'Someone' }] }),
@@ -126,6 +141,21 @@ describe('XmdbApiClient', () => {
             createMockLogger()
         );
         expect(await client.search('Movie 1')).toBeNull();
+    });
+
+    it('should log info when search results have no titles', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ results: [{ type: 'person', name: 'Someone' }] }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            mockLogger
+        );
+        await client.search('Movie 1');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
     });
 
     it('should handle details with Metacritic rating in ratings array', async () => {
@@ -478,6 +508,21 @@ describe('ImdbApiDevClient', () => {
         expect(await client.search('Unknown')).toBeNull();
     });
 
+    it('should log info when no titles found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ titles: [] }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new ImdbApiDevClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            mockLogger
+        );
+        await client.search('Unknown');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+    });
+
     it('should handle details and ratings', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
@@ -658,6 +703,21 @@ describe('AgregarrApiClient', () => {
         expect(await client.search('Unknown')).toBeNull();
     });
 
+    it('should log info when no title results found', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            mockLogger
+        );
+        await client.search('Unknown');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+    });
+
     it('should return null if suggestions response has no d array', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({}),
@@ -669,6 +729,36 @@ describe('AgregarrApiClient', () => {
             createMockLogger()
         );
         expect(await client.search('Unknown')).toBeNull();
+    });
+
+    it('should log info when suggestions response has no d array', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({}),
+        });
+        const mockLogger = createMockLogger();
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            mockLogger
+        );
+        await client.search('Unknown');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+    });
+
+    it('should log info when suggestions have no matching title types', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({ d: [{ qid: 'nm1', l: 'Some Person' }] }),
+        });
+        const mockLogger = createMockLogger();
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            mockLogger
+        );
+        expect(await client.search('Unknown')).toBeNull();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
     it('should build correct IMDb suggestions URL', async () => {

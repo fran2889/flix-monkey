@@ -208,7 +208,7 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
         await manager.getData('Logged Movie');
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from test-source.')
+            expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from test-source')
         );
     });
 });

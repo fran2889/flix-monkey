@@ -39,7 +39,7 @@ export class ApiClientManager {
         if (reenabled.length > 0) {
             this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
         } else {
-            this.#logger.info('No disabled API clients found to re-enable.');
+            this.#logger.info('No disabled API clients found to re-enable');
         }
         return reenabled;
     }
@@ -62,7 +62,7 @@ export class ApiClientManager {
                 return notFound;
             }
             await this.#cache.write(displayTitle, data);
-            this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}.`);
+            this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}`);
             return data;
         } catch (err) {
             const isHttpError = Number.isInteger(err.status) && err.status >= 400;

@@ -325,7 +325,7 @@ describe('App', () => {
             mockMutationObserverInstance.trigger([{ addedNodes: null }]);
         }).not.toThrow();
 
-        expect(logSpy).toHaveBeenCalledWith('Mutation handler error', expect.any(Error));
+        expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
     });
 
     it('should log errors thrown by decorateContainer rather than propagating them', async () => {
@@ -345,7 +345,7 @@ describe('App', () => {
 
         await vi.waitFor(
             () => {
-                expect(logSpy).toHaveBeenCalledWith('decorateContainer failed', expect.any(Error));
+                expect(logSpy).toHaveBeenCalledWith('Failed to decorate container', expect.any(Error));
             },
             { timeout: 2000 }
         );
@@ -368,7 +368,7 @@ describe('App', () => {
         // Advance past INFLIGHT_TIMEOUT_MS (30000ms)
         await vi.advanceTimersByTimeAsync(31_000);
 
-        expect(logSpy).toHaveBeenCalledWith('decorateContainer failed', expect.any(Error));
+        expect(logSpy).toHaveBeenCalledWith('Failed to decorate container', expect.any(Error));
         logSpy.mockRestore();
     });
 
