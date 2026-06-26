@@ -122,4 +122,28 @@ describe('ConfigManager', () => {
         expect(config.getInt('zero', 10)).toBe(0);
         expect(config.getFloat('zero', 10)).toBe(0);
     });
+
+    it('should return 0 from getInt when both value and fallback are non-numeric', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
+        const result = config.getInt('someKey');
+        expect(typeof result).toBe('number');
+        expect(result).toBe(0);
+    });
+
+    it('should return 0 from getFloat when both value and fallback are non-numeric', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
+        const result = config.getFloat('someKey');
+        expect(typeof result).toBe('number');
+        expect(result).toBe(0);
+    });
+
+    it('should return numeric fallback from getInt when value is non-numeric', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => undefined }), createMockLogger());
+        expect(config.getInt('someKey', 7)).toBe(7);
+    });
+
+    it('should return numeric fallback from getFloat when value is non-numeric', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => undefined }), createMockLogger());
+        expect(config.getFloat('someKey', 1.5)).toBe(1.5);
+    });
 });

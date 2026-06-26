@@ -39,12 +39,16 @@ export class ConfigManager {
     getInt(key, fallback) {
         const val = this.get(key, fallback);
         const num = Number.parseInt(val, 10);
-        return Number.isNaN(num) ? fallback : num;
+        if (!Number.isNaN(num)) return num;
+        const fb = Number.parseInt(fallback, 10);
+        return Number.isNaN(fb) ? 0 : fb;
     }
 
     getFloat(key, fallback) {
         const val = this.get(key, fallback);
         const num = Number.parseFloat(val);
-        return Number.isNaN(num) ? fallback : num;
+        if (!Number.isNaN(num)) return num;
+        const fb = Number.parseFloat(fallback);
+        return Number.isNaN(fb) ? 0 : fb;
     }
 }
