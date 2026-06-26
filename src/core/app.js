@@ -23,7 +23,7 @@ import { SurfaceManager } from './surfaces.js';
 import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
 import { ConfigManager } from './config-manager.js';
 import { Logger } from './logger.js';
-import { debounce, runIdle } from './utils.js';
+import { debounce, runIdle, slugify } from './utils.js';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
 
 export class FlixMonkeyApp {
@@ -82,7 +82,7 @@ export class FlixMonkeyApp {
     async #decorateContainer(container, displayTitle, fadeable) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
-        const dedupKey = displayTitle.toLowerCase();
+        const dedupKey = slugify(displayTitle);
 
         this.#renderer.ensureRelative(container);
         this.#renderer.injectLoadingOverlay(container);
@@ -106,7 +106,7 @@ export class FlixMonkeyApp {
 
         try {
             const data = await promise;
-            if (!this.#renderer.hasOverlay(container)) {
+            if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
                 this.#renderer.injectOverlay(container, data);
                 this.#renderer.applyFade(container, data, fadeable);
             }

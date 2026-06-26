@@ -20,6 +20,7 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { ConfigManager } from '../../../src/core/config-manager.js';
 import { TOP_10_BADGE } from '../../../src/core/constants.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { Title } from '../../../src/core/title.js';
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -88,5 +89,40 @@ describe('OverlayRenderer', () => {
         renderer.injectStyles();
         const style = document.head.querySelector('style');
         expect(style.textContent).not.toContain(`.${TOP_10_BADGE}`);
+    });
+
+    it('should render an IMDb badge for a zero rating', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        const title = new Title({ imdbId: 'tt1234567', rating: 0 });
+        renderer.injectOverlay(container, title);
+        const overlay = container.querySelector('.fm-rating-overlay');
+        expect(overlay).not.toBeNull();
+        // rating=0 renders as "0.0", not as N/A or absent
+        expect(overlay.querySelector('.fm-value')).not.toBeNull();
+        expect(overlay.textContent).toContain('0.0');
+    });
+
+    it('should render RT and MC badges for zero percent ratings', () => {
+        const config = new ConfigManager(
+            createMockAdapter({
+                configGet: key => {
+                    if (key === 'showRtRating') return true;
+                    if (key === 'showMcRating') return true;
+                    return undefined;
+                },
+            })
+        );
+        const renderer = new OverlayRenderer(config);
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        const title = new Title({ imdbId: 'tt1234567', rating: 5, rtRating: 0, mcRating: 0 });
+        renderer.injectOverlay(container, title);
+        const overlay = container.querySelector('.fm-rating-overlay');
+        expect(overlay).not.toBeNull();
+        // rtRating=0 and mcRating=0 each format as "0%"
+        const percentBadges = [...overlay.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
+        expect(percentBadges.length).toBe(2);
     });
 });
