@@ -60,3 +60,18 @@ export function runIdle(func, timeout = 2000) {
         setTimeout(func, 1);
     }
 }
+
+/**
+ * Converts a string to a slug by lowercasing, removing punctuation (except spaces),
+ * replacing spaces with underscores, and trimming leading/trailing underscores.
+ *
+ * @param {string} str The string to slugify.
+ * @returns {string} The slugified string.
+ */
+export function slugify(str) {
+    return str
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]+/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/^_|_$/g, '');
+}

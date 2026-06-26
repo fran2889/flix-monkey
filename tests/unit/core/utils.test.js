@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce, runIdle, FlixMonkeyError } from '../../../src/core/utils.js';
+import { debounce, runIdle, FlixMonkeyError, slugify } from '../../../src/core/utils.js';
 
 describe('core/utils', () => {
     beforeEach(() => {
@@ -115,6 +115,23 @@ describe('core/utils', () => {
             expect(err.url).toBeNull();
             expect(err.status).toBeNull();
             expect(err.body).toBeNull();
+        });
+    });
+
+    describe('slugify', () => {
+        it('should lowercase and replace non-alphanumeric sequences with underscores', () => {
+            expect(slugify("Schitt's Creek")).toBe('schitts_creek');
+            expect(slugify('Test: Movie')).toBe('test_movie');
+            expect(slugify('Hello World')).toBe('hello_world');
+        });
+
+        it('should trim leading and trailing underscores', () => {
+            expect(slugify('  Hello  ')).toBe('hello');
+            expect(slugify('!Movie!')).toBe('movie');
+        });
+
+        it('should produce the same slug for titles differing only by punctuation', () => {
+            expect(slugify('Test: Movie')).toBe(slugify('Test Movie'));
         });
     });
 });
