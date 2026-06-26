@@ -104,7 +104,7 @@ export const CONFIG_FIELDS = [
         label: 'Show fade toggle',
         type: 'checkbox',
         default: true,
-        title: 'Show per-title fade override toggle on hover.',
+        title: 'Show per-title fade override toggle in the bob popup.',
         row: 'fade-toggle-settings',
     },
     {

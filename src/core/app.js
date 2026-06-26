@@ -113,7 +113,7 @@ export class FlixMonkeyApp {
         try {
             const data = await promise;
             if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
-                const isRatingFaded = this.#fade.shouldFade(null, data?.rating, fadeable);
+                const isRatingFaded = this.#fade.shouldFade(null, data?.rating, showToggle || fadeable);
                 const shouldFade = this.#fade.shouldFade(fadeOverride, data?.rating, fadeable);
 
                 const enableToggle = showToggle && this.#config.get('enableFadeToggle', true);

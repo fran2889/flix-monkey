@@ -584,6 +584,37 @@ describe('App', () => {
         expect(document.querySelector('.fm-fade-toggle')).toBeNull();
     });
 
+    it('should initialise bob toggle at faded state when title is rating-faded', async () => {
+        const mockAdapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeToggle') return true;
+                if (key === 'enableFadeUnderRating') return true;
+                if (key === 'fadeRatingThreshold') return 6.0;
+                return undefined;
+            },
+        });
+        document.body.innerHTML = `
+            <div class="bob-container">
+                <div class="bob-title">Bad Movie</div>
+            </div>
+        `;
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 4.5,
+            imdbUrl: 'http://imdb.com',
+        });
+
+        appRef = startApp(mockAdapter);
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            expect(document.querySelector('.bob-container .fm-fade-toggle')).not.toBeNull();
+        });
+
+        const toggle = document.querySelector('.bob-container .fm-fade-toggle');
+        expect(toggle.dataset.state).toBe('faded');
+    });
+
     it('should stamp data-fm-dedup-key on decorated title-card containers', async () => {
         document.body.innerHTML = `
         <div class="title-card">
