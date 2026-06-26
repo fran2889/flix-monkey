@@ -404,6 +404,26 @@ describe('App', () => {
         discoverSpy.mockRestore();
     });
 
+    it('should deduplicate in-flight requests for titles that differ only by punctuation', async () => {
+        const mockAdapter = createMockAdapter();
+        document.body.innerHTML = `
+            <div id="container">
+                <div class="title-card" id="card1"><div class="fallback-text">Test: Movie</div></div>
+                <div class="title-card" id="card2"><div class="fallback-text">Test Movie</div></div>
+            </div>
+        `;
+        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            apiTitle: 'Test Movie',
+            rating: 7.0,
+        });
+        appRef = startApp(mockAdapter);
+        await vi.waitFor(() => {
+            if (getDataSpy.mock.calls.length === 0) throw new Error('Not called yet');
+        });
+        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(1);
+        getDataSpy.mockRestore();
+    });
+
     it('should not inject overlay when container is removed from DOM before data resolves', async () => {
         const container = document.createElement('div');
         container.className = 'title-card';
