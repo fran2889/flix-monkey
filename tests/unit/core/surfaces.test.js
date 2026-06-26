@@ -121,7 +121,7 @@ describe('Surfaces', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan Title');
         expect(results[0].container.className).toBe('not-a-container');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect(mockLogger.warn).toHaveBeenCalledWith(
             'Surface container selector failed, falling back to parentElement',
             {
                 selector: '.bob-container',

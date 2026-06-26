@@ -39,13 +39,17 @@ const adapter = {
             lastImdbApiRequest = Date.now();
         }
         const response = await fetch(url, options);
+        const text = await response.text();
         if (!response.ok) {
-            const body = await response.text();
-            const err = new Error(`HTTP ${response.status}: ${body}`);
+            const err = new Error(`HTTP ${response.status}: ${text}`);
             err.status = response.status;
             throw err;
         }
-        return await response.json();
+        try {
+            return JSON.parse(text);
+        } catch {
+            throw new Error(`Invalid JSON from ${url}: ${text.slice(0, 500)}`);
+        }
     },
     storageGet: async () => '0',
     storageSet: async () => {},

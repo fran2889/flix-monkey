@@ -129,13 +129,12 @@ export class BaseApiClient {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, durationMs);
         this.#logger?.warn(
-            `${this.constructor.name} disabled for ${durationMs / 60000}m. Purged ${count} queued requests.`
+            `${this.source} disabled for ${durationMs / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
         );
     }
 
     /**
      * Enqueues an HTTP request through the rate-limited queue.
-     * Automatically disables the client on 4xx responses.
      *
      * @param {string} url - Request URL.
      * @param {number} [priority=0] - Higher values are processed first.
@@ -143,18 +142,12 @@ export class BaseApiClient {
      * @returns {Promise<*>} Parsed response body.
      */
     async queuedFetch(url, priority = 0, responseType = 'json') {
-        try {
-            return await this.#queue.enqueue(
-                url,
-                priority,
-                (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
-                responseType
-            );
-        } catch (err) {
-            const status = err?.status;
-            if (Number.isInteger(status) && status >= 400 && status < 500) await this.disable();
-            throw err;
-        }
+        return this.#queue.enqueue(
+            url,
+            priority,
+            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
+            responseType
+        );
     }
 
     /**
@@ -228,12 +221,12 @@ export class XmdbApiClient extends BaseApiClient {
         this.logger?.debug(`Searching XMDB for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in XMDB for "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.logger?.debug(`No search results found in XMDB for: "${displayTitle}"`);
+            this.logger?.info(`No title-type results found in XMDB for "${displayTitle}"`);
             return null;
         }
         return titleResults[0];
@@ -245,6 +238,9 @@ export class XmdbApiClient extends BaseApiClient {
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
+            this.logger?.warn(`XMDB details request failed for "${displayTitle}" (ID: ${id})`, {
+                response: detailsJson ?? null,
+            });
             return null;
         }
         const { rating, release_year, title, metascore, title_type } = detailsJson;
@@ -285,10 +281,12 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        this.logger?.debug(`Fetching OMDB details for title: "${t}"${displayTitle ? ` ("${displayTitle}")` : ''}`);
+        this.logger?.debug(`Fetching OMDB details for title: "${t}"`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.debug(`No search results found in OMDB for: "${t}"`);
+            this.logger?.warn(`OMDB details request failed for "${displayTitle}"`, {
+                response: json,
+            });
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
@@ -322,7 +320,7 @@ export class ImdbApiDevClient extends BaseApiClient {
         this.logger?.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
         const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
         if (!titles?.length) {
-            this.logger?.debug(`No search results found in IMDb API Dev for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in IMDb API Dev for "${displayTitle}"`);
             return null;
         }
         return titles[0];
@@ -333,7 +331,10 @@ export class ImdbApiDevClient extends BaseApiClient {
         this.logger?.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
         const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
         if (!detailsJson || detailsJson.error) {
-            throw new Error(`IMDb API Dev details request failed for ID: ${id}`);
+            this.logger?.warn(`IMDb API Dev details request failed for "${displayTitle}" (ID: ${id})`, {
+                response: detailsJson ?? null,
+            });
+            return null;
         }
 
         const { primaryTitle, startYear, rating, metacritic, type } = detailsJson;
@@ -366,16 +367,16 @@ export class AgregarrApiClient extends BaseApiClient {
 
     async search(displayTitle) {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
-        this.logger?.debug(`Searching IMDb suggestions for title: "${displayTitle}"`);
+        this.logger?.debug(`Searching Agregarr for title: "${displayTitle}"`);
         const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
         const results = data?.d;
         if (!results?.length) {
-            this.logger?.debug(`No search results found in IMDb suggestions for: "${displayTitle}"`);
+            this.logger?.info(`No search results found in Agregarr for "${displayTitle}"`);
             return null;
         }
         const match = results.find(r => AGREGARR_TITLE_TYPES.has(r.qid));
         if (!match) {
-            this.logger?.debug(`No title results found in IMDb suggestions for: "${displayTitle}"`);
+            this.logger?.info(`No title-type results found in Agregarr for "${displayTitle}"`);
             return null;
         }
         return match;
@@ -383,9 +384,14 @@ export class AgregarrApiClient extends BaseApiClient {
 
     async getDetails(match, displayTitle) {
         const { id, l: title, qid, y: year } = match;
-        this.logger?.debug(`Fetching Agregarr rating for ID: ${id} ("${displayTitle}")`);
+        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
+        if (!entry) {
+            this.logger?.warn(`Agregarr details request failed for "${displayTitle}" (ID: ${id})`, {
+                response: ratings ?? null,
+            });
+        }
         return new Title({
             apiTitle: title ?? null,
             imdbId: id,
