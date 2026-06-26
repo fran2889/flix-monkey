@@ -64,4 +64,20 @@ describe('core/logger', () => {
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
     });
+
+    it('should log debug when adapter returns string "true"', () => {
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const logger = new Logger({ configGet: key => (key === 'debug' ? 'true' : undefined) });
+        logger.debug('test debug from userscript');
+        expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug from userscript');
+        spy.mockRestore();
+    });
+
+    it('should not log debug when adapter returns string "false"', () => {
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const logger = new Logger({ configGet: key => (key === 'debug' ? 'false' : undefined) });
+        logger.debug('should not appear');
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
+    });
 });
