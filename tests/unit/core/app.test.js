@@ -21,6 +21,7 @@ import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
+import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -401,5 +402,39 @@ describe('App', () => {
         expect(roots.some(r => r === parent)).toBe(true);
 
         discoverSpy.mockRestore();
+    });
+
+    it('should not inject overlay when container is removed from DOM before data resolves', async () => {
+        const container = document.createElement('div');
+        container.className = 'title-card';
+        container.innerHTML = '<div class="fallback-text">Detach Test</div>';
+        document.body.appendChild(container);
+
+        let resolveData;
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(
+            new Promise(resolve => {
+                resolveData = resolve;
+            })
+        );
+        const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay');
+
+        appRef = startApp(createMockAdapter());
+
+        // Advance fake timers so the setTimeout(resolve, 0) yield in #decorateContainer fires,
+        // moving execution past the yield and into the getData await
+        vi.advanceTimersByTime(1);
+        await Promise.resolve();
+        await Promise.resolve();
+
+        // Detach the container before the data resolves
+        document.body.removeChild(container);
+
+        // Now resolve the data — document.contains(container) is now false
+        resolveData({ apiTitle: 'Detach Test', rating: 7.0 });
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(injectSpy).not.toHaveBeenCalled();
+        injectSpy.mockRestore();
     });
 });
