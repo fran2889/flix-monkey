@@ -474,6 +474,30 @@ describe('OmdbApiClient', () => {
     });
 });
 
+describe('OmdbApiClient', () => {
+    it('should not throw when the Ratings array contains a null element', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                Title: 'Some Title',
+                imdbID: 'tt1234567',
+                imdbRating: '7.5',
+                Year: '2020',
+                Type: 'movie',
+                Ratings: [null, { Source: 'Metacritic', Value: '80/100' }],
+            }),
+        });
+        const mockDisabledManager = {
+            isDisabled: vi.fn().mockResolvedValue(false),
+            disable: vi.fn().mockResolvedValue(undefined),
+        };
+        const client = new OmdbApiClient(mockDisabledManager, mockAdapter, { get: () => 'apikey' }, createMockLogger());
+        const result = await client.fetch('Some Title');
+        expect(result).not.toBeNull();
+        expect(result.mcRating).toBe(80);
+    });
+});
+
 describe('ImdbApiDevClient', () => {
     it('should return the first title result', async () => {
         const mockAdapter = createMockAdapter({
