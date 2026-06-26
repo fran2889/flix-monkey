@@ -468,7 +468,7 @@ describe('App', () => {
             },
         });
         mockAdapter.storageGet.mockImplementation(key => {
-            if (key === 'fm-fade:test title') return Promise.resolve('true');
+            if (key === 'fm-fade:test_title') return Promise.resolve('true');
             return Promise.resolve(null);
         });
 
@@ -498,20 +498,18 @@ describe('App', () => {
         await vi.runAllTimersAsync();
     });
 
-    it('should cycle toggle state on click and update fade', async () => {
+    it('should render toggle in bob and update title-card fade on click', async () => {
         const mockAdapter = createMockAdapter({
-            configGet: key => {
-                if (key === 'enableFadeToggle') return true;
-                return undefined;
-            },
+            configGet: key => (key === 'enableFadeToggle' ? true : undefined),
         });
-
         document.body.innerHTML = `
-            <div class="title-card">
-                <div class="fallback-text">Toggle Movie</div>
-            </div>
-        `;
-
+        <div class="bob-container">
+            <div class="bob-title">Toggle Movie</div>
+        </div>
+        <div class="title-card">
+            <div class="fallback-text">Toggle Movie</div>
+        </div>
+    `;
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
             rating: 8.0,
             imdbUrl: 'http://imdb.com',
@@ -522,33 +520,29 @@ describe('App', () => {
         vi.runAllTimers();
 
         await vi.waitFor(() => {
-            const toggle = document.querySelector('.fm-fade-toggle');
-            expect(toggle).not.toBeNull();
+            expect(document.querySelector('.bob-container .fm-fade-toggle')).not.toBeNull();
         });
 
-        const toggle = document.querySelector('.fm-fade-toggle');
+        const toggle = document.querySelector('.bob-container .fm-fade-toggle');
         expect(toggle.dataset.state).toBe('auto');
+        expect(document.querySelector('.title-card .fm-fade-toggle')).toBeNull();
 
         toggle.click();
         await vi.runAllTimersAsync();
+
         expect(toggle.dataset.state).toBe('faded');
         expect(document.querySelector('.title-card').classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should not render toggle when enableFadeToggle is false', async () => {
+    it('should not render toggle in bob when enableFadeToggle is false', async () => {
         const mockAdapter = createMockAdapter({
-            configGet: key => {
-                if (key === 'enableFadeToggle') return false;
-                return undefined;
-            },
+            configGet: key => (key === 'enableFadeToggle' ? false : undefined),
         });
-
         document.body.innerHTML = `
-            <div class="title-card">
-                <div class="fallback-text">No Toggle Movie</div>
-            </div>
-        `;
-
+        <div class="bob-container">
+            <div class="bob-title">No Toggle Movie</div>
+        </div>
+    `;
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
             rating: 8.0,
             imdbUrl: 'http://imdb.com',
@@ -563,5 +557,51 @@ describe('App', () => {
         });
 
         expect(document.querySelector('.fm-fade-toggle')).toBeNull();
+    });
+
+    it('should not render toggle on title-card even when enableFadeToggle is true', async () => {
+        const mockAdapter = createMockAdapter({
+            configGet: key => (key === 'enableFadeToggle' ? true : undefined),
+        });
+        document.body.innerHTML = `
+        <div class="title-card">
+            <div class="fallback-text">No Toggle Here</div>
+        </div>
+    `;
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 7.0,
+            imdbUrl: 'http://imdb.com',
+        });
+
+        appRef = startApp(mockAdapter);
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            expect(document.querySelector('.fm-rating-overlay')).not.toBeNull();
+        });
+
+        expect(document.querySelector('.fm-fade-toggle')).toBeNull();
+    });
+
+    it('should stamp data-fm-dedup-key on decorated title-card containers', async () => {
+        document.body.innerHTML = `
+        <div class="title-card">
+            <div class="fallback-text">Stamp Test</div>
+        </div>
+    `;
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 7.0,
+            imdbUrl: 'http://imdb.com',
+        });
+
+        appRef = startApp(createMockAdapter());
+        await Promise.resolve();
+        vi.runAllTimers();
+
+        await vi.waitFor(() => {
+            const card = document.querySelector('.title-card');
+            expect(card.dataset.fmDedupKey).toBe('stamp_test');
+        });
     });
 });

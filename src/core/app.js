@@ -84,7 +84,7 @@ export class FlixMonkeyApp {
         return await this.#api.resetDisabledClients();
     }
 
-    async #decorateContainer(container, displayTitle, fadeable) {
+    async #decorateContainer(container, displayTitle, fadeable, showToggle = false) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const dedupKey = slugify(displayTitle);
@@ -116,7 +116,7 @@ export class FlixMonkeyApp {
                 const isRatingFaded = this.#fade.shouldFade(null, data?.rating, fadeable);
                 const shouldFade = this.#fade.shouldFade(fadeOverride, data?.rating, fadeable);
 
-                const enableToggle = this.#config.get('enableFadeToggle', true);
+                const enableToggle = showToggle && this.#config.get('enableFadeToggle', true);
                 let toggleOptions = null;
                 if (enableToggle) {
                     const toggleState = this.#fade.getToggleState(fadeOverride, isRatingFaded);
@@ -128,6 +128,9 @@ export class FlixMonkeyApp {
 
                 this.#renderer.injectOverlay(container, data, toggleOptions);
                 this.#renderer.applyFade(container, shouldFade);
+                if (fadeable) {
+                    container.dataset.fmDedupKey = dedupKey;
+                }
             }
         } finally {
             this.#renderer.removeLoadingOverlay(container);
@@ -149,11 +152,15 @@ export class FlixMonkeyApp {
         toggle.dataset.state = nextState;
         const shouldFade = this.#fade.shouldFade(newOverride, data?.rating, fadeable);
         this.#renderer.applyFade(container, shouldFade);
+        const siblingFade = this.#fade.shouldFade(newOverride, data?.rating, true);
+        document.querySelectorAll(`[data-fm-dedup-key="${dedupKey}"]`).forEach(sibling => {
+            this.#renderer.applyFade(sibling, siblingFade);
+        });
     }
 
     decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
-            this.#decorateContainer(container, title, fadeable).catch(err =>
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showToggle = false }) => {
+            this.#decorateContainer(container, title, fadeable, showToggle).catch(err =>
                 this.#logger.error('Failed to decorate container', err)
             );
         });
