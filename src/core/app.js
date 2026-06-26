@@ -106,7 +106,7 @@ export class FlixMonkeyApp {
 
         try {
             const data = await promise;
-            if (!this.#renderer.hasOverlay(container)) {
+            if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
                 this.#renderer.injectOverlay(container, data);
                 this.#renderer.applyFade(container, data, fadeable);
             }
