@@ -85,46 +85,47 @@ export class OverlayRenderer {
             .fm-faded:hover { opacity: 1; }
         `;
         cssText += `
-            .fm-fade-toggle {
-                opacity: 0;
-                transition: opacity 0.15s;
-                pointer-events: none;
-                cursor: pointer;
-                padding: 0;
-                background: transparent !important;
-            }
-            .fm-fade-toggle:hover {
-                background: transparent !important;
-            }
-            .fm-toggle-track {
-                width: 48px;
-                height: 18px;
-                border-radius: 9px;
-                background: rgba(255,255,255,0.25);
-                position: relative;
-                transition: background 0.2s;
-            }
-            .fm-toggle-knob {
-                width: 14px;
-                height: 14px;
-                border-radius: 50%;
-                background: #fff;
-                position: absolute;
-                top: 2px;
-                left: 2px;
-                transition: transform 0.2s;
-            }
-            .fm-fade-toggle[data-state="faded"] .fm-toggle-track { background: rgba(255,255,255,0.15); }
-            .fm-fade-toggle[data-state="auto"] .fm-toggle-track { background: rgba(255,255,255,0.25); }
-            .fm-fade-toggle[data-state="not-faded"] .fm-toggle-track { background: rgba(255,255,255,0.4); }
-            .fm-fade-toggle[data-state="faded"] .fm-toggle-knob { transform: translateX(0); }
-            .fm-fade-toggle[data-state="auto"] .fm-toggle-knob { transform: translateX(15px); }
-            .fm-fade-toggle[data-state="not-faded"] .fm-toggle-knob { transform: translateX(30px); }
-            .title-card:hover .fm-fade-toggle,
-            [data-uia="standard-card"]:hover .fm-fade-toggle {
-                opacity: 1;
-                pointer-events: auto;
-            }
+    .fm-fade-toggle {
+        cursor: pointer;
+        padding: 0;
+        background: transparent !important;
+    }
+    .fm-fade-toggle:hover {
+        background: transparent !important;
+    }
+    .fm-toggle-track {
+        width: 41px;
+        height: 15px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.25);
+        position: relative;
+    }
+    .fm-toggle-knob {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        position: absolute;
+        top: 1.5px;
+        left: 2px;
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        line-height: 1;
+    }
+    .fm-fade-toggle[data-state="faded"] .fm-toggle-knob { transform: translateX(0); }
+    .fm-fade-toggle[data-state="auto"] .fm-toggle-knob { transform: translateX(12px); }
+    .fm-fade-toggle[data-state="not-faded"] .fm-toggle-knob { transform: translateX(25px); }
+    .fm-fade-toggle[data-state="faded"] .fm-toggle-knob::after {
+        content: '✕';
+        color: #e53935;
+    }
+    .fm-fade-toggle[data-state="not-faded"] .fm-toggle-knob::after {
+        content: '✓';
+        color: #43a047;
+    }
         `;
         if (existing) {
             existing.textContent = cssText;

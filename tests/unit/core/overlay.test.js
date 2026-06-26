@@ -134,4 +134,55 @@ describe('OverlayRenderer', () => {
         expect(style.textContent).toContain('.fm-toggle-track');
         expect(style.textContent).toContain('.fm-toggle-knob');
     });
+
+    it('should not include hover-visibility rules for title-card or standard-card toggles', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        expect(css).not.toContain('.title-card:hover .fm-fade-toggle');
+        expect(css).not.toContain('[data-uia="standard-card"]:hover .fm-fade-toggle');
+    });
+
+    it('should not default the toggle to opacity 0', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        // toggle should be visible when rendered — no hidden-by-default rule
+        expect(css).not.toMatch(/fm-fade-toggle[^{]*\{[^}]*opacity:\s*0/);
+    });
+
+    it('should render toggle track at 41px wide by 15px tall', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        expect(css).toContain('width: 41px');
+        expect(css).toContain('height: 15px');
+    });
+
+    it('should render toggle knob at 12px square', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        expect(css).toContain('width: 12px');
+        expect(css).toContain('height: 12px');
+    });
+
+    it('should include red X icon for faded state and green checkmark for not-faded', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        expect(css).toContain('✕'); // ✕
+        expect(css).toContain('#e53935');
+        expect(css).toContain('✓'); // ✓
+        expect(css).toContain('#43a047');
+    });
+
+    it('should not include per-state track background color rules', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        renderer.injectStyles();
+        const css = document.head.querySelector('#fm-overlay-styles').textContent;
+        expect(css).not.toContain('[data-state="faded"] .fm-toggle-track');
+        expect(css).not.toContain('[data-state="not-faded"] .fm-toggle-track');
+        expect(css).not.toContain('[data-state="auto"] .fm-toggle-track');
+    });
 });
