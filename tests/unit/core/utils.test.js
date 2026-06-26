@@ -120,7 +120,7 @@ describe('core/utils', () => {
 
     describe('slugify', () => {
         it('should lowercase and replace non-alphanumeric sequences with underscores', () => {
-            expect(slugify("Schitt's Creek")).toBe('schitts_creek');
+            expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
             expect(slugify('Test: Movie')).toBe('test_movie');
             expect(slugify('Hello World')).toBe('hello_world');
         });
