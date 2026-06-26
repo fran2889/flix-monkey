@@ -68,7 +68,14 @@ export class RequestQueue {
                 continue;
             }
 
-            // No wait needed. Fire immediately without re-reading storage
+            // Re-read storage before claiming the timeslot to reduce cross-tab races
+            if (this.#globalSyncKey && this.#adapter) {
+                const str = await this.#adapter.storageGet(this.#globalSyncKey);
+                const parsed = parseInt(str, 10);
+                const freshGlobal = Number.isNaN(parsed) ? 0 : parsed;
+                if (Date.now() - freshGlobal < this.#minInterval) continue;
+            }
+
             this.#lastLocalReqTime = Date.now();
             if (this.#globalSyncKey && this.#adapter) {
                 await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
