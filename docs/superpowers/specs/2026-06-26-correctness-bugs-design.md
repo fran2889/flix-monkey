@@ -1,12 +1,11 @@
-# Design: Fix Correctness Bugs C1–C7
+# Design: Fix Correctness Bugs
 
 **Date:** 2026-06-26
-**Source:** `docs/issues-to-fix.md` — Bugs / Correctness section
 **Scope:** Seven targeted bug fixes, each shipped as a separate commit.
 
 ---
 
-## C1 — Cross-tab rate-limit race in the request queue
+## Cross-tab rate-limit race in the request queue
 
 **File:** `src/core/request-queue.js:71-75`
 
@@ -28,7 +27,7 @@ this.#lastLocalReqTime = Date.now();
 
 ---
 
-## C2 — In-flight dedup key ≠ cache key
+## In-flight dedup key ≠ cache key
 
 **Files:** `src/core/app.js:85`, `src/core/cache.js:33-38`, `src/core/utils.js`
 
@@ -48,7 +47,7 @@ export function slugify(str) {
 
 ---
 
-## C3 — `getInt` / `getFloat` can return a non-numeric fallback
+## `getInt` / `getFloat` can return a non-numeric fallback
 
 **File:** `src/core/config-manager.js:39-49`
 
@@ -76,7 +75,7 @@ getFloat(key, fallback) {
 
 ---
 
-## C4 — Overlay truthiness checks drop legitimate `0` / `0%` ratings
+## Overlay truthiness checks drop legitimate `0` / `0%` ratings
 
 **File:** `src/core/overlay.js:158, 170, 177`
 
@@ -92,7 +91,7 @@ getFloat(key, fallback) {
 
 ---
 
-## C5 — `parseRatings` can throw on a `null` array element
+## `parseRatings` can throw on a `null` array element
 
 **File:** `src/core/api-clients.js:37`
 
@@ -106,7 +105,7 @@ const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
 
 ---
 
-## C6 — No `document.contains()` guard before injecting the overlay
+## No `document.contains()` guard before injecting the overlay
 
 **File:** `src/core/app.js:107-115`
 
@@ -123,7 +122,7 @@ if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
 
 ---
 
-## C7 — `debug` logging silently broken on userscript host
+## `debug` logging silently broken on userscript host
 
 **File:** `src/core/logger.js:28`
 
@@ -141,7 +140,7 @@ This correctly handles boolean `true` (WebExtension) and string `"true"` (usersc
 
 ## Commit Plan
 
-Each fix is independent and will be committed separately in C1–C7 order:
+Each fix is independent and will be committed separately:
 
 | Commit                                                                           | Files touched                                               |
 | -------------------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -157,10 +156,10 @@ Each fix is independent and will be committed separately in C1–C7 order:
 
 ## Testing Notes
 
-- C1: Unit test with two interleaved queue instances sharing a mock storage adapter; verify only one fires per interval.
-- C2: Unit test with a title containing punctuation (e.g. `"Schitt's Creek"`); verify dedup key matches the cache key produced by `CacheManager`.
-- C3: Unit test `getInt(key)` with no fallback when the stored value is missing/invalid; verify a number is returned.
-- C4: Unit test `#createOverlay` with a `Title` whose `rating`, `rtRating`, `mcRating` are all `0`; verify all three badges render.
-- C5: Unit test `parseRatings` with an array containing a `null` element; verify no throw.
-- C6: Unit test `#decorateContainer` where `container` is removed from the DOM before `await promise` resolves; verify `injectOverlay` is not called.
-- C7: Unit test `Logger.debug` with the adapter returning string `"true"`; verify the console method is called.
+- **Request queue race:** Unit test with two interleaved queue instances sharing a mock storage adapter; verify only one fires per interval.
+- **Dedup/cache key alignment:** Unit test with a title containing punctuation (e.g. `"Schitt's Creek"`); verify dedup key matches the cache key produced by `CacheManager`.
+- **Numeric config return:** Unit test `getInt(key)` with no fallback when the stored value is missing/invalid; verify a number is returned.
+- **Zero ratings:** Unit test `#createOverlay` with a `Title` whose `rating`, `rtRating`, `mcRating` are all `0`; verify all three badges render.
+- **Null array element:** Unit test `parseRatings` with an array containing a `null` element; verify no throw.
+- **Detached container:** Unit test `#decorateContainer` where `container` is removed from the DOM before `await promise` resolves; verify `injectOverlay` is not called.
+- **Debug flag normalization:** Unit test `Logger.debug` with the adapter returning string `"true"`; verify the console method is called.
