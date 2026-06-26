@@ -17,6 +17,7 @@
  */
 import { DAYS_TO_MS } from './constants.js';
 import { Title } from './title.js';
+import { slugify } from './utils.js';
 
 export class CacheManager {
     #prefix = 'fmc:';
@@ -31,11 +32,7 @@ export class CacheManager {
     }
 
     #getCacheKey(displayTitle) {
-        const slug = displayTitle
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/^_|_$/g, '');
-        return `${this.#prefix}${slug}`;
+        return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
     #calculateTtl(titleObj) {

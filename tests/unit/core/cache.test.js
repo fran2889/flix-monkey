@@ -138,4 +138,15 @@ describe('CacheManager', () => {
         const result = await cacheManager.read('Old Entry', 'imdbapi');
         expect(result).toBeNull();
     });
+
+    it('should produce the same cache key for titles that differ only by punctuation', async () => {
+        const title = new Title({ apiTitle: 'Test Title' });
+        await cacheManager.write('Test: Title', title);
+        const key1 = adapter.storageSet.mock.calls[0][0];
+        adapter.storageSet.mockClear();
+        await cacheManager.write('Test Title', title);
+        const key2 = adapter.storageSet.mock.calls[0][0];
+        expect(key1).toBe(key2);
+        expect(key1).toBe('fmc:test_title');
+    });
 });
