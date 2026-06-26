@@ -38,7 +38,7 @@ The knob slides with a CSS transition.
 
 Overrides stored as individual keys using the existing platform adapter storage API:
 
-- **Key format:** `fm-fade:{title}` where `{title}` is the lowercase display title string (the same dedup key used by `#decorateContainer`)
+- **Key format:** `fm-fade:{title}` where `{title}` is the slugified display title string (lowercase, non-alphanumerics collapsed to `_` — the same dedup key used by `#decorateContainer`)
 - **Values:** `true` (always fade) / `false` (never fade) / key absent (auto — no override)
 
 On toggle click: write `true`/`false` via `adapter.storageSet()`, or delete the key via `adapter.storageDelete()` when returning to auto. Overrides persist across sessions.
@@ -62,7 +62,7 @@ New class `src/core/fade-manager.js` following the existing manager pattern (`Ca
 **`shouldFade` logic:**
 
 ```
-1. If enableFadeToggle config is on and fadeOverride is not null:
+1. If fadeable and enableFadeToggle config is on and fadeOverride is not null:
    - true → return true (fade)
    - false → return false (don't fade)
 2. If fadeable and enableFadeUnderRating config is on:
@@ -70,6 +70,9 @@ New class `src/core/fade-manager.js` following the existing manager pattern (`Ca
    - else → return false
 3. Return false
 ```
+
+Note: the `fadeable` guard on step 1 ensures the bob popup (fadeable: false) is never
+faded itself — only the sibling title-cards are affected by the override.
 
 ### 4. Updated decoration pipeline
 
