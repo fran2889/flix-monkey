@@ -22,7 +22,12 @@ export const CONFIG_FIELDS = [
         key: 'overlayCorner',
         label: 'Overlay Position',
         type: 'select',
-        options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        options: [
+            ['top-left', 'Top Left'],
+            ['top-right', 'Top Right'],
+            ['bottom-left', 'Bottom Left'],
+            ['bottom-right', 'Bottom Right'],
+        ],
         default: 'top-left',
         title: 'Where the rating badge appears on thumbnails.',
     },
