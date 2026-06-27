@@ -92,15 +92,33 @@ Existing UI test fixture files are refreshed from Chromium using the same anonym
 
 `netflix-hover.html` and `netflix-modal.html` remain in place but are also refreshed so they're ready when their corresponding UI tests are written. They are not wired up to tests in this change.
 
-### 7. `tests/unit/core/surfaces.test.js` — Migrate to fixture-based tests
+### 7. `tests/ui/` — New UI tests for the two previewModal surfaces
 
-The surfaces unit test is split into two groups:
+The fixture-based surface tests live in `tests/ui/`, alongside `browse.ui.test.js` and `search.ui.test.js`, using the same pattern (load fixture file → `discover()` → assert shape).
 
-**Fixture-based discovery tests** (new) — load each surface fixture and assert that `discover()` returns the expected surface shape. These prove the selectors work against real Netflix DOM structure.
+Two new test files are added:
 
-**Inline DOM edge-case tests** (retained) — hand-crafted minimal DOM for behaviour that doesn't depend on Netflix structure: empty title text, null alt, fallback to `parentElement`, `querySelectorAll` errors, deduplication via `seen`.
+- **`tests/ui/preview-mini.ui.test.js`** — loads `tests/fixtures/surfaces/preview-mini.html`, asserts `discover()` returns one result with the correct title, container class, and `fadeable: false`
+- **`tests/ui/preview-detail.ui.test.js`** — loads `tests/fixtures/surfaces/preview-detail.html`, same assertions for the detail-modal surface
 
-Tests for removed surfaces (BOB, jawBone, stale previewModal selectors) are deleted.
+### 8. `tests/unit/core/surfaces.test.js` — Remove dead tests, keep behavioural unit tests
+
+The unit test stays as hand-crafted inline DOM. It tests `discover()` logic and edge cases, not selector correctness against real Netflix structure — that is the job of the UI tests.
+
+**Deleted** (tests for removed surfaces and stale selectors):
+
+- `should discover bob container surfaces`
+- `should discover jawbone surfaces`
+- `should fall back to parent element...` (currently exercises `.bob-title` / `.bob-container` — rewritten using a generic orphan-title scenario instead)
+- All `it.each` cases in `previewModal fallback selectors` for the three removed selectors (`titleTreatmentWrapper img[alt]`, `data-uia="previewModal-title"`, `.previewModal--boxarttitle`)
+- All `jawBone / detail-view fallback selectors` `it.each` cases
+
+**Added** (minimal inline DOM for the two new surfaces):
+
+- `should discover preview mini-modal surface` — `<div class="previewModal--wrapper mini-modal"><div class="previewModal--player_container"><img alt="Test Title"></div></div>`
+- `should discover preview detail-modal surface` — same structure with `detail-modal`
+
+**Retained unchanged**: empty array on no match, deduplication via `seen`, fallback to `parentElement`, `querySelectorAll` error handling, empty/null title skipping.
 
 ---
 
