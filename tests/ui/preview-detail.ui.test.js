@@ -35,7 +35,7 @@ describe('Preview Detail-Modal UI Surface', () => {
     it('discovers exactly one surface from the detail-modal fixture', () => {
         const results = surfaceManager.discover(document.body);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Breaking Bad');
+        expect(results[0].title).toBe("It's Complicated");
         const detailResults = results.filter(r => r.container.classList.contains('previewModal--player_container'));
         expect(detailResults.length).toBeGreaterThanOrEqual(1);
     });

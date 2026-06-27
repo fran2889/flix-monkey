@@ -35,7 +35,7 @@ describe('Preview Mini-Modal UI Surface', () => {
     it('discovers exactly one surface from the mini-modal fixture', () => {
         const results = surfaceManager.discover(document.body);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Sweet Magnolias');
+        expect(results[0].title).toBe("It's Complicated");
         const miniResults = results.filter(r => r.container.classList.contains('previewModal--player_container'));
         expect(miniResults.length).toBeGreaterThanOrEqual(1);
     });
