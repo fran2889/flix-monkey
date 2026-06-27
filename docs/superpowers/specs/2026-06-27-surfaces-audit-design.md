@@ -1,8 +1,8 @@
-# Surfaces Audit: Selector Tightening & Comments
+# Surfaces Audit: Selector Tightening, Comments & Fresh Fixtures
 
 **Date:** 2026-06-27
-**File:** `src/core/surfaces.js`
-**Scope:** Remove dead surfaces and selectors, tighten live ones, split previewModal into distinct mini-modal and detail-modal surfaces, add comments that link each surface to its Netflix UI area.
+**File:** `src/core/surfaces.js`, `tests/unit/core/surfaces.test.js`, `tests/fixtures/`
+**Scope:** Remove dead surfaces and selectors, tighten live ones, split previewModal into distinct mini-modal and detail-modal surfaces, add comments, capture fresh anonymised DOM fixtures from Chromium and migrate the surfaces unit test to use them.
 
 ---
 
@@ -20,19 +20,21 @@ The audit found three categories of dead code:
 
 The audit also confirmed that the previewModal wrapper carries distinct classes — `mini-modal` for the card hover popup and `detail-modal` for the full "More Info" modal. The single merged previewModal surface is split into two, one per logical Netflix surface, so future UI changes can target each independently.
 
+The existing surfaces unit test uses hand-crafted inline DOM. Two of the four existing fixture files (`netflix-hover.html`, `netflix-modal.html`) are orphaned — no test loads them. All fixture files are stale (oldest meta tags date to 2022). Fixtures are refreshed from the live Chromium session as part of this change.
+
 ---
 
 ## Changes
 
-### Remove BOB surface entirely
+### 1. `src/core/surfaces.js` — Remove BOB surface
 
 The entire BOB entry is deleted.
 
-### Remove jawBone surface entirely
+### 2. `src/core/surfaces.js` — Remove jawBone surface
 
 The entire jawBone entry is deleted. No surviving selectors reference `.jawBone`, `.jawBoneContainer`, or `.previewModal--detailsMetadata`.
 
-### Split previewModal into two surfaces
+### 3. `src/core/surfaces.js` — Split previewModal into two surfaces
 
 The single previewModal surface becomes:
 
@@ -50,9 +52,49 @@ Both use `getTitle: el => el.getAttribute('alt')?.trim() ?? null` and `fadeable:
 
 The titleSelector is scoped to the wrapper class so each surface is self-contained: one selector, one logical Netflix UI area.
 
-### Add comments to all surviving surfaces
+### 4. `src/core/surfaces.js` — Add comments
 
-Each surface entry gets a short block comment naming the Netflix UI area it targets.
+Each surface entry gets a short block comment naming the Netflix UI area it targets and explaining why the specific selector was chosen.
+
+### 5. `tests/fixtures/surfaces/` — Capture and anonymise fresh DOM extracts
+
+Capture a minimal but authentic DOM extract for each surface from the live Chromium session (port 9222) and save as:
+
+| File                                          | Surface             | What to capture                                                                                            |
+| --------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `tests/fixtures/surfaces/title-card.html`     | title-card          | A single row of browse cards — enough `.title-card` elements to have 3–5 with `.fallback-text` titles      |
+| `tests/fixtures/surfaces/standard-card.html`  | standard-card       | A grid of search result cards — enough `[data-uia="standard-card"]` elements to have 3–5 with `aria-label` |
+| `tests/fixtures/surfaces/preview-mini.html`   | previewModal-mini   | The `.previewModal--wrapper.mini-modal` element with its player container and boxart image                 |
+| `tests/fixtures/surfaces/preview-detail.html` | previewModal-detail | The `.previewModal--wrapper.detail-modal` element with its player container and boxart image               |
+
+**Anonymisation rules applied to every fixture before saving:**
+
+- All `.fallback-text` text content → `"Test Show Alpha"`, `"Test Show Beta"`, `"Test Show Gamma"`, cycling
+- All `aria-label` on `[data-uia="standard-card"]` → same synthetic titles cycling
+- All `img[alt]` where the alt carries a title (non-empty, non-UI-label strings) → same synthetic titles
+- All `img[src]` and `source[srcset]` → empty string (strips Netflix CDN URLs)
+- All `<script>` tags → removed
+- All `<link rel="stylesheet">` → removed
+- User-identifying text (profile name in "Continue Watching for X", display name in nav) → `"Test User"`
+- Netflix session tokens or API keys in attributes → removed
+
+Captures are extracted from the live Chromium DOM at the element level (not full-page saves), wrapped in a minimal `<html><body>…</body></html>` shell.
+
+### 6. `tests/fixtures/netflix-browse.html` and `tests/fixtures/netflix-search.html` — Refresh
+
+Existing UI test fixture files are refreshed from Chromium using the same anonymisation rules. These stay as fuller page captures (more structural context) since `browse.ui.test.js` and `search.ui.test.js` test overlay injection on realistic DOM, not just selector matching.
+
+`netflix-hover.html` and `netflix-modal.html` remain in place but are also refreshed so they're ready when their corresponding UI tests are written. They are not wired up to tests in this change.
+
+### 7. `tests/unit/core/surfaces.test.js` — Migrate to fixture-based tests
+
+The surfaces unit test is split into two groups:
+
+**Fixture-based discovery tests** (new) — load each surface fixture and assert that `discover()` returns the expected surface shape. These prove the selectors work against real Netflix DOM structure.
+
+**Inline DOM edge-case tests** (retained) — hand-crafted minimal DOM for behaviour that doesn't depend on Netflix structure: empty title text, null alt, fallback to `parentElement`, `querySelectorAll` errors, deduplication via `seen`.
+
+Tests for removed surfaces (BOB, jawBone, stale previewModal selectors) are deleted.
 
 ---
 
@@ -100,10 +142,6 @@ Each surface entry gets a short block comment naming the Netflix UI area it targ
 
 - `discover()` logic — no changes to the surface iteration, `seen` set, or fallback to `parentElement`.
 - `SurfaceManager` class structure, constructor, and `#logger` usage.
-- title-card and standard-card surfaces — confirmed working, no changes.
-
----
-
-## Testing
-
-Manual verification via the live Netflix DOM is the primary test. Unit tests for `SurfaceManager.discover()` should mock DOM trees covering each of the four surviving surfaces and assert that the correct `{ container, title, fadeable }` tuples are returned.
+- title-card and standard-card surfaces — confirmed working, no selector changes.
+- `browse.ui.test.js` and `search.ui.test.js` test logic — only their fixture files are refreshed.
+- `info.ui.test.js` — uses inline DOM for the `previewModal` surface; aligning it to fixture-based is out of scope.
