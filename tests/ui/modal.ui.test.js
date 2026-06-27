@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Modal } from '../../src/core/ui/modal.js';
 
-describe('Modal UI Component', () => {
+describe('Modal', () => {
     beforeEach(() => {
         document.body.innerHTML = '';
     });
