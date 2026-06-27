@@ -20,10 +20,12 @@
  * Custom error class for FlixMonkey.
  */
 export class FlixMonkeyError extends Error {
-    constructor(message, status = null) {
+    constructor(message, url = null, status = null, body = null) {
         super(message);
         this.name = 'FlixMonkeyError';
+        this.url = url;
         this.status = status;
+        this.body = body;
     }
 }
 
@@ -57,4 +59,18 @@ export function runIdle(func, timeout = 2000) {
     } else {
         setTimeout(func, 1);
     }
+}
+
+/**
+ * Converts a string to a slug by lowercasing, replacing non-alphanumeric sequences with underscores,
+ * and trimming leading/trailing underscores.
+ *
+ * @param {string} str The string to slugify.
+ * @returns {string} The slugified string.
+ */
+export function slugify(str) {
+    return str
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
 }

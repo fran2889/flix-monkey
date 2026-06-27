@@ -169,6 +169,7 @@ describe('Chrome Service Worker', () => {
         global.fetch.mockResolvedValue({
             ok: false,
             status: 404,
+            text: () => Promise.resolve('Not Found'),
         });
 
         messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
@@ -177,7 +178,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'HTTP 404', status: 404 });
+        expect(sendResponse).toHaveBeenCalledWith({ error: 'HTTP 404', status: 404, body: 'Not Found' });
     });
 
     it('should handle fetch exception', async () => {

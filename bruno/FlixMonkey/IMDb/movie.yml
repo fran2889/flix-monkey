@@ -1,0 +1,29 @@
+info:
+    name: movie
+    type: http
+    seq: 2
+
+http:
+    method: GET
+    url: https://www.imdb.com/title/{{imdb_id}}/
+    headers:
+        - name: Accept
+          value: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+        - name: Referer
+          value: https://www.imdb.com/
+        - name: Accept-Language
+          value: en-US,en;q=0.9
+        - name: User-Agent
+          value: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36
+    auth: inherit
+
+runtime:
+    variables:
+        - name: imdb_id
+          value: tt0110912
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5

@@ -51,6 +51,12 @@ Husky git hooks are installed automatically via the `prepare` script.
 | `npm run audit`            | Run `npm audit` at high severity level                         |
 | `npm run clean`            | Remove `dist/` and `coverage/`                                 |
 
+### Developer Scripts
+
+| Script                                | Description                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/capture-surface-fixtures.py` | Captures and anonymises Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html` and refreshes `tests/fixtures/netflix-*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+
 ### Build Notes
 
 - `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
@@ -102,6 +108,29 @@ tests/
     setup.js              # Loads .env + fails if required API keys are missing
     api-clients.test.js
 ```
+
+### Test Taxonomy
+
+These rules determine where a test lives and what it asserts. Apply them to all new tests.
+
+**Location rule (sole determinant):** A test lives in `tests/ui/` if it loads a Netflix HTML fixture from `tests/fixtures/`. It lives in `tests/unit/` if it does not.
+
+**UI tests** (`tests/ui/`) assert two things against real Netflix fixture HTML:
+
+- _Surface discovery_: `SurfaceManager.discover()` returns the expected surfaces (count, title, container, fadeable).
+- _Injection_: overlay or style elements are created and attached to the surface container. Minimal content checks (e.g., the rating value appears in the overlay) are acceptable as injection sanity checks, not for testing rendering logic.
+
+**Unit tests** (`tests/unit/`) assert:
+
+- _OverlayRenderer rendering logic_: tooltip text, CSS string content, conditional sub-elements (🔍, N/A, RT/MC badges), pointer events, click propagation, config-driven output.
+- _SurfaceManager edge cases_ that no fixture represents: empty or null titles, deduplication, `parentElement` fallback, `querySelectorAll` throwing.
+- _UI component logic_ (`Modal`, `SettingsUI`, etc.) that does not depend on Netflix fixture HTML.
+
+**No duplication across layers:** if a surface type's basic discovery is covered by a fixture test, unit tests do not repeat that case with synthetic HTML. If rendering logic is covered in unit, UI tests do not re-assert it.
+
+**Fixture preference:** when adding a new surfaces or overlay test, check existing fixtures first. Use synthetic DOM only if no fixture represents the case.
+
+**The deciding question for any new test:** does this assertion require Netflix HTML to be meaningful? If yes, it is a UI test. If it would pass equally against a synthetic `<div>`, it is a unit test.
 
 ### Integration Tests
 
@@ -222,7 +251,7 @@ class PlatformAdapter {
 | `cacheTtlNoRating`      | text     | `'1'`      | Cache TTL (days) for unrated/not-found titles                  |
 | `enableFadeUnderRating` | checkbox | `false`    | Fade thumbnails below the IMDb threshold                       |
 | `fadeRatingThreshold`   | text     | `'6.0'`    | IMDb rating threshold for fading                               |
-| `debug`                 | checkbox | `false`    | Enable verbose console logging                                 |
+| `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
 
 ## Constants (`constants.js`)
 

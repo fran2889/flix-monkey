@@ -23,8 +23,8 @@ import { SurfaceManager } from './surfaces.js';
 import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
 import { ConfigManager } from './config-manager.js';
 import { Logger } from './logger.js';
-import { debounce, runIdle } from './utils.js';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from './api-clients.js';
+import { debounce, runIdle, slugify } from './utils.js';
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
 
 export class FlixMonkeyApp {
     #api;
@@ -82,7 +82,7 @@ export class FlixMonkeyApp {
     async #decorateContainer(container, displayTitle, fadeable) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
-        const dedupKey = displayTitle.toLowerCase();
+        const dedupKey = slugify(displayTitle);
 
         this.#renderer.ensureRelative(container);
         this.#renderer.injectLoadingOverlay(container);
@@ -106,7 +106,7 @@ export class FlixMonkeyApp {
 
         try {
             const data = await promise;
-            if (!this.#renderer.hasOverlay(container)) {
+            if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
                 this.#renderer.injectOverlay(container, data);
                 this.#renderer.applyFade(container, data, fadeable);
             }
@@ -118,7 +118,7 @@ export class FlixMonkeyApp {
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
             this.#decorateContainer(container, title, fadeable).catch(err =>
-                this.#logger.error('decorateContainer failed', err)
+                this.#logger.error('Failed to decorate container', err)
             );
         });
     }
@@ -155,7 +155,7 @@ export class FlixMonkeyApp {
                 }
                 if (hasElements) this.#debouncedDecorate();
             } catch (err) {
-                this.#logger.error('Mutation handler error', err);
+                this.#logger.error('Mutation observer error', err);
             }
         });
         this.#observer.observe(document.body, { childList: true, subtree: true });
@@ -174,13 +174,14 @@ export class FlixMonkeyApp {
 }
 
 function createApiClient(config, disabledManager, adapter, logger) {
-    const provider = (config.get('apiClient') ?? 'imdbapi').trim().toLowerCase();
+    const provider = (config.get('apiClient') ?? 'agregarr').trim().toLowerCase();
     const clientMap = {
+        [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
         [ApiSource.IMDBAPI]: ImdbApiDevClient,
     };
-    const ClientClass = clientMap[provider] ?? ImdbApiDevClient;
+    const ClientClass = clientMap[provider] ?? AgregarrApiClient;
     return new ClientClass(disabledManager, adapter, config, logger);
 }
 

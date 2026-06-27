@@ -21,52 +21,40 @@ export class SurfaceManager {
         this.#logger = logger;
     }
 
-    // Surface priority order: title-card → search → bob → previewModal → jawBone.
+    // Surface priority order: title-card → search → previewModal-mini → previewModal-detail.
     // A container matched by an earlier surface is added to `seen` and skipped by
     // all later surfaces, so declaration order determines which definition "wins".
     #SURFACES = [
         {
+            // Browse and genre page row cards. `.fallback-text` is the text title
+            // Netflix renders for cards whose thumbnail has no baked-in title logo.
             titleSelectors: '.title-card .fallback-text',
             getTitle: el => el.textContent?.trim() ?? null,
             containerSel: '.title-card',
             fadeable: true,
         },
         {
+            // Search result grid cards. The card element itself carries the full
+            // title via aria-label; there is no separate fallback-text here.
             titleSelectors: '[data-uia="standard-card"]',
             getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
             containerSel: '[data-uia="standard-card"]',
             fadeable: true,
         },
         {
-            titleSelectors: '.bob-title',
-            getTitle: el => el.textContent?.trim() ?? null,
-            containerSel: '.bob-container',
-            fadeable: false,
-        },
-        {
-            titleSelectors: [
-                '.previewModal--player-titleTreatmentWrapper img[alt]',
-                '.previewModal--player_container img[alt]',
-                '[data-uia="previewModal-title"]',
-                '.previewModal--boxarttitle',
-            ].join(','),
-            getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
+            // Hover mini-modal (card mouse-over). Scoped to `.mini-modal` so the
+            // detail-modal surface can target the same player container independently.
+            titleSelectors: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
+            getTitle: el => el.getAttribute('alt')?.trim() ?? null,
             containerSel: '.previewModal--player_container',
             fadeable: false,
         },
         {
-            titleSelectors: [
-                '.jawBone img[alt]',
-                '.jawBoneContainer img[alt]',
-                '.previewModal--detailsMetadata img[alt]',
-                '.jawBone .image-fallback-text',
-                '.jawBoneContainer .image-fallback-text',
-                '.previewModal--detailsMetadata h3',
-                '.previewModal--detailsMetadata .title',
-                '.previewModal--detailsMetadata [data-uia="previewModal-title"]',
-            ].join(','),
-            getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
-            containerSel: '.jawBone, .jawBoneContainer, .previewModal--detailsMetadata',
+            // Full "More Info" detail modal. The boxart <img alt> inside the player
+            // container is the only selector that matches in both mini and detail contexts.
+            titleSelectors: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
+            getTitle: el => el.getAttribute('alt')?.trim() ?? null,
+            containerSel: '.previewModal--player_container',
             fadeable: false,
         },
     ];
@@ -86,7 +74,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = titleEl.closest(surface.containerSel);
                 if (!container) {
-                    this.#logger.debug('Surface container selector failed, falling back to parentElement', {
+                    this.#logger.warn('Surface container selector failed, falling back to parentElement', {
                         selector: surface.containerSel,
                     });
                     container = titleEl.parentElement;

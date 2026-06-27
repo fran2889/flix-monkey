@@ -29,11 +29,12 @@ export const CONFIG_FIELDS = [
         label: 'API Provider',
         type: 'select',
         options: [
+            ['agregarr', 'Agregarr'],
             ['imdbapi', 'IMDb API'],
             ['omdb', 'OMDB'],
             ['xmdb', 'XMDB'],
         ],
-        default: 'imdbapi',
+        default: 'agregarr',
         title: 'Which service to fetch ratings from.',
     },
     {
@@ -142,7 +143,7 @@ export const CONFIG_FIELDS = [
         key: 'debug',
         label: 'Enable debug logging',
         type: 'checkbox',
-        default: false,
+        default: true,
         title: 'Log debug info to the browser console.',
         row: 'debug-settings',
     },

@@ -24,17 +24,16 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Browse UI Surface', () => {
-    let surfaceManager, overlayRenderer, _fixtureHtml;
+    let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        _fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
+        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
     });
 
     beforeEach(() => {
-        document.body.innerHTML = _fixtureHtml;
+        document.body.innerHTML = fixtureHtml;
         surfaceManager = new SurfaceManager();
         overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
-        // Ensure styles are injected for position checks if needed
         overlayRenderer.injectStyles();
     });
 
@@ -48,15 +47,31 @@ describe('Browse UI Surface', () => {
         expect(first.fadeable).toBe(true);
     });
 
-    it('should inject loading and rating overlays correctly', () => {
+    it('should extract non-empty string titles from each browse card', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        surfaces.forEach(s => {
+            expect(s.title).toBeTruthy();
+            expect(typeof s.title).toBe('string');
+        });
+    });
+
+    it('should inject a loading overlay on a browse card', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container, title } = surfaces[0];
 
         overlayRenderer.injectLoadingOverlay(container, title);
+
         const loading = container.querySelector('.fm-loading');
         expect(loading).not.toBeNull();
         expect(loading.textContent).toContain('IMDb');
         expect(loading.title).toContain('Fetching ratings');
+    });
+
+    it('should replace loading overlay with rating overlay on a browse card', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        const { container, title } = surfaces[0];
+
+        overlayRenderer.injectLoadingOverlay(container, title);
 
         const titleObj = {
             rating: 8.5,
@@ -78,7 +93,6 @@ describe('Browse UI Surface', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container } = surfaces[0];
 
-        // Set threshold high to ensure fading
         const mockConfig = new ConfigManager(
             createMockAdapter({
                 configGet: key => {
@@ -88,17 +102,14 @@ describe('Browse UI Surface', () => {
                 },
             })
         );
-        const localRenderer = new OverlayRenderer(mockConfig);
-
-        localRenderer.applyFade(container, { rating: 7.0 }, true);
+        new OverlayRenderer(mockConfig).applyFade(container, { rating: 7.0 }, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should NOT apply fading for low ratings equal or above threshold', () => {
+    it('should NOT apply fading for ratings at or above threshold', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container } = surfaces[0];
 
-        // Set threshold high to ensure fading
         const mockConfig = new ConfigManager(
             createMockAdapter({
                 configGet: key => {
@@ -108,9 +119,7 @@ describe('Browse UI Surface', () => {
                 },
             })
         );
-        const localRenderer = new OverlayRenderer(mockConfig);
-
-        localRenderer.applyFade(container, { rating: 9.5 }, true);
+        new OverlayRenderer(mockConfig).applyFade(container, { rating: 9.5 }, true);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });

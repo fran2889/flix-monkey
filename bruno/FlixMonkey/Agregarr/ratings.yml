@@ -1,0 +1,19 @@
+info:
+    name: ratings
+    type: http
+    seq: 1
+
+http:
+    method: GET
+    url: https://api.agregarr.org/api/ratings?id=tt0111161
+    params:
+        - name: id
+          value: tt0111161
+          type: query
+    auth: inherit
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5

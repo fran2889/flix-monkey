@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, beforeAll } from 'vitest';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient } from '../../src/core/api-clients';
+import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from '../../src/core/api-clients';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { ConfigManager } from '../../src/core/config-manager';
 import { Title } from '../../src/core/title';
@@ -39,13 +39,17 @@ const adapter = {
             lastImdbApiRequest = Date.now();
         }
         const response = await fetch(url, options);
+        const text = await response.text();
         if (!response.ok) {
-            const body = await response.text();
-            const err = new Error(`HTTP ${response.status}: ${body}`);
+            const err = new Error(`HTTP ${response.status}: ${text}`);
             err.status = response.status;
             throw err;
         }
-        return await response.json();
+        try {
+            return JSON.parse(text);
+        } catch {
+            throw new Error(`Invalid JSON from ${url}: ${text.slice(0, 500)}`);
+        }
     },
     storageGet: async () => '0',
     storageSet: async () => {},
@@ -121,6 +125,14 @@ describe('api-clients integration', () => {
             expectPercentageRating(result.mcRating, 'IMDBAPI Metacritic');
             expect(result.rtRating).toBeNull();
         }, 15000);
+
+        it('Agregarr', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+            expect(result.rtRating).toBeNull();
+            expect(result.mcRating).toBeNull();
+        });
     });
 
     describe('TV show', () => {
@@ -150,6 +162,12 @@ describe('api-clients integration', () => {
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
         }, 15000);
+
+        it('Agregarr', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+        });
     });
 
     describe('invalid title search', () => {
@@ -170,6 +188,11 @@ describe('api-clients integration', () => {
             const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
             expect(await client.search(TITLE)).toBeNull();
         }, 15000);
+
+        it('Agregarr', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            expect(await client.search(TITLE)).toBeNull();
+        });
     });
 
     describe('invalid ID details', () => {
@@ -224,6 +247,12 @@ describe('api-clients integration', () => {
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
         }, 15000);
+
+        it('Agregarr', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+        });
     });
 
     describe('foreign original title', () => {
@@ -257,5 +286,11 @@ describe('api-clients integration', () => {
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
         }, 15000);
+
+        it('Agregarr', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch(TITLE);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+        });
     });
 });

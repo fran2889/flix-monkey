@@ -1,0 +1,6 @@
+name: Foreign title
+variables:
+    - name: title
+      value: Envious
+    - name: imdb_id
+      value: tt29494111

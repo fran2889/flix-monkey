@@ -135,11 +135,12 @@ describe('Firefox Background Script', () => {
         global.fetch.mockResolvedValue({
             ok: false,
             status: 404,
+            text: () => Promise.resolve('Not Found'),
         });
 
         const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
-        expect(result).toEqual({ error: 'HTTP 404', status: 404 });
+        expect(result).toEqual({ error: 'HTTP 404', status: 404, body: 'Not Found' });
     });
 
     it('should handle fetch exception', async () => {

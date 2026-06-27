@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce, runIdle } from '../../../src/core/utils.js';
+import { debounce, runIdle, FlixMonkeyError, slugify } from '../../../src/core/utils.js';
 
 describe('core/utils', () => {
     beforeEach(() => {
@@ -96,6 +96,42 @@ describe('core/utils', () => {
             expect(func).toHaveBeenCalled();
 
             vi.unstubAllGlobals();
+        });
+    });
+
+    describe('FlixMonkeyError', () => {
+        it('should store all constructor params', () => {
+            const err = new FlixMonkeyError('HTTP 401', 'https://api.example.com/foo', 401, 'Unauthorized');
+            expect(err).toBeInstanceOf(Error);
+            expect(err.name).toBe('FlixMonkeyError');
+            expect(err.message).toBe('HTTP 401');
+            expect(err.url).toBe('https://api.example.com/foo');
+            expect(err.status).toBe(401);
+            expect(err.body).toBe('Unauthorized');
+        });
+
+        it('should default optional params to null', () => {
+            const err = new FlixMonkeyError('test error');
+            expect(err.url).toBeNull();
+            expect(err.status).toBeNull();
+            expect(err.body).toBeNull();
+        });
+    });
+
+    describe('slugify', () => {
+        it('should lowercase and replace non-alphanumeric sequences with underscores', () => {
+            expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
+            expect(slugify('Test: Movie')).toBe('test_movie');
+            expect(slugify('Hello World')).toBe('hello_world');
+        });
+
+        it('should trim leading and trailing underscores', () => {
+            expect(slugify('  Hello  ')).toBe('hello');
+            expect(slugify('!Movie!')).toBe('movie');
+        });
+
+        it('should produce the same slug for titles differing only by punctuation', () => {
+            expect(slugify('Test: Movie')).toBe(slugify('Test Movie'));
         });
     });
 });

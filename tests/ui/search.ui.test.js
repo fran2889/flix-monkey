@@ -24,36 +24,56 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Search UI Surface', () => {
-    let surfaceManager, _overlayRenderer, _fixtureHtml;
+    let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        _fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-search.html'), 'utf8');
+        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-search.html'), 'utf8');
     });
 
     beforeEach(() => {
-        document.body.innerHTML = _fixtureHtml;
+        document.body.innerHTML = fixtureHtml;
         surfaceManager = new SurfaceManager();
-        _overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
     });
 
     it('should discover gallery cards but ignore suggestion items', () => {
         const surfaces = surfaceManager.discover(document.body);
         expect(surfaces.length).toBeGreaterThan(0);
 
-        // Find at least one gallery card
         const hasGallery = surfaces.some(s => s.container.matches('[data-uia="standard-card"]'));
-        // Find at least one suggestion item (or parent container)
         const hasSuggestion = surfaces.some(s => s.container.matches('[data-uia="search-suggestion-item"]'));
 
         expect(hasGallery).toBe(true);
-        expect(hasSuggestion).toBe(false); // All suggestions (text links) should be ignored
+        expect(hasSuggestion).toBe(false);
     });
 
-    it('should extract titles from search attributes', () => {
+    it('should extract non-empty string titles from each search card', () => {
         const surfaces = surfaceManager.discover(document.body);
         surfaces.forEach(s => {
             expect(s.title).toBeTruthy();
             expect(typeof s.title).toBe('string');
         });
+    });
+
+    it('should set fadeable to true for search surface cards', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        surfaces.forEach(s => {
+            expect(s.fadeable).toBe(true);
+        });
+    });
+
+    it('should inject a rating overlay on a search card', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        const { container } = surfaces[0];
+
+        overlayRenderer.injectOverlay(container, {
+            rating: 7.4,
+            imdbUrl: 'https://www.imdb.com/title/tt9876543/',
+            imdbId: 'tt9876543',
+        });
+
+        const overlay = container.querySelector('.fm-rating-overlay');
+        expect(overlay).not.toBeNull();
+        expect(overlay.textContent).toContain('7.4');
     });
 });

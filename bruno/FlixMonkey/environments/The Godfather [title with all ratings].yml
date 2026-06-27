@@ -1,0 +1,6 @@
+name: Project Hail Mary [title with spaces] - Copy
+variables:
+    - name: title
+      value: The Godfather
+    - name: imdb_id
+      value: tt0068646
