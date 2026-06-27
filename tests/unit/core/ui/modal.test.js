@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Modal } from '../../src/core/ui/modal.js';
+import { Modal } from '../../../../src/core/ui/modal.js';
 
 describe('Modal', () => {
     beforeEach(() => {

@@ -21,34 +21,15 @@ import { PlatformAdapter } from '../../../src/platform/adapter.js';
 describe('PlatformAdapter', () => {
     const adapter = new PlatformAdapter();
 
-    it('should throw an error if storageGet is not implemented', async () => {
-        await expect(adapter.storageGet('key')).rejects.toThrow(
-            'PlatformAdapter: storageGet() must be implemented by subclass'
-        );
-    });
-
-    it('should throw an error if storageSet is not implemented', async () => {
-        await expect(adapter.storageSet('key', 'value')).rejects.toThrow(
-            'PlatformAdapter: storageSet() must be implemented by subclass'
-        );
-    });
-
-    it('should throw an error if storageDelete is not implemented', async () => {
-        await expect(adapter.storageDelete('key')).rejects.toThrow(
-            'PlatformAdapter: storageDelete() must be implemented by subclass'
-        );
-    });
-
-    it('should throw an error if storageGetKeys is not implemented', async () => {
-        await expect(adapter.storageGetKeys('prefix')).rejects.toThrow(
-            'PlatformAdapter: storageGetKeys() must be implemented by subclass'
-        );
-    });
-
-    it('should throw an error if httpFetch is not implemented', async () => {
-        await expect(adapter.httpFetch('url', {})).rejects.toThrow(
-            'PlatformAdapter: httpFetch() must be implemented by subclass'
-        );
+    it.each([
+        ['storageGet', () => adapter.storageGet('key')],
+        ['storageSet', () => adapter.storageSet('key', 'value')],
+        ['storageDelete', () => adapter.storageDelete('key')],
+        ['storageGetKeys', () => adapter.storageGetKeys('prefix')],
+        ['storageGetAll', () => adapter.storageGetAll()],
+        ['httpFetch', () => adapter.httpFetch('url', {})],
+    ])('should throw if %s is not implemented', async (_method, call) => {
+        await expect(call()).rejects.toThrow(`PlatformAdapter: ${_method}() must be implemented by subclass`);
     });
 
     it('should allow setting and getting configGet', () => {

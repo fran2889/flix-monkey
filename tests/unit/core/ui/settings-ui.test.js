@@ -29,12 +29,7 @@ describe('SettingsUI', () => {
 
     beforeEach(() => {
         mockAdapter = {
-            storageGetAll: vi.fn().mockResolvedValue({
-                xmdbApiKey: 'test-xmdb-key',
-                omdbApiKey: 'test-omdb-key',
-                apiClient: 'omdb',
-                showRtRating: false,
-            }),
+            storageGetAll: vi.fn().mockResolvedValue({}),
             storageSetMany: vi.fn().mockResolvedValue(),
             setConfigData: vi.fn(),
         };
@@ -46,9 +41,12 @@ describe('SettingsUI', () => {
         };
         settingsUI = new SettingsUI(mockAdapter, undefined, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
+        document.head.innerHTML = '';
         document.body.innerHTML = '';
         document.body.appendChild(container);
     });
+
+    // --- Rendering ---
 
     it('should render all config fields', async () => {
         await settingsUI.render(container);
@@ -71,7 +69,78 @@ describe('SettingsUI', () => {
         });
     });
 
+    it('should inject styles and apply the settings container class', async () => {
+        await settingsUI.render(container);
+
+        expect(container.classList.contains('fm-settings-container')).toBe(true);
+        const style = document.head.querySelector('style#flixmonkey-settings-styles');
+        expect(style).not.toBeNull();
+        expect(style.textContent).toContain('.fm-settings-container');
+    });
+
+    it('should render title, fields, action buttons, and status placeholder', async () => {
+        await settingsUI.render(container);
+
+        expect(container.querySelector('h1').textContent).toBe('FlixMonkey Settings');
+        expect(container.querySelectorAll('.field').length).toBeGreaterThan(0);
+        expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
+        expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
+        expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
+        expect(container.querySelector('#fm-status')).not.toBeNull();
+    });
+
+    it('should render overlayCorner as a select with all corner options', async () => {
+        await settingsUI.render(container);
+        const select = container.querySelector('#fm-overlayCorner');
+
+        expect(select.tagName).toBe('SELECT');
+        const values = [...select.options].map(o => o.value);
+        expect(values).toEqual(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+    });
+
+    it('should render apiClient select with [value, label] tuple options', async () => {
+        await settingsUI.render(container);
+        const select = container.querySelector('#fm-apiClient');
+
+        expect(select.tagName).toBe('SELECT');
+        const opt = [...select.options].find(o => o.value === 'agregarr');
+        expect(opt).toBeTruthy();
+        expect(opt.textContent).toBe('Agregarr');
+    });
+
+    it('should render showMcRating as a checked checkbox by default', async () => {
+        await settingsUI.render(container);
+        const checkbox = container.querySelector('#fm-showMcRating');
+
+        expect(checkbox.type).toBe('checkbox');
+        expect(checkbox.checked).toBe(true);
+    });
+
+    it('should render a labelUrl field label as an <a> link', async () => {
+        await settingsUI.render(container);
+        const label = container.querySelector('label[for="fm-omdbApiKey"]');
+        const link = label.querySelector('a');
+
+        expect(link).not.toBeNull();
+        expect(link.textContent).toBe('OMDB API Key');
+    });
+
+    it('should apply visually-hidden class to labelHidden field labels', async () => {
+        await settingsUI.render(container);
+        const label = container.querySelector('label[for="fm-fadeRatingThreshold"]');
+
+        expect(label.classList.contains('visually-hidden')).toBe(true);
+    });
+
+    // --- Field population ---
+
     it('should populate fields with values from adapter', async () => {
+        mockAdapter.storageGetAll.mockResolvedValue({
+            xmdbApiKey: 'test-xmdb-key',
+            omdbApiKey: 'test-omdb-key',
+            apiClient: 'omdb',
+            showRtRating: false,
+        });
         await settingsUI.render(container);
 
         expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe('test-xmdb-key');
@@ -88,76 +157,34 @@ describe('SettingsUI', () => {
         expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe(xmdbField.default);
     });
 
-    it('should inject styles into the document', async () => {
+    // --- Save ---
+
+    it('should call storageSetMany with all field values on save', async () => {
         await settingsUI.render(container);
-        const style = document.head.querySelector('style#flixmonkey-settings-styles');
-        expect(style).toBeDefined();
-        expect(style.textContent).toContain('.fm-settings-container');
+        await settingsUI.save();
+
+        expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
+        const saved = mockAdapter.storageSetMany.mock.calls[0][0];
+        CONFIG_FIELDS.forEach(field => {
+            expect(Object.hasOwn(saved, field.key)).toBe(true);
+        });
     });
 
-    it('should render a save button and status placeholder', async () => {
+    it('should capture updated input values on save', async () => {
         await settingsUI.render(container);
-        expect(container.querySelector('#fm-saveBtn')).toBeDefined();
-        expect(container.querySelector('#fm-status')).toBeDefined();
+        container.querySelector('[id="fm-xmdbApiKey"]').value = 'new-api-key';
+        await settingsUI.save();
+
+        expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(expect.objectContaining({ xmdbApiKey: 'new-api-key' }));
     });
 
-    it('should not save when validation fails', async () => {
+    it('should display "Saved!" status in green on successful save', async () => {
         await settingsUI.render(container);
-        container.querySelector('[id="fm-apiClient"]').value = 'xmdb';
-        container.querySelector('[id="fm-xmdbApiKey"]').value = '';
+        await settingsUI.save();
 
-        const saveBtn = container.querySelector('#fm-saveBtn');
-        await saveBtn.click();
-
-        expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
-        expect(container.querySelector('#fm-status').textContent).toBe('Please fix errors before saving.');
-    });
-
-    it('should save when validation passes', async () => {
-        await settingsUI.render(container);
-        const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]');
-        apiKeyInput.value = 'new-api-key';
-
-        const saveBtn = container.querySelector('#fm-saveBtn');
-        await saveBtn.click();
-
-        expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
-            expect.objectContaining({
-                xmdbApiKey: 'new-api-key',
-            })
-        );
-        expect(container.querySelector('#fm-status').textContent).toBe('Saved!');
-    });
-
-    it('should clear cache when clicking Clear Cache', async () => {
-        await settingsUI.render(container);
-        const clearBtn = container.querySelector('#fm-clearCacheBtn');
-        clearBtn.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        expect(mockCacheManager.clear).toHaveBeenCalled();
-        expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
-    });
-
-    it('should reset clients and list re-enabled ones when clicking Reset Disabled Clients', async () => {
-        mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
-        await settingsUI.render(container);
-        const resetBtn = container.querySelector('#fm-resetClientsBtn');
-        resetBtn.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        expect(mockDisabledClientsManager.resetAll).toHaveBeenCalled();
-        expect(container.querySelector('#fm-status').textContent).toBe('Re-enabled API clients: omdb, tmdb');
-    });
-
-    it('should report when there are no disabled clients to re-enable', async () => {
-        mockDisabledClientsManager.resetAll.mockResolvedValue([]);
-        await settingsUI.render(container);
-        const resetBtn = container.querySelector('#fm-resetClientsBtn');
-        resetBtn.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        expect(container.querySelector('#fm-status').textContent).toBe('No disabled API clients found to re-enable.');
+        const status = container.querySelector('#fm-status');
+        expect(status.textContent).toBe('Saved!');
+        expect(status.style.color).toBe('green');
     });
 
     it('should disable the save button while saving and re-enable it after', async () => {
@@ -172,7 +199,6 @@ describe('SettingsUI', () => {
         const saveBtn = container.querySelector('#fm-saveBtn');
 
         const savePromise = settingsUI.save();
-
         expect(saveBtn.disabled).toBe(true);
 
         resolveStorage();
@@ -181,25 +207,7 @@ describe('SettingsUI', () => {
         expect(saveBtn.disabled).toBe(false);
     });
 
-    it('should pass input.checked (not input.value) to validate for checkbox fields', async () => {
-        const validateFn = vi.fn().mockReturnValue(null);
-        const checkboxField = {
-            key: 'testCheckbox',
-            label: 'Test Checkbox',
-            type: 'checkbox',
-            default: false,
-            validate: validateFn,
-        };
-        const ui = new SettingsUI(mockAdapter, [checkboxField], mockCacheManager, mockDisabledClientsManager);
-        await ui.render(container);
-
-        const input = container.querySelector('#fm-testCheckbox');
-        input.checked = true;
-
-        ui._validate();
-
-        expect(validateFn).toHaveBeenCalledWith(true, expect.any(Object));
-    });
+    // --- onSave callback ---
 
     it('should call onSave callback after successful save', async () => {
         await settingsUI.render(container);
@@ -234,6 +242,80 @@ describe('SettingsUI', () => {
 
         expect(onSave).not.toHaveBeenCalled();
     });
+
+    // --- Validation ---
+
+    it('should not save when validation fails', async () => {
+        await settingsUI.render(container);
+        container.querySelector('#fm-fadeRatingThreshold').value = 'abc';
+        await settingsUI.save();
+
+        const status = container.querySelector('#fm-status');
+        expect(status.textContent).toBe('Please fix errors before saving.');
+        expect(status.style.color).toBe('red');
+        const errorEl = container
+            .querySelector('#fm-fadeRatingThreshold')
+            .parentElement.querySelector('.error-message');
+        expect(errorEl).not.toBeNull();
+        expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+    });
+
+    it('should pass input.checked (not input.value) to validate for checkbox fields', async () => {
+        const validateFn = vi.fn().mockReturnValue(null);
+        const checkboxField = {
+            key: 'testCheckbox',
+            label: 'Test Checkbox',
+            type: 'checkbox',
+            default: false,
+            validate: validateFn,
+        };
+        const ui = new SettingsUI(mockAdapter, [checkboxField], mockCacheManager, mockDisabledClientsManager);
+        await ui.render(container);
+
+        const input = container.querySelector('#fm-testCheckbox');
+        input.checked = true;
+
+        ui._validate();
+
+        expect(validateFn).toHaveBeenCalledWith(true, expect.any(Object));
+    });
+
+    // --- Action buttons ---
+
+    it('should clear cache and show "Cache cleared." status in green', async () => {
+        await settingsUI.render(container);
+        container.querySelector('#fm-clearCacheBtn').click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(mockCacheManager.clear).toHaveBeenCalledOnce();
+        const status = container.querySelector('#fm-status');
+        expect(status.textContent).toBe('Cache cleared.');
+        expect(status.style.color).toBe('green');
+    });
+
+    it('should reset clients and show re-enabled names in green', async () => {
+        mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
+        await settingsUI.render(container);
+        container.querySelector('#fm-resetClientsBtn').click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
+        const status = container.querySelector('#fm-status');
+        expect(status.textContent).toBe('Re-enabled API clients: omdb, tmdb');
+        expect(status.style.color).toBe('green');
+    });
+
+    it('should show no-clients message in green when there is nothing to reset', async () => {
+        await settingsUI.render(container);
+        container.querySelector('#fm-resetClientsBtn').click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const status = container.querySelector('#fm-status');
+        expect(status.textContent).toBe('No disabled API clients found to re-enable.');
+        expect(status.style.color).toBe('green');
+    });
+
+    // --- Scoping ---
 
     it('should scope element queries to its own container', async () => {
         const adapter = createMockAdapter({ storageGetAll: vi.fn().mockResolvedValue({}), setConfigData: vi.fn() });

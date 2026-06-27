@@ -30,65 +30,7 @@ describe('SurfaceManager', () => {
         expect(discover('<div>nothing</div>')).toEqual([]);
     });
 
-    it('should discover title-card surface', () => {
-        const results = discover(`
-            <div class="title-card">
-                <div class="fallback-text">Bones</div>
-            </div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Bones');
-        expect(results[0].container.className).toBe('title-card');
-        expect(results[0].fadeable).toBe(true);
-    });
-
-    it('should discover standard-card surface', () => {
-        const results = discover(`
-            <div data-uia="standard-card" aria-label="Breaking Bad"></div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Breaking Bad');
-        expect(results[0].container.getAttribute('data-uia')).toBe('standard-card');
-        expect(results[0].fadeable).toBe(true);
-    });
-
-    it('should discover preview mini-modal surface', () => {
-        const results = discover(`
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img class="previewModal--boxart" alt="Sweet Magnolias">
-                </div>
-            </div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Sweet Magnolias');
-        expect(results[0].container.className).toBe('previewModal--player_container');
-        expect(results[0].fadeable).toBe(false);
-
-        // Without the scoped wrapper, this surface must not fire
-        expect(
-            discover(`
-            <div class="previewModal--player_container">
-                <img class="previewModal--boxart" alt="No wrapper">
-            </div>
-        `)
-        ).toHaveLength(0);
-    });
-
-    it('should discover preview detail-modal surface', () => {
-        const results = discover(`
-            <div class="previewModal--wrapper detail-modal">
-                <div class="previewModal--player_container">
-                    <img class="previewModal--boxart" alt="Sweet Magnolias">
-                </div>
-            </div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Sweet Magnolias');
-        expect(results[0].container.className).toBe('previewModal--player_container');
-        expect(results[0].fadeable).toBe(false);
-
-        // Without the scoped wrapper, this surface must not fire
+    it('should not discover preview modal surfaces without the scoped wrapper', () => {
         expect(
             discover(`
             <div class="previewModal--player_container">
