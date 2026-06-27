@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Modal } from '../../src/core/ui/modal.js';
 
-describe('Modal UI Component', () => {
+describe('Modal', () => {
     beforeEach(() => {
         document.body.innerHTML = '';
     });
@@ -55,8 +55,7 @@ describe('Modal UI Component', () => {
 
     it('should close the modal when clicking the close button', () => {
         const _modal = new Modal('Test Modal');
-        const closeBtn = document.querySelector('.fm-modal-close');
-        closeBtn.click();
+        document.querySelector('.fm-modal-close').click();
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
@@ -82,12 +81,9 @@ describe('Modal UI Component', () => {
     it('should not register duplicate Escape listeners when opened twice', () => {
         const modal = new Modal('Double Open');
         modal.open();
-        modal.open(); // second call should be a no-op
+        modal.open();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        // modal is closed by Escape, overlay should be gone
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
-        // if two listeners were registered, calling close() twice would throw on the second overlay.remove()
-        // but there's no error to catch here - just verify clean close
     });
 
     it('should return focus to the trigger element after close', () => {

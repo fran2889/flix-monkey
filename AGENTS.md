@@ -51,6 +51,12 @@ Husky git hooks are installed automatically via the `prepare` script.
 | `npm run audit`            | Run `npm audit` at high severity level                         |
 | `npm run clean`            | Remove `dist/` and `coverage/`                                 |
 
+### Developer Scripts
+
+| Script                                | Description                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/capture-surface-fixtures.py` | Captures and anonymises Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html` and refreshes `tests/fixtures/netflix-*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+
 ### Build Notes
 
 - `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
