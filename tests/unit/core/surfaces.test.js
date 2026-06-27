@@ -64,6 +64,15 @@ describe('SurfaceManager', () => {
         expect(results[0].title).toBe('Sweet Magnolias');
         expect(results[0].container.className).toBe('previewModal--player_container');
         expect(results[0].fadeable).toBe(false);
+
+        // Without the scoped wrapper, this surface must not fire
+        expect(
+            discover(`
+            <div class="previewModal--player_container">
+                <img class="previewModal--boxart" alt="No wrapper">
+            </div>
+        `)
+        ).toHaveLength(0);
     });
 
     it('discovers preview detail-modal surface', () => {
@@ -78,6 +87,15 @@ describe('SurfaceManager', () => {
         expect(results[0].title).toBe('Sweet Magnolias');
         expect(results[0].container.className).toBe('previewModal--player_container');
         expect(results[0].fadeable).toBe(false);
+
+        // Without the scoped wrapper, this surface must not fire
+        expect(
+            discover(`
+            <div class="previewModal--player_container">
+                <img class="previewModal--boxart" alt="No wrapper">
+            </div>
+        `)
+        ).toHaveLength(0);
     });
 
     it('skips element with empty title', () => {
