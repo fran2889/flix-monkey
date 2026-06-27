@@ -40,23 +40,16 @@ export class SurfaceManager {
             showToggle: false,
         },
         {
-            titleSelectors: '.bob-title',
-            getTitle: el => el.textContent?.trim() ?? null,
-            containerSel: '.bob-container',
-            fadeable: false,
-            showToggle: true,
-        },
-        {
             titleSelectors: [
                 '.previewModal--player-titleTreatmentWrapper img[alt]',
                 '.previewModal--player_container img[alt]',
-                '[data-uia="previewModal-title"]',
-                '.previewModal--boxarttitle',
+                '.previewModal--player_container [data-uia="previewModal-title"]',
+                '.previewModal--player_container .previewModal--boxarttitle',
             ].join(','),
             getTitle: el => el.getAttribute('alt')?.trim() ?? el.textContent?.trim() ?? null,
             containerSel: '.previewModal--player_container',
             fadeable: false,
-            showToggle: false,
+            showToggle: true,
         },
         {
             titleSelectors: [

@@ -126,6 +126,10 @@ export class OverlayRenderer {
         content: '✓';
         color: #43a047;
     }
+    .fm-fade-toggle[data-state="auto"] .fm-toggle-knob::after {
+        content: '○';
+        color: rgba(255,255,255,0.6);
+    }
         `;
         if (existing) {
             existing.textContent = cssText;
@@ -213,13 +217,11 @@ export class OverlayRenderer {
 
         const { rating, imdbId, rtRating, mcRating } = titleObj;
 
-        // Helper to add click handler for propagation
         const addStopPropagation = el => {
             el.addEventListener('click', e => e.stopPropagation());
             return el;
         };
 
-        // IMDb (Interactive Link)
         const imdbLink = document.createElement('a');
         imdbLink.target = '_blank';
         imdbLink.rel = 'noopener noreferrer';
@@ -239,7 +241,6 @@ export class OverlayRenderer {
         }
         container.appendChild(imdbLink);
 
-        // RT
         // eslint-disable-next-line eqeqeq
         if (this.#config.get('showRtRating', true) && rtRating != null) {
             const formatted = this.#formatPercentRating(rtRating);
@@ -247,7 +248,6 @@ export class OverlayRenderer {
             titleParts.push(`RT: ${formatted}`);
         }
 
-        // MC
         // eslint-disable-next-line eqeqeq
         if (this.#config.get('showMcRating', true) && mcRating != null) {
             const formatted = this.#formatPercentRating(mcRating);

@@ -143,9 +143,7 @@ export class FlixMonkeyApp {
 
         const currentState = toggle.dataset.state;
         const nextState = this.#fade.nextToggleState(currentState);
-
-        const overrideMap = { faded: true, 'not-faded': false, auto: null };
-        const newOverride = overrideMap[nextState];
+        const newOverride = this.#fade.stateToOverride(nextState);
 
         await this.#fade.setOverride(dedupKey, newOverride);
 

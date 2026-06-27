@@ -58,8 +58,13 @@ export class FadeManager {
         return isRatingFaded ? 'faded' : 'auto';
     }
 
+    stateToOverride(state) {
+        const map = { faded: true, 'not-faded': false, auto: null };
+        return state in map ? map[state] : null;
+    }
+
     nextToggleState(currentState) {
         const cycle = { faded: 'not-faded', 'not-faded': 'auto', auto: 'faded' };
-        return cycle[currentState];
+        return cycle[currentState] ?? 'auto';
     }
 }

@@ -167,14 +167,15 @@ describe('OverlayRenderer', () => {
         expect(css).toContain('height: 12px');
     });
 
-    it('should include red X icon for faded state and green checkmark for not-faded', () => {
+    it('should include icons for all three toggle states', () => {
         const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
         renderer.injectStyles();
         const css = document.head.querySelector('#fm-overlay-styles').textContent;
-        expect(css).toContain('✕'); // ✕
+        expect(css).toContain('✕'); // faded
         expect(css).toContain('#e53935');
-        expect(css).toContain('✓'); // ✓
+        expect(css).toContain('✓'); // not-faded
         expect(css).toContain('#43a047');
+        expect(css).toContain('○'); // auto — neutral indicator
     });
 
     it('should not include per-state track background color rules', () => {

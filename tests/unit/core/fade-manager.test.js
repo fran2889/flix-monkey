@@ -215,5 +215,29 @@ describe('FadeManager', () => {
         it('should cycle auto -> faded', () => {
             expect(fade.nextToggleState('auto')).toBe('faded');
         });
+
+        it('should fall back to auto for unknown state', () => {
+            expect(fade.nextToggleState('unknown')).toBe('auto');
+            expect(fade.nextToggleState(undefined)).toBe('auto');
+        });
+    });
+
+    describe('stateToOverride', () => {
+        it('should return true for faded state', () => {
+            expect(fade.stateToOverride('faded')).toBe(true);
+        });
+
+        it('should return false for not-faded state', () => {
+            expect(fade.stateToOverride('not-faded')).toBe(false);
+        });
+
+        it('should return null for auto state', () => {
+            expect(fade.stateToOverride('auto')).toBeNull();
+        });
+
+        it('should return null for unknown state', () => {
+            expect(fade.stateToOverride('unknown')).toBeNull();
+            expect(fade.stateToOverride(undefined)).toBeNull();
+        });
     });
 });

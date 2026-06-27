@@ -26,11 +26,9 @@ describe('Zoomed UI Surface', () => {
     let surfaceManager, _overlayRenderer;
 
     beforeAll(() => {
-        // Override the fixture load to inject a minimal bob-container structure
-        // Since the actual hover fixture captured too much non-UI cruft.
         document.body.innerHTML = `
-      <div class="bob-container">
-        <div class="bob-title">Hover Title Test</div>
+      <div class="previewModal--player_container">
+        <img alt="Hover Title Test" src="">
       </div>
     `;
     });
@@ -40,20 +38,21 @@ describe('Zoomed UI Surface', () => {
         _overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
     });
 
-    it('should discover the active bob-container', () => {
+    it('should discover the active previewModal surface', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const bob = surfaces.find(s => s.container.classList.contains('bob-container'));
+        const modal = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
-        expect(bob).toBeDefined();
-        expect(bob.fadeable).toBe(false);
+        expect(modal).toBeDefined();
+        expect(modal.fadeable).toBe(false);
+        expect(modal.showToggle).toBe(true);
     });
 
-    it('should not apply fading to zoomed cards even with low ratings', () => {
+    it('should not apply fading to previewModal even with low ratings', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const bob = surfaces.find(s => s.container.classList.contains('bob-container'));
+        const modal = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
         const fade = new FadeManager(createMockAdapter(), new ConfigManager(createMockAdapter()));
-        _overlayRenderer.applyFade(bob.container, fade.shouldFade(null, 1.0, bob.fadeable));
-        expect(bob.container.classList.contains('fm-faded')).toBe(false);
+        _overlayRenderer.applyFade(modal.container, fade.shouldFade(null, 1.0, modal.fadeable));
+        expect(modal.container.classList.contains('fm-faded')).toBe(false);
     });
 });

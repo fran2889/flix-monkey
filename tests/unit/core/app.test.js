@@ -498,13 +498,13 @@ describe('App', () => {
         await vi.runAllTimersAsync();
     });
 
-    it('should render toggle in bob and update title-card fade on click', async () => {
+    it('should render toggle in previewModal and update title-card fade on click', async () => {
         const mockAdapter = createMockAdapter({
             configGet: key => (key === 'enableFadeToggle' ? true : undefined),
         });
         document.body.innerHTML = `
-        <div class="bob-container">
-            <div class="bob-title">Toggle Movie</div>
+        <div class="previewModal--player_container">
+            <img alt="Toggle Movie" src="">
         </div>
         <div class="title-card">
             <div class="fallback-text">Toggle Movie</div>
@@ -520,10 +520,10 @@ describe('App', () => {
         vi.runAllTimers();
 
         await vi.waitFor(() => {
-            expect(document.querySelector('.bob-container .fm-fade-toggle')).not.toBeNull();
+            expect(document.querySelector('.previewModal--player_container .fm-fade-toggle')).not.toBeNull();
         });
 
-        const toggle = document.querySelector('.bob-container .fm-fade-toggle');
+        const toggle = document.querySelector('.previewModal--player_container .fm-fade-toggle');
         expect(toggle.dataset.state).toBe('auto');
         expect(document.querySelector('.title-card .fm-fade-toggle')).toBeNull();
 
@@ -534,13 +534,13 @@ describe('App', () => {
         expect(document.querySelector('.title-card').classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should not render toggle in bob when enableFadeToggle is false', async () => {
+    it('should not render toggle in previewModal when enableFadeToggle is false', async () => {
         const mockAdapter = createMockAdapter({
             configGet: key => (key === 'enableFadeToggle' ? false : undefined),
         });
         document.body.innerHTML = `
-        <div class="bob-container">
-            <div class="bob-title">No Toggle Movie</div>
+        <div class="previewModal--player_container">
+            <img alt="No Toggle Movie" src="">
         </div>
     `;
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
@@ -584,7 +584,7 @@ describe('App', () => {
         expect(document.querySelector('.fm-fade-toggle')).toBeNull();
     });
 
-    it('should initialise bob toggle at faded state when title is rating-faded', async () => {
+    it('should initialise previewModal toggle at faded state when title is rating-faded', async () => {
         const mockAdapter = createMockAdapter({
             configGet: key => {
                 if (key === 'enableFadeToggle') return true;
@@ -594,8 +594,8 @@ describe('App', () => {
             },
         });
         document.body.innerHTML = `
-            <div class="bob-container">
-                <div class="bob-title">Bad Movie</div>
+            <div class="previewModal--player_container">
+                <img alt="Bad Movie" src="">
             </div>
         `;
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
@@ -608,10 +608,10 @@ describe('App', () => {
         vi.runAllTimers();
 
         await vi.waitFor(() => {
-            expect(document.querySelector('.bob-container .fm-fade-toggle')).not.toBeNull();
+            expect(document.querySelector('.previewModal--player_container .fm-fade-toggle')).not.toBeNull();
         });
 
-        const toggle = document.querySelector('.bob-container .fm-fade-toggle');
+        const toggle = document.querySelector('.previewModal--player_container .fm-fade-toggle');
         expect(toggle.dataset.state).toBe('faded');
     });
 

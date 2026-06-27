@@ -54,20 +54,6 @@ describe('Surfaces', () => {
         expect(results[0].showToggle).toBe(false);
     });
 
-    it('should discover bob container surfaces', () => {
-        const surfaces = new SurfaceManager(createMockLogger());
-        document.body.innerHTML = `
-            <div class="bob-container">
-                <div class="bob-title">Bob Movie</div>
-            </div>
-        `;
-        const results = surfaces.discover(document.body);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Bob Movie');
-        expect(results[0].fadeable).toBe(false);
-        expect(results[0].showToggle).toBe(true);
-    });
-
     it('should discover preview modal surfaces (img alt)', () => {
         const surfaces = new SurfaceManager(createMockLogger());
         document.body.innerHTML = `
@@ -82,6 +68,7 @@ describe('Surfaces', () => {
         expect(results[0].title).toBe('Modal Title');
         expect(results[0].container.className).toBe('previewModal--player_container');
         expect(results[0].fadeable).toBe(false);
+        expect(results[0].showToggle).toBe(true);
     });
 
     it('should discover jawbone surfaces', () => {
@@ -115,19 +102,21 @@ describe('Surfaces', () => {
     it('should fall back to parent element if container selector not found', () => {
         const mockLogger = createMockLogger();
         const surfaces = new SurfaceManager(mockLogger);
+        // .previewModal--player-titleTreatmentWrapper img[alt] matches without a
+        // .previewModal--player_container ancestor, triggering the fallback path.
         document.body.innerHTML = `
-            <div class="not-a-container">
-                <div class="bob-title">Orphan Title</div>
+            <div class="previewModal--player-titleTreatmentWrapper">
+                <img alt="Orphan Title" src="...">
             </div>
         `;
         const results = surfaces.discover(document.body);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan Title');
-        expect(results[0].container.className).toBe('not-a-container');
+        expect(results[0].container.className).toBe('previewModal--player-titleTreatmentWrapper');
         expect(mockLogger.warn).toHaveBeenCalledWith(
             'Surface container selector failed, falling back to parentElement',
             {
-                selector: '.bob-container',
+                selector: '.previewModal--player_container',
             }
         );
     });
@@ -208,11 +197,15 @@ describe('Surfaces', () => {
 
     it('should handle missing container', () => {
         const surfaces = new SurfaceManager(createMockLogger());
-        // Mock a title element that doesn't have a closest container
-        document.body.innerHTML = '<div class="bob-title">No Container</div>';
+        // img inside titleTreatmentWrapper but no player_container ancestor → parentElement is the fallback
+        document.body.innerHTML = `
+            <div class="previewModal--player-titleTreatmentWrapper">
+                <img alt="No Container" src="">
+            </div>
+        `;
         const results = surfaces.discover(document.body);
         expect(results).toHaveLength(1);
-        expect(results[0].container).toBe(document.body); // parentElement of .bob-title is body
+        expect(results[0].container.className).toBe('previewModal--player-titleTreatmentWrapper');
     });
 
     describe('previewModal fallback selectors', () => {
@@ -245,7 +238,7 @@ describe('Surfaces', () => {
             expect(results[0].title).toBe(expectedTitle);
             expect(results[0].container.className).toBe(expectedContainerClass);
             expect(results[0].fadeable).toBe(false);
-            expect(results[0].showToggle).toBe(false);
+            expect(results[0].showToggle).toBe(true);
         });
     });
 
