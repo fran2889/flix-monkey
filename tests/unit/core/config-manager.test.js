@@ -165,4 +165,17 @@ describe('ConfigManager', () => {
         expect(config.getBool('showRtRating')).toBe(CONFIG_DEFAULTS.showRtRating);
         expect(config.getBool('enableFadeUnderRating')).toBe(CONFIG_DEFAULTS.enableFadeUnderRating);
     });
+
+    it('should return default when stored value is not in select options (overlayCorner)', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'invalid-corner' }), createMockLogger());
+        expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
+    });
+
+    it('should return default when stored value is not in select options (apiClient)', () => {
+        const config = new ConfigManager(
+            createMockAdapter({ configGet: () => 'unknown-provider' }),
+            createMockLogger()
+        );
+        expect(config.get('apiClient')).toBe(CONFIG_DEFAULTS.apiClient);
+    });
 });

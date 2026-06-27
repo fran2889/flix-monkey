@@ -16,6 +16,8 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { CONFIG_DEFAULTS } from './config-fields.js';
+
 export class Logger {
     #prefix = '[FlixMonkey]';
     #adapter;
@@ -25,7 +27,7 @@ export class Logger {
     }
 
     debug(message, ...args) {
-        if (String(this.#adapter.configGet('debug') ?? true) === 'true') {
+        if (String(this.#adapter.configGet('debug') ?? CONFIG_DEFAULTS['debug']) === 'true') {
             console.log(`${this.#prefix} ${message}`, ...args);
         }
     }

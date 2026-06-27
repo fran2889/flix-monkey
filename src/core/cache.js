@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { DAYS_TO_MS } from './constants.js';
+import { DAYS_TO_MS, CACHE_TTL_INFINITE } from './constants.js';
 import { Title } from './title.js';
 import { slugify } from './utils.js';
 
@@ -36,7 +36,7 @@ export class CacheManager {
     }
 
     #calculateTtl(titleObj) {
-        const getTtlMs = days => (days === -1 ? Infinity : days * DAYS_TO_MS);
+        const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
         if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
         const currentYear = new Date().getFullYear();

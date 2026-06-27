@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { CONFIG_DEFAULTS } from './config-fields.js';
+import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 import { FlixMonkeyError } from './utils.js';
 
 export class ConfigManager {
@@ -31,7 +31,10 @@ export class ConfigManager {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
             const val = this.#adapter.configGet(key);
-            return val !== undefined && val !== null ? val : CONFIG_DEFAULTS[key];
+            if (val === undefined || val === null) return CONFIG_DEFAULTS[key];
+            const allowed = CONFIG_SELECT_ALLOWED[key];
+            if (allowed && !allowed.includes(val)) return CONFIG_DEFAULTS[key];
+            return val;
         } catch (err) {
             this.#logger.warn('ConfigManager.get error, using fallback', { key, err });
             return CONFIG_DEFAULTS[key];
