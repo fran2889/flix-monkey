@@ -21,7 +21,7 @@ import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 
-describe('Preview Mini-Modal UI Surface', () => {
+describe('Info UI Surface (Mini-Modal)', () => {
     let surfaceManager, overlayRenderer;
 
     beforeAll(() => {
