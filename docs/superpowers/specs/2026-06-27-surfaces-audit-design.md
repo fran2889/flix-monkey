@@ -67,16 +67,22 @@ Capture a minimal but authentic DOM extract for each surface from the live Chrom
 | `tests/fixtures/surfaces/preview-mini.html`   | previewModal-mini   | The `.previewModal--wrapper.mini-modal` element with its player container and boxart image                 |
 | `tests/fixtures/surfaces/preview-detail.html` | previewModal-detail | The `.previewModal--wrapper.detail-modal` element with its player container and boxart image               |
 
-**Anonymisation rules applied to every fixture before saving:**
+**What is kept (real content data):**
 
-- All `.fallback-text` text content → `"Test Show Alpha"`, `"Test Show Beta"`, `"Test Show Gamma"`, cycling
-- All `aria-label` on `[data-uia="standard-card"]` → same synthetic titles cycling
-- All `img[alt]` where the alt carries a title (non-empty, non-UI-label strings) → same synthetic titles
-- All `img[src]` and `source[srcset]` → empty string (strips Netflix CDN URLs)
-- All `<script>` tags → removed
-- All `<link rel="stylesheet">` → removed
-- User-identifying text (profile name in "Continue Watching for X", display name in nav) → `"Test User"`
-- Netflix session tokens or API keys in attributes → removed
+- All show and movie titles — `.fallback-text` text, `img[alt]`, `aria-label` on cards
+- All Netflix CDN image URLs — show thumbnails, boxart, title treatment images
+- All page structure — class names, `data-uia` attributes, DOM hierarchy
+
+**What is removed (user-identifying data only):**
+
+- **Profile name** — text content of the profile display name element in the nav, and the suffix in "Continue Watching for [Name]" → replaced with `"Test User"`
+- **User avatar** — the profile `<img>` `src` attribute → replaced with empty string
+- **Cookies** — any `<script>` blocks that set or reference `document.cookie`, and `<meta>` cookie-related tags → removed
+- **API keys and session tokens** — Netflix embeds auth tokens and API keys in inline `<script>` blocks and `data-*` attributes (e.g. `authURL`, `esn`, bearer tokens in page state JSON) → those `<script>` blocks are removed; any `data-*` attribute whose value looks like a token (long alphanumeric, base64, or JWT-shaped string) is stripped
+- **"My List" row** — the entire row `<div>` whose heading matches "My List" → removed
+- **"Continue Watching" row** — the entire row `<div>` whose heading matches "Continue Watching" → removed
+
+All other `<script>` tags (page bootstrap, polyfills, feature flags without tokens) are also removed since they are non-functional outside the Netflix origin and add bulk.
 
 Captures are extracted from the live Chromium DOM at the element level (not full-page saves), wrapped in a minimal `<html><body>…</body></html>` shell.
 
