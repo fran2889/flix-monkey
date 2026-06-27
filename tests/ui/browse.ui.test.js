@@ -55,15 +55,23 @@ describe('Browse UI Surface', () => {
         });
     });
 
-    it('should inject loading and rating overlays on a browse card', () => {
+    it('should inject a loading overlay on a browse card', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container, title } = surfaces[0];
 
         overlayRenderer.injectLoadingOverlay(container, title);
+
         const loading = container.querySelector('.fm-loading');
         expect(loading).not.toBeNull();
         expect(loading.textContent).toContain('IMDb');
         expect(loading.title).toContain('Fetching ratings');
+    });
+
+    it('should replace loading overlay with rating overlay on a browse card', () => {
+        const surfaces = surfaceManager.discover(document.body);
+        const { container, title } = surfaces[0];
+
+        overlayRenderer.injectLoadingOverlay(container, title);
 
         const titleObj = {
             rating: 8.5,
