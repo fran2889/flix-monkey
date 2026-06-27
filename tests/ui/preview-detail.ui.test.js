@@ -17,11 +17,14 @@
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { SurfaceManager } from '../../src/core/surfaces.js';
+import { OverlayRenderer } from '../../src/core/overlay.js';
+import { ConfigManager } from '../../src/core/config-manager.js';
+import { createMockAdapter } from '../mocks/adapter.js';
 import fs from 'fs';
 import path from 'path';
 
 describe('Preview Detail-Modal UI Surface', () => {
-    let surfaceManager, fixtureHtml;
+    let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
         fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/surfaces/preview-detail.html'), 'utf8');
@@ -30,17 +33,17 @@ describe('Preview Detail-Modal UI Surface', () => {
     beforeEach(() => {
         document.body.innerHTML = fixtureHtml;
         surfaceManager = new SurfaceManager();
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
     });
 
-    it('discovers exactly one surface from the detail-modal fixture', () => {
+    it('should discover exactly one surface from the detail-modal fixture', () => {
         const results = surfaceManager.discover(document.body);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe("It's Complicated");
-        const detailResults = results.filter(r => r.container.classList.contains('previewModal--player_container'));
-        expect(detailResults.length).toBeGreaterThanOrEqual(1);
+        expect(results[0].container.classList.contains('previewModal--player_container')).toBe(true);
     });
 
-    it('extracts a non-empty title from the boxart alt attribute', () => {
+    it('should extract a non-empty title from the boxart alt attribute', () => {
         const results = surfaceManager.discover(document.body);
         results.forEach(r => {
             expect(r.title).toBeTruthy();
@@ -48,10 +51,32 @@ describe('Preview Detail-Modal UI Surface', () => {
         });
     });
 
-    it('sets fadeable to false for the detail-modal surface', () => {
+    it('should set fadeable to false for the detail-modal surface', () => {
         const results = surfaceManager.discover(document.body);
         results.forEach(r => {
             expect(r.fadeable).toBe(false);
         });
+    });
+
+    it('should inject a rating overlay into the detail-modal container', () => {
+        const results = surfaceManager.discover(document.body);
+        const { container } = results[0];
+
+        overlayRenderer.injectOverlay(container, {
+            rating: 6.6,
+            imdbUrl: 'https://www.imdb.com/title/tt0762107/',
+            imdbId: 'tt0762107',
+        });
+
+        expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
+        expect(container.querySelector('.fm-rating-overlay').textContent).toContain('6.6');
+    });
+
+    it('should not apply fading even for ratings below the threshold', () => {
+        const results = surfaceManager.discover(document.body);
+        const { container, fadeable } = results[0];
+
+        overlayRenderer.applyFade(container, { rating: 1.0 }, fadeable);
+        expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });

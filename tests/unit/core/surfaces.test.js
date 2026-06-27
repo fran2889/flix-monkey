@@ -26,11 +26,11 @@ describe('SurfaceManager', () => {
         return sm.discover(document.body);
     }
 
-    it('returns empty array when no matching elements exist', () => {
+    it('should return empty array when no matching elements exist', () => {
         expect(discover('<div>nothing</div>')).toEqual([]);
     });
 
-    it('discovers title-card surface', () => {
+    it('should discover title-card surface', () => {
         const results = discover(`
             <div class="title-card">
                 <div class="fallback-text">Bones</div>
@@ -42,7 +42,7 @@ describe('SurfaceManager', () => {
         expect(results[0].fadeable).toBe(true);
     });
 
-    it('discovers standard-card surface', () => {
+    it('should discover standard-card surface', () => {
         const results = discover(`
             <div data-uia="standard-card" aria-label="Breaking Bad"></div>
         `);
@@ -52,7 +52,7 @@ describe('SurfaceManager', () => {
         expect(results[0].fadeable).toBe(true);
     });
 
-    it('discovers preview mini-modal surface', () => {
+    it('should discover preview mini-modal surface', () => {
         const results = discover(`
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
@@ -75,7 +75,7 @@ describe('SurfaceManager', () => {
         ).toHaveLength(0);
     });
 
-    it('discovers preview detail-modal surface', () => {
+    it('should discover preview detail-modal surface', () => {
         const results = discover(`
             <div class="previewModal--wrapper detail-modal">
                 <div class="previewModal--player_container">
@@ -98,11 +98,11 @@ describe('SurfaceManager', () => {
         ).toHaveLength(0);
     });
 
-    it('skips element with empty title', () => {
+    it('should skip element with empty title', () => {
         expect(discover('<div class="title-card"><div class="fallback-text">   </div></div>')).toHaveLength(0);
     });
 
-    it('skips element with null title', () => {
+    it('should skip element with null title', () => {
         const mockEl = {
             textContent: null,
             closest: () => document.body,
@@ -113,7 +113,7 @@ describe('SurfaceManager', () => {
         expect(sm.discover({ querySelectorAll: () => [mockEl] })).toHaveLength(0);
     });
 
-    it('deduplicates when multiple title elements share the same container', () => {
+    it('should deduplicate when multiple title elements share the same container', () => {
         const results = discover(`
             <div class="title-card">
                 <div class="fallback-text">First</div>
@@ -124,7 +124,7 @@ describe('SurfaceManager', () => {
         expect(results[0].title).toBe('First');
     });
 
-    it('falls back to parentElement when containerSel does not match', () => {
+    it('should fall back to parentElement when containerSel does not match', () => {
         const logger = createMockLogger();
         const sm = new SurfaceManager(logger);
         const fakeParent = document.createElement('div');
@@ -144,7 +144,7 @@ describe('SurfaceManager', () => {
         });
     });
 
-    it('returns empty array when querySelectorAll throws', () => {
+    it('should return empty array when querySelectorAll throws', () => {
         const sm = new SurfaceManager(createMockLogger());
         expect(
             sm.discover({
