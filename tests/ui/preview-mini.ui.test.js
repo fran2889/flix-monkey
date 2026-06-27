@@ -34,8 +34,8 @@ describe('Preview Mini-Modal UI Surface', () => {
 
     it('discovers exactly one surface from the mini-modal fixture', () => {
         const results = surfaceManager.discover(document.body);
-        expect(results.length).toBeGreaterThanOrEqual(1);
-        // Mini-modal has a single player container
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Sweet Magnolias');
         const miniResults = results.filter(r => r.container.classList.contains('previewModal--player_container'));
         expect(miniResults.length).toBeGreaterThanOrEqual(1);
     });
@@ -53,14 +53,5 @@ describe('Preview Mini-Modal UI Surface', () => {
         results.forEach(r => {
             expect(r.fadeable).toBe(false);
         });
-    });
-
-    it('does not discover a detail-modal surface from the mini-modal fixture', () => {
-        const results = surfaceManager.discover(document.body);
-        const wrappers = [...document.querySelectorAll('.previewModal--wrapper')];
-        const hasDetailModal = wrappers.some(w => w.classList.contains('detail-modal'));
-        expect(hasDetailModal).toBe(false);
-        // All discovered surfaces come from the mini-modal wrapper, not a detail-modal one
-        expect(results.length).toBeGreaterThanOrEqual(1);
     });
 });

@@ -34,7 +34,8 @@ describe('Preview Detail-Modal UI Surface', () => {
 
     it('discovers exactly one surface from the detail-modal fixture', () => {
         const results = surfaceManager.discover(document.body);
-        expect(results.length).toBeGreaterThanOrEqual(1);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Breaking Bad');
         const detailResults = results.filter(r => r.container.classList.contains('previewModal--player_container'));
         expect(detailResults.length).toBeGreaterThanOrEqual(1);
     });
@@ -52,11 +53,5 @@ describe('Preview Detail-Modal UI Surface', () => {
         results.forEach(r => {
             expect(r.fadeable).toBe(false);
         });
-    });
-
-    it('does not discover a mini-modal surface from the detail-modal fixture', () => {
-        const wrappers = [...document.querySelectorAll('.previewModal--wrapper')];
-        const hasMiniModal = wrappers.some(w => w.classList.contains('mini-modal'));
-        expect(hasMiniModal).toBe(false);
     });
 });
