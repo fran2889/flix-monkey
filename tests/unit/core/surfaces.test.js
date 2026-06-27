@@ -109,17 +109,20 @@ describe('SurfaceManager', () => {
     it('falls back to parentElement when containerSel does not match', () => {
         const logger = createMockLogger();
         const sm = new SurfaceManager(logger);
-        document.body.innerHTML = `
-            <div class="not-a-container">
-                <div class="bob-title">Orphan</div>
-            </div>
-        `;
-        const results = sm.discover(document.body);
+        const fakeParent = document.createElement('div');
+        fakeParent.className = 'orphan-parent';
+        const mockTitleEl = {
+            textContent: 'Orphan',
+            closest: () => null,
+            parentElement: fakeParent,
+            getAttribute: () => null,
+        };
+        const results = sm.discover({ querySelectorAll: () => [mockTitleEl] });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
-        expect(results[0].container.className).toBe('not-a-container');
+        expect(results[0].container).toBe(fakeParent);
         expect(logger.warn).toHaveBeenCalledWith('Surface container selector failed, falling back to parentElement', {
-            selector: '.bob-container',
+            selector: '.title-card',
         });
     });
 
