@@ -95,7 +95,10 @@ export class OverlayRenderer {
     }
 
     clearAllOverlays() {
-        document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => el.remove());
+        document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {
+            el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);
+            el.remove();
+        });
     }
 
     #createBadgeElement(label, value, labelClassName = '', valueClassName = '') {
