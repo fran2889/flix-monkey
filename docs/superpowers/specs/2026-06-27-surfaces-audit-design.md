@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-27
 **File:** `src/core/surfaces.js`
-**Scope:** Remove dead surfaces and selectors, tighten live ones, add comments that link each surface to its Netflix UI area.
+**Scope:** Remove dead surfaces and selectors, tighten live ones, split previewModal into distinct mini-modal and detail-modal surfaces, add comments that link each surface to its Netflix UI area.
 
 ---
 
@@ -16,9 +16,9 @@ The audit found three categories of dead code:
 
 2. **Three stale previewModal selectors**: Of the four `titleSelectors`, only `.previewModal--player_container img[alt]` ever matches. `.previewModal--player-titleTreatmentWrapper img[alt]` is dead because the logo `<img>` inside that wrapper has `alt=null`. `[data-uia="previewModal-title"]` and `.previewModal--boxarttitle` return 0 across all tested contexts.
 
-3. **jawBone `previewModal--detailsMetadata` sub-selectors**: The jawBone surface has eight title selectors split between `.jawBone`/`.jawBoneContainer` targets (the inline expand panel) and `.previewModal--detailsMetadata` targets (the detail modal's metadata block). The metadata block is confirmed present but only contains synopsis, cast, and genre — never title info. All five `detailsMetadata` title selectors return 0. These are wrong-layer: title info in the full detail modal lives in `.previewModal--player_container`, which is already handled by the previewModal surface.
+3. **jawBone surface** (`.jawBone` / `.jawBoneContainer` / `.previewModal--detailsMetadata` selectors): `.jawBone` and `.jawBoneContainer` are absent from the current Netflix DOM. All eight title selectors return 0. The five `previewModal--detailsMetadata` sub-selectors are also wrong-layer — the detail metadata block only contains synopsis, cast, and genre, never title info (title lives in `.previewModal--player_container`, handled by the previewModal surface). The entire surface is removed.
 
-The `.jawBone`/`.jawBoneContainer` classes themselves are also absent from the current Netflix DOM. They target the older inline-expand row panel that Netflix has largely replaced with the mini-modal, but they remain distinct conceptually and are retained as a deprecated safety net.
+The audit also confirmed that the previewModal wrapper carries distinct classes — `mini-modal` for the card hover popup and `detail-modal` for the full "More Info" modal. The single merged previewModal surface is split into two, one per logical Netflix surface, so future UI changes can target each independently.
 
 ---
 
@@ -26,56 +26,40 @@ The `.jawBone`/`.jawBoneContainer` classes themselves are also absent from the c
 
 ### Remove BOB surface entirely
 
-The entire BOB entry is deleted. No surviving selectors reference `.bob-title` or `.bob-container`.
+The entire BOB entry is deleted.
 
-### Tighten previewModal surface to one selector
+### Remove jawBone surface entirely
 
-Remove:
+The entire jawBone entry is deleted. No surviving selectors reference `.jawBone`, `.jawBoneContainer`, or `.previewModal--detailsMetadata`.
 
-- `.previewModal--player-titleTreatmentWrapper img[alt]`
-- `[data-uia="previewModal-title"]`
-- `.previewModal--boxarttitle`
+### Split previewModal into two surfaces
 
-Keep:
+The single previewModal surface becomes:
 
-- `.previewModal--player_container img[alt]` (matches `.previewModal--boxart` with `alt="<title>"`)
+**previewModal-mini** — hover mini-modal that appears on card mouse-over:
 
-`getTitle` collapses to just `el.getAttribute('alt')?.trim() ?? null`.
+- `titleSelectors`: `.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]`
+- `containerSel`: `.previewModal--player_container`
 
-### Prune jawBone surface
+**previewModal-detail** — full "More Info" detail modal:
 
-Remove (wrong layer, covered by previewModal surface):
+- `titleSelectors`: `.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]`
+- `containerSel`: `.previewModal--player_container`
 
-- `.previewModal--detailsMetadata img[alt]`
-- `.jawBone .image-fallback-text`
-- `.jawBoneContainer .image-fallback-text`
-- `.previewModal--detailsMetadata h3`
-- `.previewModal--detailsMetadata .title`
-- `.previewModal--detailsMetadata [data-uia="previewModal-title"]`
+Both use `getTitle: el => el.getAttribute('alt')?.trim() ?? null` and `fadeable: false`. The `seen` set stays clean because the two modals are mutually exclusive — opening the detail modal dismisses the mini-modal.
 
-Keep (speculative, inline expand panel):
-
-- `.jawBone img[alt]`
-- `.jawBoneContainer img[alt]`
-
-Update `containerSel` from `.jawBone, .jawBoneContainer, .previewModal--detailsMetadata` → `.jawBone, .jawBoneContainer`.
-
-Add `// @deprecated` block comment marking the surface as unobserved in the current Netflix DOM.
+The titleSelector is scoped to the wrapper class so each surface is self-contained: one selector, one logical Netflix UI area.
 
 ### Add comments to all surviving surfaces
 
-Each surface entry gets a short block comment:
-
-- **title-card**: row cards on browse/genre pages; `.fallback-text` is the text title Netflix renders for cards whose thumbnail has no baked-in title logo.
-- **standard-card**: search result grid; the card element carries the title via `aria-label`.
-- **previewModal**: hover mini-modal and full "More Info" detail modal; the boxart `<img alt>` inside `.previewModal--player_container` always carries the clean title.
-- **jawBone** (deprecated): the older inline-expand row panel; `.jawBone`/`.jawBoneContainer` are absent from the current DOM but retained in case Netflix reinstates this UI path.
+Each surface entry gets a short block comment naming the Netflix UI area it targets.
 
 ---
 
 ## Resulting `#SURFACES` (reference)
 
 ```js
+// Surface priority order: title-card → search → previewModal-mini → previewModal-detail.
 #SURFACES = [
     {
         // Browse and genre page row cards. `.fallback-text` is the text title
@@ -94,23 +78,17 @@ Each surface entry gets a short block comment:
         fadeable: true,
     },
     {
-        // Hover mini-modal and full "More Info" detail modal. The boxart <img>
-        // inside the player container always carries the clean title in alt.
-        titleSelectors: '.previewModal--player_container img[alt]',
+        // Hover mini-modal (card mouse-over).
+        titleSelectors: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
         getTitle: el => el.getAttribute('alt')?.trim() ?? null,
         containerSel: '.previewModal--player_container',
         fadeable: false,
     },
     {
-        // @deprecated — .jawBone / .jawBoneContainer are absent from the
-        // current Netflix DOM. Retained as a safety net for A/B variants and
-        // legacy paths that still use the older inline-expand row panel.
-        titleSelectors: [
-            '.jawBone img[alt]',
-            '.jawBoneContainer img[alt]',
-        ].join(','),
+        // Full "More Info" detail modal.
+        titleSelectors: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
         getTitle: el => el.getAttribute('alt')?.trim() ?? null,
-        containerSel: '.jawBone, .jawBoneContainer',
+        containerSel: '.previewModal--player_container',
         fadeable: false,
     },
 ];
@@ -122,10 +100,10 @@ Each surface entry gets a short block comment:
 
 - `discover()` logic — no changes to the surface iteration, `seen` set, or fallback to `parentElement`.
 - `SurfaceManager` class structure, constructor, and `#logger` usage.
-- Surface priority order (title-card → search → previewModal → jawBone).
+- title-card and standard-card surfaces — confirmed working, no changes.
 
 ---
 
 ## Testing
 
-Manual verification via the live Netflix DOM is the primary test. Unit tests for `SurfaceManager.discover()` should mock a DOM tree covering each surviving surface and assert that the correct `{ container, title, fadeable }` tuples are returned. The BOB surface should have no corresponding test case after this change.
+Manual verification via the live Netflix DOM is the primary test. Unit tests for `SurfaceManager.discover()` should mock DOM trees covering each of the four surviving surfaces and assert that the correct `{ container, title, fadeable }` tuples are returned.
