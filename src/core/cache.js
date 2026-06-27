@@ -37,13 +37,13 @@ export class CacheManager {
 
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === -1 ? Infinity : days * DAYS_TO_MS);
-        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating', 1));
-        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear', 30));
+        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
+        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
         const currentYear = new Date().getFullYear();
         const isOldRelease = currentYear - titleObj.year > 1;
         const ttlDays = isOldRelease
-            ? this.#config.getInt('cacheTtlRatedOldYear', -1)
-            : this.#config.getInt('cacheTtlRatedNewYear', 30);
+            ? this.#config.getInt('cacheTtlRatedOldYear')
+            : this.#config.getInt('cacheTtlRatedNewYear');
         return getTtlMs(ttlDays);
     }
 

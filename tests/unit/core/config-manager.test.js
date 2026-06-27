@@ -35,29 +35,29 @@ describe('ConfigManager', () => {
         expect(config.get('overlayCorner')).toBe('bottom-right');
     });
 
-    it('should return explicit fallback when adapter returns null', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => null }), createMockLogger());
-        expect(config.get('nonExistentKey', 'fallback')).toBe('fallback');
+    it('should throw for unknown key', () => {
+        const config = new ConfigManager(createMockAdapter(), createMockLogger());
+        expect(() => config.get('nonExistentKey')).toThrow('ConfigManager: unknown config key "nonExistentKey"');
     });
 
     it('should parse integer via getInt', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => '42' }), createMockLogger());
-        expect(config.getInt('someInt', 0)).toBe(42);
+        expect(config.getInt('cacheTtlNoRating')).toBe(42);
     });
 
-    it('should return fallback for invalid integer', () => {
+    it('should return CONFIG_DEFAULTS value for invalid integer', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
-        expect(config.getInt('someInt', 10)).toBe(10);
+        expect(config.getInt('cacheTtlNoRating')).toBe(Number.parseInt(CONFIG_DEFAULTS.cacheTtlNoRating, 10));
     });
 
     it('should parse float via getFloat', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => '3.14' }), createMockLogger());
-        expect(config.getFloat('someFloat', 0)).toBe(3.14);
+        expect(config.getFloat('fadeRatingThreshold')).toBe(3.14);
     });
 
-    it('should return fallback for invalid float', () => {
+    it('should return CONFIG_DEFAULTS value for invalid float', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
-        expect(config.getFloat('someFloat', 2.5)).toBe(2.5);
+        expect(config.getFloat('fadeRatingThreshold')).toBe(Number.parseFloat(CONFIG_DEFAULTS.fadeRatingThreshold));
     });
 
     it('should call injected logger.warn when configGet throws', () => {
@@ -68,10 +68,10 @@ describe('ConfigManager', () => {
             },
         });
         const config = new ConfigManager(adapter, mockLogger);
-        config.get('someKey');
+        config.get('overlayCorner');
         expect(mockLogger.warn).toHaveBeenCalledWith(
             'ConfigManager.get error, using fallback',
-            expect.objectContaining({ key: 'someKey' })
+            expect.objectContaining({ key: 'overlayCorner' })
         );
     });
 
@@ -80,7 +80,7 @@ describe('ConfigManager', () => {
         expect(config.get(key)).toBe(expectedValue);
     });
 
-    it('should use explicit fallback when configGet throws', () => {
+    it('should use CONFIG_DEFAULTS when configGet throws', () => {
         const mockLogger = createMockLogger();
         const config = new ConfigManager(
             createMockAdapter({
@@ -91,7 +91,6 @@ describe('ConfigManager', () => {
             mockLogger
         );
         expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
-        expect(config.get('overlayCorner', 'top-left')).toBe('top-left');
         expect(mockLogger.warn).toHaveBeenCalledWith(
             'ConfigManager.get error, using fallback',
             expect.objectContaining({ key: 'overlayCorner' })
@@ -105,45 +104,65 @@ describe('ConfigManager', () => {
 
     it('should handle non-string values from configGet', () => {
         const config = new ConfigManager(
-            createMockAdapter({ configGet: key => (key === 'someInt' ? 42 : key === 'someFloat' ? 1.5 : undefined) }),
+            createMockAdapter({
+                configGet: key => (key === 'cacheTtlNoRating' ? 42 : key === 'fadeRatingThreshold' ? 1.5 : undefined),
+            }),
             createMockLogger()
         );
-        expect(config.getInt('someInt')).toBe(42);
-        expect(config.getFloat('someFloat')).toBe(1.5);
+        expect(config.getInt('cacheTtlNoRating')).toBe(42);
+        expect(config.getFloat('fadeRatingThreshold')).toBe(1.5);
     });
 
     it('should handle falsy but valid values (0 and empty string)', () => {
         const config = new ConfigManager(
-            createMockAdapter({ configGet: key => (key === 'zero' ? 0 : key === 'empty' ? '' : undefined) }),
+            createMockAdapter({
+                configGet: key => (key === 'cacheTtlNoRating' ? 0 : key === 'omdbApiKey' ? '' : undefined),
+            }),
             createMockLogger()
         );
-        expect(config.get('zero')).toBe(0);
-        expect(config.get('empty')).toBe('');
-        expect(config.getInt('zero', 10)).toBe(0);
-        expect(config.getFloat('zero', 10)).toBe(0);
+        expect(config.get('cacheTtlNoRating')).toBe(0);
+        expect(config.get('omdbApiKey')).toBe('');
+        expect(config.getInt('cacheTtlNoRating')).toBe(0);
+        expect(config.getFloat('cacheTtlNoRating')).toBe(0);
     });
 
-    it('should return 0 from getInt when both value and fallback are non-numeric', () => {
+    it('should return CONFIG_DEFAULTS from getInt when value is non-numeric', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
-        const result = config.getInt('someKey');
+        const result = config.getInt('cacheTtlNoRating');
         expect(typeof result).toBe('number');
-        expect(result).toBe(0);
+        expect(result).toBe(Number.parseInt(CONFIG_DEFAULTS.cacheTtlNoRating, 10));
     });
 
-    it('should return 0 from getFloat when both value and fallback are non-numeric', () => {
+    it('should return CONFIG_DEFAULTS from getFloat when value is non-numeric', () => {
         const config = new ConfigManager(createMockAdapter({ configGet: () => 'not-a-number' }), createMockLogger());
-        const result = config.getFloat('someKey');
+        const result = config.getFloat('fadeRatingThreshold');
         expect(typeof result).toBe('number');
-        expect(result).toBe(0);
+        expect(result).toBe(Number.parseFloat(CONFIG_DEFAULTS.fadeRatingThreshold));
     });
 
-    it('should return numeric fallback from getInt when value is non-numeric', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => undefined }), createMockLogger());
-        expect(config.getInt('someKey', 7)).toBe(7);
+    it('getBool should return true for boolean true', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => true }), createMockLogger());
+        expect(config.getBool('showRtRating')).toBe(true);
     });
 
-    it('should return numeric fallback from getFloat when value is non-numeric', () => {
-        const config = new ConfigManager(createMockAdapter({ configGet: () => undefined }), createMockLogger());
-        expect(config.getFloat('someKey', 1.5)).toBe(1.5);
+    it('getBool should return false for boolean false', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => false }), createMockLogger());
+        expect(config.getBool('showRtRating')).toBe(false);
+    });
+
+    it('getBool should return true for string "true"', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'true' }), createMockLogger());
+        expect(config.getBool('showRtRating')).toBe(true);
+    });
+
+    it('getBool should return false for string "false"', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => 'false' }), createMockLogger());
+        expect(config.getBool('showRtRating')).toBe(false);
+    });
+
+    it('getBool should use CONFIG_DEFAULTS when adapter returns null', () => {
+        const config = new ConfigManager(createMockAdapter({ configGet: () => null }), createMockLogger());
+        expect(config.getBool('showRtRating')).toBe(CONFIG_DEFAULTS.showRtRating);
+        expect(config.getBool('enableFadeUnderRating')).toBe(CONFIG_DEFAULTS.enableFadeUnderRating);
     });
 });

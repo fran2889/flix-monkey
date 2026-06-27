@@ -25,7 +25,7 @@ export class Logger {
     }
 
     debug(message, ...args) {
-        if (String(this.#adapter.configGet('debug')) === 'true') {
+        if (String(this.#adapter.configGet('debug') ?? true) === 'true') {
             console.log(`${this.#prefix} ${message}`, ...args);
         }
     }
