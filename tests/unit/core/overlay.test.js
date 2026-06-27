@@ -342,4 +342,17 @@ describe('OverlayRenderer', () => {
             expect(spy).toHaveBeenCalled();
         });
     });
+
+    // --- Clear overlays ---
+
+    it('should remove all overlay elements from the document', () => {
+        const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        document.body.innerHTML =
+            '<div class="fm-rating-overlay"></div>' +
+            '<div class="fm-rating-overlay"></div>' +
+            '<div class="other"></div>';
+        renderer.clearAllOverlays();
+        expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(0);
+        expect(document.querySelectorAll('.other')).toHaveLength(1);
+    });
 });
