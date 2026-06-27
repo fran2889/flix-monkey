@@ -1,12 +1,11 @@
-# Design: Correctness & Contract Fixes — D3, D5, D6, D7
+# Design: Correctness & Contract Fixes
 
 **Date:** 2026-06-27
-**Issues:** D3 (visual-settings redecoration), D5 (disabled-gate TOCTOU), D6 (mid-fetch disable guard), D7 (storageGet contract)
-**PR structure:** One PR per issue; this doc and the implementation plan ship with the D3 PR.
+**PR structure:** One PR per issue; this doc and the implementation plan ship with PR 1.
 
 ---
 
-## D3 — Unified visual-settings redecoration
+## 1 — Unified visual-settings redecoration
 
 ### Problem
 
@@ -40,7 +39,7 @@ the document and removes them.
 
 ---
 
-## D5 — Single-ownership disabled gate
+## 2 — Single-ownership disabled gate
 
 ### Problem
 
@@ -61,7 +60,7 @@ post-implementation.
 
 ---
 
-## D6 — Mid-fetch disable guard
+## 3 — Mid-fetch disable guard
 
 ### Problem
 
@@ -72,8 +71,7 @@ goes undetected.
 
 ### Design
 
-Add a second `isDisabled()` check in `BaseApiClient.fetch()`, between `search()` and
-`getDetails()`:
+Add an `isDisabled()` check in `BaseApiClient.fetch()`, between `search()` and `getDetails()`:
 
 ```js
 const match = await this.search(displayTitle);
@@ -92,7 +90,7 @@ be aborted and may complete, but its result is discarded by the caller. This is 
 
 ---
 
-## D7 — `storageGet` contract alignment
+## 4 — `storageGet` contract alignment
 
 ### Problem
 
