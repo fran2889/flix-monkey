@@ -21,37 +21,38 @@ import { OverlayRenderer } from '../../src/core/overlay.js';
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 
-describe('Zoomed UI Surface', () => {
-    let surfaceManager, _overlayRenderer;
+describe('Mini-Modal (Hover) UI Surface', () => {
+    let surfaceManager, overlayRenderer;
 
     beforeAll(() => {
-        // Override the fixture load to inject a minimal bob-container structure
-        // Since the actual hover fixture captured too much non-UI cruft.
         document.body.innerHTML = `
-      <div class="bob-container">
-        <div class="bob-title">Hover Title Test</div>
-      </div>
-    `;
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img class="previewModal--boxart" alt="Hover Title Test">
+                </div>
+            </div>
+        `;
     });
 
     beforeEach(() => {
         surfaceManager = new SurfaceManager();
-        _overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
     });
 
-    it('should discover the active bob-container', () => {
+    it('should discover the hover mini-modal container', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const bob = surfaces.find(s => s.container.classList.contains('bob-container'));
+        const mini = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
-        expect(bob).toBeDefined();
-        expect(bob.fadeable).toBe(false);
+        expect(mini).toBeDefined();
+        expect(mini.title).toBe('Hover Title Test');
+        expect(mini.fadeable).toBe(false);
     });
 
-    it('should not apply fading to zoomed cards even with low ratings', () => {
+    it('should not apply fading to hover cards even with low ratings', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const bob = surfaces.find(s => s.container.classList.contains('bob-container'));
+        const mini = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
-        _overlayRenderer.applyFade(bob.container, { rating: 1.0 }, bob.fadeable);
-        expect(bob.container.classList.contains('fm-faded')).toBe(false);
+        overlayRenderer.applyFade(mini.container, { rating: 1.0 }, mini.fadeable);
+        expect(mini.container.classList.contains('fm-faded')).toBe(false);
     });
 });

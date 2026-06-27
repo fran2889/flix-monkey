@@ -25,12 +25,13 @@ describe('Info UI Surface (Modal)', () => {
     let surfaceManager, overlayRenderer;
 
     beforeAll(() => {
-        // Inject a minimal modal structure
         document.body.innerHTML = `
-        <div class="previewModal--player_container">
-            <div data-uia="previewModal-title">Beef</div>
-        </div>
-    `;
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img class="previewModal--boxart" alt="Beef">
+                </div>
+            </div>
+        `;
     });
 
     beforeEach(() => {
@@ -40,24 +41,16 @@ describe('Info UI Surface (Modal)', () => {
 
     it('should discover title in the preview modal', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const modal = surfaces.find(s =>
-            s.container.matches(
-                '.previewModal--player_container, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata'
-            )
-        );
+        const modal = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
         expect(modal).toBeDefined();
-        expect(modal.title).toBeTruthy();
+        expect(modal.title).toBe('Beef');
         expect(modal.fadeable).toBe(false);
     });
 
     it('should inject overlay into modal container', () => {
         const surfaces = surfaceManager.discover(document.body);
-        const modal = surfaces.find(s =>
-            s.container.matches(
-                '.previewModal--player_container, .jawBone, .jawBoneContainer, .previewModal--detailsMetadata'
-            )
-        );
+        const modal = surfaces.find(s => s.container.classList.contains('previewModal--player_container'));
 
         overlayRenderer.injectOverlay(modal.container, { rating: 7.8, imdbUrl: 'https://www.imdb.com/title/tt789/' });
         expect(modal.container.querySelector('.fm-rating-overlay')).not.toBeNull();
