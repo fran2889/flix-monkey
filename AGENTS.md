@@ -109,6 +109,29 @@ tests/
     api-clients.test.js
 ```
 
+### Test Taxonomy
+
+These rules determine where a test lives and what it asserts. Apply them to all new tests.
+
+**Location rule (sole determinant):** A test lives in `tests/ui/` if it loads a Netflix HTML fixture from `tests/fixtures/`. It lives in `tests/unit/` if it does not.
+
+**UI tests** (`tests/ui/`) assert two things against real Netflix fixture HTML:
+
+- _Surface discovery_: `SurfaceManager.discover()` returns the expected surfaces (count, title, container, fadeable).
+- _Injection_: overlay or style elements are created and attached to the surface container. Minimal content checks (e.g., the rating value appears in the overlay) are acceptable as injection sanity checks, not for testing rendering logic.
+
+**Unit tests** (`tests/unit/`) assert:
+
+- _OverlayRenderer rendering logic_: tooltip text, CSS string content, conditional sub-elements (🔍, N/A, RT/MC badges), pointer events, click propagation, config-driven output.
+- _SurfaceManager edge cases_ that no fixture represents: empty or null titles, deduplication, `parentElement` fallback, `querySelectorAll` throwing.
+- _UI component logic_ (`Modal`, `SettingsUI`, etc.) that does not depend on Netflix fixture HTML.
+
+**No duplication across layers:** if a surface type's basic discovery is covered by a fixture test, unit tests do not repeat that case with synthetic HTML. If rendering logic is covered in unit, UI tests do not re-assert it.
+
+**Fixture preference:** when adding a new surfaces or overlay test, check existing fixtures first. Use synthetic DOM only if no fixture represents the case.
+
+**The deciding question for any new test:** does this assertion require Netflix HTML to be meaningful? If yes, it is a UI test. If it would pass equally against a synthetic `<div>`, it is a unit test.
+
 ### Integration Tests
 
 Integration tests in `tests/integration/` make live HTTP requests to external
