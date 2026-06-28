@@ -54,7 +54,7 @@ export function debounce(func, wait) {
  * @param {number} timeout Optional timeout after which the function will be run if it hasn't already.
  */
 export function runIdle(func, timeout = 2000) {
-    if (typeof window.requestIdleCallback === 'function') {
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
         window.requestIdleCallback(func, { timeout });
     } else {
         setTimeout(func, 1);
