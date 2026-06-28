@@ -34,6 +34,7 @@ export class SurfaceManager {
             getTitle: el => el.textContent?.trim() ?? null,
             containerSel: '.title-card',
             fadeable: true,
+            showFadeToggle: false,
         },
         {
             // Search result grid cards. The card element itself carries the full
@@ -42,6 +43,7 @@ export class SurfaceManager {
             getTitle: el => el.getAttribute('aria-label')?.trim() ?? null,
             containerSel: '[data-uia="standard-card"]',
             fadeable: true,
+            showFadeToggle: false,
         },
         {
             // Hover mini-modal (card mouse-over). Scoped to `.mini-modal` so the
@@ -50,6 +52,7 @@ export class SurfaceManager {
             getTitle: el => el.getAttribute('alt')?.trim() ?? null,
             containerSel: '.previewModal--player_container',
             fadeable: false,
+            showFadeToggle: true,
         },
         {
             // Full "More Info" detail modal. The boxart <img alt> inside the player
@@ -58,6 +61,7 @@ export class SurfaceManager {
             getTitle: el => el.getAttribute('alt')?.trim() ?? null,
             containerSel: '.previewModal--player_container',
             fadeable: false,
+            showFadeToggle: false,
         },
     ];
 
@@ -83,7 +87,12 @@ export class SurfaceManager {
                 }
                 if (!container || seen.has(container)) return;
                 seen.add(container);
-                results.push({ container, title, fadeable: surface.fadeable ?? false });
+                results.push({
+                    container,
+                    title,
+                    fadeable: surface.fadeable ?? false,
+                    showFadeToggle: surface.showFadeToggle ?? false,
+                });
             });
         });
         return results;

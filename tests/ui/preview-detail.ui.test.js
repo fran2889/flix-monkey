@@ -58,6 +58,13 @@ describe('Preview Detail-Modal UI Surface', () => {
         });
     });
 
+    it('should set showFadeToggle to false for the detail-modal surface', () => {
+        const results = surfaceManager.discover(document.body);
+        results.forEach(r => {
+            expect(r.showFadeToggle).toBe(false);
+        });
+    });
+
     it('should inject a rating overlay into the detail-modal container', () => {
         const results = surfaceManager.discover(document.body);
         const { container } = results[0];
