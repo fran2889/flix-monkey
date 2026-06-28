@@ -157,4 +157,12 @@ describe('WebExtensionAdapter', () => {
             expect(e.url).toBe('https://api.example.com/test');
         }
     });
+
+    it('httpFetch clears the timeout after a successful fetch', async () => {
+        const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+        browser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
+        await adapter.httpFetch('https://api.example.com');
+        expect(clearSpy).toHaveBeenCalled();
+        clearSpy.mockRestore();
+    });
 });

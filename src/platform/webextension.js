@@ -70,16 +70,21 @@ export class WebExtensionAdapter extends PlatformAdapter {
         const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT;
         const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new FlixMonkeyError('background relay timeout', url)), timeout)
-        );
+        let timerId;
+        const timeoutPromise = new Promise((_, reject) => {
+            timerId = setTimeout(() => reject(new FlixMonkeyError('background relay timeout', url)), timeout);
+        });
 
-        const response = await Promise.race([fetchPromise, timeoutPromise]);
-        if (!response) throw new FlixMonkeyError('empty background response', url);
-        if (response.error) {
-            throw new FlixMonkeyError(response.error, url, response.status, response.body ?? null);
+        try {
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
+            if (!response) throw new FlixMonkeyError('empty background response', url);
+            if (response.error) {
+                throw new FlixMonkeyError(response.error, url, response.status, response.body ?? null);
+            }
+            return response.data;
+        } finally {
+            clearTimeout(timerId);
         }
-        return response.data;
     }
 
     /**
