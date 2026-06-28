@@ -24,7 +24,8 @@ describe('Modal', () => {
     });
 
     it('should correctly render the modal and its sub-elements', () => {
-        const _modal = new Modal('Test Modal');
+        const modal = new Modal('Test Modal');
+        modal.open();
 
         expect(document.querySelector('.fm-modal-overlay')).not.toBeNull();
         expect(document.querySelector('.fm-modal-content')).not.toBeNull();
@@ -54,13 +55,15 @@ describe('Modal', () => {
     });
 
     it('should close the modal when clicking the close button', () => {
-        const _modal = new Modal('Test Modal');
+        const modal = new Modal('Test Modal');
+        modal.open();
         document.querySelector('.fm-modal-close').click();
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
     it('should have role="dialog" and aria-modal on the content element', () => {
-        const _modal = new Modal('A11y Modal');
+        const modal = new Modal('A11y Modal');
+        modal.open();
         const content = document.querySelector('.fm-modal-content');
         expect(content.getAttribute('role')).toBe('dialog');
         expect(content.getAttribute('aria-modal')).toBe('true');
@@ -83,6 +86,11 @@ describe('Modal', () => {
         modal.open();
         modal.open();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should not be in the DOM before open() is called', () => {
+        new Modal('Pre-open Modal');
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
