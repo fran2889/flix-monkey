@@ -35,7 +35,7 @@ export class OverlayRenderer {
             'bottom-left': 'bottom:6px;left:6px;',
             'bottom-right': 'bottom:6px;right:6px;',
         };
-        const corner = this.#config.get('overlayCorner', 'top-left');
+        const corner = this.#config.get('overlayCorner');
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
         let cssText = `
@@ -92,6 +92,13 @@ export class OverlayRenderer {
             style.textContent = cssText;
             document.head.appendChild(style);
         }
+    }
+
+    clearAllOverlays() {
+        document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {
+            el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);
+            el.remove();
+        });
     }
 
     #createBadgeElement(label, value, labelClassName = '', valueClassName = '') {
@@ -169,7 +176,7 @@ export class OverlayRenderer {
 
         // RT
         // eslint-disable-next-line eqeqeq
-        if (this.#config.get('showRtRating', true) && rtRating != null) {
+        if (this.#config.getBool('showRtRating') && rtRating != null) {
             const formatted = this.#formatPercentRating(rtRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('RT', formatted, 'fm-rt')));
             titleParts.push(`RT: ${formatted}`);
@@ -177,7 +184,7 @@ export class OverlayRenderer {
 
         // MC
         // eslint-disable-next-line eqeqeq
-        if (this.#config.get('showMcRating', true) && mcRating != null) {
+        if (this.#config.getBool('showMcRating') && mcRating != null) {
             const formatted = this.#formatPercentRating(mcRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('MC', formatted, 'fm-mc')));
             titleParts.push(`MC: ${formatted}`);
@@ -223,12 +230,12 @@ export class OverlayRenderer {
     }
 
     applyFade(container, titleObj, fadeable) {
-        if (!fadeable || !this.#config.get('enableFadeUnderRating', false)) {
+        if (!fadeable || !this.#config.getBool('enableFadeUnderRating')) {
             container.classList.remove('fm-faded');
             return;
         }
         const { rating } = titleObj ?? {};
-        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold', 6.0)) {
+        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold')) {
             container.classList.add('fm-faded');
         } else {
             container.classList.remove('fm-faded');
