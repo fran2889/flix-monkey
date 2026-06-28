@@ -15,12 +15,19 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { CACHE_TTL_INFINITE } from './constants.js';
+
 export const CONFIG_FIELDS = [
     {
         key: 'overlayCorner',
         label: 'Overlay Position',
         type: 'select',
-        options: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        options: [
+            ['top-left', 'Top Left'],
+            ['top-right', 'Top Right'],
+            ['bottom-left', 'Bottom Left'],
+            ['bottom-right', 'Bottom Right'],
+        ],
         default: 'top-left',
         title: 'Where the rating badge appears on thumbnails.',
     },
@@ -103,7 +110,7 @@ export const CONFIG_FIELDS = [
         key: 'cacheTtlRatedOldYear',
         label: 'Rated > 1yr',
         type: 'text',
-        default: '-1',
+        default: String(CACHE_TTL_INFINITE),
         title: 'How long to cache ratings for older titles. -1 = forever.',
         section: 'Cache Duration (days)',
         row: 'cache-fields',
@@ -150,3 +157,7 @@ export const CONFIG_FIELDS = [
 ];
 
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
+
+export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
+    CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
+);

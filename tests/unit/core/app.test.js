@@ -424,6 +424,33 @@ describe('App', () => {
         getDataSpy.mockRestore();
     });
 
+    it('should clear data-fm-injected attribute during redecorate so containers are eligible for re-decoration', () => {
+        // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
+        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+
+        appRef = startApp(createMockAdapter());
+
+        // Manually set up a container in the "decorated" state
+        const container = document.createElement('div');
+        const overlayEl = document.createElement('div');
+        overlayEl.className = 'fm-rating-overlay';
+        container.appendChild(overlayEl);
+        container.setAttribute('data-fm-injected', '1');
+        document.body.appendChild(container);
+
+        expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
+        expect(container.hasAttribute('data-fm-injected')).toBe(true);
+
+        appRef.redecorate();
+
+        // clearAllOverlays() must remove the overlay element AND the attribute,
+        // leaving the container eligible for re-decoration
+        expect(container.querySelector('.fm-rating-overlay')).toBeNull();
+        expect(container.hasAttribute('data-fm-injected')).toBe(false);
+
+        discoverSpy.mockRestore();
+    });
+
     it('should not inject overlay when container is removed from DOM before data resolves', async () => {
         const container = document.createElement('div');
         container.className = 'title-card';

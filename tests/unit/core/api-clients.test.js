@@ -72,10 +72,22 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         expect(result).toBeNull();
     });
 
-    it('should return null if client is disabled', async () => {
-        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(true) }, {}, {}, createMockLogger());
-        const result = await client.fetch('Movie 1');
+    it('should abort and return null if disabled between search and getDetails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                results: [{ type: 'title', id: 'tt123', title: 'Test' }],
+            }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(true) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.fetch('Test Movie');
         expect(result).toBeNull();
+        // search httpFetch ran; getDetails httpFetch did not
+        expect(mockAdapter.httpFetch).toHaveBeenCalledTimes(1);
     });
 });
 
