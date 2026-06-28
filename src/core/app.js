@@ -25,6 +25,7 @@ import { ConfigManager } from './config-manager.js';
 import { Logger } from './logger.js';
 import { debounce, runIdle, slugify } from './utils.js';
 import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
+import { FadeManager } from './fade-manager.js';
 
 export class FlixMonkeyApp {
     #api;
@@ -42,12 +43,16 @@ export class FlixMonkeyApp {
     #originalPushState = null;
     #originalReplaceState = null;
     #popstateHandler = null;
+    #fadeManager;
+    #config;
 
-    constructor(cache, api, renderer, surfaces, logger) {
+    constructor(cache, api, renderer, surfaces, fadeManager, config, logger) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
+        this.#fadeManager = fadeManager;
+        this.#config = config;
         this.#logger = logger;
         this.#debouncedDecorate = debounce(() => {
             const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
@@ -79,7 +84,7 @@ export class FlixMonkeyApp {
         return await this.#api.resetDisabledClients();
     }
 
-    async #decorateContainer(container, displayTitle, fadeable) {
+    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const dedupKey = slugify(displayTitle);
@@ -95,6 +100,8 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
+        const fadeOverride = showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
+
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
             const timeoutPromise = new Promise((_, reject) =>
@@ -109,12 +116,31 @@ export class FlixMonkeyApp {
         try {
             const data = await promise;
             if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
-                this.#renderer.injectOverlay(container, data);
-                this.#renderer.applyFade(container, data, fadeable);
+                const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
+                this.#renderer.applyFade(container, shouldFade);
+                if (fadeable) container.dataset.fmKey = dedupKey;
+                const onFadeToggleClick = showFadeToggle
+                    ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el)
+                    : null;
+                this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
             }
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
+    }
+
+    async #handleFadeToggleClick(dedupKey, rating, toggleBadgeEl) {
+        const domState = toggleBadgeEl.dataset.state;
+        const currentState = domState === 'auto' ? null : domState;
+        const nextState = this.#fadeManager.nextState(currentState);
+        await this.#fadeManager.setOverride(dedupKey, nextState);
+        toggleBadgeEl.dataset.state = nextState ?? 'auto';
+        toggleBadgeEl.textContent = nextState === null ? '⭐' : '👁️';
+        toggleBadgeEl.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
+        const shouldFade = this.#fadeManager.shouldFade(nextState, rating, this.#config);
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
+            this.#renderer.applyFade(c, shouldFade);
+        });
     }
 
     redecorate() {
@@ -124,8 +150,8 @@ export class FlixMonkeyApp {
     }
 
     decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
-            this.#decorateContainer(container, title, fadeable).catch(err =>
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
+            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
                 this.#logger.error('Failed to decorate container', err)
             );
         });
@@ -202,7 +228,8 @@ export function startApp(adapter) {
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const renderer = new OverlayRenderer(configManager);
     const surfaces = new SurfaceManager(logger);
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, logger);
+    const fadeManager = new FadeManager(adapter);
+    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger);
     app.init();
     return {
         clearCache: () => app.clearCache(),
