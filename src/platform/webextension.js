@@ -24,6 +24,17 @@ export class WebExtensionAdapter extends PlatformAdapter {
     #configData = {};
     #configLoaded = false;
 
+    /**
+     * Seeds the config snapshot from `browser.storage.local`.
+     *
+     * Must be called before `startApp()`. Stores the object reference directly — the
+     * same object is mutated in-place by `content.js`'s `storage.onChanged` listener,
+     * so `configGet` automatically reflects subsequent storage changes without needing
+     * another `setConfigData` call.
+     *
+     * @override
+     * @param {Record<string, string|boolean>} data - Full contents of `browser.storage.local`.
+     */
     setConfigData(data) {
         this.#configData = data;
         this.#configLoaded = true;
@@ -71,8 +82,16 @@ export class WebExtensionAdapter extends PlatformAdapter {
         return response.data;
     }
 
-    // setConfigData() must be called first (after reading browser.storage.local).
-    // Returns undefined for all keys until then; ConfigManager falls back to CONFIG_DEFAULTS.
+    /**
+     * Reads a config value from the in-memory snapshot.
+     *
+     * Returns `undefined` until `setConfigData()` has been called; `ConfigManager` treats
+     * `undefined` as absent and falls back to `CONFIG_DEFAULTS`, so early reads are safe.
+     *
+     * @override
+     * @param {string} key - Config key.
+     * @returns {string|boolean|undefined}
+     */
     configGet(key) {
         if (!this.#configLoaded) return undefined;
         return this.#configData[key];

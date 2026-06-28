@@ -21,9 +21,11 @@ export class SurfaceManager {
         this.#logger = logger;
     }
 
-    // Surface priority order: title-card → search → previewModal-mini → previewModal-detail.
-    // A container matched by an earlier surface is added to `seen` and skipped by
-    // all later surfaces, so declaration order determines which definition "wins".
+    /*
+     * Surface priority order: title-card → search → previewModal-mini → previewModal-detail.
+     * A container matched by an earlier surface is added to `seen` and skipped by
+     * all later surfaces, so declaration order determines which definition "wins".
+     */
     #SURFACES = [
         {
             // Browse and genre page row cards. `.fallback-text` is the text title
