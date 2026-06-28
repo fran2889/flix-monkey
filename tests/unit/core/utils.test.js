@@ -97,6 +97,16 @@ describe('core/utils', () => {
 
             vi.unstubAllGlobals();
         });
+
+        it('falls back to setTimeout when window is undefined', () => {
+            const savedWindow = global.window;
+            global.window = undefined;
+            const func = vi.fn();
+            runIdle(func);
+            vi.advanceTimersByTime(1);
+            expect(func).toHaveBeenCalled();
+            global.window = savedWindow;
+        });
     });
 
     describe('FlixMonkeyError', () => {
