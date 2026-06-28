@@ -81,9 +81,11 @@ export class UserscriptAdapter extends PlatformAdapter {
         });
     }
 
-    // Live-read model: GM_getValue always returns the current persisted value, so no snapshot
-    // or setConfigData() call is needed. Config changes take effect on the next page reload
-    // (see entry.js) because stateful app objects don't auto-reinitialize mid-session.
+    /*
+     * Live-read model: GM_getValue always returns the current persisted value, so no snapshot
+     * or setConfigData() call is needed. Config changes take effect on the next page reload
+     * (see entry.js) because stateful app objects don't auto-reinitialize mid-session.
+     */
     configGet(key) {
         return GM_getValue(key);
     }

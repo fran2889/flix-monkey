@@ -87,10 +87,12 @@ export class FlixMonkeyApp {
         this.#renderer.ensureRelative(container);
         this.#renderer.injectLoadingOverlay(container);
 
-        // Yield to the event loop so the browser can paint the loading overlay
-        // before executing potentially synchronous microtasks. GM storage APIs
-        // (like GM_getValue) can be synchronously blocking in some userscript managers,
-        // which is the reason for the explicit yield before cache reads.
+        /*
+         * Yield to the event loop so the browser can paint the loading overlay
+         * before executing potentially synchronous microtasks. GM storage APIs
+         * (like GM_getValue) can be synchronously blocking in some userscript managers,
+         * which is the reason for the explicit yield before cache reads.
+         */
         await new Promise(resolve => setTimeout(resolve, 0));
 
         let promise = this.#inFlight.get(dedupKey);
