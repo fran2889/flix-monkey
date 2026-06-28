@@ -71,6 +71,24 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const result = await client.fetch('Unknown');
         expect(result).toBeNull();
     });
+
+    it('should abort and return null if disabled between search and getDetails', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                results: [{ type: 'title', id: 'tt123', title: 'Test' }],
+            }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(true) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.fetch('Test Movie');
+        expect(result).toBeNull();
+        // search httpFetch ran; getDetails httpFetch did not
+        expect(mockAdapter.httpFetch).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('XmdbApiClient', () => {
