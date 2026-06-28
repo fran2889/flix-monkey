@@ -19,6 +19,14 @@ import browser from 'webextension-polyfill';
 import { WebExtensionAdapter } from '../../platform/webextension.js';
 import { startApp } from '../../core/app.js';
 
+const VISUAL_SETTINGS = new Set([
+    'overlayCorner',
+    'showRtRating',
+    'showMcRating',
+    'enableFadeUnderRating',
+    'fadeRatingThreshold',
+]);
+
 (async () => {
     const adapter = new WebExtensionAdapter();
     const stored = await browser.storage.local.get(null);
@@ -29,12 +37,13 @@ import { startApp } from '../../core/app.js';
     // The ref wrapper avoids a temporal dead zone: the listener closure captures the object,
     // and app is assigned into it synchronously before any storage events can fire.
     const appRef = { app: null };
+
     browser.storage.onChanged.addListener(changes => {
         Object.entries(changes).forEach(([k, v]) => {
             stored[k] = v.newValue;
         });
-        if ('overlayCorner' in changes) {
-            appRef.app?.refreshStyles();
+        if (Object.keys(changes).some(k => VISUAL_SETTINGS.has(k))) {
+            appRef.app?.redecorate();
         }
     });
 
