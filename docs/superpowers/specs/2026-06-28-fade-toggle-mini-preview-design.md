@@ -90,10 +90,10 @@ New field appended to the `fade-settings` row, after the existing `enableFadeUnd
 ```js
 {
     key: 'enableFadeToggle',
-    label: 'Show fade toggle in mini preview',
+    label: 'Fade override per title',
     type: 'checkbox',
     default: true,
-    title: 'Show a per-title fade override toggle in the hover preview.',
+    title: 'Shows a button in the hover preview to always fade, never fade, or follow the rating rule for individual titles.',
     row: 'fade-settings',
 }
 ```
