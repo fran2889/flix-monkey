@@ -17,6 +17,12 @@
  */
 import { CACHE_TTL_INFINITE } from './constants.js';
 
+function validateCacheTtl(val) {
+    if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
+    const n = Number(val);
+    return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
+}
+
 export const CONFIG_FIELDS = [
     {
         key: 'overlayCorner',
@@ -114,11 +120,7 @@ export const CONFIG_FIELDS = [
         title: 'How long to cache ratings for older titles. -1 = forever.',
         section: 'Cache Duration (days)',
         row: 'cache-fields',
-        validate: val => {
-            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
-            const n = Number(val);
-            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
-        },
+        validate: validateCacheTtl,
     },
     {
         key: 'cacheTtlRatedNewYear',
@@ -127,11 +129,7 @@ export const CONFIG_FIELDS = [
         default: '30',
         title: 'How long to cache ratings for recent titles.',
         row: 'cache-fields',
-        validate: val => {
-            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
-            const n = Number(val);
-            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
-        },
+        validate: validateCacheTtl,
     },
     {
         key: 'cacheTtlNoRating',
@@ -140,11 +138,7 @@ export const CONFIG_FIELDS = [
         default: '1',
         title: 'How long to cache titles with no rating. Use small value to retry sooner.',
         row: 'cache-fields',
-        validate: val => {
-            if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
-            const n = Number(val);
-            return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
-        },
+        validate: validateCacheTtl,
     },
     {
         key: 'debug',
