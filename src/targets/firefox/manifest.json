@@ -28,6 +28,9 @@
         "page": "options.html",
         "open_in_tab": false
     },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self';"
+    },
     "browser_specific_settings": {
         "gecko": {
             "id": "flixmonkey@fran",
