@@ -53,7 +53,6 @@ export class Modal {
         header.append(heading, closeBtn);
         content.append(header, body);
         this.overlay.appendChild(content);
-        document.body.appendChild(this.overlay);
     }
 
     getContentContainer() {
@@ -62,6 +61,7 @@ export class Modal {
 
     open() {
         if (this.#escHandler) return;
+        document.body.appendChild(this.overlay);
         this.#returnFocus = document.activeElement;
         this.overlay.style.display = 'flex';
         this.overlay.querySelector('.fm-modal-content').focus();
