@@ -300,7 +300,7 @@ describe('OverlayRenderer', () => {
             const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle).not.toBeNull();
             expect(toggle.dataset.state).toBe('auto');
-            expect(toggle.title).toBe('Fade: auto');
+            expect(toggle.title).toBe('Fade: Auto');
             expect(icon.textContent).toBe('⭐');
             expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
@@ -312,7 +312,7 @@ describe('OverlayRenderer', () => {
             const toggle = container.querySelector('.fm-fade-toggle');
             const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle.dataset.state).toBe('always');
-            expect(toggle.title).toBe('Fade: always');
+            expect(toggle.title).toBe('Fade: Always');
             expect(icon.textContent).toBe('👁️');
             expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
         });
@@ -324,7 +324,7 @@ describe('OverlayRenderer', () => {
             const toggle = container.querySelector('.fm-fade-toggle');
             const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle.dataset.state).toBe('never');
-            expect(toggle.title).toBe('Fade: never');
+            expect(toggle.title).toBe('Fade: Never');
             expect(icon.textContent).toBe('👁️');
             expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
@@ -345,6 +345,7 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const css = document.head.querySelector('#fm-overlay-styles').textContent;
             expect(css).toContain('.fm-fade-toggle');
+            expect(css).toContain('.fm-fade-toggle .fm-label');
             expect(css).toContain('.fm-fade-toggle--faded');
         });
     });

@@ -17,6 +17,12 @@
  */
 import { TOP_10_BADGE } from './constants.js';
 
+export const FADE_STATE_LABELS = {
+    auto: 'Auto',
+    always: 'Always',
+    never: 'Never',
+};
+
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
@@ -86,6 +92,7 @@ export class OverlayRenderer {
         `;
         cssText += `
             .fm-fade-toggle { cursor: pointer; }
+            .fm-fade-toggle .fm-label { color: #aaa; }
             .fm-fade-toggle--faded { opacity: 0.35; }
         `;
         if (existing) {
@@ -134,7 +141,7 @@ export class OverlayRenderer {
         const el = document.createElement('div');
         el.className = 'fm-fade-toggle';
         el.dataset.state = state ?? 'auto';
-        el.title = state === null ? 'Fade: auto' : `Fade: ${state}`;
+        el.title = `Fade: ${FADE_STATE_LABELS[state ?? 'auto']}`;
         const label = document.createElement('span');
         label.className = 'fm-label';
         label.textContent = 'Fade ';

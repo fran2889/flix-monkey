@@ -18,7 +18,7 @@
 import { CacheManager } from './cache.js';
 import { DisabledClientsManager } from './disabled-clients.js';
 import { ApiClientManager } from './api-manager.js';
-import { OverlayRenderer } from './overlay.js';
+import { OverlayRenderer, FADE_STATE_LABELS } from './overlay.js';
 import { SurfaceManager } from './surfaces.js';
 import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
 import { ConfigManager } from './config-manager.js';
@@ -135,7 +135,7 @@ export class FlixMonkeyApp {
         const nextState = this.#fadeManager.nextState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
-        toggleBadgeEl.title = nextState === null ? 'Fade: auto' : `Fade: ${nextState}`;
+        toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
         const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
         icon.textContent = nextState === null ? '⭐' : '👁️';
         icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
