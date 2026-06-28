@@ -35,6 +35,12 @@ describe('UserscriptAdapter', () => {
         expect(result).toBe('test-value');
     });
 
+    it('storageGet should return null if key is not found', async () => {
+        GM_getValue.mockReturnValue(undefined);
+        const result = await adapter.storageGet('nonexistent');
+        expect(result).toBeNull();
+    });
+
     it('storageGetAll should call GM_listValues and GM_getValue for each key', async () => {
         GM_listValues.mockReturnValue(['key1', 'key2']);
         GM_getValue.mockImplementation(key => `val-${key}`);

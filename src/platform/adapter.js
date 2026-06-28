@@ -36,7 +36,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @returns {Promise<string|undefined>} The stored value, or `undefined` if the key does not exist.
+     * @returns {Promise<string|null>} The stored value, or `null` if the key does not exist.
      */
     async storageGet(_key) {
         throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
