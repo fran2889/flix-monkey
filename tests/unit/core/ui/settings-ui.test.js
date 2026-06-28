@@ -317,6 +317,28 @@ describe('SettingsUI', () => {
             expect(status.textContent).toBe('No disabled API clients found to re-enable.');
             expect(status.style.color).toBe('green');
         });
+
+        it('should show error in red when clearCache fails', async () => {
+            mockCacheManager.clear.mockRejectedValue(new Error('disk full'));
+            await settingsUI.render(container);
+            container.querySelector('#fm-clearCacheBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            const status = container.querySelector('#fm-status');
+            expect(status.textContent).toBe('Error: disk full');
+            expect(status.style.color).toBe('red');
+        });
+
+        it('should show error in red when resetClients fails', async () => {
+            mockDisabledClientsManager.resetAll.mockRejectedValue(new Error('storage unavailable'));
+            await settingsUI.render(container);
+            container.querySelector('#fm-resetClientsBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            const status = container.querySelector('#fm-status');
+            expect(status.textContent).toBe('Error: storage unavailable');
+            expect(status.style.color).toBe('red');
+        });
     });
 
     describe('Scoping', () => {
