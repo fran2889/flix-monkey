@@ -19,22 +19,31 @@ import { CONFIG_FIELDS } from '../config-fields.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 export class SettingsUI {
+    #adapter;
+    #fields;
+    #cacheManager;
+    #disabledClientsManager;
+    #container = null;
+    #onSave = null;
+
+    get onSave() {
+        return this.#onSave;
+    }
+    set onSave(fn) {
+        this.#onSave = fn;
+    }
+
     constructor(adapter, fields = CONFIG_FIELDS, cacheManager, disabledClientsManager) {
-        this.adapter = adapter;
-        this.fields = fields;
+        this.#adapter = adapter;
+        this.#fields = fields;
         this.#cacheManager = cacheManager;
         this.#disabledClientsManager = disabledClientsManager;
     }
 
-    #cacheManager;
-    #disabledClientsManager;
-    #container = null;
-    onSave = null;
-
     async render(container) {
         this.#container = container;
-        this._injectStyles();
-        const settings = (await this.adapter.storageGetAll()) || {};
+        this.#injectStyles();
+        const settings = (await this.#adapter.storageGetAll()) || {};
 
         container.className = 'fm-settings-container';
         container.replaceChildren();
@@ -47,7 +56,7 @@ export class SettingsUI {
         fieldsContainer.id = 'fm-fields';
         container.appendChild(fieldsContainer);
 
-        const groups = this._groupFields();
+        const groups = this.#groupFields();
         for (const group of groups) {
             if (group.section) {
                 const header = document.createElement('div');
@@ -65,7 +74,7 @@ export class SettingsUI {
             }
 
             for (const field of group.fields) {
-                parent.appendChild(this._createField(field, settings));
+                parent.appendChild(this.#createField(field, settings));
             }
         }
 
@@ -101,9 +110,9 @@ export class SettingsUI {
         container.appendChild(statusDiv);
     }
 
-    _groupFields() {
+    #groupFields() {
         const groups = [];
-        for (const field of this.fields) {
+        for (const field of this.#fields) {
             const last = groups[groups.length - 1];
             if (field.row && last && last.row === field.row) {
                 last.fields.push(field);
@@ -114,7 +123,7 @@ export class SettingsUI {
         return groups;
     }
 
-    _createField(field, settings) {
+    #createField(field, settings) {
         const fieldDiv = document.createElement('div');
         fieldDiv.className = 'field';
 
@@ -179,15 +188,15 @@ export class SettingsUI {
         return fieldDiv;
     }
 
-    _validate() {
+    #validate() {
         let hasErrors = false;
         const allValues = {};
-        this.fields.forEach(field => {
+        this.#fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
             if (!input) return;
             allValues[field.key] = input.type === 'checkbox' ? input.checked : input.value;
         });
-        this.fields.forEach(field => {
+        this.#fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
             if (!input) return;
 
@@ -215,7 +224,7 @@ export class SettingsUI {
     }
 
     async save() {
-        const isValid = this._validate();
+        const isValid = this.#validate();
         const statusDiv = this.#container.querySelector('#fm-status');
 
         if (!isValid) {
@@ -225,7 +234,7 @@ export class SettingsUI {
         }
 
         const values = {};
-        this.fields.forEach(field => {
+        this.#fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
             if (field.type === 'checkbox') {
                 values[field.key] = input.checked;
@@ -237,10 +246,10 @@ export class SettingsUI {
         const saveBtn = this.#container.querySelector('#fm-saveBtn');
         if (saveBtn) saveBtn.disabled = true;
         try {
-            await this.adapter.storageSetMany(values);
+            await this.#adapter.storageSetMany(values);
             statusDiv.textContent = 'Saved!';
             statusDiv.style.color = 'green';
-            await this.onSave?.();
+            await this.#onSave?.();
         } finally {
             if (saveBtn) saveBtn.disabled = false;
         }
@@ -273,7 +282,7 @@ export class SettingsUI {
         }
     }
 
-    _injectStyles() {
+    #injectStyles() {
         if (!document.getElementById('flixmonkey-settings-styles')) {
             const style = document.createElement('style');
             style.id = 'flixmonkey-settings-styles';
