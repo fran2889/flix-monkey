@@ -278,7 +278,7 @@ describe('SettingsUI', () => {
             const input = container.querySelector('#fm-testCheckbox');
             input.checked = true;
 
-            ui._validate();
+            await ui.save();
 
             expect(validateFn).toHaveBeenCalledWith(true, expect.any(Object));
         });
