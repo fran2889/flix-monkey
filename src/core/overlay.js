@@ -76,7 +76,8 @@ export class OverlayRenderer {
                 cursor: pointer;
             }
             .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
-            .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
+            .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
+            .${this.#OVERLAY_CLASS} .fm-imdb { color: #f5c518; }
             .${this.#OVERLAY_CLASS} .fm-rt { color: #fa320a; }
             .${this.#OVERLAY_CLASS} .fm-mc { color: #6ac; }
             .${this.#OVERLAY_CLASS} .fm-value { color: #fff; }
@@ -197,12 +198,12 @@ export class OverlayRenderer {
         // eslint-disable-next-line eqeqeq
         if (rating != null) {
             const formatted = this.#formatImdbRating(rating);
-            imdbLink.appendChild(this.#createRatingElement('IMDb', formatted));
+            imdbLink.appendChild(this.#createRatingElement('IMDb', formatted, 'fm-imdb'));
             titleParts.push(`IMDb: ${formatted}`);
         } else if (imdbId) {
-            imdbLink.appendChild(this.#createMissingRatingElement('IMDb'));
+            imdbLink.appendChild(this.#createMissingRatingElement('IMDb', 'fm-imdb'));
         } else {
-            imdbLink.appendChild(this.#createSearchRatingElement('IMDb'));
+            imdbLink.appendChild(this.#createSearchRatingElement('IMDb', 'fm-imdb'));
         }
         container.appendChild(imdbLink);
 
@@ -233,7 +234,7 @@ export class OverlayRenderer {
     #createLoadingOverlay() {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
-        container.appendChild(this.#createBadgeElement('IMDb', '⏳', '', 'fm-search'));
+        container.appendChild(this.#createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
         container.title = 'Fetching ratings… click to search IMDb';
         return container;
     }
