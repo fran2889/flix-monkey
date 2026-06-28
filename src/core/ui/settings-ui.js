@@ -248,20 +248,30 @@ export class SettingsUI {
     }
 
     async clearCache() {
-        await this.#cacheManager.clear();
         const statusDiv = this.#container.querySelector('#fm-status');
-        statusDiv.textContent = 'Cache cleared.';
-        statusDiv.style.color = 'green';
+        try {
+            await this.#cacheManager.clear();
+            statusDiv.textContent = 'Cache cleared.';
+            statusDiv.style.color = 'green';
+        } catch (err) {
+            statusDiv.textContent = `Error: ${err.message}`;
+            statusDiv.style.color = 'red';
+        }
     }
 
     async resetClients() {
-        const reenabled = await this.#disabledClientsManager.resetAll();
         const statusDiv = this.#container.querySelector('#fm-status');
-        statusDiv.textContent =
-            reenabled.length > 0
-                ? `Re-enabled API clients: ${reenabled.join(', ')}`
-                : 'No disabled API clients found to re-enable.';
-        statusDiv.style.color = 'green';
+        try {
+            const reenabled = await this.#disabledClientsManager.resetAll();
+            statusDiv.textContent =
+                reenabled.length > 0
+                    ? `Re-enabled API clients: ${reenabled.join(', ')}`
+                    : 'No disabled API clients found to re-enable.';
+            statusDiv.style.color = 'green';
+        } catch (err) {
+            statusDiv.textContent = `Error: ${err.message}`;
+            statusDiv.style.color = 'red';
+        }
     }
 
     _injectStyles() {
