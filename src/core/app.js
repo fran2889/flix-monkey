@@ -135,8 +135,10 @@ export class FlixMonkeyApp {
         const nextState = this.#fadeManager.nextState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
-        toggleBadgeEl.textContent = nextState === null ? '⭐' : '👁️';
-        toggleBadgeEl.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
+        toggleBadgeEl.title = nextState === null ? 'Fade: auto' : `Fade: ${nextState}`;
+        const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
+        icon.textContent = nextState === null ? '⭐' : '👁️';
+        icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
         const shouldFade = this.#fadeManager.shouldFade(nextState, rating, this.#config);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c, shouldFade);

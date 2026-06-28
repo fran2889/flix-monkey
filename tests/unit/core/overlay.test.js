@@ -218,7 +218,7 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj);
-            expect(container.querySelector('.fm-rating-overlay').title).toBe(expectedTitle);
+            expect(container.querySelector('.fm-rating-overlay a').title).toBe(expectedTitle);
         });
     });
 
@@ -297,10 +297,12 @@ describe('OverlayRenderer', () => {
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, null, vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
+            const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle).not.toBeNull();
             expect(toggle.dataset.state).toBe('auto');
-            expect(toggle.textContent).toBe('⭐');
-            expect(toggle.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(toggle.title).toBe('Fade: auto');
+            expect(icon.textContent).toBe('⭐');
+            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
 
         it('should render toggle with 👁️ and fm-fade-toggle--faded for "always" state', () => {
@@ -308,9 +310,11 @@ describe('OverlayRenderer', () => {
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'always', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
+            const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle.dataset.state).toBe('always');
-            expect(toggle.textContent).toBe('👁️');
-            expect(toggle.classList.contains('fm-fade-toggle--faded')).toBe(true);
+            expect(toggle.title).toBe('Fade: always');
+            expect(icon.textContent).toBe('👁️');
+            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
         });
 
         it('should render toggle with 👁️ without fm-fade-toggle--faded for "never" state', () => {
@@ -318,9 +322,11 @@ describe('OverlayRenderer', () => {
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'never', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
+            const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle.dataset.state).toBe('never');
-            expect(toggle.textContent).toBe('👁️');
-            expect(toggle.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(toggle.title).toBe('Fade: never');
+            expect(icon.textContent).toBe('👁️');
+            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
 
         it('should call onFadeToggleClick with the badge element on click', () => {

@@ -134,8 +134,16 @@ export class OverlayRenderer {
         const el = document.createElement('div');
         el.className = 'fm-fade-toggle';
         el.dataset.state = state ?? 'auto';
-        if (state === 'always') el.classList.add('fm-fade-toggle--faded');
-        el.textContent = state === null ? '⭐' : '👁️';
+        el.title = state === null ? 'Fade: auto' : `Fade: ${state}`;
+        const label = document.createElement('span');
+        label.className = 'fm-label';
+        label.textContent = 'Fade ';
+        const icon = document.createElement('span');
+        icon.className = 'fm-fade-toggle-icon';
+        icon.textContent = state === null ? '⭐' : '👁️';
+        if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
+        el.appendChild(label);
+        el.appendChild(icon);
         el.addEventListener('click', e => {
             e.stopPropagation();
             onClick(el);
@@ -207,7 +215,7 @@ export class OverlayRenderer {
             titleParts.push(`MC: ${formatted}`);
         }
 
-        container.title = this.#buildTooltip(titleParts, imdbId);
+        imdbLink.title = this.#buildTooltip(titleParts, imdbId);
         return container;
     }
 
