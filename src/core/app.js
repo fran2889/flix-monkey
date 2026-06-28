@@ -115,6 +115,12 @@ export class FlixMonkeyApp {
         }
     }
 
+    redecorate() {
+        this.#renderer.injectStyles();
+        this.#renderer.clearAllOverlays();
+        this.decorateRoot(document);
+    }
+
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable }) => {
             this.#decorateContainer(container, title, fadeable).catch(err =>
@@ -174,7 +180,7 @@ export class FlixMonkeyApp {
 }
 
 function createApiClient(config, disabledManager, adapter, logger) {
-    const provider = (config.get('apiClient') ?? 'agregarr').trim().toLowerCase();
+    const provider = config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
@@ -200,7 +206,7 @@ export function startApp(adapter) {
         clearCache: () => app.clearCache(),
         resetDisabledClients: () => app.resetDisabledClients(),
         disconnect: () => app.disconnect(),
-        refreshStyles: () => renderer.injectStyles(),
+        redecorate: () => app.redecorate(),
         cacheManager: cache,
         disabledManager: disabledManager,
     };
