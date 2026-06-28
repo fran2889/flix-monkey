@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { CONFIG_DEFAULTS } from './config-fields.js';
+import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
+import { FlixMonkeyError } from './utils.js';
 
 export class ConfigManager {
     #adapter;
@@ -26,29 +27,33 @@ export class ConfigManager {
         this.#logger = logger;
     }
 
-    get(key, fallback) {
+    get(key) {
+        if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
             const val = this.#adapter.configGet(key);
-            return val !== undefined && val !== null ? val : (fallback ?? CONFIG_DEFAULTS[key]);
+            if (val === undefined || val === null) return CONFIG_DEFAULTS[key];
+            const allowed = CONFIG_SELECT_ALLOWED[key];
+            if (allowed && !allowed.includes(val)) return CONFIG_DEFAULTS[key];
+            return val;
         } catch (err) {
             this.#logger.warn('ConfigManager.get error, using fallback', { key, err });
-            return fallback ?? CONFIG_DEFAULTS[key];
+            return CONFIG_DEFAULTS[key];
         }
     }
 
-    getInt(key, fallback) {
-        const val = this.get(key, fallback);
+    getInt(key) {
+        const val = this.get(key);
         const num = Number.parseInt(val, 10);
-        if (!Number.isNaN(num)) return num;
-        const fb = Number.parseInt(fallback, 10);
-        return Number.isNaN(fb) ? 0 : fb;
+        return Number.isNaN(num) ? Number.parseInt(CONFIG_DEFAULTS[key], 10) : num;
     }
 
-    getFloat(key, fallback) {
-        const val = this.get(key, fallback);
+    getFloat(key) {
+        const val = this.get(key);
         const num = Number.parseFloat(val);
-        if (!Number.isNaN(num)) return num;
-        const fb = Number.parseFloat(fallback);
-        return Number.isNaN(fb) ? 0 : fb;
+        return Number.isNaN(num) ? Number.parseFloat(CONFIG_DEFAULTS[key]) : num;
+    }
+
+    getBool(key) {
+        return String(this.get(key)) === 'true';
     }
 }

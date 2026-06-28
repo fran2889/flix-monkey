@@ -80,4 +80,20 @@ describe('core/logger', () => {
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
     });
+
+    it('should log debug when adapter returns undefined (fresh install default)', () => {
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const logger = new Logger({ configGet: () => undefined });
+        logger.debug('fresh install debug');
+        expect(spy).toHaveBeenCalledWith('[FlixMonkey] fresh install debug');
+        spy.mockRestore();
+    });
+
+    it('should log debug when adapter returns null', () => {
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const logger = new Logger({ configGet: () => null });
+        logger.debug('null debug');
+        expect(spy).toHaveBeenCalledWith('[FlixMonkey] null debug');
+        spy.mockRestore();
+    });
 });
