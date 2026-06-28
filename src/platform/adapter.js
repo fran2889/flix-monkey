@@ -113,9 +113,20 @@ export class PlatformAdapter {
     /**
      * Synchronously reads a configuration value.
      *
+     * Two reading models are supported by the framework:
+     * - **Live reads** (`UserscriptAdapter`): calls storage directly (`GM_getValue`) on every
+     *   invocation, so the returned value is always the current persisted value.
+     * - **Snapshot reads** (`WebExtensionAdapter`): reads from an in-memory cache seeded by
+     *   `setConfigData()` and kept current by a `storage.onChanged` listener. The returned
+     *   value is current as of the last storage-change event.
+     *
+     * Regardless of model, the returned value must reflect the persisted state at the time
+     * of the call. `ConfigManager` treats `undefined` as "key absent" and falls back to
+     * `CONFIG_DEFAULTS`.
+     *
      * @abstract
      * @param {string} _key - Config key (one of the keys defined in `CONFIG_FIELDS`).
-     * @returns {string|boolean} The current config value.
+     * @returns {string|boolean|undefined} The current config value, or `undefined` if absent.
      */
     configGet(_key) {
         throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
@@ -134,8 +145,14 @@ export class PlatformAdapter {
 
     /**
      * Pre-loads configuration data into the adapter.
-     * No-op by default; `WebExtensionAdapter` overrides this to seed config
-     * from `browser.storage` before the app starts.
+     *
+     * Only needed by **snapshot-based** adapters (`WebExtensionAdapter`): called once before
+     * the app starts to seed the in-memory config cache from `browser.storage`. A
+     * `storage.onChanged` listener then keeps the same object current, so `configGet` can
+     * return synchronously without hitting async storage.
+     *
+     * **Live-read** adapters (`UserscriptAdapter`) leave this as a no-op because their
+     * `configGet` reads from storage directly on every call and never needs a pre-seeded cache.
      *
      * @param {Record<string, string|boolean>} _data - Config key/value pairs.
      */
