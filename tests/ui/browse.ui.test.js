@@ -102,7 +102,7 @@ describe('Browse UI Surface', () => {
                 },
             })
         );
-        new OverlayRenderer(mockConfig).applyFade(container, { rating: 7.0 }, true);
+        new OverlayRenderer(mockConfig).applyFade(container, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
     });
 
@@ -119,7 +119,7 @@ describe('Browse UI Surface', () => {
                 },
             })
         );
-        new OverlayRenderer(mockConfig).applyFade(container, { rating: 9.5 }, true);
+        new OverlayRenderer(mockConfig).applyFade(container, false);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });

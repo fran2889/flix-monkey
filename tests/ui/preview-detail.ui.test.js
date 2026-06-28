@@ -79,11 +79,11 @@ describe('Preview Detail-Modal UI Surface', () => {
         expect(container.querySelector('.fm-rating-overlay').textContent).toContain('6.6');
     });
 
-    it('should not apply fading even for ratings below the threshold', () => {
+    it('should not apply fading to the detail-modal container', () => {
         const results = surfaceManager.discover(document.body);
-        const { container, fadeable } = results[0];
+        const { container } = results[0];
 
-        overlayRenderer.applyFade(container, { rating: 1.0 }, fadeable);
+        overlayRenderer.applyFade(container, false);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });

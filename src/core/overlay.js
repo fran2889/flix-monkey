@@ -84,6 +84,10 @@ export class OverlayRenderer {
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
         `;
+        cssText += `
+            .fm-fade-toggle { cursor: pointer; }
+            .fm-fade-toggle--faded { opacity: 0.35; }
+        `;
         if (existing) {
             existing.textContent = cssText;
         } else {
@@ -124,6 +128,19 @@ export class OverlayRenderer {
 
     #createSearchRatingElement(label, className = '') {
         return this.#createBadgeElement(label, '🔍', className, 'fm-search');
+    }
+
+    #createFadeToggle(state, onClick) {
+        const el = document.createElement('div');
+        el.className = 'fm-fade-toggle';
+        el.dataset.state = state ?? 'auto';
+        if (state === 'always') el.classList.add('fm-fade-toggle--faded');
+        el.textContent = state === null ? '⭐' : '👁️';
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            onClick(el);
+        });
+        return el;
     }
 
     #formatImdbRating(rating) {
@@ -219,9 +236,13 @@ export class OverlayRenderer {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
-    injectOverlay(container, titleObj) {
+    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(this.#createOverlay(titleObj));
+        const overlay = this.#createOverlay(titleObj);
+        if (onFadeToggleClick && this.#config.getBool('enableFadeToggle')) {
+            overlay.appendChild(this.#createFadeToggle(fadeToggleState, onFadeToggleClick));
+        }
+        container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
@@ -229,16 +250,7 @@ export class OverlayRenderer {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
-    applyFade(container, titleObj, fadeable) {
-        if (!fadeable || !this.#config.getBool('enableFadeUnderRating')) {
-            container.classList.remove('fm-faded');
-            return;
-        }
-        const { rating } = titleObj ?? {};
-        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold')) {
-            container.classList.add('fm-faded');
-        } else {
-            container.classList.remove('fm-faded');
-        }
+    applyFade(container, shouldFade) {
+        container.classList.toggle('fm-faded', shouldFade);
     }
 }
