@@ -71,12 +71,6 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const result = await client.fetch('Unknown');
         expect(result).toBeNull();
     });
-
-    it('should return null if client is disabled', async () => {
-        const client = new XmdbApiClient({ isDisabled: vi.fn().mockResolvedValue(true) }, {}, {}, createMockLogger());
-        const result = await client.fetch('Movie 1');
-        expect(result).toBeNull();
-    });
 });
 
 describe('XmdbApiClient', () => {

@@ -152,13 +152,13 @@ export class BaseApiClient {
 
     /**
      * Fetches ratings for a Netflix title by running the search → details pipeline.
+     * Callers must gate through {@link getStatus} before invoking.
      *
      * @param {string} displayTitle - Title as shown on the Netflix UI.
-     * @returns {Promise<Title|null>} Hydrated `Title` with ratings, or `null` if the client
-     *   is disabled or the title was not found.
+     * @returns {Promise<Title|null>} Hydrated `Title` with ratings, or `null` if the
+     *   title was not found.
      */
     async fetch(displayTitle) {
-        if (await this.isDisabled()) return null;
         const match = await this.search(displayTitle);
         if (!match) return null;
         const titleObj = await this.getDetails(match, displayTitle);
