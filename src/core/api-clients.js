@@ -124,6 +124,8 @@ export class BaseApiClient {
      *
      * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
      * @returns {Promise<void>}
+     * @note Any HTTP request already executing at the network level when `disable()` is called
+     *   cannot be aborted and may complete, but its result is discarded by the caller.
      */
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
@@ -161,6 +163,7 @@ export class BaseApiClient {
     async fetch(displayTitle) {
         const match = await this.search(displayTitle);
         if (!match) return null;
+        if (await this.isDisabled()) return null;
         const titleObj = await this.getDetails(match, displayTitle);
         if (titleObj) {
             titleObj.displayTitle = displayTitle;
