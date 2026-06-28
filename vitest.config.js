@@ -7,7 +7,7 @@ export default defineConfig({
         globals: false,
         setupFiles: ['./tests/setup.js'],
         coverage: {
-            thresholds: { lines: 90, functions: 90 },
+            thresholds: { lines: 90, functions: 90, statements: 97, branches: 90 },
         },
     },
 });
