@@ -55,7 +55,7 @@ describe('content.js entry point', () => {
         // Reset the captured listener and app handle for each test run.
         onChangedListener = undefined;
         mockAppHandle = {
-            refreshStyles: vi.fn(),
+            redecorate: vi.fn(),
             clearCache: vi.fn(),
             disconnect: vi.fn(),
         };
@@ -80,13 +80,33 @@ describe('content.js entry point', () => {
         expect(onChangedListener).toBeDefined();
     });
 
-    it('should call refreshStyles when overlayCorner changes', () => {
+    it('should call redecorate when overlayCorner changes', () => {
         onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
-        expect(mockAppHandle.refreshStyles).toHaveBeenCalledOnce();
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should not call refreshStyles when an unrelated key changes', () => {
+    it('should call redecorate when showRtRating changes', () => {
+        onChangedListener({ showRtRating: { newValue: true } });
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+    });
+
+    it('should call redecorate when showMcRating changes', () => {
+        onChangedListener({ showMcRating: { newValue: false } });
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+    });
+
+    it('should call redecorate when enableFadeUnderRating changes', () => {
+        onChangedListener({ enableFadeUnderRating: { newValue: true } });
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+    });
+
+    it('should call redecorate when fadeRatingThreshold changes', () => {
+        onChangedListener({ fadeRatingThreshold: { newValue: 50 } });
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+    });
+
+    it('should not call redecorate when an unrelated key changes', () => {
         onChangedListener({ someOtherKey: { newValue: 'value' } });
-        expect(mockAppHandle.refreshStyles).not.toHaveBeenCalled();
+        expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
     });
 });
