@@ -197,8 +197,7 @@ describe('ApiClientManager', () => {
 
     it('should log on successful data retrieval', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const title = new Title({ apiTitle: 'Logged Movie' });
-        title.source = 'test-source';
+        const title = new Title({ apiTitle: 'Logged Movie', source: 'test-source' });
         const mockClient = {
             source: 'test-source',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
