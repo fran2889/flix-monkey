@@ -29,7 +29,7 @@
  */
 
 /**
- * Immutable-style data class representing a movie or show with its ratings.
+ * Immutable data class representing a movie or show with its ratings.
  *
  * Rating values are normalised during construction: `null`, `undefined`, empty
  * strings, and `"N/A"` are all collapsed to `null`; numeric strings are parsed
@@ -85,6 +85,7 @@ export class Title {
         });
         this.source = source ?? null;
         this.type = type ?? null;
+        Object.freeze(this);
     }
 
     /** @returns {boolean} `true` if at least one rating (IMDb, Metacritic, or RT) is present. */

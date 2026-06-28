@@ -150,4 +150,22 @@ describe('Title', () => {
             expect(Title.notFound('Missing').type).toBeNull();
         });
     });
+
+    describe('immutability', () => {
+        it('should not allow mutation of fields after construction', () => {
+            const title = new Title({ displayTitle: 'Original', rating: 7.5 });
+            try {
+                title.displayTitle = 'Mutated';
+            } catch {
+                /* frozen in strict mode */
+            }
+            try {
+                title.rating = 0;
+            } catch {
+                /* frozen in strict mode */
+            }
+            expect(title.displayTitle).toBe('Original');
+            expect(title.rating).toBe(7.5);
+        });
+    });
 });

@@ -165,11 +165,8 @@ export class BaseApiClient {
         if (!match) return null;
         if (await this.isDisabled()) return null;
         const titleObj = await this.getDetails(match, displayTitle);
-        if (titleObj) {
-            titleObj.displayTitle = displayTitle;
-            titleObj.source = this.#source;
-        }
-        return titleObj;
+        if (!titleObj) return null;
+        return Title.fromJSON({ ...titleObj, displayTitle, source: this.#source });
     }
 
     /**
