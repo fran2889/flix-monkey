@@ -17,7 +17,7 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     npm install
     ```
 
-    Note: Requires Node.js >= 22.
+    Note: Requires Node.js >= 24.
 
 3.  **Local Testing:**
     Run the test suite to ensure everything is working correctly:

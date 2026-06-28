@@ -23,6 +23,8 @@
 // @author       __AUTHOR__
 // @license      __LICENSE__
 // @homepageURL  __HOMEPAGE__
+// @updateURL    https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js
+// @downloadURL  https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js
 // @icon         __ICON__
 // @match        https://www.netflix.com/*
 // @grant        GM_xmlhttpRequest
