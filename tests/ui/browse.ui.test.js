@@ -93,16 +93,7 @@ describe('Browse UI Surface', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container } = surfaces[0];
 
-        const mockConfig = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 9.0;
-                    return null;
-                },
-            })
-        );
-        new OverlayRenderer(mockConfig).applyFade(container, true);
+        new OverlayRenderer(new ConfigManager(createMockAdapter())).applyFade(container, true);
         expect(container.classList.contains('fm-faded')).toBe(true);
     });
 
@@ -110,16 +101,7 @@ describe('Browse UI Surface', () => {
         const surfaces = surfaceManager.discover(document.body);
         const { container } = surfaces[0];
 
-        const mockConfig = new ConfigManager(
-            createMockAdapter({
-                configGet: key => {
-                    if (key === 'enableFadeUnderRating') return true;
-                    if (key === 'fadeRatingThreshold') return 9.0;
-                    return null;
-                },
-            })
-        );
-        new OverlayRenderer(mockConfig).applyFade(container, false);
+        new OverlayRenderer(new ConfigManager(createMockAdapter())).applyFade(container, false);
         expect(container.classList.contains('fm-faded')).toBe(false);
     });
 });
