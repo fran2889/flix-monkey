@@ -174,7 +174,7 @@ export class FlixMonkeyApp {
 }
 
 function createApiClient(config, disabledManager, adapter, logger) {
-    const provider = (config.get('apiClient') ?? 'agregarr').trim().toLowerCase();
+    const provider = config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
