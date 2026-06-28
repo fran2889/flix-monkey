@@ -263,7 +263,7 @@ class PlatformAdapter {
 | `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)                         |
 | `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                                 |
 | `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI }`: canonical client names                    |
-| `RATE_LIMITS`             | object        | Per-client minimum interval in ms: XMDB 1500, OMDB 250, IMDBAPI 1000 |
+| `RATE_LIMITS`             | object        | Per-client minimum interval in ms: XMDB 1500, OMDB 250, IMDBAPI 4000 |
 | `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements                  |
 
 ## Code Style & Conventions
