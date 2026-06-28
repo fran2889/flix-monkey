@@ -35,7 +35,6 @@ export class SettingsUI {
         this.#container = container;
         this._injectStyles();
         const settings = (await this.adapter.storageGetAll()) || {};
-        this.adapter.setConfigData(settings);
 
         container.className = 'fm-settings-container';
         container.replaceChildren();
