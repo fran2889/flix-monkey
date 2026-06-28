@@ -30,10 +30,6 @@ export class ApiClientManager {
         this.#logger = logger;
     }
 
-    getClient() {
-        return this.#client;
-    }
-
     async resetDisabledClients() {
         const reenabled = await this.#disabledManager.resetAll();
         if (reenabled.length > 0) {
