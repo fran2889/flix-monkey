@@ -29,6 +29,9 @@ adapter.registerMenuCommand('FlixMonkey Settings', () => {
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
     const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
+    // Full page reload on save: GM_getValue already returns the freshest value, but
+    // stateful app objects (ApiClientManager, CacheManager, logger) don't reinitialize
+    // mid-session, so a reload is the simplest way to apply all config changes.
     ui.onSave = () => {
         modal.close();
         window.location.reload();
