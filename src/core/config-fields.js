@@ -18,9 +18,9 @@
 import { CACHE_TTL_INFINITE } from './constants.js';
 
 function validateCacheTtl(val) {
-    if (typeof val === 'string' && val.trim() === '') return 'Must be -1 or a positive integer';
+    if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
     const n = Number(val);
-    return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Must be -1 or a positive integer';
+    return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Cache duration must be -1 or a positive integer';
 }
 
 export const CONFIG_FIELDS = [
@@ -107,9 +107,9 @@ export const CONFIG_FIELDS = [
         row: 'fade-settings',
         labelHidden: true,
         validate: val => {
-            if (typeof val === 'string' && val.trim() === '') return 'Must be a number between 0 and 10';
+            if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(val);
-            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Must be a number between 0 and 10';
+            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Fade threshold must be a number between 0 and 10';
         },
     },
     {
