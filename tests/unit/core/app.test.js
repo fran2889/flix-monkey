@@ -571,6 +571,35 @@ describe('App', () => {
         expect(container.querySelector('.fm-fade-toggle').dataset.state).toBe('auto');
     });
 
+    it('should apply stored "always" fade override to browse title cards on reload', async () => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Reload Movie</div>
+            </div>
+        `;
+        const storageGet = vi
+            .fn()
+            .mockImplementation(key =>
+                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
+            );
+        const adapter = createMockAdapter({
+            configGet: key => (key === 'enableFadeUnderRating' ? false : undefined),
+            storageGet,
+        });
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 7.0,
+            imdbUrl: 'http://imdb.com',
+            imdbId: 'tt5',
+        });
+        appRef = startApp(adapter);
+        const card = document.querySelector('.title-card');
+        await vi.waitFor(() => {
+            if (!card.querySelector('.fm-rating-overlay:not(.fm-loading)'))
+                throw new Error('Final overlay not injected');
+        });
+        expect(card.classList.contains('fm-faded')).toBe(true);
+    });
+
     it('should cycle fade toggle state on click and update sibling cards', async () => {
         document.body.innerHTML = `
             <div class="title-card" id="card1"><div class="fallback-text">Cycle Movie</div></div>

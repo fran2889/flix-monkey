@@ -100,7 +100,7 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
+        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
 
         let promise = this.#inFlight.get(dedupKey);
         if (!promise) {
