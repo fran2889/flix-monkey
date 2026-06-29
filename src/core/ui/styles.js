@@ -18,17 +18,15 @@
 export const SETTINGS_STYLES = `
 .fm-settings-container {
     box-sizing: border-box;
-}
-.fm-settings-container * {
-    box-sizing: border-box;
-}
-.fm-settings-container {
     background: #141414;
     color: #fff;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 10px 25px 20px;
     min-width: 480px;
+}
+.fm-settings-container * {
+    box-sizing: border-box;
 }
 .fm-settings-container h1 {
     color: #e50914;
@@ -52,7 +50,6 @@ export const SETTINGS_STYLES = `
     padding-right: 15px;
     color: #ccc;
     font-size: 14px;
-    cursor: default;
 }
 .fm-settings-container .field label a {
     color: #6bf;
@@ -75,6 +72,8 @@ export const SETTINGS_STYLES = `
 .fm-settings-container .field input[type='text']:focus,
 .fm-settings-container .field select:focus {
     border-color: #e50914;
+    outline: 2px solid #e50914;
+    outline-offset: 1px;
 }
 .fm-settings-container .field input[type='checkbox'] {
     width: 16px;
@@ -110,7 +109,10 @@ export const SETTINGS_STYLES = `
     height: 1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
     white-space: nowrap;
+    border: 0;
+    padding: 0;
 }
 .fm-settings-container .section-header {
     color: #888;
@@ -163,6 +165,10 @@ export const SETTINGS_STYLES = `
     color: #aaa;
     min-height: 18px;
 }
+.fm-settings-container .field input.error,
+.fm-settings-container .field select.error {
+    border-color: #e05252;
+}
 .fm-modal-overlay {
     position: fixed;
     top: 0;
@@ -179,7 +185,7 @@ export const SETTINGS_STYLES = `
 .fm-modal-content {
     background: #141414;
     border: 1px solid #555;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 20px;
     max-width: 500px;
     width: 100%;
@@ -210,5 +216,8 @@ export const SETTINGS_STYLES = `
 }
 .fm-modal-close:hover {
     color: #fff;
+}
+.fm-modal-body {
+    padding: 0 4px;
 }
 `;
