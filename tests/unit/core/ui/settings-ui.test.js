@@ -79,10 +79,9 @@ describe('SettingsUI', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
-        it('should render title, fields, action buttons, and status placeholder', async () => {
+        it('should render fields, action buttons, and status placeholder', async () => {
             await settingsUI.render(container);
 
-            expect(container.querySelector('h1').textContent).toBe('FlixMonkey Settings');
             expect(container.querySelectorAll('.field').length).toBeGreaterThan(0);
             expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
             expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
@@ -181,13 +180,13 @@ describe('SettingsUI', () => {
             );
         });
 
-        it('should display "Saved!" status in green on successful save', async () => {
+        it('should display "Saved!" status with success class on successful save', async () => {
             await settingsUI.render(container);
             await settingsUI.save();
 
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('Saved!');
-            expect(status.style.color).toBe('green');
+            expect(status.className).toBe('fm-status--success');
         });
 
         it('should disable the save button while saving and re-enable it after', async () => {
@@ -254,12 +253,10 @@ describe('SettingsUI', () => {
             await settingsUI.save();
 
             const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Please fix errors before saving.');
-            expect(status.style.color).toBe('red');
-            const errorEl = container
-                .querySelector('#fm-fadeRatingThreshold')
-                .parentElement.querySelector('.error-message');
-            expect(errorEl).not.toBeNull();
+            expect(status.textContent.length).toBeGreaterThan(0);
+            expect(status.className).toBe('fm-status--error');
+            expect(container.querySelector('#fm-fadeRatingThreshold').classList.contains('error')).toBe(true);
+            expect(container.querySelector('.error-message')).toBeNull();
             expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
         });
 
@@ -293,7 +290,7 @@ describe('SettingsUI', () => {
             expect(mockCacheManager.clear).toHaveBeenCalledOnce();
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('Cache cleared.');
-            expect(status.style.color).toBe('green');
+            expect(status.className).toBe('fm-status--success');
         });
 
         it('should reset clients and show re-enabled names in green', async () => {
@@ -305,7 +302,7 @@ describe('SettingsUI', () => {
             expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('Re-enabled API clients: omdb, tmdb');
-            expect(status.style.color).toBe('green');
+            expect(status.className).toBe('fm-status--success');
         });
 
         it('should show no-clients message in green when there is nothing to reset', async () => {
@@ -315,7 +312,7 @@ describe('SettingsUI', () => {
 
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('No disabled API clients found to re-enable.');
-            expect(status.style.color).toBe('green');
+            expect(status.className).toBe('fm-status--success');
         });
 
         it('should show error in red when clearCache fails', async () => {
@@ -326,7 +323,7 @@ describe('SettingsUI', () => {
 
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('Error: disk full');
-            expect(status.style.color).toBe('red');
+            expect(status.className).toBe('fm-status--error');
         });
 
         it('should show error in red when resetClients fails', async () => {
@@ -337,7 +334,7 @@ describe('SettingsUI', () => {
 
             const status = container.querySelector('#fm-status');
             expect(status.textContent).toBe('Error: storage unavailable');
-            expect(status.style.color).toBe('red');
+            expect(status.className).toBe('fm-status--error');
         });
     });
 

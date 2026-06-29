@@ -48,10 +48,6 @@ export class SettingsUI {
         container.className = 'fm-settings-container';
         container.replaceChildren();
 
-        const title = document.createElement('h1');
-        title.textContent = 'FlixMonkey Settings';
-        container.appendChild(title);
-
         const fieldsContainer = document.createElement('div');
         fieldsContainer.id = 'fm-fields';
         container.appendChild(fieldsContainer);
@@ -189,7 +185,7 @@ export class SettingsUI {
     }
 
     #validate() {
-        let hasErrors = false;
+        const errors = [];
         const allValues = {};
         this.#fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
@@ -199,37 +195,25 @@ export class SettingsUI {
         this.#fields.forEach(field => {
             const input = this.#container.querySelector(`#fm-${field.key}`);
             if (!input) return;
-
             const fieldValue = input.type === 'checkbox' ? input.checked : input.value;
             const errorMsg = field.validate ? field.validate(fieldValue, allValues) : null;
-            let errorEl = input.parentElement.querySelector('.error-message');
-
             if (errorMsg) {
-                hasErrors = true;
-                if (!errorEl) {
-                    errorEl = document.createElement('div');
-                    errorEl.className = 'error-message';
-                    input.parentElement.appendChild(errorEl);
-                }
-                errorEl.textContent = errorMsg;
+                errors.push(errorMsg);
                 input.classList.add('error');
             } else {
-                if (errorEl) {
-                    errorEl.remove();
-                }
                 input.classList.remove('error');
             }
         });
-        return !hasErrors;
+        return errors;
     }
 
     async save() {
-        const isValid = this.#validate();
+        const errors = this.#validate();
         const statusDiv = this.#container.querySelector('#fm-status');
 
-        if (!isValid) {
-            statusDiv.textContent = 'Please fix errors before saving.';
-            statusDiv.style.color = 'red';
+        if (errors.length > 0) {
+            statusDiv.textContent = errors.join('\n');
+            statusDiv.className = 'fm-status--error';
             return;
         }
 
@@ -248,7 +232,7 @@ export class SettingsUI {
         try {
             await this.#adapter.storageSetMany(values);
             statusDiv.textContent = 'Saved!';
-            statusDiv.style.color = 'green';
+            statusDiv.className = 'fm-status--success';
             await this.#onSave?.();
         } finally {
             if (saveBtn) saveBtn.disabled = false;
@@ -260,10 +244,10 @@ export class SettingsUI {
         try {
             await this.#cacheManager.clear();
             statusDiv.textContent = 'Cache cleared.';
-            statusDiv.style.color = 'green';
+            statusDiv.className = 'fm-status--success';
         } catch (err) {
             statusDiv.textContent = `Error: ${err.message}`;
-            statusDiv.style.color = 'red';
+            statusDiv.className = 'fm-status--error';
         }
     }
 
@@ -275,10 +259,10 @@ export class SettingsUI {
                 reenabled.length > 0
                     ? `Re-enabled API clients: ${reenabled.join(', ')}`
                     : 'No disabled API clients found to re-enable.';
-            statusDiv.style.color = 'green';
+            statusDiv.className = 'fm-status--success';
         } catch (err) {
             statusDiv.textContent = `Error: ${err.message}`;
-            statusDiv.style.color = 'red';
+            statusDiv.className = 'fm-status--error';
         }
     }
 
