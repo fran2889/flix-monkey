@@ -164,6 +164,13 @@ export const SETTINGS_STYLES = `
     font-size: 13px;
     color: #aaa;
     min-height: 18px;
+    white-space: pre-line;
+}
+.fm-settings-container #fm-status.fm-status--error {
+    color: #e05252;
+}
+.fm-settings-container #fm-status.fm-status--success {
+    color: #4caf50;
 }
 .fm-settings-container .field input.error,
 .fm-settings-container .field select.error {
