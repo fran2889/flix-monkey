@@ -301,7 +301,21 @@ describe('App', () => {
             isLoading: vi.fn().mockReturnValue(false),
         };
         const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
-        const app = new FlixMonkeyApp({}, {}, mockRenderer, mockSurfaces, createMockLogger());
+        const mockFadeManager = {
+            getOverride: vi.fn().mockResolvedValue(null),
+            shouldFade: vi.fn().mockReturnValue(false),
+            nextState: vi.fn(),
+        };
+        const mockConfig = { getBool: vi.fn().mockReturnValue(false), getFloat: vi.fn().mockReturnValue(6.0) };
+        const app = new FlixMonkeyApp(
+            {},
+            {},
+            mockRenderer,
+            mockSurfaces,
+            mockFadeManager,
+            mockConfig,
+            createMockLogger()
+        );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         app.disconnect();
@@ -483,5 +497,147 @@ describe('App', () => {
 
         expect(injectSpy).not.toHaveBeenCalled();
         injectSpy.mockRestore();
+    });
+
+    it('should stamp data-fm-key on fadeable card containers after decoration', async () => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Stamped Movie</div>
+            </div>
+        `;
+        const spy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue({ rating: 7.0, imdbUrl: 'http://imdb.com', imdbId: 'tt1' });
+        appRef = startApp(createMockAdapter());
+        await vi.waitFor(() => {
+            if (spy.mock.calls.length === 0) throw new Error('Not called');
+        });
+        await vi.runAllTimersAsync();
+        const card = document.querySelector('.title-card');
+        await vi.waitFor(() => {
+            if (!card.dataset.fmKey) throw new Error('Not stamped yet');
+        });
+        expect(card.dataset.fmKey).toBeTruthy();
+        spy.mockRestore();
+    });
+
+    it('should not stamp data-fm-key on non-fadeable mini-modal containers', async () => {
+        document.body.innerHTML = `
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Mini Movie">
+                </div>
+            </div>
+        `;
+        const spy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue({ rating: 5.0, imdbUrl: 'http://imdb.com', imdbId: 'tt2' });
+        appRef = startApp(createMockAdapter());
+        await vi.waitFor(() => {
+            if (spy.mock.calls.length === 0) throw new Error('Not called');
+        });
+        await vi.runAllTimersAsync();
+        const container = document.querySelector('.previewModal--player_container');
+        await vi.waitFor(() => {
+            if (!container.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
+        });
+        expect(container.dataset.fmKey).toBeUndefined();
+        spy.mockRestore();
+    });
+
+    it('should render a fade toggle badge in the mini-modal when enableFadeToggle is true', async () => {
+        document.body.innerHTML = `
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Toggle Movie">
+                </div>
+            </div>
+        `;
+        const adapter = createMockAdapter({
+            configGet: key => (key === 'enableFadeToggle' ? true : undefined),
+            storageGet: vi.fn().mockResolvedValue(null),
+        });
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 7.0,
+            imdbUrl: 'http://imdb.com',
+            imdbId: 'tt3',
+        });
+        appRef = startApp(adapter);
+        const container = document.querySelector('.previewModal--player_container');
+        await vi.waitFor(() => {
+            if (!container.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
+        });
+        expect(container.querySelector('.fm-fade-toggle')).not.toBeNull();
+        expect(container.querySelector('.fm-fade-toggle').dataset.state).toBe('auto');
+    });
+
+    it('should apply stored "always" fade override to browse title cards on reload', async () => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <div class="fallback-text">Reload Movie</div>
+            </div>
+        `;
+        const storageGet = vi
+            .fn()
+            .mockImplementation(key =>
+                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
+            );
+        const adapter = createMockAdapter({
+            configGet: key => (key === 'enableFadeUnderRating' ? false : undefined),
+            storageGet,
+        });
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 7.0,
+            imdbUrl: 'http://imdb.com',
+            imdbId: 'tt5',
+        });
+        appRef = startApp(adapter);
+        const card = document.querySelector('.title-card');
+        await vi.waitFor(() => {
+            if (!card.querySelector('.fm-rating-overlay:not(.fm-loading)'))
+                throw new Error('Final overlay not injected');
+        });
+        expect(card.classList.contains('fm-faded')).toBe(true);
+    });
+
+    it('should cycle fade toggle state on click and update sibling cards', async () => {
+        document.body.innerHTML = `
+            <div class="title-card" id="card1"><div class="fallback-text">Cycle Movie</div></div>
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Cycle Movie">
+                </div>
+            </div>
+        `;
+        const storageGet = vi.fn().mockResolvedValue(null);
+        const storageSet = vi.fn().mockResolvedValue(undefined);
+        const adapter = createMockAdapter({
+            configGet: key => {
+                if (key === 'enableFadeToggle') return true;
+                if (key === 'enableFadeUnderRating') return false;
+                return undefined;
+            },
+            storageGet,
+            storageSet,
+        });
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
+            rating: 5.0,
+            imdbUrl: 'http://imdb.com',
+            imdbId: 'tt4',
+        });
+        appRef = startApp(adapter);
+        const modal = document.querySelector('.previewModal--player_container');
+        await vi.waitFor(() => {
+            if (!modal.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
+        });
+        const toggle = modal.querySelector('.fm-fade-toggle');
+        expect(toggle.dataset.state).toBe('auto');
+        toggle.click();
+        await vi.waitFor(() => {
+            if (toggle.dataset.state !== 'always') throw new Error('State not updated');
+        });
+        expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
+        const card = document.querySelector('.title-card');
+        expect(card.classList.contains('fm-faded')).toBe(true);
     });
 });
