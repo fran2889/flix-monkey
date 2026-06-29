@@ -28,13 +28,6 @@ export const SETTINGS_STYLES = `
 .fm-settings-container * {
     box-sizing: border-box;
 }
-.fm-settings-container h1 {
-    color: #e50914;
-    font-size: 24px;
-    margin: 0 0 15px;
-    text-align: center;
-    font-weight: bold;
-}
 .fm-settings-container #fm-fields {
     width: fit-content;
     margin: 0 auto;

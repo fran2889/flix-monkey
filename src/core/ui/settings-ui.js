@@ -48,10 +48,6 @@ export class SettingsUI {
         container.className = 'fm-settings-container';
         container.replaceChildren();
 
-        const title = document.createElement('h1');
-        title.textContent = 'FlixMonkey Settings';
-        container.appendChild(title);
-
         const fieldsContainer = document.createElement('div');
         fieldsContainer.id = 'fm-fields';
         container.appendChild(fieldsContainer);

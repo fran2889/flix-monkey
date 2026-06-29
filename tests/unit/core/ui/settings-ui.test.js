@@ -79,10 +79,9 @@ describe('SettingsUI', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
-        it('should render title, fields, action buttons, and status placeholder', async () => {
+        it('should render fields, action buttons, and status placeholder', async () => {
             await settingsUI.render(container);
 
-            expect(container.querySelector('h1').textContent).toBe('FlixMonkey Settings');
             expect(container.querySelectorAll('.field').length).toBeGreaterThan(0);
             expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
             expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
