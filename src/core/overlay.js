@@ -17,6 +17,12 @@
  */
 import { TOP_10_BADGE } from './constants.js';
 
+export const FADE_STATE_LABELS = {
+    auto: 'Auto',
+    always: 'Always',
+    never: 'Never',
+};
+
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
@@ -70,7 +76,8 @@ export class OverlayRenderer {
                 cursor: pointer;
             }
             .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
-            .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; color: #f5c518; }
+            .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
+            .${this.#OVERLAY_CLASS} .fm-imdb { color: #f5c518; }
             .${this.#OVERLAY_CLASS} .fm-rt { color: #fa320a; }
             .${this.#OVERLAY_CLASS} .fm-mc { color: #6ac; }
             .${this.#OVERLAY_CLASS} .fm-value { color: #fff; }
@@ -83,6 +90,11 @@ export class OverlayRenderer {
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
+        `;
+        cssText += `
+            .fm-fade-toggle { cursor: pointer; }
+            .fm-fade-toggle .fm-label { color: #aaa; }
+            .fm-fade-toggle--faded { opacity: 0.35; }
         `;
         if (existing) {
             existing.textContent = cssText;
@@ -126,6 +138,27 @@ export class OverlayRenderer {
         return this.#createBadgeElement(label, '🔍', className, 'fm-search');
     }
 
+    #createFadeToggle(state, onClick) {
+        const el = document.createElement('div');
+        el.className = 'fm-fade-toggle';
+        el.dataset.state = state ?? 'auto';
+        el.title = `Fade: ${FADE_STATE_LABELS[state ?? 'auto']}`;
+        const label = document.createElement('span');
+        label.className = 'fm-label';
+        label.textContent = 'Fade ';
+        const icon = document.createElement('span');
+        icon.className = 'fm-fade-toggle-icon';
+        icon.textContent = state === null ? '⭐' : '👁️';
+        if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
+        el.appendChild(label);
+        el.appendChild(icon);
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            onClick(el);
+        });
+        return el;
+    }
+
     #formatImdbRating(rating) {
         if (typeof rating !== 'number') return String(rating);
         return rating.toFixed(1);
@@ -165,12 +198,12 @@ export class OverlayRenderer {
         // eslint-disable-next-line eqeqeq
         if (rating != null) {
             const formatted = this.#formatImdbRating(rating);
-            imdbLink.appendChild(this.#createRatingElement('IMDb', formatted));
+            imdbLink.appendChild(this.#createRatingElement('IMDb', formatted, 'fm-imdb'));
             titleParts.push(`IMDb: ${formatted}`);
         } else if (imdbId) {
-            imdbLink.appendChild(this.#createMissingRatingElement('IMDb'));
+            imdbLink.appendChild(this.#createMissingRatingElement('IMDb', 'fm-imdb'));
         } else {
-            imdbLink.appendChild(this.#createSearchRatingElement('IMDb'));
+            imdbLink.appendChild(this.#createSearchRatingElement('IMDb', 'fm-imdb'));
         }
         container.appendChild(imdbLink);
 
@@ -190,7 +223,7 @@ export class OverlayRenderer {
             titleParts.push(`MC: ${formatted}`);
         }
 
-        container.title = this.#buildTooltip(titleParts, imdbId);
+        imdbLink.title = this.#buildTooltip(titleParts, imdbId);
         return container;
     }
 
@@ -201,7 +234,7 @@ export class OverlayRenderer {
     #createLoadingOverlay() {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
-        container.appendChild(this.#createBadgeElement('IMDb', '⏳', '', 'fm-search'));
+        container.appendChild(this.#createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
         container.title = 'Fetching ratings… click to search IMDb';
         return container;
     }
@@ -219,9 +252,13 @@ export class OverlayRenderer {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
-    injectOverlay(container, titleObj) {
+    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(this.#createOverlay(titleObj));
+        const overlay = this.#createOverlay(titleObj);
+        if (onFadeToggleClick && this.#config.getBool('enableFadeToggle')) {
+            overlay.appendChild(this.#createFadeToggle(fadeToggleState, onFadeToggleClick));
+        }
+        container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
@@ -229,16 +266,7 @@ export class OverlayRenderer {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
-    applyFade(container, titleObj, fadeable) {
-        if (!fadeable || !this.#config.getBool('enableFadeUnderRating')) {
-            container.classList.remove('fm-faded');
-            return;
-        }
-        const { rating } = titleObj ?? {};
-        if (typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold')) {
-            container.classList.add('fm-faded');
-        } else {
-            container.classList.remove('fm-faded');
-        }
+    applyFade(container, shouldFade) {
+        container.classList.toggle('fm-faded', shouldFade);
     }
 }

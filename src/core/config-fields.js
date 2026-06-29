@@ -113,6 +113,14 @@ export const CONFIG_FIELDS = [
         },
     },
     {
+        key: 'enableFadeToggle',
+        label: 'Fade override per title',
+        type: 'checkbox',
+        default: true,
+        title: 'Shows a button in the hover preview to always fade, never fade, or follow the rating rule for individual titles.',
+        row: 'fade-settings',
+    },
+    {
         key: 'cacheTtlRatedOldYear',
         label: 'Rated > 1yr',
         type: 'text',

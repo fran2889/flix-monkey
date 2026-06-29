@@ -96,4 +96,40 @@ describe('SurfaceManager', () => {
             })
         ).toEqual([]);
     });
+
+    it('should set showFadeToggle to false for title-card surfaces', () => {
+        const results = discover(`
+            <div class="title-card"><div class="fallback-text">Movie</div></div>
+        `);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
+
+    it('should set showFadeToggle to false for search card surfaces', () => {
+        const results = discover(`
+            <div data-uia="standard-card" aria-label="Movie"></div>
+        `);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
+
+    it('should set showFadeToggle to true for the mini-modal surface', () => {
+        const results = discover(`
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Movie Title">
+                </div>
+            </div>
+        `);
+        expect(results[0].showFadeToggle).toBe(true);
+    });
+
+    it('should set showFadeToggle to false for the detail-modal surface', () => {
+        const results = discover(`
+            <div class="previewModal--wrapper detail-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Movie Title">
+                </div>
+            </div>
+        `);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
 });
