@@ -340,13 +340,14 @@ describe('OverlayRenderer', () => {
             expect(onClick).toHaveBeenCalledWith(toggle);
         });
 
-        it('should include fm-fade-toggle CSS in injected styles', () => {
+        it('should include fm-fade-toggle CSS scoped under fm-rating-overlay', () => {
             const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
             renderer.injectStyles();
             const css = document.head.querySelector('#fm-overlay-styles').textContent;
-            expect(css).toContain('.fm-fade-toggle');
-            expect(css).toContain('.fm-fade-toggle .fm-label');
-            expect(css).toContain('.fm-fade-toggle--faded');
+            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
+            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle .fm-label');
+            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle--faded');
+            expect(css).not.toContain('\n            .fm-fade-toggle {');
         });
     });
 

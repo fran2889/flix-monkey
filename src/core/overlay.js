@@ -56,7 +56,7 @@ export class OverlayRenderer {
             }
             .${this.#OVERLAY_CLASS} > * {
                 background: rgba(0,0,0,0.72);
-                font-family: Arial, sans-serif;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                 font-size: 12px;
                 font-weight: 700;
                 line-height: 1;
@@ -72,7 +72,6 @@ export class OverlayRenderer {
                 gap: 4px;
             }
             .${this.#OVERLAY_CLASS} a {
-                pointer-events: auto;
                 cursor: pointer;
             }
             .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
@@ -92,9 +91,9 @@ export class OverlayRenderer {
             .fm-faded:hover { opacity: 1; }
         `;
         cssText += `
-            .fm-fade-toggle { cursor: pointer; }
-            .fm-fade-toggle .fm-label { color: #aaa; }
-            .fm-fade-toggle--faded { opacity: 0.35; }
+            .${this.#OVERLAY_CLASS} .fm-fade-toggle { cursor: pointer; }
+            .${this.#OVERLAY_CLASS} .fm-fade-toggle .fm-label { color: #aaa; }
+            .${this.#OVERLAY_CLASS} .fm-fade-toggle--faded { opacity: 0.35; }
         `;
         if (existing) {
             existing.textContent = cssText;

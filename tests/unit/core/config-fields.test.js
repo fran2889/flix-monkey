@@ -83,6 +83,7 @@ describe('core/config-fields', () => {
 
             it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
                 expect(typeof field.validate(val)).toBe('string');
+                expect(field.validate(val)).toBe('Fade threshold must be a number between 0 and 10');
             });
         });
 
@@ -98,6 +99,7 @@ describe('core/config-fields', () => {
 
             it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {
                 expect(typeof field.validate(val)).toBe('string');
+                expect(field.validate(val)).toBe('Cache duration must be -1 or a positive integer');
             });
         });
     });
