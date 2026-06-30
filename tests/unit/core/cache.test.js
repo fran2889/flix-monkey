@@ -18,9 +18,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CacheManager } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
-import { ConfigManager } from '../../../src/core/config-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
+import { createConfig } from '../../mocks/config.js';
 
 describe('CacheManager', () => {
     let adapter;
@@ -36,7 +36,11 @@ describe('CacheManager', () => {
             storageGetKeys: vi.fn(),
         });
         mockLogger = createMockLogger();
-        config = new ConfigManager(createMockAdapter(), mockLogger);
+        config = createConfig({
+            cacheTtlNoRating: '1',
+            cacheTtlRatedNewYear: '30',
+            cacheTtlRatedOldYear: '-1',
+        });
         cacheManager = new CacheManager(adapter, config, mockLogger);
     });
 

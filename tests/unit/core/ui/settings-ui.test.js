@@ -113,7 +113,9 @@ describe('SettingsUI', () => {
             const checkbox = container.querySelector('#fm-showMcRating');
 
             expect(checkbox.type).toBe('checkbox');
-            expect(checkbox.checked).toBe(true);
+            // Check against the actual field default, not a hardcoded value
+            const showMcRatingField = CONFIG_FIELDS.find(f => f.key === 'showMcRating');
+            expect(checkbox.checked).toBe(showMcRatingField.default);
         });
 
         it('should render a labelUrl field label as an <a> link', async () => {
