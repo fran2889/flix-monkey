@@ -100,12 +100,10 @@ export async function discoverVisibleTitles(page, minimumCount = 2) {
                 const title = getTitleFromSurface(surface);
                 if (!title || seenTitles.has(title)) continue;
 
-                surface.setAttribute('data-fm-integration-surface', String(results.length));
                 seenSurfaces.add(surface);
                 seenTitles.add(title);
                 results.push({
                     title,
-                    surfaceSelector: `[data-fm-integration-surface="${results.length}"]`,
                 });
             }
         }
@@ -129,6 +127,18 @@ export async function reloadNetflixAndWait(page, env) {
 }
 
 export async function openHoverSurfaceForTitle(page, seededTitle, env) {
-    await page.locator(seededTitle.surfaceSelector).hover();
+    const surface = findSurfaceByTitle(page, seededTitle.title);
+    await surface.hover();
     await expect(page.locator('.fm-fade-toggle').first()).toBeVisible({ timeout: env.timeoutMs });
+}
+
+/**
+ * Finds a surface element by its title text.
+ */
+export function findSurfaceByTitle(page, titleText) {
+    // Create a locator that finds surfaces containing the title text
+    // This works regardless of reload since it uses Netflix's actual content
+    return page
+        .locator(`[data-uia="search-gallery-video-card"], [data-uia="title-card"], .title-card`)
+        .filter({ hasText: titleText });
 }
