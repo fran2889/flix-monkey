@@ -29,7 +29,7 @@ describe('OverlayRenderer', () => {
 
     describe('Style injection', () => {
         it('should inject styles into document head', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style).not.toBeNull();
@@ -37,7 +37,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should inject styles only once per instance', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             renderer.injectStyles();
             const styles = document.head.querySelectorAll('style');
@@ -90,7 +90,7 @@ describe('OverlayRenderer', () => {
 
     describe('Overlay injection', () => {
         it('should render an IMDb badge for a zero rating', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ imdbId: 'tt1234567', rating: 0 });
@@ -102,9 +102,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render RT and MC badges for zero percent ratings', () => {
-            const renderer = new OverlayRenderer(
-                createConfig({ showRtRating: true, showMcRating: true, overlayCorner: 'top-left' })
-            );
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ imdbId: 'tt1234567', rating: 5, rtRating: 0, mcRating: 0 });
@@ -115,10 +113,8 @@ describe('OverlayRenderer', () => {
             expect(percentBadges.length).toBe(2);
         });
 
-        it('should respect showRtRating and showMcRating config', () => {
-            const renderer = new OverlayRenderer(
-                createConfig({ showRtRating: false, showMcRating: false, overlayCorner: 'top-left' })
-            );
+        it('should not render RT and MC badges when disabled by config', () => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: false, showMcRating: false }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, { rating: 7.0, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
 
@@ -151,7 +147,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should show the search icon when imdbId is missing', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, { rating: null, imdbId: null });
             expect(container.querySelector('.fm-search')).not.toBeNull();
@@ -159,7 +155,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should show N/A when imdbId is present but rating is missing', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, {
                 imdbId: 'tt1234567',
@@ -186,7 +182,7 @@ describe('OverlayRenderer', () => {
                 false,
             ],
             ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search', false],
-        ])('should build correct tooltip for %s', (_, titleObj, expectedTitle, showRtRating) => {
+        ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
             const renderer = new OverlayRenderer(createConfig({ showRtRating }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj);
@@ -196,7 +192,7 @@ describe('OverlayRenderer', () => {
 
     describe('Loading overlay', () => {
         it('should inject loading overlay', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectLoadingOverlay(container, 'Test Movie');
             const loadingElement = container.querySelector('.fm-loading');
@@ -206,7 +202,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should replace loading overlay with ratings overlay', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectLoadingOverlay(container, 'Test Movie');
             renderer.injectOverlay(container, {
@@ -224,14 +220,14 @@ describe('OverlayRenderer', () => {
 
     describe('Fade', () => {
         it('should add fm-faded class when shouldFade is true', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.applyFade(container, true);
             expect(container.classList.contains('fm-faded')).toBe(true);
         });
 
         it('should remove fm-faded class when shouldFade is false', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.classList.add('fm-faded');
             renderer.applyFade(container, false);
@@ -243,21 +239,21 @@ describe('OverlayRenderer', () => {
         const titleObj = { rating: 7.0, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
 
         it('should not render toggle when onFadeToggleClick is absent', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj);
             expect(container.querySelector('.fm-fade-toggle')).toBeNull();
         });
 
         it('should not render toggle when enableFadeToggle config is false', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: false, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: false }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, null, vi.fn());
             expect(container.querySelector('.fm-fade-toggle')).toBeNull();
         });
 
         it('should render toggle with ⭐ and data-state="auto" for null state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, null, vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -270,7 +266,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render toggle with 👁️ and fm-fade-toggle--faded for "always" state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'always', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -282,7 +278,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render toggle with 👁️ without fm-fade-toggle--faded for "never" state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'never', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -294,7 +290,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should call onFadeToggleClick with the badge element on click', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true, overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const onClick = vi.fn();
@@ -305,7 +301,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should include fm-fade-toggle CSS scoped under fm-rating-overlay', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             const css = document.head.querySelector('#fm-overlay-styles').textContent;
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
@@ -317,7 +313,7 @@ describe('OverlayRenderer', () => {
 
     describe('Container positioning', () => {
         it('should ensure container has non-static position', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'static';
             renderer.ensureRelative(container);
@@ -325,7 +321,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should not change position if already non-static', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'absolute';
             renderer.ensureRelative(container);
@@ -334,7 +330,7 @@ describe('OverlayRenderer', () => {
     });
 
     describe('Pointer events and click propagation', () => {
-        it('should set correct pointer-events for overlay elements when RT is enabled', () => {
+        it('should enable pointer events on rating badges when RT is enabled', () => {
             const renderer = new OverlayRenderer(createConfig({ showRtRating: true }));
             const container = document.createElement('div');
             renderer.injectStyles();
@@ -348,7 +344,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should stop propagation on IMDb link click', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, { imdbUrl: 'http://imdb.com' });
 
@@ -384,7 +380,7 @@ describe('OverlayRenderer', () => {
 
     describe('Clear overlays', () => {
         it('should remove all overlay elements from the document', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             document.body.innerHTML =
                 '<div class="fm-rating-overlay"></div>' +
                 '<div class="fm-rating-overlay"></div>' +
@@ -395,7 +391,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should remove data-fm-injected attribute from parent when clearing overlays', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ apiTitle: 'Test', rating: 7.5 });
