@@ -15,23 +15,11 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
-export const CACHE_TTL_INFINITE = -1;
-export const DECORATION_DEBOUNCE_MS = 250;
-export const INFLIGHT_TIMEOUT_MS = 30_000;
-export const CLIENT_DISABLE_DURATION = 60 * 60 * 1000; // 1 hour
-export const DEFAULT_FETCH_TIMEOUT = 8000;
+import { ApiSource } from './constants.js';
 
-export const ApiSource = Object.freeze({
-    XMDB: 'xmdb',
-    OMDB: 'omdb',
-    IMDBAPI: 'imdbapi',
-    AGREGARR: 'agregarr',
-});
-
-export const TOP_10_BADGE = 'title-card-top-10';
-
-export const TitleType = Object.freeze({
-    MOVIE: 'movie',
-    SERIES: 'series',
+export const RATE_LIMITS = Object.freeze({
+    [ApiSource.XMDB]: 1500,
+    [ApiSource.OMDB]: 250,
+    [ApiSource.IMDBAPI]: 4000,
+    [ApiSource.AGREGARR]: 250,
 });
