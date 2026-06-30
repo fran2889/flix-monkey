@@ -23,6 +23,8 @@ import { createStorageHelper } from './helpers/storage.js';
 
 export { expect };
 
+const TEST_USER_DATA_DIR = resolve(process.cwd(), '.playwright-chrome-profile');
+
 function isFlixMonkeyExtensionWorker(worker) {
     const url = worker.url();
 
@@ -70,10 +72,8 @@ export const test = base.extend({
     context: async ({ env }, use) => {
         const extensionPath = resolve(process.cwd(), 'dist/chrome');
         const args = [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`];
-        if (env.chromeProfileDirectory) args.push(`--profile-directory=${env.chromeProfileDirectory}`);
 
-        const context = await chromium.launchPersistentContext(env.chromeUserDataDir, {
-            executablePath: env.chromeExecutablePath,
+        const context = await chromium.launchPersistentContext(TEST_USER_DATA_DIR, {
             headless: env.headless,
             args,
         });

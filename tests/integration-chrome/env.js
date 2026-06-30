@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { existsSync } from 'node:fs';
 import { config } from 'dotenv';
 
 config();
@@ -37,13 +36,6 @@ function parseTimeout() {
     return value;
 }
 
-function requirePath(name) {
-    const value = process.env[name];
-    if (!value) throw new Error(`${name} is required for npm run test:integration-chrome`);
-    if (!existsSync(value)) throw new Error(`${name} does not exist: ${value}`);
-    return value;
-}
-
 export function loadChromeIntegrationEnv() {
     const netflixProfileName = process.env.NETFLIX_PROFILE_NAME;
     if (!netflixProfileName) {
@@ -51,9 +43,6 @@ export function loadChromeIntegrationEnv() {
     }
 
     return {
-        chromeExecutablePath: requirePath('CHROME_EXECUTABLE_PATH'),
-        chromeUserDataDir: requirePath('CHROME_USER_DATA_DIR'),
-        chromeProfileDirectory: process.env.CHROME_PROFILE_DIRECTORY ?? '',
         netflixProfileName,
         headless: parseBoolean('CHROME_INTEGRATION_HEADLESS', false),
         keepOpen: parseBoolean('CHROME_INTEGRATION_KEEP_OPEN', false),
@@ -64,7 +53,5 @@ export function loadChromeIntegrationEnv() {
 export function redactEnv(env) {
     return {
         ...env,
-        chromeExecutablePath: env.chromeExecutablePath ? '<configured>' : null,
-        chromeUserDataDir: env.chromeUserDataDir ? '<configured>' : null,
     };
 }

@@ -17,5 +17,6 @@ playwright-report/
 web-ext-artifacts/
 node_modules/
 test-results/
+.playwright-chrome-profile/
 
 .worktrees/

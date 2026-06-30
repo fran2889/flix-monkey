@@ -155,19 +155,17 @@ npm run format
 
 Before running it:
 
-1. Create a dedicated Chrome or Chromium profile for FlixMonkey integration testing.
-2. Log into Netflix in that profile.
-3. Populate `.env` with:
+1. Run `npx playwright install chromium` to ensure Playwright's Chromium is available.
+2. Populate `.env` with:
 
     ```dotenv
-    CHROME_EXECUTABLE_PATH=/path/to/chrome-or-chromium
-    CHROME_USER_DATA_DIR=/path/to/flixmonkey-chrome-profile
-    CHROME_PROFILE_DIRECTORY=
     NETFLIX_PROFILE_NAME=Your Netflix Profile
     CHROME_INTEGRATION_HEADLESS=false
     CHROME_INTEGRATION_KEEP_OPEN=false
     CHROME_INTEGRATION_TIMEOUT_MS=30000
     ```
+
+3. On first run, the test browser will open. Manually log into Netflix and select your profile. Subsequent runs will use the persistent `playwright-chrome-profile` directory.
 
 Run:
 
@@ -175,7 +173,7 @@ Run:
 npm run test:integration-chrome
 ```
 
-The suite builds `dist/chrome`, loads it as an unpacked extension, opens Netflix, selects `NETFLIX_PROFILE_NAME` if the Netflix profile chooser appears, seeds deterministic cache entries for visible titles, and verifies overlays and settings behavior. It preserves `omdbApiKey` and `xmdbApiKey`, and resets other options, `fmc:*` cache entries, and `fm-fade:*` overrides at the start and end of the run.
+The suite builds `dist/chrome`, loads it as an unpacked extension into Playwright's Chromium, opens Netflix, selects `NETFLIX_PROFILE_NAME` if the Netflix profile chooser appears, seeds deterministic cache entries for visible titles, and verifies overlays and settings behavior. It preserves `omdbApiKey` and `xmdbApiKey`, and resets other options, `fmc:*` cache entries, and `fm-fade:*` overrides at the start and end of the run.
 
 ---
 
