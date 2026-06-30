@@ -17,6 +17,12 @@
  */
 import { expect } from '@playwright/test';
 
+export async function openOptionsPage(context, extensionId) {
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/options.html`, { waitUntil: 'domcontentloaded' });
+    return page;
+}
+
 export async function setCheckbox(page, key, checked) {
     const input = page.locator(`#fm-${key}`);
     await expect(input).toBeVisible();
@@ -58,4 +64,5 @@ export async function saveOptionsAndWaitForNetflixReload(optionsPage, netflixPag
     await expect(optionsPage.locator('#fm-status')).toHaveText('Saved!');
     await reloadPromise;
     await netflixPage.waitForLoadState('domcontentloaded');
+    await optionsPage.close();
 }

@@ -17,7 +17,7 @@
  */
 import { test } from './fixtures.js';
 import { discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
-import { setCheckbox, setSelect, saveOptionsAndWaitForNetflixReload } from './helpers/options-page.js';
+import { setCheckbox, setSelect, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectOverlayBadges, expectOverlayCorner } from './helpers/overlays.js';
 
 const SEED_RATINGS = [
@@ -27,6 +27,8 @@ const SEED_RATINGS = [
 
 test('shows IMDb, RT, and MC according to options UI visibility settings', async ({
     env,
+    context,
+    extensionId,
     storage,
     netflixPage,
     optionsPage,
@@ -41,7 +43,7 @@ test('shows IMDb, RT, and MC according to options UI visibility settings', async
 
     await expectOverlayBadges(netflixPage, seeded[0], { rt: true, mc: true });
 
-    await optionsPage.reload({ waitUntil: 'domcontentloaded' });
+    optionsPage = await openOptionsPage(context, extensionId);
     await setCheckbox(optionsPage, 'showRtRating', false);
     await setCheckbox(optionsPage, 'showMcRating', false);
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);

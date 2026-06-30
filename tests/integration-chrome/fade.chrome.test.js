@@ -17,13 +17,20 @@
  */
 import { test, expect } from './fixtures.js';
 import { discoverVisibleTitles, openHoverSurfaceForTitle, reloadNetflixAndWait } from './helpers/netflix.js';
-import { setCheckbox, setText, saveOptionsAndWaitForNetflixReload } from './helpers/options-page.js';
+import { setCheckbox, setText, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectFaded, findFadeToggle } from './helpers/overlays.js';
 
 const LOW_RATING = [{ rating: 4.2, rtRating: 35, mcRating: 41, imdbId: 'tt9000101' }];
 const MID_RATING = [{ rating: 6.5, rtRating: 69, mcRating: 62, imdbId: 'tt9000102' }];
 
-test('applies fade threshold settings saved from options UI', async ({ env, storage, netflixPage, optionsPage }) => {
+test('applies fade threshold settings saved from options UI', async ({
+    env,
+    context,
+    extensionId,
+    storage,
+    netflixPage,
+    optionsPage,
+}) => {
     const visibleTitles = await discoverVisibleTitles(netflixPage, 1);
     const [seeded] = await storage.seedRatings(visibleTitles.slice(0, 1), LOW_RATING);
 
@@ -33,7 +40,7 @@ test('applies fade threshold settings saved from options UI', async ({ env, stor
     await reloadNetflixAndWait(netflixPage, env);
     await expectFaded(netflixPage, seeded, true);
 
-    await optionsPage.reload({ waitUntil: 'domcontentloaded' });
+    optionsPage = await openOptionsPage(context, extensionId);
     await setText(optionsPage, 'fadeRatingThreshold', '3.0');
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
     await reloadNetflixAndWait(netflixPage, env);
