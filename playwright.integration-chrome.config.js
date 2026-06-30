@@ -13,7 +13,7 @@ export default defineConfig({
     expect: {
         timeout: env.timeoutMs,
     },
-    reporter: [['list'], ['html', { outputFolder: 'test-results/integration-chrome-report', open: 'never' }]],
+    reporter: [['list'], ['html', { outputFolder: 'playwright-report/integration-chrome', open: 'never' }]],
     use: {
         actionTimeout: env.timeoutMs,
         navigationTimeout: env.timeoutMs,

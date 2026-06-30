@@ -46,25 +46,63 @@ export async function selectNetflixProfileIfNeeded(page, profileName) {
 
 export async function discoverVisibleTitles(page, minimumCount = 2) {
     const titles = await page.evaluate(() => {
-        const candidateSelectors = [
-            '.title-card',
-            '[data-uia="title-card"]',
-            '[data-uia="search-gallery-video-card"]',
-            '[aria-label][role="link"]',
-            '[aria-label][role="button"]',
-        ];
-        const seen = new Set();
+        const surfaceSelectors = ['[data-uia="search-gallery-video-card"]', '[data-uia="title-card"]', '.title-card'];
+        const genericControlLabels = new Set([
+            'play',
+            'next',
+            'previous',
+            'back',
+            'more info',
+            'episodes',
+            'mute',
+            'unmute',
+            'add to my list',
+            'remove from my list',
+        ]);
+        const seenTitles = new Set();
+        const seenSurfaces = new WeakSet();
         const results = [];
-        for (const selector of candidateSelectors) {
-            for (const el of document.querySelectorAll(selector)) {
-                const rect = el.getBoundingClientRect();
+
+        function normalizeTitle(value) {
+            const title = value?.replace(/\s+/g, ' ').trim() ?? '';
+            if (!title) return '';
+            if (genericControlLabels.has(title.toLowerCase())) return '';
+            return title;
+        }
+
+        function getTitleFromSurface(surface) {
+            const directCandidates = [
+                surface.getAttribute('aria-label'),
+                surface.getAttribute('title'),
+                surface.querySelector('img[alt]')?.getAttribute('alt'),
+                surface.querySelector('[data-uia*="title" i]')?.getAttribute('aria-label'),
+                surface.querySelector('[data-uia*="title" i]')?.getAttribute('title'),
+                surface.querySelector('[data-uia*="title" i]')?.textContent,
+                surface.querySelector('[title]')?.getAttribute('title'),
+                surface.querySelector('h1, h2, h3, h4, p, span')?.textContent,
+            ];
+
+            for (const candidate of directCandidates) {
+                const title = normalizeTitle(candidate);
+                if (title) return title;
+            }
+
+            return '';
+        }
+
+        for (const selector of surfaceSelectors) {
+            for (const surface of document.querySelectorAll(selector)) {
+                if (seenSurfaces.has(surface)) continue;
+
+                const rect = surface.getBoundingClientRect();
                 if (rect.width < 40 || rect.height < 40) continue;
-                const aria = el.getAttribute('aria-label');
-                const imageAlt = el.querySelector('img[alt]')?.getAttribute('alt');
-                const title = (aria || imageAlt || '').trim();
-                if (!title || seen.has(title)) continue;
-                el.setAttribute('data-fm-integration-surface', String(results.length));
-                seen.add(title);
+
+                const title = getTitleFromSurface(surface);
+                if (!title || seenTitles.has(title)) continue;
+
+                surface.setAttribute('data-fm-integration-surface', String(results.length));
+                seenSurfaces.add(surface);
+                seenTitles.add(title);
                 results.push({
                     title,
                     surfaceSelector: `[data-fm-integration-surface="${results.length}"]`,

@@ -23,20 +23,45 @@ import { createStorageHelper } from './helpers/storage.js';
 
 export { expect };
 
-async function findExtensionServiceWorker(context, timeoutMs) {
-    let [worker] = context.serviceWorkers();
-    if (!worker) {
-        worker = await context.waitForEvent('serviceworker', { timeout: timeoutMs });
+function isFlixMonkeyExtensionWorker(worker) {
+    const url = worker.url();
+
+    if (!url.startsWith('chrome-extension://')) return false;
+
+    try {
+        return new URL(url).pathname.endsWith('/service-worker.js');
+    } catch {
+        return false;
     }
-    if (!worker.url().startsWith('chrome-extension://')) {
-        throw new Error(`Expected Chrome extension service worker, received ${worker.url()}`);
+}
+
+export async function findExtensionServiceWorker(context, timeoutMs) {
+    const existingWorker = context.serviceWorkers().find(isFlixMonkeyExtensionWorker);
+    if (existingWorker) return existingWorker;
+
+    const deadline = Date.now() + timeoutMs;
+    while (true) {
+        const remainingMs = deadline - Date.now();
+        if (remainingMs <= 0) {
+            const workerUrls = context.serviceWorkers().map(worker => worker.url());
+            throw new Error(
+                `Timed out waiting for FlixMonkey Chrome extension service worker. Workers seen: ${
+                    workerUrls.length > 0 ? workerUrls.join(', ') : '(none)'
+                }`
+            );
+        }
+
+        const worker = await context.waitForEvent('serviceworker', { timeout: remainingMs });
+        if (isFlixMonkeyExtensionWorker(worker)) {
+            return worker;
+        }
     }
-    return worker;
 }
 
 export const test = base.extend({
     env: [
-        async (_args, use) => {
+        async ({ browserName }, use) => {
+            void browserName;
             await use(loadChromeIntegrationEnv());
         },
         { scope: 'worker' },
@@ -76,17 +101,23 @@ export const test = base.extend({
     },
 
     netflixPage: async ({ context, env, storage: _storage }, use, testInfo) => {
-        const page = context.pages()[0] ?? (await context.newPage());
-        page.on('console', message => {
+        const page = await context.newPage();
+        const consoleListener = message => {
             if (message.type() === 'error') {
                 testInfo.attach(`console-error-${Date.now()}`, {
                     body: message.text(),
                     contentType: 'text/plain',
                 });
             }
-        });
-        await ensureNetflixBrowseReady(page, env);
-        await use(page);
+        };
+        page.on('console', consoleListener);
+        try {
+            await ensureNetflixBrowseReady(page, env);
+            await use(page);
+        } finally {
+            page.off('console', consoleListener);
+            await page.close();
+        }
     },
 
     optionsPage: async ({ context, extensionId }, use) => {

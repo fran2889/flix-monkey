@@ -48,7 +48,12 @@ export function createStorageHelper(serviceWorker) {
         const all = await getAll();
         const keysToRemove = Object.keys(all).filter(key => {
             if (API_KEY_FIELDS.has(key)) return false;
-            return CONFIG_FIELD_KEYS.has(key) || key.startsWith(CACHE_PREFIX) || key.startsWith(FADE_PREFIX);
+            return (
+                CONFIG_FIELD_KEYS.has(key) ||
+                key.startsWith(CACHE_PREFIX) ||
+                key.startsWith(FADE_PREFIX) ||
+                key.startsWith(DISABLED_PREFIX)
+            );
         });
         await remove(keysToRemove);
     }
