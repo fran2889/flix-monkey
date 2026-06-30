@@ -17,6 +17,7 @@
  */
 import { expect } from '@playwright/test';
 import { slugifyTitle } from './storage.js';
+import { SURFACE_DEFS } from '../../../src/core/surface-selectors.js';
 
 export const NETFLIX_BROWSE_URL = 'https://www.netflix.com/browse';
 
@@ -29,13 +30,7 @@ export async function ensureNetflixBrowseReady(page, env) {
         throw new Error('Netflix is not logged in for the configured Chrome profile');
     }
 
-    await expect(
-        page
-            .locator(
-                '.title-card, [data-uia="title-card"], [data-uia="search-gallery-video-card"], [data-uia="standard-card"]'
-            )
-            .first()
-    ).toBeVisible({
+    await expect(page.locator('.title-card, [data-uia="standard-card"]').first()).toBeVisible({
         timeout: env.timeoutMs,
     });
 }
@@ -49,75 +44,47 @@ export async function selectNetflixProfileIfNeeded(page, profileName) {
 }
 
 export async function discoverVisibleTitles(page, minimumCount = 2) {
-    const titles = await page.evaluate(() => {
-        const surfaceSelectors = [
-            '[data-uia="search-gallery-video-card"]',
-            '[data-uia="standard-card"]',
-            '[data-uia="title-card"]',
-            '.title-card',
-        ];
-        const genericControlLabels = new Set([
-            'play',
-            'next',
-            'previous',
-            'back',
-            'more info',
-            'episodes',
-            'mute',
-            'unmute',
-            'add to my list',
-            'remove from my list',
-        ]);
+    const titles = await page.evaluate(surfaceDefs => {
         const seenTitles = new Set();
-        const seenSurfaces = new WeakSet();
+        const seenContainers = new WeakSet();
         const results = [];
 
-        function normalizeTitle(value) {
-            const title = value?.replace(/\s+/g, ' ').trim() ?? '';
-            if (!title) return '';
-            if (genericControlLabels.has(title.toLowerCase())) return '';
-            return title;
-        }
-
-        function getTitleFromSurface(surface) {
-            const directCandidates = [
-                surface.getAttribute('aria-label'),
-                surface.getAttribute('title'),
-                surface.querySelector('img[alt]')?.getAttribute('alt'),
-                surface.querySelector('[data-uia*="title" i]')?.getAttribute('aria-label'),
-                surface.querySelector('[data-uia*="title" i]')?.getAttribute('title'),
-                surface.querySelector('[data-uia*="title" i]')?.textContent,
-                surface.querySelector('[title]')?.getAttribute('title'),
-                surface.querySelector('h1, h2, h3, h4, p, span')?.textContent,
-            ];
-
-            for (const candidate of directCandidates) {
-                const title = normalizeTitle(candidate);
-                if (title) return title;
+        // getTitle function based on selector type
+        const getTitle = (el, titleSelectors) => {
+            if (titleSelectors === '.title-card .fallback-text') {
+                return el.textContent?.trim() ?? null;
             }
+            if (titleSelectors === '[data-uia="standard-card"]') {
+                return el.getAttribute('aria-label')?.trim() ?? null;
+            }
+            return el.getAttribute('alt')?.trim() ?? null;
+        };
 
-            return '';
-        }
-
-        for (const selector of surfaceSelectors) {
-            for (const surface of document.querySelectorAll(selector)) {
-                if (seenSurfaces.has(surface)) continue;
-
-                const rect = surface.getBoundingClientRect();
-                if (rect.width < 40 || rect.height < 40) continue;
-
-                const title = getTitleFromSurface(surface);
-                if (!title || seenTitles.has(title)) continue;
-
-                seenSurfaces.add(surface);
+        surfaceDefs.forEach(surface => {
+            let titleEls;
+            try {
+                titleEls = document.querySelectorAll(surface.titleSelectors);
+            } catch {
+                return;
+            }
+            titleEls.forEach(titleEl => {
+                const title = getTitle(titleEl, surface.titleSelectors);
+                if (!title) return;
+                let container = titleEl.closest(surface.containerSel);
+                if (!container) {
+                    container = titleEl.parentElement;
+                }
+                if (!container || seenContainers.has(container)) return;
+                seenContainers.add(container);
+                if (seenTitles.has(title)) return;
                 seenTitles.add(title);
                 results.push({
                     title,
                 });
-            }
-        }
+            });
+        });
         return results;
-    });
+    }, SURFACE_DEFS);
 
     if (titles.length < minimumCount) {
         throw new Error(`Expected at least ${minimumCount} visible Netflix titles, found ${titles.length}`);
@@ -146,10 +113,7 @@ export async function openHoverSurfaceForTitle(page, seededTitle, env) {
  */
 export function findSurfaceByTitle(page, titleText) {
     // Create a locator that finds surfaces containing the title text
-    // This works regardless of reload since it uses Netflix's actual content
-    return page
-        .locator(
-            `[data-uia="search-gallery-video-card"], [data-uia="standard-card"], [data-uia="title-card"], .title-card`
-        )
-        .filter({ hasText: titleText });
+    // Uses the same container selectors as surfaces.js
+    // Use .first() to avoid strict mode violation when multiple elements match
+    return page.locator('.title-card, [data-uia="standard-card"]').filter({ hasText: titleText }).first();
 }
