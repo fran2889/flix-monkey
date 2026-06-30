@@ -23,6 +23,7 @@
         "test:unit": "vitest run tests/unit",
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run -c vitest.integration.config.js",
+        "test:integration-chrome": "playwright test -c playwright.integration-chrome.config.js",
         "audit": "npm audit --audit-level=high",
         "clean": "npx rimraf dist coverage"
     },
@@ -30,6 +31,7 @@
         "@commitlint/cli": "^21.0.2",
         "@commitlint/config-conventional": "^21.0.2",
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.61.1",
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.0",
         "@testing-library/dom": "^10.4.1",
