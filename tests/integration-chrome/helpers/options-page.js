@@ -38,9 +38,22 @@ export async function setSelect(page, key, value) {
 }
 
 export async function saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env) {
-    const reloadPromise = netflixPage
-        .waitForLoadState('domcontentloaded', { timeout: env.timeoutMs })
-        .catch(() => null);
+    const reloadMarker = `__fmReloadMarker_${Date.now()}_${Math.random().toString(36).slice(2)}__`;
+
+    await netflixPage.addInitScript(marker => {
+        window[marker] = 'new-document';
+    }, reloadMarker);
+    await netflixPage.evaluate(marker => {
+        window[marker] = 'before-save';
+    }, reloadMarker);
+
+    const reloadPromise = Promise.race([
+        netflixPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: env.timeoutMs }),
+        netflixPage.waitForFunction(marker => window[marker] === 'new-document', reloadMarker, {
+            timeout: env.timeoutMs,
+        }),
+    ]);
+
     await optionsPage.locator('#fm-saveBtn').click();
     await expect(optionsPage.locator('#fm-status')).toHaveText('Saved!');
     await reloadPromise;

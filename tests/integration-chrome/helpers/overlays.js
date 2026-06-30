@@ -30,9 +30,9 @@ export async function expectOverlayBadges(page, seededTitle, badges) {
     await expect(container).toBeVisible();
     await expect(container).toContainText(`IMDb ${seededTitle.rating.toFixed(1)}`);
     if (badges.rt) await expect(container).toContainText(`RT ${seededTitle.rtRating}%`);
-    else await expect(container).not.toContainText('RT ');
+    else await expect(container.locator('.fm-rt')).toHaveCount(0);
     if (badges.mc) await expect(container).toContainText(`MC ${seededTitle.mcRating}%`);
-    else await expect(container).not.toContainText('MC ');
+    else await expect(container.locator('.fm-mc')).toHaveCount(0);
 }
 
 export async function expectOverlayCorner(page, seededTitle, corner) {
