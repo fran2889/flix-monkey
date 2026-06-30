@@ -30,7 +30,11 @@ export async function ensureNetflixBrowseReady(page, env) {
     }
 
     await expect(
-        page.locator('.title-card, [data-uia="title-card"], [data-uia="search-gallery-video-card"]').first()
+        page
+            .locator(
+                '.title-card, [data-uia="title-card"], [data-uia="search-gallery-video-card"], [data-uia="standard-card"]'
+            )
+            .first()
     ).toBeVisible({
         timeout: env.timeoutMs,
     });
@@ -46,7 +50,12 @@ export async function selectNetflixProfileIfNeeded(page, profileName) {
 
 export async function discoverVisibleTitles(page, minimumCount = 2) {
     const titles = await page.evaluate(() => {
-        const surfaceSelectors = ['[data-uia="search-gallery-video-card"]', '[data-uia="title-card"]', '.title-card'];
+        const surfaceSelectors = [
+            '[data-uia="search-gallery-video-card"]',
+            '[data-uia="standard-card"]',
+            '[data-uia="title-card"]',
+            '.title-card',
+        ];
         const genericControlLabels = new Set([
             'play',
             'next',
@@ -139,6 +148,8 @@ export function findSurfaceByTitle(page, titleText) {
     // Create a locator that finds surfaces containing the title text
     // This works regardless of reload since it uses Netflix's actual content
     return page
-        .locator(`[data-uia="search-gallery-video-card"], [data-uia="title-card"], .title-card`)
+        .locator(
+            `[data-uia="search-gallery-video-card"], [data-uia="standard-card"], [data-uia="title-card"], .title-card`
+        )
         .filter({ hasText: titleText });
 }
