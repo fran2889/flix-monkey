@@ -127,3 +127,8 @@ export async function reloadNetflixAndWait(page, env) {
     await selectNetflixProfileIfNeeded(page, env.netflixProfileName);
     await expect(page.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
 }
+
+export async function openHoverSurfaceForTitle(page, seededTitle, env) {
+    await page.locator(seededTitle.surfaceSelector).hover();
+    await expect(page.locator('.fm-fade-toggle').first()).toBeVisible({ timeout: env.timeoutMs });
+}

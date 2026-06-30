@@ -149,6 +149,34 @@ npm run format
 2. Run `npm run build` to generate distribution artifacts in `dist/`.
 3. Load the `dist/` folder into your browser (Extensions) or point your manager to `dist/FlixMonkey.user.js` (Userscript).
 
+### Chrome Integration Tests
+
+`npm run test:integration-chrome` runs a local-only Playwright suite against the built Chrome extension and a live Netflix browser session. It is not part of `npm test` or regular CI.
+
+Before running it:
+
+1. Create a dedicated Chrome or Chromium profile for FlixMonkey integration testing.
+2. Log into Netflix in that profile.
+3. Populate `.env` with:
+
+    ```dotenv
+    CHROME_EXECUTABLE_PATH=/path/to/chrome-or-chromium
+    CHROME_USER_DATA_DIR=/path/to/flixmonkey-chrome-profile
+    CHROME_PROFILE_DIRECTORY=
+    NETFLIX_PROFILE_NAME=Your Netflix Profile
+    CHROME_INTEGRATION_HEADLESS=false
+    CHROME_INTEGRATION_KEEP_OPEN=false
+    CHROME_INTEGRATION_TIMEOUT_MS=30000
+    ```
+
+Run:
+
+```bash
+npm run test:integration-chrome
+```
+
+The suite builds `dist/chrome`, loads it as an unpacked extension, opens Netflix, selects `NETFLIX_PROFILE_NAME` if the Netflix profile chooser appears, seeds deterministic cache entries for visible titles, and verifies overlays and settings behavior. It preserves `omdbApiKey` and `xmdbApiKey`, and resets other options, `fmc:*` cache entries, and `fm-fade:*` overrides at the start and end of the run.
+
 ---
 
 ## Privacy Policy
