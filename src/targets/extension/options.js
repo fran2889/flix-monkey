@@ -33,6 +33,5 @@ const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManag
 ui.onSave = async () => {
     const tabs = await browser.tabs.query({ url: '*://*.netflix.com/*' });
     await Promise.all(tabs.map(tab => browser.tabs.reload(tab.id)));
-    window.close();
 };
 ui.render(document.body);

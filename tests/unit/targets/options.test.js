@@ -88,17 +88,12 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
-    it('should wire onSave to reload Netflix tabs and close the window', async () => {
-        const closeSpy = vi.spyOn(window, 'close').mockImplementation(() => {});
-
+    it('should wire onSave to reload Netflix tabs', async () => {
         expect(capturedInstance.onSave).toBeTypeOf('function');
         await capturedInstance.onSave();
 
         expect(tabsQuerySpy).toHaveBeenCalledWith({ url: '*://*.netflix.com/*' });
         expect(tabsReloadSpy).toHaveBeenCalledWith(1);
         expect(tabsReloadSpy).toHaveBeenCalledWith(42);
-        expect(closeSpy).toHaveBeenCalled();
-
-        closeSpy.mockRestore();
     });
 });
