@@ -55,6 +55,7 @@
     "engines": {
         "node": ">= 24"
     },
+    "sideEffects": false,
     "lint-staged": {
         "**/*.{js,cjs,ts,jsx,tsx}": [
             "prettier --write",

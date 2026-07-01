@@ -17,7 +17,8 @@
  */
 import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
-import { ApiSource, RATE_LIMITS, CLIENT_DISABLE_DURATION, TitleType } from './constants.js';
+import { ApiSource, CLIENT_DISABLE_DURATION, TitleType } from './constants.js';
+import { RATE_LIMITS } from './rate-limits.js';
 
 /**
  * @typedef {Object} ClientStatus
