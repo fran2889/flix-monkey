@@ -17,9 +17,8 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { ConfigManager } from '../../../src/core/config-manager.js';
 import { TOP_10_BADGE } from '../../../src/core/constants.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { createConfig } from '../../mocks/config.js';
 import { Title } from '../../../src/core/title.js';
 
 describe('OverlayRenderer', () => {
@@ -30,7 +29,7 @@ describe('OverlayRenderer', () => {
 
     describe('Style injection', () => {
         it('should inject styles into document head', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style).not.toBeNull();
@@ -38,7 +37,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should inject styles only once per instance', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             renderer.injectStyles();
             const styles = document.head.querySelectorAll('style');
@@ -47,14 +46,8 @@ describe('OverlayRenderer', () => {
         });
 
         it('should update the existing style tag when injectStyles is called again', () => {
-            const configLeft = new ConfigManager(
-                createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-left' : undefined) })
-            );
-            const configRight = new ConfigManager(
-                createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-right' : undefined) })
-            );
-            const rendererA = new OverlayRenderer(configLeft);
-            const rendererB = new OverlayRenderer(configRight);
+            const rendererA = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const rendererB = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
 
             rendererA.injectStyles();
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
@@ -66,10 +59,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should use bottom positioning for bottom-side corners', () => {
-            const config = new ConfigManager(
-                createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'bottom-right' : undefined) })
-            );
-            const renderer = new OverlayRenderer(config);
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'bottom-right' }));
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain('bottom:6px;right:6px;');
@@ -77,27 +67,21 @@ describe('OverlayRenderer', () => {
         });
 
         it('should use TOP_10_BADGE constant in injected CSS', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
         });
 
         it('should include TOP_10_BADGE offset rule for left-side corners', () => {
-            const config = new ConfigManager(
-                createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-left' : undefined) })
-            );
-            const renderer = new OverlayRenderer(config);
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
         });
 
         it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
-            const config = new ConfigManager(
-                createMockAdapter({ configGet: key => (key === 'overlayCorner' ? 'top-right' : undefined) })
-            );
-            const renderer = new OverlayRenderer(config);
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).not.toContain(`.${TOP_10_BADGE}`);
@@ -106,7 +90,7 @@ describe('OverlayRenderer', () => {
 
     describe('Overlay injection', () => {
         it('should render an IMDb badge for a zero rating', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ imdbId: 'tt1234567', rating: 0 });
@@ -118,16 +102,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render RT and MC badges for zero percent ratings', () => {
-            const config = new ConfigManager(
-                createMockAdapter({
-                    configGet: key => {
-                        if (key === 'showRtRating') return true;
-                        if (key === 'showMcRating') return true;
-                        return undefined;
-                    },
-                })
-            );
-            const renderer = new OverlayRenderer(config);
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ imdbId: 'tt1234567', rating: 5, rtRating: 0, mcRating: 0 });
@@ -138,17 +113,8 @@ describe('OverlayRenderer', () => {
             expect(percentBadges.length).toBe(2);
         });
 
-        it('should respect showRtRating and showMcRating config', () => {
-            const config = new ConfigManager(
-                createMockAdapter({
-                    configGet: key => {
-                        if (key === 'showRtRating') return false;
-                        if (key === 'showMcRating') return false;
-                        return undefined;
-                    },
-                })
-            );
-            const renderer = new OverlayRenderer(config);
+        it('should not render RT and MC badges when disabled by config', () => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: false, showMcRating: false }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, { rating: 7.0, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
 
@@ -158,8 +124,8 @@ describe('OverlayRenderer', () => {
             expect(overlay.textContent).not.toContain('MC');
         });
 
-        it('should display all three ratings when provided', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        it('should display all three ratings when provided and enabled', () => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, {
                 rating: 8.5,
@@ -181,7 +147,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should show the search icon when imdbId is missing', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, { rating: null, imdbId: null });
             expect(container.querySelector('.fm-search')).not.toBeNull();
@@ -189,7 +155,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should show N/A when imdbId is present but rating is missing', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, {
                 imdbId: 'tt1234567',
@@ -207,15 +173,17 @@ describe('OverlayRenderer', () => {
                 'normal ratings',
                 { rating: 8.2, rtRating: 85, imdbId: 'tt1' },
                 'IMDb: 8.2 · RT: 85% – click to open IMDb',
+                true,
             ],
             [
                 'no ratings but IMDb ID present',
                 { rating: null, imdbId: 'tt1' },
                 'No ratings available – click to open IMDb',
+                false,
             ],
-            ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search'],
-        ])('should build correct tooltip for %s', (_, titleObj, expectedTitle) => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search', false],
+        ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj);
             expect(container.querySelector('.fm-rating-overlay a').title).toBe(expectedTitle);
@@ -224,7 +192,7 @@ describe('OverlayRenderer', () => {
 
     describe('Loading overlay', () => {
         it('should inject loading overlay', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectLoadingOverlay(container, 'Test Movie');
             const loadingElement = container.querySelector('.fm-loading');
@@ -234,7 +202,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should replace loading overlay with ratings overlay', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectLoadingOverlay(container, 'Test Movie');
             renderer.injectOverlay(container, {
@@ -252,14 +220,14 @@ describe('OverlayRenderer', () => {
 
     describe('Fade', () => {
         it('should add fm-faded class when shouldFade is true', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.applyFade(container, true);
             expect(container.classList.contains('fm-faded')).toBe(true);
         });
 
         it('should remove fm-faded class when shouldFade is false', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.classList.add('fm-faded');
             renderer.applyFade(container, false);
@@ -268,32 +236,24 @@ describe('OverlayRenderer', () => {
     });
 
     describe('Fade toggle', () => {
-        function makeConfig(enableFadeToggle) {
-            return new ConfigManager(
-                createMockAdapter({
-                    configGet: key => (key === 'enableFadeToggle' ? enableFadeToggle : undefined),
-                })
-            );
-        }
-
         const titleObj = { rating: 7.0, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
 
         it('should not render toggle when onFadeToggleClick is absent', () => {
-            const renderer = new OverlayRenderer(makeConfig(true));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj);
             expect(container.querySelector('.fm-fade-toggle')).toBeNull();
         });
 
         it('should not render toggle when enableFadeToggle config is false', () => {
-            const renderer = new OverlayRenderer(makeConfig(false));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: false }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, null, vi.fn());
             expect(container.querySelector('.fm-fade-toggle')).toBeNull();
         });
 
         it('should render toggle with ⭐ and data-state="auto" for null state', () => {
-            const renderer = new OverlayRenderer(makeConfig(true));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, null, vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -306,7 +266,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render toggle with 👁️ and fm-fade-toggle--faded for "always" state', () => {
-            const renderer = new OverlayRenderer(makeConfig(true));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'always', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -318,7 +278,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should render toggle with 👁️ without fm-fade-toggle--faded for "never" state', () => {
-            const renderer = new OverlayRenderer(makeConfig(true));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, titleObj, 'never', vi.fn());
             const toggle = container.querySelector('.fm-fade-toggle');
@@ -330,7 +290,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should call onFadeToggleClick with the badge element on click', () => {
-            const renderer = new OverlayRenderer(makeConfig(true));
+            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const onClick = vi.fn();
@@ -341,7 +301,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should include fm-fade-toggle CSS scoped under fm-rating-overlay', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             const css = document.head.querySelector('#fm-overlay-styles').textContent;
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
@@ -353,7 +313,7 @@ describe('OverlayRenderer', () => {
 
     describe('Container positioning', () => {
         it('should ensure container has non-static position', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'static';
             renderer.ensureRelative(container);
@@ -361,7 +321,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should not change position if already non-static', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'absolute';
             renderer.ensureRelative(container);
@@ -370,8 +330,8 @@ describe('OverlayRenderer', () => {
     });
 
     describe('Pointer events and click propagation', () => {
-        it('should set correct pointer-events for overlay elements', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        it('should enable pointer events on rating badges when RT is enabled', () => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: true }));
             const container = document.createElement('div');
             renderer.injectStyles();
             renderer.injectOverlay(container, { rating: 8.0, rtRating: 90, imdbUrl: 'http://imdb.com' });
@@ -384,7 +344,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should stop propagation on IMDb link click', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             renderer.injectOverlay(container, { imdbUrl: 'http://imdb.com' });
 
@@ -395,8 +355,8 @@ describe('OverlayRenderer', () => {
             expect(spy).toHaveBeenCalled();
         });
 
-        it('should stop propagation on MC and RT rating clicks', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        it('should stop propagation on MC and RT rating clicks when enabled', () => {
+            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
             const container = document.createElement('div');
             renderer.injectOverlay(container, {
                 rating: 8.5,
@@ -420,7 +380,7 @@ describe('OverlayRenderer', () => {
 
     describe('Clear overlays', () => {
         it('should remove all overlay elements from the document', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             document.body.innerHTML =
                 '<div class="fm-rating-overlay"></div>' +
                 '<div class="fm-rating-overlay"></div>' +
@@ -431,7 +391,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('should remove data-fm-injected attribute from parent when clearing overlays', () => {
-            const renderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+            const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
             const title = new Title({ apiTitle: 'Test', rating: 7.5 });
