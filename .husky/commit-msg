@@ -1,1 +1,22 @@
+#!/usr/bin/env sh
+
+# Discover global hooks path from git config
+GLOBAL_HOOKS_PATH=$(git config --global --get core.hooksPath 2>/dev/null || echo "")
+
+# If a global hooks path is configured, try to run the global commit-msg hook
+if [ -n "$GLOBAL_HOOKS_PATH" -a -x "$GLOBAL_HOOKS_PATH/commit-msg" ]; then
+  "$GLOBAL_HOOKS_PATH/commit-msg" "$@"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+fi
+
+# Additional check: reject commit messages containing Co-Authored-By: footer
+COMMIT_MSG_FILE="$1"
+if [ -f "$COMMIT_MSG_FILE" ] && grep -q "^Co-Authored-By:" "$COMMIT_MSG_FILE" 2>/dev/null; then
+  echo "Error: Commit message contains Co-Authored-By: footer. Please remove it." >&2
+  exit 1
+fi
+
+# Run project-specific hook
 npx --no -- commitlint --edit "$1"
