@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/fran2889/flix-monkey/compare/v1.2.0...v1.2.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* **build,options:** eliminate dead code and fix webextension options close ([#88](https://github.com/fran2889/flix-monkey/issues/88)) ([174a953](https://github.com/fran2889/flix-monkey/commit/174a953830668b32c957a1b4176bf152cc5bfd33))
+
 ## [1.2.0](https://github.com/fran2889/flix-monkey/compare/v1.1.1...v1.2.0) (2026-07-01)
 
 
