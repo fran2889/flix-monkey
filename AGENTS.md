@@ -308,11 +308,11 @@ type(scope)?: description
 
 ### PR Descriptions
 
-Skip sections that don't apply:
+Use imperative mood. Skip sections that don't apply:
 
 ```
 ## Summary
-- <What changed and why, 1–3 bullets>
+- <What this PR does, 1–3 bullets>
 
 ## Test Plan
 - <How to verify: test commands, manual steps, or "covered by existing tests">
