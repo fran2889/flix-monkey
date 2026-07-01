@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.2.0](https://github.com/fran2889/flix-monkey/compare/v1.1.1...v1.2.0) (2026-07-01)
+
+
+### Features
+
+* add Agregarr as default ratings provider ([#35](https://github.com/fran2889/flix-monkey/issues/35)) ([d1f9b68](https://github.com/fran2889/flix-monkey/commit/d1f9b688196f75a3354540fbfc380b5da9d8d340))
+* clean up error flow and add structured error logging ([#42](https://github.com/fran2889/flix-monkey/issues/42)) ([23683e8](https://github.com/fran2889/flix-monkey/commit/23683e8c97e713b3bb3cbb20d7d546ae03135820))
+* **config:** enable debug logging by default ([#37](https://github.com/fran2889/flix-monkey/issues/37)) ([bd81fce](https://github.com/fran2889/flix-monkey/commit/bd81fce212b6a1f1408c98e235e03562ff91afdd))
+* **config:** reduce default overlay clutter ([#85](https://github.com/fran2889/flix-monkey/issues/85)) ([9c4c0eb](https://github.com/fran2889/flix-monkey/commit/9c4c0eb3d6aa4cd38ef297d8b42d1b9638333e57))
+* **overlay:** add per-title fade toggle to mini preview ([#73](https://github.com/fran2889/flix-monkey/issues/73)) ([e6ba2ce](https://github.com/fran2889/flix-monkey/commit/e6ba2ce09b84bed459b92767dd9f1f3fa6d6a538))
+
+
+### Bug Fixes
+
+* **api-clients:** guard against disable() between search and getDetails ([#55](https://github.com/fran2889/flix-monkey/issues/55)) ([455f492](https://github.com/fran2889/flix-monkey/commit/455f492eb4d95e078b8050e2c78b007832965e6a))
+* **api-clients:** guard null element in parseRatings ([#47](https://github.com/fran2889/flix-monkey/issues/47)) ([a206ae8](https://github.com/fran2889/flix-monkey/commit/a206ae8658dadd824413d34f3070df3339c420c9))
+* **api-clients:** remove redundant isDisabled check from fetch ([#54](https://github.com/fran2889/flix-monkey/issues/54)) ([0d44bcb](https://github.com/fran2889/flix-monkey/commit/0d44bcb2663d0567b51f5e4553225d5ee69f1497))
+* **app:** guard document.contains before overlay injection ([#48](https://github.com/fran2889/flix-monkey/issues/48)) ([16f041d](https://github.com/fran2889/flix-monkey/commit/16f041dd1ca10614db22e9398cfbd8320d0b8bb8))
+* **cache:** extract slugify helper and align deduplication key with cache key ([#44](https://github.com/fran2889/flix-monkey/issues/44)) ([ae05da7](https://github.com/fran2889/flix-monkey/commit/ae05da7ae724a635c87848795cfa6646ecfb22ea))
+* **config:** enforce config defaults, normalize boolean reads, guard unknown keys ([#52](https://github.com/fran2889/flix-monkey/issues/52)) ([688d9bb](https://github.com/fran2889/flix-monkey/commit/688d9bba4b7e6cc9658026f53f5c45e15ae30910))
+* **config:** guarantee numeric return from getInt and getFloat ([#45](https://github.com/fran2889/flix-monkey/issues/45)) ([b60bd8f](https://github.com/fran2889/flix-monkey/commit/b60bd8f69c1544f59d7702fb51106de69d3d3440))
+* **css:** fix CSS issues across overlay and settings UI ([#83](https://github.com/fran2889/flix-monkey/issues/83)) ([c2e0157](https://github.com/fran2889/flix-monkey/commit/c2e0157950aff78d4b0fff51b13e0d6e01e01606))
+* **logger:** normalize debug flag to handle string "true" from userscript host ([#49](https://github.com/fran2889/flix-monkey/issues/49)) ([1efba98](https://github.com/fran2889/flix-monkey/commit/1efba988afcf06e5f2ea1e691455821e6433f1c9))
+* **modal:** defer DOM attachment from constructor to open() ([#64](https://github.com/fran2889/flix-monkey/issues/64)) ([b2f9228](https://github.com/fran2889/flix-monkey/commit/b2f9228c026348ba7931c9e16c5fe596cd399eea))
+* **overlay:** unified visual-settings redecoration ([#53](https://github.com/fran2889/flix-monkey/issues/53)) ([a25a80a](https://github.com/fran2889/flix-monkey/commit/a25a80ac3495037f9afc488062b59133dfd30cca))
+* **overlay:** use != null checks to preserve zero ratings ([#46](https://github.com/fran2889/flix-monkey/issues/46)) ([1ff2243](https://github.com/fran2889/flix-monkey/commit/1ff2243e469d05b0ced64321a86d8db72933cea3))
+* **platform:** align storageGet contract to return null for missing keys ([#56](https://github.com/fran2889/flix-monkey/issues/56)) ([7734951](https://github.com/fran2889/flix-monkey/commit/7734951740484ad1a6946c378f8158f66d7c51ab))
+* **request-queue:** re-read storage before claiming timeslot on no-wait path ([#43](https://github.com/fran2889/flix-monkey/issues/43)) ([d8f7359](https://github.com/fran2889/flix-monkey/commit/d8f735920dad6842ca51b55040334f06da82e003))
+* **settings-ui:** show error feedback when clearCache or resetClients fails ([#63](https://github.com/fran2889/flix-monkey/issues/63)) ([67a7a4c](https://github.com/fran2889/flix-monkey/commit/67a7a4cda4428e9231dff97502df0828bf4e3eea))
+* **utils:** guard window existence in runIdle ([#60](https://github.com/fran2889/flix-monkey/issues/60)) ([88bfb74](https://github.com/fran2889/flix-monkey/commit/88bfb74c4272b68da3629c3b84fb8f76c6588acb))
+* **webextension:** clear httpFetch timeout after race settles ([#61](https://github.com/fran2889/flix-monkey/issues/61)) ([6e17224](https://github.com/fran2889/flix-monkey/commit/6e172244b65918e8efc3fae4ceecd47056450a73))
+
 ## [1.1.1](https://github.com/fran2889/flix-monkey/compare/v1.1.0...v1.1.1) (2026-06-22)
 
 
