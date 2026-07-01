@@ -1,1 +1,15 @@
+#!/usr/bin/env sh
+
+# Discover global hooks path from git config
+GLOBAL_HOOKS_PATH=$(git config --global --get core.hooksPath 2>/dev/null || echo "")
+
+# If a global hooks path is configured, try to run the global commit-msg hook
+if [ -n "$GLOBAL_HOOKS_PATH" -a -x "$GLOBAL_HOOKS_PATH/commit-msg" ]; then
+  "$GLOBAL_HOOKS_PATH/commit-msg" "$@"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+fi
+
+# Run project-specific hook
 npx --no -- commitlint --edit "$1"

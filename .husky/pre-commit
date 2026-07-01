@@ -1,1 +1,15 @@
+#!/usr/bin/env sh
+
+# Discover global hooks path from git config
+GLOBAL_HOOKS_PATH=$(git config --global --get core.hooksPath 2>/dev/null || echo "")
+
+# If a global hooks path is configured, try to run the global pre-commit hook
+if [ -n "$GLOBAL_HOOKS_PATH" -a -x "$GLOBAL_HOOKS_PATH/pre-commit" ]; then
+  "$GLOBAL_HOOKS_PATH/pre-commit" "$@"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+fi
+
+# Run project-specific hook
 npx lint-staged
