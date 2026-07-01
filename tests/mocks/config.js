@@ -50,7 +50,7 @@ export function createConfigWithAllOptionsDisabled() {
 }
 
 /**
- * Creates a ConfigManager with a default fallback and specific overrides.
+ * Creates a ConfigManager with default values and optional overrides.
  * For keys not in overrides, returns CONFIG_DEFAULTS value.
  *
  * @param {Object} overrides - Object with key-value pairs to override defaults
@@ -59,17 +59,9 @@ export function createConfigWithAllOptionsDisabled() {
 export function createConfig(overrides = {}) {
     return new ConfigManager(
         createMockAdapter({
-            configGet: key => (key in overrides ? overrides[key] : undefined),
+            configGet: key => (key in overrides ? overrides[key] : CONFIG_DEFAULTS[key]),
         })
     );
-}
-
-/**
- * Creates a ConfigManager that strictly uses CONFIG_DEFAULTS for all values.
- * Useful for tests that explicitly want to verify default behavior.
- */
-export function createConfigWithDefaults() {
-    return new ConfigManager(createMockAdapter());
 }
 
 export { CONFIG_DEFAULTS, CONFIG_FIELDS };
