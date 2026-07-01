@@ -17,7 +17,7 @@
  */
 import { expect } from '@playwright/test';
 import { slugifyTitle } from './storage.js';
-import { SURFACE_DEFS } from '../../../src/core/surface-selectors.js';
+import { SURFACE_DEFS } from '../../../src/core/surfaces.js';
 
 export const NETFLIX_BROWSE_URL = 'https://www.netflix.com/browse';
 
@@ -49,15 +49,9 @@ export async function discoverVisibleTitles(page, minimumCount = 2) {
         const seenContainers = new WeakSet();
         const results = [];
 
-        // getTitle function based on selector type
-        const getTitle = (el, titleSelectors) => {
-            if (titleSelectors === '.title-card .fallback-text') {
-                return el.textContent?.trim() ?? null;
-            }
-            if (titleSelectors === '[data-uia="standard-card"]') {
-                return el.getAttribute('aria-label')?.trim() ?? null;
-            }
-            return el.getAttribute('alt')?.trim() ?? null;
+        // getTitle function using titleAttribute from surface definitions
+        const getTitle = (el, surface) => {
+            return el.getAttribute(surface.titleAttribute)?.trim() ?? null;
         };
 
         surfaceDefs.forEach(surface => {
@@ -68,7 +62,7 @@ export async function discoverVisibleTitles(page, minimumCount = 2) {
                 return;
             }
             titleEls.forEach(titleEl => {
-                const title = getTitle(titleEl, surface.titleSelectors);
+                const title = getTitle(titleEl, surface);
                 if (!title) return;
                 let container = titleEl.closest(surface.containerSel);
                 if (!container) {
