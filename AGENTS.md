@@ -315,11 +315,15 @@ Use imperative mood. Skip sections that don't apply:
 - <What this PR does, 1–3 bullets>
 
 ## Test Plan
-- <How to verify: test commands, manual steps, or "covered by existing tests">
+- [x] <Automated: e.g., 335 unit tests pass, 5 integration tests pass, all targets build>
+- [ ] <Manual: e.g., load extension, verify feature X is default, ratings appear on browse pages>
+- [ ] <Manual: e.g., verify non-ASCII titles resolve correctly>
 
 ## Breaking Changes
 - <Only if applicable: describe what breaks and migration steps>
 ```
+
+**Test Plan rules**: use `[x]` for automated tests that have passed and `[ ]` for manual verification steps requiring human testing.
 
 ### Pre-submission Checklist
 
