@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { test, expect } from './fixtures.js';
-import { discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
+import { CONTAINER_SELECTOR, discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
 import { setCheckbox, saveOptionsAndWaitForNetflixReload } from './helpers/options-page.js';
 import { expectOverlayBadges } from './helpers/overlays.js';
 
@@ -29,7 +29,7 @@ const NETFLIX_SEARCH_URL = 'https://www.netflix.com/search?q=breaking';
 
 async function navigateToSearch(page, env) {
     await page.goto(NETFLIX_SEARCH_URL, { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('[data-uia="standard-card"]').first()).toBeVisible({
+    await expect(page.locator(CONTAINER_SELECTOR).first()).toBeVisible({
         timeout: env.timeoutMs,
     });
 }

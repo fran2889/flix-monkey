@@ -19,6 +19,12 @@ import { expect } from '@playwright/test';
 import { slugifyTitle } from './storage.js';
 import { SURFACE_DEFS } from '../../../src/core/surfaces.js';
 
+/**
+ * Combined container selector built from all surface definitions.
+ * Used to locate Netflix title elements in the DOM.
+ */
+export const CONTAINER_SELECTOR = [...new Set(SURFACE_DEFS.map(s => s.containerSelector))].join(', ');
+
 export const NETFLIX_BROWSE_URL = 'https://www.netflix.com/browse';
 
 export async function ensureNetflixBrowseReady(page, env) {
@@ -30,7 +36,7 @@ export async function ensureNetflixBrowseReady(page, env) {
         throw new Error('Netflix is not logged in for the configured Chrome profile');
     }
 
-    await expect(page.locator('.title-card, [data-uia="standard-card"]').first()).toBeVisible({
+    await expect(page.locator(CONTAINER_SELECTOR).first()).toBeVisible({
         timeout: env.timeoutMs,
     });
 }
@@ -57,14 +63,14 @@ export async function discoverVisibleTitles(page, minimumCount = 2) {
         surfaceDefs.forEach(surface => {
             let titleEls;
             try {
-                titleEls = document.querySelectorAll(surface.titleSelectors);
+                titleEls = document.querySelectorAll(surface.titleSelector);
             } catch {
                 return;
             }
             titleEls.forEach(titleEl => {
                 const title = getTitle(titleEl, surface);
                 if (!title) return;
-                let container = titleEl.closest(surface.containerSel);
+                let container = titleEl.closest(surface.containerSelector);
                 if (!container) {
                     container = titleEl.parentElement;
                 }
@@ -104,10 +110,11 @@ export async function openHoverSurfaceForTitle(page, seededTitle, env) {
 
 /**
  * Finds a surface element by its title text.
+ * Uses the combined container selector from all surface definitions.
  */
 export function findSurfaceByTitle(page, titleText) {
     // Create a locator that finds surfaces containing the title text
     // Uses the same container selectors as surfaces.js
     // Use .first() to avoid strict mode violation when multiple elements match
-    return page.locator('.title-card, [data-uia="standard-card"]').filter({ hasText: titleText }).first();
+    return page.locator(CONTAINER_SELECTOR).filter({ hasText: titleText }).first();
 }
