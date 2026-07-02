@@ -41,12 +41,11 @@ describe('SurfaceManager', () => {
     });
 
     it('should skip element with empty title', () => {
-        expect(discover('<div class="title-card"><div class="fallback-text">   </div></div>')).toHaveLength(0);
+        expect(discover('<div class="title-card"><a aria-label="   "></a></div>')).toHaveLength(0);
     });
 
     it('should skip element with null title', () => {
         const mockEl = {
-            textContent: null,
             closest: () => document.body,
             parentElement: document.body,
             getAttribute: () => null,
@@ -58,8 +57,8 @@ describe('SurfaceManager', () => {
     it('should deduplicate when multiple title elements share the same container', () => {
         const results = discover(`
             <div class="title-card">
-                <div class="fallback-text">First</div>
-                <div class="fallback-text">Second</div>
+                <a aria-label="First"></a>
+                <a aria-label="Second"></a>
             </div>
         `);
         expect(results).toHaveLength(1);
@@ -72,10 +71,9 @@ describe('SurfaceManager', () => {
         const fakeParent = document.createElement('div');
         fakeParent.className = 'orphan-parent';
         const mockTitleEl = {
-            textContent: 'Orphan',
             closest: () => null,
             parentElement: fakeParent,
-            getAttribute: () => null,
+            getAttribute: () => 'Orphan',
         };
         const results = sm.discover({ querySelectorAll: () => [mockTitleEl] });
         expect(results).toHaveLength(1);
@@ -99,7 +97,7 @@ describe('SurfaceManager', () => {
 
     it('should set showFadeToggle to false for title-card surfaces', () => {
         const results = discover(`
-            <div class="title-card"><div class="fallback-text">Movie</div></div>
+            <div class="title-card"><a aria-label="Movie"></a></div>
         `);
         expect(results[0].showFadeToggle).toBe(false);
     });
