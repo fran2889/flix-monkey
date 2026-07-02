@@ -66,7 +66,7 @@ describe('App', () => {
     it('should discover titles in JSDOM', () => {
         document.body.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">Movie Title</div>
+            <a aria-label="Movie Title"></a>
         </div>
     `;
         const surfaces = new SurfaceManager(createMockLogger());
@@ -81,8 +81,8 @@ describe('App', () => {
         // Initialize DOM with multiple containers sharing the same title
         document.body.innerHTML = `
         <div id="container">
-            <div class="title-card" id="card1"><div class="fallback-text">Shared Title</div></div>
-            <div class="title-card" id="card2"><div class="fallback-text">Shared Title</div></div>
+            <div class="title-card" id="card1"><a aria-label="Shared Title"></a></div>
+            <div class="title-card" id="card2"><a aria-label="Shared Title"></a></div>
         </div>
     `;
 
@@ -111,7 +111,7 @@ describe('App', () => {
 
         document.body.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">Test</div>
+            <a aria-label="Test"></a>
         </div>
     `;
         const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({ apiTitle: 'Test' });
@@ -123,7 +123,7 @@ describe('App', () => {
         // Change DOM to ensure a new card is discovered upon navigation
         document.body.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">New Test</div>
+            <a aria-label="New Test"></a>
         </div>
     `;
 
@@ -155,7 +155,7 @@ describe('App', () => {
         const container = document.createElement('div');
         container.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">New Movie</div>
+            <a aria-label="New Movie"></a>
         </div>
     `;
         document.body.appendChild(container);
@@ -179,7 +179,7 @@ describe('App', () => {
 
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Original Title</div>
+                <a aria-label="Original Title"></a>
             </div>
         `;
 
@@ -192,7 +192,7 @@ describe('App', () => {
         // Simulate replacement of container
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Original Title</div>
+                <a aria-label="Original Title"></a>
             </div>
         `;
 
@@ -215,7 +215,7 @@ describe('App', () => {
 
         document.body.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">Test Title</div>
+            <a aria-label="Test Title"></a>
         </div>
     `;
 
@@ -251,7 +251,7 @@ describe('App', () => {
 
         document.body.innerHTML = `
         <div class="title-card">
-            <div class="fallback-text">Failing Title</div>
+            <a aria-label="Failing Title"></a>
         </div>
     `;
 
@@ -283,7 +283,7 @@ describe('App', () => {
         // Add a NEW title card so it's not skipped by the "already has overlay" check
         document.body.innerHTML += `
             <div class="title-card" id="new-card">
-                <div class="fallback-text">New Title</div>
+                <a aria-label="New Title"></a>
             </div>
         `;
 
@@ -346,7 +346,7 @@ describe('App', () => {
     it('should log errors thrown by decorateContainer rather than propagating them', async () => {
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Boom Movie</div>
+                <a aria-label="Boom Movie"></a>
             </div>
         `;
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -370,7 +370,7 @@ describe('App', () => {
     it('should remove inFlight entry and log error if API call hangs past timeout', async () => {
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Hanging Film</div>
+                <a aria-label="Hanging Film"></a>
             </div>
         `;
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -422,8 +422,8 @@ describe('App', () => {
         const mockAdapter = createMockAdapter();
         document.body.innerHTML = `
             <div id="container">
-                <div class="title-card" id="card1"><div class="fallback-text">Test: Movie</div></div>
-                <div class="title-card" id="card2"><div class="fallback-text">Test Movie</div></div>
+                <div class="title-card" id="card1"><a aria-label="Test: Movie"></a></div>
+                <div class="title-card" id="card2"><a aria-label="Test Movie"></a></div>
             </div>
         `;
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue({
@@ -468,7 +468,7 @@ describe('App', () => {
     it('should not inject overlay when container is removed from DOM before data resolves', async () => {
         const container = document.createElement('div');
         container.className = 'title-card';
-        container.innerHTML = '<div class="fallback-text">Detach Test</div>';
+        container.innerHTML = '<a aria-label="Detach Test"></a>';
         document.body.appendChild(container);
 
         let resolveData;
@@ -502,7 +502,7 @@ describe('App', () => {
     it('should stamp data-fm-key on fadeable card containers after decoration', async () => {
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Stamped Movie</div>
+                <a aria-label="Stamped Movie"></a>
             </div>
         `;
         const spy = vi
@@ -574,7 +574,7 @@ describe('App', () => {
     it('should apply stored "always" fade override to browse title cards on reload', async () => {
         document.body.innerHTML = `
             <div class="title-card">
-                <div class="fallback-text">Reload Movie</div>
+                <a aria-label="Reload Movie"></a>
             </div>
         `;
         const storageGet = vi
@@ -602,7 +602,7 @@ describe('App', () => {
 
     it('should cycle fade toggle state on click and update sibling cards', async () => {
         document.body.innerHTML = `
-            <div class="title-card" id="card1"><div class="fallback-text">Cycle Movie</div></div>
+            <div class="title-card" id="card1"><a aria-label="Cycle Movie"></a></div>
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
                     <img alt="Cycle Movie">
