@@ -103,7 +103,7 @@ export async function reloadNetflixAndWait(page, env) {
 }
 
 export async function openHoverSurfaceForTitle(page, seededTitle, env) {
-    const surface = findSurfaceByTitle(page, seededTitle.title);
+    const surface = findSurfaceBySlug(page, seededTitle.slug);
     await surface.hover();
     await expect(page.locator('.fm-fade-toggle').first()).toBeVisible({ timeout: env.timeoutMs });
 }
@@ -111,10 +111,22 @@ export async function openHoverSurfaceForTitle(page, seededTitle, env) {
 /**
  * Finds a surface element by its title text.
  * Uses the combined container selector from all surface definitions.
+ * Note: This searches by text content. For more reliable matching, use findSurfaceBySlug.
  */
 export function findSurfaceByTitle(page, titleText) {
     // Create a locator that finds surfaces containing the title text
     // Uses the same container selectors as surfaces.js
     // Use .first() to avoid strict mode violation when multiple elements match
     return page.locator(CONTAINER_SELECTOR).filter({ hasText: titleText }).first();
+}
+
+/**
+ * Finds a surface element by its slug.
+ * Uses the data-fm-key attribute that FlixMonkey adds to containers.
+ * This is more reliable than findSurfaceByTitle as it uses exact attribute matching.
+ */
+export function findSurfaceBySlug(page, slug) {
+    // Use the data-fm-key attribute that FlixMonkey sets on containers
+    // Use .first() to avoid strict mode violation when multiple elements match
+    return page.locator(`${CONTAINER_SELECTOR}[data-fm-key="${slug}"]`).first();
 }

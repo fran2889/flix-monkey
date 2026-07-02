@@ -16,10 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { expect } from '@playwright/test';
-import { findSurfaceByTitle } from './netflix.js';
+import { findSurfaceBySlug } from './netflix.js';
 
 function surface(page, seededTitle) {
-    return findSurfaceByTitle(page, seededTitle.title);
+    return findSurfaceBySlug(page, seededTitle.slug);
 }
 
 function overlay(page, seededTitle) {
