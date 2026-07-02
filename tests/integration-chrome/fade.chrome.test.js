@@ -61,7 +61,7 @@ test('fade override updates immediately and persists after reload', async ({
     await reloadNetflixAndWait(netflixPage, env);
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
-    const toggle = findFadeToggle(netflixPage, seeded);
+    const toggle = findFadeToggle(netflixPage);
     await expect(toggle).toHaveAttribute('data-state', 'auto');
 
     await toggle.click();
@@ -71,14 +71,14 @@ test('fade override updates immediately and persists after reload', async ({
     await expectFaded(netflixPage, seeded, true);
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
-    await findFadeToggle(netflixPage, seeded).click();
+    await findFadeToggle(netflixPage).click();
     await expectFaded(netflixPage, seeded, false);
     await expect.poll(async () => (await storage.getAll())[`fm-fade:${seeded.slug}`]).toBe('never');
     await reloadNetflixAndWait(netflixPage, env);
     await expectFaded(netflixPage, seeded, false);
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
-    await findFadeToggle(netflixPage, seeded).click();
+    await findFadeToggle(netflixPage).click();
     await expect.poll(async () => (await storage.getAll())[`fm-fade:${seeded.slug}`]).toBeUndefined();
     await expectFaded(netflixPage, seeded, false);
     await reloadNetflixAndWait(netflixPage, env);

@@ -52,6 +52,6 @@ export async function expectFaded(page, seededTitle, expected) {
     await expect(surface(page, seededTitle)).toHaveClass(expected ? /fm-faded/ : /^(?!.*fm-faded).*$/);
 }
 
-export function findFadeToggle(page, seededTitle) {
-    return overlay(page, seededTitle).locator('.fm-fade-toggle');
+export function findFadeToggle(page) {
+    return page.locator('.fm-fade-toggle').first();
 }
