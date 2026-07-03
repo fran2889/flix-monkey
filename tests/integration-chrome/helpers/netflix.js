@@ -111,8 +111,18 @@ export async function openHoverSurfaceForTitle(page, seededTitle, env) {
     }
     // Hover with force: true to ensure event is dispatched
     await surface.hover({ force: true });
-    // Wait for fade toggle to appear in mini-modal
-    await expect(page.locator('.fm-fade-toggle').first()).toBeVisible({ timeout: env.timeoutMs });
+    // Wait for the mini-modal to appear and be decorated by FlixMonkey
+    // Note: mini-modal doesn't have data-fm-key, so we wait for any mini-modal with overlay
+    await expect(
+        page
+            .locator('.previewModal--wrapper.mini-modal .previewModal--player_container')
+            .filter({ has: page.locator('.fm-rating-overlay') })
+            .first()
+    ).toBeVisible({ timeout: env.timeoutMs });
+    // Then wait for fade toggle to appear in mini-modal
+    await expect(
+        page.locator('.previewModal--wrapper.mini-modal .previewModal--player_container .fm-fade-toggle').first()
+    ).toBeVisible({ timeout: env.timeoutMs });
 }
 
 /**

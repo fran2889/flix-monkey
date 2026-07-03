@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { test } from './fixtures.js';
-import { discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
+import { test, expect } from './fixtures.js';
+import { discoverVisibleTitles } from './helpers/netflix.js';
 import { setCheckbox, setSelect, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectOverlayBadges, expectOverlayCorner } from './helpers/overlays.js';
 import { DEFAULT_RATINGS } from './helpers/test-data.js';
@@ -35,7 +35,7 @@ test('shows IMDb, RT, and MC according to options UI visibility settings', async
     await setCheckbox(optionsPage, 'showRtRating', true);
     await setCheckbox(optionsPage, 'showMcRating', true);
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
 
     await expectOverlayBadges(netflixPage, seeded[0], { rt: true, mc: true });
 
@@ -43,7 +43,7 @@ test('shows IMDb, RT, and MC according to options UI visibility settings', async
     await setCheckbox(optionsPage, 'showRtRating', false);
     await setCheckbox(optionsPage, 'showMcRating', false);
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
 
     await expectOverlayBadges(netflixPage, seeded[0], { rt: false, mc: false });
 });
@@ -59,7 +59,7 @@ test('moves the overlay when overlayCorner is changed through options UI', async
 
     await setSelect(optionsPage, 'overlayCorner', 'bottom-right');
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
 
     await expectOverlayCorner(netflixPage, seeded, 'bottom-right');
 });

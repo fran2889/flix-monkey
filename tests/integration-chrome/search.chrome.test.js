@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { test, expect } from './fixtures.js';
-import { CONTAINER_SELECTOR, discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
+import { CONTAINER_SELECTOR, discoverVisibleTitles } from './helpers/netflix.js';
 import { setCheckbox, saveOptionsAndWaitForNetflixReload } from './helpers/options-page.js';
 import { expectOverlayBadges } from './helpers/overlays.js';
 import { DEFAULT_RATINGS, NETFLIX_SEARCH_URL } from './helpers/test-data.js';
@@ -39,7 +39,15 @@ test('discovers and renders ratings on search page elements', async ({ env, stor
     await setCheckbox(optionsPage, 'showRtRating', true);
     await setCheckbox(optionsPage, 'showMcRating', true);
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await navigateToSearch(netflixPage, env);
+
+    // Wait for the seeded titles to have overlays
+    await expect(netflixPage.locator(`[data-fm-key="${seeded[0].slug}"] .fm-rating-overlay`)).toBeVisible({
+        timeout: env.timeoutMs,
+    });
+    await expect(netflixPage.locator(`[data-fm-key="${seeded[1].slug}"] .fm-rating-overlay`)).toBeVisible({
+        timeout: env.timeoutMs,
+    });
 
     await expectOverlayBadges(netflixPage, seeded[0], { rt: true, mc: true });
     await expectOverlayBadges(netflixPage, seeded[1], { rt: true, mc: true });

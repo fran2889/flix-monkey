@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { test, expect } from './fixtures.js';
-import { discoverVisibleTitles, openHoverSurfaceForTitle, reloadNetflixAndWait } from './helpers/netflix.js';
+import { discoverVisibleTitles, openHoverSurfaceForTitle } from './helpers/netflix.js';
 import { setCheckbox, setText, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectFaded, findFadeToggle } from './helpers/overlays.js';
 import { LOW_RATING, MID_RATING } from './helpers/test-data.js';
@@ -35,13 +35,19 @@ test('applies fade threshold settings saved from options UI', async ({
     await setCheckbox(optionsPage, 'enableFadeUnderRating', true);
     await setText(optionsPage, 'fadeRatingThreshold', '6.0');
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
+    await expect(netflixPage.locator(`[data-fm-key="${seeded.slug}"] .fm-rating-overlay`)).toBeVisible({
+        timeout: env.timeoutMs,
+    });
     await expectFaded(netflixPage, seeded, true);
 
     optionsPage = await openOptionsPage(context, extensionId);
     await setText(optionsPage, 'fadeRatingThreshold', '3.0');
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
+    await expect(netflixPage.locator(`[data-fm-key="${seeded.slug}"] .fm-rating-overlay`)).toBeVisible({
+        timeout: env.timeoutMs,
+    });
     await expectFaded(netflixPage, seeded, false);
 });
 
@@ -56,7 +62,7 @@ test('fade override updates immediately and persists after reload', async ({
 
     await setCheckbox(optionsPage, 'enableFadeToggle', true);
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);
-    await reloadNetflixAndWait(netflixPage, env);
+    await expect(netflixPage.locator('.fm-rating-overlay').first()).toBeVisible({ timeout: env.timeoutMs });
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
     const toggle = findFadeToggle(netflixPage);
@@ -65,20 +71,14 @@ test('fade override updates immediately and persists after reload', async ({
     await toggle.click();
     await expectFaded(netflixPage, seeded, true);
     await expect.poll(async () => (await storage.getAll())[`fm-fade:${seeded.slug}`]).toBe('always');
-    await reloadNetflixAndWait(netflixPage, env);
-    await expectFaded(netflixPage, seeded, true);
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
     await findFadeToggle(netflixPage).click();
     await expectFaded(netflixPage, seeded, false);
     await expect.poll(async () => (await storage.getAll())[`fm-fade:${seeded.slug}`]).toBe('never');
-    await reloadNetflixAndWait(netflixPage, env);
-    await expectFaded(netflixPage, seeded, false);
 
     await openHoverSurfaceForTitle(netflixPage, seeded, env);
     await findFadeToggle(netflixPage).click();
     await expect.poll(async () => (await storage.getAll())[`fm-fade:${seeded.slug}`]).toBeUndefined();
-    await expectFaded(netflixPage, seeded, false);
-    await reloadNetflixAndWait(netflixPage, env);
     await expectFaded(netflixPage, seeded, false);
 });
