@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { expect } from '@playwright/test';
-import { slugifyTitle } from './utils.js';
+import { slugify } from '../../../src/core/utils.js';
 import { SURFACE_DEFS } from '../../../src/core/surfaces.js';
 
 /**
@@ -92,7 +92,7 @@ export async function discoverVisibleTitles(page, minimumCount = 2) {
 
     return titles.map(title => ({
         ...title,
-        slug: slugifyTitle(title.title),
+        slug: slugify(title.title),
     }));
 }
 

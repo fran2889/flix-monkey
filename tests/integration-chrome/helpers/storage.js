@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
-import { slugifyTitle } from './utils.js';
+import { slugify } from '../../../src/core/utils.js';
 
 const API_KEY_FIELDS = new Set(['omdbApiKey', 'xmdbApiKey']);
 const CONFIG_FIELD_KEYS = new Set(CONFIG_FIELDS.map(field => field.key));
@@ -55,7 +55,7 @@ export function createStorageHelper(serviceWorker) {
     async function seedRatings(titles, ratings) {
         const seeded = titles.map((title, index) => {
             const rating = ratings[index % ratings.length];
-            const slug = slugifyTitle(title.title);
+            const slug = slugify(title.title);
             const cacheKey = `${CACHE_PREFIX}${slug}`;
             const titleData = {
                 displayTitle: title.title,
