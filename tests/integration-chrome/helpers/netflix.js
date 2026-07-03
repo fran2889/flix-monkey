@@ -104,7 +104,14 @@ export async function reloadNetflixAndWait(page, env) {
 
 export async function openHoverSurfaceForTitle(page, seededTitle, env) {
     const surface = findSurfaceBySlug(page, seededTitle.slug);
-    await surface.hover();
+    // Move mouse to surface center to ensure proper hover behavior
+    const box = await surface.boundingBox();
+    if (box) {
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    // Hover with force: true to ensure event is dispatched
+    await surface.hover({ force: true });
+    // Wait for fade toggle to appear in mini-modal
     await expect(page.locator('.fm-fade-toggle').first()).toBeVisible({ timeout: env.timeoutMs });
 }
 
