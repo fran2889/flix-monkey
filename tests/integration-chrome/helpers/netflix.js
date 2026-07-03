@@ -127,6 +127,11 @@ export function findSurfaceByTitle(page, titleText) {
  */
 export function findSurfaceBySlug(page, slug) {
     // Use the data-fm-key attribute that FlixMonkey sets on containers
+    // Apply the data-fm-key filter to each container selector individually
+    const slugSelector = `[data-fm-key="${slug}"]`;
+    const surfaceSelectors = [...new Set(SURFACE_DEFS.map(s => s.containerSelector))]
+        .map(selector => `${selector}${slugSelector}`)
+        .join(', ');
     // Use .first() to avoid strict mode violation when multiple elements match
-    return page.locator(`${CONTAINER_SELECTOR}[data-fm-key="${slug}"]`).first();
+    return page.locator(surfaceSelectors).first();
 }
