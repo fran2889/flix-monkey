@@ -39,7 +39,10 @@ function parseTimeout() {
 export function loadChromeIntegrationEnv() {
     const netflixProfileName = process.env.NETFLIX_PROFILE_NAME;
     if (!netflixProfileName) {
-        throw new Error('NETFLIX_PROFILE_NAME is required for npm run test:integration-chrome');
+        throw new Error(
+            'NETFLIX_PROFILE_NAME is required for Chrome integration tests. ' +
+                'Set it in your .env file or environment: NETFLIX_PROFILE_NAME=YourProfile'
+        );
     }
 
     return {
@@ -47,11 +50,5 @@ export function loadChromeIntegrationEnv() {
         headless: parseBoolean('CHROME_INTEGRATION_HEADLESS', false),
         keepOpen: parseBoolean('CHROME_INTEGRATION_KEEP_OPEN', false),
         timeoutMs: parseTimeout(),
-    };
-}
-
-export function redactEnv(env) {
-    return {
-        ...env,
     };
 }

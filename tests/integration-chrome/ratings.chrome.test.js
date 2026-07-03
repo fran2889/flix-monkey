@@ -19,11 +19,7 @@ import { test } from './fixtures.js';
 import { discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
 import { setCheckbox, setSelect, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectOverlayBadges, expectOverlayCorner } from './helpers/overlays.js';
-
-const SEED_RATINGS = [
-    { rating: 8.4, rtRating: 93, mcRating: 81, imdbId: 'tt9000001' },
-    { rating: 6.7, rtRating: 71, mcRating: 64, imdbId: 'tt9000002' },
-];
+import { DEFAULT_RATINGS } from './helpers/test-data.js';
 
 test('shows IMDb, RT, and MC according to options UI visibility settings', async ({
     env,
@@ -34,7 +30,7 @@ test('shows IMDb, RT, and MC according to options UI visibility settings', async
     optionsPage,
 }) => {
     const visibleTitles = await discoverVisibleTitles(netflixPage, 2);
-    const seeded = await storage.seedRatings(visibleTitles.slice(0, 2), SEED_RATINGS);
+    const seeded = await storage.seedRatings(visibleTitles.slice(0, 2), DEFAULT_RATINGS);
 
     await setCheckbox(optionsPage, 'showRtRating', true);
     await setCheckbox(optionsPage, 'showMcRating', true);
@@ -59,7 +55,7 @@ test('moves the overlay when overlayCorner is changed through options UI', async
     optionsPage,
 }) => {
     const visibleTitles = await discoverVisibleTitles(netflixPage, 1);
-    const [seeded] = await storage.seedRatings(visibleTitles.slice(0, 1), SEED_RATINGS);
+    const [seeded] = await storage.seedRatings(visibleTitles.slice(0, 1), DEFAULT_RATINGS);
 
     await setSelect(optionsPage, 'overlayCorner', 'bottom-right');
     await saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env);

@@ -16,19 +16,13 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
+import { slugifyTitle } from './utils.js';
 
 const API_KEY_FIELDS = new Set(['omdbApiKey', 'xmdbApiKey']);
 const CONFIG_FIELD_KEYS = new Set(CONFIG_FIELDS.map(field => field.key));
 const CACHE_PREFIX = 'fmc:';
 const FADE_PREFIX = 'fm-fade:';
 const DISABLED_PREFIX = 'fm_disabled_';
-
-export function slugifyTitle(title) {
-    return title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_|_$/g, '');
-}
 
 export function createStorageHelper(serviceWorker) {
     async function getAll() {
@@ -103,10 +97,7 @@ export function createStorageHelper(serviceWorker) {
     async function redactAll() {
         const all = await getAll();
         return Object.fromEntries(
-            Object.entries(all).map(([key, value]) => [
-                API_KEY_FIELDS.has(key) ? key : key,
-                API_KEY_FIELDS.has(key) ? '<redacted>' : value,
-            ])
+            Object.entries(all).map(([key, value]) => [key, API_KEY_FIELDS.has(key) ? '<redacted>' : value])
         );
     }
 

@@ -19,13 +19,7 @@ import { test, expect } from './fixtures.js';
 import { CONTAINER_SELECTOR, discoverVisibleTitles, reloadNetflixAndWait } from './helpers/netflix.js';
 import { setCheckbox, saveOptionsAndWaitForNetflixReload } from './helpers/options-page.js';
 import { expectOverlayBadges } from './helpers/overlays.js';
-
-const SEARCH_RATINGS = [
-    { rating: 8.4, rtRating: 93, mcRating: 81, imdbId: 'tt9000001' },
-    { rating: 6.7, rtRating: 71, mcRating: 64, imdbId: 'tt9000002' },
-];
-
-const NETFLIX_SEARCH_URL = 'https://www.netflix.com/search?q=breaking';
+import { DEFAULT_RATINGS, NETFLIX_SEARCH_URL } from './helpers/test-data.js';
 
 async function navigateToSearch(page, env) {
     await page.goto(NETFLIX_SEARCH_URL, { waitUntil: 'domcontentloaded' });
@@ -40,7 +34,7 @@ test('discovers and renders ratings on search page elements', async ({ env, stor
     const visibleTitles = await discoverVisibleTitles(netflixPage, 2);
     expect(visibleTitles.length).toBeGreaterThanOrEqual(2);
 
-    const seeded = await storage.seedRatings(visibleTitles.slice(0, 2), SEARCH_RATINGS);
+    const seeded = await storage.seedRatings(visibleTitles.slice(0, 2), DEFAULT_RATINGS);
 
     await setCheckbox(optionsPage, 'showRtRating', true);
     await setCheckbox(optionsPage, 'showMcRating', true);

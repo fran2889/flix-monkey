@@ -38,7 +38,7 @@
 - `tests/integration-chrome/helpers/overlays.js`: overlay, badge, corner, fade, and fade-toggle assertions.
 - `tests/integration-chrome/ratings.chrome.test.js`: ratings display, RT/MC settings, and overlay position tests.
 - `tests/integration-chrome/fade.chrome.test.js`: fade threshold and fade override tests.
-- `tests/integration-chrome/settings-maintenance.chrome.test.js`: Clear Cache and Reset Disabled Clients tests.
+- `tests/integration-chrome/settings.chrome.test.js`: Clear Cache and Reset Disabled Clients tests.
 - `README.md`: local setup and execution documentation.
 
 ---
@@ -1104,7 +1104,7 @@ git commit -m "test(integration-chrome): verify fade behavior"
 
 **Files:**
 
-- Create: `tests/integration-chrome/settings-maintenance.chrome.test.js`
+- Create: `tests/integration-chrome/settings.chrome.test.js`
 
 **Interfaces:**
 
@@ -1114,7 +1114,7 @@ git commit -m "test(integration-chrome): verify fade behavior"
 
 - [ ] **Step 1: Create settings maintenance test**
 
-Create `tests/integration-chrome/settings-maintenance.chrome.test.js` with:
+Create `tests/integration-chrome/settings.chrome.test.js` with:
 
 ```js
 /**
@@ -1169,7 +1169,7 @@ test('Reset Disabled Clients clears disabled provider flags from options UI', as
 Run:
 
 ```bash
-npm run test:integration-chrome -- tests/integration-chrome/settings-maintenance.chrome.test.js
+npm run test:integration-chrome -- tests/integration-chrome/settings.chrome.test.js
 ```
 
 Expected: PASS.
@@ -1177,7 +1177,7 @@ Expected: PASS.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add tests/integration-chrome/settings-maintenance.chrome.test.js
+git add tests/integration-chrome/settings.chrome.test.js
 git commit -m "test(integration-chrome): verify settings maintenance actions"
 ```
 

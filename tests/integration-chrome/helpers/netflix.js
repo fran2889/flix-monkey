@@ -16,12 +16,12 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { expect } from '@playwright/test';
-import { slugifyTitle } from './storage.js';
+import { slugifyTitle } from './utils.js';
 import { SURFACE_DEFS } from '../../../src/core/surfaces.js';
 
 /**
- * Combined container selector built from all surface definitions.
- * Used to locate Netflix title elements in the DOM.
+ * Combined CSS selector for all Netflix surface containers.
+ * Built from all surface definitions in surfaces.js.
  */
 export const CONTAINER_SELECTOR = [...new Set(SURFACE_DEFS.map(s => s.containerSelector))].join(', ');
 

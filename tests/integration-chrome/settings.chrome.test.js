@@ -17,12 +17,11 @@
  */
 import { test, expect } from './fixtures.js';
 import { discoverVisibleTitles } from './helpers/netflix.js';
-
-const SEED_RATING = [{ rating: 7.4, rtRating: 82, mcRating: 73, imdbId: 'tt9000201' }];
+import { SINGLE_RATING } from './helpers/test-data.js';
 
 test('Clear Cache removes cached rating entries from options UI', async ({ storage, netflixPage, optionsPage }) => {
     const visibleTitles = await discoverVisibleTitles(netflixPage, 1);
-    await storage.seedRatings(visibleTitles.slice(0, 1), SEED_RATING);
+    await storage.seedRatings(visibleTitles.slice(0, 1), SINGLE_RATING);
     await expect.poll(async () => (await storage.getKeysByPrefix(storage.prefixes.cache)).length).toBeGreaterThan(0);
 
     await optionsPage.locator('#fm-clearCacheBtn').click();

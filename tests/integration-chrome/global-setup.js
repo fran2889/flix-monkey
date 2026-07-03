@@ -18,16 +18,34 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loadChromeIntegrationEnv, redactEnv } from './env.js';
+import { chromium } from '@playwright/test';
+import { loadChromeIntegrationEnv } from './env.js';
 
 export default async function globalSetup() {
     const env = loadChromeIntegrationEnv();
-    console.info('Chrome integration environment:', redactEnv(env));
-
-    execFileSync('npm', ['run', 'build:chrome'], {
-        cwd: process.cwd(),
-        stdio: 'inherit',
+    console.info('Chrome integration environment:', {
+        netflixProfileName: env.netflixProfileName,
+        headless: env.headless,
+        keepOpen: env.keepOpen,
+        timeoutMs: env.timeoutMs,
     });
+
+    const chromiumPath = chromium.executablePath();
+    if (!existsSync(chromiumPath)) {
+        throw new Error(
+            `Playwright Chromium not found at ${chromiumPath}. ` +
+                'Run "npx playwright install chromium" to install it.'
+        );
+    }
+
+    try {
+        execFileSync('npm', ['run', 'build:chrome'], {
+            cwd: process.cwd(),
+            stdio: 'inherit',
+        });
+    } catch {
+        throw new Error('Chrome extension build failed. Run "npm run build:chrome" manually to see errors.');
+    }
 
     const extensionPath = resolve(process.cwd(), 'dist/chrome');
     if (!existsSync(extensionPath)) {

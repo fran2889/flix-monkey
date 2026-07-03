@@ -19,9 +19,7 @@ import { test, expect } from './fixtures.js';
 import { discoverVisibleTitles, openHoverSurfaceForTitle, reloadNetflixAndWait } from './helpers/netflix.js';
 import { setCheckbox, setText, saveOptionsAndWaitForNetflixReload, openOptionsPage } from './helpers/options-page.js';
 import { expectFaded, findFadeToggle } from './helpers/overlays.js';
-
-const LOW_RATING = [{ rating: 4.2, rtRating: 35, mcRating: 41, imdbId: 'tt9000101' }];
-const MID_RATING = [{ rating: 6.5, rtRating: 69, mcRating: 62, imdbId: 'tt9000102' }];
+import { LOW_RATING, MID_RATING } from './helpers/test-data.js';
 
 test('applies fade threshold settings saved from options UI', async ({
     env,
