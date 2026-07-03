@@ -25,7 +25,7 @@
         "test:integration": "vitest run -c vitest.integration.config.js",
         "test:integration-chrome": "playwright test -c playwright.integration-chrome.config.js",
         "audit": "npm audit --audit-level=high",
-        "clean": "npx rimraf dist coverage"
+        "clean": "npx rimraf dist test-results coverage playwright-report"
     },
     "devDependencies": {
         "@commitlint/cli": "^21.0.2",

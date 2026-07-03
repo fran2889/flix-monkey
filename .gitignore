@@ -1,8 +1,5 @@
 # IDE settings
-.antigravitycli
-.claude/
 .idea/
-.kiro/
 .vscode/
 
 # OS metadata
@@ -13,10 +10,10 @@ Thumbs.db
 .env
 coverage/
 dist/
-playwright-report/
-web-ext-artifacts/
 node_modules/
+playwright-report/
 test-results/
-.playwright-chrome-profile/
+web-ext-artifacts/
 
+.playwright-chrome-profile/
 .worktrees/
