@@ -325,6 +325,25 @@ describe('XmdbApiClient', () => {
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
     });
+
+    it('getDetails extracts vote_count from XMDB response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                id: 'tt1',
+                title: 'Test',
+                rating: 8.8,
+                vote_count: 2500000,
+            }),
+        });
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt1', title: 'Test' }, 'Test');
+        expect(result.imdbVotes).toBe(2500000);
+    });
 });
 
 describe('OmdbApiClient', () => {
@@ -484,6 +503,43 @@ describe('OmdbApiClient', () => {
         );
         const result = await client.getDetails({ title: 'Unknown' }, 'Unknown');
         expect(result).toBeNull();
+    });
+
+    it('getDetails extracts imdbVotes from OMDB response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbVotes: '2,500,000',
+                imdbRating: '8.8',
+                Title: 'Test',
+            }),
+        });
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ title: 'Test' }, 'Test');
+        expect(result.imdbVotes).toBe(2500000);
+    });
+
+    it('getDetails handles missing imdbVotes from OMDB response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                Response: 'True',
+                imdbRating: '8.8',
+                Title: 'Test',
+            }),
+        });
+        const client = new OmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger()
+        );
+        const result = await client.getDetails({ title: 'Test' }, 'Test');
+        expect(result.imdbVotes).toBeNull();
     });
 });
 
@@ -658,6 +714,23 @@ describe('ImdbApiDevClient', () => {
             expect.stringContaining('Movie 1'),
             expect.objectContaining({ response: { error: 'server error' } })
         );
+    });
+
+    it('getDetails extracts voteCount from IMDb API Dev response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                primaryTitle: 'Movie 1',
+                rating: { aggregateRating: 8.8, voteCount: 2500000 },
+            }),
+        });
+        const client = new ImdbApiDevClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
+        expect(result.imdbVotes).toBe(2500000);
     });
 
     it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
@@ -849,5 +922,33 @@ describe('AgregarrApiClient', () => {
         const calledUrl = httpFetch.mock.calls[0][0];
         expect(calledUrl).toContain('imdb.iamidiotareyoutoo.com/search?');
         expect(calledUrl).toContain('q=');
+    });
+
+    it('getDetails extracts votes from Agregarr response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ '#IMDB_ID': 'tt1', '#TITLE': 'Test', '#YEAR': 2020 }, 'Test');
+        expect(result.imdbVotes).toBe(2500000);
+    });
+
+    it('getDetails handles null votes from Agregarr response', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: null }]),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+        const result = await client.getDetails({ '#IMDB_ID': 'tt1', '#TITLE': 'Test', '#YEAR': 2020 }, 'Test');
+        expect(result.imdbVotes).toBeNull();
     });
 });
