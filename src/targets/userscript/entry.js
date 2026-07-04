@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { UserscriptAdapter } from '../../platform/userscript.js';
 import { startApp } from '../../core/app.js';
-import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { Modal } from '../../core/ui/modal.js';
+import { SettingsUI } from '../../core/ui/settings-ui.js';
+import { UserscriptAdapter } from '../../platform/userscript.js';
 
 const adapter = new UserscriptAdapter();
 const app = startApp(adapter);

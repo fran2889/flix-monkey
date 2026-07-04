@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { startApp, FlixMonkeyApp } from '../../../src/core/app.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ApiClientManager } from '../../../src/core/api-manager.js';
-import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
+import { SurfaceManager } from '../../../src/core/surfaces.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 

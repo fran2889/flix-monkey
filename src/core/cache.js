@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { DAYS_TO_MS, CACHE_TTL_INFINITE } from './constants.js';
+import { CACHE_TTL_INFINITE, DAYS_TO_MS } from './constants.js';
 import { Title } from './title.js';
 import { slugify } from './utils.js';
 

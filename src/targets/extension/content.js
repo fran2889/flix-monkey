@@ -16,8 +16,9 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import browser from 'webextension-polyfill';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+
 import { startApp } from '../../core/app.js';
+import { WebExtensionAdapter } from '../../platform/webextension.js';
 
 /*
  * Settings that can be hot-applied without a page reload: they only affect overlay

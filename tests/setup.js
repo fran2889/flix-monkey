@@ -16,10 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { beforeAll, afterEach, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { HttpResponse as _HttpResponse, http as _http } from 'msw';
 import '@testing-library/jest-dom/vitest';
+
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll } from 'vitest';
 
 export const server = setupServer();
 

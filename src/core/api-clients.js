@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { RequestQueue } from './request-queue.js';
-import { Title } from './title.js';
 import { ApiSource, CLIENT_DISABLE_DURATION, TitleType } from './constants.js';
 import { RATE_LIMITS } from './rate-limits.js';
+import { RequestQueue } from './request-queue.js';
+import { Title } from './title.js';
 
 /**
  * @typedef {Object} ClientStatus

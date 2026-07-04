@@ -16,6 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { vi } from 'vitest';
+
 import { PlatformAdapter } from '../../src/platform/adapter.js';
 
 class MockPlatformAdapter extends PlatformAdapter {

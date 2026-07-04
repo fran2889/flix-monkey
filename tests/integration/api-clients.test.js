@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, beforeAll } from 'vitest';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from '../../src/core/api-clients';
-import { DisabledClientsManager } from '../../src/core/disabled-clients';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api-clients';
 import { ConfigManager } from '../../src/core/config-manager';
+import { ApiSource, TitleType } from '../../src/core/constants';
+import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
-import { ApiSource, TitleType } from '../../src/core/constants';
 
 // Cloudflare enforces ~3 requests per 10s window on imdbapi.dev.
 // Each test creates a fresh client (fresh RequestQueue), so the per-client
