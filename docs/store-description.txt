@@ -1,0 +1,28 @@
+FlixMonkey adds IMDb, Metacritic, and Rotten Tomatoes ratings directly to Netflix, helping you decide what to watch before you press play.
+
+Ratings appear on title cards, hover previews, detail views, and search results. You can also filter out low-rated titles and quickly jump to IMDb for more details.
+
+Available as a Chrome extension, Firefox add-on, and Greasemonkey userscript.
+
+FEATURES
+• View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes added when available
+• Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
+• Optionally fade out titles below a chosen IMDb rating threshold
+
+RATING PROVIDERS
+FlixMonkey supports multiple rating sources:
+• Agregarr (default): Provides IMDb ratings only. No API key required
+• OMDb (recommended): Provides IMDb, Metacritic, and Rotten Tomatoes ratings with a free API key
+• XMDb: Provides IMDb and Metacritic ratings with a free API key
+• IMDb API (deprecated): Unreliable due to low rate limits
+
+CACHING
+Ratings are cached locally to keep browsing fast and reduce API usage:
+• Older titles (1+ year) are cached indefinitely
+• Recent titles refresh monthly to capture updated ratings
+• Unrated titles are retried after 24 hours
+• Failing providers are temporarily paused to prevent repeated errors
+
+LICENSE
+Licensed under GPLv3. Documentation and source code are available on GitHub:
+https://github.com/fran2889/flix-monkey

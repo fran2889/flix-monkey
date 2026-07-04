@@ -20,9 +20,13 @@ import fs from 'fs';
 import { SignJWT } from 'jose';
 import path from 'path';
 
-const pkgPath = path.resolve(process.cwd(), 'package.json');
+const descriptionPath = path.resolve(process.cwd(), 'docs', 'store-description.txt');
 
 async function updateChromeDescription(description, extensionId, clientId, clientSecret, refreshToken) {
+    if (!extensionId || !clientId || !clientSecret || !refreshToken) {
+        throw new Error('Missing Chrome Web Store credentials');
+    }
+
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -63,6 +67,10 @@ async function updateChromeDescription(description, extensionId, clientId, clien
 }
 
 async function updateFirefoxDescription(description, addonId, jwtIssuer, jwtSecret) {
+    if (!jwtIssuer || !jwtSecret) {
+        throw new Error('Missing Firefox Add-ons credentials');
+    }
+
     const now = Math.floor(Date.now() / 1000);
     const secret = new TextEncoder().encode(jwtSecret);
 
@@ -91,17 +99,11 @@ async function updateFirefoxDescription(description, addonId, jwtIssuer, jwtSecr
 }
 
 async function main() {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    const description = fs.readFileSync(descriptionPath, 'utf8').trim();
 
-    if (!pkg.descriptionFull) {
-        throw new Error('Missing descriptionFull field in package.json');
+    if (!description) {
+        throw new Error('Store description file is empty');
     }
-
-    if (typeof pkg.descriptionFull !== 'string' || pkg.descriptionFull.trim() === '') {
-        throw new Error('descriptionFull must be a non-empty string');
-    }
-
-    const description = pkg.descriptionFull;
 
     const extensionId = process.env.CHROME_EXTENSION_ID;
     const clientId = process.env.CHROME_CLIENT_ID;
@@ -110,14 +112,6 @@ async function main() {
     const jwtIssuer = process.env.AMO_JWT_ISSUER;
     const jwtSecret = process.env.AMO_JWT_SECRET;
     const addonId = 'flixmonkey@fran';
-
-    if (!extensionId || !clientId || !clientSecret || !refreshToken) {
-        throw new Error('Missing Chrome Web Store credentials');
-    }
-
-    if (!jwtIssuer || !jwtSecret) {
-        throw new Error('Missing Firefox Add-ons credentials');
-    }
 
     console.log('Updating Chrome Web Store description...');
     await updateChromeDescription(description, extensionId, clientId, clientSecret, refreshToken);
