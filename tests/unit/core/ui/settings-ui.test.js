@@ -105,7 +105,7 @@ describe('SettingsUI', () => {
             expect(select.tagName).toBe('SELECT');
             const opt = [...select.options].find(o => o.value === 'agregarr');
             expect(opt).toBeTruthy();
-            expect(opt.textContent).toBe('Agregarr');
+            expect(opt.textContent).toBe('FM-DB + Agregarr');
         });
 
         it('should render showMcRating as a checked checkbox by default', async () => {

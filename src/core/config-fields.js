@@ -42,7 +42,7 @@ export const CONFIG_FIELDS = [
         label: 'API Provider',
         type: 'select',
         options: [
-            ['agregarr', 'Agregarr'],
+            ['agregarr', 'FM-DB + Agregarr'],
             ['imdbapi', 'IMDb API'],
             ['omdb', 'OMDB'],
             ['xmdb', 'XMDB'],

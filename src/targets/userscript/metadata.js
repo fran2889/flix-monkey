@@ -36,7 +36,7 @@
 // @connect      www.omdbapi.com
 // @connect      xmdbapi.com
 // @connect      api.imdbapi.dev
-// @connect      v3.sg.media-imdb.com
+// @connect      imdb.iamidiotareyoutoo.com
 // @connect      api.agregarr.org
 // @run-at       document-idle
 // ==/UserScript==

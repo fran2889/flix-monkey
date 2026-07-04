@@ -352,8 +352,6 @@ export class ImdbApiDevClient extends BaseApiClient {
     }
 }
 
-const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
-
 export class AgregarrApiClient extends BaseApiClient {
     constructor(disabledManager, adapter, config, logger) {
         super(
@@ -367,24 +365,25 @@ export class AgregarrApiClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        const encoded = encodeURIComponent(displayTitle.toLowerCase());
-        this.logger?.debug(`Searching Agregarr for title: "${displayTitle}"`);
-        const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
-        const results = data?.d;
+        const encoded = encodeURIComponent(displayTitle);
+        this.logger?.debug(`Searching FM-DB for title: "${displayTitle}"`);
+        const data = await this.queuedFetch(`https://imdb.iamidiotareyoutoo.com/search?q=${encoded}`, 0);
+        if (!data?.ok) {
+            this.logger?.info(`FM-DB search request failed for "${displayTitle}"`);
+            return null;
+        }
+        const results = data?.description;
         if (!results?.length) {
-            this.logger?.info(`No search results found in Agregarr for "${displayTitle}"`);
+            this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
             return null;
         }
-        const match = results.find(r => AGREGARR_TITLE_TYPES.has(r.qid));
-        if (!match) {
-            this.logger?.info(`No title-type results found in Agregarr for "${displayTitle}"`);
-            return null;
-        }
-        return match;
+        return results[0];
     }
 
     async getDetails(match, displayTitle) {
-        const { id, l: title, qid, y: year } = match;
+        const id = match['#IMDB_ID'];
+        const title = match['#TITLE'];
+        const year = match['#YEAR'];
         this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
@@ -400,7 +399,7 @@ export class AgregarrApiClient extends BaseApiClient {
             rating: entry?.rating ?? null,
             rtRating: null,
             mcRating: null,
-            type: mapTitleType(qid),
+            type: null,
         });
     }
 }
