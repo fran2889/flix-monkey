@@ -17,12 +17,24 @@
  */
 import { expect } from '@playwright/test';
 
+/**
+ * Open the extension options page.
+ * @param {import('@playwright/test').BrowserContext} context - Playwright browser context
+ * @param {string} extensionId - Chrome extension ID
+ * @returns {Promise<import('@playwright/test').Page>} Options page
+ */
 export async function openOptionsPage(context, extensionId) {
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/options.html`, { waitUntil: 'domcontentloaded' });
     return page;
 }
 
+/**
+ * Set a checkbox option on the options page.
+ * @param {import('@playwright/test').Page} page - Options page
+ * @param {string} key - Option key (without fm- prefix)
+ * @param {boolean} checked - Desired checked state
+ */
 export async function setCheckbox(page, key, checked) {
     const input = page.locator(`#fm-${key}`);
     await expect(input).toBeVisible();
@@ -31,18 +43,36 @@ export async function setCheckbox(page, key, checked) {
     }
 }
 
+/**
+ * Set a text option on the options page.
+ * @param {import('@playwright/test').Page} page - Options page
+ * @param {string} key - Option key (without fm- prefix)
+ * @param {string|number} value - Value to set
+ */
 export async function setText(page, key, value) {
     const input = page.locator(`#fm-${key}`);
     await expect(input).toBeVisible();
     await input.fill(String(value));
 }
 
+/**
+ * Set a select option on the options page.
+ * @param {import('@playwright/test').Page} page - Options page
+ * @param {string} key - Option key (without fm- prefix)
+ * @param {string} value - Value to select
+ */
 export async function setSelect(page, key, value) {
     const input = page.locator(`#fm-${key}`);
     await expect(input).toBeVisible();
     await input.selectOption(value);
 }
 
+/**
+ * Save options and wait for Netflix page to reload.
+ * @param {import('@playwright/test').Page} optionsPage - Options page
+ * @param {import('@playwright/test').Page} netflixPage - Netflix tab
+ * @param {Object} env - Environment configuration with timeoutMs
+ */
 export async function saveOptionsAndWaitForNetflixReload(optionsPage, netflixPage, env) {
     const reloadMarker = `__fmReloadMarker_${Date.now()}_${Math.random().toString(36).slice(2)}__`;
 
