@@ -32,38 +32,62 @@ Currently, the full store description is maintained in `docs/DESCRIPTIONS.md` an
 
 ### 1. Data Source
 
-Add a new field `descriptionFull` to `package.json`:
+Create `docs/store-description.txt` containing the full store description in plain text:
 
-```json
-{
-    "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.",
-    "descriptionFull": "FlixMonkey adds IMDb, Metacritic, and Rotten Tomatoes ratings directly to Netflix, helping you decide what to watch before you press play.\n\nRatings appear on title cards, hover previews, detail views, and search results. You can also filter out low-rated titles and quickly jump to IMDb for more details.\n\nAvailable as a Chrome extension, Firefox add-on, and Greasemonkey userscript.\n\nFEATURES\n- View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes added when available\n- Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found\n- Optionally fade out titles below a chosen IMDb rating threshold\n\nRATING PROVIDERS\nFlixMonkey supports multiple rating sources:\n- Agregarr (default): Provides IMDb ratings only. No API key required\n- OMDb (recommended): Provides IMDb, Metacritic, and Rotten Tomatoes ratings with a free API key\n- XMDb: Provides IMDb and Metacritic ratings with a free API key\n- IMDb API (deprecated): Unreliable due to low rate limits\n\nCACHING\nRatings are cached locally to keep browsing fast and reduce API usage:\n- Older titles (1+ year) are cached indefinitely\n- Recent titles refresh monthly to capture updated ratings\n- Unrated titles are retried after 24 hours\n- Failing providers are temporarily paused to prevent repeated errors\n\nLICENSE\nLicensed under GPLv3. Documentation and source code are available on GitHub:\nhttps://github.com/fran2889/flix-monkey"
-}
+```
+FlixMonkey adds IMDb, Metacritic, and Rotten Tomatoes ratings directly to Netflix, helping you decide what to watch before you press play.
+
+Ratings appear on title cards, hover previews, detail views, and search results. You can also filter out low-rated titles and quickly jump to IMDb for more details.
+
+Available as a Chrome extension, Firefox add-on, and Greasemonkey userscript.
+
+FEATURES
+• View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes added when available
+• Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
+• Optionally fade out titles below a chosen IMDb rating threshold
+
+RATING PROVIDERS
+FlixMonkey supports multiple rating sources:
+• Agregarr (default): Provides IMDb ratings only. No API key required
+• OMDb (recommended): Provides IMDb, Metacritic, and Rotten Tomatoes ratings with a free API key
+• XMDb: Provides IMDb and Metacritic ratings with a free API key
+• IMDb API (deprecated): Unreliable due to low rate limits
+
+CACHING
+Ratings are cached locally to keep browsing fast and reduce API usage:
+• Older titles (1+ year) are cached indefinitely
+• Recent titles refresh monthly to capture updated ratings
+• Unrated titles are retried after 24 hours
+• Failing providers are temporarily paused to prevent repeated errors
+
+LICENSE
+Licensed under GPLv3. Documentation and source code are available on GitHub:
+https://github.com/fran2889/flix-monkey
 ```
 
-- Format: Plain text (no markdown, no HTML) - the description from `docs/DESCRIPTIONS.md` converted by removing markdown formatting
+- Format: Plain text (no markdown, no HTML) - the description from `docs/DESCRIPTIONS.md` converted by removing markdown formatting (keeping bullet points as `• `)
 - Single description used for both Chrome Web Store and Firefox Add-ons
-- The existing `description` field remains the source of truth for short descriptions
-- The initial `descriptionFull` value should be the full description from `docs/DESCRIPTIONS.md` with markdown formatting removed (headers, bullet points converted to plain text)
+- The existing `description` field in `package.json` remains the source of truth for short descriptions
 
 ### 2. Update Script
 
 Create `scripts/update-store-descriptions.js` that:
 
-1. Reads `descriptionFull` from `package.json`
-2. Validates that the field exists and is a non-empty string
+1. Reads the full description from `docs/store-description.txt`
+2. Validates that the file exists and contains a non-empty string
 3. Updates Chrome Web Store listing:
-    - Authenticates using existing secrets: `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`
-    - Obtains access token via OAuth 2.0
-    - Calls `PATCH https://chromewebstore.googleapis.com/v1.1/items/{CHROME_EXTENSION_ID}`
+    - Validates Chrome credentials exist: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`
+    - Authenticates using OAuth 2.0 with the refresh token
+    - Calls `PUT https://chromewebstore.googleapis.com/v1.1/items/{CHROME_EXTENSION_ID}`
     - Updates the listing description in the request body
 4. Updates Firefox Add-ons listing:
-    - Authenticates using existing secrets: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`
-    - Generates JWT and obtains access token
+    - Validates Firefox credentials exist: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`
+    - Generates JWT and authenticates
     - Calls `PATCH https://addons.mozilla.org/api/v4/addons/{addon_id}/`
     - Updates the add-on description in the request body
-5. Logs success/failure for each store
-6. Exits with error code if any description update fails
+5. Each update function validates its own credentials before proceeding
+6. Logs success/failure for each store
+7. Exits with error code if any description update fails
 
 ### 3. Workflow Integration
 
@@ -114,13 +138,13 @@ The AMO API requires:
 
 | File                                   | Change                      |
 | -------------------------------------- | --------------------------- |
-| `package.json`                         | Add `descriptionFull` field |
+| `docs/store-description.txt`           | New file - source of truth  |
 | `scripts/update-store-descriptions.js` | New file                    |
-| `.github/workflows/publish-stores.yml` | Add two new steps           |
+| `.github/workflows/publish-stores.yml` | Add update-descriptions job |
 
 ## Success Criteria
 
-- [ ] `descriptionFull` field added to `package.json`
+- [ ] `docs/store-description.txt` created
 - [ ] `scripts/update-store-descriptions.js` created and working
 - [ ] `publish-stores.yml` updated with description update steps
 - [ ] Running the workflow successfully updates both store descriptions
