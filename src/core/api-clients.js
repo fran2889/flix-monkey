@@ -290,13 +290,15 @@ export class OmdbApiClient extends BaseApiClient {
             });
             return null;
         }
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
+        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
+        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replace(/,/g, ''), 10) : null;
         return new Title({
             apiTitle: apiTitle ?? null,
             imdbId: imdbID,
             year: releaseYear,
             rating: imdbRating,
+            imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
             type: mapTitleType(apiType),
