@@ -691,7 +691,7 @@ describe('AgregarrApiClient', () => {
         expect(result['#TITLE']).toBe('Movie 1');
     });
 
-    it('should return first result from FM-DB regardless of type', async () => {
+    it('should return first result from FM-DB even when query does not match', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 ok: true,
@@ -710,23 +710,6 @@ describe('AgregarrApiClient', () => {
         );
         const result = await client.search('Movie 1');
         expect(result['#IMDB_ID']).toBe('tt0001');
-    });
-
-    it('should accept any result type from FM-DB', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                ok: true,
-                description: [{ '#IMDB_ID': 'tt1', '#TITLE': 'Mini Show', '#YEAR': 2020 }],
-            }),
-        });
-        const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.search('Mini Show');
-        expect(result['#IMDB_ID']).toBe('tt1');
     });
 
     it('should return null if no results found', async () => {
@@ -845,20 +828,6 @@ describe('AgregarrApiClient', () => {
         );
         const result = await client.getDetails({ '#IMDB_ID': 'tt4', '#TITLE': 'Movie 1', '#YEAR': 2020 }, 'Movie 1');
         expect(result.rating).toBeNull();
-        expect(result.type).toBeNull();
-    });
-
-    it('should return type as null since FM-DB does not provide type', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt2', rating: 9.5, votes: 2000000 }]),
-        });
-        const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ '#IMDB_ID': 'tt2', '#TITLE': 'Show 1', '#YEAR': 2020 }, 'Show 1');
         expect(result.type).toBeNull();
     });
 
