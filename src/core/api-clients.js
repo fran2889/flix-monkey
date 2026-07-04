@@ -347,6 +347,7 @@ export class ImdbApiDevClient extends BaseApiClient {
             imdbId: id,
             year: startYear,
             rating: rating?.aggregateRating ?? null,
+            imdbVotes: rating?.voteCount ?? null,
             rtRating: null,
             mcRating: metacritic?.score ?? null,
             type: mapTitleType(type),
