@@ -1,5 +1,5 @@
 info:
-    name: suggestion
+    name: /suggestion
     type: http
     seq: 1
 
