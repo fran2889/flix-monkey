@@ -168,17 +168,26 @@ export class OverlayRenderer {
         return `${rating}%`;
     }
 
+    #formatVoteCount(count) {
+        if (count === null || count === undefined) return '';
+        const num = Number(count);
+        if (Number.isNaN(num) || num < 0) return '';
+        if (num >= 1000000) return `${Math.round(num / 1000000)}M`;
+        if (num >= 1000) return `${Math.round(num / 1000)}k`;
+        return String(Math.round(num));
+    }
+
     #buildTooltip(titleParts, imdbId) {
-        if (titleParts.length) return `${titleParts.join(' · ')} – click to open IMDb`;
-        if (imdbId) return 'No ratings available – click to open IMDb';
-        return 'Not found on IMDb – click to search';
+        if (titleParts.length) return `${titleParts.join(' · ')} - Open IMDb`;
+        if (imdbId) return 'No rating - Open IMDb';
+        return 'Not found - Search IMDb';
     }
 
     #createOverlay(titleObj) {
         const container = document.createElement('div');
         container.className = this.#OVERLAY_CLASS;
 
-        const { rating, imdbId, rtRating, mcRating } = titleObj;
+        const { rating, imdbId, rtRating, mcRating, imdbVotes } = titleObj;
 
         // Helper to add click handler for propagation
         const addStopPropagation = el => {
@@ -197,8 +206,10 @@ export class OverlayRenderer {
         // eslint-disable-next-line eqeqeq
         if (rating != null) {
             const formatted = this.#formatImdbRating(rating);
+            const votesStr = this.#formatVoteCount(imdbVotes);
+            const voteText = votesStr ? ` (${votesStr} votes)` : '';
             imdbLink.appendChild(this.#createRatingElement('IMDb', formatted, 'fm-imdb'));
-            titleParts.push(`IMDb: ${formatted}`);
+            titleParts.push(`IMDb: ${formatted}${voteText}`);
         } else if (imdbId) {
             imdbLink.appendChild(this.#createMissingRatingElement('IMDb', 'fm-imdb'));
         } else {
@@ -211,7 +222,6 @@ export class OverlayRenderer {
         if (this.#config.getBool('showRtRating') && rtRating != null) {
             const formatted = this.#formatPercentRating(rtRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('RT', formatted, 'fm-rt')));
-            titleParts.push(`RT: ${formatted}`);
         }
 
         // MC
@@ -219,7 +229,6 @@ export class OverlayRenderer {
         if (this.#config.getBool('showMcRating') && mcRating != null) {
             const formatted = this.#formatPercentRating(mcRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('MC', formatted, 'fm-mc')));
-            titleParts.push(`MC: ${formatted}`);
         }
 
         imdbLink.title = this.#buildTooltip(titleParts, imdbId);
