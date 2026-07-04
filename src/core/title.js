@@ -22,6 +22,7 @@
  * @property {string|null} [imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
  * @property {number|string|null} [year=null] - Release year; coerced to integer.
  * @property {number|string|null} [rating=null] - IMDb rating (0–10); coerced to float.
+ * @property {number|string|null} [imdbVotes=null] - IMDb vote count; coerced to integer.
  * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0–100); coerced to integer.
  * @property {number|string|null} [mcRating=null] - Metacritic score (0–100); leading digits extracted, coerced to integer.
  * @property {string|null} [source=null] - API source that produced this title (an `ApiSource` value).
@@ -47,6 +48,8 @@ export class Title {
     /** @type {number|null} */
     rating;
     /** @type {number|null} */
+    imdbVotes;
+    /** @type {number|null} */
     rtRating;
     /** @type {number|null} */
     mcRating;
@@ -62,6 +65,7 @@ export class Title {
         imdbId = null,
         year = null,
         rating = null,
+        imdbVotes = null,
         rtRating = null,
         mcRating = null,
         source = null,
@@ -73,6 +77,10 @@ export class Title {
         this.year = year !== null && year !== undefined ? Number.parseInt(year, 10) : null;
         this.rating = this.#normalizeRating(rating, v => {
             const num = parseFloat(v);
+            return Number.isNaN(num) ? null : num;
+        });
+        this.imdbVotes = this.#normalizeRating(imdbVotes, v => {
+            const num = Number.parseInt(v, 10);
             return Number.isNaN(num) ? null : num;
         });
         this.rtRating = this.#normalizeRating(rtRating, v => {
