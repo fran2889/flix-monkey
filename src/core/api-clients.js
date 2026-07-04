@@ -244,12 +244,13 @@ export class XmdbApiClient extends BaseApiClient {
             });
             return null;
         }
-        const { rating, release_year, title, metascore, title_type } = detailsJson;
+        const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
             imdbId: id,
             year: release_year,
             rating,
+            imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
             type: mapTitleType(title_type),
