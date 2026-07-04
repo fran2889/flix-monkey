@@ -67,5 +67,8 @@
         "**/*.{json,md,yml,html}": [
             "prettier --write"
         ]
+    },
+    "dependencies": {
+        "jose": "^6.2.3"
     }
 }
