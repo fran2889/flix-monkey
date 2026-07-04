@@ -670,27 +670,6 @@ describe('ImdbApiDevClient', () => {
 });
 
 describe('AgregarrApiClient', () => {
-    it('should return the first result from FM-DB', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                ok: true,
-                description: [
-                    { '#IMDB_ID': 'tt1', '#TITLE': 'Movie 1', '#YEAR': 2020 },
-                    { '#IMDB_ID': 'tt2', '#TITLE': 'Movie 2', '#YEAR': 2020 },
-                ],
-            }),
-        });
-        const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.search('Movie 1');
-        expect(result['#IMDB_ID']).toBe('tt1');
-        expect(result['#TITLE']).toBe('Movie 1');
-    });
-
     it('should return first result from FM-DB even when query does not match', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
