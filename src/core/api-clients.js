@@ -368,6 +368,10 @@ export class AgregarrApiClient extends BaseApiClient {
         const encoded = encodeURIComponent(displayTitle);
         this.logger?.debug(`Searching FM-DB for title: "${displayTitle}"`);
         const data = await this.queuedFetch(`https://imdb.iamidiotareyoutoo.com/search?q=${encoded}`, 0);
+        if (!data?.ok) {
+            this.logger?.info(`FM-DB search request failed for "${displayTitle}"`);
+            return null;
+        }
         const results = data?.description;
         if (!results?.length) {
             this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
