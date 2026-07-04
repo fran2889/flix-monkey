@@ -25,6 +25,37 @@ export { expect };
 
 const TEST_USER_DATA_DIR = resolve(process.cwd(), '.playwright-chrome-profile');
 
+/**
+ * Attach diagnostic context to test failure.
+ * @param {import('@playwright/test').TestInfo} testInfo - Playwright test info
+ * @param {import('@playwright/test').Page} page - Page at time of failure
+ * @param {string[]} consoleErrors - Collected console errors
+ * @param {Array<{type: string, text: string, time: number}>} consoleLogs - Collected console logs
+ * @param {Error} _err - The error that caused the failure
+ */
+async function attachErrorContext(testInfo, page, consoleErrors, consoleLogs, _err) {
+    if (consoleErrors.length > 0) {
+        testInfo.attach('browser-errors', {
+            body: consoleErrors.join('\n'),
+            contentType: 'text/plain',
+        });
+    }
+    if (consoleLogs.length > 0) {
+        testInfo.attach('browser-console', {
+            body: consoleLogs.map(l => `[${l.type}] ${l.text}`).join('\n'),
+            contentType: 'text/plain',
+        });
+    }
+    try {
+        testInfo.attach('page-screenshot', {
+            body: await page.screenshot(),
+            contentType: 'image/png',
+        });
+    } catch {
+        /* ignore screenshot failures */
+    }
+}
+
 function isFlixMonkeyExtensionWorker(worker) {
     const url = worker.url();
 
@@ -95,25 +126,36 @@ export const test = base.extend({
 
     storage: async ({ extensionWorker }, use) => {
         const helper = createStorageHelper(extensionWorker);
-        await helper.resetForCleanRun();
+        await helper.resetAllForCleanRun();
+
         await use(helper);
-        await helper.resetForCleanRun();
+
+        await helper.resetAllForCleanRun().catch(() => {});
     },
 
     netflixPage: async ({ context, env, storage: _storage }, use, testInfo) => {
         const page = await context.newPage();
+        const consoleErrors = [];
+        const consoleLogs = [];
+
         const consoleListener = message => {
+            consoleLogs.push({ type: message.type(), text: message.text(), time: Date.now() });
             if (message.type() === 'error') {
-                testInfo.attach(`console-error-${Date.now()}`, {
-                    body: message.text(),
-                    contentType: 'text/plain',
-                });
+                consoleErrors.push(message.text());
             }
         };
         page.on('console', consoleListener);
+        page.on('pageerror', err => consoleErrors.push(err.message));
+        page.on('crash', () => consoleErrors.push('Page crashed'));
+
         try {
             await ensureNetflixBrowseReady(page, env);
             await use(page);
+        } catch (err) {
+            if (testInfo) {
+                await attachErrorContext(testInfo, page, consoleErrors, consoleLogs, err);
+            }
+            throw err;
         } finally {
             page.off('console', consoleListener);
             await page.close();
