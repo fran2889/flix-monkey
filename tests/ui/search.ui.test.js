@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
-import { SurfaceManager } from '../../src/core/surfaces.js';
-import { OverlayRenderer } from '../../src/core/overlay.js';
-import { ConfigManager } from '../../src/core/config-manager.js';
-import { createMockAdapter } from '../mocks/adapter.js';
 import fs from 'fs';
 import path from 'path';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
+import { ConfigManager } from '../../src/core/config-manager.js';
+import { OverlayRenderer } from '../../src/core/overlay.js';
+import { SurfaceManager } from '../../src/core/surfaces.js';
+import { createMockAdapter } from '../mocks/adapter.js';
 
 describe('Search UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;

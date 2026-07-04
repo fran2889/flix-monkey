@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { Logger } from '../../../src/core/logger.js';
 
 describe('core/logger', () => {

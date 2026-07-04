@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { Title } from '../../../src/core/title.js';
 import { FlixMonkeyError } from '../../../src/core/utils.js';

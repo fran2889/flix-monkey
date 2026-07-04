@@ -1,6 +1,8 @@
 import js from '@eslint/js';
-import globals from 'globals';
 import headers from 'eslint-plugin-headers';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
+import globals from 'globals';
 
 const commonRules = {
     'prefer-const': 'error',
@@ -8,6 +10,10 @@ const commonRules = {
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-duplicate-imports': 'error',
+    'simple-import-sort/imports': 'error',
+    'simple-import-sort/exports': 'error',
+    'unused-imports/no-unused-imports': 'error',
 };
 
 const userscriptGlobals = {
@@ -28,6 +34,10 @@ export default [
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
+        },
+        plugins: {
+            'simple-import-sort': simpleImportSort,
+            'unused-imports': eslintPluginUnusedImports,
         },
         rules: commonRules,
     },

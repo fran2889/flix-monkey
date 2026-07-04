@@ -1,6 +1,6 @@
+import { ZipArchive } from 'archiver';
 import fs from 'fs';
 import path from 'path';
-import { ZipArchive } from 'archiver';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;

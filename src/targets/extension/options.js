@@ -16,12 +16,13 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import browser from 'webextension-polyfill';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+
+import { CacheManager } from '../../core/cache.js';
+import { ConfigManager } from '../../core/config-manager.js';
+import { DisabledClientsManager } from '../../core/disabled-clients.js';
 import { Logger } from '../../core/logger.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { ConfigManager } from '../../core/config-manager.js';
-import { CacheManager } from '../../core/cache.js';
-import { DisabledClientsManager } from '../../core/disabled-clients.js';
+import { WebExtensionAdapter } from '../../platform/webextension.js';
 
 const adapter = new WebExtensionAdapter();
 const logger = new Logger(adapter);

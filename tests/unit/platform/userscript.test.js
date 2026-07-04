@@ -15,10 +15,11 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { FlixMonkeyError } from '../../../src/core/utils.js';
 import { UserscriptAdapter } from '../../../src/platform/userscript.js';
 import { setupUserscriptMocks } from '../../mocks/platform.js';
-import { FlixMonkeyError } from '../../../src/core/utils.js';
 
 describe('UserscriptAdapter', () => {
     let adapter;

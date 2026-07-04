@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {

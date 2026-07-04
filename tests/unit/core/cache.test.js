@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { CacheManager } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
-import { createMockLogger } from '../../mocks/logger.js';
 import { createConfig } from '../../mocks/config.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 describe('CacheManager', () => {
     let adapter;

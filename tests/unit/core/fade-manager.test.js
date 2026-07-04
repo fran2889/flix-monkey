@@ -15,10 +15,11 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+import { ConfigManager } from '../../../src/core/config-manager.js';
 import { FadeManager } from '../../../src/core/fade-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
-import { ConfigManager } from '../../../src/core/config-manager.js';
 
 function makeConfig(enableFadeUnderRating = false, fadeRatingThreshold = 6.0) {
     return new ConfigManager(

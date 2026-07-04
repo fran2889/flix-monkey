@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect } from 'vitest';
 import '../../mocks/webextension.js';
+
+import { describe, expect, it } from 'vitest';
 
 describe('WebExtension Entry Point', () => {
     it('should verify manifest structure', () => {

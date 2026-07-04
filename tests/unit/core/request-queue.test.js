@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { RequestQueue } from '../../../src/core/request-queue.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 

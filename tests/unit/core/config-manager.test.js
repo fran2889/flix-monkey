@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect } from 'vitest';
-import { ConfigManager } from '../../../src/core/config-manager.js';
+import { describe, expect, it } from 'vitest';
+
 import { CONFIG_DEFAULTS } from '../../../src/core/config-fields.js';
+import { ConfigManager } from '../../../src/core/config-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 

@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { debounce, runIdle, FlixMonkeyError, slugify } from '../../../src/core/utils.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { debounce, FlixMonkeyError, runIdle, slugify } from '../../../src/core/utils.js';
 
 describe('core/utils', () => {
     beforeEach(() => {

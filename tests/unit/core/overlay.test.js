@@ -15,11 +15,12 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OverlayRenderer } from '../../../src/core/overlay.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { TOP_10_BADGE } from '../../../src/core/constants.js';
-import { createConfig } from '../../mocks/config.js';
+import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
+import { createConfig } from '../../mocks/config.js';
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {

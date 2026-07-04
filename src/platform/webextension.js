@@ -16,9 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import browser from 'webextension-polyfill';
-import { PlatformAdapter } from './adapter.js';
-import { FlixMonkeyError } from '../core/utils.js';
+
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
+import { FlixMonkeyError } from '../core/utils.js';
+import { PlatformAdapter } from './adapter.js';
 
 export class WebExtensionAdapter extends PlatformAdapter {
     #configData = {};
