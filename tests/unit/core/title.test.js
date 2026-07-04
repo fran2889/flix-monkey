@@ -59,6 +59,16 @@ describe('Title', () => {
             expect(Title.fromJSON('string')).toBeNull();
             expect(Title.fromJSON(42)).toBeNull();
         });
+
+        it('should handle imdbVotes field from JSON', () => {
+            const title = Title.fromJSON({ displayTitle: 'Test', imdbVotes: 1000 });
+            expect(title.imdbVotes).toBe(1000);
+        });
+
+        it('should handle missing imdbVotes field from JSON', () => {
+            const title = Title.fromJSON({ displayTitle: 'Test' });
+            expect(title.imdbVotes).toBeNull();
+        });
     });
 
     it('should create notFound title with default null source', () => {
@@ -149,6 +159,25 @@ describe('Title', () => {
 
         it('should be null on notFound titles', () => {
             expect(Title.notFound('Missing').type).toBeNull();
+        });
+    });
+
+    describe('imdbVotes normalization', () => {
+        it.each([
+            [null, null],
+            [undefined, null],
+            ['', null],
+            ['N/A', null],
+            [0, 0],
+            [1, 1],
+            [999, 999],
+            [1000, 1000],
+            [2500000, 2500000],
+            ['2500000', 2500000],
+            ['2,500,000', 2], // parseInt stops at comma, returns 2
+            ['not a number', null],
+        ])('normalizes imdbVotes %s → %s', (input, expected) => {
+            expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });
 
