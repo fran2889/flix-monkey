@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { validateDomain } from './domains.js';
 import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
+import { validateDomain } from './domains.js';
 
 export async function handleFetchMessage(url, options = {}) {
     const validation = validateDomain(url);

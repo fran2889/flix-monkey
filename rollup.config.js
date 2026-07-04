@@ -1,8 +1,8 @@
-import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'fs';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { name, homepage, version, description, author, license } = pkg;

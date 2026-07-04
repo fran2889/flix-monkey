@@ -1,4 +1,5 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
+
 import baseConfig from './vitest.config.js';
 
 // Extends the base config so shared defaults (environment, future timeouts,

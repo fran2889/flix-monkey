@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from '../../../src/core/api-clients.js';
+import { describe, expect, it, vi } from 'vitest';
+
+import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 

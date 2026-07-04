@@ -15,17 +15,17 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { CacheManager } from './cache.js';
-import { DisabledClientsManager } from './disabled-clients.js';
+import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from './api-clients.js';
 import { ApiClientManager } from './api-manager.js';
-import { OverlayRenderer, FADE_STATE_LABELS } from './overlay.js';
-import { SurfaceManager } from './surfaces.js';
-import { DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS, ApiSource } from './constants.js';
+import { CacheManager } from './cache.js';
 import { ConfigManager } from './config-manager.js';
-import { Logger } from './logger.js';
-import { debounce, runIdle, slugify } from './utils.js';
-import { XmdbApiClient, OmdbApiClient, ImdbApiDevClient, AgregarrApiClient } from './api-clients.js';
+import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
+import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
+import { Logger } from './logger.js';
+import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
+import { SurfaceManager } from './surfaces.js';
+import { debounce, runIdle, slugify } from './utils.js';
 
 export class FlixMonkeyApp {
     #api;

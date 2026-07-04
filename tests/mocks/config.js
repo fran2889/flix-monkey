@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { ConfigManager } from '../../src/core/config-manager.js';
 import { CONFIG_DEFAULTS, CONFIG_FIELDS } from '../../src/core/config-fields.js';
+import { ConfigManager } from '../../src/core/config-manager.js';
 import { createMockAdapter } from './adapter.js';
 
 /**

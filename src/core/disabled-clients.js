@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { CLIENT_DISABLE_DURATION, ApiSource } from './constants.js';
+import { ApiSource, CLIENT_DISABLE_DURATION } from './constants.js';
 
 export class DisabledClientsManager {
     #adapter;

@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
+import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { createMockAdapter } from '../../../mocks/adapter.js';
 
 describe('SettingsUI', () => {

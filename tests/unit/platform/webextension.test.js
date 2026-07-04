@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { WebExtensionAdapter } from '../../../src/platform/webextension.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
+
+import { WebExtensionAdapter } from '../../../src/platform/webextension.js';
 
 vi.mock('webextension-polyfill', () => ({
     default: {
