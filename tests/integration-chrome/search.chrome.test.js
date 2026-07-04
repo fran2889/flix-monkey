@@ -28,7 +28,12 @@ async function navigateToSearch(page, env) {
     });
 }
 
-test('discovers and renders ratings on search page elements', async ({ env, storage, netflixPage, optionsPage }) => {
+test('should discover and render ratings on search page elements', async ({
+    env,
+    storage,
+    netflixPage,
+    optionsPage,
+}) => {
     await navigateToSearch(netflixPage, env);
 
     const visibleTitles = await discoverVisibleTitles(netflixPage, 2);

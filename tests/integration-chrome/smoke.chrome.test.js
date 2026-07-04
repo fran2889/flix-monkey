@@ -17,7 +17,7 @@
  */
 import { test, expect } from './fixtures.js';
 
-test('loads the Chrome extension and opens Netflix browse', async ({ extensionId, netflixPage }) => {
+test('should load the Chrome extension and open Netflix browse', async ({ extensionId, netflixPage }) => {
     expect(extensionId).toMatch(/^[a-p]{32}$/);
     await expect(netflixPage.locator('body')).toBeVisible();
 });

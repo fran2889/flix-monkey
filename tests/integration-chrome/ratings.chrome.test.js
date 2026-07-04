@@ -21,7 +21,7 @@ import { setCheckbox, setSelect, saveOptionsAndWaitForNetflixReload, openOptions
 import { expectOverlayBadges, expectOverlayCorner } from './helpers/overlays.js';
 import { DEFAULT_RATINGS } from './helpers/test-data.js';
 
-test('shows IMDb, RT, and MC according to options UI visibility settings', async ({
+test('should show IMDb, RT, and MC according to options UI visibility settings', async ({
     env,
     context,
     extensionId,
@@ -48,7 +48,7 @@ test('shows IMDb, RT, and MC according to options UI visibility settings', async
     await expectOverlayBadges(netflixPage, seeded[0], { rt: false, mc: false });
 });
 
-test('moves the overlay when overlayCorner is changed through options UI', async ({
+test('should move the overlay when overlayCorner is changed through options UI', async ({
     env,
     storage,
     netflixPage,

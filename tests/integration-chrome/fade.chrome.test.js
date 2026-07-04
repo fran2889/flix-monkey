@@ -21,7 +21,7 @@ import { setCheckbox, setText, saveOptionsAndWaitForNetflixReload, openOptionsPa
 import { expectFaded, findFadeToggle } from './helpers/overlays.js';
 import { LOW_RATING, MID_RATING } from './helpers/test-data.js';
 
-test('applies fade threshold settings saved from options UI', async ({
+test('should apply fade threshold settings saved from options UI', async ({
     env,
     context,
     extensionId,
@@ -51,7 +51,7 @@ test('applies fade threshold settings saved from options UI', async ({
     await expectFaded(netflixPage, seeded, false);
 });
 
-test('fade override updates immediately and persists after reload', async ({
+test('should have fade override update immediately and persist after reload', async ({
     env,
     storage,
     netflixPage,

@@ -19,7 +19,11 @@ import { test, expect } from './fixtures.js';
 import { discoverVisibleTitles } from './helpers/netflix.js';
 import { SINGLE_RATING } from './helpers/test-data.js';
 
-test('Clear Cache removes cached rating entries from options UI', async ({ storage, netflixPage, optionsPage }) => {
+test('should clear cache and remove cached rating entries from options UI', async ({
+    storage,
+    netflixPage,
+    optionsPage,
+}) => {
     const visibleTitles = await discoverVisibleTitles(netflixPage, 1);
     await storage.seedRatings(visibleTitles.slice(0, 1), SINGLE_RATING);
     await expect.poll(async () => (await storage.getKeysByPrefix(storage.prefixes.cache)).length).toBeGreaterThan(0);
@@ -29,7 +33,10 @@ test('Clear Cache removes cached rating entries from options UI', async ({ stora
     await expect.poll(async () => await storage.getKeysByPrefix(storage.prefixes.cache)).toEqual([]);
 });
 
-test('Reset Disabled Clients clears disabled provider flags from options UI', async ({ storage, optionsPage }) => {
+test('should reset disabled clients and clear disabled provider flags from options UI', async ({
+    storage,
+    optionsPage,
+}) => {
     await storage.seedDisabledClients(['agregarr', 'omdb']);
     await expect.poll(async () => (await storage.getKeysByPrefix(storage.prefixes.disabled)).length).toBeGreaterThan(0);
 
