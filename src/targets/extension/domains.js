@@ -19,8 +19,8 @@ export const ALLOWED_DOMAINS = [
     'api.imdbapi.dev',
     'www.omdbapi.com',
     'xmdbapi.com',
-    'v3.sg.media-imdb.com',
     'api.agregarr.org',
+    'imdb.iamidiotareyoutoo.com',
 ];
 
 export function validateDomain(url) {
