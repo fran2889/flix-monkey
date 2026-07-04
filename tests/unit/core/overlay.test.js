@@ -170,19 +170,9 @@ describe('OverlayRenderer', () => {
         });
 
         it.each([
-            [
-                'normal ratings',
-                { rating: 8.2, rtRating: 85, imdbId: 'tt1' },
-                'IMDb: 8.2 · RT: 85% – click to open IMDb',
-                true,
-            ],
-            [
-                'no ratings but IMDb ID present',
-                { rating: null, imdbId: 'tt1' },
-                'No ratings available – click to open IMDb',
-                false,
-            ],
-            ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found on IMDb – click to search', false],
+            ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 - Open IMDb', true],
+            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'No rating - Open IMDb', false],
+            ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found - Search IMDb', false],
         ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
             const renderer = new OverlayRenderer(createConfig({ showRtRating }));
             const container = document.createElement('div');
@@ -400,6 +390,85 @@ describe('OverlayRenderer', () => {
             expect(renderer.hasOverlay(container)).toBe(true);
             renderer.clearAllOverlays();
             expect(renderer.hasOverlay(container)).toBe(false);
+        });
+    });
+
+    describe('vote count formatting in tooltip', () => {
+        it('should format tooltip with vote count in k format', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 8.5, imdbVotes: 250000 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 8.5 (250k votes) - Open IMDb');
+        });
+
+        it('should format tooltip with vote count in M format', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 9.0, imdbVotes: 2500000 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 9.0 (3M votes) - Open IMDb');
+        });
+
+        it('should format tooltip without votes when imdbVotes is null', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 7.5, imdbVotes: null });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 7.5 - Open IMDb');
+        });
+
+        it('should format tooltip without votes when imdbVotes is undefined', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 6.0 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 6.0 - Open IMDb');
+        });
+
+        it('should show no rating tooltip when rating is null but imdbId exists', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: null });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('No rating - Open IMDb');
+        });
+
+        it('should show not found tooltip when no imdbId', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', rating: null, imdbId: null });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('Not found - Search IMDb');
+        });
+
+        it('should show tooltip with small vote count', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 5.0, imdbVotes: 123 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 5.0 (123 votes) - Open IMDb');
         });
     });
 });
