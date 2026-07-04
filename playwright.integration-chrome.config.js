@@ -13,9 +13,21 @@ export default defineConfig({
     expect: {
         timeout: env.timeoutMs,
     },
-    reporter: [['list'], ['html', { outputFolder: 'playwright-report/integration-chrome', open: 'never' }]],
+    reporter: [
+        ['list'],
+        [
+            'html',
+            {
+                outputFolder: 'playwright-report/integration-chrome',
+                open: 'never',
+                attachments: {
+                    include: ['screenshot', 'trace', 'video'],
+                },
+            },
+        ],
+    ],
     use: {
-        actionTimeout: env.timeoutMs,
+        actionTimeout: 5000,
         navigationTimeout: env.timeoutMs,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
