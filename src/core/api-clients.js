@@ -377,7 +377,9 @@ export class AgregarrApiClient extends BaseApiClient {
     }
 
     async getDetails(match, displayTitle) {
-        const { id, l: title, qid, y: year } = match;
+        const id = match['#IMDB_ID'];
+        const title = match['#TITLE'];
+        const year = match['#YEAR'];
         this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
@@ -393,7 +395,7 @@ export class AgregarrApiClient extends BaseApiClient {
             rating: entry?.rating ?? null,
             rtRating: null,
             mcRating: null,
-            type: mapTitleType(qid),
+            type: null,
         });
     }
 }
