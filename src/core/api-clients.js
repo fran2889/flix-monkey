@@ -397,6 +397,7 @@ export class AgregarrApiClient extends BaseApiClient {
             imdbId: id,
             year: year ?? null,
             rating: entry?.rating ?? null,
+            imdbVotes: entry?.votes ?? null,
             rtRating: null,
             mcRating: null,
             type: null,
