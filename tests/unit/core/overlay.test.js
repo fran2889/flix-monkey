@@ -170,9 +170,9 @@ describe('OverlayRenderer', () => {
         });
 
         it.each([
-            ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 - Open IMDb', true],
-            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'No rating - Open IMDb', false],
-            ['missing IMDb ID', { rating: null, imdbId: null }, 'Not found - Search IMDb', false],
+            ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb', true],
+            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'IMDb: Not rated · Open IMDb', false],
+            ['missing IMDb ID', { rating: null, imdbId: null }, 'IMDb: Not found · Search IMDb', false],
         ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
             const renderer = new OverlayRenderer(createConfig({ showRtRating }));
             const container = document.createElement('div');
@@ -402,7 +402,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 8.5 (250k votes) - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: 8.5 (250k votes) · Open IMDb');
         });
 
         it('should format tooltip with vote count in M format', () => {
@@ -413,7 +413,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 9.0 (3M votes) - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: 9.0 (3M votes) · Open IMDb');
         });
 
         it('should format tooltip without votes when imdbVotes is null', () => {
@@ -424,7 +424,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 7.5 - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: 7.5 · Open IMDb');
         });
 
         it('should format tooltip without votes when imdbVotes is undefined', () => {
@@ -435,7 +435,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 6.0 - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: 6.0 · Open IMDb');
         });
 
         it('should show no rating tooltip when rating is null but imdbId exists', () => {
@@ -446,7 +446,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('No rating - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: Not rated · Open IMDb');
         });
 
         it('should show not found tooltip when no imdbId', () => {
@@ -457,7 +457,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('Not found - Search IMDb');
+            expect(imdbLink.title).toBe('IMDb: Not found · Search IMDb');
         });
 
         it('should show tooltip with small vote count', () => {
@@ -468,7 +468,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 5.0 (123 votes) - Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: 5.0 (123 votes) · Open IMDb');
         });
     });
 });

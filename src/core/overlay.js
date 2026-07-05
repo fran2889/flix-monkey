@@ -178,9 +178,9 @@ export class OverlayRenderer {
     }
 
     #buildTooltip(titleParts, imdbId) {
-        if (titleParts.length) return `${titleParts.join(' · ')} - Open IMDb`;
-        if (imdbId) return 'No rating - Open IMDb';
-        return 'Not found - Search IMDb';
+        if (titleParts.length) return `${titleParts.join(' · ')} · Open IMDb`;
+        if (imdbId) return 'IMDb: Not rated · Open IMDb';
+        return 'IMDb: Not found · Search IMDb';
     }
 
     #createOverlay(titleObj) {
@@ -243,7 +243,7 @@ export class OverlayRenderer {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
         container.appendChild(this.#createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
-        container.title = 'Fetching ratings… click to search IMDb';
+        container.title = 'IMDb: Fetching ratings… · Search IMDb';
         return container;
     }
 
