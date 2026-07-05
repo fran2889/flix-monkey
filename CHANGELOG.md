@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/fran2889/flix-monkey/compare/v1.2.0...v1.3.0) (2026-07-05)
+
+
+### Features
+
+* **api-clients:** replace IMDb suggestions API with FM-DB for Agregarr client ([#90](https://github.com/fran2889/flix-monkey/issues/90)) ([e0afb4d](https://github.com/fran2889/flix-monkey/commit/e0afb4de65da1bc6beb747e87f9f17dacca84c2f))
+* **overlay:** add IMDb vote count to tooltip ([#93](https://github.com/fran2889/flix-monkey/issues/93)) ([7663342](https://github.com/fran2889/flix-monkey/commit/7663342b9b48d53d11079abdfd089012a20d4e5c))
+* **surfaces:** move browse title detection from .fallback-text to aria-label, refactor surfaces ([#89](https://github.com/fran2889/flix-monkey/issues/89)) ([0174313](https://github.com/fran2889/flix-monkey/commit/01743137b8d0ee1807c3f19f1d9d37473aee272a))
+
+
+### Bug Fixes
+
+* **build,options:** eliminate dead code and fix webextension options close ([#88](https://github.com/fran2889/flix-monkey/issues/88)) ([174a953](https://github.com/fran2889/flix-monkey/commit/174a953830668b32c957a1b4176bf152cc5bfd33))
+
 ## [1.2.0](https://github.com/fran2889/flix-monkey/compare/v1.1.1...v1.2.0) (2026-07-01)
 
 
