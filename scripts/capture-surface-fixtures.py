@@ -34,7 +34,8 @@ def _find_netflix_ws():
         url = p.get('url', '')
         if p.get('type') == 'page':
             parsed = urllib.parse.urlparse(url)
-            if parsed.netloc.endswith('netflix.com'):
+            host = parsed.hostname
+            if host and (host == 'netflix.com' or host.endswith('.netflix.com')):
                 return p['webSocketDebuggerUrl'].replace('ws://localhost:9222', '')
     raise RuntimeError('No Netflix page found on port 9222')
 
