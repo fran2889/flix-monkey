@@ -244,12 +244,13 @@ export class XmdbApiClient extends BaseApiClient {
             });
             return null;
         }
-        const { rating, release_year, title, metascore, title_type } = detailsJson;
+        const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
         return new Title({
             apiTitle: title ?? searchResultTitle ?? null,
             imdbId: id,
             year: release_year,
             rating,
+            imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
             type: mapTitleType(title_type),
@@ -290,13 +291,15 @@ export class OmdbApiClient extends BaseApiClient {
             });
             return null;
         }
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType } = json;
+        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
+        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replace(/,/g, ''), 10) : null;
         return new Title({
             apiTitle: apiTitle ?? null,
             imdbId: imdbID,
             year: releaseYear,
             rating: imdbRating,
+            imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
             type: mapTitleType(apiType),
@@ -345,6 +348,7 @@ export class ImdbApiDevClient extends BaseApiClient {
             imdbId: id,
             year: startYear,
             rating: rating?.aggregateRating ?? null,
+            imdbVotes: rating?.voteCount ?? null,
             rtRating: null,
             mcRating: metacritic?.score ?? null,
             type: mapTitleType(type),
@@ -397,6 +401,7 @@ export class AgregarrApiClient extends BaseApiClient {
             imdbId: id,
             year: year ?? null,
             rating: entry?.rating ?? null,
+            imdbVotes: entry?.votes ?? null,
             rtRating: null,
             mcRating: null,
             type: null,
