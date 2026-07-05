@@ -179,7 +179,7 @@ export class OverlayRenderer {
 
     #buildTooltip(titleParts, imdbId) {
         if (titleParts.length) return `${titleParts.join(' · ')} · Open IMDb`;
-        if (imdbId) return 'IMDb: Not rated · Open IMDb';
+        if (imdbId) return 'IMDb: No rating · Open IMDb';
         return 'IMDb: Not found · Search IMDb';
     }
 

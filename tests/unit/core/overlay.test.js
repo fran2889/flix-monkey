@@ -171,7 +171,7 @@ describe('OverlayRenderer', () => {
 
         it.each([
             ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb', true],
-            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'IMDb: Not rated · Open IMDb', false],
+            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb', false],
             ['missing IMDb ID', { rating: null, imdbId: null }, 'IMDb: Not found · Search IMDb', false],
         ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
             const renderer = new OverlayRenderer(createConfig({ showRtRating }));
@@ -446,7 +446,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: Not rated · Open IMDb');
+            expect(imdbLink.title).toBe('IMDb: No rating · Open IMDb');
         });
 
         it('should show not found tooltip when no imdbId', () => {
