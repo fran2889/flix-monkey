@@ -19,7 +19,7 @@ Outputs:
     tests/fixtures/netflix-hover.html
     tests/fixtures/netflix-modal.html
 """
-import json, os, re, socket, struct, time, urllib.request
+import json, os, re, socket, struct, time, urllib.parse, urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -31,8 +31,12 @@ def _find_netflix_ws():
     data = urllib.request.urlopen('http://localhost:9222/json/list').read()
     pages = json.loads(data)
     for p in pages:
-        if 'netflix.com' in p.get('url', '') and p.get('type') == 'page':
-            return p['webSocketDebuggerUrl'].replace('ws://localhost:9222', '')
+        url = p.get('url', '')
+        if p.get('type') == 'page':
+            parsed = urllib.parse.urlparse(url)
+            host = parsed.hostname
+            if host and (host == 'netflix.com' or host.endswith('.netflix.com')):
+                return p['webSocketDebuggerUrl'].replace('ws://localhost:9222', '')
     raise RuntimeError('No Netflix page found on port 9222')
 
 def _connect(ws_path):
