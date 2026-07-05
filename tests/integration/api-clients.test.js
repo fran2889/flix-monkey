@@ -80,6 +80,11 @@ function expectPercentageRating(rating, label) {
     expect(rating, `${label} out of range`).toBeLessThanOrEqual(100);
 }
 
+function _expectImdbVotes(votes, label = 'IMDb votes') {
+    expect(votes, `${label} missing`).toBeTypeOf('number');
+    expect(votes, `${label} out of range`).toBeGreaterThanOrEqual(0);
+}
+
 describe('api-clients integration', () => {
     let configManager;
     let badKeyConfigManager;
@@ -292,6 +297,32 @@ describe('api-clients integration', () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+        });
+    });
+
+    describe('imdbVotes verification', () => {
+        it('XMDB returns imdbVotes', async () => {
+            const client = new XmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch('The Godfather');
+            _expectImdbVotes(result.imdbVotes);
+        });
+
+        it('OMDB returns imdbVotes', async () => {
+            const client = new OmdbApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch('The Godfather');
+            _expectImdbVotes(result.imdbVotes);
+        });
+
+        it('IMDBAPI returns imdbVotes', async () => {
+            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
+            const result = await client.fetch('The Godfather');
+            _expectImdbVotes(result.imdbVotes);
+        }, 15000);
+
+        it('Agregarr returns imdbVotes', async () => {
+            const client = new AgregarrApiClient(disabledManager, adapter, configManager);
+            const result = await client.fetch('The Godfather');
+            _expectImdbVotes(result.imdbVotes);
         });
     });
 });
