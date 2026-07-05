@@ -326,7 +326,7 @@ describe('XmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
-    it('getDetails extracts vote_count from XMDB response', async () => {
+    it('should extract vote_count from XMDB response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 id: 'tt1',
@@ -505,7 +505,7 @@ describe('OmdbApiClient', () => {
         expect(result).toBeNull();
     });
 
-    it('getDetails extracts imdbVotes from OMDB response', async () => {
+    it('should extract imdbVotes from OMDB response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
@@ -524,7 +524,7 @@ describe('OmdbApiClient', () => {
         expect(result.imdbVotes).toBe(2500000);
     });
 
-    it('getDetails handles missing imdbVotes from OMDB response', async () => {
+    it('should handle missing imdbVotes from OMDB response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 Response: 'True',
@@ -716,7 +716,7 @@ describe('ImdbApiDevClient', () => {
         );
     });
 
-    it('getDetails extracts voteCount from IMDb API Dev response', async () => {
+    it('should extract voteCount from IMDb API Dev response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
                 primaryTitle: 'Movie 1',
@@ -924,7 +924,7 @@ describe('AgregarrApiClient', () => {
         expect(calledUrl).toContain('q=');
     });
 
-    it('getDetails extracts votes from Agregarr response', async () => {
+    it('should extract votes from Agregarr response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
@@ -938,7 +938,7 @@ describe('AgregarrApiClient', () => {
         expect(result.imdbVotes).toBe(2500000);
     });
 
-    it('getDetails handles null votes from Agregarr response', async () => {
+    it('should handle null votes from Agregarr response', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: null }]),
         });
