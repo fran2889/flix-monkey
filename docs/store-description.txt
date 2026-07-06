@@ -1,6 +1,6 @@
-FlixMonkey adds IMDb ratings directly to Netflix thumbnails, with Metacritic and Rotten Tomatoes available from supported providers, so you can spot better picks faster.
+FlixMonkey adds IMDb ratings directly to Netflix, with Metacritic and Rotten Tomatoes available from supported providers, helping you decide what to watch before you press play.
 
-Ratings appear on title cards, hover previews, detail views, and search results. Available as a Chrome extension, Firefox add-on, and Tampermonkey/Violentmonkey/Greasemonkey userscript.
+Available as a Chrome extension, Firefox add-on, and Tampermonkey/Violentmonkey/Greasemonkey userscript.
 
 ⭐ FEATURES
 • View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes when available
@@ -8,15 +8,15 @@ Ratings appear on title cards, hover previews, detail views, and search results.
 • Skip low-rated titles by fading out anything below your chosen IMDb threshold
 
 ⚙️ CUSTOMIZATION
-• Position rating badges in any corner of thumbnails
+• Position rating badge in any corner of the thumbnail
 • Show or hide Metacritic and Rotten Tomatoes scores
 • Set the IMDb rating threshold for the fade-out feature
 
 📊 RATING PROVIDERS
 FlixMonkey supports multiple data sources:
-• FM-DB + Agregarr (default): IMDb ratings with no API key or setup needed
-• OMDb: Recommended for full IMDb, Metacritic, and Rotten Tomatoes coverage with a free API key
-• XMDb: Free API key for IMDb and Metacritic
+• FM-DB + Agregarr (default): IMDb ratings with no setup needed
+• OMDb: Recommended for full IMDb, Metacritic, and Rotten Tomatoes support with a free API key
+• XMDb: Supports IMDb and Metacritic with a free API key
 • IMDb API (deprecated): Unreliable due to low rate limits
 
 ⚡ CACHING
@@ -27,4 +27,6 @@ Ratings are cached locally for instant loading:
 • Failing providers are temporarily paused to prevent repeated errors
 
 📜 LICENSE
-Open source under GPLv3. Source code, questions, and issues: https://github.com/fran2889/flix-monkey
+Open source under GPLv3.
+
+Documentation, source code, and issues: https://github.com/fran2889/flix-monkey
