@@ -15,6 +15,7 @@
 - All external links must be validated
 - User-facing labels for defaults (not internal values)
 - Screenshots must be anonymized (no personal data)
+- Placeholder images: single color rectangles of matching size for all screenshots
 
 ---
 
@@ -26,10 +27,11 @@
 
 ### Files to Create
 
-- `screenshots/hero.png` - Main hero screenshot
-- `screenshots/thumbnails.png` - Thumbnail grid screenshot
-- `screenshots/hover.png` - Hover card screenshot
-- `screenshots/modal.png` - Preview modal screenshot
+- `screenshots/` directory
+- `screenshots/hero.png` - Main hero screenshot (or placeholder)
+- `screenshots/thumbnails.png` - Thumbnail grid screenshot (or placeholder)
+- `screenshots/hover.png` - Hover card screenshot (or placeholder)
+- `screenshots/modal.png` - Preview modal screenshot (or placeholder)
 
 ### Files to Reference (Read-Only)
 
@@ -70,7 +72,54 @@ git commit -m "chore: create screenshots directory for README assets"
 
 ---
 
-### Task 2: Create README Hero Section
+### Task 2: Create Image Placeholders
+
+**Files:**
+
+- Create: `screenshots/hero.png`
+- Create: `screenshots/thumbnails.png`
+- Create: `screenshots/hover.png`
+- Create: `screenshots/modal.png`
+
+**Interfaces:**
+
+- Produces: Single-color rectangle placeholder images of matching size
+
+- [ ] **Step 1: Create hero placeholder**
+
+Run: `convert -size 1200x600 xc:"#2a2a2a" screenshots/hero.png`
+Expected: 1200x600 dark gray rectangle created
+
+- [ ] **Step 2: Create thumbnails placeholder**
+
+Run: `convert -size 800x400 xc:"#2a2a2a" screenshots/thumbnails.png`
+Expected: 800x400 dark gray rectangle created
+
+- [ ] **Step 3: Create hover placeholder**
+
+Run: `convert -size 600x400 xc:"#2a2a2a" screenshots/hover.png`
+Expected: 600x400 dark gray rectangle created
+
+- [ ] **Step 4: Create modal placeholder**
+
+Run: `convert -size 600x400 xc:"#2a2a2a" screenshots/modal.png`
+Expected: 600x400 dark gray rectangle created
+
+- [ ] **Step 5: Verify placeholders exist**
+
+Run: `ls -la screenshots/`
+Expected: All 4 placeholder files present
+
+- [ ] **Step 6: Commit placeholder images**
+
+```bash
+git add screenshots/*.png
+git commit -m "docs: add placeholder images for README screenshots"
+```
+
+---
+
+### Task 3: Create README Hero Section
 
 **Files:**
 
@@ -78,6 +127,7 @@ git commit -m "chore: create screenshots directory for README assets"
 
 **Interfaces:**
 
+- Consumes: `screenshots/hero.png` from Task 2
 - Produces: Hero section with project name, screenshot, badges, tagline
 
 - [ ] **Step 1: Write hero section content**
@@ -107,7 +157,7 @@ git commit -m "docs(readme): add hero section with screenshot and badges"
 
 ---
 
-### Task 3: Add Screenshot Gallery
+### Task 4: Add Screenshot Gallery
 
 **Files:**
 
@@ -115,6 +165,7 @@ git commit -m "docs(readme): add hero section with screenshot and badges"
 
 **Interfaces:**
 
+- Consumes: `screenshots/thumbnails.png`, `screenshots/hover.png`, `screenshots/modal.png` from Task 2
 - Produces: Screenshot gallery section
 
 - [ ] **Step 1: Write screenshot gallery section**
@@ -141,7 +192,7 @@ git commit -m "docs(readme): add screenshot gallery"
 
 ---
 
-### Task 4: Add Installation Section with Badge Links
+### Task 5: Add Installation Section with Badge Links
 
 **Files:**
 
@@ -184,7 +235,7 @@ git commit -m "docs(readme): add installation section with store badge links"
 
 ---
 
-### Task 5: Add Features Section
+### Task 6: Add Features Section
 
 **Files:**
 
@@ -220,7 +271,7 @@ git commit -m "docs(readme): add features section with benefit statements"
 
 ---
 
-### Task 6: Add Configuration Section with All Settings
+### Task 7: Add Configuration Section with All Settings
 
 **Files:**
 
@@ -283,7 +334,7 @@ git commit -m "docs(readme): add comprehensive configuration section with all se
 
 ---
 
-### Task 7: Add Troubleshooting Section
+### Task 8: Add Troubleshooting Section
 
 **Files:**
 
@@ -318,7 +369,7 @@ git commit -m "docs(readme): add troubleshooting FAQ section"
 
 ---
 
-### Task 8: Add Development Section
+### Task 9: Add Development Section
 
 **Files:**
 
@@ -359,7 +410,7 @@ git commit -m "docs(readme): add minimal development section with build info"
 
 ---
 
-### Task 9: Add Footer with Privacy and License
+### Task 10: Add Footer with Privacy and License
 
 **Files:**
 
@@ -406,7 +457,7 @@ git commit -m "docs(readme): add footer with privacy policy and license"
 
 ---
 
-### Task 10: Remove Old Content from README
+### Task 11: Remove Old README Content
 
 **Files:**
 
@@ -414,13 +465,13 @@ git commit -m "docs(readme): add footer with privacy policy and license"
 
 **Interfaces:**
 
-- Consumes: All new sections from Tasks 2-9
+- Consumes: All new sections from Tasks 3-10
 - Produces: Final README.md with old content removed
 
-- [ ] **Step 1: Review current README.md**
+- [ ] **Step 1: Review current README.md structure**
 
-Run: `wc -l README.md` to check line count
-Expected: Should be significantly longer than original due to new content
+Run: `head -20 README.md && echo "..." && tail -20 README.md`
+Expected: Hero at top, footer at bottom, no old content mixed in
 
 - [ ] **Step 2: Verify all old sections are replaced**
 
@@ -433,12 +484,12 @@ Check that these old sections are NOT present:
 - Developer workflow
 - Old configuration format
 
-- [ ] **Step 3: Final verification of complete README**
+- [ ] **Step 3: Ensure complete README flow**
 
 Run: Read through entire README.md
 Expected: Flows from hero → screenshots → installation → features → configuration → troubleshooting → development → footer
 
-- [ ] **Step 4: Commit final README cleanup**
+- [ ] **Step 4: Commit README cleanup**
 
 ```bash
 git add README.md
@@ -447,7 +498,7 @@ git commit -m "docs(readme): finalize README redesign with all new sections"
 
 ---
 
-### Task 11: Update CONTRIBUTING.md (Optional)
+### Task 12: Update CONTRIBUTING.md (Optional)
 
 **Files:**
 
@@ -460,66 +511,68 @@ git commit -m "docs(readme): finalize README redesign with all new sections"
 
 - [ ] **Step 1: Check if CONTRIBUTING needs updates**
 
-Run: Compare old README with CONTRIBUTING.md
-Expected: Identify any gaps where developer info was in README but not in CONTRIBUTING
+Run: `grep -n "build\|rollup\|npm run" README.md`
+Expected: Should NOT find detailed build instructions in README
 
-- [ ] **Step 2: Add missing developer content if needed**
+- [ ] **Step 2: Verify CONTRIBUTING has necessary info**
 
-If gaps found, add content from old README to CONTRIBUTING.md
+Run: Read CONTRIBUTING.md
+Expected: Contains build, test, and development workflow details
 
-- [ ] **Step 3: Commit CONTRIBUTING updates if made**
+- [ ] **Step 3: Commit CONTRIBUTING updates if needed**
+
+If changes made:
 
 ```bash
 git add CONTRIBUTING.md
-git commit -m "docs: move developer info from README to CONTRIBUTING"
+git commit -m "docs: ensure CONTRIBUTING has complete development info"
 ```
 
-- [ ] **Step 4: If no changes needed, skip this task**
+- [ ] **Step 4: If no changes needed, mark as complete**
 
 ---
 
-### Task 12: Create Screenshots (Manual Task)
+### Task 13: Replace Placeholders with Real Screenshots (Manual/Optional)
 
 **Files:**
 
-- Create: `screenshots/hero.png`
-- Create: `screenshots/thumbnails.png`
-- Create: `screenshots/hover.png`
-- Create: `screenshots/modal.png`
+- Replace: `screenshots/hero.png`
+- Replace: `screenshots/thumbnails.png`
+- Replace: `screenshots/hover.png`
+- Replace: `screenshots/modal.png`
 
 **Interfaces:**
 
-- Produces: All screenshot assets for README
+- Consumes: Placeholders from Task 2
+- Produces: Real screenshot assets
 
-- [ ] **Step 1: Capture hero screenshot**
+- [ ] **Step 1: Capture real hero screenshot**
 
-Create: `screenshots/hero.png` showing FlixMonkey rating badges on Netflix thumbnails
-Requirements: High quality, anonymized, shows value proposition clearly
+Create real `screenshots/hero.png` showing FlixMonkey rating badges on Netflix thumbnails
+Requirements: High quality, anonymized, 1200x600 or similar aspect ratio
 
-- [ ] **Step 2: Capture thumbnail grid screenshot**
+- [ ] **Step 2: Capture real thumbnail grid screenshot**
 
-Create: `screenshots/thumbnails.png` showing badges on browse grid
+Create real `screenshots/thumbnails.png` showing badges on browse grid
 
-- [ ] **Step 3: Capture hover card screenshot**
+- [ ] **Step 3: Capture real hover card screenshot**
 
-Create: `screenshots/hover.png` showing ratings on hover preview
+Create real `screenshots/hover.png` showing ratings on hover preview
 
-- [ ] **Step 4: Capture modal screenshot**
+- [ ] **Step 4: Capture real modal screenshot**
 
-Create: `screenshots/modal.png` showing ratings on preview modal
+Create real `screenshots/modal.png` showing ratings on preview modal
 
-- [ ] **Step 5: Optimize and commit screenshots**
-
-Run: Optimize images for web (compress if needed)
+- [ ] **Step 5: Commit real screenshots**
 
 ```bash
 git add screenshots/*.png
-git commit -m "docs: add README screenshot assets"
+git commit -m "docs: replace placeholder images with real screenshots"
 ```
 
 ---
 
-### Task 13: Final Verification and Testing
+### Task 14: Final Verification and Testing
 
 **Files:**
 
@@ -534,8 +587,8 @@ git commit -m "docs: add README screenshot assets"
 
 - [ ] **Step 1: Verify README structure**
 
-Run: Read README.md end-to-end
-Expected: All sections present in correct order, no typos, all links valid
+Run: `wc -l README.md && grep -c "##" README.md`
+Expected: Appropriate line count, all section headers present
 
 - [ ] **Step 2: Test all external links**
 
@@ -562,9 +615,14 @@ Expected: All formatting correct (tables, lists, badges, images)
 - [ ] **Step 4: Check git history**
 
 Run: `git log --oneline -20`
-Expected: All commits from Tasks 1-12 present with descriptive messages
+Expected: All commits from Tasks 1-13 present with descriptive messages
 
-- [ ] **Step 5: Final commit if any fixes needed**
+- [ ] **Step 5: Verify all images exist**
+
+Run: `for f in hero thumbnails hover modal; do test -f screenshots/$f.png && echo "$f.png exists" || echo "$f.png MISSING"; done`
+Expected: All image files exist
+
+- [ ] **Step 6: Final commit if any fixes needed**
 
 If any issues found, fix and commit:
 
@@ -578,25 +636,19 @@ git commit -m "fix(readme): address final verification issues"
 ## Self-Review Checklist
 
 - [x] **Spec coverage**: All design decisions from spec are implemented in tasks
-    - Hero section with badges: Task 2
-    - Screenshot gallery: Task 3
-    - Installation with store badges: Task 4
-    - Features section: Task 5
-    - Configuration with all settings: Task 6
-    - Troubleshooting: Task 7
-    - Development section: Task 8
-    - Footer: Task 9
-    - Screenshots: Task 12
+    - Hero section with badges: Task 3
+    - Screenshot gallery: Task 4
+    - Installation with store badges: Task 5
+    - Features section: Task 6
+    - Configuration with all settings: Task 7
+    - Troubleshooting: Task 8
+    - Development section: Task 9
+    - Footer: Task 10
+    - Screenshots/Placeholders: Task 2, 13
+    - Image placeholders: Task 2
 - [x] **Placeholder scan**: No TBDs, TODOs, or placeholders found
 - [x] **Type consistency**: No type inconsistencies (all file paths exact, all markdown syntax consistent)
 - [x] **Scope check**: Each task is bite-sized (2-5 minutes) with clear deliverables
+- [x] **New requirement**: Image placeholders added as Task 2
 
 **Plan complete and saved to `docs/superpowers/plans/2026-07-06-readme-redesign-plan.md`.**
-
-**Two execution options:**
-
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-**Which approach?**
