@@ -29,15 +29,11 @@ _Requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/d
 
 ## Features
 
-✅ **Rating Badges** - IMDb, Metacritic, Rotten Tomatoes scores on thumbnails, hover cards, and modals
-
-✅ **Smart Caching** - Fast lookups for titles you've seen before
-
-✅ **Auto-Disable** - Failing APIs are temporarily disabled to prevent lag
-
-✅ **Click to Open** - Click badges to open the IMDb page
-
-✅ **Customizable** - Change badge position, choose API provider, and more
+- **Rating Badges** - IMDb, Metacritic, Rotten Tomatoes scores on thumbnails, hover cards, and modals
+- **Smart Caching** - Fast lookups for titles you've seen before
+- **Auto-Disable** - Failing APIs are temporarily disabled to prevent lag
+- **Click to Open** - Click badges to open the IMDb page
+- **Customizable** - Change badge position, choose API provider, and more
 
 ---
 
@@ -80,10 +76,7 @@ Access settings via:
 
 ## Troubleshooting
 
-**No badges appearing?** Refresh Netflix or check if the extension is enabled.
-**Need fresh ratings?** Clear cache in settings.
-**Slow performance?** Reset disabled APIs in settings.
-**Still having issues?** Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues).
+**No badges appearing?** Refresh Netflix or check if the extension is enabled. **Need fresh ratings?** Clear cache in settings. **Slow performance?** Reset disabled APIs in settings. **Still having issues?** Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues).
 
 ---
 
