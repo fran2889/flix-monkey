@@ -18,7 +18,7 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
 - **Test runner**: Vitest + jsdom + MSW
-- **External APIs**: XMDB (`xmdbapi.com`), OMDB (`omdbapi.com`), IMDb API Dev (`api.imdbapi.dev`)
+- **External APIs**: XMDB (`xmdbapi.com`), OMDB (`omdbapi.com`), IMDb API Dev (`api.imdbapi.dev`), Agregarr (`api.agregarr.org`), IMDb fallback (`imdb.iamidiotareyoutoo.com`)
 
 ## Setup
 
@@ -60,7 +60,7 @@ Husky git hooks are installed automatically via the `prepare` script.
 ### Build Notes
 
 - `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
-- **Manifest injection**: `name`, `version`, `description`, and `icons` fields in `manifest.json` source files use placeholder strings (`__NAME__`, etc.) and are populated at build time from `package.json` by the `injectManifestMetadata` Rollup plugin.
+- **Manifest injection**: `name`, `version`, `description`, `homepage_url`, and `icons` fields in `manifest.json` source files use placeholder strings (`__NAME__`, `__VERSION__`, `__DESCRIPTION__`, `__HOMEPAGE_URL__`, etc.) and are populated at build time from `package.json` by the `injectManifestMetadata` Rollup plugin.
 - **Icon resizing**: `src/assets/icons/icon.png` is the single source icon; `sharp` resizes it to 16/32/48/128px at build time into `dist/<target>/icons/`.
 - **Packaging**: `scripts/package.js` creates ZIP archives of the built extension directories for distribution.
 - **Userscript**: Bundled as IIFE with a `==UserScript==` banner generated at build time. Non-ASCII characters are unicode-escaped. License headers are stripped from the output (they're already in the banner).
@@ -95,9 +95,15 @@ tests/
     netflix-hover.html
     netflix-modal.html
     netflix-search.html
+    surfaces/             # Individual surface type fixtures
+      preview-detail.html
+      preview-mini.html
+      standard-card.html
+      title-card.html
   mocks/                # Shared mock factories
     adapter.js          # Mock PlatformAdapter
     chrome.js           # chrome.* API stubs
+    config.js           # Mock ConfigManager
     logger.js           # Mock Logger
     platform.js         # Platform-level helpers
     userscript.js       # GM_* API stubs
@@ -153,7 +159,7 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | --------------------- | ------------------------------------------------------------------------ |
 | `app.js`              | Main `FlixMonkeyApp` class and `startApp` factory function               |
 | `api-manager.js`      | Orchestrates API clients, handles provider selection and fallbacks       |
-| `api-clients.js`      | Client implementations for XMDB, OMDB, and IMDb API Dev                  |
+| `api-clients.js`      | Client implementations for XMDB, OMDB, IMDb API Dev, and Agregarr        |
 | `cache.js`            | Async cache with per-entry TTL logic backed by the platform adapter      |
 | `disabled-clients.js` | Tracks failing API clients to avoid redundant requests (1-hour lockout)  |
 | `request-queue.js`    | Rate limiting and cross-tab synchronization via `fm_last_req` in storage |
@@ -161,10 +167,12 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | `surfaces.js`         | Netflix DOM discovery: locates thumbnails, banners, and modal elements   |
 | `config-manager.js`   | Reactive configuration object; dispatches change events                  |
 | `config-fields.js`    | Single source of truth for all settings definitions and defaults         |
+| `fade-manager.js`     | Manages fade state overrides for individual titles                       |
 | `logger.js`           | Centralized logging; honours the `debug` config flag                     |
+| `rate-limits.js`      | Per-client rate limit intervals                                          |
 | `utils.js`            | Shared helpers; defines `FlixMonkeyError`                                |
 | `title.js`            | Pure data class representing a movie/show title                          |
-| `constants.js`        | Shared constants: timing values, `ApiSource` enum, `RATE_LIMITS`         |
+| `constants.js`        | Shared constants: timing values, `ApiSource` enum, `TitleType` enum      |
 
 **`src/core/ui/`**: Shared UI components
 
@@ -211,6 +219,7 @@ Entry points and platform-specific files.
 **`src/targets/userscript/`**:
 
 - `entry.js`: Userscript entry; wires GM_config and starts the app
+- `metadata.js`: Userscript metadata banner template with placeholders
 
 ## Platform Adapter Interface
 
@@ -240,31 +249,39 @@ class PlatformAdapter {
 
 | Key                     | Type     | Default    | Description                                                    |
 | ----------------------- | -------- | ---------- | -------------------------------------------------------------- |
-| `apiClient`             | select   | `imdbapi`  | Primary API provider (`imdbapi`, `omdb`, `xmdb`)               |
+| `apiClient`             | select   | `agregarr` | Primary API provider (`agregarr`, `imdbapi`, `omdb`, `xmdb`)   |
 | `xmdbApiKey`            | text     | `''`       | API key for XMDB (required if provider is `xmdb`)              |
 | `omdbApiKey`            | text     | `''`       | API key for OMDB (required if provider is `omdb`)              |
 | `overlayCorner`         | select   | `top-left` | Badge position on thumbnails                                   |
-| `showRtRating`          | checkbox | `true`     | Show Rotten Tomatoes score                                     |
-| `showMcRating`          | checkbox | `true`     | Show Metacritic score                                          |
+| `showRtRating`          | checkbox | `false`    | Show Rotten Tomatoes score                                     |
+| `showMcRating`          | checkbox | `false`    | Show Metacritic score                                          |
 | `cacheTtlRatedOldYear`  | text     | `'-1'`     | Cache TTL (days) for rated titles > 1 year old; `-1` = forever |
 | `cacheTtlRatedNewYear`  | text     | `'30'`     | Cache TTL (days) for rated titles < 1 year old                 |
 | `cacheTtlNoRating`      | text     | `'1'`      | Cache TTL (days) for unrated/not-found titles                  |
 | `enableFadeUnderRating` | checkbox | `false`    | Fade thumbnails below the IMDb threshold                       |
 | `fadeRatingThreshold`   | text     | `'6.0'`    | IMDb rating threshold for fading                               |
+| `enableFadeToggle`      | checkbox | `false`    | Show fade override button in hover preview                     |
 | `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
 
 ## Constants (`constants.js`)
 
-| Export                    | Value / Type  | Notes                                                                |
-| ------------------------- | ------------- | -------------------------------------------------------------------- |
-| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                                 |
-| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                                                |
-| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request                               |
-| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)                         |
-| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                                 |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI }`: canonical client names                    |
-| `RATE_LIMITS`             | object        | Per-client minimum interval in ms: XMDB 1500, OMDB 250, IMDBAPI 4000 |
-| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements                  |
+| Export                    | Value / Type  | Notes                                                       |
+| ------------------------- | ------------- | ----------------------------------------------------------- |
+| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                        |
+| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                             |
+| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                                       |
+| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request                      |
+| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)                |
+| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                        |
+| `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI, AGREGARR }`: canonical client names |
+| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum                        |
+| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements         |
+
+## Rate Limits (`rate-limits.js`)
+
+| Export        | Value / Type | Notes                                                                              |
+| ------------- | ------------ | ---------------------------------------------------------------------------------- |
+| `RATE_LIMITS` | object       | Per-client minimum interval in ms: XMDB 1500, OMDB 250, IMDBAPI 4000, AGREGARR 250 |
 
 ## Code Style & Conventions
 
@@ -345,10 +362,10 @@ npm run build && npm test
 ## Common Gotchas
 
 - **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.js` / `service-worker.js`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS`. Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
+- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (IMDb API Dev, OMDB, XMDB, Agregarr, and IMDb fallback). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
-- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `constants.js`.
-- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, and `description`. Do not hardcode these: they are injected from `package.json` at build time.
+- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.js`.
+- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
 - **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.js` for application logging, not raw `console` calls in `src/`.
 - **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract: it throws if not implemented. Every adapter must implement it.
 - **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment: a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
