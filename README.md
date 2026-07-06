@@ -19,27 +19,24 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ## Installation
 
-### Chrome Extension
+<img src="https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white" alt="Install for Chrome" title="Install from Chrome Web Store" />
+<img src="https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white" alt="Install for Firefox" title="Install from Firefox Add-ons" />
+<img src="https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white" alt="Install Userscript" title="Install FlixMonkey userscript" />
 
-[![Install for Chrome](https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
-
-### Firefox Add-on
-
-[![Install for Firefox](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
-
-### Userscript
-
-[![Install Userscript](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/fran2889/flix-monkey/main/FlixMonkey.user.js)
-_Requires [Tampermonkey for Chrome](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo), [Tampermonkey for Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/), or [Violentmonkey](https://violentmonkey.github.io/)_
+_Requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) or [Violentmonkey](https://violentmonkey.github.io/) for userscript installation_
 
 ---
 
 ## Features
 
 ✅ **Rating Badges** - IMDb, Metacritic, Rotten Tomatoes scores on thumbnails, hover cards, and modals
+
 ✅ **Smart Caching** - Fast lookups for titles you've seen before
+
 ✅ **Auto-Disable** - Failing APIs are temporarily disabled to prevent lag
+
 ✅ **Click to Open** - Click badges to open the IMDb page
+
 ✅ **Customizable** - Change badge position, choose API provider, and more
 
 ---
