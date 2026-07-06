@@ -9,6 +9,19 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ---
 
+## Table of Contents
+
+- [How it looks](#how-it-looks)
+- [Installation](#installation)
+- [Features](#features)
+- [Settings](#settings)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Privacy Policy](#privacy-policy)
+- [License](#license)
+
+---
+
 ## How it looks
 
 ![Rating badges on Netflix thumbnails](screenshots/thumbnails.png)
