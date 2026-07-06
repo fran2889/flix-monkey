@@ -32,8 +32,8 @@ function logError(message) {
 
 function getEnv(name) {
     const value = process.env[name];
-    if (!value) {
-        logError(`Missing required environment variable: ${name}`);
+    if (!value || value.trim() === '') {
+        logError(`Missing or empty required environment variable: ${name}`);
         process.exit(1);
     }
     return value;
@@ -41,7 +41,13 @@ function getEnv(name) {
 
 function generateJWT(issuer, secret) {
     const header = { alg: 'HS256', typ: 'JWT' };
-    const payload = { iss: issuer };
+    // AMO API v5 requires JWT to expire within 3 minutes
+    const payload = {
+        iss: issuer,
+        exp: Math.floor(Date.now() / 1000) + 180, // 180 seconds = 3 minutes
+    };
+
+    logInfo(`JWT payload: ${JSON.stringify(payload)}`);
 
     const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -49,7 +55,9 @@ function generateJWT(issuer, secret) {
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
     const signature = crypto.createHmac('sha256', secret).update(signatureInput).digest('base64url');
 
-    return `${signatureInput}.${signature}`;
+    const jwtToken = `${signatureInput}.${signature}`;
+    logInfo('JWT generated successfully');
+    return jwtToken;
 }
 
 function makeAMORequest(method, path, jwt, payload = null) {
@@ -72,11 +80,21 @@ function makeAMORequest(method, path, jwt, payload = null) {
             let data = '';
             res.on('data', chunk => (data += chunk));
             res.on('end', () => {
+                logInfo(`AMO API response: ${res.statusCode} ${res.statusMessage}`);
+                if (data) {
+                    logInfo(`Response data: ${data.substring(0, 200)}...`);
+                }
+
                 if (res.statusCode >= 400) {
                     return reject(new Error(`AMO API request failed: ${res.statusCode} ${data}`));
                 }
+
                 try {
                     const parsed = data ? JSON.parse(data) : {};
+                    // Check for API-level errors even with 2xx status
+                    if (parsed.error || parsed.errors) {
+                        return reject(new Error(`AMO API error: ${JSON.stringify(parsed.error || parsed.errors)}`));
+                    }
                     resolve(parsed);
                 } catch (error) {
                     logError(`Failed to parse response: ${error.message}`);
@@ -123,6 +141,11 @@ async function main() {
         const description = validateDescription(content.trim());
         logInfo(`Description length: ${description.length} characters`);
 
+        if (!description) {
+            logError('Description is empty');
+            process.exit(1);
+        }
+
         if (dryRun) {
             logInfo('Dry run complete. Description would be:');
             logInfo(description.substring(0, 200) + '...');
@@ -135,6 +158,8 @@ async function main() {
         const secret = getEnv('AMO_JWT_SECRET');
         const addonId = getEnv('AMO_ADDON_ID');
 
+        logInfo(`Using AMO API issuer: ${issuer.length > 20 ? issuer.substring(0, 20) + '...' : issuer}`);
+        logInfo(`Using AMO addon ID: ${addonId}`);
         logInfo('Generating JWT for AMO API...');
         const jwt = generateJWT(issuer, secret);
         logInfo('JWT generated successfully');
@@ -144,8 +169,12 @@ async function main() {
         const payload = JSON.stringify({
             description: { 'en-US': description },
         });
+        logInfo(`Request payload: ${payload.substring(0, 200)}...`);
 
-        const result = await makeAMORequest('PATCH', `/addons/addon/${addonId}`, jwt, payload);
+        // URL-encode the addon ID to handle special characters like @
+        const encodedAddonId = encodeURIComponent(addonId);
+        logInfo(`Using encoded addon ID: ${encodedAddonId}`);
+        const result = await makeAMORequest('PATCH', `/addons/addon/${encodedAddonId}/`, jwt, payload);
         logInfo('Firefox AMO description updated successfully');
         logInfo(JSON.stringify(result, null, 2));
 

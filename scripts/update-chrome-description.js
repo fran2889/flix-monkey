@@ -81,7 +81,7 @@ async function getAccessToken() {
     });
 }
 
-async function updateChromeDescription(accessToken, extensionId, description) {
+async function updateChromeDescription(accessToken, publisherId, extensionId, description) {
     const payload = JSON.stringify({
         item: {
             description: description,
@@ -90,7 +90,7 @@ async function updateChromeDescription(accessToken, extensionId, description) {
 
     const options = {
         hostname: 'chromewebstore.googleapis.com',
-        path: `/v2/items/${extensionId}`,
+        path: `/v2/publishers/${publisherId}/items/${extensionId}`,
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -167,8 +167,9 @@ async function main() {
 
         // Update description
         const extensionId = getEnv('CHROME_EXTENSION_ID');
+        const publisherId = getEnv('CHROME_PUBLISHER_ID');
         logInfo(`Updating Chrome Web Store description for extension ${extensionId}`);
-        const result = await updateChromeDescription(accessToken, extensionId, description);
+        const result = await updateChromeDescription(accessToken, publisherId, extensionId, description);
         logInfo('Chrome Web Store description updated successfully');
         logInfo(JSON.stringify(result, null, 2));
 
