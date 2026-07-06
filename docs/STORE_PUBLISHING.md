@@ -58,3 +58,57 @@ Generate both at <https://addons.mozilla.org/developers/addon/api/key/>
 (Manage API Keys). The add-on's stable ID is already set in
 `src/targets/firefox/manifest.json` as `browser_specific_settings.gecko.id`
 (`flixmonkey@fran`); AMO uses it to match version updates to the listing.
+
+## Updating Store Descriptions
+
+The store listing descriptions for Chrome Web Store and Firefox AMO can be updated
+automatically using the `Update Store Description` GitHub Actions workflow
+(`update-store-description.yml`).
+
+### Description File
+
+Store descriptions are maintained in `docs/store-description.txt`. This file contains
+the rich, formatted text that appears in both store listings.
+
+### Automatic Updates
+
+The workflow runs automatically whenever `docs/store-description.txt` is modified
+and merged to the `main` branch. This ensures store listings stay in sync with the
+repository.
+
+### Manual Updates
+
+To manually trigger a description update:
+
+1. Navigate to **Actions** > **Update Store Description** in the GitHub repository
+2. Click **Run workflow**
+3. Optionally enable **Dry run** to test without making actual changes
+4. Click **Run workflow**
+
+### Required Secrets
+
+The workflow requires the following repository secrets:
+
+#### Chrome Web Store
+
+| Secret                 | Description                      |
+| ---------------------- | -------------------------------- |
+| `CHROME_CLIENT_ID`     | OAuth2 client ID                 |
+| `CHROME_CLIENT_SECRET` | OAuth2 client secret             |
+| `CHROME_REFRESH_TOKEN` | OAuth2 refresh token             |
+| `CHROME_EXTENSION_ID`  | Extension ID in Chrome Web Store |
+
+#### Firefox AMO
+
+| Secret           | Description                                |
+| ---------------- | ------------------------------------------ |
+| `AMO_JWT_ISSUER` | API JWT issuer                             |
+| `AMO_JWT_SECRET` | API JWT secret                             |
+| `AMO_ADDON_ID`   | Add-on ID on AMO (e.g., `flixmonkey@fran`) |
+
+### Notes
+
+- Both store updates run in parallel and are independent; a failure in one does not block the other
+- The workflow uses direct REST API calls (no additional npm dependencies)
+- Description length is validated against store limits (Chrome: 132,072 chars, Firefox: 10,000 chars)
+- Excessively long descriptions are truncated with a warning

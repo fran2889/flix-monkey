@@ -1,0 +1,54 @@
+name: Update Store Description
+
+on:
+    workflow_dispatch:
+        inputs:
+            dry-run:
+                description: 'Test without actually updating (true/false)'
+                required: false
+                default: 'false'
+                type: string
+    push:
+        branches: [main]
+        paths: ['docs/store-description.txt']
+
+permissions:
+    contents: read
+
+jobs:
+    update-chrome-description:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+              with:
+                  node-version: '24'
+
+            - name: Update Chrome Web Store description
+              env:
+                  CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+                  CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+                  CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+                  CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+                  DRY_RUN: ${{ inputs.dry-run }}
+              run: node scripts/update-chrome-description.js
+
+    update-firefox-description:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+            - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+              with:
+                  node-version: '24'
+
+            - name: Update Firefox AMO description
+              env:
+                  AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+                  AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+                  AMO_ADDON_ID: ${{ secrets.AMO_ADDON_ID }}
+                  DRY_RUN: ${{ inputs.dry-run }}
+              run: node scripts/update-firefox-description.js
