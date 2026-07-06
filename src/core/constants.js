@@ -31,6 +31,14 @@ export const ApiSource = Object.freeze({
 
 export const TOP_10_BADGE = 'title-card-top-10';
 
+// Rating color thresholds
+export const RATING_COLOR_LOW_THRESHOLD = 5.0; // IMDb: \u22645.0, RT/MC: \u226450%
+export const RATING_COLOR_HIGH_THRESHOLD = 9.0; // IMDb: \u22659.0, RT/MC: \u226590%
+
+// Rating colors
+export const RATING_COLOR_RED = '#ff0000'; // Pure red
+export const RATING_COLOR_GREEN = '#00cc00'; // Dark green
+
 export const TitleType = Object.freeze({
     MOVIE: 'movie',
     SERIES: 'series',
