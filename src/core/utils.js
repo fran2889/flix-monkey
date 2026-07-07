@@ -74,17 +74,3 @@ export function slugify(str) {
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '');
 }
-
-/**
- * Parse hex color string to RGB object.
- *
- * @param {string} hex - Hex color string with leading # (e.g., '#ff0000')
- * @returns {{r: number, g: number, b: number}} RGB object with values 0-255
- */
-export function parseHex(hex) {
-    return {
-        r: parseInt(hex.slice(1, 3), 16),
-        g: parseInt(hex.slice(3, 5), 16),
-        b: parseInt(hex.slice(5, 7), 16),
-    };
-}

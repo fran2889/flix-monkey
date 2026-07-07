@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
+import { interpolateColor } from './color-utils.js';
 import {
     RATING_COLOR_GREEN,
     RATING_COLOR_HIGH_THRESHOLD,
@@ -22,7 +23,6 @@ import {
     RATING_COLOR_RED,
     TOP_10_BADGE,
 } from './constants.js';
-import { parseHex } from './utils.js';
 
 export const FADE_STATE_LABELS = {
     auto: 'Auto',
@@ -185,17 +185,8 @@ export class OverlayRenderer {
         if (rating <= low) return RATING_COLOR_RED;
         if (rating >= high) return RATING_COLOR_GREEN;
 
-        // Interpolate between RATING_COLOR_RED and RATING_COLOR_GREEN for values between thresholds
         const progress = (rating - low) / (high - low);
-
-        const redRgb = parseHex(RATING_COLOR_RED);
-        const greenRgb = parseHex(RATING_COLOR_GREEN);
-
-        const r = Math.round(redRgb.r * (1 - progress) + greenRgb.r * progress);
-        const g = Math.round(redRgb.g * (1 - progress) + greenRgb.g * progress);
-        const b = Math.round(redRgb.b * (1 - progress) + greenRgb.b * progress);
-
-        return `rgb(${r}, ${g}, ${b})`;
+        return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
     }
 
     #formatImdbRating(rating) {
