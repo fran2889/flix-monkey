@@ -29,4 +29,4 @@ Ratings are cached locally for instant loading:
 📜 LICENSE
 Open source under GPLv3.
 
-Documentation, source code, and issues: https://github.com/fran2889/flix-monkey
+Documentation, source code, and support: https://github.com/fran2889/flix-monkey

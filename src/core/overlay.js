@@ -15,7 +15,14 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { TOP_10_BADGE } from './constants.js';
+import { interpolateColor } from './color-utils.js';
+import {
+    RATING_COLOR_GREEN,
+    RATING_COLOR_HIGH_THRESHOLD,
+    RATING_COLOR_LOW_THRESHOLD,
+    RATING_COLOR_RED,
+    TOP_10_BADGE,
+} from './constants.js';
 
 export const FADE_STATE_LABELS = {
     auto: 'Auto',
@@ -126,7 +133,17 @@ export class OverlayRenderer {
     }
 
     #createRatingElement(label, value, className = '') {
-        return this.#createBadgeElement(label, value, className, 'fm-value');
+        const el = this.#createBadgeElement(label, value, className, 'fm-value');
+
+        // Apply gradient color to rating values
+        const numericValue = Number(value.replace('%', ''));
+        const isPercentage = value.includes('%');
+        const color = this.#calculateRatingColor(numericValue, isPercentage);
+        if (color && el.lastChild) {
+            el.lastChild.style.color = color;
+        }
+
+        return el;
     }
 
     #createMissingRatingElement(label, className = '') {
@@ -156,6 +173,20 @@ export class OverlayRenderer {
             onClick(el);
         });
         return el;
+    }
+
+    #calculateRatingColor(rating, isPercentage = false) {
+        if (rating === null || rating === undefined) return null;
+
+        // Apply thresholds based on rating type
+        const low = isPercentage ? RATING_COLOR_LOW_THRESHOLD * 10 : RATING_COLOR_LOW_THRESHOLD;
+        const high = isPercentage ? RATING_COLOR_HIGH_THRESHOLD * 10 : RATING_COLOR_HIGH_THRESHOLD;
+
+        if (rating <= low) return RATING_COLOR_RED;
+        if (rating >= high) return RATING_COLOR_GREEN;
+
+        const progress = (rating - low) / (high - low);
+        return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
     }
 
     #formatImdbRating(rating) {
