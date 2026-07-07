@@ -22,6 +22,7 @@ import {
     RATING_COLOR_RED,
     TOP_10_BADGE,
 } from './constants.js';
+import { parseHex } from './utils.js';
 
 export const FADE_STATE_LABELS = {
     auto: 'Auto',
@@ -184,11 +185,17 @@ export class OverlayRenderer {
         if (rating <= low) return RATING_COLOR_RED;
         if (rating >= high) return RATING_COLOR_GREEN;
 
-        // Interpolate between red and green for values between thresholds
+        // Interpolate between RATING_COLOR_RED and RATING_COLOR_GREEN for values between thresholds
         const progress = (rating - low) / (high - low);
-        const r = Math.round(255 * (1 - progress));
-        const g = Math.round(255 * progress);
-        return `rgb(${r}, ${g}, 0)`;
+
+        const redRgb = parseHex(RATING_COLOR_RED);
+        const greenRgb = parseHex(RATING_COLOR_GREEN);
+
+        const r = Math.round(redRgb.r * (1 - progress) + greenRgb.r * progress);
+        const g = Math.round(redRgb.g * (1 - progress) + greenRgb.g * progress);
+        const b = Math.round(redRgb.b * (1 - progress) + greenRgb.b * progress);
+
+        return `rgb(${r}, ${g}, ${b})`;
     }
 
     #formatImdbRating(rating) {
