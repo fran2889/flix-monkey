@@ -17,7 +17,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { TOP_10_BADGE } from '../../../src/core/constants.js';
+import { parseHex } from '../../../src/core/color-utils.js';
+import { RATING_COLOR_GREEN, RATING_COLOR_RED, TOP_10_BADGE } from '../../../src/core/constants.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
@@ -469,6 +470,107 @@ describe('OverlayRenderer', () => {
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
             expect(imdbLink.title).toBe('IMDb: 5.0 (123 votes) · Open IMDb');
+        });
+    });
+
+    describe('Rating color calculation', () => {
+        beforeEach(() => {
+            document.head.innerHTML = '';
+            document.body.innerHTML = '';
+        });
+
+        it.each([
+            // IMDb ratings (scale 1-10)
+            ['IMDb low rating (3.2)', 3.2, false, RATING_COLOR_RED],
+            ['IMDb low rating (5.0 - threshold)', 5.0, false, RATING_COLOR_RED],
+            ['IMDb high rating (9.0 - threshold)', 9.0, false, RATING_COLOR_GREEN],
+            ['IMDb high rating (9.5)', 9.5, false, RATING_COLOR_GREEN],
+            // Percentage ratings (scale 0-100)
+            ['Percentage low rating (30%)', 30, true, RATING_COLOR_RED],
+            ['Percentage low rating (50% - threshold)', 50, true, RATING_COLOR_RED],
+            ['Percentage high rating (90% - threshold)', 90, true, RATING_COLOR_GREEN],
+            ['Percentage high rating (95%)', 95, true, RATING_COLOR_GREEN],
+        ])('returns exact color for %s', (_, rating, isPercentage, expectedHex) => {
+            // For percentage ratings, we need to enable showRtRating to see RT badge
+            const config = isPercentage ? createConfig({ showRtRating: true }) : createConfig();
+            const renderer = new OverlayRenderer(config);
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const titleObj = isPercentage
+                ? { rating: 7.0, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating }
+                : { rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' };
+
+            renderer.injectOverlay(container, titleObj);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const valueSpans = overlay.querySelectorAll('.fm-value');
+            // For percentage, RT is the second value; for IMDb, it's the first
+            const valueSpan = isPercentage ? valueSpans[1] : valueSpans[0];
+            expect(valueSpan).not.toBeNull();
+
+            // Browser converts hex to rgb() when setting style.color
+            const expectedRgb = parseHex(expectedHex);
+            const actualColor = valueSpan.style.color;
+            expect(actualColor).toBe(`rgb(${expectedRgb.r}, ${expectedRgb.g}, ${expectedRgb.b})`);
+        });
+
+        it.each([
+            // One case for each code path (isPercentage false/true)
+            ['IMDb rating in gradient range', 7.0, false],
+            ['Percentage rating in gradient range', 70, true],
+        ])('returns gradient color for %s', (_, rating, isPercentage) => {
+            // For percentage tests, enable showRtRating
+            const config = isPercentage ? createConfig({ showRtRating: true }) : createConfig();
+            const renderer = new OverlayRenderer(config);
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const titleObj = isPercentage
+                ? { rating: 7.0, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating }
+                : { rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' };
+
+            renderer.injectOverlay(container, titleObj);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const valueSpans = overlay.querySelectorAll('.fm-value');
+            const valueSpan = isPercentage ? valueSpans[1] : valueSpans[0];
+            expect(valueSpan).not.toBeNull();
+
+            // Verify color is set and is a valid rgb() string
+            expect(valueSpan.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+            expect(valueSpan.style.color).not.toBe('');
+        });
+
+        it('does not apply color to N/A rating in overlay', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            renderer.injectOverlay(container, {
+                rating: null,
+                imdbId: 'tt1',
+                imdbUrl: 'http://imdb.com',
+            });
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const naSpan = overlay.querySelector('.fm-na');
+            expect(naSpan).not.toBeNull();
+            // N/A elements should not have inline color
+            expect(naSpan.style.color).toBe('');
+        });
+
+        it('applies color to MC rating in overlay', () => {
+            const renderer = new OverlayRenderer(createConfig({ showMcRating: true, showRtRating: false }));
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            renderer.injectOverlay(container, {
+                rating: 7.0,
+                imdbId: 'tt1',
+                imdbUrl: 'http://imdb.com',
+                mcRating: 74,
+            });
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const valueSpans = overlay.querySelectorAll('.fm-value');
+            // MC rating should be the second value element (after IMDb)
+            const mcValueSpan = valueSpans[1];
+            expect(mcValueSpan).not.toBeNull();
+            // 74 is between 50 and 90, so should have gradient color
+            expect(mcValueSpan.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
         });
     });
 });
