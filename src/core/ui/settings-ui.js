@@ -141,10 +141,10 @@ export class SettingsUI {
         const container = document.createElement('div');
         container.className = 'ratings-group';
 
-        // Create the group label
-        const label = document.createElement('div');
-        label.className = 'ratings-group-label';
-        label.textContent = 'Show Ratings:';
+        // Create the group label (styled like other field labels)
+        const label = document.createElement('label');
+        label.className = 'field-label ratings-group-label';
+        label.textContent = 'Ratings';
         container.appendChild(label);
 
         // IMDb checkbox (always checked, disabled)

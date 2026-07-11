@@ -76,7 +76,7 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'showMcRating',
-        label: 'Show Metacritic',
+        label: 'Metacritic',
         type: 'checkbox',
         default: false,
         title: 'Show Metacritic score',
@@ -84,7 +84,7 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'showRtRating',
-        label: 'Show Rotten Tomatoes',
+        label: 'Rotten Tomatoes',
         type: 'checkbox',
         default: false,
         title: 'Show Rotten Tomatoes score',

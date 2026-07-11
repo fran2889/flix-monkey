@@ -229,7 +229,9 @@ export const SETTINGS_STYLES = `
 }
 
 .fm-settings-container .ratings-group-label {
-    font-weight: 600;
+    flex: 0 0 200px;
+    text-align: right;
+    padding-right: 15px;
     color: #ccc;
     font-size: 14px;
 }
