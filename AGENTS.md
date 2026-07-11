@@ -18,7 +18,7 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
 - **Test runner**: Vitest + jsdom + MSW
-- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), IMDb API Dev (`api.imdbapi.dev`), Agregarr (`api.agregarr.org`), IMDb fallback (`imdb.iamidiotareyoutoo.com`)
+- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb fallback (`imdb.iamidiotareyoutoo.com`)
 
 ## Setup
 
@@ -159,7 +159,7 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | --------------------- | ------------------------------------------------------------------------ |
 | `app.js`              | Main `FlixMonkeyApp` class and `startApp` factory function               |
 | `api-manager.js`      | Orchestrates API clients, handles provider selection and fallbacks       |
-| `api-clients.js`      | Client implementations for XMDb, OMDb, IMDb API Dev, and Agregarr        |
+| `api-clients.js`      | Client implementations for XMDb, OMDb, and Agregarr                      |
 | `cache.js`            | Async cache with per-entry TTL logic backed by the platform adapter      |
 | `disabled-clients.js` | Tracks failing API clients to avoid redundant requests (1-hour lockout)  |
 | `request-queue.js`    | Rate limiting and cross-tab synchronization via `fm_last_req` in storage |
@@ -265,23 +265,23 @@ class PlatformAdapter {
 
 ## Constants (`constants.js`)
 
-| Export                    | Value / Type  | Notes                                                       |
-| ------------------------- | ------------- | ----------------------------------------------------------- |
-| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                        |
-| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                             |
-| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                                       |
-| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request                      |
-| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)                |
-| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                        |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, IMDBAPI, AGREGARR }`: canonical client names |
-| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum                        |
-| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements         |
+| Export                    | Value / Type  | Notes                                               |
+| ------------------------- | ------------- | --------------------------------------------------- |
+| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                |
+| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                     |
+| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                               |
+| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request              |
+| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)        |
+| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                |
+| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names  |
+| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum                |
+| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements |
 
 ## Rate Limits (`rate-limits.js`)
 
-| Export        | Value / Type | Notes                                                                              |
-| ------------- | ------------ | ---------------------------------------------------------------------------------- |
-| `RATE_LIMITS` | object       | Per-client minimum interval in ms: XMDb 1500, OMDb 250, IMDBAPI 4000, AGREGARR 250 |
+| Export        | Value / Type | Notes                                                                |
+| ------------- | ------------ | -------------------------------------------------------------------- |
+| `RATE_LIMITS` | object       | Per-client minimum interval in ms: XMDb 1500, OMDb 250, AGREGARR 250 |
 
 ## Code Style & Conventions
 
@@ -366,7 +366,7 @@ npm run build && npm test
 ## Common Gotchas
 
 - **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.js` / `service-worker.js`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (IMDb API Dev, OMDb, XMDb, Agregarr, and IMDb fallback). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
+- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb fallback). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
 - **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.js`.
 - **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
