@@ -220,4 +220,33 @@ export const SETTINGS_STYLES = `
 .fm-modal-body {
     padding: 0 4px;
 }
-`;
+
+.fm-settings-container .ratings-field .ratings-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 200px;
+}
+
+.fm-settings-container .rating-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fm-settings-container .rating-checkbox .field-input {
+    margin: 0;
+}
+
+.fm-settings-container .rating-checkbox .field-label {
+    flex: none;
+    text-align: left;
+    padding: 0;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.fm-settings-container .rating-checkbox .field-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}`;

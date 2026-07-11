@@ -26,7 +26,7 @@ function validateCacheTtl(val) {
 export const CONFIG_FIELDS = [
     {
         key: 'overlayCorner',
-        label: 'Overlay Position',
+        label: 'Badge Position',
         type: 'select',
         options: [
             ['top-left', 'Top Left'],
@@ -35,11 +35,11 @@ export const CONFIG_FIELDS = [
             ['bottom-right', 'Bottom Right'],
         ],
         default: 'top-left',
-        title: 'Where the rating badge appears on thumbnails.',
+        title: 'Badge position on thumbnails',
     },
     {
         key: 'apiClient',
-        label: 'API Provider',
+        label: 'Rating Provider',
         type: 'select',
         options: [
             ['agregarr', 'FM-DB + Agregarr'],
@@ -48,7 +48,7 @@ export const CONFIG_FIELDS = [
             ['xmdb', 'XMDb'],
         ],
         default: 'agregarr',
-        title: 'Which service to fetch ratings from.',
+        title: 'Rating data source',
     },
     {
         key: 'omdbApiKey',
@@ -56,7 +56,7 @@ export const CONFIG_FIELDS = [
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
         type: 'text',
         default: '',
-        title: 'Required when using OMDb as API provider.',
+        title: 'OMDb key. Needed if OMDb is selected',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'omdb') return null;
             return val && val.length > 0 ? null : 'OMDb API Key is required';
@@ -68,7 +68,7 @@ export const CONFIG_FIELDS = [
         labelUrl: 'https://xmdbapi.com/api-key',
         type: 'text',
         default: '',
-        title: 'Required when using XMDb as API provider.',
+        title: 'XMDb key. Needed if XMDb is selected',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'xmdb') return null;
             return val && val.length > 0 ? null : 'XMDb API Key is required';
@@ -76,26 +76,26 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'showMcRating',
-        label: 'Show Metacritic',
+        label: 'Metacritic',
         type: 'checkbox',
         default: false,
-        title: 'Show Metacritic score on thumbnails.',
+        title: 'Show Metacritic score',
         row: 'ratings-display',
     },
     {
         key: 'showRtRating',
-        label: 'Show Rotten Tomatoes',
+        label: 'Rotten Tomatoes',
         type: 'checkbox',
         default: false,
-        title: 'Show Rotten Tomatoes score on thumbnails.',
+        title: 'Show Rotten Tomatoes score',
         row: 'ratings-display',
     },
     {
         key: 'enableFadeUnderRating',
-        label: 'Fade titles rated below',
+        label: 'Fade Below Rating',
         type: 'checkbox',
         default: false,
-        title: 'Fade titles with IMDb rating below this value.',
+        title: 'Fade thumbnails rated below threshold',
         row: 'fade-settings',
     },
     {
@@ -103,7 +103,7 @@ export const CONFIG_FIELDS = [
         label: 'Fade threshold',
         type: 'text',
         default: '6.0',
-        title: 'IMDb rating cutoff for fading (0-10).',
+        title: 'IMDb rating threshold (0-10)',
         row: 'fade-settings',
         labelHidden: true,
         validate: val => {
@@ -114,37 +114,37 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'enableFadeToggle',
-        label: 'Fade override per title',
+        label: 'Allow Override',
         type: 'checkbox',
         default: false,
-        title: 'Shows a button in the hover preview to always fade, never fade, or follow the rating rule for individual titles.',
+        title: 'Allow manual override of fade state in hover preview',
         row: 'fade-settings',
     },
     {
         key: 'cacheTtlRatedOldYear',
-        label: 'Rated > 1yr',
+        label: 'Older Titles',
         type: 'text',
         default: String(CACHE_TTL_INFINITE),
-        title: 'How long to cache ratings for older titles. -1 = forever.',
-        section: 'Cache Duration (days)',
+        title: 'Cache duration (days) for older titles. -1 = forever',
+        section: 'Cache Settings',
         row: 'cache-fields',
         validate: validateCacheTtl,
     },
     {
         key: 'cacheTtlRatedNewYear',
-        label: 'Rated < 1yr',
+        label: 'Recent Titles',
         type: 'text',
         default: '30',
-        title: 'How long to cache ratings for recent titles.',
+        title: 'Cache duration (days) for recent titles',
         row: 'cache-fields',
         validate: validateCacheTtl,
     },
     {
         key: 'cacheTtlNoRating',
-        label: 'Unrated',
+        label: 'No Rating',
         type: 'text',
         default: '1',
-        title: 'How long to cache titles with no rating. Use small value to retry sooner.',
+        title: 'Cache duration (days) for titles without ratings',
         row: 'cache-fields',
         validate: validateCacheTtl,
     },
@@ -153,7 +153,7 @@ export const CONFIG_FIELDS = [
         label: 'Enable debug logging',
         type: 'checkbox',
         default: true,
-        title: 'Log debug info to the browser console.',
+        title: 'Enable debug logging in console',
         row: 'debug-settings',
     },
 ];
