@@ -108,7 +108,7 @@ describe('Title', () => {
             [undefined, null],
             ['8.5', 8.5],
             [0, 0],
-        ])('normalizes rating %s → %s', (input, expected) => {
+        ])('normalizes rating %s -> %s', (input, expected) => {
             expect(new Title({ rating: input }).rating).toBe(expected);
         });
 
@@ -119,7 +119,7 @@ describe('Title', () => {
             ['', null],
             [null, null],
             ['8.5/10', 8], // parseInt stops at non-digit
-        ])('normalizes rtRating %s → %s', (input, expected) => {
+        ])('normalizes rtRating %s -> %s', (input, expected) => {
             expect(new Title({ rtRating: input }).rtRating).toBe(expected);
         });
 
@@ -130,12 +130,12 @@ describe('Title', () => {
             ['', null],
             [null, null],
             ['abc', null],
-        ])('normalizes mcRating %s → %s', (input, expected) => {
+        ])('normalizes mcRating %s -> %s', (input, expected) => {
             expect(new Title({ mcRating: input }).mcRating).toBe(expected);
         });
 
         it('parses year from open-ended range string', () => {
-            expect(new Title({ year: '2020–' }).year).toBe(2020);
+            expect(new Title({ year: '2020-' }).year).toBe(2020);
         });
     });
 
@@ -176,7 +176,7 @@ describe('Title', () => {
             ['2500000', 2500000],
             ['2,500,000', 2], // parseInt stops at comma, returns 2
             ['not a number', null],
-        ])('normalizes imdbVotes %s → %s', (input, expected) => {
+        ])('normalizes imdbVotes %s -> %s', (input, expected) => {
             expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });

@@ -44,34 +44,34 @@ export const CONFIG_FIELDS = [
         options: [
             ['agregarr', 'FM-DB + Agregarr'],
             ['imdbapi', 'IMDb API'],
-            ['omdb', 'OMDB'],
-            ['xmdb', 'XMDB'],
+            ['omdb', 'OMDb'],
+            ['xmdb', 'XMDb'],
         ],
         default: 'agregarr',
         title: 'Rating data source',
     },
     {
         key: 'omdbApiKey',
-        label: 'OMDB API Key',
+        label: 'OMDb API Key',
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
         type: 'text',
         default: '',
         title: 'OMDb key. Needed if OMDb is selected',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'omdb') return null;
-            return val && val.length > 0 ? null : 'OMDB API Key is required';
+            return val && val.length > 0 ? null : 'OMDb API Key is required';
         },
     },
     {
         key: 'xmdbApiKey',
-        label: 'XMDB API Key',
+        label: 'XMDb API Key',
         labelUrl: 'https://xmdbapi.com/api-key',
         type: 'text',
         default: '',
         title: 'XMDb key. Needed if XMDb is selected',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'xmdb') return null;
-            return val && val.length > 0 ? null : 'XMDB API Key is required';
+            return val && val.length > 0 ? null : 'XMDb API Key is required';
         },
     },
     {
