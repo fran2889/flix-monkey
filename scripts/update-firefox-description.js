@@ -42,9 +42,11 @@ function getEnv(name) {
 function generateJWT(issuer, secret) {
     const header = { alg: 'HS256', typ: 'JWT' };
     // AMO API v5 requires JWT to expire within 3 minutes
+    const now = Math.floor(Date.now() / 1000);
     const payload = {
         iss: issuer,
-        exp: Math.floor(Date.now() / 1000) + 180, // 180 seconds = 3 minutes
+        iat: now,
+        exp: now + 180, // 180 seconds = 3 minutes
     };
 
     logInfo(`JWT payload: ${JSON.stringify(payload)}`);
