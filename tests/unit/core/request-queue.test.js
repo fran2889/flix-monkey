@@ -141,7 +141,7 @@ describe('RequestQueue', () => {
         const mockAdapter = createMockAdapter({
             storageGet: vi.fn(async () => {
                 callCount++;
-                // 2nd call is the pre-claim re-read — simulate another tab just fired
+                // 2nd call is the pre-claim re-read - simulate another tab just fired
                 return callCount === 2 ? recentTime.toString() : staleTime;
             }),
             storageSet: vi.fn().mockResolvedValue(undefined),
@@ -149,8 +149,8 @@ describe('RequestQueue', () => {
         const queue = new RequestQueue(100, 'sync-key', mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
-        // loop1-start → stale (wait=0), pre-claim → recent (re-loop),
-        // loop2-start → stale (wait=0), pre-claim → stale (Date.now()-stale>100 → proceed)
+        // loop1-start -> stale (wait=0), pre-claim -> recent (re-loop),
+        // loop2-start -> stale (wait=0), pre-claim -> stale (Date.now()-stale>100 -> proceed)
         expect(mockAdapter.storageGet).toHaveBeenCalledTimes(4);
         expect(fetchFn).toHaveBeenCalledOnce();
     });

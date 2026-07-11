@@ -111,15 +111,15 @@ describe('FadeManager', () => {
     });
 
     describe('nextState', () => {
-        it('cycles null → "always"', () => {
+        it('cycles null -> "always"', () => {
             expect(new FadeManager(createMockAdapter()).nextState(null)).toBe('always');
         });
 
-        it('cycles "always" → "never"', () => {
+        it('cycles "always" -> "never"', () => {
             expect(new FadeManager(createMockAdapter()).nextState('always')).toBe('never');
         });
 
-        it('cycles "never" → null', () => {
+        it('cycles "never" -> null', () => {
             expect(new FadeManager(createMockAdapter()).nextState('never')).toBeNull();
         });
     });

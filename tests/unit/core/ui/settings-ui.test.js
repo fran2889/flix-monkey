@@ -124,7 +124,7 @@ describe('SettingsUI', () => {
             const link = label.querySelector('a');
 
             expect(link).not.toBeNull();
-            expect(link.textContent).toBe('OMDB API Key');
+            expect(link.textContent).toBe('OMDb API Key');
         });
 
         it('should apply visually-hidden class to labelHidden field labels', async () => {

@@ -44,34 +44,34 @@ export const CONFIG_FIELDS = [
         options: [
             ['agregarr', 'FM-DB + Agregarr'],
             ['imdbapi', 'IMDb API'],
-            ['omdb', 'OMDB'],
-            ['xmdb', 'XMDB'],
+            ['omdb', 'OMDb'],
+            ['xmdb', 'XMDb'],
         ],
         default: 'agregarr',
         title: 'Which service to fetch ratings from.',
     },
     {
         key: 'omdbApiKey',
-        label: 'OMDB API Key',
+        label: 'OMDb API Key',
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
         type: 'text',
         default: '',
-        title: 'Required when using OMDB as API provider.',
+        title: 'Required when using OMDb as API provider.',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'omdb') return null;
-            return val && val.length > 0 ? null : 'OMDB API Key is required';
+            return val && val.length > 0 ? null : 'OMDb API Key is required';
         },
     },
     {
         key: 'xmdbApiKey',
-        label: 'XMDB API Key',
+        label: 'XMDb API Key',
         labelUrl: 'https://xmdbapi.com/api-key',
         type: 'text',
         default: '',
-        title: 'Required when using XMDB as API provider.',
+        title: 'Required when using XMDb as API provider.',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'xmdb') return null;
-            return val && val.length > 0 ? null : 'XMDB API Key is required';
+            return val && val.length > 0 ? null : 'XMDb API Key is required';
         },
     },
     {
@@ -103,7 +103,7 @@ export const CONFIG_FIELDS = [
         label: 'Fade threshold',
         type: 'text',
         default: '6.0',
-        title: 'IMDb rating cutoff for fading (0–10).',
+        title: 'IMDb rating cutoff for fading (0-10).',
         row: 'fade-settings',
         labelHidden: true,
         validate: val => {
