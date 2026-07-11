@@ -35,7 +35,7 @@
 // @grant        GM_registerMenuCommand
 // @connect      www.omdbapi.com
 // @connect      xmdbapi.com
-// @connect      api.imdbapi.dev
+
 // @connect      imdb.iamidiotareyoutoo.com
 // @connect      api.agregarr.org
 // @run-at       document-idle

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
-import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from './api-clients.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api-clients.js';
 import { ApiClientManager } from './api-manager.js';
 import { CacheManager } from './cache.js';
 import { ConfigManager } from './config-manager.js';
@@ -215,7 +215,6 @@ function createApiClient(config, disabledManager, adapter, logger) {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
-        [ApiSource.IMDBAPI]: ImdbApiDevClient,
     };
     const ClientClass = clientMap[provider] ?? AgregarrApiClient;
     return new ClientClass(disabledManager, adapter, config, logger);

@@ -25,17 +25,17 @@ import { createMockLogger } from '../../mocks/logger.js';
 describe('ApiClientManager', () => {
     it('should return cached data if available', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
-        const mockClient = { source: 'imdbapi' };
+        const mockClient = { source: 'agregarr' };
         const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Cached Movie');
-        expect(mockCache.read).toHaveBeenCalledWith('Some Title', 'imdbapi');
+        expect(mockCache.read).toHaveBeenCalledWith('Some Title', 'agregarr');
     });
 
     it('should fetch and return result from client', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const mockClient = {
-            source: 'imdbapi',
+            source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Fetched Movie' })),
         };
@@ -47,7 +47,7 @@ describe('ApiClientManager', () => {
     it('should handle fail if client returns null', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const client = {
-            source: 'imdbapi',
+            source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(null),
         };
@@ -79,14 +79,14 @@ describe('ApiClientManager', () => {
     it('should skip unhealthy client and not cache the result', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const unhealthyClient = {
-            source: 'imdbapi',
+            source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: false }),
             fetch: vi.fn(),
         };
         const manager = new ApiClientManager(mockCache, {}, unhealthyClient, createMockLogger());
         const result = await manager.getData('Test Movie');
         expect(result.hasRating).toBe(false);
-        expect(result.source).toBe('imdbapi');
+        expect(result.source).toBe('agregarr');
         expect(unhealthyClient.fetch).not.toHaveBeenCalled();
         expect(mockCache.write).not.toHaveBeenCalled();
     });
@@ -94,7 +94,7 @@ describe('ApiClientManager', () => {
     it('should not cache result when fetch throws an error', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const mockClient = {
-            source: 'imdbapi',
+            source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockRejectedValue(new Error('API error')),
         };
@@ -103,7 +103,7 @@ describe('ApiClientManager', () => {
         const result = await manager.getData('Error Movie');
         expect(result.hasRating).toBe(false);
         expect(result.displayTitle).toBe('Error Movie');
-        expect(result.source).toBe('imdbapi');
+        expect(result.source).toBe('agregarr');
         expect(mockCache.write).not.toHaveBeenCalled();
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Error Movie'), {
             url: null,

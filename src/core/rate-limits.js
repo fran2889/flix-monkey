@@ -20,6 +20,5 @@ import { ApiSource } from './constants.js';
 export const RATE_LIMITS = Object.freeze({
     [ApiSource.XMDB]: 1500,
     [ApiSource.OMDB]: 250,
-    [ApiSource.IMDBAPI]: 4000,
     [ApiSource.AGREGARR]: 250,
 });

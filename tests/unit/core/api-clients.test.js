@@ -17,7 +17,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -541,9 +541,7 @@ describe('OmdbApiClient', () => {
         const result = await client.getDetails({ title: 'Test' }, 'Test');
         expect(result.imdbVotes).toBeNull();
     });
-});
 
-describe('OmdbApiClient', () => {
     it('should not throw when the Ratings array contains a null element', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
@@ -564,182 +562,6 @@ describe('OmdbApiClient', () => {
         const result = await client.fetch('Some Title');
         expect(result).not.toBeNull();
         expect(result.mcRating).toBe(80);
-    });
-});
-
-describe('ImdbApiDevClient', () => {
-    it('should return the first title result', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                titles: [
-                    { id: 'tt1', primaryTitle: 'Movie 1' },
-                    { id: 'tt2', primaryTitle: 'Movie 2' },
-                ],
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-
-        const result = await client.search('Movie 1');
-        expect(result.id).toBe('tt1');
-    });
-
-    it('should return null if no titles found', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ titles: [] }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        expect(await client.search('Unknown')).toBeNull();
-    });
-
-    it('should log info when no titles found', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ titles: [] }),
-        });
-        const mockLogger = createMockLogger();
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            mockLogger
-        );
-        await client.search('Unknown');
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
-    });
-
-    it('should handle details and ratings', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                primaryTitle: 'Movie 1',
-                startYear: 2020,
-                rating: { aggregateRating: 8.5 },
-                metacritic: { score: 75 },
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.year).toBe(2020);
-        expect(result.rating).toBe(8.5);
-        expect(result.mcRating).toBe(75);
-    });
-
-    it('should handle missing optional fields', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                primaryTitle: 'Movie 1',
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.year).toBeNull();
-        expect(result.rating).toBeNull();
-        expect(result.mcRating).toBeNull();
-    });
-
-    it('should map type to TitleType in getDetails', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                id: 'tt1',
-                primaryTitle: 'Movie 1',
-                type: 'movie',
-                startYear: 2020,
-                rating: { aggregateRating: 8.5 },
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
-        expect(result.type).toBe('movie');
-    });
-
-    it('should map tvSeries type to series', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                id: 'tt2',
-                primaryTitle: 'Show 1',
-                type: 'tvSeries',
-                startYear: 2020,
-                rating: { aggregateRating: 7.0 },
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ id: 'tt2' }, 'Show 1');
-        expect(result.type).toBe('series');
-    });
-
-    it('should return null and log warn when details fetch returns an error', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ error: 'server error' }),
-        });
-        const mockLogger = createMockLogger();
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            mockLogger
-        );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
-        expect(result).toBeNull();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Movie 1'),
-            expect.objectContaining({ response: { error: 'server error' } })
-        );
-    });
-
-    it('should extract voteCount from IMDb API Dev response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
-                primaryTitle: 'Movie 1',
-                rating: { aggregateRating: 8.8, voteCount: 2500000 },
-            }),
-        });
-        const client = new ImdbApiDevClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockAdapter,
-            undefined,
-            createMockLogger()
-        );
-        const result = await client.getDetails({ id: 'tt1' }, 'Movie 1');
-        expect(result.imdbVotes).toBe(2500000);
-    });
-
-    it('should throw Not implemented for search and getDetails in BaseApiClient', async () => {
-        const { BaseApiClient } = await import('../../../src/core/api-clients.js');
-        class DummyClient extends BaseApiClient {}
-        const dummy = new DummyClient({}, {}, {});
-
-        await expect(dummy.search('title')).rejects.toThrow('Not implemented');
-        await expect(dummy.getDetails({}, 'title')).rejects.toThrow('Not implemented');
     });
 });
 
