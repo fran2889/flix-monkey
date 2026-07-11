@@ -403,7 +403,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 8.5 (250k votes) · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: 8.5 (250k votes) · Open IMDb');
         });
 
         it('should format tooltip with vote count in M format', () => {
@@ -414,7 +414,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 9.0 (3M votes) · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: 9.0 (3M votes) · Open IMDb');
         });
 
         it('should format tooltip without votes when imdbVotes is null', () => {
@@ -425,7 +425,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 7.5 · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: 7.5 · Open IMDb');
         });
 
         it('should format tooltip without votes when imdbVotes is undefined', () => {
@@ -436,7 +436,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 6.0 · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: 6.0 · Open IMDb');
         });
 
         it('should show no rating tooltip when rating is null but imdbId exists', () => {
@@ -447,7 +447,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: No rating · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: No rating · Open IMDb');
         });
 
         it('should show not found tooltip when no imdbId', () => {
@@ -458,7 +458,7 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: Not found · Search IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: Not found · Search IMDb');
         });
 
         it('should show tooltip with small vote count', () => {
@@ -469,7 +469,63 @@ describe('OverlayRenderer', () => {
             renderer.injectOverlay(container, title);
             const overlay = container.querySelector('.fm-rating-overlay');
             const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 5.0 (123 votes) · Open IMDb');
+            expect(imdbLink.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
+        });
+
+        it('should format tooltip with apiTitle and year', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({
+                apiTitle: 'The Shawshank Redemption',
+                imdbId: 'tt0111161',
+                rating: 9.3,
+                imdbVotes: 2700000,
+                year: 1994,
+            });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb');
+        });
+
+        it('should format tooltip with apiTitle but no year', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({
+                apiTitle: 'Inception',
+                imdbId: 'tt1375666',
+                rating: 8.8,
+                imdbVotes: 2400000,
+                year: null,
+            });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('Inception\nIMDb: 8.8 (2M votes) · Open IMDb');
+        });
+
+        it('should not add apiTitle line when apiTitle is null', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ apiTitle: null, imdbId: 'tt1234567', rating: 7.0, imdbVotes: 100000 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 7.0 (100k votes) · Open IMDb');
+        });
+
+        it('should not add apiTitle line when apiTitle is undefined', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const title = new Title({ imdbId: 'tt1234567', rating: 6.5, imdbVotes: 50000 });
+            renderer.injectOverlay(container, title);
+            const overlay = container.querySelector('.fm-rating-overlay');
+            const imdbLink = overlay.querySelector('a');
+            expect(imdbLink.title).toBe('IMDb: 6.5 (50k votes) · Open IMDb');
         });
     });
 
