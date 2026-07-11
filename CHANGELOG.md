@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0](https://github.com/fran2889/flix-monkey/compare/v1.3.0...v1.4.0) (2026-07-11)
+
+
+### Features
+
+* improve settings labels/tooltips and ratings UI grouping ([#105](https://github.com/fran2889/flix-monkey/issues/105)) ([6704540](https://github.com/fran2889/flix-monkey/commit/67045403da3f7d7876e35548220383ce0422dd9e))
+* **overlay:** add apiTitle (year) to IMDb tooltip with multi-line format ([#103](https://github.com/fran2889/flix-monkey/issues/103)) ([4cccd59](https://github.com/fran2889/flix-monkey/commit/4cccd59afaed434451d37ac30e726e7f5a83b714))
+* **overlay:** add threshold-based gradient text color to ratings ([#102](https://github.com/fran2889/flix-monkey/issues/102)) ([27da7be](https://github.com/fran2889/flix-monkey/commit/27da7be3090d4ca78cae8f392f5fc4c4eddb2bba))
+* remove deprecated IMDb API Dev provider ([#106](https://github.com/fran2889/flix-monkey/issues/106)) ([586b0c0](https://github.com/fran2889/flix-monkey/commit/586b0c0574f77b4bd27921dfbb485bead0070196))
+* **store:** add workflow to update store descriptions ([#98](https://github.com/fran2889/flix-monkey/issues/98)) ([31d2386](https://github.com/fran2889/flix-monkey/commit/31d2386be1c1e2c4acc3c261bba965a07c43d6fb))
+
 ## [1.3.0](https://github.com/fran2889/flix-monkey/compare/v1.2.0...v1.3.0) (2026-07-05)
 
 
