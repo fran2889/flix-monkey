@@ -491,7 +491,7 @@ describe('App', () => {
         // Detach the container before the data resolves
         document.body.removeChild(container);
 
-        // Now resolve the data — document.contains(container) is now false
+        // Now resolve the data - document.contains(container) is now false
         resolveData({ apiTitle: 'Detach Test', rating: 7.0 });
         await Promise.resolve();
         await Promise.resolve();

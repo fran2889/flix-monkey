@@ -17,28 +17,15 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { AgregarrApiClient, ImdbApiDevClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api-clients';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api-clients';
 import { ConfigManager } from '../../src/core/config-manager';
 import { ApiSource, TitleType } from '../../src/core/constants';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
 
-// Cloudflare enforces ~3 requests per 10s window on imdbapi.dev.
-// Each test creates a fresh client (fresh RequestQueue), so the per-client
-// rate limit doesn't help across tests. Throttle at the HTTP layer instead.
-const IMDBAPI_CF_RATE_LIMIT_MS = 4000;
-let lastImdbApiRequest = 0;
-
 const adapter = {
     httpFetch: async (url, options) => {
-        if (typeof url === 'string' && url.includes('imdbapi.dev')) {
-            const elapsed = Date.now() - lastImdbApiRequest;
-            if (elapsed < IMDBAPI_CF_RATE_LIMIT_MS) {
-                await new Promise(r => setTimeout(r, IMDBAPI_CF_RATE_LIMIT_MS - elapsed));
-            }
-            lastImdbApiRequest = Date.now();
-        }
         const response = await fetch(url, options);
         const text = await response.text();
         if (!response.ok) {
@@ -124,14 +111,6 @@ describe('api-clients integration', () => {
             expectPercentageRating(result.mcRating, 'OMDB Metacritic');
         });
 
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-            expectPercentageRating(result.mcRating, 'IMDBAPI Metacritic');
-            expect(result.rtRating).toBeNull();
-        }, 15000);
-
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
@@ -163,12 +142,6 @@ describe('api-clients integration', () => {
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        }, 15000);
-
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
@@ -190,11 +163,6 @@ describe('api-clients integration', () => {
             expect(result).toBeNull();
         });
 
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            expect(await client.search(TITLE)).toBeNull();
-        }, 15000);
-
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             expect(await client.search(TITLE)).toBeNull();
@@ -209,11 +177,6 @@ describe('api-clients integration', () => {
             const result = await client.getDetails({ id: INVALID_ID }, 'nonexistent');
             expect(result).toBeNull();
         });
-
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            await expect(client.getDetails({ id: INVALID_ID }, 'nonexistent')).rejects.toThrow();
-        }, 15000);
     });
 
     describe('invalid API key', () => {
@@ -248,12 +211,6 @@ describe('api-clients integration', () => {
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        }, 15000);
-
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
@@ -287,12 +244,6 @@ describe('api-clients integration', () => {
             expect(result.imdbId).not.toBe(EXPECTED_IMDB_ID);
         });
 
-        it('IMDBAPI', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.IMDBAPI, common);
-        }, 15000);
-
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
@@ -312,12 +263,6 @@ describe('api-clients integration', () => {
             const result = await client.fetch('The Godfather');
             _expectImdbVotes(result.imdbVotes);
         });
-
-        it('IMDBAPI returns imdbVotes', async () => {
-            const client = new ImdbApiDevClient(disabledManager, adapter, configManager);
-            const result = await client.fetch('The Godfather');
-            _expectImdbVotes(result.imdbVotes);
-        }, 15000);
 
         it('Agregarr returns imdbVotes', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);

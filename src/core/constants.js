@@ -25,7 +25,6 @@ export const DEFAULT_FETCH_TIMEOUT = 8000;
 export const ApiSource = Object.freeze({
     XMDB: 'xmdb',
     OMDB: 'omdb',
-    IMDBAPI: 'imdbapi',
     AGREGARR: 'agregarr',
 });
 

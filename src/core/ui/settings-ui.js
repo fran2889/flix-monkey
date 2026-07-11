@@ -69,6 +69,25 @@ export class SettingsUI {
                 parent = rowDiv;
             }
 
+            // Special handling for ratings group
+            if (group.isRatingsGroup) {
+                // Create a field with "Show Ratings" label and the ratings checkboxes
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field ratings-field';
+
+                const label = document.createElement('label');
+                label.className = 'field-label';
+                label.textContent = 'Show Ratings';
+                label.title = 'Choose which ratings to display on thumbnails';
+                fieldDiv.appendChild(label);
+
+                const checkboxesContainer = this.#createRatingsCheckboxes(group, settings);
+                fieldDiv.appendChild(checkboxesContainer);
+
+                parent.appendChild(fieldDiv);
+                continue;
+            }
+
             for (const field of group.fields) {
                 parent.appendChild(this.#createField(field, settings));
             }
@@ -87,7 +106,7 @@ export class SettingsUI {
         clearBtn.id = 'fm-clearCacheBtn';
         clearBtn.className = 'secondary';
         clearBtn.textContent = 'Clear Cache';
-        clearBtn.title = 'Delete all cached ratings so they are fetched again.';
+        clearBtn.title = 'Delete all cached ratings to force fresh rating lookups';
         clearBtn.onclick = () => this.clearCache();
         actionsDiv.appendChild(clearBtn);
 
@@ -95,7 +114,7 @@ export class SettingsUI {
         resetBtn.id = 'fm-resetClientsBtn';
         resetBtn.className = 'secondary';
         resetBtn.textContent = 'Reset Disabled Clients';
-        resetBtn.title = 'Re-enable API providers that were turned off after repeated errors.';
+        resetBtn.title = 'Re-enable rating providers that were automatically disabled due to errors';
         resetBtn.onclick = () => this.resetClients();
         actionsDiv.appendChild(resetBtn);
 
@@ -116,7 +135,76 @@ export class SettingsUI {
                 groups.push({ row: field.row, section: field.section, fields: [field] });
             }
         }
+
+        // Mark groups that contain rating display fields as special ratings groups
+        for (const group of groups) {
+            if (group.row === 'ratings-display') {
+                const hasMcRating = group.fields.some(f => f.key === 'showMcRating');
+                const hasRtRating = group.fields.some(f => f.key === 'showRtRating');
+                if (hasMcRating && hasRtRating) {
+                    group.isRatingsGroup = true;
+                }
+            }
+        }
+
         return groups;
+    }
+
+    #createRatingsCheckboxes(group, settings) {
+        const container = document.createElement('div');
+        container.className = 'ratings-group';
+
+        // IMDb checkbox (always checked, disabled)
+        const imdbCheckbox = this.#createRatingCheckbox('showImdbRating', 'IMDb', true, settings);
+        container.appendChild(imdbCheckbox);
+
+        // Metacritic checkbox
+        const mcField = group.fields.find(f => f.key === 'showMcRating');
+        if (mcField) {
+            const mcCheckbox = this.#createRatingCheckbox(mcField.key, mcField.label, false, settings);
+            container.appendChild(mcCheckbox);
+        }
+
+        // Rotten Tomatoes checkbox
+        const rtField = group.fields.find(f => f.key === 'showRtRating');
+        if (rtField) {
+            const rtCheckbox = this.#createRatingCheckbox(rtField.key, rtField.label, false, settings);
+            container.appendChild(rtCheckbox);
+        }
+
+        return container;
+    }
+
+    #createRatingCheckbox(key, labelText, isDisabled, settings) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'rating-checkbox';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.className = 'field-input';
+        input.id = `fm-${key}`;
+        input.name = key;
+
+        // For the hardcoded IMDb checkbox, always checked
+        // For real config fields, use the stored or default value
+        if (isDisabled) {
+            input.checked = true;
+            input.disabled = true;
+        } else {
+            const field = this.#fields.find(f => f.key === key);
+            input.checked = settings[key] !== undefined ? settings[key] : field?.default || false;
+            input.disabled = false;
+        }
+
+        const label = document.createElement('label');
+        label.className = 'field-label';
+        label.htmlFor = input.id;
+        label.textContent = labelText;
+
+        fieldDiv.appendChild(input);
+        fieldDiv.appendChild(label);
+
+        return fieldDiv;
     }
 
     #createField(field, settings) {

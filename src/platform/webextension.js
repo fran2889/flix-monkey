@@ -28,7 +28,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
     /**
      * Seeds the config snapshot from `browser.storage.local`.
      *
-     * Must be called before `startApp()`. Stores the object reference directly — the
+     * Must be called before `startApp()`. Stores the object reference directly - the
      * same object is mutated in-place by `content.js`'s `storage.onChanged` listener,
      * so `configGet` automatically reflects subsequent storage changes without needing
      * another `setConfigData` call.
