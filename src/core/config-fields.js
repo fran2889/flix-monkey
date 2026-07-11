@@ -43,7 +43,6 @@ export const CONFIG_FIELDS = [
         type: 'select',
         options: [
             ['agregarr', 'FM-DB + Agregarr'],
-            ['imdbapi', 'IMDb API'],
             ['omdb', 'OMDb'],
             ['xmdb', 'XMDb'],
         ],
