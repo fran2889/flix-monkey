@@ -208,7 +208,7 @@ export class OverlayRenderer {
         return String(Math.round(num));
     }
 
-    #buildTooltip(titleParts, imdbId, apiTitle = null, year = null) {
+    #buildTooltip(titleParts, imdbId, apiTitle, year) {
         const tooltipContent = titleParts.length
             ? `${titleParts.join(' · ')} · Open IMDb`
             : imdbId
