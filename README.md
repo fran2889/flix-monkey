@@ -2,7 +2,7 @@
 
 ![FlixMonkey screenshot showing rating badges on Netflix thumbnails](screenshots/hero.png)
 
-[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![Version 1.3.0](https://img.shields.io/badge/version-1.3.0-green.svg)](https://github.com/fran2889/flix-monkey/releases)
 
 See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
@@ -32,9 +32,9 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ## Installation
 
-<img src="https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white" alt="Install for Chrome" title="Install from Chrome Web Store" />
-<img src="https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white" alt="Install for Firefox" title="Install from Firefox Add-ons" />
-<img src="https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white" alt="Install Userscript" title="Install FlixMonkey userscript" />
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white)](https://addons.mozilla.org)
+[![Tampermonkey](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://www.tampermonkey.net)
 
 _Requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) or [Violentmonkey](https://violentmonkey.github.io/) for userscript installation_
 
@@ -42,10 +42,10 @@ _Requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/d
 
 ## Features
 
-- **Rating Badges** - IMDb, Metacritic, Rotten Tomatoes scores on thumbnails, hover cards, and modals
+- **Rating Badges** - IMDb, Metacritic, and Rotten Tomatoes scores on thumbnails, hover cards, and modals
 - **Smart Caching** - Fast lookups for titles you've seen before
-- **Auto-Disable** - Failing APIs are temporarily disabled to prevent lag
-- **Click to Open** - Click badges to open the IMDb page
+- **Auto-Disable** - Failing APIs are temporarily disabled for 1 hour to prevent lag
+- **Click to Open** - Click badges to open the title's IMDb page
 - **Customizable** - Change badge position, choose API provider, and more
 
 ---
@@ -59,25 +59,25 @@ Access settings via:
 
 ### Display Options
 
-| Option                    | Default  | Description                                   |
-| ------------------------- | -------- | --------------------------------------------- |
-| **Overlay Position**      | Top Left | Corner where rating badges appear             |
-| **Show Rotten Tomatoes**  | No       | Display RT score (requires OMDB key)          |
-| **Show Metacritic**       | No       | Display Metacritic score                      |
-| **Fade Thumbnails**       | No       | Fade thumbnails below rating threshold        |
-| **Fade Rating Threshold** | 6.0      | IMDb rating below which to fade               |
-| **Show Fade Toggle**      | No       | Show button to override fade in hover preview |
+| Option                    | Default  | Description                                      |
+| ------------------------- | -------- | ------------------------------------------------ |
+| **Overlay Position**      | Top Left | Corner where rating badges appear                |
+| **Show Rotten Tomatoes**  | No       | Display RT score (only when OMDb is selected)    |
+| **Show Metacritic**       | No       | Display Metacritic score (OMDb or XMDb required) |
+| **Fade Thumbnails**       | No       | Fade thumbnails below rating threshold           |
+| **Fade Rating Threshold** | 6.0      | IMDb rating below which to fade                  |
+| **Show Fade Toggle**      | No       | Show button to override fade in hover preview    |
 
 ### API & Data
 
-| Option                     | Default  | Description                                                            |
-| -------------------------- | -------- | ---------------------------------------------------------------------- |
-| **API Client**             | Agregarr | Primary rating provider (Agregarr, IMDb API, OMDb, XMDb)               |
-| **OMDb API Key**           | _empty_  | [Get a free key](https://www.omdbapi.com/apikey.aspx) for RT/MC scores |
-| **XMDb API Key**           | _empty_  | [Get a free key](https://xmdbapi.com/api-key) for additional data      |
-| **Cache TTL (Old Titles)** | Forever  | Cache duration for rated titles > 1 year old                           |
-| **Cache TTL (New Titles)** | 30 days  | Cache duration for rated titles < 1 year old                           |
-| **Cache TTL (No Rating)**  | 1 day    | Cache duration for unrated/not-found titles                            |
+| Option                     | Default          | Description                                                                                                                  |
+| -------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Rating Provider**        | FM-DB + Agregarr | Primary data source (FM-DB + Agregarr, OMDb, XMDb). Note: RT scores only available with OMDb; MC available with OMDb or XMDb |
+| **OMDb API Key**           | _empty_          | [Get a free key](https://www.omdbapi.com/apikey.aspx) (required when OMDb is selected)                                       |
+| **XMDb API Key**           | _empty_          | [Get a free key](https://xmdbapi.com/api-key) (required when XMDb is selected)                                               |
+| **Cache TTL (Old Titles)** | -1 (forever)     | Cache duration (days) for rated titles > 1 year old. Use -1 for never expire                                                 |
+| **Cache TTL (New Titles)** | 30               | Cache duration (days) for rated titles < 1 year old                                                                          |
+| **Cache TTL (No Rating)**  | 1                | Cache duration (days) for unrated/not-found titles                                                                           |
 
 ### Advanced
 
@@ -119,10 +119,10 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **Third-party APIs:**
 
-By default, title lookups are resolved via [IMDb](https://www.imdb.com/) suggestions and ratings are fetched from [Agregarr](https://github.com/agregarr/agregarr). When OMDb or XMDb is selected, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
+By default, title lookups use [FM-DB](https://imdb.iamidiotareyoutoo.com/) (IMDb suggestions) and ratings are fetched from [Agregarr](https://github.com/agregarr/agregarr) at [api.agregarr.org](https://api.agregarr.org/). When OMDb or XMDb is selected, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
 
 ---
 
 ## License
 
-[GPLv3](LICENSE)
+[GPL-3.0-or-later](LICENSE)
