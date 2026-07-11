@@ -87,7 +87,7 @@ export class SettingsUI {
         clearBtn.id = 'fm-clearCacheBtn';
         clearBtn.className = 'secondary';
         clearBtn.textContent = 'Clear Cache';
-        clearBtn.title = 'Delete all cached ratings so they are fetched again.';
+        clearBtn.title = 'Delete all cached ratings to force fresh rating lookups';
         clearBtn.onclick = () => this.clearCache();
         actionsDiv.appendChild(clearBtn);
 
@@ -95,7 +95,7 @@ export class SettingsUI {
         resetBtn.id = 'fm-resetClientsBtn';
         resetBtn.className = 'secondary';
         resetBtn.textContent = 'Reset Disabled Clients';
-        resetBtn.title = 'Re-enable API providers that were turned off after repeated errors.';
+        resetBtn.title = 'Re-enable rating providers that were automatically disabled due to errors';
         resetBtn.onclick = () => this.resetClients();
         actionsDiv.appendChild(resetBtn);
 
