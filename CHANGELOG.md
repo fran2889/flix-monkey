@@ -78,7 +78,7 @@
 * **surfaces:** add support for ratings on Netflix search result gallery items ([8901e14](https://github.com/fran2889/flix-monkey/commit/8901e14))
 * **overlay:** loading badge displayed while ratings are being fetched ([e49d952](https://github.com/fran2889/flix-monkey/commit/e49d952))
 * **overlay:** low-rated titles are visually dimmed on browse and search surfaces ([5801d47](https://github.com/fran2889/flix-monkey/commit/5801d47))
-* **api-clients:** XMDB, OMDB, and IMDb API Dev clients ([55d58a0](https://github.com/fran2889/flix-monkey/commit/55d58a0), [de05390](https://github.com/fran2889/flix-monkey/commit/de05390))
+* **api-clients:** XMDb, OMDb, and IMDb API Dev clients ([55d58a0](https://github.com/fran2889/flix-monkey/commit/55d58a0), [de05390](https://github.com/fran2889/flix-monkey/commit/de05390))
 * **api-manager:** persistent circuit breaker disables consistently failing API endpoints to avoid redundant requests ([cb30b95](https://github.com/fran2889/flix-monkey/commit/cb30b95))
 * **request-queue:** rate-limited request queue with cross-tab synchronization via shared storage ([52c6317](https://github.com/fran2889/flix-monkey/commit/52c6317))
 * **cache:** per-item cache storage ([0fef9b8](https://github.com/fran2889/flix-monkey/commit/0fef9b8))

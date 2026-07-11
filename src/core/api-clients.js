@@ -27,7 +27,7 @@ import { Title } from './title.js';
  */
 
 /**
- * Extracts a rating value from an OMDB-style `Ratings` array.
+ * Extracts a rating value from an OMDb-style `Ratings` array.
  *
  * @param {Array<{source?: string, Source?: string, value?: string, Value?: string}>|*} ratings
  * @param {RegExp} sourcePattern - Pattern to match against the `source`/`Source` field.
@@ -219,27 +219,27 @@ export class XmdbApiClient extends BaseApiClient {
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        this.logger?.debug(`Searching XMDB for title: "${displayTitle}"`);
+        this.logger?.debug(`Searching XMDb for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            this.logger?.info(`No search results found in XMDB for "${displayTitle}"`);
+            this.logger?.info(`No search results found in XMDb for "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.logger?.info(`No title-type results found in XMDB for "${displayTitle}"`);
+            this.logger?.info(`No title-type results found in XMDb for "${displayTitle}"`);
             return null;
         }
         return titleResults[0];
     }
 
     async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        this.logger?.debug(`Fetching XMDB details for ID: ${id} ("${displayTitle}")`);
+        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
-            this.logger?.warn(`XMDB details request failed for "${displayTitle}" (ID: ${id})`, {
+            this.logger?.warn(`XMDb details request failed for "${displayTitle}" (ID: ${id})`, {
                 response: detailsJson ?? null,
             });
             return null;
@@ -283,10 +283,10 @@ export class OmdbApiClient extends BaseApiClient {
     async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t });
-        this.logger?.debug(`Fetching OMDB details for title: "${t}"`);
+        this.logger?.debug(`Fetching OMDb details for title: "${t}"`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.warn(`OMDB details request failed for "${displayTitle}"`, {
+            this.logger?.warn(`OMDb details request failed for "${displayTitle}"`, {
                 response: json,
             });
             return null;
