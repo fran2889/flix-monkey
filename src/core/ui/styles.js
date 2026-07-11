@@ -221,19 +221,16 @@ export const SETTINGS_STYLES = `
     padding: 0 4px;
 }
 
-.fm-settings-container .ratings-group {
+.fm-settings-container .ratings-field {
     display: flex;
     align-items: center;
-    gap: 20px;
     margin-bottom: 10px;
 }
 
-.fm-settings-container .ratings-group-label {
-    flex: 0 0 200px;
-    text-align: right;
-    padding-right: 15px;
-    color: #ccc;
-    font-size: 14px;
+.fm-settings-container .ratings-field .ratings-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 .fm-settings-container .rating-checkbox {

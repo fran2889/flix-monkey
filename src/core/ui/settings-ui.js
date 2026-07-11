@@ -71,7 +71,19 @@ export class SettingsUI {
 
             // Special handling for ratings group
             if (group.isRatingsGroup) {
-                parent.appendChild(this.#createRatingsGroup(group, settings));
+                // Create a field with "Show Ratings" label and the ratings checkboxes
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field ratings-field';
+
+                const label = document.createElement('label');
+                label.className = 'field-label';
+                label.textContent = 'Show Ratings';
+                fieldDiv.appendChild(label);
+
+                const checkboxesContainer = this.#createRatingsCheckboxes(group, settings);
+                fieldDiv.appendChild(checkboxesContainer);
+
+                parent.appendChild(fieldDiv);
                 continue;
             }
 
@@ -137,15 +149,9 @@ export class SettingsUI {
         return groups;
     }
 
-    #createRatingsGroup(group, settings) {
+    #createRatingsCheckboxes(group, settings) {
         const container = document.createElement('div');
         container.className = 'ratings-group';
-
-        // Create the group label (styled like other field labels)
-        const label = document.createElement('label');
-        label.className = 'field-label ratings-group-label';
-        label.textContent = 'Ratings';
-        container.appendChild(label);
 
         // IMDb checkbox (always checked, disabled)
         const imdbCheckbox = this.#createRatingCheckbox('showImdbRating', 'IMDb', true, settings);
