@@ -339,6 +339,9 @@ Use imperative mood. Skip sections that don't apply:
 
 ## Breaking Changes
 - <Only if applicable: describe what breaks and migration steps>
+
+## Resolves
+- <Issue numbers this PR closes, e.g., Resolves #123 or Resolves #123, #456>
 ```
 
 **Test Plan rules**: use `[x]` for automated tests that have passed and `[ ]` for manual verification steps requiring human testing.
