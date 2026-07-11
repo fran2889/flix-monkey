@@ -61,14 +61,13 @@ Generate both at <https://addons.mozilla.org/developers/addon/api/key/>
 
 ## Updating Store Descriptions
 
-The store listing descriptions for Chrome Web Store and Firefox AMO can be updated
-automatically using the `Update Store Description` GitHub Actions workflow
-(`update-store-description.yml`).
+The Firefox AMO store listing description can be updated automatically using the
+`Update Store Description` GitHub Actions workflow (`update-store-description.yml`).
 
 ### Description File
 
 Store descriptions are maintained in `docs/store-description.txt`. This file contains
-the rich, formatted text that appears in both store listings.
+the rich, formatted text that appears in the Firefox AMO listing.
 
 ### Automatic Updates
 
@@ -89,15 +88,6 @@ To manually trigger a description update:
 
 The workflow requires the following repository secrets:
 
-#### Chrome Web Store
-
-| Secret                 | Description                      |
-| ---------------------- | -------------------------------- |
-| `CHROME_CLIENT_ID`     | OAuth2 client ID                 |
-| `CHROME_CLIENT_SECRET` | OAuth2 client secret             |
-| `CHROME_REFRESH_TOKEN` | OAuth2 refresh token             |
-| `CHROME_EXTENSION_ID`  | Extension ID in Chrome Web Store |
-
 #### Firefox AMO
 
 | Secret           | Description                                |
@@ -108,7 +98,6 @@ The workflow requires the following repository secrets:
 
 ### Notes
 
-- Both store updates run in parallel and are independent; a failure in one does not block the other
 - The workflow uses direct REST API calls (no additional npm dependencies)
-- Description length is validated against store limits (Chrome: 132,072 chars, Firefox: 10,000 chars)
+- Description length is validated against store limits (Firefox: 10,000 chars)
 - Excessively long descriptions are truncated with a warning
