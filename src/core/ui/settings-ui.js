@@ -78,6 +78,7 @@ export class SettingsUI {
                 const label = document.createElement('label');
                 label.className = 'field-label';
                 label.textContent = 'Show Ratings';
+                label.title = 'Choose which ratings to display on thumbnails';
                 fieldDiv.appendChild(label);
 
                 const checkboxesContainer = this.#createRatingsCheckboxes(group, settings);
