@@ -297,12 +297,13 @@ class PlatformAdapter {
 - **Protocol**: Always print a suggested commit message at the end of a task.
 - **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
 - **Prose style**: Use the Oxford comma: "A, B, and C".
+- **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
 
 ## Branches & Pull Requests
 
 ### Branch Naming
 
-`type/kebab-case-slug`: `type` matches a Conventional Commits type (see above), slug is 2–4 words.
+`type/kebab-case-slug`: `type` matches a Conventional Commits type (see above), slug is 2-4 words.
 
 ```
 feat/add-metacritic-fallback
@@ -329,7 +330,7 @@ Use imperative mood. Skip sections that don't apply:
 
 ```
 ## Summary
-- <What this PR does, 1–3 bullets>
+- <What this PR does, 1-3 bullets>
 
 ## Test Plan
 - [x] <Automated: e.g., 335 unit tests pass, 5 integration tests pass, all targets build>

@@ -274,7 +274,7 @@ export class OverlayRenderer {
         const container = document.createElement('div');
         container.className = `${this.#OVERLAY_CLASS} ${this.#LOADING_CLASS}`;
         container.appendChild(this.#createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
-        container.title = 'IMDb: Fetching ratings… · Search IMDb';
+        container.title = 'IMDb: Fetching ratings... * Search IMDb';
         return container;
     }
 

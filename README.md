@@ -53,9 +53,9 @@ Displays a compact badge in your chosen corner on:
 
 ### Supported Scores
 
-- **IMDb** rating (0.0–10.0)
-- **Metacritic** score (0–100)
-- **Rotten Tomatoes** score (0–100, requires OMDB key)
+- **IMDb** rating (0.0-10.0)
+- **Metacritic** score (0-100)
+- **Rotten Tomatoes** score (0-100, requires OMDB key)
 
 ### Interactive Badges
 

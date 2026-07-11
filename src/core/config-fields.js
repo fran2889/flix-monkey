@@ -103,7 +103,7 @@ export const CONFIG_FIELDS = [
         label: 'Fade threshold',
         type: 'text',
         default: '6.0',
-        title: 'IMDb rating cutoff for fading (0–10).',
+        title: 'IMDb rating cutoff for fading (0-10).',
         row: 'fade-settings',
         labelHidden: true,
         validate: val => {

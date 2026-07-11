@@ -21,10 +21,10 @@
  * @property {string|null} [apiTitle=null] - Canonical title returned by the API.
  * @property {string|null} [imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
  * @property {number|string|null} [year=null] - Release year; coerced to integer.
- * @property {number|string|null} [rating=null] - IMDb rating (0–10); coerced to float.
+ * @property {number|string|null} [rating=null] - IMDb rating (0-10); coerced to float.
  * @property {number|string|null} [imdbVotes=null] - IMDb vote count; coerced to integer.
- * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0–100); coerced to integer.
- * @property {number|string|null} [mcRating=null] - Metacritic score (0–100); leading digits extracted, coerced to integer.
+ * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0-100); coerced to integer.
+ * @property {number|string|null} [mcRating=null] - Metacritic score (0-100); leading digits extracted, coerced to integer.
  * @property {string|null} [source=null] - API source that produced this title (an `ApiSource` value).
  * @property {string|null} [type=null] - Title type (e.g. `"movie"`, `"series"`).
  */

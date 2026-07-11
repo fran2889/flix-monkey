@@ -154,7 +154,7 @@ export class BaseApiClient {
     }
 
     /**
-     * Fetches ratings for a Netflix title by running the search → details pipeline.
+     * Fetches ratings for a Netflix title by running the search -> details pipeline.
      * Callers must gate through {@link getStatus} before invoking.
      *
      * @param {string} displayTitle - Title as shown on the Netflix UI.
