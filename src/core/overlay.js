@@ -208,17 +208,25 @@ export class OverlayRenderer {
         return String(Math.round(num));
     }
 
-    #buildTooltip(titleParts, imdbId) {
-        if (titleParts.length) return `${titleParts.join(' · ')} · Open IMDb`;
-        if (imdbId) return 'IMDb: No rating · Open IMDb';
-        return 'IMDb: Not found · Search IMDb';
+    #buildTooltip(titleParts, imdbId, apiTitle = null, year = null) {
+        const tooltipContent = titleParts.length
+            ? `${titleParts.join(' · ')} · Open IMDb`
+            : imdbId
+              ? 'IMDb: No rating · Open IMDb'
+              : 'IMDb: Not found · Search IMDb';
+
+        if (apiTitle) {
+            const titleLine = year ? `${apiTitle} (${year})` : apiTitle;
+            return `${titleLine}\n${tooltipContent}`;
+        }
+        return tooltipContent;
     }
 
     #createOverlay(titleObj) {
         const container = document.createElement('div');
         container.className = this.#OVERLAY_CLASS;
 
-        const { rating, imdbId, rtRating, mcRating, imdbVotes } = titleObj;
+        const { rating, imdbId, rtRating, mcRating, imdbVotes, apiTitle, year } = titleObj;
 
         // Helper to add click handler for propagation
         const addStopPropagation = el => {
@@ -262,7 +270,7 @@ export class OverlayRenderer {
             container.appendChild(addStopPropagation(this.#createRatingElement('MC', formatted, 'fm-mc')));
         }
 
-        imdbLink.title = this.#buildTooltip(titleParts, imdbId);
+        imdbLink.title = this.#buildTooltip(titleParts, imdbId, apiTitle, year);
         return container;
     }
 
