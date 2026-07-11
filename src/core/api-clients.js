@@ -307,55 +307,6 @@ export class OmdbApiClient extends BaseApiClient {
     }
 }
 
-export class ImdbApiDevClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger) {
-        super(
-            new RequestQueue(RATE_LIMITS[ApiSource.IMDBAPI], null, adapter),
-            ApiSource.IMDBAPI,
-            disabledManager,
-            adapter,
-            config,
-            logger
-        );
-    }
-
-    async search(displayTitle) {
-        const searchParams = new URLSearchParams({ query: displayTitle, limit: 5 });
-        this.logger?.debug(`Searching IMDb API Dev for title: "${displayTitle}"`);
-        const { titles } = await this.queuedFetch(`https://api.imdbapi.dev/search/titles?${searchParams}`, 0);
-        if (!titles?.length) {
-            this.logger?.info(`No search results found in IMDb API Dev for "${displayTitle}"`);
-            return null;
-        }
-        return titles[0];
-    }
-
-    async getDetails(match, displayTitle) {
-        const { id } = match;
-        this.logger?.debug(`Fetching IMDb API Dev details for ID: ${id} ("${displayTitle}")`);
-        const detailsJson = await this.queuedFetch(`https://api.imdbapi.dev/titles/${id}`, 1);
-        if (!detailsJson || detailsJson.error) {
-            this.logger?.warn(`IMDb API Dev details request failed for "${displayTitle}" (ID: ${id})`, {
-                response: detailsJson ?? null,
-            });
-            return null;
-        }
-
-        const { primaryTitle, startYear, rating, metacritic, type } = detailsJson;
-
-        return new Title({
-            apiTitle: primaryTitle ?? null,
-            imdbId: id,
-            year: startYear,
-            rating: rating?.aggregateRating ?? null,
-            imdbVotes: rating?.voteCount ?? null,
-            rtRating: null,
-            mcRating: metacritic?.score ?? null,
-            type: mapTitleType(type),
-        });
-    }
-}
-
 export class AgregarrApiClient extends BaseApiClient {
     constructor(disabledManager, adapter, config, logger) {
         super(
