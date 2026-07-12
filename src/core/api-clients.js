@@ -296,33 +296,34 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        return { title: displayTitle };
-    }
-
-    async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
-        const params = new URLSearchParams({ apikey: apiKey, t });
-        this.logger?.debug(`Fetching OMDb details for title: "${t}"`);
+        const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
+        this.logger?.debug(`Searching OMDb for title: "${displayTitle}"`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.warn(`OMDb details request failed for "${displayTitle}"`, {
-                response: json,
-            });
+            this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replace(/,/g, ''), 10) : null;
         return new Title({
+            displayTitle,
             apiTitle: apiTitle ?? null,
-            imdbId: imdbID,
+            imdbId: imdbID ?? null,
             year: releaseYear,
             rating: imdbRating,
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
             type: mapTitleType(apiType),
+            source: null,
         });
+    }
+
+    async getDetails(searchTitle) {
+        // Pass-through: OMDb already fetched all details (including ratings) in search()
+        return searchTitle;
     }
 }
 
