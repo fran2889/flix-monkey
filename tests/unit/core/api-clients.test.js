@@ -18,6 +18,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
+import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -108,7 +109,10 @@ describe('XmdbApiClient', () => {
             createMockLogger()
         );
         const result = await client.search('Movie 1');
-        expect(result.id).toBe('m1');
+        expect(result.imdbId).toBe('m1');
+        expect(result.apiTitle).toBe('Movie 1');
+        expect(result.year).toBe(2020);
+        expect(result.rating).toBeNull();
     });
 
     it('should return null if no search results found', async () => {
@@ -205,7 +209,7 @@ describe('XmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'm1' }, 'Movie 1');
+        const result = await client.getDetails(new Title({ imdbId: 'm1', displayTitle: 'Movie 1' }));
         expect(result).toBeNull();
     });
 
@@ -288,7 +292,7 @@ describe('XmdbApiClient', () => {
             { get: _k => 'key' },
             mockLogger
         );
-        await client.getDetails({ id: 'm1' }, 'Movie 1');
+        await client.getDetails(new Title({ imdbId: 'm1', displayTitle: 'Movie 1' }));
         expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining('Movie 1'),
             expect.objectContaining({ response: { error: 'not found' } })
@@ -311,7 +315,7 @@ describe('XmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt0000000' }, 'nonexistent');
+        const result = await client.getDetails(new Title({ imdbId: 'tt0000000', displayTitle: 'nonexistent' }));
         expect(result).toBeNull();
     });
 
@@ -341,7 +345,7 @@ describe('XmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ id: 'tt1', title: 'Test' }, 'Test');
+        const result = await client.getDetails(new Title({ imdbId: 'tt1', displayTitle: 'Test' }));
         expect(result.imdbVotes).toBe(2500000);
     });
 });
@@ -365,7 +369,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
+        const result = await client.search('Movie 1');
 
         expect(result.rating).toBe(8.0);
         expect(result.imdbId).toBe('tt1');
@@ -398,7 +402,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
+        const result = await client.search('Movie 1');
         expect(result.year).toBeNull();
     });
 
@@ -423,7 +427,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
+        const result = await client.search('Movie 1');
 
         expect(result.rtRating).toBe(90);
         expect(result.mcRating).toBe(85);
@@ -446,7 +450,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
+        const result = await client.search('Movie 1');
         expect(result.type).toBe('movie');
     });
 
@@ -467,7 +471,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Show 1' }, 'Show 1');
+        const result = await client.search('Show 1');
         expect(result.type).toBe('series');
     });
 
@@ -482,11 +486,8 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             mockLogger
         );
-        await client.getDetails({ title: 'Unknown' }, 'Unknown');
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Unknown'),
-            expect.objectContaining({ response: { Response: 'False', Error: 'Movie not found!' } })
-        );
+        await client.search('Unknown');
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
     it('should return null on OMDB False response', async () => {
@@ -501,7 +502,7 @@ describe('OmdbApiClient', () => {
             },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Unknown' }, 'Unknown');
+        const result = await client.search('Unknown');
         expect(result).toBeNull();
     });
 
@@ -520,7 +521,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Test' }, 'Test');
+        const result = await client.search('Test');
         expect(result.imdbVotes).toBe(2500000);
     });
 
@@ -538,7 +539,7 @@ describe('OmdbApiClient', () => {
             { get: _k => 'key' },
             createMockLogger()
         );
-        const result = await client.getDetails({ title: 'Test' }, 'Test');
+        const result = await client.search('Test');
         expect(result.imdbVotes).toBeNull();
     });
 
@@ -584,7 +585,7 @@ describe('AgregarrApiClient', () => {
             createMockLogger()
         );
         const result = await client.search('Movie 1');
-        expect(result['#IMDB_ID']).toBe('tt0001');
+        expect(result.imdbId).toBe('tt0001');
     });
 
     it('should return null if no results found', async () => {
@@ -681,7 +682,8 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ '#IMDB_ID': 'tt1', '#TITLE': 'Movie 1', '#YEAR': 2020 }, 'Movie 1');
+        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Movie 1', year: 2020, displayTitle: 'Movie 1' });
+        const result = await client.getDetails(searchResult);
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.imdbId).toBe('tt1');
         expect(result.year).toBe(2020);
@@ -701,7 +703,8 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ '#IMDB_ID': 'tt4', '#TITLE': 'Movie 1', '#YEAR': 2020 }, 'Movie 1');
+        const searchResult = new Title({ imdbId: 'tt4', apiTitle: 'Movie 1', year: 2020, displayTitle: 'Movie 1' });
+        const result = await client.getDetails(searchResult);
         expect(result.rating).toBeNull();
         expect(result.type).toBeNull();
     });
@@ -756,7 +759,8 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ '#IMDB_ID': 'tt1', '#TITLE': 'Test', '#YEAR': 2020 }, 'Test');
+        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
+        const result = await client.getDetails(searchResult);
         expect(result.imdbVotes).toBe(2500000);
     });
 
@@ -770,7 +774,8 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const result = await client.getDetails({ '#IMDB_ID': 'tt1', '#TITLE': 'Test', '#YEAR': 2020 }, 'Test');
+        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
+        const result = await client.getDetails(searchResult);
         expect(result.imdbVotes).toBeNull();
     });
 });
