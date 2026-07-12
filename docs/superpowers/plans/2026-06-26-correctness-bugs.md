@@ -34,7 +34,7 @@
 - Consumes: `RequestQueue(minInterval, globalSyncKey, adapter)` constructor — unchanged
 - Produces: same public API; internal `#process` now calls `adapter.storageGet` twice per request on the no-wait path when a sync key is configured
 
-- [ ] **Step 1: Add two new failing tests to `tests/unit/core/request-queue.test.js`**
+- [x] **Step 1: Add two new failing tests to `tests/unit/core/request-queue.test.js`**
 
 Add inside the existing `describe('RequestQueue', () => { ... })` block, after the last test:
 
@@ -74,7 +74,7 @@ it('should re-loop when pre-claim read shows another tab fired recently', async 
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```
 npx vitest run tests/unit/core/request-queue.test.js
@@ -82,7 +82,7 @@ npx vitest run tests/unit/core/request-queue.test.js
 
 Expected: two new tests FAIL with `storageGet` call count mismatches; all other tests in the file PASS.
 
-- [ ] **Step 3: Implement the fix in `src/core/request-queue.js`**
+- [x] **Step 3: Implement the fix in `src/core/request-queue.js`**
 
 Replace lines 71-77 (the no-wait section) with:
 
@@ -143,7 +143,7 @@ while (this.#queue.length > 0) {
 }
 ```
 
-- [ ] **Step 4: Update the existing test whose expected call count changed**
+- [x] **Step 4: Update the existing test whose expected call count changed**
 
 In `tests/unit/core/request-queue.test.js`, find and update the test "should read global storage only once per request when no wait is needed":
 
@@ -172,7 +172,7 @@ it('should read global storage twice per request when no wait is needed', async 
 });
 ```
 
-- [ ] **Step 5: Run all tests to verify everything passes**
+- [x] **Step 5: Run all tests to verify everything passes**
 
 ```
 npx vitest run tests/unit/core/request-queue.test.js
@@ -180,7 +180,7 @@ npx vitest run tests/unit/core/request-queue.test.js
 
 Expected: all tests in the file PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/request-queue.js tests/unit/core/request-queue.test.js
@@ -207,7 +207,7 @@ git commit -m "fix(request-queue): re-read storage before claiming timeslot on n
     - Example: `slugify("Schitt's Creek")` → `"schitts_creek"`
     - Example: `slugify("Test: Movie")` → `"test_movie"`
 
-- [ ] **Step 1: Add `slugify` tests to `tests/unit/core/utils.test.js`**
+- [x] **Step 1: Add `slugify` tests to `tests/unit/core/utils.test.js`**
 
 Extend the existing static import at the top of `tests/unit/core/utils.test.js`:
 
@@ -279,7 +279,7 @@ it('should deduplicate in-flight requests for titles that differ only by punctua
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```
 npx vitest run tests/unit/core/utils.test.js tests/unit/core/cache.test.js tests/unit/core/app.test.js
@@ -287,7 +287,7 @@ npx vitest run tests/unit/core/utils.test.js tests/unit/core/cache.test.js tests
 
 Expected: `slugify` tests in utils FAIL (not exported), cache key collision test PASSES (coincidentally same slug already), app punctuation dedup test FAILS (two separate in-flight requests because dedupKeys differ).
 
-- [ ] **Step 3: Implement `slugify` in `src/core/utils.js`**
+- [x] **Step 3: Implement `slugify` in `src/core/utils.js`**
 
 Add after the `runIdle` function:
 
@@ -300,7 +300,7 @@ export function slugify(str) {
 }
 ```
 
-- [ ] **Step 4: Update `src/core/cache.js` to use `slugify`**
+- [x] **Step 4: Update `src/core/cache.js` to use `slugify`**
 
 Add `slugify` to the import at the top of `src/core/cache.js`:
 
@@ -333,7 +333,7 @@ Replace the body of `#getCacheKey`:
 }
 ```
 
-- [ ] **Step 5: Update `src/core/app.js` to use `slugify` for `dedupKey`**
+- [x] **Step 5: Update `src/core/app.js` to use `slugify` for `dedupKey`**
 
 Extend the existing utils import at the top of `src/core/app.js`:
 
@@ -355,7 +355,7 @@ const dedupKey = displayTitle.toLowerCase();
 const dedupKey = slugify(displayTitle);
 ```
 
-- [ ] **Step 6: Run all affected tests to verify they pass**
+- [x] **Step 6: Run all affected tests to verify they pass**
 
 ```
 npx vitest run tests/unit/core/utils.test.js tests/unit/core/cache.test.js tests/unit/core/app.test.js
@@ -363,7 +363,7 @@ npx vitest run tests/unit/core/utils.test.js tests/unit/core/cache.test.js tests
 
 Expected: all tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/utils.js src/core/cache.js src/core/app.js \
@@ -386,7 +386,7 @@ git commit -m "fix(dedup): extract slugify helper and align dedup key with cache
 
 - Produces: `ConfigManager.getInt(key, fallback?)` and `ConfigManager.getFloat(key, fallback?)` — both always return a finite `number` (never `undefined`, `null`, or `NaN`)
 
-- [ ] **Step 1: Add failing tests to `tests/unit/core/config-manager.test.js`**
+- [x] **Step 1: Add failing tests to `tests/unit/core/config-manager.test.js`**
 
 Add inside the existing `describe('ConfigManager', ...)` block:
 
@@ -416,7 +416,7 @@ it('should return numeric fallback from getFloat when value is non-numeric', () 
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```
 npx vitest run tests/unit/core/config-manager.test.js
@@ -424,7 +424,7 @@ npx vitest run tests/unit/core/config-manager.test.js
 
 Expected: the two `return 0` tests FAIL (current code returns `undefined`); the numeric-fallback tests PASS (current code already returns the fallback).
 
-- [ ] **Step 3: Implement the fix in `src/core/config-manager.js`**
+- [x] **Step 3: Implement the fix in `src/core/config-manager.js`**
 
 Replace `getInt` and `getFloat`:
 
@@ -446,7 +446,7 @@ getFloat(key, fallback) {
 }
 ```
 
-- [ ] **Step 4: Run all tests in the file to verify they pass**
+- [x] **Step 4: Run all tests in the file to verify they pass**
 
 ```
 npx vitest run tests/unit/core/config-manager.test.js
@@ -454,7 +454,7 @@ npx vitest run tests/unit/core/config-manager.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/config-manager.js tests/unit/core/config-manager.test.js
@@ -476,7 +476,7 @@ git commit -m "fix(config): guarantee numeric return from getInt and getFloat"
 
 - Produces: `OverlayRenderer.injectOverlay(container, titleObj)` — now renders badges when `rating`, `rtRating`, or `mcRating` is `0`
 
-- [ ] **Step 1: Add failing tests to `tests/unit/core/overlay.test.js`**
+- [x] **Step 1: Add failing tests to `tests/unit/core/overlay.test.js`**
 
 Add the following imports at the top of the test file (after existing imports):
 
@@ -523,7 +523,7 @@ it('should render RT and MC badges for zero percent ratings', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```
 npx vitest run tests/unit/core/overlay.test.js
@@ -531,7 +531,7 @@ npx vitest run tests/unit/core/overlay.test.js
 
 Expected: both new tests FAIL because the zero ratings are not rendered.
 
-- [ ] **Step 3: Implement the fix in `src/core/overlay.js`**
+- [x] **Step 3: Implement the fix in `src/core/overlay.js`**
 
 Three replacements in `#createOverlay`:
 
@@ -559,7 +559,7 @@ if (this.#config.get('showMcRating', true) && mcRating) {
 if (this.#config.get('showMcRating', true) && mcRating != null) {
 ```
 
-- [ ] **Step 4: Run all tests in the file to verify they pass**
+- [x] **Step 4: Run all tests in the file to verify they pass**
 
 ```
 npx vitest run tests/unit/core/overlay.test.js
@@ -567,7 +567,7 @@ npx vitest run tests/unit/core/overlay.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/overlay.js tests/unit/core/overlay.test.js
@@ -589,7 +589,7 @@ git commit -m "fix(overlay): use != null checks to preserve zero ratings"
 
 - Produces: `parseRatings(ratings, sourcePattern)` (module-private) — no longer throws when `ratings` contains `null` or `undefined` elements; tested via `OmdbApiClient.fetch`
 
-- [ ] **Step 1: Add a failing test to `tests/unit/core/api-clients.test.js`**
+- [x] **Step 1: Add a failing test to `tests/unit/core/api-clients.test.js`**
 
 `OmdbApiClient` is already imported at the top of that file. Add a new `describe` block after the existing ones:
 
@@ -619,7 +619,7 @@ describe('OmdbApiClient', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new test to verify it fails**
+- [x] **Step 2: Run the new test to verify it fails**
 
 ```
 npx vitest run tests/unit/core/api-clients.test.js
@@ -627,7 +627,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: the new test FAILS with `TypeError: Cannot read properties of null`.
 
-- [ ] **Step 3: Implement the fix in `src/core/api-clients.js`**
+- [x] **Step 3: Implement the fix in `src/core/api-clients.js`**
 
 ```js
 // Line 37 — BEFORE
@@ -637,7 +637,7 @@ const entry = ratings.find(r => sourcePattern.test(r.source || r.Source));
 const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
 ```
 
-- [ ] **Step 4: Run all tests in the file to verify they pass**
+- [x] **Step 4: Run all tests in the file to verify they pass**
 
 ```
 npx vitest run tests/unit/core/api-clients.test.js
@@ -645,7 +645,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -667,7 +667,7 @@ git commit -m "fix(api-clients): guard null element in parseRatings"
 
 - Produces: `FlixMonkeyApp.#decorateContainer` — skips `injectOverlay` if the container is no longer in the document when data resolves
 
-- [ ] **Step 1: Add a failing test to `tests/unit/core/app.test.js`**
+- [x] **Step 1: Add a failing test to `tests/unit/core/app.test.js`**
 
 Add the following import at the top of `tests/unit/core/app.test.js` (after existing imports):
 
@@ -714,7 +714,7 @@ it('should not inject overlay when container is removed from DOM before data res
 });
 ```
 
-- [ ] **Step 2: Run the new test to verify it fails**
+- [x] **Step 2: Run the new test to verify it fails**
 
 ```
 npx vitest run tests/unit/core/app.test.js
@@ -722,7 +722,7 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: the new test FAILS because `injectOverlay` is called even after the container is detached.
 
-- [ ] **Step 3: Implement the fix in `src/core/app.js`**
+- [x] **Step 3: Implement the fix in `src/core/app.js`**
 
 ```js
 // Lines 109-111 — BEFORE
@@ -738,7 +738,7 @@ if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
 }
 ```
 
-- [ ] **Step 4: Run all tests in the file to verify they pass**
+- [x] **Step 4: Run all tests in the file to verify they pass**
 
 ```
 npx vitest run tests/unit/core/app.test.js
@@ -746,7 +746,7 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -768,7 +768,7 @@ git commit -m "fix(app): guard document.contains before overlay injection"
 
 - Produces: `Logger.debug(message, ...args)` — activates when `configGet('debug')` returns boolean `true` **or** string `"true"`
 
-- [ ] **Step 1: Add a failing test to `tests/unit/core/logger.test.js`**
+- [x] **Step 1: Add a failing test to `tests/unit/core/logger.test.js`**
 
 Add inside the existing `describe('core/logger', ...)` block:
 
@@ -790,7 +790,7 @@ it('should not log debug when adapter returns string "false"', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests to verify they fail**
+- [x] **Step 2: Run the new tests to verify they fail**
 
 ```
 npx vitest run tests/unit/core/logger.test.js
@@ -798,7 +798,7 @@ npx vitest run tests/unit/core/logger.test.js
 
 Expected: the `string "true"` test FAILS (strict `=== true` misses it); the `string "false"` test PASSES.
 
-- [ ] **Step 3: Implement the fix in `src/core/logger.js`**
+- [x] **Step 3: Implement the fix in `src/core/logger.js`**
 
 ```js
 // Line 28 — BEFORE
@@ -808,7 +808,7 @@ if (this.#adapter.configGet('debug') === true) {
 if (String(this.#adapter.configGet('debug')) === 'true') {
 ```
 
-- [ ] **Step 4: Run all tests in the file to verify they pass**
+- [x] **Step 4: Run all tests in the file to verify they pass**
 
 ```
 npx vitest run tests/unit/core/logger.test.js
@@ -816,7 +816,7 @@ npx vitest run tests/unit/core/logger.test.js
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/logger.js tests/unit/core/logger.test.js
@@ -829,7 +829,7 @@ git commit -m "fix(logger): normalize debug flag to handle string \"true\" from 
 
 After all 7 tasks are committed:
 
-- [ ] **Run the full unit test suite**
+- [x] **Run the full unit test suite**
 
 ```
 npm run test:unit

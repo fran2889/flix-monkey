@@ -40,7 +40,7 @@
 - Consumes: `Title` class from `./title.js`
 - Produces: Updated method signatures that all subclasses must implement
 
-- [ ] **Step 1: Update search() JSDoc and signature**
+- [x] **Step 1: Update search() JSDoc and signature**
 
 ```javascript
 // BEFORE (lines 173-184)
@@ -72,7 +72,7 @@ async search(_displayTitle) {
 }
 ```
 
-- [ ] **Step 2: Update getDetails() JSDoc and signature**
+- [x] **Step 2: Update getDetails() JSDoc and signature**
 
 ```javascript
 // BEFORE (lines 186-198)
@@ -109,7 +109,7 @@ async getDetails(_searchTitle) {
 }
 ```
 
-- [ ] **Step 3: Update fetch() method**
+- [x] **Step 3: Update fetch() method**
 
 ```javascript
 // BEFORE (lines 164-171)
@@ -133,12 +133,12 @@ async fetch(displayTitle) {
 }
 ```
 
-- [ ] **Step 4: Verify file compiles and has no syntax errors**
+- [x] **Step 4: Verify file compiles and has no syntax errors**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx eslint src/core/api-clients.js --no-fix`
 Expected: No errors (or only unrelated warnings)
 
-- [ ] **Step 5: Commit BaseApiClient signature changes**
+- [x] **Step 5: Commit BaseApiClient signature changes**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -162,7 +162,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `Title` class from `./title.js`, `mapTitleType()` helper
 - Produces: `search()` returns `Title` with metadata from XMDb search, `getDetails()` returns `Title` with ratings from XMDb details endpoint
 
-- [ ] **Step 1: Update XmdbApiClient.search() to return Title**
+- [x] **Step 1: Update XmdbApiClient.search() to return Title**
 
 ```javascript
 // BEFORE (lines 219-234)
@@ -214,7 +214,7 @@ async search(displayTitle) {
 }
 ```
 
-- [ ] **Step 2: Update XmdbApiClient.getDetails() to accept Title and merge**
+- [x] **Step 2: Update XmdbApiClient.getDetails() to accept Title and merge**
 
 ```javascript
 // BEFORE (lines 236-258)
@@ -272,12 +272,12 @@ async getDetails(searchTitle) {
 }
 ```
 
-- [ ] **Step 3: Run unit tests for XmdbApiClient to check for regressions**
+- [x] **Step 3: Run unit tests for XmdbApiClient to check for regressions**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "XmdbApiClient"`
 Expected: Tests fail (need to update test mocks next)
 
-- [ ] **Step 4: Commit XmdbApiClient implementation**
+- [x] **Step 4: Commit XmdbApiClient implementation**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -301,7 +301,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `Title` class from `./title.js`, `parseRatings()` helper, `mapTitleType()` helper
 - Produces: `search()` performs full OMDb API fetch and returns `Title` with all data, `getDetails()` is pass-through
 
-- [ ] **Step 1: Update OmdbApiClient.search() to perform full fetch and return Title**
+- [x] **Step 1: Update OmdbApiClient.search() to perform full fetch and return Title**
 
 ```javascript
 // BEFORE (lines 279-281)
@@ -337,7 +337,7 @@ async search(displayTitle) {
 }
 ```
 
-- [ ] **Step 2: Update OmdbApiClient.getDetails() to be pass-through**
+- [x] **Step 2: Update OmdbApiClient.getDetails() to be pass-through**
 
 ```javascript
 // BEFORE (lines 283-307)
@@ -374,12 +374,12 @@ async getDetails(searchTitle) {
 }
 ```
 
-- [ ] **Step 3: Run unit tests for OmdbApiClient to check for regressions**
+- [x] **Step 3: Run unit tests for OmdbApiClient to check for regressions**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "OmdbApiClient"`
 Expected: Tests fail (need to update test mocks next)
 
-- [ ] **Step 4: Commit OmdbApiClient implementation**
+- [x] **Step 4: Commit OmdbApiClient implementation**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -403,7 +403,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `Title` class from `./title.js`
 - Produces: `search()` returns `Title` with metadata from FM-DB search, `getDetails()` fetches ratings from Agregarr and returns merged `Title`
 
-- [ ] **Step 1: Update AgregarrApiClient.search() to return Title**
+- [x] **Step 1: Update AgregarrApiClient.search() to return Title**
 
 ```javascript
 // BEFORE (lines 322-336)
@@ -453,7 +453,7 @@ async search(displayTitle) {
 }
 ```
 
-- [ ] **Step 2: Update AgregarrApiClient.getDetails() to accept Title and merge**
+- [x] **Step 2: Update AgregarrApiClient.getDetails() to accept Title and merge**
 
 ```javascript
 // BEFORE (lines 338-360)
@@ -509,12 +509,12 @@ async getDetails(searchTitle) {
 }
 ```
 
-- [ ] **Step 3: Run unit tests for AgregarrApiClient to check for regressions**
+- [x] **Step 3: Run unit tests for AgregarrApiClient to check for regressions**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "AgregarrApiClient"`
 Expected: Tests fail (need to update test mocks next)
 
-- [ ] **Step 4: Commit AgregarrApiClient implementation**
+- [x] **Step 4: Commit AgregarrApiClient implementation**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -539,7 +539,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Updated `XmdbApiClient` implementation from Tasks 1-2
 - Produces: Tests that pass with new `Title`-based signatures
 
-- [ ] **Step 1: Update BaseApiClient tests to use Title**
+- [x] **Step 1: Update BaseApiClient tests to use Title**
 
 Find and update all assertions that check `search()` return values:
 
@@ -553,7 +553,7 @@ expect(result.imdbId).toBe('m1');
 
 Note: This test file has many assertions checking `result.id` for XmdbApiClient.search(). All need to change to `result.imdbId`.
 
-- [ ] **Step 2: Update XmdbApiClient.search() test**
+- [x] **Step 2: Update XmdbApiClient.search() test**
 
 ```javascript
 // BEFORE (lines 96-112)
@@ -594,7 +594,7 @@ it('should handle search with results', async () => {
 });
 ```
 
-- [ ] **Step 3: Update XmdbApiClient.getDetails() tests to use Title parameter**
+- [x] **Step 3: Update XmdbApiClient.getDetails() tests to use Title parameter**
 
 Find and replace all `getDetails()` calls with raw objects to use `Title` instances:
 
@@ -617,7 +617,7 @@ There are many such calls in the test file. Update all of them:
 
 For tests that call `fetch()` directly (which internally calls search + getDetails), the tests should continue to work because `fetch()` now handles the Title creation internally. Verify each test individually.
 
-- [ ] **Step 4: Update all XmdbApiClient assertions to check Title properties**
+- [x] **Step 4: Update all XmdbApiClient assertions to check Title properties**
 
 For tests that call `fetch()` and check properties, update to use the new `Title` constructor pattern:
 
@@ -631,12 +631,12 @@ expect(result.mcRating).toBe(88);
 
 Most `fetch()` tests should continue to work because they check `Title` properties which haven't changed.
 
-- [ ] **Step 5: Run XmdbApiClient tests**
+- [x] **Step 5: Run XmdbApiClient tests**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "XmdbApiClient"`
 Expected: All XmdbApiClient tests pass
 
-- [ ] **Step 6: Commit XmdbApiClient test updates**
+- [x] **Step 6: Commit XmdbApiClient test updates**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -660,7 +660,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Updated `OmdbApiClient` implementation from Task 3
 - Produces: Tests that pass with new pass-through `getDetails()` behavior
 
-- [ ] **Step 1: Update OmdbApiClient.search() tests**
+- [x] **Step 1: Update OmdbApiClient.search() tests**
 
 The `search()` method now makes the actual API call, so update tests accordingly:
 
@@ -710,7 +710,7 @@ it('should fetch details correctly', async () => {
 });
 ```
 
-- [ ] **Step 2: Update OmdbApiClient.getDetails() tests to be pass-through**
+- [x] **Step 2: Update OmdbApiClient.getDetails() tests to be pass-through**
 
 Since `getDetails()` is now a pass-through, tests should verify this:
 
@@ -742,7 +742,7 @@ it('should pass through Title in getDetails', async () => {
 });
 ```
 
-- [ ] **Step 3: Update all remaining OmdbApiClient tests**
+- [x] **Step 3: Update all remaining OmdbApiClient tests**
 
 Find and replace all `getDetails()` calls with raw objects:
 
@@ -758,12 +758,12 @@ await client.getDetails({ title: 'Movie 1' }, 'Movie 1');
 
 For tests that mock `httpFetch` and test the full flow, redirect them to test `search()` instead of `getDetails()` since OMDb now does everything in `search()`.
 
-- [ ] **Step 4: Run OmdbApiClient tests**
+- [x] **Step 4: Run OmdbApiClient tests**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "OmdbApiClient"`
 Expected: All OmdbApiClient tests pass
 
-- [ ] **Step 5: Commit OmdbApiClient test updates**
+- [x] **Step 5: Commit OmdbApiClient test updates**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -787,7 +787,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Updated `AgregarrApiClient` implementation from Task 4
 - Produces: Tests that pass with new `Title`-based signatures
 
-- [ ] **Step 1: Update AgregarrApiClient.search() tests**
+- [x] **Step 1: Update AgregarrApiClient.search() tests**
 
 Update assertions to check `Title` properties instead of raw object properties:
 
@@ -799,7 +799,7 @@ expect(result['#IMDB_ID']).toBe('tt0001');
 expect(result.imdbId).toBe('tt0001');
 ```
 
-- [ ] **Step 2: Update AgregarrApiClient.getDetails() tests to use Title parameter**
+- [x] **Step 2: Update AgregarrApiClient.getDetails() tests to use Title parameter**
 
 Replace all raw object parameters with `Title` instances:
 
@@ -818,7 +818,7 @@ const result = await client.getDetails(
 );
 ```
 
-- [ ] **Step 3: Update assertions to check Title properties**
+- [x] **Step 3: Update assertions to check Title properties**
 
 ```javascript
 // BEFORE (lines 685-691)
@@ -829,12 +829,12 @@ expect(result.year).toBe(2020);
 // AFTER - these should still work as they check Title properties
 ```
 
-- [ ] **Step 4: Run AgregarrApiClient tests**
+- [x] **Step 4: Run AgregarrApiClient tests**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "AgregarrApiClient"`
 Expected: All AgregarrApiClient tests pass
 
-- [ ] **Step 5: Commit AgregarrApiClient test updates**
+- [x] **Step 5: Commit AgregarrApiClient test updates**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -858,18 +858,18 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Updated `BaseApiClient` from Task 1
 - Produces: Tests that pass with new signatures
 
-- [ ] **Step 1: Update BaseApiClient status tests**
+- [x] **Step 1: Update BaseApiClient status tests**
 
 These tests don't call `search()` or `getDetails()` directly, so they should still work:
 
 - Lines 25-42: Tests for `getStatus()` - no changes needed
 
-- [ ] **Step 2: Run BaseApiClient tests**
+- [x] **Step 2: Run BaseApiClient tests**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/unit/core/api-clients.test.js -t "BaseApiClient"`
 Expected: All BaseApiClient tests pass
 
-- [ ] **Step 3: Commit if any changes were needed**
+- [x] **Step 3: Commit if any changes were needed**
 
 If changes were made:
 
@@ -895,11 +895,11 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Updated API client implementations from Tasks 1-4
 - Produces: Integration tests that pass with new signatures
 
-- [ ] **Step 1: Review integration tests**
+- [x] **Step 1: Review integration tests**
 
 Read the integration test file to identify all `search()` and `getDetails()` calls.
 
-- [ ] **Step 2: Update search() assertions**
+- [x] **Step 2: Update search() assertions**
 
 ```javascript
 // BEFORE (line 157)
@@ -909,7 +909,7 @@ expect(await client.search(TITLE)).toBeNull();
 expect(await client.search(TITLE)).toBeNull();
 ```
 
-- [ ] **Step 3: Update getDetails() calls**
+- [x] **Step 3: Update getDetails() calls**
 
 ```javascript
 // BEFORE (line 162)
@@ -920,12 +920,12 @@ const searchResult = await client.search(TITLE);
 const result = await client.getDetails(searchResult);
 ```
 
-- [ ] **Step 4: Run integration tests (if API keys available)**
+- [x] **Step 4: Run integration tests (if API keys available)**
 
 Run: `cd /home/fran/Projects/flix-monkey && npx vitest run tests/integration/api-clients.test.js`
 Expected: All integration tests pass (if `XMDB_API_KEY` and `OMDB_API_KEY` are set in environment)
 
-- [ ] **Step 5: Commit integration test updates**
+- [x] **Step 5: Commit integration test updates**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -944,16 +944,16 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - All test files
 
-- [ ] **Step 1: Run all unit and UI tests**
+- [x] **Step 1: Run all unit and UI tests**
 
 Run: `cd /home/fran/Projects/flix-monkey && npm test`
 Expected: All 335+ tests pass
 
-- [ ] **Step 2: Check for any remaining failures**
+- [x] **Step 2: Check for any remaining failures**
 
 If any tests fail, identify the issue and create a follow-up task to fix them.
 
-- [ ] **Step 3: Commit test verification**
+- [x] **Step 3: Commit test verification**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -972,22 +972,22 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - All source files
 
-- [ ] **Step 1: Build all targets**
+- [x] **Step 1: Build all targets**
 
 Run: `cd /home/fran/Projects/flix-monkey && npm run build`
 Expected: All targets (userscript, firefox, chrome) build successfully
 
-- [ ] **Step 2: Run linter**
+- [x] **Step 2: Run linter**
 
 Run: `cd /home/fran/Projects/flix-monkey && npm run lint`
 Expected: No lint errors
 
-- [ ] **Step 3: Run formatter check**
+- [x] **Step 3: Run formatter check**
 
 Run: `cd /home/fran/Projects/flix-monkey && npm run format:check`
 Expected: No formatting issues
 
-- [ ] **Step 4: Fix any issues and commit**
+- [x] **Step 4: Fix any issues and commit**
 
 If any issues found:
 
@@ -1006,12 +1006,12 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 ## Task 12: Clean Up and Final Verification
 
-- [ ] **Step 1: Final verification**
+- [x] **Step 1: Final verification**
 
 Run: `cd /home/fran/Projects/flix-monkey && npm run build && npm test`
 Expected: Everything passes
 
-- [ ] **Step 2: Create final summary commit**
+- [x] **Step 2: Create final summary commit**
 
 ```bash
 cd /home/fran/Projects/flix-monkey

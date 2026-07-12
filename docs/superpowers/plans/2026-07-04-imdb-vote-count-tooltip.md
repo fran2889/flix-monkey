@@ -31,7 +31,7 @@
 - Modify: `src/core/title.js`
 - Test: `tests/unit/core/title.test.js`
 
-- [ ] **Step 1: Update TitleOptions typedef**
+- [x] **Step 1: Update TitleOptions typedef**
 
 ```javascript
 /**
@@ -49,14 +49,14 @@
  */
 ```
 
-- [ ] **Step 2: Add imdbVotes property to Title class**
+- [x] **Step 2: Add imdbVotes property to Title class**
 
 ```javascript
 /** @type {number|null} */
 imdbVotes;
 ```
 
-- [ ] **Step 3: Update constructor to accept and normalize imdbVotes**
+- [x] **Step 3: Update constructor to accept and normalize imdbVotes**
 
 ```javascript
 constructor({
@@ -97,12 +97,12 @@ constructor({
 }
 ```
 
-- [ ] **Step 4: Run lint to verify syntax**
+- [x] **Step 4: Run lint to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/core/title.js`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/title.js
@@ -118,7 +118,7 @@ git commit -m "feat(title): add imdbVotes property"
 - Modify: `src/core/api-clients.js`
 - Test: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Update AgregarrApiClient.getDetails() to extract votes**
+- [x] **Step 1: Update AgregarrApiClient.getDetails() to extract votes**
 
 In the `getDetails` method of `AgregarrApiClient` (around line 383-404), update the return statement:
 
@@ -135,12 +135,12 @@ return new Title({
 });
 ```
 
-- [ ] **Step 2: Run unit tests for api-clients**
+- [x] **Step 2: Run unit tests for api-clients**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js --reporter=verbose`
 Expected: All AgregarrApiClient tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -156,7 +156,7 @@ git commit -m "feat(api-clients): extract imdbVotes from AgregarrApiClient"
 - Modify: `src/core/api-clients.js`
 - Test: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Update OmdbApiClient.getDetails() to extract imdbVotes**
+- [x] **Step 1: Update OmdbApiClient.getDetails() to extract imdbVotes**
 
 In the `getDetails` method of `OmdbApiClient` (around line 282-304), update the return statement:
 
@@ -176,12 +176,12 @@ return new Title({
 });
 ```
 
-- [ ] **Step 2: Run unit tests for api-clients**
+- [x] **Step 2: Run unit tests for api-clients**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js --reporter=verbose`
 Expected: All OmdbApiClient tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -197,7 +197,7 @@ git commit -m "feat(api-clients): extract imdbVotes from OmdbApiClient"
 - Modify: `src/core/api-clients.js`
 - Test: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Update ImdbApiDevClient.getDetails() to extract rating.voteCount**
+- [x] **Step 1: Update ImdbApiDevClient.getDetails() to extract rating.voteCount**
 
 In the `getDetails` method of `ImdbApiDevClient` (around line 330-352), update the return statement:
 
@@ -216,12 +216,12 @@ return new Title({
 });
 ```
 
-- [ ] **Step 2: Run unit tests for api-clients**
+- [x] **Step 2: Run unit tests for api-clients**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js --reporter=verbose`
 Expected: All ImdbApiDevClient tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -237,7 +237,7 @@ git commit -m "feat(api-clients): extract imdbVotes from ImdbApiDevClient"
 - Modify: `src/core/api-clients.js`
 - Test: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Update XmdbApiClient.getDetails() to extract vote_count**
+- [x] **Step 1: Update XmdbApiClient.getDetails() to extract vote_count**
 
 In the `getDetails` method of `XmdbApiClient` (around line 236-257), update the destructuring and return statement:
 
@@ -255,12 +255,12 @@ return new Title({
 });
 ```
 
-- [ ] **Step 2: Run unit tests for api-clients**
+- [x] **Step 2: Run unit tests for api-clients**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js --reporter=verbose`
 Expected: All XmdbApiClient tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -276,7 +276,7 @@ git commit -m "feat(api-clients): extract imdbVotes from XmdbApiClient"
 - Modify: `src/core/overlay.js`
 - Test: `tests/unit/core/overlay.test.js`
 
-- [ ] **Step 1: Add #formatVoteCount helper method**
+- [x] **Step 1: Add #formatVoteCount helper method**
 
 Add this method to the `OverlayRenderer` class, after the `#formatPercentRating` method:
 
@@ -291,12 +291,12 @@ Add this method to the `OverlayRenderer` class, after the `#formatPercentRating`
 }
 ```
 
-- [ ] **Step 2: Run lint to verify syntax**
+- [x] **Step 2: Run lint to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/core/overlay.js`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/overlay.js
@@ -312,7 +312,7 @@ git commit -m "feat(overlay): add formatVoteCount helper method"
 - Modify: `src/core/overlay.js`
 - Test: `tests/unit/core/overlay.test.js`
 
-- [ ] **Step 1: Update #buildTooltip to use shorter suffix**
+- [x] **Step 1: Update #buildTooltip to use shorter suffix**
 
 Replace the current `#buildTooltip` method with:
 
@@ -326,7 +326,7 @@ Replace the current `#buildTooltip` method with:
 }
 ```
 
-- [ ] **Step 2: Update #createOverlay to pass imdbVotes and build tooltip correctly**
+- [x] **Step 2: Update #createOverlay to pass imdbVotes and build tooltip correctly**
 
 In the `#createOverlay` method, update the tooltip building section:
 
@@ -384,12 +384,12 @@ In the `#createOverlay` method, update the tooltip building section:
 }
 ```
 
-- [ ] **Step 3: Run lint to verify syntax**
+- [x] **Step 3: Run lint to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/overlay.js
@@ -404,11 +404,11 @@ git commit -m "feat(overlay): include imdbVotes in tooltip"
 
 - Modify: `tests/unit/core/title.test.js`
 
-- [ ] **Step 1: Add test file license header if not present**
+- [x] **Step 1: Add test file license header if not present**
 
 Ensure the file starts with the standard GPL-3.0 license header matching `LICENSE_HEADER.template`.
 
-- [ ] **Step 2: Add imdbVotes normalization tests**
+- [x] **Step 2: Add imdbVotes normalization tests**
 
 Add these tests to the existing test suite:
 
@@ -477,12 +477,12 @@ describe('Title', () => {
 });
 ```
 
-- [ ] **Step 3: Run title tests**
+- [x] **Step 3: Run title tests**
 
 Run: `npx vitest run tests/unit/core/title.test.js --reporter=verbose`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/title.test.js
@@ -497,7 +497,7 @@ git commit -m "test(title): add imdbVotes normalization tests"
 
 - Modify: `tests/unit/core/overlay.test.js`
 
-- [ ] **Step 1: Add formatVoteCount tests**
+- [x] **Step 1: Add formatVoteCount tests**
 
 Add these tests to the existing OverlayRenderer test suite:
 
@@ -576,12 +576,12 @@ describe('OverlayRenderer', () => {
 });
 ```
 
-- [ ] **Step 2: Run overlay tests**
+- [x] **Step 2: Run overlay tests**
 
 Run: `npx vitest run tests/unit/core/overlay.test.js --reporter=verbose`
 Expected: All tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/core/overlay.test.js
@@ -596,7 +596,7 @@ git commit -m "test(overlay): add vote count formatting tests"
 
 - Modify: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Update AgregarrApiClient tests to verify imdbVotes extraction**
+- [x] **Step 1: Update AgregarrApiClient tests to verify imdbVotes extraction**
 
 Find the existing AgregarrApiClient test section and add vote assertions:
 
@@ -624,7 +624,7 @@ it('getDetails handles null votes from Agregarr response', async () => {
 });
 ```
 
-- [ ] **Step 2: Update OmdbApiClient tests to verify imdbVotes extraction**
+- [x] **Step 2: Update OmdbApiClient tests to verify imdbVotes extraction**
 
 ```javascript
 it('getDetails extracts imdbVotes from OMDB response', async () => {
@@ -650,7 +650,7 @@ it('getDetails handles missing imdbVotes from OMDB response', async () => {
 });
 ```
 
-- [ ] **Step 3: Update ImdbApiDevClient tests to verify rating.voteCount extraction**
+- [x] **Step 3: Update ImdbApiDevClient tests to verify rating.voteCount extraction**
 
 ```javascript
 it('getDetails extracts voteCount from IMDb API Dev response', async () => {
@@ -665,7 +665,7 @@ it('getDetails extracts voteCount from IMDb API Dev response', async () => {
 });
 ```
 
-- [ ] **Step 4: Update XmdbApiClient tests to verify vote_count extraction**
+- [x] **Step 4: Update XmdbApiClient tests to verify vote_count extraction**
 
 ```javascript
 it('getDetails extracts vote_count from XMDB response', async () => {
@@ -680,12 +680,12 @@ it('getDetails extracts vote_count from XMDB response', async () => {
 });
 ```
 
-- [ ] **Step 5: Run api-clients unit tests**
+- [x] **Step 5: Run api-clients unit tests**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js --reporter=verbose`
 Expected: All tests pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/core/api-clients.test.js
@@ -700,7 +700,7 @@ git commit -m "test(api-clients): add imdbVotes extraction tests"
 
 - Modify: `tests/integration/api-clients.test.js`
 
-- [ ] **Step 1: Add helper function to check imdbVotes**
+- [x] **Step 1: Add helper function to check imdbVotes**
 
 Add this helper function after the existing rating helpers:
 
@@ -711,7 +711,7 @@ function expectImdbVotes(votes, label = 'IMDb votes') {
 }
 ```
 
-- [ ] **Step 2: Update expectCommonTitleFields to check imdbVotes**
+- [x] **Step 2: Update expectCommonTitleFields to check imdbVotes**
 
 Update the existing helper to optionally check votes:
 
@@ -732,7 +732,7 @@ function expectCommonTitleFields(result, source, { displayTitle, apiTitleContain
 }
 ```
 
-- [ ] **Step 3: Update existing integration tests to verify votes**
+- [x] **Step 3: Update existing integration tests to verify votes**
 
 Update the test calls in `describe('movie with all ratings')` to include imdbVotes expectation:
 
@@ -772,12 +772,12 @@ it('Agregarr', async () => {
 
 Also update the TV show tests similarly.
 
-- [ ] **Step 4: Run integration tests (if API keys available)**
+- [x] **Step 4: Run integration tests (if API keys available)**
 
 Run: `npm run test:integration`
 Expected: All tests pass (requires XMDB_API_KEY and OMDB_API_KEY in environment)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/integration/api-clients.test.js
@@ -788,27 +788,27 @@ git commit -m "test(integration): verify imdbVotes from real API responses"
 
 ### Task 12: Final verification
 
-- [ ] **Step 1: Run full lint**
+- [x] **Step 1: Run full lint**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 2: Run full format check**
+- [x] **Step 2: Run full format check**
 
 Run: `npm run format:check`
 Expected: No formatting issues
 
-- [ ] **Step 3: Run all unit tests**
+- [x] **Step 3: Run all unit tests**
 
 Run: `npm test`
 Expected: All 300+ unit tests pass
 
-- [ ] **Step 4: Build all targets**
+- [x] **Step 4: Build all targets**
 
 Run: `npm run build`
 Expected: All three targets (userscript, firefox, chrome) build successfully
 
-- [ ] **Step 5: Commit final verification**
+- [x] **Step 5: Commit final verification**
 
 ```bash
 git commit -m "chore: final verification of imdbVotes feature"
