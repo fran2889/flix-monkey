@@ -3,7 +3,9 @@
 ![FlixMonkey screenshot showing rating badges on Netflix thumbnails](screenshots/hero.png)
 
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
-[![Version 1.3.0](https://img.shields.io/badge/version-1.3.0-green.svg)](https://github.com/fran2889/flix-monkey/releases)
+[![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
+[![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
 See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
