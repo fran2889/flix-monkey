@@ -352,30 +352,44 @@ export class AgregarrApiClient extends BaseApiClient {
             this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
             return null;
         }
-        return results[0];
+        const match = results[0];
+        return new Title({
+            displayTitle,
+            apiTitle: match['#TITLE'] ?? null,
+            imdbId: match['#IMDB_ID'] ?? null,
+            year: match['#YEAR'] ?? null,
+            rating: null,
+            imdbVotes: null,
+            rtRating: null,
+            mcRating: null,
+            type: null,
+            source: null,
+        });
     }
 
-    async getDetails(match, displayTitle) {
-        const id = match['#IMDB_ID'];
-        const title = match['#TITLE'];
-        const year = match['#YEAR'];
-        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${displayTitle}")`);
+    async getDetails(searchTitle) {
+        const id = searchTitle.imdbId;
+        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
         if (!entry) {
-            this.logger?.warn(`Agregarr details request failed for "${displayTitle}" (ID: ${id})`, {
+            this.logger?.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: ratings ?? null,
             });
+            return null;
         }
+        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
-            apiTitle: title ?? null,
-            imdbId: id,
-            year: year ?? null,
+            displayTitle: searchTitle.displayTitle,
+            apiTitle: searchTitle.apiTitle,
+            imdbId: id ?? searchTitle.imdbId,
+            year: searchTitle.year,
             rating: entry?.rating ?? null,
             imdbVotes: entry?.votes ?? null,
             rtRating: null,
             mcRating: null,
-            type: null,
+            type: searchTitle.type,
+            source: null,
         });
     }
 }
