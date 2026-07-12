@@ -233,30 +233,46 @@ export class XmdbApiClient extends BaseApiClient {
             this.logger?.info(`No title-type results found in XMDb for "${displayTitle}"`);
             return null;
         }
-        return titleResults[0];
+        const match = titleResults[0];
+        return new Title({
+            displayTitle,
+            apiTitle: match.title ?? null,
+            imdbId: match.id ?? null,
+            year: match.release_year ?? match.year ?? null,
+            rating: null,
+            imdbVotes: null,
+            rtRating: null,
+            mcRating: null,
+            type: null,
+            source: null,
+        });
     }
 
-    async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${displayTitle}")`);
+    async getDetails(searchTitle) {
+        const id = searchTitle.imdbId;
+        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
-            this.logger?.warn(`XMDb details request failed for "${displayTitle}" (ID: ${id})`, {
+            this.logger?.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: detailsJson ?? null,
             });
             return null;
         }
         const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
+        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
-            apiTitle: title ?? searchResultTitle ?? null,
-            imdbId: id,
-            year: release_year,
+            displayTitle: searchTitle.displayTitle,
+            apiTitle: title ?? searchTitle.apiTitle,
+            imdbId: id ?? searchTitle.imdbId,
+            year: release_year ?? searchTitle.year,
             rating,
             imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
-            type: mapTitleType(title_type),
+            type: mapTitleType(title_type) ?? searchTitle.type,
+            source: null,
         });
     }
 }
