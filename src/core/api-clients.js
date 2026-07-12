@@ -162,12 +162,12 @@ export class BaseApiClient {
      *   title was not found.
      */
     async fetch(displayTitle) {
-        const match = await this.search(displayTitle);
-        if (!match) return null;
+        const searchTitle = await this.search(displayTitle);
+        if (!searchTitle) return null;
         if (await this.isDisabled()) return null;
-        const titleObj = await this.getDetails(match, displayTitle);
-        if (!titleObj) return null;
-        return Title.fromJSON({ ...titleObj, displayTitle, source: this.#source });
+        const detailedTitle = await this.getDetails(searchTitle);
+        if (!detailedTitle) return null;
+        return new Title({ ...detailedTitle, source: this.#source });
     }
 
     /**
@@ -175,25 +175,28 @@ export class BaseApiClient {
      * Subclasses must override this method.
      *
      * @abstract
-     * @param {string} _displayTitle - Title to search for.
-     * @returns {Promise<Object|null>} A provider-specific match object to pass to
-     *   {@link getDetails}, or `null` if no match was found.
+     * @param {string} displayTitle - Title to search for.
+     * @returns {Promise<Title|null>} A Title with available metadata from search results,
+     *   or `null` if no match was found.
      */
     async search(_displayTitle) {
         throw new Error('Not implemented');
     }
 
     /**
-     * Fetches full details and ratings for a search match.
+     * Fetches ratings and additional details for a title returned by search().
      * Subclasses must override this method.
      *
+     * Implementations should merge searchTitle values as fallbacks:
+     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns null/undefined
+     * - Override with details fetch values when available
+     *
      * @abstract
-     * @param {Object} _match - Provider-specific match object from {@link search}.
-     * @param {string} _displayTitle - Original Netflix display title (for logging).
-     * @returns {Promise<Title|null>} A `Title` with ratings populated, or `null`
+     * @param {Title} searchTitle - Title returned by search().
+     * @returns {Promise<Title|null>} A Title with ratings and details populated, or `null`
      *   if details could not be retrieved.
      */
-    async getDetails(_match, _displayTitle) {
+    async getDetails(_searchTitle) {
         throw new Error('Not implemented');
     }
 }
