@@ -162,12 +162,12 @@ export class BaseApiClient {
      *   title was not found.
      */
     async fetch(displayTitle) {
-        const match = await this.search(displayTitle);
-        if (!match) return null;
+        const searchTitle = await this.search(displayTitle);
+        if (!searchTitle) return null;
         if (await this.isDisabled()) return null;
-        const titleObj = await this.getDetails(match, displayTitle);
-        if (!titleObj) return null;
-        return Title.fromJSON({ ...titleObj, displayTitle, source: this.#source });
+        const detailedTitle = await this.getDetails(searchTitle);
+        if (!detailedTitle) return null;
+        return new Title({ ...detailedTitle, source: this.#source });
     }
 
     /**
@@ -175,25 +175,28 @@ export class BaseApiClient {
      * Subclasses must override this method.
      *
      * @abstract
-     * @param {string} _displayTitle - Title to search for.
-     * @returns {Promise<Object|null>} A provider-specific match object to pass to
-     *   {@link getDetails}, or `null` if no match was found.
+     * @param {string} displayTitle - Title to search for.
+     * @returns {Promise<Title|null>} A Title with available metadata from search results,
+     *   or `null` if no match was found.
      */
     async search(_displayTitle) {
         throw new Error('Not implemented');
     }
 
     /**
-     * Fetches full details and ratings for a search match.
+     * Fetches ratings and additional details for a title returned by search().
      * Subclasses must override this method.
      *
+     * Implementations should merge searchTitle values as fallbacks:
+     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns null/undefined
+     * - Override with details fetch values when available
+     *
      * @abstract
-     * @param {Object} _match - Provider-specific match object from {@link search}.
-     * @param {string} _displayTitle - Original Netflix display title (for logging).
-     * @returns {Promise<Title|null>} A `Title` with ratings populated, or `null`
+     * @param {Title} searchTitle - Title returned by search().
+     * @returns {Promise<Title|null>} A Title with ratings and details populated, or `null`
      *   if details could not be retrieved.
      */
-    async getDetails(_match, _displayTitle) {
+    async getDetails(_searchTitle) {
         throw new Error('Not implemented');
     }
 }
@@ -230,30 +233,46 @@ export class XmdbApiClient extends BaseApiClient {
             this.logger?.info(`No title-type results found in XMDb for "${displayTitle}"`);
             return null;
         }
-        return titleResults[0];
+        const match = titleResults[0];
+        return new Title({
+            displayTitle,
+            apiTitle: match.title ?? null,
+            imdbId: match.id ?? null,
+            year: match.release_year ?? match.year ?? null,
+            rating: null,
+            imdbVotes: null,
+            rtRating: null,
+            mcRating: null,
+            type: null,
+            source: null,
+        });
     }
 
-    async getDetails({ id, title: searchResultTitle }, displayTitle) {
-        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${displayTitle}")`);
+    async getDetails(searchTitle) {
+        const id = searchTitle.imdbId;
+        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
-            this.logger?.warn(`XMDb details request failed for "${displayTitle}" (ID: ${id})`, {
+            this.logger?.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: detailsJson ?? null,
             });
             return null;
         }
         const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
+        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
-            apiTitle: title ?? searchResultTitle ?? null,
-            imdbId: id,
-            year: release_year,
+            displayTitle: searchTitle.displayTitle,
+            apiTitle: title ?? searchTitle.apiTitle,
+            imdbId: id ?? searchTitle.imdbId,
+            year: release_year ?? searchTitle.year,
             rating,
             imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
-            type: mapTitleType(title_type),
+            type: mapTitleType(title_type) ?? searchTitle.type,
+            source: null,
         });
     }
 }
@@ -277,33 +296,34 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        return { title: displayTitle };
-    }
-
-    async getDetails({ title: t }, displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
-        const params = new URLSearchParams({ apikey: apiKey, t });
-        this.logger?.debug(`Fetching OMDb details for title: "${t}"`);
+        const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
+        this.logger?.debug(`Searching OMDb for title: "${displayTitle}"`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.warn(`OMDb details request failed for "${displayTitle}"`, {
-                response: json,
-            });
+            this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replace(/,/g, ''), 10) : null;
         return new Title({
+            displayTitle,
             apiTitle: apiTitle ?? null,
-            imdbId: imdbID,
+            imdbId: imdbID ?? null,
             year: releaseYear,
             rating: imdbRating,
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
             type: mapTitleType(apiType),
+            source: null,
         });
+    }
+
+    async getDetails(searchTitle) {
+        // Pass-through: OMDb already fetched all details (including ratings) in search()
+        return searchTitle;
     }
 }
 
@@ -332,30 +352,44 @@ export class AgregarrApiClient extends BaseApiClient {
             this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
             return null;
         }
-        return results[0];
+        const match = results[0];
+        return new Title({
+            displayTitle,
+            apiTitle: match['#TITLE'] ?? null,
+            imdbId: match['#IMDB_ID'] ?? null,
+            year: match['#YEAR'] ?? null,
+            rating: null,
+            imdbVotes: null,
+            rtRating: null,
+            mcRating: null,
+            type: null,
+            source: null,
+        });
     }
 
-    async getDetails(match, displayTitle) {
-        const id = match['#IMDB_ID'];
-        const title = match['#TITLE'];
-        const year = match['#YEAR'];
-        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${displayTitle}")`);
+    async getDetails(searchTitle) {
+        const id = searchTitle.imdbId;
+        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
         if (!entry) {
-            this.logger?.warn(`Agregarr details request failed for "${displayTitle}" (ID: ${id})`, {
+            this.logger?.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: ratings ?? null,
             });
+            return null;
         }
+        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
-            apiTitle: title ?? null,
-            imdbId: id,
-            year: year ?? null,
+            displayTitle: searchTitle.displayTitle,
+            apiTitle: searchTitle.apiTitle,
+            imdbId: id ?? searchTitle.imdbId,
+            year: searchTitle.year,
             rating: entry?.rating ?? null,
             imdbVotes: entry?.votes ?? null,
             rtRating: null,
             mcRating: null,
-            type: null,
+            type: searchTitle.type,
+            source: null,
         });
     }
 }
