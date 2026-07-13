@@ -40,7 +40,7 @@
 
 - Produces: `RATING_COLOR_LOW_THRESHOLD`, `RATING_COLOR_HIGH_THRESHOLD`, `RATING_COLOR_RED`, `RATING_COLOR_GREEN`
 
-- [ ] **Step 1: Add constants to constants.js**
+- [x] **Step 1: Add constants to constants.js**
 
 Add the following exports after the existing constants in `src/core/constants.js`:
 
@@ -54,12 +54,12 @@ export const RATING_COLOR_RED = '#ff0000'; // Pure red
 export const RATING_COLOR_GREEN = '#00cc00'; // Dark green
 ```
 
-- [ ] **Step 2: Verify file compiles and lint passes**
+- [x] **Step 2: Verify file compiles and lint passes**
 
 Run: `npm run lint`
 Expected: PASS
 
-- [ ] **Step 3: Commit constants addition**
+- [x] **Step 3: Commit constants addition**
 
 ```bash
 git add src/core/constants.js
@@ -83,7 +83,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `RATING_COLOR_LOW_THRESHOLD`, `RATING_COLOR_HIGH_THRESHOLD`, `RATING_COLOR_RED`, `RATING_COLOR_GREEN` from constants.js
 - Produces: `OverlayRenderer.#calculateRatingColor(rating, isPercentage)` method
 
-- [ ] **Step 1: Write the failing tests for #calculateRatingColor**
+- [x] **Step 1: Write the failing tests for #calculateRatingColor**
 
 Add to `tests/unit/overlay.test.js`:
 
@@ -196,12 +196,12 @@ describe('OverlayRenderer.#calculateRatingColor', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test -- --reporter=verbose --run tests/unit/overlay.test.js`
 Expected: FAIL with "Cannot read private member #calculateRatingColor from an object whose class did not declare it"
 
-- [ ] **Step 3: Add #calculateRatingColor method to OverlayRenderer**
+- [x] **Step 3: Add #calculateRatingColor method to OverlayRenderer**
 
 Add to `src/core/overlay.js` inside the `OverlayRenderer` class, before the `#formatImdbRating` method:
 
@@ -224,7 +224,7 @@ Add to `src/core/overlay.js` inside the `OverlayRenderer` class, before the `#fo
 }
 ```
 
-- [ ] **Step 4: Import constants in overlay.js**
+- [x] **Step 4: Import constants in overlay.js**
 
 Add to the imports at the top of `src/core/overlay.js`:
 
@@ -244,12 +244,12 @@ import {
 } from './constants.js';
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm test -- --reporter=verbose --run tests/unit/overlay.test.js`
 Expected: PASS for all #calculateRatingColor tests
 
-- [ ] **Step 6: Commit color calculation method**
+- [x] **Step 6: Commit color calculation method**
 
 ```bash
 git add src/core/overlay.js tests/unit/overlay.test.js
@@ -273,7 +273,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `OverlayRenderer.#calculateRatingColor(rating, isPercentage)` from Task 2
 - Produces: Modified `#createRatingElement` method that applies inline color styles
 
-- [ ] **Step 1: Write tests for color application in rating elements**
+- [x] **Step 1: Write tests for color application in rating elements**
 
 Add to `tests/unit/overlay.test.js` after the #calculateRatingColor tests:
 
@@ -329,12 +329,12 @@ describe('Rating element color application', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test -- --reporter=verbose --run tests/unit/overlay.test.js`
 Expected: FAIL with color application tests failing (colors not yet applied)
 
-- [ ] **Step 3: Modify #createRatingElement to apply gradient colors**
+- [x] **Step 3: Modify #createRatingElement to apply gradient colors**
 
 In `src/core/overlay.js`, replace the existing `#createRatingElement` method:
 
@@ -362,17 +362,17 @@ with:
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test -- --reporter=verbose --run tests/unit/overlay.test.js`
 Expected: PASS for all color application tests
 
-- [ ] **Step 5: Run full test suite to ensure no regressions**
+- [x] **Step 5: Run full test suite to ensure no regressions**
 
 Run: `npm test`
 Expected: PASS (all tests pass, including existing ones)
 
-- [ ] **Step 6: Commit color application to rating elements**
+- [x] **Step 6: Commit color application to rating elements**
 
 ```bash
 git add src/core/overlay.js tests/unit/overlay.test.js
@@ -395,7 +395,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Existing fixture HTML files
 - Produces: UI tests verifying color application on real Netflix-like DOM
 
-- [ ] **Step 1: Write UI tests for rating colors**
+- [x] **Step 1: Write UI tests for rating colors**
 
 Create `tests/ui/rating-colors.test.js`:
 
@@ -528,12 +528,12 @@ describe('Rating Colors UI Tests', () => {
 });
 ```
 
-- [ ] **Step 2: Run UI tests to verify they pass**
+- [x] **Step 2: Run UI tests to verify they pass**
 
 Run: `npm test -- --reporter=verbose --run tests/ui/rating-colors.test.js`
 Expected: PASS
 
-- [ ] **Step 3: Commit UI tests**
+- [x] **Step 3: Commit UI tests**
 
 ```bash
 git add tests/ui/rating-colors.test.js
@@ -551,35 +551,35 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - All modified and new files
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run: `npm test`
 Expected: PASS (all tests including new ones)
 
-- [ ] **Step 2: Run lint**
+- [x] **Step 2: Run lint**
 
 Run: `npm run lint`
 Expected: PASS
 
-- [ ] **Step 3: Run format check**
+- [x] **Step 3: Run format check**
 
 Run: `npm run format:check`
 Expected: PASS
 
-- [ ] **Step 4: Run build to verify no errors**
+- [x] **Step 4: Run build to verify no errors**
 
 Run: `npm run build`
 Expected: SUCCESS (all targets build without errors)
 
-- [ ] **Step 5: Manual verification (optional)**
+- [x] **Step 5: Manual verification (optional)**
 
 Open `rating-colors-demo.html` in browser to visually verify the gradient colors match the implementation.
 
-- [ ] **Step 6: Final commit with all changes**
+- [x] **Step 6: Final commit with all changes**
 
 If any files weren't committed in previous tasks, commit them now.
 
-- [ ] **Step 7: Clean up demo file**
+- [x] **Step 7: Clean up demo file**
 
 Remove the demo file from the workspace:
 
@@ -587,7 +587,7 @@ Remove the demo file from the workspace:
 rm /home/fran/Repositories/flix-monkey/rating-colors-demo.html
 ```
 
-- [ ] **Step 8: Final commit removing demo file**
+- [x] **Step 8: Final commit removing demo file**
 
 ```bash
 git add -A

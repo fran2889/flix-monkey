@@ -30,7 +30,7 @@
 
 - Produces: `FlixMonkeyError(message, status?, body?, url?)` constructor. Properties: `.name`, `.status`, `.body`, `.url`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add a new `describe('FlixMonkeyError', ...)` block at the end of `tests/unit/core/utils.test.js`:
 
@@ -81,12 +81,12 @@ Add the import at the top of the file alongside the existing imports:
 import { debounce, runIdle, FlixMonkeyError } from '../../../src/core/utils.js';
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/utils.test.js`
 Expected: The new `FlixMonkeyError` tests fail — `body` and `url` properties are `undefined`.
 
-- [ ] **Step 3: Update `FlixMonkeyError` constructor**
+- [x] **Step 3: Update `FlixMonkeyError` constructor**
 
 In `src/core/utils.js`, replace the `FlixMonkeyError` class:
 
@@ -102,12 +102,12 @@ export class FlixMonkeyError extends Error {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/utils.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/utils.js tests/unit/core/utils.test.js
@@ -131,7 +131,7 @@ git commit -m "feat(utils): add body and url properties to FlixMonkeyError"
 - Consumes: `FlixMonkeyError(message, status, body, url)` from Task 1.
 - Produces: `FlixMonkeyError` instances thrown from `httpFetch` now carry `.body` (truncated response text, max 200 chars) and `.url` (the request URL). `fetch-proxy.js` returns `{ error, status, body }` on failure.
 
-- [ ] **Step 1: Write failing tests for `UserscriptAdapter`**
+- [x] **Step 1: Write failing tests for `UserscriptAdapter`**
 
 Add these tests to the existing `describe('UserscriptAdapter', ...)` block in `tests/unit/platform/userscript.test.js`:
 
@@ -198,12 +198,12 @@ it('httpFetch should include url on timeout error', async () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/unit/platform/userscript.test.js`
 Expected: New tests fail — `.url` is `undefined`, `.body` is `undefined`.
 
-- [ ] **Step 3: Update `UserscriptAdapter.httpFetch`**
+- [x] **Step 3: Update `UserscriptAdapter.httpFetch`**
 
 In `src/platform/userscript.js`, replace the `httpFetch` method:
 
@@ -238,12 +238,12 @@ async httpFetch(url, { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } 
 }
 ```
 
-- [ ] **Step 4: Run userscript tests to verify they pass**
+- [x] **Step 4: Run userscript tests to verify they pass**
 
 Run: `npx vitest run tests/unit/platform/userscript.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 5: Write failing tests for `WebExtensionAdapter`**
+- [x] **Step 5: Write failing tests for `WebExtensionAdapter`**
 
 Add these tests to the existing `describe('WebExtensionAdapter', ...)` block in `tests/unit/platform/webextension.test.js`:
 
@@ -271,12 +271,12 @@ it('httpFetch should include url on empty background response', async () => {
 });
 ```
 
-- [ ] **Step 6: Run webextension tests to verify they fail**
+- [x] **Step 6: Run webextension tests to verify they fail**
 
 Run: `npx vitest run tests/unit/platform/webextension.test.js`
 Expected: New tests fail — `.url` and `.body` are `undefined`.
 
-- [ ] **Step 7: Update `WebExtensionAdapter.httpFetch`**
+- [x] **Step 7: Update `WebExtensionAdapter.httpFetch`**
 
 In `src/platform/webextension.js`, replace the `httpFetch` method:
 
@@ -298,12 +298,12 @@ async httpFetch(url, options = {}) {
 }
 ```
 
-- [ ] **Step 8: Run webextension tests to verify they pass**
+- [x] **Step 8: Run webextension tests to verify they pass**
 
 Run: `npx vitest run tests/unit/platform/webextension.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 9: Update `fetch-proxy.js` to capture response body**
+- [x] **Step 9: Update `fetch-proxy.js` to capture response body**
 
 In `src/targets/extension/fetch-proxy.js`, replace the `try` block inside `handleFetchMessage`:
 
@@ -326,12 +326,12 @@ try {
 }
 ```
 
-- [ ] **Step 10: Run full test suite to verify no regressions**
+- [x] **Step 10: Run full test suite to verify no regressions**
 
 Run: `npx vitest run`
 Expected: All tests PASS.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/platform/userscript.js src/platform/webextension.js src/targets/extension/fetch-proxy.js tests/unit/platform/userscript.test.js tests/unit/platform/webextension.test.js
@@ -352,7 +352,7 @@ git commit -m "feat(platform): capture response body and url in FlixMonkeyError"
 - Consumes: `FlixMonkeyError` with `.status`, `.body`, `.url` from Tasks 1–2.
 - Produces: `queuedFetch(url, priority, responseType)` — pure transport wrapper that propagates all errors without catching. No longer calls `disable()` on 4xx.
 
-- [ ] **Step 1: Update existing tests for `queuedFetch` behavior change**
+- [x] **Step 1: Update existing tests for `queuedFetch` behavior change**
 
 In `tests/unit/core/api-clients.test.js`, replace the first test (`should disable itself and purge queue on 4xx error`) with a test that verifies `queuedFetch` does NOT disable on 4xx:
 
@@ -378,12 +378,12 @@ it('should NOT disable itself on 4xx error in queuedFetch', async () => {
 
 The existing `should NOT disable itself on 5xx error` and `should NOT disable itself on a network error with no status property` tests remain unchanged — they already assert no disable, which is still correct.
 
-- [ ] **Step 2: Run tests to verify the new test fails**
+- [x] **Step 2: Run tests to verify the new test fails**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js`
 Expected: The new test fails — `queuedFetch` still calls `disable()` on 4xx.
 
-- [ ] **Step 3: Simplify `queuedFetch` in `BaseApiClient`**
+- [x] **Step 3: Simplify `queuedFetch` in `BaseApiClient`**
 
 In `src/core/api-clients.js`, replace the `queuedFetch` method (lines 145–158) with:
 
@@ -398,12 +398,12 @@ async queuedFetch(url, priority = 0, responseType = 'json') {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -424,7 +424,7 @@ git commit -m "refactor(api-clients): remove policy logic from queuedFetch"
 - Consumes: `this.logger?.warn(...)`, `this.logger?.info(...)` from `BaseApiClient`.
 - Produces: All `getDetails` methods return `null` (never throw) on API-level errors, with a `warn` log. All `search` methods log "no results" at `info` instead of `debug`.
 
-- [ ] **Step 1: Write failing tests for `getDetails` warn logging**
+- [x] **Step 1: Write failing tests for `getDetails` warn logging**
 
 Add these tests to `tests/unit/core/api-clients.test.js`:
 
@@ -492,12 +492,12 @@ it('should return null and log warn when details fetch returns an error', async 
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js`
 Expected: XMDB warn test fails (no warn call), OMDB warn test fails (no warn call), IMDb test fails (throws instead of returning null).
 
-- [ ] **Step 3: Add warn logging to `XmdbApiClient.getDetails`**
+- [x] **Step 3: Add warn logging to `XmdbApiClient.getDetails`**
 
 In `src/core/api-clients.js`, replace lines 247–249:
 
@@ -518,7 +518,7 @@ if (!detailsJson || detailsJson.error || !detailsJson.title) {
 }
 ```
 
-- [ ] **Step 4: Update `OmdbApiClient.getDetails` logging**
+- [x] **Step 4: Update `OmdbApiClient.getDetails` logging**
 
 In `src/core/api-clients.js`, replace lines 290–293:
 
@@ -538,7 +538,7 @@ if (json.Response === 'False') {
 }
 ```
 
-- [ ] **Step 5: Change `ImdbApiDevClient.getDetails` from throw to warn + return null**
+- [x] **Step 5: Change `ImdbApiDevClient.getDetails` from throw to warn + return null**
 
 In `src/core/api-clients.js`, replace lines 335–337:
 
@@ -559,7 +559,7 @@ if (!detailsJson || detailsJson.error) {
 }
 ```
 
-- [ ] **Step 6: Upgrade `search` method logs from `debug` to `info`**
+- [x] **Step 6: Upgrade `search` method logs from `debug` to `info`**
 
 In `src/core/api-clients.js`, change all "No search results" / "No title results" `debug` calls in search methods to `info`:
 
@@ -571,12 +571,12 @@ In `src/core/api-clients.js`, change all "No search results" / "No title results
 
 Note: `OmdbApiClient.search` has no "not found" log (it always returns a match object) — no change needed.
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api-clients.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -597,7 +597,7 @@ git commit -m "feat(api-clients): add warn logging for API errors, upgrade searc
 - Consumes: `this.#client.disable()` from `BaseApiClient`. `FlixMonkeyError` with `.status`, `.url`, `.body`.
 - Produces: `getData` catch block disables client on 4xx, logs at `error` for HTTP errors (with url, status, body), logs at `warn` for non-HTTP errors.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add these tests to the existing `describe('ApiClientManager', ...)` block in `tests/unit/core/api-manager.test.js`. First, add the import at the top of the file alongside existing imports:
 
@@ -678,12 +678,12 @@ it('should log at warn level for non-HTTP errors', async () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.js`
 Expected: disable-on-4xx test fails (no `.disable()` call), error-level logging test fails (no `.error()` call), non-HTTP test fails (`.warn()` called with wrong signature).
 
-- [ ] **Step 3: Update the `getData` catch block**
+- [x] **Step 3: Update the `getData` catch block**
 
 In `src/core/api-manager.js`, replace the catch block (lines 67–69):
 
@@ -710,7 +710,7 @@ with:
         }
 ```
 
-- [ ] **Step 4: Update existing test assertion**
+- [x] **Step 4: Update existing test assertion**
 
 The existing test `should not cache result when fetch throws an error` (line 92) asserts that `mockLogger.warn` was called with a string containing `'Error Movie'`. After our change, a plain `new Error('API error')` (no `.status`) will still log at `warn` level — but now with a second argument. Update the assertion:
 
@@ -730,22 +730,22 @@ expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Error Movi
 });
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.js`
 Expected: All tests PASS.
 
-- [ ] **Step 6: Run full test suite**
+- [x] **Step 6: Run full test suite**
 
 Run: `npx vitest run`
 Expected: All tests PASS.
 
-- [ ] **Step 7: Run build**
+- [x] **Step 7: Run build**
 
 Run: `npm run build`
 Expected: Build succeeds.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/api-manager.js tests/unit/core/api-manager.test.js

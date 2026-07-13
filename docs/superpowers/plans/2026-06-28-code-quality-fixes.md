@@ -49,7 +49,7 @@
 
 The three cache TTL config fields (`cacheTtlRatedOldYear`, `cacheTtlRatedNewYear`, `cacheTtlNoRating`) each carry an identical inline validator body. Extract it as a module-scoped unexported function.
 
-- [ ] **Step 1: Verify existing TTL validator tests pass**
+- [x] **Step 1: Verify existing TTL validator tests pass**
 
 ```bash
 npx vitest run tests/unit/core/config-fields.test.js
@@ -57,7 +57,7 @@ npx vitest run tests/unit/core/config-fields.test.js
 
 Expected: all tests pass. The `describe.each(['cacheTtlRatedOldYear', 'cacheTtlRatedNewYear', 'cacheTtlNoRating'])` block at line 89 is the coverage target.
 
-- [ ] **Step 2: Extract the helper in `src/core/config-fields.js`**
+- [x] **Step 2: Extract the helper in `src/core/config-fields.js`**
 
 Add the helper function before the `CONFIG_FIELDS` declaration (after the imports):
 
@@ -108,7 +108,7 @@ The three fields are at lines ~117, ~129, ~143. After the change the three field
 },
 ```
 
-- [ ] **Step 3: Run tests to verify nothing broke**
+- [x] **Step 3: Run tests to verify nothing broke**
 
 ```bash
 npm test
@@ -116,7 +116,7 @@ npm test
 
 Expected: all tests pass. No behavior changed.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/config-fields.js docs/superpowers/specs/2026-06-28-code-quality-fixes-design.md docs/superpowers/plans/2026-06-28-code-quality-fixes.md
@@ -136,7 +136,7 @@ git commit -m "refactor(config): extract shared TTL validator helper"
 
 - Produces: `runIdle(func, timeout?)` — same signature, same behavior in browser environments, safe on hosts where `window` is undefined
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/utils.test.js`, inside the `describe('runIdle')` block (after the two existing tests), add:
 
@@ -152,7 +152,7 @@ it('falls back to setTimeout when window is undefined', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/utils.test.js
@@ -160,7 +160,7 @@ npx vitest run tests/unit/core/utils.test.js
 
 Expected: the new test fails because the current code dereferences `window.requestIdleCallback` when `window` is undefined, causing a TypeError.
 
-- [ ] **Step 3: Apply the guard in `src/core/utils.js`**
+- [x] **Step 3: Apply the guard in `src/core/utils.js`**
 
 Change line 57 of `src/core/utils.js` from:
 
@@ -174,7 +174,7 @@ to:
 if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -182,7 +182,7 @@ npm test
 
 Expected: all tests pass including the new one.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/utils.js tests/unit/core/utils.test.js
@@ -202,7 +202,7 @@ git commit -m "fix(utils): guard window existence in runIdle"
 
 - Produces: `httpFetch(url, options?)` — same signature; the dangling `setTimeout` is now cleared after every settled race
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/platform/webextension.test.js`, after the existing `httpFetch` tests, add:
 
@@ -216,7 +216,7 @@ it('httpFetch clears the timeout after a successful fetch', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/platform/webextension.test.js
@@ -224,7 +224,7 @@ npx vitest run tests/unit/platform/webextension.test.js
 
 Expected: the new test fails because `clearTimeout` is never called in the current implementation.
 
-- [ ] **Step 3: Update `httpFetch` in `src/platform/webextension.js`**
+- [x] **Step 3: Update `httpFetch` in `src/platform/webextension.js`**
 
 Replace the current `httpFetch` method body (lines 70–83) with:
 
@@ -254,7 +254,7 @@ async httpFetch(url, options = {}) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -262,7 +262,7 @@ npm test
 
 Expected: all tests pass including the new one.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/platform/webextension.js tests/unit/platform/webextension.test.js
@@ -281,7 +281,7 @@ git commit -m "fix(webextension): clear httpFetch timeout after race settles"
 
 - The method `getClient()` is removed entirely. It has no caller in `src/` and no test calls it (confirmed by the coverage report showing line 34 uncovered).
 
-- [ ] **Step 1: Delete the `getClient()` method**
+- [x] **Step 1: Delete the `getClient()` method**
 
 In `src/core/api-manager.js`, remove lines 33–35:
 
@@ -321,7 +321,7 @@ constructor(cache, disabledManager, client, logger) {
 async resetDisabledClients() {
 ```
 
-- [ ] **Step 2: Run tests to verify nothing broke**
+- [x] **Step 2: Run tests to verify nothing broke**
 
 ```bash
 npm test
@@ -329,7 +329,7 @@ npm test
 
 Expected: all tests pass. The `ApiClientManager` tests test via `getData` and `resetDisabledClients`, not `getClient`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api-manager.js
@@ -349,7 +349,7 @@ git commit -m "refactor(api-manager): remove unused getClient() accessor"
 
 - `clearCache()` and `resetClients()` now catch errors and display them in the `#fm-status` div in red
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `tests/unit/core/ui/settings-ui.test.js`, inside the `describe('Action buttons')` block (after the last existing action button test), add:
 
@@ -377,7 +377,7 @@ it('should show error in red when resetClients fails', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js
@@ -385,7 +385,7 @@ npx vitest run tests/unit/core/ui/settings-ui.test.js
 
 Expected: the two new tests fail (unhandled rejections leave status unchanged).
 
-- [ ] **Step 3: Add error handling in `src/core/ui/settings-ui.js`**
+- [x] **Step 3: Add error handling in `src/core/ui/settings-ui.js`**
 
 Replace `clearCache` (lines 250–255) and `resetClients` (lines 257–265) with:
 
@@ -420,7 +420,7 @@ async resetClients() {
 
 Note: `this.#container` is the already-declared private field; it exists at this point because `clearCache`/`resetClients` are only called after `render()`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -428,7 +428,7 @@ npm test
 
 Expected: all tests pass including the two new ones.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -451,7 +451,7 @@ git commit -m "fix(settings-ui): show error feedback when clearCache or resetCli
 - `close()` removes it (unchanged — already calls `this.overlay.remove()`)
 - `getContentContainer()` works on detached DOM (unchanged)
 
-- [ ] **Step 1: Update three existing tests and add one new test**
+- [x] **Step 1: Update three existing tests and add one new test**
 
 Three existing tests query `document` immediately after `new Modal(...)` without calling `open()`. They need to call `open()` first. Additionally, add one new test confirming the overlay is absent from the DOM before `open()`.
 
@@ -511,7 +511,7 @@ it('should not be in the DOM before open() is called', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 npx vitest run tests/unit/core/ui/modal.test.js
@@ -519,7 +519,7 @@ npx vitest run tests/unit/core/ui/modal.test.js
 
 Expected: the new test fails (overlay IS in DOM after constructor), and the three updated tests might pass by accident since they now call open() — but the new test definitively fails.
 
-- [ ] **Step 3: Move `appendChild` to `open()` in `src/core/ui/modal.js`**
+- [x] **Step 3: Move `appendChild` to `open()` in `src/core/ui/modal.js`**
 
 In the constructor (around line 56), remove `document.body.appendChild(this.overlay)`.
 
@@ -541,7 +541,7 @@ open() {
 
 `close()` already calls `this.overlay.remove()`, so calling `open()` again after `close()` re-appends correctly (the JS object still holds the reference).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -549,7 +549,7 @@ npm test
 
 Expected: all tests pass including the new one.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/modal.js tests/unit/core/ui/modal.test.js
@@ -572,7 +572,7 @@ git commit -m "fix(modal): defer DOM attachment from constructor to open()"
 - `Title` instances are frozen after construction — field assignment after `new Title(...)` is silently ignored (or throws in strict mode)
 - `BaseApiClient.fetch()` returns a new `Title.fromJSON({...titleObj, displayTitle, source})` instead of mutating the returned object
 
-- [ ] **Step 1: Write the failing Title freeze test**
+- [x] **Step 1: Write the failing Title freeze test**
 
 In `tests/unit/core/title.test.js`, add a new `describe` block after the existing ones:
 
@@ -588,7 +588,7 @@ describe('immutability', () => {
 });
 ```
 
-- [ ] **Step 2: Update the api-manager test**
+- [x] **Step 2: Update the api-manager test**
 
 In `tests/unit/core/api-manager.test.js`, find the test "should log on successful data retrieval" (around line 198). The setup currently does:
 
@@ -623,7 +623,7 @@ it('should log on successful data retrieval', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify the Title freeze test fails**
+- [x] **Step 3: Run the tests to verify the Title freeze test fails**
 
 ```bash
 npx vitest run tests/unit/core/title.test.js tests/unit/core/api-manager.test.js
@@ -631,7 +631,7 @@ npx vitest run tests/unit/core/title.test.js tests/unit/core/api-manager.test.js
 
 Expected: the immutability test fails (mutation currently succeeds). The api-manager test should now pass since we moved source to the constructor.
 
-- [ ] **Step 4: Add `Object.freeze(this)` to the `Title` constructor**
+- [x] **Step 4: Add `Object.freeze(this)` to the `Title` constructor**
 
 In `src/core/title.js`, add `Object.freeze(this)` as the last line of the constructor body, after all property assignments. The end of the constructor becomes:
 
@@ -642,7 +642,7 @@ In `src/core/title.js`, add `Object.freeze(this)` as the last line of the constr
     }
 ```
 
-- [ ] **Step 5: Update the docstring on the `Title` class**
+- [x] **Step 5: Update the docstring on the `Title` class**
 
 In `src/core/title.js`, change the class docstring from:
 
@@ -658,7 +658,7 @@ to:
  * Immutable data class representing a movie or show with its ratings.
 ```
 
-- [ ] **Step 6: Update `BaseApiClient.fetch()` in `src/core/api-clients.js`**
+- [x] **Step 6: Update `BaseApiClient.fetch()` in `src/core/api-clients.js`**
 
 The `fetch` method currently mutates the `titleObj` returned by `getDetails`. Replace the mutation with `Title.fromJSON`:
 
@@ -695,7 +695,7 @@ async fetch(displayTitle) {
 
 Note: `Title` is already imported in `src/core/api-clients.js` (used by `getDetails` implementations).
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -703,7 +703,7 @@ npm test
 
 Expected: all tests pass including the new immutability test.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/title.js src/core/api-clients.js tests/unit/core/title.test.js tests/unit/core/api-manager.test.js
@@ -723,7 +723,7 @@ git commit -m "fix(title): enforce immutability with Object.freeze and eliminate
 - `render(container)` no longer calls `adapter.setConfigData()` — it is purely a DOM-building function
 - Callers that need `setConfigData` (WebExtension content script) already call it independently
 
-- [ ] **Step 1: Remove the call from `render()`**
+- [x] **Step 1: Remove the call from `render()`**
 
 In `src/core/ui/settings-ui.js`, find lines 37–38 in `render()`:
 
@@ -738,7 +738,7 @@ Remove the `setConfigData` call, leaving only:
 const settings = (await this.adapter.storageGetAll()) || {};
 ```
 
-- [ ] **Step 2: Run tests to verify nothing broke**
+- [x] **Step 2: Run tests to verify nothing broke**
 
 ```bash
 npm test
@@ -746,7 +746,7 @@ npm test
 
 Expected: all tests pass. No existing test asserts that `setConfigData` is called during `render()`, so no test changes are needed. The mock adapter still defines `setConfigData: vi.fn()` — it just won't be called, which is fine.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js
@@ -769,7 +769,7 @@ git commit -m "fix(settings-ui): remove setConfigData side effect from render()"
 
 This is the largest rename in the batch. Touch every occurrence of each renamed symbol.
 
-- [ ] **Step 1: Update the test that directly calls `_validate()`**
+- [x] **Step 1: Update the test that directly calls `_validate()`**
 
 In `tests/unit/core/ui/settings-ui.test.js`, find the test "should pass input.checked (not input.value) to validate for checkbox fields" (around line 266). It currently calls `ui._validate()`. Replace with `await ui.save()` to exercise the same code path via the public API:
 
@@ -795,7 +795,7 @@ it('should pass input.checked (not input.value) to validate for checkbox fields'
 });
 ```
 
-- [ ] **Step 2: Run the updated test to verify it still passes before touching the source**
+- [x] **Step 2: Run the updated test to verify it still passes before touching the source**
 
 ```bash
 npx vitest run tests/unit/core/ui/settings-ui.test.js
@@ -803,7 +803,7 @@ npx vitest run tests/unit/core/ui/settings-ui.test.js
 
 Expected: all tests pass. (The `_validate` method still exists and the save path calls it.)
 
-- [ ] **Step 3: Apply all renames in `src/core/ui/settings-ui.js`**
+- [x] **Step 3: Apply all renames in `src/core/ui/settings-ui.js`**
 
 Apply these changes to the class body:
 
@@ -1176,7 +1176,7 @@ export class SettingsUI {
 
 Note: this is the final state of the file inclusive of the Task 5 changes (error handling in `clearCache`/`resetClients`) and the Task 8 change (no `setConfigData` call). If Tasks 5 and 8 have already been applied, only apply the renames; the error-handling bodies and the removed `setConfigData` line should already be in place.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -1184,7 +1184,7 @@ npm test
 
 Expected: all tests pass. The test that previously called `ui._validate()` now calls `ui.save()` and passes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.js tests/unit/core/ui/settings-ui.test.js
@@ -1203,7 +1203,7 @@ git commit -m "refactor(settings-ui): standardize all members to # private field
 
 - CI now enforces `statements ≥ 97%` and `branches ≥ 90%` in addition to the existing `lines ≥ 90%` and `functions ≥ 90%`
 
-- [ ] **Step 1: Add the thresholds in `vitest.config.js`**
+- [x] **Step 1: Add the thresholds in `vitest.config.js`**
 
 Change line 10 from:
 
@@ -1217,7 +1217,7 @@ to:
 thresholds: { lines: 90, functions: 90, statements: 97, branches: 90 },
 ```
 
-- [ ] **Step 2: Run tests to verify the thresholds pass**
+- [x] **Step 2: Run tests to verify the thresholds pass**
 
 ```bash
 npm test
@@ -1225,7 +1225,7 @@ npm test
 
 Expected: all tests pass and coverage report shows no threshold failures. Current measured values are statements 97.2% and branches 91.8%, both above the new floors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add vitest.config.js

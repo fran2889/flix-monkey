@@ -30,7 +30,7 @@
 
 - Produces: `OverlayRenderer.clearAllOverlays(): void` — removes every `.fm-rating-overlay` element from the live document.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add inside the `describe('OverlayRenderer', ...)` block in `tests/unit/core/overlay.test.js`:
 
@@ -45,7 +45,7 @@ it('should remove all overlay elements from the document', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js
@@ -53,7 +53,7 @@ npx vitest run tests/unit/core/overlay.test.js
 
 Expected: FAIL — `renderer.clearAllOverlays is not a function`.
 
-- [ ] **Step 3: Add `clearAllOverlays()` to `OverlayRenderer`**
+- [x] **Step 3: Add `clearAllOverlays()` to `OverlayRenderer`**
 
 In `src/core/overlay.js`, add after `injectStyles()`:
 
@@ -63,7 +63,7 @@ clearAllOverlays() {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js
@@ -71,7 +71,7 @@ npx vitest run tests/unit/core/overlay.test.js
 
 Expected: all overlay tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/overlay.js tests/unit/core/overlay.test.js
@@ -93,7 +93,7 @@ git commit -m "fix(overlay): add clearAllOverlays method"
 - Consumes: `OverlayRenderer.clearAllOverlays()` from Task 1.
 - Produces: `FlixMonkeyApp.redecorate(): void`; `startApp()` handle gains `redecorate`, loses `refreshStyles`.
 
-- [ ] **Step 1: Update content.test.js to use `redecorate`**
+- [x] **Step 1: Update content.test.js to use `redecorate`**
 
 In `tests/unit/targets/content.test.js`:
 
@@ -141,7 +141,7 @@ it('should not call redecorate when an unrelated key changes', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 npx vitest run tests/unit/targets/content.test.js
@@ -149,7 +149,7 @@ npx vitest run tests/unit/targets/content.test.js
 
 Expected: FAIL — `redecorate` tests fail because `content.js` still calls `refreshStyles`.
 
-- [ ] **Step 3: Add `redecorate()` to `FlixMonkeyApp` in `src/core/app.js`**
+- [x] **Step 3: Add `redecorate()` to `FlixMonkeyApp` in `src/core/app.js`**
 
 Add after the `#decorateContainer` method (before `decorateRoot`):
 
@@ -161,7 +161,7 @@ redecorate() {
 }
 ```
 
-- [ ] **Step 4: Update `startApp()` in `src/core/app.js`**
+- [x] **Step 4: Update `startApp()` in `src/core/app.js`**
 
 Replace:
 
@@ -175,7 +175,7 @@ With:
 redecorate: () => app.redecorate(),
 ```
 
-- [ ] **Step 5: Update `content.js`**
+- [x] **Step 5: Update `content.js`**
 
 Replace the entire `storage.onChanged.addListener` block (lines 32–39) in `src/targets/extension/content.js` with:
 
@@ -198,7 +198,7 @@ browser.storage.onChanged.addListener(changes => {
 });
 ```
 
-- [ ] **Step 6: Run the full test suite**
+- [x] **Step 6: Run the full test suite**
 
 ```bash
 npm test
@@ -206,7 +206,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/app.js src/targets/extension/content.js tests/unit/targets/content.test.js
@@ -226,7 +226,7 @@ git commit -m "fix(content): redecorate on any visual setting change"
 - Modify: `src/core/api-clients.js`
 - Modify: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Delete the stale test**
+- [x] **Step 1: Delete the stale test**
 
 Remove the following test from `tests/unit/core/api-clients.test.js` (currently in `describe('BaseApiClient (via XmdbApiClient)', ...)`):
 
@@ -238,7 +238,7 @@ it('should return null if client is disabled', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify the suite is still green**
+- [x] **Step 2: Run the tests to verify the suite is still green**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
@@ -246,7 +246,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: PASS (deleted test is gone, remaining tests unaffected).
 
-- [ ] **Step 3: Remove `isDisabled()` check from `fetch()` and add JSDoc note**
+- [x] **Step 3: Remove `isDisabled()` check from `fetch()` and add JSDoc note**
 
 In `src/core/api-clients.js`, update `BaseApiClient.fetch()`:
 
@@ -275,7 +275,7 @@ async fetch(displayTitle) {
 
 (Keep the rest of the method body unchanged.)
 
-- [ ] **Step 4: Run the full test suite**
+- [x] **Step 4: Run the full test suite**
 
 ```bash
 npm test
@@ -283,7 +283,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -303,7 +303,7 @@ git commit -m "fix(api-clients): remove redundant isDisabled check from fetch"
 - Modify: `src/core/api-clients.js`
 - Test: `tests/unit/core/api-clients.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add inside `describe('BaseApiClient (via XmdbApiClient)', ...)` in `tests/unit/core/api-clients.test.js`:
 
@@ -327,7 +327,7 @@ it('should abort and return null if disabled between search and getDetails', asy
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 ```bash
 npx vitest run tests/unit/core/api-clients.test.js
@@ -335,7 +335,7 @@ npx vitest run tests/unit/core/api-clients.test.js
 
 Expected: FAIL — `fetch()` calls `getDetails()`, causing a second `httpFetch` call, and `httpFetch` returns search data rather than details data causing an error or wrong result.
 
-- [ ] **Step 3: Add the mid-fetch check to `fetch()` and update `disable()` JSDoc**
+- [x] **Step 3: Add the mid-fetch check to `fetch()` and update `disable()` JSDoc**
 
 In `src/core/api-clients.js`, update `BaseApiClient.fetch()`:
 
@@ -366,7 +366,7 @@ Also update the `disable()` JSDoc to add a `@note` after the `@returns` line:
  */
 ```
 
-- [ ] **Step 4: Run the full test suite**
+- [x] **Step 4: Run the full test suite**
 
 ```bash
 npm test
@@ -374,7 +374,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -394,7 +394,7 @@ git commit -m "fix(api-clients): guard against disable between search and getDet
 
 **Note:** `tests/unit/platform/webextension.test.js` already has a "storageGet should return null if key is not found" test — no changes needed there.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `tests/unit/platform/userscript.test.js` inside `describe('UserscriptAdapter', ...)`:
 
@@ -406,7 +406,7 @@ it('storageGet should return null if key is not found', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it passes immediately**
+- [x] **Step 2: Run the test to verify it passes immediately**
 
 ```bash
 npx vitest run tests/unit/platform/userscript.test.js
@@ -414,7 +414,7 @@ npx vitest run tests/unit/platform/userscript.test.js
 
 Expected: PASS — `GM_getValue` returns `undefined`, `?? null` converts it to `null`. This test documents existing correct behaviour.
 
-- [ ] **Step 3: Update `adapter.js` JSDoc**
+- [x] **Step 3: Update `adapter.js` JSDoc**
 
 In `src/platform/adapter.js`, update the `storageGet` JSDoc:
 
@@ -430,7 +430,7 @@ With:
  * @returns {Promise<string|null>} The stored value, or `null` if the key does not exist.
 ```
 
-- [ ] **Step 4: Run the full test suite**
+- [x] **Step 4: Run the full test suite**
 
 ```bash
 npm test
@@ -438,7 +438,7 @@ npm test
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/platform/adapter.js tests/unit/platform/userscript.test.js

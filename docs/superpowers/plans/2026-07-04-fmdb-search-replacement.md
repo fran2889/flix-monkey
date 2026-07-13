@@ -50,7 +50,7 @@
 - Consumes: `queuedFetch` from `BaseApiClient`, `logger` from constructor
 - Produces: FM-DB result object with `#` prefixed keys, or `null` if no match
 
-- [ ] **Step 1: Update search() method in AgregarrApiClient**
+- [x] **Step 1: Update search() method in AgregarrApiClient**
 
 Replace the current `search()` implementation with FM-DB call:
 
@@ -71,7 +71,7 @@ Replace the current `search()` implementation with FM-DB call:
     }
 ```
 
-- [ ] **Step 2: Remove unused AGREGARR_TITLE_TYPES constant**
+- [x] **Step 2: Remove unused AGREGARR_TITLE_TYPES constant**
 
 Delete the constant at the top of the class section (line 355):
 
@@ -79,12 +79,12 @@ Delete the constant at the top of the class section (line 355):
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 ```
 
-- [ ] **Step 3: Run linter to verify syntax**
+- [x] **Step 3: Run linter to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/core/api-clients.js`
 
-- [ ] **Step 4: Commit search changes**
+- [x] **Step 4: Commit search changes**
 
 ```bash
 git add src/core/api-clients.js
@@ -105,7 +105,7 @@ git commit -m "refactor(api-clients): replace IMDb suggestions with FM-DB in Agr
 - Consumes: FM-DB match object from updated `search()` method
 - Produces: `Title` object with metadata from FM-DB and rating from Agregarr
 
-- [ ] **Step 1: Update getDetails() method in AgregarrApiClient**
+- [x] **Step 1: Update getDetails() method in AgregarrApiClient**
 
 Replace the current `getDetails()` implementation:
 
@@ -137,12 +137,12 @@ Replace the current `getDetails()` implementation:
     }
 ```
 
-- [ ] **Step 2: Run linter to verify syntax**
+- [x] **Step 2: Run linter to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/core/api-clients.js`
 
-- [ ] **Step 3: Commit getDetails changes**
+- [x] **Step 3: Commit getDetails changes**
 
 ```bash
 git add src/core/api-clients.js
@@ -162,7 +162,7 @@ git commit -m "refactor(api-clients): adapt getDetails to FM-DB response format"
 - Consumes: None
 - Produces: Updated `ALLOWED_DOMAINS` array
 
-- [ ] **Step 1: Update ALLOWED_DOMAINS array**
+- [x] **Step 1: Update ALLOWED_DOMAINS array**
 
 Replace:
 
@@ -188,12 +188,12 @@ export const ALLOWED_DOMAINS = [
 ];
 ```
 
-- [ ] **Step 2: Run linter to verify syntax**
+- [x] **Step 2: Run linter to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/targets/extension/domains.js`
 
-- [ ] **Step 3: Commit domains changes**
+- [x] **Step 3: Commit domains changes**
 
 ```bash
 git add src/targets/extension/domains.js
@@ -213,7 +213,7 @@ git commit -m "refactor(domains): replace v3.sg.media-imdb.com with imdb.iamidio
 - Consumes: None
 - Produces: Updated `apiClient` select options with new label
 
-- [ ] **Step 1: Update apiClient options label**
+- [x] **Step 1: Update apiClient options label**
 
 Find the `apiClient` configuration in `CONFIG_FIELDS` array and update:
 
@@ -239,12 +239,12 @@ With:
 ] },
 ```
 
-- [ ] **Step 2: Run linter to verify syntax**
+- [x] **Step 2: Run linter to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/core/config-fields.js`
 
-- [ ] **Step 3: Commit config-fields changes**
+- [x] **Step 3: Commit config-fields changes**
 
 ```bash
 git add src/core/config-fields.js
@@ -264,7 +264,7 @@ git commit -m "docs(config): update agregarr label to FM-DB + Agregarr"
 - Consumes: None
 - Produces: Updated `host_permissions` array
 
-- [ ] **Step 1: Update host_permissions in Chrome manifest**
+- [x] **Step 1: Update host_permissions in Chrome manifest**
 
 Replace:
 
@@ -292,12 +292,12 @@ With:
 ],
 ```
 
-- [ ] **Step 2: Verify JSON is valid**
+- [x] **Step 2: Verify JSON is valid**
 
 Run: `node -e "require('./src/targets/chrome/manifest.json')"`
 Expected: No errors
 
-- [ ] **Step 3: Commit Chrome manifest changes**
+- [x] **Step 3: Commit Chrome manifest changes**
 
 ```bash
 git add src/targets/chrome/manifest.json
@@ -317,7 +317,7 @@ git commit -m "build(chrome): replace v3.sg.media-imdb.com with imdb.iamidiotare
 - Consumes: None
 - Produces: Updated `host_permissions` array
 
-- [ ] **Step 1: Update host_permissions in Firefox manifest**
+- [x] **Step 1: Update host_permissions in Firefox manifest**
 
 Replace:
 
@@ -345,12 +345,12 @@ With:
 ],
 ```
 
-- [ ] **Step 2: Verify JSON is valid**
+- [x] **Step 2: Verify JSON is valid**
 
 Run: `node -e "require('./src/targets/firefox/manifest.json')"`
 Expected: No errors
 
-- [ ] **Step 3: Commit Firefox manifest changes**
+- [x] **Step 3: Commit Firefox manifest changes**
 
 ```bash
 git add src/targets/firefox/manifest.json
@@ -370,7 +370,7 @@ git commit -m "build(firefox): replace v3.sg.media-imdb.com with imdb.iamidiotar
 - Consumes: None
 - Produces: Updated `@connect` directives
 
-- [ ] **Step 1: Update @connect directives**
+- [x] **Step 1: Update @connect directives**
 
 Replace:
 
@@ -392,12 +392,12 @@ With:
 // @connect      api.agregarr.org
 ```
 
-- [ ] **Step 2: Run linter to verify syntax**
+- [x] **Step 2: Run linter to verify syntax**
 
 Run: `npm run lint`
 Expected: No errors in `src/targets/userscript/metadata.js`
 
-- [ ] **Step 3: Commit userscript metadata changes**
+- [x] **Step 3: Commit userscript metadata changes**
 
 ```bash
 git add src/targets/userscript/metadata.js
@@ -417,7 +417,7 @@ git commit -m "build(userscript): replace v3.sg.media-imdb.com with imdb.iamidio
 - Consumes: Updated `AgregarrApiClient` behavior
 - Produces: Passing tests for FM-DB search and getDetails
 
-- [ ] **Step 1: Update search test to expect FM-DB format**
+- [x] **Step 1: Update search test to expect FM-DB format**
 
 Find the `AgregarrApiClient` describe block and update the search test. Replace:
 
@@ -460,7 +460,7 @@ it('should handle search with FM-DB format', async () => {
 });
 ```
 
-- [ ] **Step 2: Add test for empty FM-DB response**
+- [x] **Step 2: Add test for empty FM-DB response**
 
 Add after the search test:
 
@@ -480,7 +480,7 @@ it('should return null when FM-DB returns empty results', async () => {
 });
 ```
 
-- [ ] **Step 3: Update getDetails test to handle FM-DB match format**
+- [x] **Step 3: Update getDetails test to handle FM-DB match format**
 
 Find the `AgregarrApiClient` getDetails test and update. Replace:
 
@@ -542,7 +542,7 @@ it('should handle getDetails with FM-DB match format', async () => {
 });
 ```
 
-- [ ] **Step 4: Add test for missing optional fields in FM-DB response**
+- [x] **Step 4: Add test for missing optional fields in FM-DB response**
 
 Add after the getDetails test:
 
@@ -576,12 +576,12 @@ it('should handle getDetails with missing optional FM-DB fields', async () => {
 });
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm run test:unit -- --reporter=verbose tests/unit/core/api-clients.test.js`
 Expected: All AgregarrApiClient tests pass
 
-- [ ] **Step 6: Commit test updates**
+- [x] **Step 6: Commit test updates**
 
 ```bash
 git add tests/unit/core/api-clients.test.js
@@ -601,27 +601,27 @@ git commit -m "test(api-clients): update AgregarrApiClient tests for FM-DB forma
 - Consumes: All previous changes
 - Produces: Passing tests, successful build
 
-- [ ] **Step 1: Run full lint check**
+- [x] **Step 1: Run full lint check**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 2: Run full test suite**
+- [x] **Step 2: Run full test suite**
 
 Run: `npm test`
 Expected: All tests pass (335+ unit tests, 5+ UI tests)
 
-- [ ] **Step 3: Run build**
+- [x] **Step 3: Run build**
 
 Run: `npm run build`
 Expected: All three targets (userscript, chrome, firefox) build successfully
 
-- [ ] **Step 4: Verify no references to v3.sg.media-imdb.com remain**
+- [x] **Step 4: Verify no references to v3.sg.media-imdb.com remain**
 
 Run: `grep -r "v3.sg.media-imdb.com" src/ tests/ docs/`
 Expected: No matches (or only in this plan file)
 
-- [ ] **Step 5: Verify new domain is present**
+- [x] **Step 5: Verify new domain is present**
 
 Run: `grep -r "imdb.iamidiotareyoutoo.com" src/`
 Expected: Matches in domains.js, both manifests, userscript metadata, and api-clients.js

@@ -1,10 +1,11 @@
 # Platform Testing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [x]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (` - [ ]`) syntax for tracking.
 
 **Goal:** Implement the hybrid platform testing strategy as defined in the platform testing design.
 
-**Architecture:** 
+**Architecture:**
+
 1. Shared contract test suite for structural validation.
 2. Isolated behavioral unit tests for platform adapters.
 
@@ -15,9 +16,10 @@
 ### Task 1: Create Contract Test Suite
 
 **Files:**
+
 - Create: `tests/unit/platform/contract.test.js`
 
- - [x] **Step 1: Write structural contract tests**
+- [x] **Step 1: Write structural contract tests**
 
 ```javascript
 import { describe, it, expect } from 'vitest';
@@ -48,12 +50,12 @@ describe('PlatformAdapter Contract', () => {
 });
 ```
 
- - [x] **Step 2: Verify Contract Tests**
+- [x] **Step 2: Verify Contract Tests**
 
 Run: `npx vitest tests/unit/platform/contract.test.js`
 Expected: PASS
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/platform/contract.test.js
@@ -63,9 +65,10 @@ git commit -m "test: add platform contract test suite"
 ### Task 2: Implement UserscriptAdapter Unit Tests
 
 **Files:**
+
 - Create: `tests/unit/platform/userscript.test.js`
 
- - [x] **Step 1: Write behavioral tests for UserscriptAdapter**
+- [x] **Step 1: Write behavioral tests for UserscriptAdapter**
 
 ```javascript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -94,12 +97,12 @@ describe('UserscriptAdapter', () => {
 });
 ```
 
- - [x] **Step 2: Verify Tests**
+- [x] **Step 2: Verify Tests**
 
 Run: `npx vitest tests/unit/platform/userscript.test.js`
 Expected: PASS
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/platform/userscript.test.js
@@ -109,9 +112,10 @@ git commit -m "test: add userscript adapter unit tests"
 ### Task 3: Implement WebExtensionAdapter Unit Tests
 
 **Files:**
+
 - Create: `tests/unit/platform/webextension.test.js`
 
- - [x] **Step 1: Write behavioral tests for WebExtensionAdapter**
+- [x] **Step 1: Write behavioral tests for WebExtensionAdapter**
 
 ```javascript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -121,8 +125,8 @@ import browser from 'webextension-polyfill';
 vi.mock('webextension-polyfill', () => ({
     default: {
         storage: { local: { get: vi.fn(), set: vi.fn() } },
-        runtime: { sendMessage: vi.fn() }
-    }
+        runtime: { sendMessage: vi.fn() },
+    },
 }));
 
 describe('WebExtensionAdapter', () => {
@@ -146,12 +150,12 @@ describe('WebExtensionAdapter', () => {
 });
 ```
 
- - [x] **Step 2: Verify Tests**
+- [x] **Step 2: Verify Tests**
 
 Run: `npx vitest tests/unit/platform/webextension.test.js`
 Expected: PASS
 
- - [x] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/platform/webextension.test.js

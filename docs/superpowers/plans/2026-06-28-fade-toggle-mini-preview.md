@@ -59,7 +59,7 @@
     - `shouldFade(override: 'always' | 'never' | null, rating: unknown, config: ConfigManager): boolean`
     - `nextState(current: 'always' | 'never' | null): 'always' | 'never' | null`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/unit/core/fade-manager.test.js`:
 
@@ -191,7 +191,7 @@ describe('FadeManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 npm run test:unit -- fade-manager
@@ -199,7 +199,7 @@ npm run test:unit -- fade-manager
 
 Expected: fails with "Cannot find module '../../../src/core/fade-manager.js'"
 
-- [ ] **Step 3: Implement FadeManager**
+- [x] **Step 3: Implement FadeManager**
 
 Create `src/core/fade-manager.js`:
 
@@ -259,7 +259,7 @@ export class FadeManager {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm run test:unit -- fade-manager
@@ -267,7 +267,7 @@ npm run test:unit -- fade-manager
 
 Expected: all tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/fade-manager.js tests/unit/core/fade-manager.test.js
@@ -287,7 +287,7 @@ git commit -m "feat(fade-manager): add FadeManager with override storage and fad
 - Consumes: nothing new
 - Produces: `CONFIG_FIELDS` now includes `{ key: 'enableFadeToggle', type: 'checkbox', default: true, row: 'fade-settings' }`
 
-- [ ] **Step 1: Add the field to CONFIG_FIELDS**
+- [x] **Step 1: Add the field to CONFIG_FIELDS**
 
 In `src/core/config-fields.js`, after the `fadeRatingThreshold` entry (around line 114), insert:
 
@@ -302,7 +302,7 @@ In `src/core/config-fields.js`, after the `fadeRatingThreshold` entry (around li
     },
 ```
 
-- [ ] **Step 2: Run tests to verify they pass**
+- [x] **Step 2: Run tests to verify they pass**
 
 The existing `it.each(CONFIG_FIELDS)` test in `tests/unit/core/config-fields.test.js` validates all field structures automatically.
 
@@ -312,7 +312,7 @@ npm run test:unit -- config-fields
 
 Expected: all tests PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/config-fields.js
@@ -335,7 +335,7 @@ git commit -m "feat(config): add enableFadeToggle checkbox field"
 - Consumes: nothing new
 - Produces: `SurfaceManager.discover()` returns `{ container, title, fadeable, showFadeToggle: boolean }` — `true` only for the mini-modal surface
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `tests/unit/core/surfaces.test.js`, add inside the `describe('SurfaceManager', ...)` block:
 
@@ -399,7 +399,7 @@ it('should set showFadeToggle to false for the detail-modal surface', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 npm test
@@ -407,7 +407,7 @@ npm test
 
 Expected: new `showFadeToggle` assertions FAIL (property is undefined)
 
-- [ ] **Step 3: Update surfaces.js**
+- [x] **Step 3: Update surfaces.js**
 
 In `src/core/surfaces.js`, add `showFadeToggle` to each surface definition and to the `discover()` return:
 
@@ -455,7 +455,7 @@ results.push({
 });
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -463,7 +463,7 @@ npm test
 
 Expected: all tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/surfaces.js tests/unit/core/surfaces.test.js tests/ui/preview-mini.ui.test.js tests/ui/preview-detail.ui.test.js
@@ -489,7 +489,7 @@ git commit -m "feat(surfaces): add showFadeToggle property to surface definition
     - `applyFade(container: Element, shouldFade: boolean): void`
     - `injectOverlay(container, titleObj, fadeToggleState?: 'always' | 'never' | null, onFadeToggleClick?: (badgeEl: Element) => void): void`
 
-- [ ] **Step 1: Update applyFade tests and add toggle tests in overlay.test.js**
+- [x] **Step 1: Update applyFade tests and add toggle tests in overlay.test.js**
 
 Replace the existing `describe('Fade', ...)` block (lines ~253–283) in `tests/unit/core/overlay.test.js` with:
 
@@ -592,7 +592,7 @@ describe('Fade toggle', () => {
 });
 ```
 
-- [ ] **Step 2: Fix broken applyFade call sites in UI tests**
+- [x] **Step 2: Fix broken applyFade call sites in UI tests**
 
 In `tests/ui/browse.ui.test.js`, replace (around lines 105 and 122):
 
@@ -666,7 +666,7 @@ it('should not apply fading to the detail-modal container', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 ```bash
 npm test
@@ -674,7 +674,7 @@ npm test
 
 Expected: new toggle tests FAIL, old `applyFade` tests in overlay.test.js FAIL (wrong arity)
 
-- [ ] **Step 4: Implement changes in overlay.js**
+- [x] **Step 4: Implement changes in overlay.js**
 
 **4a — simplify `applyFade`** (replace the existing method):
 
@@ -724,7 +724,7 @@ cssText += `
         `;
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -732,7 +732,7 @@ npm test
 
 Expected: all tests PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/overlay.js tests/unit/core/overlay.test.js tests/ui/browse.ui.test.js tests/ui/preview-mini.ui.test.js tests/ui/preview-detail.ui.test.js
@@ -757,7 +757,7 @@ git commit -m "feat(overlay): add fade toggle badge and simplify applyFade to bo
     - `SurfaceManager.discover()` returns `showFadeToggle` (Task 3)
 - Produces: `startApp(adapter)` unchanged public API
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `tests/unit/core/app.test.js`, at the top add the FadeManager import:
 
@@ -905,7 +905,7 @@ it('should cycle fade toggle state on click and update sibling cards', async () 
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 npm test
@@ -913,7 +913,7 @@ npm test
 
 Expected: the updated constructor test FAILS (wrong arg count), new toggle/stamp tests FAIL
 
-- [ ] **Step 3: Implement changes in app.js**
+- [x] **Step 3: Implement changes in app.js**
 
 **3a — add import** at the top of `src/core/app.js` alongside other imports:
 
@@ -1046,7 +1046,7 @@ export function startApp(adapter) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 npm test
@@ -1054,7 +1054,7 @@ npm test
 
 Expected: all tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
