@@ -50,7 +50,7 @@
 - Consumes: `SurfaceManager` from `src/core/surfaces.js` (unchanged in this task), `createMockLogger` from `tests/mocks/logger.js`
 - Produces: failing tests for mini-modal and detail-modal (surfaces.js not updated yet); deleted tests for BOB, jawBone, stale previewModal selectors
 
-- [ ] **Step 1: Replace the file contents**
+- [x] **Step 1: Replace the file contents**
 
 Replace `tests/unit/core/surfaces.test.js` entirely with:
 
@@ -193,7 +193,7 @@ describe('SurfaceManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run the unit tests and confirm expected failures**
+- [x] **Step 2: Run the unit tests and confirm expected failures**
 
 ```bash
 npm run test:unit -- --reporter=verbose 2>&1 | grep -E "PASS|FAIL|✓|×|preview"
@@ -201,7 +201,7 @@ npm run test:unit -- --reporter=verbose 2>&1 | grep -E "PASS|FAIL|✓|×|preview
 
 Expected: the two new `preview mini-modal` and `preview detail-modal` tests **fail** (current surfaces.js has no scoped wrapper selectors). All other tests pass. If BOB or jawBone tests appear, they were not deleted — check the file.
 
-- [ ] **Step 3: Commit the test rewrite**
+- [x] **Step 3: Commit the test rewrite**
 
 ```bash
 git add tests/unit/core/surfaces.test.js
@@ -221,7 +221,7 @@ git commit -m "test(surfaces): remove dead surface tests, add mini/detail modal 
 - Consumes: nothing new
 - Produces: `SurfaceManager.#SURFACES` with 4 entries; priority comment updated; `discover()` unchanged
 
-- [ ] **Step 1: Replace `#SURFACES` in `src/core/surfaces.js`**
+- [x] **Step 1: Replace `#SURFACES` in `src/core/surfaces.js`**
 
 Replace the `#SURFACES` field and its leading comment (lines 24–72 in the current file) with:
 
@@ -265,7 +265,7 @@ Replace the `#SURFACES` field and its leading comment (lines 24–72 in the curr
     ];
 ```
 
-- [ ] **Step 2: Run the unit tests — all must pass**
+- [x] **Step 2: Run the unit tests — all must pass**
 
 ```bash
 npm run test:unit
@@ -273,7 +273,7 @@ npm run test:unit
 
 Expected output: all tests pass, no failures.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/surfaces.js
@@ -298,7 +298,7 @@ git commit -m "refactor(surfaces): remove BOB and jawBone, split previewModal in
 
 **Prerequisites:** Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open and logged in.
 
-- [ ] **Step 1: Create the capture script**
+- [x] **Step 1: Create the capture script**
 
 Create `scripts/capture-surface-fixtures.py`:
 
@@ -732,11 +732,11 @@ if __name__ == '__main__':
     main()
 ```
 
-- [ ] **Step 2: Ensure the `tests/fixtures/surfaces/` directory exists**
+- [x] **Step 2: Ensure the `tests/fixtures/surfaces/` directory exists**
 
 The script creates it via `Path.mkdir(parents=True, exist_ok=True)` — no manual action needed.
 
-- [ ] **Step 3: Run the capture script**
+- [x] **Step 3: Run the capture script**
 
 Make sure Chromium is running with `--remote-debugging-port=9222` and Netflix `/browse` is open and logged in, then:
 
@@ -771,7 +771,7 @@ Done.
 
 If any fixture is empty, check that the browser was on the right page/state before running.
 
-- [ ] **Step 4: Verify fixtures contain expected selectors**
+- [x] **Step 4: Verify fixtures contain expected selectors**
 
 ```bash
 grep -c "title-card" tests/fixtures/surfaces/title-card.html
@@ -782,7 +782,7 @@ grep -c "detail-modal" tests/fixtures/surfaces/preview-detail.html
 
 Each command should print a number greater than 0. If any prints 0, the capture for that surface failed — re-run after verifying the browser state.
 
-- [ ] **Step 5: Verify anonymisation — no profile name in any fixture**
+- [x] **Step 5: Verify anonymisation — no profile name in any fixture**
 
 Replace `Blaženka` with whatever the script reported as the detected profile name:
 
@@ -792,7 +792,7 @@ grep -r "Blaženka" tests/fixtures/ && echo "FAIL: profile name found" || echo "
 
 Expected: `OK: profile name absent`
 
-- [ ] **Step 6: Verify anonymisation — no cookie or token patterns**
+- [x] **Step 6: Verify anonymisation — no cookie or token patterns**
 
 ```bash
 grep -rE "document\.cookie|authURL|Bearer [A-Za-z0-9]" tests/fixtures/ && echo "FAIL" || echo "OK"
@@ -800,7 +800,7 @@ grep -rE "document\.cookie|authURL|Bearer [A-Za-z0-9]" tests/fixtures/ && echo "
 
 Expected: `OK`
 
-- [ ] **Step 7: Run the full test suite — existing tests must still pass**
+- [x] **Step 7: Run the full test suite — existing tests must still pass**
 
 ```bash
 npm test
@@ -808,7 +808,7 @@ npm test
 
 Expected: all tests pass. The existing `browse.ui.test.js` and `search.ui.test.js` use the refreshed fixtures — they should still find the selectors they rely on.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add scripts/capture-surface-fixtures.py tests/fixtures/
@@ -830,7 +830,7 @@ git commit -m "test(fixtures): capture and anonymise Netflix surface fixtures fr
 - Consumes: `tests/fixtures/surfaces/preview-mini.html` and `preview-detail.html` (Task 3), `SurfaceManager` from `src/core/surfaces.js` (Task 2)
 - Produces: two passing UI test files covering the two previewModal surfaces
 
-- [ ] **Step 1: Create `tests/ui/preview-mini.ui.test.js`**
+- [x] **Step 1: Create `tests/ui/preview-mini.ui.test.js`**
 
 ```javascript
 /**
@@ -901,7 +901,7 @@ describe('Preview Mini-Modal UI Surface', () => {
 });
 ```
 
-- [ ] **Step 2: Create `tests/ui/preview-detail.ui.test.js`**
+- [x] **Step 2: Create `tests/ui/preview-detail.ui.test.js`**
 
 ```javascript
 /**
@@ -968,7 +968,7 @@ describe('Preview Detail-Modal UI Surface', () => {
 });
 ```
 
-- [ ] **Step 3: Run the UI tests**
+- [x] **Step 3: Run the UI tests**
 
 ```bash
 npm run test:ui
@@ -976,7 +976,7 @@ npm run test:ui
 
 Expected: all UI tests pass, including the two new ones.
 
-- [ ] **Step 4: Run the full test suite**
+- [x] **Step 4: Run the full test suite**
 
 ```bash
 npm test
@@ -984,7 +984,7 @@ npm test
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/ui/preview-mini.ui.test.js tests/ui/preview-detail.ui.test.js

@@ -159,7 +159,7 @@ describe('api-clients integration', () => {
 
         it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.getDetails({ title: TITLE }, TITLE);
+            const result = await client.search(TITLE);
             expect(result).toBeNull();
         });
 
@@ -174,7 +174,8 @@ describe('api-clients integration', () => {
 
         it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
-            const result = await client.getDetails({ id: INVALID_ID }, 'nonexistent');
+            const searchResult = new Title({ imdbId: INVALID_ID, displayTitle: 'nonexistent' });
+            const result = await client.getDetails(searchResult);
             expect(result).toBeNull();
         });
     });
@@ -187,7 +188,7 @@ describe('api-clients integration', () => {
 
         it('OMDB', async () => {
             const client = new OmdbApiClient(disabledManager, adapter, badKeyConfigManager);
-            await expect(client.getDetails({ title: 'The Godfather' }, 'The Godfather')).rejects.toThrow();
+            await expect(client.search('The Godfather')).rejects.toThrow();
         });
     });
 
