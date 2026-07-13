@@ -299,9 +299,13 @@ class PlatformAdapter {
 - **Prose style**: Use the Oxford comma: "A, B, and C".
 - **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
 
-## Branches & Pull Requests
+## GitHub
 
-### Branch Naming
+Use the GitHub CLI (`gh`) for managing GitHub pull requests and issues.
+
+### Branches & Pull Requests
+
+#### Branch Naming
 
 `type/kebab-case-slug`: `type` matches a Conventional Commits type (see above), slug is 2-4 words.
 
@@ -313,7 +317,7 @@ test/expand-api-client-coverage
 chore/npm-audit-fix-undici
 ```
 
-### PR Titles
+#### PR Titles
 
 PRs are squash-merged. The title becomes the merge commit and is parsed by release-please. Use Conventional Commits format:
 
@@ -324,7 +328,7 @@ type(scope)?: description
 - Imperative mood, lowercase, no trailing period.
 - Include scope when targeting a specific module: `fix(cache): prevent TTL overflow on negative values`.
 
-### PR Descriptions
+#### PR Descriptions
 
 Use imperative mood. Skip sections that don't apply:
 
@@ -346,13 +350,35 @@ Use imperative mood. Skip sections that don't apply:
 
 **Test Plan rules**: use `[x]` for automated tests that have passed and `[ ]` for manual verification steps requiring human testing.
 
-### Pre-submission Checklist
+#### Pre-submission Checklist
 
 Run before opening a PR:
 
 ```bash
 npm run build && npm test
 ```
+
+### Issue Rules
+
+**Title Format**: Imperative mood, descriptive, no trailing period. Examples:
+
+- Add HBO Max support
+- Add TMDB as a rating provider
+- Fetch missing ratings for cached titles when current provider supports them
+
+**Description Template**:
+
+- Description of the feature or bug
+- Requirements (for enhancements)
+- Open questions (optional for discussion)
+
+**Labels Usage**:
+
+- `enhancement`: for feature requests
+- `bug`: for bug reports
+- `documentation`: for docs-related issues
+- `good first issue`: for beginner-friendly tasks
+- `help wanted`: for issues needing community assistance
 
 ## Git Hooks (Husky)
 
