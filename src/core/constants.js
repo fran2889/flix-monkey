@@ -28,8 +28,6 @@ export const ApiSource = Object.freeze({
     AGREGARR: 'agregarr',
 });
 
-export const TOP_10_BADGE = 'title-card-top-10';
-
 // Rating color thresholds
 export const RATING_COLOR_LOW_THRESHOLD = 5.0; // IMDb: \u22645.0, RT/MC: \u226450%
 export const RATING_COLOR_HIGH_THRESHOLD = 8.5; // IMDb: \u22659.0, RT/MC: \u226590%
