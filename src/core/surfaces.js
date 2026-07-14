@@ -16,9 +16,127 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Logger as _Logger } from './logger.js';
+
 /**
- * Surface definitions for Netflix DOM discovery.
- * Each surface defines selectors and metadata for finding title elements and their containers.
+ * @typedef {Object} SurfaceDefinition
+ * @property {string} titleSelector - CSS selector for title elements
+ * @property {string} containerSelector - CSS selector for container elements
+ * @property {string} titleAttribute - Attribute name containing the title text
+ * @property {boolean} fadeable - Whether this surface supports fading
+ * @property {boolean} showFadeToggle - Whether to show fade toggle button
+ */
+
+/**
+ * Base surface manager - generic discovery logic that works for any streaming platform.
+ */
+export class SurfaceManager {
+    #SURFACES;
+    #logger;
+
+    /**
+     * @param {Array<SurfaceDefinition>} surfaceDefs - Platform-specific surface definitions
+     * @param {_Logger} logger - Logger instance
+     */
+    constructor(surfaceDefs, logger) {
+        this.#SURFACES = surfaceDefs;
+        /** @type {_Logger} */
+        this.#logger = logger;
+    }
+
+    /**
+     * Discovers all surface containers with titles in the given root element.
+     *
+     * @param {Element|Document} root - The root element to search within
+     * @returns {Array<{container: Element, title: string, fadeable: boolean, showFadeToggle: boolean}>}
+     */
+    discover(root) {
+        const seen = new Set();
+        const results = [];
+        this.#SURFACES.forEach(surface => {
+            let titleEls;
+            try {
+                titleEls = root.querySelectorAll(surface.titleSelector);
+            } catch {
+                return;
+            }
+            titleEls.forEach(titleEl => {
+                const title = titleEl.getAttribute(surface.titleAttribute)?.trim() ?? null;
+                if (!title) return;
+                let container = titleEl.closest(surface.containerSelector);
+                if (!container) {
+                    this.#logger.warn('Surface container selector failed, falling back to parentElement', {
+                        selector: surface.containerSelector,
+                    });
+                    container = titleEl.parentElement;
+                }
+                if (!container || seen.has(container)) return;
+                seen.add(container);
+                results.push({
+                    container,
+                    title,
+                    fadeable: surface.fadeable,
+                    showFadeToggle: surface.showFadeToggle,
+                });
+            });
+        });
+        return results;
+    }
+}
+
+/**
+ * Netflix-specific surface definitions for various UI surfaces.
+ */
+const NETFLIX_SURFACE_DEFS = Object.freeze([
+    {
+        // Browse and genre page row cards. The <a> element carries the full title via aria-label.
+        titleSelector: '.title-card a[aria-label]',
+        containerSelector: '.title-card',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    },
+    {
+        // Search result grid cards. The card element itself carries the full title via aria-label.
+        titleSelector: '[data-uia="standard-card"]',
+        containerSelector: '[data-uia="standard-card"]',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    },
+    {
+        // Hover mini-modal (card mouse-over). Scoped to .mini-modal so the detail-modal surface
+        // can target the same player container independently.
+        titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
+        containerSelector: '.previewModal--player_container',
+        titleAttribute: 'alt',
+        fadeable: false,
+        showFadeToggle: true,
+    },
+    {
+        // Full "More Info" detail modal. The boxart <img alt> inside the player container
+        // is the only selector that matches in both mini and detail contexts.
+        titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
+        containerSelector: '.previewModal--player_container',
+        titleAttribute: 'alt',
+        fadeable: false,
+        showFadeToggle: false,
+    },
+]);
+
+/**
+ * Netflix surface manager - discovers surfaces specific to Netflix UI.
+ */
+export class NetflixSurfaceManager extends SurfaceManager {
+    constructor(logger) {
+        super(NETFLIX_SURFACE_DEFS, logger);
+    }
+}
+
+/**
+ * Named surface definitions for use in tests and external code.
+ * Access surfaces by property name for type-safe access without string lookups.
+ * @deprecated Use NetflixSurfaceManager instead for Netflix-specific code.
  */
 const TITLE_CARD = Object.freeze({
     // Browse and genre page row cards. The <a> element carries the full title via aria-label.
@@ -59,8 +177,7 @@ const PREVIEW_DETAIL = Object.freeze({
 });
 
 /**
- * Named surface definitions for use in tests and external code.
- * Access surfaces by property name for type-safe access without string lookups.
+ * @deprecated Use NetflixSurfaceManager instead.
  */
 export const Surfaces = Object.freeze({
     TITLE_CARD,
@@ -70,49 +187,6 @@ export const Surfaces = Object.freeze({
 });
 
 /**
- * Surface definitions in priority order for discovery.
- * Earlier surfaces have priority; containers matched by earlier surfaces are skipped by later ones.
+ * @deprecated Use NetflixSurfaceManager instead.
  */
 export const SURFACE_DEFS = Object.freeze([TITLE_CARD, SEARCH_CARD, PREVIEW_MINI, PREVIEW_DETAIL]);
-
-export class SurfaceManager {
-    #logger;
-    constructor(logger) {
-        this.#logger = logger;
-    }
-
-    #SURFACES = SURFACE_DEFS;
-
-    discover(root) {
-        const seen = new Set();
-        const results = [];
-        this.#SURFACES.forEach(surface => {
-            let titleEls;
-            try {
-                titleEls = root.querySelectorAll(surface.titleSelector);
-            } catch {
-                return;
-            }
-            titleEls.forEach(titleEl => {
-                const title = titleEl.getAttribute(surface.titleAttribute)?.trim() ?? null;
-                if (!title) return;
-                let container = titleEl.closest(surface.containerSelector);
-                if (!container) {
-                    this.#logger.warn('Surface container selector failed, falling back to parentElement', {
-                        selector: surface.containerSelector,
-                    });
-                    container = titleEl.parentElement;
-                }
-                if (!container || seen.has(container)) return;
-                seen.add(container);
-                results.push({
-                    container,
-                    title,
-                    fadeable: surface.fadeable,
-                    showFadeToggle: surface.showFadeToggle,
-                });
-            });
-        });
-        return results;
-    }
-}

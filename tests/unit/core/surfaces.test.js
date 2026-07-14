@@ -17,12 +17,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { NetflixSurfaceManager, SURFACE_DEFS, SurfaceManager } from '../../../src/core/surfaces.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
     function discover(html) {
-        const sm = new SurfaceManager(createMockLogger());
+        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
         document.body.innerHTML = html;
         return sm.discover(document.body);
     }
@@ -51,7 +51,7 @@ describe('SurfaceManager', () => {
             parentElement: document.body,
             getAttribute: () => null,
         };
-        const sm = new SurfaceManager(createMockLogger());
+        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
         expect(sm.discover({ querySelectorAll: () => [mockEl] })).toHaveLength(0);
     });
 
@@ -68,7 +68,7 @@ describe('SurfaceManager', () => {
 
     it('should fall back to parentElement when containerSel does not match', () => {
         const logger = createMockLogger();
-        const sm = new SurfaceManager(logger);
+        const sm = new SurfaceManager(SURFACE_DEFS, logger);
         const fakeParent = document.createElement('div');
         fakeParent.className = 'orphan-parent';
         const mockTitleEl = {
@@ -86,7 +86,7 @@ describe('SurfaceManager', () => {
     });
 
     it('should return empty array when querySelectorAll throws', () => {
-        const sm = new SurfaceManager(createMockLogger());
+        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
         expect(
             sm.discover({
                 querySelectorAll: () => {
@@ -129,6 +129,75 @@ describe('SurfaceManager', () => {
                 </div>
             </div>
         `);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
+});
+
+describe('NetflixSurfaceManager', () => {
+    function discoverNetflix(html) {
+        const sm = new NetflixSurfaceManager(createMockLogger());
+        document.body.innerHTML = html;
+        return sm.discover(document.body);
+    }
+
+    it('should be a subclass of SurfaceManager', () => {
+        const sm = new NetflixSurfaceManager(createMockLogger());
+        expect(sm).toBeInstanceOf(SurfaceManager);
+    });
+
+    it('should use Netflix surface definitions', () => {
+        const results = discoverNetflix(`
+            <div class="title-card"><a aria-label="Test Movie"></a></div>
+        `);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Test Movie');
+    });
+
+    it('should discover title-card surfaces', () => {
+        const results = discoverNetflix(`
+            <div class="title-card"><a aria-label="Movie Title"></a></div>
+        `);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Movie Title');
+        expect(results[0].fadeable).toBe(true);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
+
+    it('should discover search card surfaces', () => {
+        const results = discoverNetflix(`
+            <div data-uia="standard-card" aria-label="Search Result"></div>
+        `);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Search Result');
+        expect(results[0].fadeable).toBe(true);
+        expect(results[0].showFadeToggle).toBe(false);
+    });
+
+    it('should discover mini-modal surfaces', () => {
+        const results = discoverNetflix(`
+            <div class="previewModal--wrapper mini-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Preview Title">
+                </div>
+            </div>
+        `);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Preview Title');
+        expect(results[0].fadeable).toBe(false);
+        expect(results[0].showFadeToggle).toBe(true);
+    });
+
+    it('should discover detail-modal surfaces', () => {
+        const results = discoverNetflix(`
+            <div class="previewModal--wrapper detail-modal">
+                <div class="previewModal--player_container">
+                    <img alt="Detail Title">
+                </div>
+            </div>
+        `);
+        expect(results).toHaveLength(1);
+        expect(results[0].title).toBe('Detail Title');
+        expect(results[0].fadeable).toBe(false);
         expect(results[0].showFadeToggle).toBe(false);
     });
 });
