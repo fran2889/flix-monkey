@@ -22,7 +22,8 @@ import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { NetflixService } from '../../../src/core/services.js';
+import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -31,10 +32,14 @@ describe('App', () => {
     let appRef = null;
     const ActualMutationObserver = global.MutationObserver;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         appRef = null;
         vi.useFakeTimers();
         document.body.innerHTML = '';
+
+        // Mock ServiceRegistry.detect to return Netflix service
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
 
         // Patch MutationObserver to allow manual triggering of callbacks in tests
         global.MutationObserver = class extends ActualMutationObserver {
@@ -70,7 +75,7 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new SurfaceManager(createMockLogger());
+        const surfaces = new NetflixSurfaceManager(createMockLogger());
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Movie Title');

@@ -21,8 +21,9 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
-import { SurfaceManager } from '../../src/core/surfaces.js';
+import { NetflixSurfaceManager } from '../../src/core/surfaces.js';
 import { createMockAdapter } from '../mocks/adapter.js';
+import { createMockLogger } from '../mocks/logger.js';
 
 describe('Preview Mini-Modal UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;
@@ -33,7 +34,7 @@ describe('Preview Mini-Modal UI Surface', () => {
 
     beforeEach(() => {
         document.body.innerHTML = fixtureHtml;
-        surfaceManager = new SurfaceManager();
+        surfaceManager = new NetflixSurfaceManager(createMockLogger());
         overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
     });
 
