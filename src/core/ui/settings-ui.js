@@ -88,6 +88,24 @@ export class SettingsUI {
                 continue;
             }
 
+            // Special handling for services group
+            if (group.isServicesGroup) {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field services-field';
+
+                const label = document.createElement('label');
+                label.className = 'field-label';
+                label.textContent = 'Enabled Streaming Services';
+                label.title = 'Choose which streaming services to enable FlixMonkey on';
+                fieldDiv.appendChild(label);
+
+                const checkboxesContainer = this.#createServicesCheckboxes(group, settings);
+                fieldDiv.appendChild(checkboxesContainer);
+
+                parent.appendChild(fieldDiv);
+                continue;
+            }
+
             for (const field of group.fields) {
                 parent.appendChild(this.#createField(field, settings));
             }
@@ -145,6 +163,13 @@ export class SettingsUI {
                     group.isRatingsGroup = true;
                 }
             }
+            // Mark groups that contain service fields as special services groups
+            if (group.row === 'services') {
+                const hasServices = group.fields.some(f => f.row === 'services');
+                if (hasServices) {
+                    group.isServicesGroup = true;
+                }
+            }
         }
 
         return groups;
@@ -170,6 +195,20 @@ export class SettingsUI {
         if (rtField) {
             const rtCheckbox = this.#createRatingCheckbox(rtField.key, rtField.label, false, settings);
             container.appendChild(rtCheckbox);
+        }
+
+        return container;
+    }
+
+    #createServicesCheckboxes(group, settings) {
+        const container = document.createElement('div');
+        container.className = 'services-group';
+
+        for (const field of group.fields) {
+            if (field.row === 'services') {
+                const checkbox = this.#createField(field, settings);
+                container.appendChild(checkbox);
+            }
         }
 
         return container;

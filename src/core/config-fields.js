@@ -25,13 +25,12 @@ function validateCacheTtl(val) {
 
 export const CONFIG_FIELDS = [
     {
-        key: 'enabledServices',
-        label: 'Enabled Streaming Services',
-        type: 'select',
-        multi: true,
-        options: [['netflix', 'Netflix']],
-        default: ['netflix'],
-        title: 'Select which streaming services to enable FlixMonkey on',
+        key: 'enableNetflix',
+        label: 'Netflix',
+        type: 'checkbox',
+        default: true,
+        title: 'Enable FlixMonkey on Netflix',
+        row: 'services',
     },
     {
         key: 'overlayCorner',
