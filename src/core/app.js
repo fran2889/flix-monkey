@@ -24,7 +24,7 @@ import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
 import { Logger } from './logger.js';
 import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
-import { SurfaceManager } from './surfaces.js';
+import { ServiceRegistry } from './services.js';
 import { debounce, runIdle, slugify } from './utils.js';
 
 export class FlixMonkeyApp {
@@ -221,14 +221,22 @@ function createApiClient(config, disabledManager, adapter, logger) {
 }
 
 export function startApp(adapter) {
+    const currentService = ServiceRegistry.detect();
+    if (!currentService) {
+        return null;
+    }
+
     const logger = new Logger(adapter);
     const configManager = new ConfigManager(adapter, logger);
+    if (!configManager.getBool('enableNetflix')) {
+        return null;
+    }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const client = createApiClient(configManager, disabledManager, adapter, logger);
     const api = new ApiClientManager(cache, disabledManager, client, logger);
-    const renderer = new OverlayRenderer(configManager);
-    const surfaces = new SurfaceManager(logger);
+    const surfaces = new currentService.SurfaceManager(logger);
+    const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter);
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger);
     app.init();

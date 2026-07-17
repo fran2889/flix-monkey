@@ -22,7 +22,8 @@ import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { SurfaceManager } from '../../../src/core/surfaces.js';
+import { NetflixService } from '../../../src/core/services.js';
+import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
@@ -31,10 +32,14 @@ describe('App', () => {
     let appRef = null;
     const ActualMutationObserver = global.MutationObserver;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         appRef = null;
         vi.useFakeTimers();
         document.body.innerHTML = '';
+
+        // Mock ServiceRegistry.detect to return Netflix service
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
 
         // Patch MutationObserver to allow manual triggering of callbacks in tests
         global.MutationObserver = class extends ActualMutationObserver {
@@ -70,7 +75,7 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new SurfaceManager(createMockLogger());
+        const surfaces = new NetflixSurfaceManager(createMockLogger());
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Movie Title');
@@ -328,6 +333,24 @@ describe('App', () => {
         expect(typeof appRef.cacheManager.clear).toBe('function');
         expect(appRef.disabledManager).toBeDefined();
         expect(typeof appRef.disabledManager.resetAll).toBe('function');
+    });
+
+    it('should return null when Netflix is disabled via enableNetflix config', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? false : undefined) });
+        const result = startApp(adapter);
+        expect(result).toBeNull();
+    });
+
+    it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? true : undefined) });
+        const result = startApp(adapter);
+        expect(result).not.toBeNull();
+        expect(result.clearCache).toBeDefined();
+        expect(result.disconnect).toBeDefined();
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {

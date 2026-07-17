@@ -17,72 +17,86 @@
  */
 
 /**
- * Surface definitions for Netflix DOM discovery.
- * Each surface defines selectors and metadata for finding title elements and their containers.
+ * @typedef {Object} SurfaceDefinition
+ * @property {string} titleSelector - CSS selector for title elements
+ * @property {string} containerSelector - CSS selector for container elements
+ * @property {string} titleAttribute - Attribute name containing the title text
+ * @property {boolean} fadeable - Whether this surface supports fading
+ * @property {boolean} showFadeToggle - Whether to show fade toggle button
  */
-const TITLE_CARD = Object.freeze({
-    // Browse and genre page row cards. The <a> element carries the full title via aria-label.
-    titleSelector: '.title-card a[aria-label]',
-    containerSelector: '.title-card',
-    titleAttribute: 'aria-label',
-    fadeable: true,
-    showFadeToggle: false,
-});
 
-const SEARCH_CARD = Object.freeze({
-    // Search result grid cards. The card element itself carries the full title via aria-label.
-    titleSelector: '[data-uia="standard-card"]',
-    containerSelector: '[data-uia="standard-card"]',
-    titleAttribute: 'aria-label',
-    fadeable: true,
-    showFadeToggle: false,
-});
-
-const PREVIEW_MINI = Object.freeze({
-    // Hover mini-modal (card mouse-over). Scoped to .mini-modal so the detail-modal surface
-    // can target the same player container independently.
-    titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
-    containerSelector: '.previewModal--player_container',
-    titleAttribute: 'alt',
-    fadeable: false,
-    showFadeToggle: true,
-});
-
-const PREVIEW_DETAIL = Object.freeze({
-    // Full "More Info" detail modal. The boxart <img alt> inside the player container
-    // is the only selector that matches in both mini and detail contexts.
-    titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
-    containerSelector: '.previewModal--player_container',
-    titleAttribute: 'alt',
-    fadeable: false,
-    showFadeToggle: false,
+/**
+ * Netflix-specific surface definitions for various UI surfaces.
+ * Named properties allow for easy reference: NETFLIX_SURFACES.TITLE_CARD, etc.
+ */
+export const NETFLIX_SURFACES = Object.freeze({
+    /**
+     * Browse and genre page row cards. The <a> element carries the full title via aria-label.
+     */
+    TITLE_CARD: Object.freeze({
+        titleSelector: '.title-card a[aria-label]',
+        containerSelector: '.title-card',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    /**
+     * Search result grid cards. The card element itself carries the full title via aria-label.
+     */
+    SEARCH_CARD: Object.freeze({
+        titleSelector: '[data-uia="standard-card"]',
+        containerSelector: '[data-uia="standard-card"]',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    /**
+     * Hover mini-modal (card mouse-over). Scoped to .mini-modal so the detail-modal surface
+     * can target the same player container independently.
+     */
+    PREVIEW_MINI: Object.freeze({
+        titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
+        containerSelector: '.previewModal--player_container',
+        titleAttribute: 'alt',
+        fadeable: false,
+        showFadeToggle: true,
+    }),
+    /**
+     * Full "More Info" detail modal. The boxart <img alt> inside the player container
+     * is the only selector that matches in both mini and detail contexts.
+     */
+    PREVIEW_DETAIL: Object.freeze({
+        titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
+        containerSelector: '.previewModal--player_container',
+        titleAttribute: 'alt',
+        fadeable: false,
+        showFadeToggle: false,
+    }),
 });
 
 /**
- * Named surface definitions for use in tests and external code.
- * Access surfaces by property name for type-safe access without string lookups.
+ * Base surface manager - generic discovery logic that works for any streaming platform.
+ * Accepts either an array of surface definitions or a named object (values will be used).
  */
-export const Surfaces = Object.freeze({
-    TITLE_CARD,
-    SEARCH_CARD,
-    PREVIEW_MINI,
-    PREVIEW_DETAIL,
-});
-
-/**
- * Surface definitions in priority order for discovery.
- * Earlier surfaces have priority; containers matched by earlier surfaces are skipped by later ones.
- */
-export const SURFACE_DEFS = Object.freeze([TITLE_CARD, SEARCH_CARD, PREVIEW_MINI, PREVIEW_DETAIL]);
-
 export class SurfaceManager {
+    #SURFACES;
     #logger;
-    constructor(logger) {
+
+    /**
+     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Named surface definitions object
+     * @param {import('./logger.js').Logger} logger - Logger instance
+     */
+    constructor(surfaceDefs, logger) {
+        this.#SURFACES = Object.values(surfaceDefs);
         this.#logger = logger;
     }
 
-    #SURFACES = SURFACE_DEFS;
-
+    /**
+     * Discovers all surface containers with titles in the given root element.
+     *
+     * @param {Element|Document} root - The root element to search within
+     * @returns {Array<{container: Element, title: string, fadeable: boolean, showFadeToggle: boolean}>}
+     */
     discover(root) {
         const seen = new Set();
         const results = [];
@@ -114,5 +128,14 @@ export class SurfaceManager {
             });
         });
         return results;
+    }
+}
+
+/**
+ * Netflix surface manager - discovers surfaces specific to Netflix UI.
+ */
+export class NetflixSurfaceManager extends SurfaceManager {
+    constructor(logger) {
+        super(NETFLIX_SURFACES, logger);
     }
 }
