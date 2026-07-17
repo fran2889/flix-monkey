@@ -74,7 +74,7 @@ export class ServiceRegistry {
     static detect() {
         const currentHost = window.location.hostname;
         for (const service of Object.values(SERVICES)) {
-            if (service.domains.some(d => currentHost === d || currentHost.endsWith('.' + d))) {
+            if (service.domains.some(d => currentHost === d || currentHost.endsWith(`.${d}`))) {
                 return service;
             }
         }

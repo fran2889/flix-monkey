@@ -154,21 +154,13 @@ export class SettingsUI {
             }
         }
 
-        // Mark groups that contain rating display fields as special ratings groups
+        // Mark special groups by their row property
         for (const group of groups) {
             if (group.row === 'ratings-display') {
-                const hasMcRating = group.fields.some(f => f.key === 'showMcRating');
-                const hasRtRating = group.fields.some(f => f.key === 'showRtRating');
-                if (hasMcRating && hasRtRating) {
-                    group.isRatingsGroup = true;
-                }
+                group.isRatingsGroup = true;
             }
-            // Mark groups that contain service fields as special services groups
             if (group.row === 'services') {
-                const hasServices = group.fields.some(f => f.row === 'services');
-                if (hasServices) {
-                    group.isServicesGroup = true;
-                }
+                group.isServicesGroup = true;
             }
         }
 

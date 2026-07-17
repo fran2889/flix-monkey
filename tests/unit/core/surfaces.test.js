@@ -17,12 +17,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { NetflixSurfaceManager, SURFACE_DEFS, SurfaceManager } from '../../../src/core/surfaces.js';
+import { NETFLIX_SURFACES, NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
     function discover(html) {
-        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
+        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
         document.body.innerHTML = html;
         return sm.discover(document.body);
     }
@@ -51,7 +51,7 @@ describe('SurfaceManager', () => {
             parentElement: document.body,
             getAttribute: () => null,
         };
-        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
+        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
         expect(sm.discover({ querySelectorAll: () => [mockEl] })).toHaveLength(0);
     });
 
@@ -68,7 +68,7 @@ describe('SurfaceManager', () => {
 
     it('should fall back to parentElement when containerSel does not match', () => {
         const logger = createMockLogger();
-        const sm = new SurfaceManager(SURFACE_DEFS, logger);
+        const sm = new SurfaceManager(NETFLIX_SURFACES, logger);
         const fakeParent = document.createElement('div');
         fakeParent.className = 'orphan-parent';
         const mockTitleEl = {
@@ -86,7 +86,7 @@ describe('SurfaceManager', () => {
     });
 
     it('should return empty array when querySelectorAll throws', () => {
-        const sm = new SurfaceManager(SURFACE_DEFS, createMockLogger());
+        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
         expect(
             sm.discover({
                 querySelectorAll: () => {

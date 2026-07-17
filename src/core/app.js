@@ -228,6 +228,9 @@ export function startApp(adapter) {
 
     const logger = new Logger(adapter);
     const configManager = new ConfigManager(adapter, logger);
+    if (!configManager.getBool('enableNetflix')) {
+        return null;
+    }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const client = createApiClient(configManager, disabledManager, adapter, logger);

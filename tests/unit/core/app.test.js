@@ -335,6 +335,24 @@ describe('App', () => {
         expect(typeof appRef.disabledManager.resetAll).toBe('function');
     });
 
+    it('should return null when Netflix is disabled via enableNetflix config', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? false : undefined) });
+        const result = startApp(adapter);
+        expect(result).toBeNull();
+    });
+
+    it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? true : undefined) });
+        const result = startApp(adapter);
+        expect(result).not.toBeNull();
+        expect(result.clearCache).toBeDefined();
+        expect(result.disconnect).toBeDefined();
+    });
+
     it('should catch and log errors thrown in the mutation handler', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
