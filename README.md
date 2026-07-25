@@ -1,7 +1,9 @@
 # FlixMonkey
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
+[![Chrome Web Store Version](https://img.shields.io/chrome-web-store/v/ipbiebdbicmlajmbcghkcdkobmcaoadl.svg?label=Chrome)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
+[![Firefox Add-on Version](https://img.shields.io/amo/v/flixmonkey.svg?label=Firefox)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
@@ -24,82 +26,84 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ## How It Looks
 
-<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix thumbnails in browse view" style="max-width: 45%
-; height: auto; margin-right: 2%">
-<img src="screenshots/netflix-info.png" alt="Rating badges on Netflix preview modal with title details" style="max-width: 45%; height: auto;">
+<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix titles in browse view" style="max-width: 45%; height: auto; margin-right: 2%">
+<img src="screenshots/netflix-info.png" alt="Rating badges on Netflix title detail pages" style="max-width: 45%; height: auto;">
 
 ---
 
 ## Installation
 
-> The userscript version requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo), [Violentmonkey](https://violentmonkey.github.io/), or [Greasemonkey](https://www.greasespot.net/).
+Use the links below to install the add-on for your browser.
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
 [![Tampermonkey](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js)
 
+> The userscript version requires [Tampermonkey](https://www.tampermonkey.net/) (Chrome, Edge, Firefox, Opera, Safari), [Violentmonkey](https://violentmonkey.github.io/) (Chrome, Edge, Firefox), or [Greasemonkey](https://www.greasespot.net/) (Firefox).
+
 ---
 
 ## Features
 
-- **Rating Badges**: IMDb scores on thumbnails, hover cards, and modals; Metacritic and Rotten Tomatoes scores available when using OMDb or XMDb providers
-- **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, no rating)
-- **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
+- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages; Metacritic and Rotten Tomatoes scores are available when using OMDb or XMDb providers
+- **Click to Open**: Click rating badges to open the title's IMDb page or search IMDb when no match is found
+- **Color-Coded Ratings**: Rating badges change color based on thresholds (red < 5.0, green >= 8.5)
+- **Customizable**: Change badge position, choose rating provider, fade titles below a rating threshold, and more
+- **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, without rating)
 - **Multi-Tab Sync**: Requests and settings are synchronized across Netflix tabs to prevent redundant lookups
-- **Click to Open**: Click badges to open the title's IMDb page
-- **Color-Coded Ratings**: Badges change color based on rating thresholds (red < 5.0, green >= 8.5)
-- **Customizable**: Change badge position, choose API provider, fade thumbnails below a rating threshold, and more
+- **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
 
 ---
 
 ## Settings
 
-> The default provider (FM-DB + Agregarr) requires no API keys and provides IMDb ratings only. OMDb and XMDb providers require API keys but also provide Rotten Tomatoes and Metacritic scores.
+> FlixMonkey supports multiple rating providers. The default (FM-DB + Agregarr) requires no API key but provides IMDb ratings only. OMDb and XMDb require free API keys, but they are more reliable and also provide Rotten Tomatoes and Metacritic scores.
 
 Access settings via:
 
-- **Extensions**: Click the FlixMonkey icon in your browser toolbar -> **Options**
-- **Userscript**: Open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and configure FlixMonkey from its settings menu
+- **Chrome**: Click the FlixMonkey icon in your browser toolbar
+- **Firefox**: Click the FlixMonkey icon in your browser toolbar, or go to `about:addons`, select FlixMonkey and go to the **Preferences** tab
+- **Userscript**: Open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and click on the **FlixMonkey Settings** menu item
 
 ![Settings](screenshots/firefox-settings.png)
 
 ### Display Options
 
-| Option          | Default  | Description                                                                               |
-| --------------- | -------- | ----------------------------------------------------------------------------------------- |
-| Badge Position  | Top Left | Corner where rating badges appear                                                         |
-| Rotten Tomatoes | No       | Display RT score. Only available when OMDb is selected as rating provider                 |
-| Metacritic      | No       | Display Metacritic score. Only available when OMDb or XMDb is selected as rating provider |
+| Option                | Default  | Description                                                                       |
+| --------------------- | -------- | --------------------------------------------------------------------------------- |
+| Rating Badge Position | Top Left | Corner where rating badges appear                                                 |
+| Rotten Tomatoes       | No       | Display RT score. Only available when OMDb is the rating provider                 |
+| Metacritic            | No       | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+
+### Rating Providers
+
+| Option          | Default          | Description                                                                                  |
+| --------------- | ---------------- | -------------------------------------------------------------------------------------------- |
+| Rating Provider | FM-DB + Agregarr | Active rating provider. Default uses FM-DB for IMDb ID lookup and Agregarr for IMDb ratings. |
+| OMDb API Key    | _empty_          | [Get a free API key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected    |
+| XMDb API Key    | _empty_          | [Get a free API key](https://xmdbapi.com/api-key). Required when XMDb is selected            |
 
 ### Fade Settings
 
 | Option            | Default | Description                                         |
 | ----------------- | ------- | --------------------------------------------------- |
-| Fade Below Rating | No      | Fade thumbnails rated below the threshold           |
+| Fade Below Rating | No      | Fade titles rated below the threshold               |
 | Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)          |
-| Allow Override    | No      | Show button to override fade state in hover preview |
-
-### API & Data
-
-| Option          | Default          | Description                                                                                                                                                                                                                                                         |
-| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rating Provider | FM-DB + Agregarr | Primary data source. Uses FM-DB (imdb.iamidiotareyoutoo.com) for IMDb ID lookup and Agregarr (api.agregarr.org) for ratings. This provider only supplies IMDb ratings. Note: RT scores are only available with OMDb; MC scores are only available with OMDb or XMDb |
-| OMDb API Key    | ''               | [Get a free key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected                                                                                                                                                                               |
-| XMDb API Key    | ''               | [Get a free key](https://xmdbapi.com/api-key). Required when XMDb is selected                                                                                                                                                                                       |
+| Allow Override    | No      | Show button to override fade state in title preview |
 
 ### Cache Settings
 
-| Option                    | Default      | Description                                                                  |
-| ------------------------- | ------------ | ---------------------------------------------------------------------------- |
-| Cache TTL (Older Titles)  | -1 (forever) | Cache duration (days) for rated titles > 1 year old. Use -1 for never expire |
-| Cache TTL (Recent Titles) | 30           | Cache duration (days) for rated titles <= 1 year old                         |
-| Cache TTL (No Rating)     | 1            | Cache duration (days) for unrated or not-found titles                        |
+| Option                    | Default      | Description                                                                 |
+| ------------------------- | ------------ | --------------------------------------------------------------------------- |
+| Older Titles (Cache TTL)  | -1 (forever) | Cache duration (days) for rated titles > 1 year old. Set -1 to never expire |
+| Recent Titles (Cache TTL) | 30           | Cache duration (days) for rated titles <= 1 year old                        |
+| No Rating (Cache TTL)     | 1            | Cache duration (days) for unrated or not-found titles                       |
 
 ### Advanced
 
-| Option               | Default | Description                                                                |
-| -------------------- | ------- | -------------------------------------------------------------------------- |
-| Enable debug logging | Yes     | Enable verbose console logging. Note: may generate noise for regular users |
+| Option               | Default | Description                                                |
+| -------------------- | ------- | ---------------------------------------------------------- |
+| Enable debug logging | Yes     | Enable verbose console logging to help troubleshoot issues |
 
 ---
 
@@ -111,7 +115,7 @@ Before diving deeper, try these first:
 2. Check that FlixMonkey is enabled in your extension/userscript manager
 3. Verify you are on a supported Netflix page (browse, search, or title pages)
 
-**No badges appearing?**
+**No rating badges appearing?**
 
 - Ensure the extension is enabled in your browser
 - Verify you are on a supported Netflix page (browse, search, or title pages)
