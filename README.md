@@ -1,7 +1,5 @@
 # FlixMonkey
 
-![FlixMonkey screenshot showing rating badges on Netflix thumbnails](screenshots/hero.png)
-
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
@@ -26,9 +24,8 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ## How It Looks
 
-![Rating badges on Netflix thumbnails](screenshots/thumbnails.png)
-![Hover card with ratings](screenshots/hover.png)
-![Preview modal with ratings](screenshots/modal.png)
+<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix thumbnails" style="max-width: 45%; height: auto; margin-right: 2%">
+<img src="screenshots/netflix-info.png" alt="Preview modal with ratings" style="max-width: 45%; height: auto;">
 
 ---
 
@@ -59,6 +56,8 @@ Access settings via:
 
 - **Extensions**: Click the FlixMonkey icon in your browser toolbar -> **Options**
 - **Userscript**: Open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and configure FlixMonkey from its settings menu
+
+![Settings](screenshots/firefox-settings.png)
 
 ### Display Options
 
