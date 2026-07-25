@@ -94,6 +94,13 @@ describe('api-clients integration', () => {
             year: 1972,
             type: TitleType.MOVIE,
         };
+        const commonAgregarr = {
+            displayTitle: TITLE,
+            apiTitleContains: 'Godfather',
+            imdbId: 'tt0068646',
+            year: 1972,
+            type: undefined,
+        };
 
         it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
@@ -114,7 +121,7 @@ describe('api-clients integration', () => {
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
             expect(result.rtRating).toBeNull();
             expect(result.mcRating).toBeNull();
         });
@@ -128,6 +135,13 @@ describe('api-clients integration', () => {
             imdbId: 'tt4574334',
             year: 2016,
             type: TitleType.SERIES,
+        };
+        const commonAgregarr = {
+            displayTitle: TITLE,
+            apiTitleContains: 'Stranger',
+            imdbId: 'tt4574334',
+            year: 2016,
+            type: undefined,
         };
 
         it('XMDB', async () => {
@@ -145,7 +159,7 @@ describe('api-clients integration', () => {
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
     });
 
@@ -199,6 +213,11 @@ describe('api-clients integration', () => {
             imdbId: 'tt0211915',
             type: TitleType.MOVIE,
         };
+        const commonAgregarr = {
+            displayTitle: TITLE,
+            imdbId: 'tt0211915',
+            type: undefined,
+        };
 
         it('XMDB', async () => {
             const client = new XmdbApiClient(disabledManager, adapter, configManager);
@@ -215,7 +234,7 @@ describe('api-clients integration', () => {
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
     });
 
@@ -227,6 +246,12 @@ describe('api-clients integration', () => {
             imdbId: EXPECTED_IMDB_ID,
             year: 1997,
             type: TitleType.MOVIE,
+        };
+        const commonAgregarr = {
+            displayTitle: TITLE,
+            imdbId: EXPECTED_IMDB_ID,
+            year: 1997,
+            type: undefined,
         };
 
         it('XMDB', async () => {
@@ -248,7 +273,7 @@ describe('api-clients integration', () => {
         it('Agregarr', async () => {
             const client = new AgregarrApiClient(disabledManager, adapter, configManager);
             const result = await client.fetch(TITLE);
-            expectCommonTitleFields(result, ApiSource.AGREGARR, common);
+            expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
     });
 
