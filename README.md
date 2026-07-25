@@ -24,8 +24,8 @@ See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
 ## How It Looks
 
-<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix thumbnails" style="max-width: 45%; height: auto; margin-right: 2%">
-<img src="screenshots/netflix-info.png" alt="Preview modal with ratings" style="max-width: 45%; height: auto;">
+<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix thumbnails in browse view" style="max-width: 45%; height: auto; margin-right: 2%">
+<img src="screenshots/netflix-info.png" alt="Rating badges on Netflix preview modal with title details" style="max-width: 45%; height: auto;">
 
 ---
 
@@ -41,11 +41,12 @@ _Requires [Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/d
 
 ## Features
 
-- **Rating Badges** - IMDb, Metacritic, and Rotten Tomatoes scores on thumbnails, hover cards, and modals
+- **Rating Badges** - IMDb scores on thumbnails, hover cards, and modals; Metacritic and Rotten Tomatoes scores available when using OMDb or XMDb providers
 - **Smart Caching** - Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, no rating)
 - **Auto-Disable** - Failing APIs are temporarily disabled for 1 hour to prevent lag
-- **Multi-Tab Sync** - Requests are synchronized across Netflix tabs to prevent redundant lookups
+- **Multi-Tab Sync** - Requests and settings are synchronized across Netflix tabs to prevent redundant lookups
 - **Click to Open** - Click badges to open the title's IMDb page
+- **Color-Coded Ratings** - Badges change color based on rating thresholds (red < 5.0, green >= 8.5)
 - **Customizable** - Change badge position, choose API provider, fade thumbnails below a rating threshold, and more
 
 ---
@@ -77,11 +78,11 @@ Access settings via:
 
 ### API & Data
 
-| Option          | Default          | Description                                                                                                                                                                                                               |
-| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rating Provider | FM-DB + Agregarr | Primary data source. Uses FM-DB (imdb.iamidiotareyoutoo.com) for IMDb ID lookup and Agregarr (api.agregarr.org) for ratings. Note: RT scores are only available with OMDb; MC scores are only available with OMDb or XMDb |
-| OMDb API Key    | ''               | [Get a free key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected                                                                                                                                     |
-| XMDb API Key    | ''               | [Get a free key](https://xmdbapi.com/api-key). Required when XMDb is selected                                                                                                                                             |
+| Option          | Default          | Description                                                                                                                                                                                                                                                         |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rating Provider | FM-DB + Agregarr | Primary data source. Uses FM-DB (imdb.iamidiotareyoutoo.com) for IMDb ID lookup and Agregarr (api.agregarr.org) for ratings. This provider only supplies IMDb ratings. Note: RT scores are only available with OMDb; MC scores are only available with OMDb or XMDb |
+| OMDb API Key    | ''               | [Get a free key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected                                                                                                                                                                               |
+| XMDb API Key    | ''               | [Get a free key](https://xmdbapi.com/api-key). Required when XMDb is selected                                                                                                                                                                                       |
 
 ### Cache Settings
 
@@ -101,7 +102,35 @@ Access settings via:
 
 ## Troubleshooting
 
-**No badges appearing?** Refresh Netflix or check if the extension is enabled. Ensure you are on a supported Netflix page (browse, search, or title pages). **Need fresh ratings?** Clear cache in settings. **Slow performance?** Failing APIs are auto-disabled for 1 hour; wait for reactivation or switch Rating Provider in settings. **Still having issues?** Check browser console for errors and open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues).
+**No badges appearing?**
+
+- Ensure the extension is enabled in your browser
+- Verify you are on a supported Netflix page (browse, search, or title pages)
+- Refresh the Netflix page
+- Check that your userscript manager is running (for userscript version)
+
+**Need fresh ratings?**
+
+- Clear the cache in FlixMonkey settings
+- Switch to a different Rating Provider if your current one is down
+
+**Slow performance?**
+
+- Failing APIs are auto-disabled for 1 hour; wait for reactivation or switch Rating Provider in settings
+- Reduce the number of open Netflix tabs
+
+**Ratings not showing for a specific title?**
+
+- The title may not be in the selected API's database
+- Try a different Rating Provider
+- Check browser console (F12) for errors and open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues)
+
+**Still having issues?**
+
+- Open browser developer tools (F12) and check the Console tab for errors
+- Ensure your API keys are correctly configured for your selected Rating Provider
+- Check the Network tab for failed requests to rating APIs
+- Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with details of what you tried
 
 ---
 
@@ -113,9 +142,16 @@ FlixMonkey requires Node.js >= 24.
 npm install
 npm run build    # Build all targets
 npm run dev      # Watch mode with auto-rebuild
-npm test         # Run all tests
+npm test         # Run unit and UI tests
+npm run test:unit     # Run unit tests only
+npm run test:ui       # Run UI tests only
+npm run test:coverage # Run tests with coverage report
+npm run test:integration # Run integration tests (requires API keys)
 npm run lint     # Lint source files
+npm run lint:fix # Lint with auto-fix
 npm run format   # Format source files
+npm run format:check # Check formatting without writing
+npm run clean    # Remove dist/ and coverage/ directories
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup and architecture details.
