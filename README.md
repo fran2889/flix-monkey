@@ -105,45 +105,66 @@ Access settings via:
 | -------------------- | ------- | ---------------------------------------------------------- |
 | Enable debug logging | Yes     | Enable verbose console logging to help troubleshoot issues |
 
+### Settings Actions
+
+- **Save**: Apply configuration changes and refresh the Netflix tab
+- **Clear Cache**: Remove all cached ratings, forcing fresh lookups for all titles
+- **Reset Disabled Providers**: Re-enable any rating providers that were automatically disabled due to failures
+
 ---
 
 ## Troubleshooting
 
-Before diving deeper, try these first:
+**Rating badges are not showing**
 
-1. Refresh the Netflix page (F5 or Ctrl+R)
-2. Check that FlixMonkey is enabled in your extension/userscript manager
-3. Verify you are on a supported Netflix page (browse, search, or title pages)
+Loading placeholder badges should show immediately, before the ratings are retrieved. If not, that means the extension is not active or failed to load.
 
-**No rating badges appearing?**
+1. Verify the extension is enabled in your browser toolbar.
+2. For the userscript version, confirm your userscript manager is active and FlixMonkey script is loaded.
+3. Refresh the Netflix page.
+4. Open browser developer tools (F12) and check the Console tab for errors.
 
-- Ensure the extension is enabled in your browser
-- Verify you are on a supported Netflix page (browse, search, or title pages)
-- Refresh the Netflix page (F5 or Ctrl+R)
-- Check that your userscript manager is running (for userscript version)
+**Badges are showing but there are no ratings**
 
-**Need fresh ratings?**
+This usually means that the rating provider is failing or disabled. If the problem persists, select a different provider.
 
-- Clear the cache in FlixMonkey settings (found in the Options panel for extensions, or your userscript manager for userscripts)
-- Switch to a different rating provider if your current one is down
+1. Open browser developer tools (F12) and check the Console tab for errors.
+2. Check the Console to see if your rating provider was disabled. Providers are auto-disabled for 1 hour after failures.
+3. Re-enable disabled providers in Settings to retry.
+4. Switch to a different rating provider. Default provider (FM-DB + Agregarr) can be unreliable.
 
-**Slow performance?**
+**Rating shown does not match the rating on IMDb page**
 
-- Failing APIs are auto-disabled for 1 hour; wait for reactivation or switch rating provider in settings
-- Reduce the number of open Netflix tabs
+Titles are identified by name only, because Netflix does not provide year or additional metadata. There can be a mismatch when multiple titles share the same name.
 
-**Ratings not showing for a specific title?**
+1. Tooltip on the rating badge shows title and year as returned by the rating provider. Verify it matches the Netflix title.
+2. If the tooltip confirms title match, the provider rating may be outdated since it isn't directly from IMDb. Recent releases have shorter cache times to ensure ratings are updated.
+3. If the tooltip shows a different title, try selecting a different rating provider and clear the cache. This can help because providers have different result ordering logic.
 
-- The title may not be in the selected API's database
-- Try a different rating provider
-- Check browser console (F12) for errors and open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues)
+**Metacritic and Rotten Tomatoes scores are not showing**
 
-**Still having issues?**
+Most often MC/RT score is not shown on a title because it was not returned by the rating provider. A provider supporting MC/RT does not mean that it will return a score for every title.
 
-- Open browser developer tools (F12) and check the Console tab for errors
-- Ensure your API keys are correctly configured for your selected rating provider
-- Check the Network tab for failed requests to rating APIs
-- Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with details of what you tried
+1. If MC/RT scores are missing on all titles, check your settings.
+2. Check if your current rating provider supports these scores; OMDb supports both, XMDb supports Metacritic only.
+3. Make sure that Metacritic and Rotten Tomatoes are enabled in Settings under Show Ratings.
+
+**Ratings are loading slowly**
+
+Rating providers are rate-limited so FlixMonkey spreads requests over time. Ratings are cached, so subsequent lookups will be instant.
+
+1. Wait 10-15 seconds to see if ratings populate.
+2. Open browser developer tools (F12) and check the Console tab for errors if ratings still do not appear.
+
+**Still need help?**
+
+Netflix may change their layout, breaking title discovery or rating badge positioning. A new FlixMonkey version may have introduced a bug.
+
+Please report these issues with as much detail as possible.
+
+1. Verify your API keys are correctly configured for your selected rating provider.
+2. Open browser developer tools (F12) and check the Console and Network tabs for errors or relevant logs.
+3. Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with details about the problem and steps to reproduce it.
 
 ---
 
