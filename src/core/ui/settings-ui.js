@@ -131,7 +131,7 @@ export class SettingsUI {
         const resetBtn = document.createElement('button');
         resetBtn.id = 'fm-resetClientsBtn';
         resetBtn.className = 'secondary';
-        resetBtn.textContent = 'Reset Disabled Clients';
+        resetBtn.textContent = 'Reset Disabled Providers';
         resetBtn.title = 'Re-enable rating providers that were automatically disabled due to errors';
         resetBtn.onclick = () => this.resetClients();
         actionsDiv.appendChild(resetBtn);

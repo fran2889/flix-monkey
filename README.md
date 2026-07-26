@@ -1,153 +1,193 @@
 # FlixMonkey
 
-A multi-platform browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix thumbnails, hover cards, and preview modals.
+[![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
+[![Chrome Web Store Version](https://img.shields.io/chrome-web-store/v/ipbiebdbicmlajmbcghkcdkobmcaoadl.svg?label=Chrome)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
+[![Firefox Add-on Version](https://img.shields.io/amo/v/flixmonkey.svg?label=Firefox)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
+[![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
-## Overview
+See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
 
-FlixMonkey enriches your Netflix browsing experience by displaying aggregated ratings from multiple sources. It fetches data from independent APIs (Agregarr, XMDb, and OMDb), caches results locally for fast subsequent lookups, and intelligently deduplicates concurrent requests for the same title.
+---
 
-The project is available as a **Chrome Extension**, **Firefox Add-on**, and a **Tampermonkey/Violentmonkey Userscript**. All versions share a common core and provide a feature-equivalent experience.
+## Table of Contents
 
-By default, it uses [Agregarr](https://github.com/agregarr/agregarr) for IMDb ratings (no API key needed). Optional keys for OMDb and XMDb unlock Metacritic and Rotten Tomatoes scores.
+- [How It Looks](#how-it-looks)
+- [Installation](#installation)
+- [Features](#features)
+- [Settings](#settings)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Privacy Policy](#privacy-policy)
+- [License](#license)
+
+---
+
+## How It Looks
+
+<img src="screenshots/netflix-browse.png" alt="Rating badges on Netflix titles in browse view" style="max-width: 45%; height: auto; margin-right: 2%">
+<img src="screenshots/netflix-info.png" alt="Rating badges on Netflix title detail pages" style="max-width: 45%; height: auto;">
 
 ---
 
 ## Installation
 
-### Userscript (Tampermonkey / Violentmonkey)
+Use the links below to install the add-on for your browser.
 
-Compatible with all major userscript managers. This is the easiest way to get started.
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
+[![Tampermonkey](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js)
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/), [Violentmonkey](https://violentmonkey.github.io/), or [Greasemonkey](https://www.greasespot.net/).
-2. Visit the [raw script file](https://raw.githubusercontent.com/fran2889/flix-monkey/main/FlixMonkey.user.js) to trigger installation.
-3. Confirm the installation and refresh Netflix. Rating badges should appear immediately.
-
-### Browser Extension (Chrome & Firefox)
-
-The browser extensions provide a more seamless integration and better performance by using background processes for network requests.
-
-1. **Chrome / Edge**:
-    1. Download the latest `chrome.zip` from the [Releases page](https://github.com/fran2889/flix-monkey/releases) and extract it (or build from source).
-    2. Open your browser and navigate to `chrome://extensions/` (or `edge://extensions/` for Edge).
-    3. Toggle the **Developer mode** switch in the top right corner.
-    4. Click the **Load unpacked** button that appears.
-    5. Select the extracted `chrome` folder (or `dist/chrome` if built from source).
-    6. Ensure the extension is toggled **On**.
-2. **Firefox**:
-    1. Download the latest `.xpi` from the [Releases page](https://github.com/fran2889/flix-monkey/releases) (or build from source).
-    2. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
-    3. Click the **Load Temporary Add-on...** button.
-    4. Select the `manifest.json` file inside the extracted `firefox` folder (or `dist/firefox/manifest.json` if built from source).
+> The userscript version requires [Tampermonkey](https://www.tampermonkey.net/) (Chrome, Edge, Firefox, Opera, Safari), [Violentmonkey](https://violentmonkey.github.io/) (Chrome, Edge, Firefox), or [Greasemonkey](https://www.greasespot.net/) (Firefox).
 
 ---
 
 ## Features
 
-### Rating Badges
-
-Displays a compact badge in your chosen corner on:
-
-- Browse grid thumbnails
-- Hover zoom cards
-- Preview modals
-
-### Supported Scores
-
-- **IMDb** rating (0.0-10.0)
-- **Metacritic** score (0-100)
-- **Rotten Tomatoes** score (0-100, requires OMDb key)
-
-### Interactive Badges
-
-| Badge State           | Appearance | Action                                |
-| --------------------- | ---------- | ------------------------------------- |
-| **Found & Rated**     | `IMDb 8.3` | Click to open the IMDb title page     |
-| **Found, No Rating**  | `IMDb N/A` | Click to open the IMDb title page     |
-| **Not Found on IMDb** | `IMDb 🔍`  | Click to search for the title on IMDb |
-
-### Smart Technology
-
-- **Caching**: Local storage caching with intelligent TTLs based on release year.
-- **Deduplication**: Only one API call per title, even if it appears multiple times on the page.
-- **Auto-Disable**: Slow or failing APIs are temporarily disabled for 1 hour to prevent UI lag.
+- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages; Metacritic and Rotten Tomatoes scores are available when using OMDb or XMDb providers
+- **Click to Open**: Click rating badges to open the title's IMDb page or search IMDb when no match is found
+- **Color-Coded Ratings**: Rating badges change color based on thresholds (red < 5.0, green >= 8.5)
+- **Customizable**: Change badge position, choose rating provider, fade titles below a rating threshold, and more
+- **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, without rating)
+- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix tabs to prevent redundant lookups
+- **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
 
 ---
 
-## Configuration
+## Settings
 
-Access settings to customize your experience:
+> FlixMonkey supports multiple rating providers. The default (FM-DB + Agregarr) requires no API key but provides IMDb ratings only. OMDb and XMDb require free API keys, but they are more reliable and also provide Rotten Tomatoes and Metacritic scores.
 
-- **Extensions**: Click the FlixMonkey icon in your browser toolbar and select **Options**.
-- **Userscript**: Right-click the userscript manager icon on Netflix and select **FlixMonkey Settings**.
+Access settings via:
 
-### Key Settings
+- **Chrome**: Click the FlixMonkey icon in your browser toolbar
+- **Firefox**: Click the FlixMonkey icon in your browser toolbar, or go to `about:addons`, select FlixMonkey and go to the **Preferences** tab
+- **Userscript**: Open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and click on the **FlixMonkey Settings** menu item
 
-| Option               | Default    | Description                                                                                |
-| -------------------- | ---------- | ------------------------------------------------------------------------------------------ |
-| **Overlay Position** | `top-left` | Corner where the rating badge appears.                                                     |
-| **API Client**       | `agregarr` | The primary API service to query for ratings.                                              |
-| **OMDb API Key**     | `Optional` | Provides Metacritic/RT scores. [Get a free key here](https://www.omdbapi.com/apikey.aspx). |
-| **XMDb API Key**     | `Optional` | Additional movie/TV database. [Get a free key here](https://xmdbapi.com/api-key).          |
+![Settings](screenshots/firefox-settings.png)
 
-### Cache Management
+### Display Options
 
-Use the **Clear Cache** button in the settings menu to remove all cached ratings and force fresh API lookups.
+| Option                | Default  | Description                                                                       |
+| --------------------- | -------- | --------------------------------------------------------------------------------- |
+| Rating Badge Position | Top Left | Corner where rating badges appear                                                 |
+| Rotten Tomatoes       | No       | Display RT score. Only available when OMDb is the rating provider                 |
+| Metacritic            | No       | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+
+### Rating Providers
+
+| Option          | Default          | Description                                                                                  |
+| --------------- | ---------------- | -------------------------------------------------------------------------------------------- |
+| Rating Provider | FM-DB + Agregarr | Active rating provider. Default uses FM-DB for IMDb ID lookup and Agregarr for IMDb ratings. |
+| OMDb API Key    | _empty_          | [Get a free API key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected    |
+| XMDb API Key    | _empty_          | [Get a free API key](https://xmdbapi.com/api-key). Required when XMDb is selected            |
+
+### Fade Settings
+
+| Option            | Default | Description                                         |
+| ----------------- | ------- | --------------------------------------------------- |
+| Fade Below Rating | No      | Fade titles rated below the threshold               |
+| Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)          |
+| Allow Override    | No      | Show button to override fade state in title preview |
+
+### Cache Settings
+
+| Option                    | Default      | Description                                                                 |
+| ------------------------- | ------------ | --------------------------------------------------------------------------- |
+| Older Titles (Cache TTL)  | -1 (forever) | Cache duration (days) for rated titles > 1 year old. Set -1 to never expire |
+| Recent Titles (Cache TTL) | 30           | Cache duration (days) for rated titles <= 1 year old                        |
+| No Rating (Cache TTL)     | 1            | Cache duration (days) for unrated or not-found titles                       |
+
+### Advanced
+
+| Option               | Default | Description                                                |
+| -------------------- | ------- | ---------------------------------------------------------- |
+| Enable debug logging | Yes     | Enable verbose console logging to help troubleshoot issues |
+
+### Settings Actions
+
+- **Save**: Apply configuration changes and refresh the Netflix tab
+- **Clear Cache**: Remove all cached ratings, forcing fresh lookups for all titles
+- **Reset Disabled Providers**: Re-enable any rating providers that were automatically disabled due to failures
 
 ---
 
 ## Troubleshooting
 
-- **No badges appearing?** Refresh the Netflix page or check if the extension/script is enabled in your manager.
-- **Stale ratings?** Use the **Clear Cache** button in settings.
-- **Slow performance?** Check if an API was auto-disabled. You can manually reset this via **Reset Misbehaving Clients** in settings.
-- **Still having issues?** Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with your browser version and any console errors.
+**Rating badges are not showing**
+
+Loading placeholder badges should show immediately, before the ratings are retrieved. If not, that means the extension is not active or failed to load.
+
+1. Verify the extension is enabled in your browser toolbar.
+2. For the userscript version, confirm your userscript manager is active and FlixMonkey script is loaded.
+3. Refresh the Netflix page.
+4. Open browser developer tools (F12) and check the Console tab for errors.
+
+**Badges are showing but there are no ratings**
+
+This usually means that the rating provider is failing or disabled. If the problem persists, select a different provider.
+
+1. Open browser developer tools (F12) and check the Console tab for errors.
+2. Check the Console to see if your rating provider was disabled. Providers are auto-disabled for 1 hour after failures.
+3. Re-enable disabled providers in Settings to retry.
+4. Switch to a different rating provider. Default provider (FM-DB + Agregarr) can be unreliable.
+
+**Rating shown does not match the rating on IMDb page**
+
+Titles are identified by name only, because Netflix does not provide year or additional metadata. There can be a mismatch when multiple titles share the same name.
+
+1. Tooltip on the rating badge shows title and year as returned by the rating provider. Verify it matches the Netflix title.
+2. If the tooltip confirms title match, the provider rating may be outdated since it isn't directly from IMDb. Recent releases have shorter cache times to ensure ratings are updated.
+3. If the tooltip shows a different title, try selecting a different rating provider and clear the cache. This can help because providers have different result ordering logic.
+
+**Metacritic and Rotten Tomatoes scores are not showing**
+
+Most often MC/RT score is not shown on a title because it was not returned by the rating provider. A provider supporting MC/RT does not mean that it will return a score for every title.
+
+1. If MC/RT scores are missing on all titles, check your settings.
+2. Check if your current rating provider supports these scores; OMDb supports both, XMDb supports Metacritic only.
+3. Make sure that Metacritic and Rotten Tomatoes are enabled in Settings under Show Ratings.
+
+**Ratings are loading slowly**
+
+Rating providers are rate-limited so FlixMonkey spreads requests over time. Ratings are cached, so subsequent lookups will be instant.
+
+1. Wait 10-15 seconds to see if ratings populate.
+2. Open browser developer tools (F12) and check the Console tab for errors if ratings still do not appear.
+
+**Still need help?**
+
+Netflix may change their layout, breaking title discovery or rating badge positioning. A new FlixMonkey version may have introduced a bug.
+
+Please report these issues with as much detail as possible.
+
+1. Verify your API keys are correctly configured for your selected rating provider.
+2. Open browser developer tools (F12) and check the Console and Network tabs for errors or relevant logs.
+3. Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with details about the problem and steps to reproduce it.
 
 ---
 
-## Changelog
+## Development
 
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes.
+FlixMonkey uses JavaScript (ES2022, ES modules) with Rollup for bundling, ESLint for linting, Prettier for formatting, and Vitest for testing.
 
-## Development & Technical Info
-
-FlixMonkey is built using a modern modular architecture with a shared core for all platforms.
-
-### Architecture
-
-The codebase is split into three layers:
-
-1. **Core (`src/core/`)**: Platform-agnostic business logic (APIs, Caching, Rendering).
-2. **Platform (`src/platform/`)**: Implementation of the `PlatformAdapter` interface for each environment.
-3. **Targets (`src/targets/`)**: Entry points and platform-specific manifests.
-
-Detailed architectural documentation can be found in [AGENTS.md](./AGENTS.md).
-
-### Build Process
-
-Requires [Node.js](https://nodejs.org/) (>= 24).
+This project requires Node.js >= 24.
 
 ```bash
-# Install dependencies
 npm install
-
-# Build all targets (outputs to dist/)
-npm run build
-
-# Build specific targets
-npm run build:chrome
-npm run build:firefox
-npm run build:userscript
-
-# Lint and format
-npm run lint
-npm run format
+npm run build    # Build all targets
+npm run dev      # Watch mode with auto-rebuild
+npm test         # Run unit and UI tests
 ```
 
-### Development Workflow
+To test locally:
 
-1. Edit source files in `src/`.
-2. Run `npm run build` to generate distribution artifacts in `dist/`.
-3. Load the `dist/` folder into your browser (Extensions) or point your manager to `dist/FlixMonkey.user.js` (Userscript).
+1. Run `npm run build:chrome` or `npm run build:firefox`
+2. In Chrome: go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select `dist/chrome`
+3. In Firefox: go to `about:debugging`, click **This Firefox**, then **Load Temporary Add-on**, and select any file in `dist/firefox`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development details.
 
 ---
 
@@ -157,17 +197,17 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (Agregarr, OMDb, XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (FM-DB, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
 
 **Third-party APIs:**
 
-By default, title lookups are resolved via [IMDb](https://www.imdb.com/) suggestions and ratings are fetched from [Agregarr](https://github.com/agregarr/agregarr). When OMDb or XMDb is selected, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
+By default, title lookups use [FM-DB](https://imdb.iamidiotareyoutoo.com/) for IMDb ID lookup and [Agregarr](https://agregarr.org/docs/imdb-ratings/) for ratings. When you opt-in to OMDb or XMDb (which requires your own API key), requests are made to [OMDb](https://www.omdbapi.com/) and/or [XMDb](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
 
 ---
 
 ## License
 
-GPLv3
+[GPL-3.0-or-later](LICENSE)
