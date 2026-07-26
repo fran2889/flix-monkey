@@ -170,34 +170,24 @@ Please report these issues with as much detail as possible.
 
 ## Development
 
-FlixMonkey requires Node.js >= 24.
+FlixMonkey uses JavaScript (ES2022, ES modules) with Rollup for bundling, ESLint for linting, Prettier for formatting, and Vitest for testing.
+
+This project requires Node.js >= 24.
 
 ```bash
 npm install
-npm run build             # Build all targets
-npm run build:userscript  # Build userscript only
-npm run build:firefox     # Build Firefox extension only
-npm run build:chrome      # Build Chrome extension only
-npm run dev               # Watch mode with auto-rebuild
-npm test                  # Run unit and UI tests
-npm run test:unit        # Run unit tests only
-npm run test:ui          # Run UI tests only
-npm run test:coverage    # Run tests with coverage report
-npm run test:integration  # Run integration tests (requires API keys)
-npm run lint              # Lint source files
-npm run lint:fix          # Lint with auto-fix
-npm run format            # Format source files
-npm run format:check      # Check formatting without writing
-npm run clean             # Remove dist/ and coverage/ directories
+npm run build    # Build all targets
+npm run dev      # Watch mode with auto-rebuild
+npm test         # Run unit and UI tests
 ```
 
-To test in development:
+To test locally:
 
-1. Run the appropriate build command for your target (e.g., `npm run build:chrome`)
-2. In Chrome: go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `dist/chrome` directory
+1. Run `npm run build:chrome` or `npm run build:firefox`
+2. In Chrome: go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select `dist/chrome`
 3. In Firefox: go to `about:debugging`, click **This Firefox**, then **Load Temporary Add-on**, and select any file in `dist/firefox`
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup and architecture details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development details.
 
 ---
 
@@ -207,14 +197,14 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (FM-DB, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
 
 **Third-party APIs:**
 
-By default, title lookups use FM-DB (imdb.iamidiotareyoutoo.com) for IMDb ID lookup and [Agregarr](https://github.com/agregarr/agregarr) at [api.agregarr.org](https://api.agregarr.org/) for ratings. When OMDb or XMDb is selected, requests are made to [omdbapi.com](https://www.omdbapi.com/) and/or [xmdbapi.com](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
+By default, title lookups use [FM-DB](https://imdb.iamidiotareyoutoo.com/) for IMDb ID lookup and [Agregarr](https://agregarr.org/docs/imdb-ratings/) for ratings. When you opt-in to OMDb or XMDb (which requires your own API key), requests are made to [OMDb](https://www.omdbapi.com/) and/or [XMDb](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
 
 ---
 
