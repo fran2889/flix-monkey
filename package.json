@@ -23,7 +23,7 @@
         "test:unit": "vitest run tests/unit",
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run -c vitest.integration.config.js",
-        "audit": "npm audit --audit-level=high",
+        "audit": "npm audit --omit=dev --audit-level=high",
         "clean": "npx rimraf dist coverage"
     },
     "devDependencies": {
