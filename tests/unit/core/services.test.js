@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { afterEach, assert, describe, it } from 'vitest';
+import { afterEach, assert, describe, it, vi } from 'vitest';
 
 import { NetflixService, ServiceRegistry, SERVICES, StreamingService } from '../../../src/core/services.js';
 
@@ -39,6 +39,12 @@ describe('StreamingService', () => {
     it('returns empty object for constants by default', () => {
         const service = new StreamingService();
         assert.deepEqual(service.constants, {});
+    });
+
+    it('throws on unimplemented isEnabled method', () => {
+        const service = new StreamingService();
+        const mockConfig = { getBool: () => true };
+        assert.throws(() => service.isEnabled(mockConfig), /Not implemented/);
     });
 });
 
@@ -66,6 +72,18 @@ describe('NetflixService', () => {
     it('returns constants as frozen object', () => {
         const service = new NetflixService();
         assert(Object.isFrozen(service.constants));
+    });
+
+    it('isEnabled returns true when enableNetflix is true', () => {
+        const service = new NetflixService();
+        const mockConfig = { getBool: vi.fn().mockReturnValue(true) };
+        assert.equal(service.isEnabled(mockConfig), true);
+    });
+
+    it('isEnabled returns false when enableNetflix is false', () => {
+        const service = new NetflixService();
+        const mockConfig = { getBool: vi.fn().mockReturnValue(false) };
+        assert.equal(service.isEnabled(mockConfig), false);
     });
 });
 

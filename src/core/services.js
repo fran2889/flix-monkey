@@ -37,6 +37,10 @@ export class StreamingService {
     get constants() {
         return Object.freeze({});
     }
+
+    isEnabled(_configManager) {
+        throw new Error('Not implemented');
+    }
 }
 
 /**
@@ -57,6 +61,10 @@ export class NetflixService extends StreamingService {
 
     get constants() {
         return Object.freeze({ TOP_10_BADGE: 'title-card-top-10' });
+    }
+
+    isEnabled(configManager) {
+        return configManager.getBool('enableNetflix');
     }
 }
 

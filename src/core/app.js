@@ -228,7 +228,7 @@ export function startApp(adapter) {
 
     const logger = new Logger(adapter);
     const configManager = new ConfigManager(adapter, logger);
-    if (!configManager.getBool('enableNetflix')) {
+    if (!currentService.isEnabled(configManager)) {
         return null;
     }
     const cache = new CacheManager(adapter, configManager, logger);
