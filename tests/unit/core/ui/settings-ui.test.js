@@ -133,6 +133,23 @@ describe('SettingsUI', () => {
 
             expect(label.classList.contains('visually-hidden')).toBe(true);
         });
+
+        it('should render enableNetflix as a checked checkbox by default', async () => {
+            await settingsUI.render(container);
+            const checkbox = container.querySelector('#fm-enableNetflix');
+
+            expect(checkbox.type).toBe('checkbox');
+            const enableNetflixField = CONFIG_FIELDS.find(f => f.key === 'enableNetflix');
+            expect(checkbox.checked).toBe(enableNetflixField.default);
+        });
+
+        it('should render services group with "Enabled Streaming Services" label', async () => {
+            await settingsUI.render(container);
+            const servicesLabel = container.querySelector('.services-field .field-label');
+
+            expect(servicesLabel).not.toBeNull();
+            expect(servicesLabel.textContent).toBe('Enabled Streaming Services');
+        });
     });
 
     describe('Field population', () => {

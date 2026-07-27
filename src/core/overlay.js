@@ -21,7 +21,6 @@ import {
     RATING_COLOR_HIGH_THRESHOLD,
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
-    TOP_10_BADGE,
 } from './constants.js';
 
 export const FADE_STATE_LABELS = {
@@ -35,9 +34,15 @@ export class OverlayRenderer {
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
     #config;
+    #serviceConstants;
 
-    constructor(config) {
+    /**
+     * @param {ConfigManager} config - Application configuration
+     * @param {Object} [serviceConstants={}] - Service-specific constants (e.g., TOP_10_BADGE)
+     */
+    constructor(config, serviceConstants = {}) {
         this.#config = config;
+        this.#serviceConstants = serviceConstants;
     }
 
     injectStyles() {
@@ -51,6 +56,7 @@ export class OverlayRenderer {
         const corner = this.#config.get('overlayCorner');
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
+        const TOP_10_BADGE = this.#serviceConstants.TOP_10_BADGE ?? 'title-card-top-10';
         let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
