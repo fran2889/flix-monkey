@@ -18,10 +18,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { parseHex } from '../../../src/core/color-utils.js';
-import { RATING_COLOR_GREEN, RATING_COLOR_RED, TOP_10_BADGE } from '../../../src/core/constants.js';
+import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../src/core/constants.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
+
+const NETFLIX_CONSTANTS = { TOP_10_BADGE: 'title-card-top-10' };
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -69,24 +71,24 @@ describe('OverlayRenderer', () => {
         });
 
         it('should use TOP_10_BADGE constant in injected CSS', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), NETFLIX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
+            expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
         });
 
         it('should include TOP_10_BADGE offset rule for left-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), NETFLIX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            expect(style.textContent).toContain(`.${TOP_10_BADGE}`);
+            expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
         });
 
         it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }), NETFLIX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            expect(style.textContent).not.toContain(`.${TOP_10_BADGE}`);
+            expect(style.textContent).not.toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
         });
     });
 
