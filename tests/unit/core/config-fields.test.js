@@ -116,11 +116,7 @@ describe('core/config-fields', () => {
             if (field.type === 'checkbox') {
                 expect(typeof field.default).toBe('boolean');
             } else if (field.type === 'text' || field.type === 'select') {
-                if (field.multi) {
-                    expect(Array.isArray(field.default)).toBe(true);
-                } else {
-                    expect(typeof field.default).toBe('string');
-                }
+                expect(typeof field.default).toBe('string');
             }
         });
     });
