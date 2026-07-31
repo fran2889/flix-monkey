@@ -23,7 +23,10 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
-const NETFLIX_CONSTANTS = { TOP_10_BADGE: 'title-card-top-10' };
+const NETFLIX_CONSTANTS = {
+    TOP_10_BADGE: 'title-card-top-10',
+    TOP_10_CARD_SELECTOR: '[data-uia="custom-ranked-card"]',
+};
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -82,7 +85,8 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
-            expect(style.textContent).toContain('[data-uia="ranked-card"] .fm-rating-overlay');
+            expect(style.textContent).toContain(`${NETFLIX_CONSTANTS.TOP_10_CARD_SELECTOR} .fm-rating-overlay`);
+            expect(style.textContent).not.toContain('[data-uia="ranked-card"] .fm-rating-overlay');
             expect(style.textContent).toContain('left: calc(50% + 6px)');
         });
 
@@ -91,7 +95,7 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).not.toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
-            expect(style.textContent).not.toContain('[data-uia="ranked-card"] .fm-rating-overlay');
+            expect(style.textContent).not.toContain(`${NETFLIX_CONSTANTS.TOP_10_CARD_SELECTOR} .fm-rating-overlay`);
         });
     });
 

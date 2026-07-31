@@ -29,6 +29,8 @@
  * Netflix-specific surface definitions for various UI surfaces.
  * Named properties allow for easy reference: NETFLIX_SURFACES.TITLE_CARD, etc.
  */
+export const NETFLIX_TOP_10_CARD_SELECTOR = '[data-uia="ranked-card"]';
+
 export const NETFLIX_SURFACES = Object.freeze({
     /**
      * Browse and genre page row cards. The <a> element carries the full title via aria-label.
@@ -50,9 +52,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /**
-     * Browse-page Continue Watching cards. Generated Netflix CSS classes are intentionally avoided.
-     */
+    /** Browse-page Continue Watching cards. */
     PROGRESS_CARD: Object.freeze({
         titleSelector: '[data-uia="progress-card"][aria-label]',
         containerSelector: '[data-uia="progress-card"]',
@@ -60,12 +60,10 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /**
-     * Browse-page Top 10 cards. Generated Netflix CSS classes are intentionally avoided.
-     */
+    /** Browse-page Top 10 cards. */
     RANKED_CARD: Object.freeze({
-        titleSelector: '[data-uia="ranked-card"][aria-label]',
-        containerSelector: '[data-uia="ranked-card"]',
+        titleSelector: `${NETFLIX_TOP_10_CARD_SELECTOR}[aria-label]`,
+        containerSelector: NETFLIX_TOP_10_CARD_SELECTOR,
         titleAttribute: 'aria-label',
         fadeable: true,
         showFadeToggle: false,

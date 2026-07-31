@@ -57,6 +57,7 @@ export class OverlayRenderer {
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
         const TOP_10_BADGE = this.#serviceConstants.TOP_10_BADGE ?? 'title-card-top-10';
+        const TOP_10_CARD_SELECTOR = this.#serviceConstants.TOP_10_CARD_SELECTOR;
         let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
@@ -97,9 +98,11 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
         if (corner.includes('left')) {
-            cssText += `
-            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS},
-            [data-uia="ranked-card"] .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+            const top10Selectors = [`.${TOP_10_BADGE} .${this.#OVERLAY_CLASS}`];
+            if (TOP_10_CARD_SELECTOR) {
+                top10Selectors.push(`${TOP_10_CARD_SELECTOR} .${this.#OVERLAY_CLASS}`);
+            }
+            cssText += `\n            ${top10Selectors.join(',\n            ')} { left: calc(50% + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }

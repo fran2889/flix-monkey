@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { NetflixSurfaceManager } from './surfaces.js';
+import { NETFLIX_TOP_10_CARD_SELECTOR, NetflixSurfaceManager } from './surfaces.js';
 
 /**
  * Base class for streaming service implementations.
@@ -60,7 +60,10 @@ export class NetflixService extends StreamingService {
     }
 
     get constants() {
-        return Object.freeze({ TOP_10_BADGE: 'title-card-top-10' });
+        return Object.freeze({
+            TOP_10_BADGE: 'title-card-top-10',
+            TOP_10_CARD_SELECTOR: NETFLIX_TOP_10_CARD_SELECTOR,
+        });
     }
 
     isEnabled(configManager) {
