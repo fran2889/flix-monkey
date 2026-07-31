@@ -53,9 +53,9 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Developer Scripts
 
-| Script                                | Description                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/capture-surface-fixtures.py` | Captures and anonymises Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html` and refreshes `tests/fixtures/netflix-*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+| Script                                | Description                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
 
 ### Build Notes
 
@@ -90,16 +90,15 @@ Husky git hooks are installed automatically via the `prepare` script.
 ```
 tests/
   setup.js              # Global: MSW server lifecycle + jest-dom matchers
-  fixtures/             # HTML snapshots of Netflix DOM states for UI tests
-    netflix-browse.html
-    netflix-hover.html
-    netflix-modal.html
-    netflix-search.html
-    surfaces/             # Individual surface type fixtures
+  fixtures/
+    surfaces/           # Targeted Netflix surface fixtures for UI tests
       preview-detail.html
       preview-mini.html
+      progress-card.html
+      ranked-card.html
       standard-card.html
       title-card.html
+  scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
     adapter.js          # Mock PlatformAdapter
     chrome.js           # chrome.* API stubs

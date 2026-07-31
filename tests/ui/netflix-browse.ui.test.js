@@ -29,7 +29,9 @@ describe('Browse UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
+        fixtureHtml = ['title-card.html', 'progress-card.html', 'ranked-card.html']
+            .map(file => fs.readFileSync(path.resolve(__dirname, `../fixtures/surfaces/${file}`), 'utf8'))
+            .join('\n');
     });
 
     beforeEach(() => {
