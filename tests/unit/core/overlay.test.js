@@ -82,6 +82,8 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
+            expect(style.textContent).toContain('[data-uia="ranked-card"] .fm-rating-overlay');
+            expect(style.textContent).toContain('left: calc(50% + 6px)');
         });
 
         it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
@@ -89,6 +91,7 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).not.toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
+            expect(style.textContent).not.toContain('[data-uia="ranked-card"] .fm-rating-overlay');
         });
     });
 

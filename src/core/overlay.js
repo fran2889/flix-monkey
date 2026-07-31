@@ -97,7 +97,9 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
         if (corner.includes('left')) {
-            cssText += `\n            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+            cssText += `
+            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS},
+            [data-uia="ranked-card"] .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
