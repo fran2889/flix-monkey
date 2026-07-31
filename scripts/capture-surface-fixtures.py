@@ -304,7 +304,7 @@ def validate_fixture(path):
 # ---------------------------------------------------------------------------
 
 ROOT = Path(__file__).parent.parent
-SURFACE_DIR = ROOT / 'tests/fixtures/surfaces'
+SURFACE_DIR = ROOT / 'tests/fixtures'
 FIXTURE_PATHS = (
     SURFACE_DIR / 'title-card.html',
     SURFACE_DIR / 'progress-card.html',

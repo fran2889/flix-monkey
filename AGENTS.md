@@ -53,9 +53,9 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Developer Scripts
 
-| Script                                | Description                                                                                                                                                                                                                                                                                                          |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+| Script                                | Description                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
 
 ### Build Notes
 
@@ -90,14 +90,13 @@ Husky git hooks are installed automatically via the `prepare` script.
 ```
 tests/
   setup.js              # Global: MSW server lifecycle + jest-dom matchers
-  fixtures/
-    surfaces/           # Targeted Netflix surface fixtures for UI tests
-      preview-detail.html
-      preview-mini.html
-      progress-card.html
-      ranked-card.html
-      standard-card.html
-      title-card.html
+  fixtures/             # Targeted Netflix surface fixtures for UI tests
+    preview-detail.html
+    preview-mini.html
+    progress-card.html
+    ranked-card.html
+    standard-card.html
+    title-card.html
   scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
     adapter.js          # Mock PlatformAdapter
@@ -264,17 +263,16 @@ class PlatformAdapter {
 
 ## Constants (`constants.js`)
 
-| Export                    | Value / Type  | Notes                                               |
-| ------------------------- | ------------- | --------------------------------------------------- |
-| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                |
-| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                     |
-| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                               |
-| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request              |
-| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)        |
-| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names  |
-| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum                |
-| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements |
+| Export                    | Value / Type  | Notes                                              |
+| ------------------------- | ------------- | -------------------------------------------------- |
+| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                               |
+| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                    |
+| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                              |
+| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request             |
+| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)       |
+| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                               |
+| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
+| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum               |
 
 ## Rate Limits (`rate-limits.js`)
 

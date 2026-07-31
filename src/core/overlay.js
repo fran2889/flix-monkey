@@ -38,7 +38,7 @@ export class OverlayRenderer {
 
     /**
      * @param {ConfigManager} config - Application configuration
-     * @param {Object} [serviceConstants={}] - Service-specific constants (e.g., TOP_10_BADGE)
+     * @param {Object} [serviceConstants={}] - Service-specific constants (e.g., TOP_10_SELECTORS)
      */
     constructor(config, serviceConstants = {}) {
         this.#config = config;
@@ -56,8 +56,7 @@ export class OverlayRenderer {
         const corner = this.#config.get('overlayCorner');
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
-        const TOP_10_BADGE = this.#serviceConstants.TOP_10_BADGE ?? 'title-card-top-10';
-        const TOP_10_CARD_SELECTOR = this.#serviceConstants.TOP_10_CARD_SELECTOR;
+        const TOP_10_SELECTORS = this.#serviceConstants.TOP_10_SELECTORS ?? [];
         let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
@@ -97,12 +96,9 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-na { color: #aaa; }
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
-        if (corner.includes('left')) {
-            const top10Selectors = [`.${TOP_10_BADGE} .${this.#OVERLAY_CLASS}`];
-            if (TOP_10_CARD_SELECTOR) {
-                top10Selectors.push(`${TOP_10_CARD_SELECTOR} .${this.#OVERLAY_CLASS}`);
-            }
-            cssText += `\n            ${top10Selectors.join(',\n            ')} { left: calc(50% + 6px); }`;
+        if (corner.includes('left') && TOP_10_SELECTORS.length) {
+            const selectors = TOP_10_SELECTORS.map(selector => `${selector} .${this.#OVERLAY_CLASS}`);
+            cssText += `\n            ${selectors.join(',\n            ')} { left: calc(50% + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }

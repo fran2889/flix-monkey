@@ -29,7 +29,7 @@ describe('Search UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/surfaces/standard-card.html'), 'utf8');
+        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/standard-card.html'), 'utf8');
     });
 
     beforeEach(() => {
