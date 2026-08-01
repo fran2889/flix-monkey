@@ -327,6 +327,8 @@ export class OmdbApiClient extends BaseApiClient {
     }
 }
 
+const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
+
 export class AgregarrApiClient extends BaseApiClient {
     constructor(disabledManager, adapter, config, logger) {
         super(
@@ -340,29 +342,29 @@ export class AgregarrApiClient extends BaseApiClient {
     }
 
     async search(displayTitle) {
-        const encoded = encodeURIComponent(displayTitle);
-        this.logger?.debug(`Searching FM-DB for title: "${displayTitle}"`);
-        const data = await this.queuedFetch(`https://imdb.iamidiotareyoutoo.com/search?q=${encoded}`, 0);
-        if (!data?.ok) {
-            this.logger?.info(`FM-DB search request failed for "${displayTitle}"`);
-            return null;
-        }
-        const results = data?.description;
+        const encoded = encodeURIComponent(displayTitle.toLowerCase());
+        this.logger?.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
+        const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
+        const results = data?.d;
         if (!results?.length) {
-            this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
+            this.logger?.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
             return null;
         }
-        const match = results[0];
+        const match = results.find(result => AGREGARR_TITLE_TYPES.has(result.qid));
+        if (!match) {
+            this.logger?.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
+            return null;
+        }
         return new Title({
             displayTitle,
-            apiTitle: match['#TITLE'] ?? null,
-            imdbId: match['#IMDB_ID'] ?? null,
-            year: match['#YEAR'] ?? null,
+            apiTitle: match.l ?? null,
+            imdbId: match.id ?? null,
+            year: match.y ?? null,
             rating: null,
             imdbVotes: null,
             rtRating: null,
             mcRating: null,
-            type: null,
+            type: mapTitleType(match.qid),
             source: null,
         });
     }

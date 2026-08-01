@@ -567,14 +567,13 @@ describe('OmdbApiClient', () => {
 });
 
 describe('AgregarrApiClient', () => {
-    it('should return first result from FM-DB even when query does not match', async () => {
+    it('should return the first supported IMDb Suggestions result', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({
-                ok: true,
-                description: [
-                    { '#IMDB_ID': 'tt0001', '#TITLE': 'Some Video', '#YEAR': 2020 },
-                    { '#IMDB_ID': 'tt0002', '#TITLE': 'Some Short', '#YEAR': 2020 },
-                    { '#IMDB_ID': 'tt0003', '#TITLE': 'Movie 1', '#YEAR': 2020 },
+                d: [
+                    { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
+                    { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
+                    { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
                 ],
             }),
         });
@@ -585,12 +584,35 @@ describe('AgregarrApiClient', () => {
             createMockLogger()
         );
         const result = await client.search('Movie 1');
-        expect(result.imdbId).toBe('tt0001');
+        expect(result.imdbId).toBe('tt0003');
+        expect(result.apiTitle).toBe('Movie 1');
+        expect(result.type).toBe('movie');
+    });
+
+    it.each([
+        ['tvSeries', 'series'],
+        ['tvMiniSeries', 'series'],
+    ])('should map IMDb Suggestions %s results to %s', async (qid, type) => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue({
+                d: [{ id: 'tt1', l: 'Show 1', qid, y: 2020 }],
+            }),
+        });
+        const client = new AgregarrApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            undefined,
+            createMockLogger()
+        );
+
+        const result = await client.search('Show 1');
+
+        expect(result.type).toBe(type);
     });
 
     it('should return null if no results found', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ ok: true, description: [] }),
+            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -603,7 +625,7 @@ describe('AgregarrApiClient', () => {
 
     it('should log info when no results found', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ ok: true, description: [] }),
+            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
         });
         const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
@@ -616,9 +638,9 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null if FM-DB response has no description array', async () => {
+    it('should return null if IMDb Suggestions response has no d array', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ ok: true }),
+            httpFetch: vi.fn().mockResolvedValue({}),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -629,9 +651,9 @@ describe('AgregarrApiClient', () => {
         expect(await client.search('Unknown')).toBeNull();
     });
 
-    it('should log info when FM-DB response has no description array', async () => {
+    it('should log info when IMDb Suggestions response has no d array', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ ok: true }),
+            httpFetch: vi.fn().mockResolvedValue({}),
         });
         const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
@@ -644,9 +666,9 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null if FM-DB response is not ok', async () => {
+    it('should return null when IMDb Suggestions has no supported title types', async () => {
         const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ ok: false, description: [] }),
+            httpFetch: vi.fn().mockResolvedValue({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] }),
         });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -657,8 +679,8 @@ describe('AgregarrApiClient', () => {
         expect(await client.search('Unknown')).toBeNull();
     });
 
-    it('should build correct FM-DB search URL', async () => {
-        const httpFetch = vi.fn().mockResolvedValue({ ok: true, description: [] });
+    it('should build the correct IMDb Suggestions URL', async () => {
+        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = createMockAdapter({ httpFetch });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -668,11 +690,10 @@ describe('AgregarrApiClient', () => {
         );
         await client.search('Movie 1');
         const calledUrl = httpFetch.mock.calls[0][0];
-        expect(calledUrl).toContain('imdb.iamidiotareyoutoo.com/search?');
-        expect(calledUrl).toContain('q=Movie%201');
+        expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/movie%201.json');
     });
 
-    it('should fetch rating from Agregarr and return Title with FM-DB format', async () => {
+    it('should fetch rating from Agregarr and retain IMDb Suggestions metadata', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
@@ -682,7 +703,13 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Movie 1', year: 2020, displayTitle: 'Movie 1' });
+        const searchResult = new Title({
+            imdbId: 'tt1',
+            apiTitle: 'Movie 1',
+            year: 2020,
+            displayTitle: 'Movie 1',
+            type: 'movie',
+        });
         const result = await client.getDetails(searchResult);
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.imdbId).toBe('tt1');
@@ -690,10 +717,10 @@ describe('AgregarrApiClient', () => {
         expect(result.rating).toBe(8.8);
         expect(result.rtRating).toBeNull();
         expect(result.mcRating).toBeNull();
-        expect(result.type).toBeNull();
+        expect(result.type).toBe('movie');
     });
 
-    it('should handle null rating from Agregarr with FM-DB format', async () => {
+    it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt4', rating: null, votes: null }]),
         });
@@ -703,19 +730,24 @@ describe('AgregarrApiClient', () => {
             undefined,
             createMockLogger()
         );
-        const searchResult = new Title({ imdbId: 'tt4', apiTitle: 'Movie 1', year: 2020, displayTitle: 'Movie 1' });
+        const searchResult = new Title({
+            imdbId: 'tt4',
+            apiTitle: 'Movie 1',
+            year: 2020,
+            displayTitle: 'Movie 1',
+            type: 'series',
+        });
         const result = await client.getDetails(searchResult);
         expect(result.rating).toBeNull();
-        expect(result.type).toBeNull();
+        expect(result.type).toBe('series');
     });
 
-    it('should handle full fetch flow (search + details) with FM-DB', async () => {
+    it('should handle the full IMDb Suggestions and Agregarr fetch flow', async () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi
                 .fn()
                 .mockResolvedValueOnce({
-                    ok: true,
-                    description: [{ '#IMDB_ID': 'tt1', '#TITLE': 'Movie 1', '#YEAR': 2020 }],
+                    d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
                 })
                 .mockResolvedValueOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
@@ -731,11 +763,11 @@ describe('AgregarrApiClient', () => {
         expect(result.imdbId).toBe('tt1');
         expect(result.rating).toBe(8.8);
         expect(result.source).toBe('agregarr');
-        expect(result.type).toBeNull();
+        expect(result.type).toBe('movie');
     });
 
-    it('should build correct FM-DB URL for non-ASCII titles', async () => {
-        const httpFetch = vi.fn().mockResolvedValue({ ok: true, description: [] });
+    it('should lowercase and encode non-ASCII titles in IMDb Suggestions URLs', async () => {
+        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = createMockAdapter({ httpFetch });
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
@@ -745,8 +777,7 @@ describe('AgregarrApiClient', () => {
         );
         await client.search('Élite');
         const calledUrl = httpFetch.mock.calls[0][0];
-        expect(calledUrl).toContain('imdb.iamidiotareyoutoo.com/search?');
-        expect(calledUrl).toContain('q=');
+        expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
     });
 
     it('should extract votes from Agregarr response', async () => {
