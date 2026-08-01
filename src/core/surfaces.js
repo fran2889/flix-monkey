@@ -22,6 +22,7 @@
  * @property {string} containerSelector - CSS selector for container elements
  * @property {string} [titleAttribute] - Attribute name containing the title text
  * @property {(element: Element) => string|null|undefined} [getTitle] - Callback that returns the title text
+ * @property {(element: Element) => Element|null|undefined} [getContainer] - Callback that returns the container
  * @property {boolean} fadeable - Whether this surface supports fading
  * @property {boolean} showFadeToggle - Whether to show fade toggle button
  */
@@ -114,7 +115,8 @@ export class SurfaceManager {
                     : titleEl.getAttribute(surface.titleAttribute);
                 const title = rawTitle?.trim() ?? null;
                 if (!title) return;
-                let container = titleEl.closest(surface.containerSelector);
+                let container = surface.getContainer?.(titleEl);
+                if (!container) container = titleEl.closest(surface.containerSelector);
                 if (!container) {
                     this.#logger.warn('Surface container selector failed, falling back to parentElement', {
                         selector: surface.containerSelector,
@@ -168,6 +170,7 @@ export const HBO_MAX_SURFACES = Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         containerSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
+        getContainer: tile => tile.parentElement,
         fadeable: true,
         showFadeToggle: false,
     }),

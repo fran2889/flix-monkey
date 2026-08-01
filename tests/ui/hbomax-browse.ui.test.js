@@ -40,18 +40,23 @@ describe('HBO Max browse UI surface', () => {
     });
 
     it('discovers supported browse tiles and injects overlays', () => {
-        expect(surfaceManager.discover(document.body).map(surface => surface.title)).toEqual([
-            'Movie Title',
-            'Show Title',
-            'Mini Series Title',
-        ]);
+        const surfaces = surfaceManager.discover(document.body);
+        expect(surfaces.map(surface => surface.title)).toEqual(['Movie Title', 'Show Title', 'Mini Series Title']);
+        expect(surfaces.every(({ container }) => container.matches('.hbo-card'))).toBe(true);
 
-        surfaceManager.discover(document.body).forEach(({ container }) => {
+        surfaces.forEach(({ container }) => {
             overlayRenderer.injectOverlay(container, {
                 rating: 8.5,
                 imdbUrl: 'https://www.imdb.com/title/tt1234567/',
             });
         });
         expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(3);
+        expect(document.querySelectorAll('.hbo-card > .fm-rating-overlay')).toHaveLength(3);
+        expect(document.querySelectorAll('a a')).toHaveLength(0);
+        const imdbLinks = document.querySelectorAll('.fm-rating-overlay > a');
+        expect(imdbLinks).toHaveLength(3);
+        imdbLinks.forEach(link => {
+            expect(link.href).toBe('https://www.imdb.com/title/tt1234567/');
+        });
     });
 });

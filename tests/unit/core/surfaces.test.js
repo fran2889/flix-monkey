@@ -117,6 +117,49 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
     });
 
+    it('uses a surface getContainer callback before the container selector', () => {
+        const resolvedContainer = document.createElement('div');
+        resolvedContainer.innerHTML = '<span data-title="Resolver Title"></span>';
+        const selectorContainer = document.createElement('section');
+        selectorContainer.dataset.selectorContainer = '';
+        selectorContainer.appendChild(resolvedContainer);
+        document.body.replaceChildren(selectorContainer);
+        const sm = new SurfaceManager(
+            {
+                card: {
+                    titleSelector: '[data-title]',
+                    containerSelector: '[data-selector-container]',
+                    titleAttribute: 'data-title',
+                    getContainer: element => element.parentElement,
+                },
+            },
+            createMockLogger()
+        );
+
+        expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
+    });
+
+    it('uses the container selector when a surface getContainer callback returns null', () => {
+        document.body.innerHTML = `
+            <div data-container>
+                <span data-title="Fallback Title"></span>
+            </div>
+        `;
+        const sm = new SurfaceManager(
+            {
+                card: {
+                    titleSelector: '[data-title]',
+                    containerSelector: '[data-container]',
+                    titleAttribute: 'data-title',
+                    getContainer: () => null,
+                },
+            },
+            createMockLogger()
+        );
+
+        expect(sm.discover(document.body)[0].container).toBe(document.querySelector('[data-container]'));
+    });
+
     it('should set showFadeToggle to false for title-card surfaces', () => {
         const results = discover(`
             <div class="title-card"><a aria-label="Movie"></a></div>
@@ -167,6 +210,21 @@ describe('HBO Max surfaces', () => {
 
     it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {
         document.body.innerHTML = `<a data-testid="id_tile" data-sonic-type="${type}" aria-label="Title. 1 of 20."></a>`;
+        expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
+    });
+
+    it.each([
+        ['a missing aria-label', undefined],
+        ['a label without card-position metadata', 'Title'],
+        ['incomplete card-position metadata', 'Title. 1 of'],
+    ])('skips supported tiles with %s', (_description, ariaLabel) => {
+        const tile = document.createElement('a');
+        tile.dataset.testid = 'id_tile';
+        tile.dataset.sonicType = 'movie';
+        if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
+        document.body.replaceChildren(tile);
+
+        expect(extractHboMaxTitle(tile)).toBeNull();
         expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
     });
 });

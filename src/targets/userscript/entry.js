@@ -16,6 +16,10 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 import { startApp } from '../../core/app.js';
+import { CacheManager } from '../../core/cache.js';
+import { ConfigManager } from '../../core/config-manager.js';
+import { DisabledClientsManager } from '../../core/disabled-clients.js';
+import { Logger } from '../../core/logger.js';
 import { Modal } from '../../core/ui/modal.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { UserscriptAdapter } from '../../platform/userscript.js';
@@ -23,9 +27,23 @@ import { UserscriptAdapter } from '../../platform/userscript.js';
 const adapter = new UserscriptAdapter();
 const app = startApp(adapter);
 
-const { cacheManager, disabledManager: disabledClientsManager } = app;
+function getSettingsDependencies() {
+    if (app) {
+        return {
+            cacheManager: app.cacheManager,
+            disabledClientsManager: app.disabledManager,
+        };
+    }
+    const logger = new Logger(adapter);
+    const config = new ConfigManager(adapter, logger);
+    return {
+        cacheManager: new CacheManager(adapter, config, logger),
+        disabledClientsManager: new DisabledClientsManager(adapter),
+    };
+}
 
 adapter.registerMenuCommand('FlixMonkey Settings', () => {
+    const { cacheManager, disabledClientsManager } = getSettingsDependencies();
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
     const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
