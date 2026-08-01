@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { NetflixSurfaceManager } from './surfaces.js';
+import { HboMaxSurfaceManager, NetflixSurfaceManager } from './surfaces.js';
 
 /**
  * Base class for streaming service implementations.
@@ -69,10 +69,32 @@ export class NetflixService extends StreamingService {
 }
 
 /**
+ * HBO Max service implementation.
+ */
+export class HboMaxService extends StreamingService {
+    get id() {
+        return 'hbomax';
+    }
+
+    get domains() {
+        return Object.freeze(['play.hbomax.com']);
+    }
+
+    get SurfaceManager() {
+        return HboMaxSurfaceManager;
+    }
+
+    isEnabled(configManager) {
+        return configManager.getBool('enableHboMax');
+    }
+}
+
+/**
  * Registry of all supported services.
  */
 export const SERVICES = Object.freeze({
     netflix: new NetflixService(),
+    hbomax: new HboMaxService(),
 });
 
 /**

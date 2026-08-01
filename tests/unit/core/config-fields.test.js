@@ -111,6 +111,15 @@ describe('core/config-fields', () => {
         expect(uniqueKeys.size).toBe(keys.length);
     });
 
+    it('defines HBO Max as an enabled service', () => {
+        expect(CONFIG_FIELDS.find(field => field.key === 'enableHboMax')).toMatchObject({
+            label: 'HBO Max',
+            type: 'checkbox',
+            default: true,
+            row: 'services',
+        });
+    });
+
     describe('field defaults alignment with types', () => {
         it.each(CONFIG_FIELDS)('should have default value matching type for field "$key"', field => {
             if (field.type === 'checkbox') {
