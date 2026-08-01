@@ -24,6 +24,7 @@ import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
 const NETFLIX_CONSTANTS = { TOP_10_BADGE: 'title-card-top-10' };
+const HBO_MAX_CONSTANTS = { TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' };
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -82,6 +83,13 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
+        });
+
+        it('should use the service-provided Top 10 offset for left-side corners', () => {
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), HBO_MAX_CONSTANTS);
+            renderer.injectStyles();
+            const style = document.head.querySelector('#fm-overlay-styles');
+            expect(style.textContent).toContain('.fm-hbo-top-10 .fm-rating-overlay { left: calc(30% + 6px); }');
         });
 
         it('should not include TOP_10_BADGE offset rule for right-side corners', () => {

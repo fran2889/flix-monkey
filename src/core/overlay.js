@@ -57,6 +57,7 @@ export class OverlayRenderer {
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
         const TOP_10_BADGE = this.#serviceConstants.TOP_10_BADGE ?? 'title-card-top-10';
+        const TOP_10_OFFSET = this.#serviceConstants.TOP_10_OFFSET ?? '50%';
         let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
@@ -97,7 +98,7 @@ export class OverlayRenderer {
             .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
         `;
         if (corner.includes('left')) {
-            cssText += `\n            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS} { left: calc(50% + 6px); }`;
+            cssText += `\n            .${TOP_10_BADGE} .${this.#OVERLAY_CLASS} { left: calc(${TOP_10_OFFSET} + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }

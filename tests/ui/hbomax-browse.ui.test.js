@@ -21,6 +21,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
+import { HboMaxService } from '../../src/core/services.js';
 import { HboMaxSurfaceManager } from '../../src/core/surfaces.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 import { createMockLogger } from '../mocks/logger.js';
@@ -35,13 +36,20 @@ describe('HBO Max browse UI surface', () => {
     beforeEach(() => {
         document.body.innerHTML = fixtureHtml;
         surfaceManager = new HboMaxSurfaceManager(createMockLogger());
-        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()), new HboMaxService().constants);
         overlayRenderer.injectStyles();
     });
 
     it('discovers supported browse tiles and injects overlays', () => {
         const surfaces = surfaceManager.discover(document.body);
-        expect(surfaces.map(surface => surface.title)).toEqual(['Movie Title', 'Show Title', 'Mini Series Title']);
+        expect(surfaces.map(surface => surface.title)).toEqual([
+            'Movie Title',
+            'Show Title',
+            'Mini Series Title',
+            'Continue Watching Show',
+            'Search Grid Show',
+            'Top Ten Movie',
+        ]);
         expect(surfaces.every(({ container }) => container.matches('.hbo-card'))).toBe(true);
 
         surfaces.forEach(({ container }) => {
@@ -50,13 +58,14 @@ describe('HBO Max browse UI surface', () => {
                 imdbUrl: 'https://www.imdb.com/title/tt1234567/',
             });
         });
-        expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(3);
-        expect(document.querySelectorAll('.hbo-card > .fm-rating-overlay')).toHaveLength(3);
+        expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(6);
+        expect(document.querySelectorAll('.hbo-card > .fm-rating-overlay')).toHaveLength(6);
         expect(document.querySelectorAll('a a')).toHaveLength(0);
         const imdbLinks = document.querySelectorAll('.fm-rating-overlay > a');
-        expect(imdbLinks).toHaveLength(3);
+        expect(imdbLinks).toHaveLength(6);
         imdbLinks.forEach(link => {
             expect(link.href).toBe('https://www.imdb.com/title/tt1234567/');
         });
+        expect(document.querySelector('[data-testid="top-ten_tile"]').parentElement).toHaveClass('fm-hbo-top-10');
     });
 });

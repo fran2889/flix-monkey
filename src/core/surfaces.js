@@ -153,13 +153,31 @@ export class NetflixSurfaceManager extends SurfaceManager {
  * @returns {string|null} Extracted title, or null if the tile is unsupported
  */
 export function extractHboMaxTitle(tile) {
-    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType)) return null;
     const label = tile
         .getAttribute('aria-label')
         ?.replace(/[\u2066-\u2069]/g, '')
         .trim();
-    const match = label?.match(/^(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u);
+    if (!label) return null;
+
+    if (tile.dataset.sonicType === 'video') {
+        const match = label.match(/^Watch\s+(.+?)[.,]\s+(?:Season\s+\d+|Episode\s+\d+)/u);
+        return match?.[1]?.trim() || null;
+    }
+    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType)) return null;
+
+    const match =
+        label.match(/^Number\s+\d+:\s+(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u) ??
+        label.match(/^(.+?)\.\s+Row\s+\d+\s+of\s+\d+,\s+Column\s+\d+\s+of\s+\d+(?:\.|$)/u) ??
+        label.match(/^(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u);
     return match?.[1]?.trim() || null;
+}
+
+function isHboMaxTop10Tile(tile) {
+    const label = tile
+        .getAttribute('aria-label')
+        ?.replace(/[\u2066-\u2069]/g, '')
+        .trim();
+    return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
 
 /**
@@ -170,7 +188,11 @@ export const HBO_MAX_SURFACES = Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         containerSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
-        getContainer: tile => tile.parentElement,
+        getContainer: tile => {
+            const container = tile.parentElement;
+            container?.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(tile));
+            return container;
+        },
         fadeable: true,
         showFadeToggle: false,
     }),

@@ -84,6 +84,10 @@ export class HboMaxService extends StreamingService {
         return HboMaxSurfaceManager;
     }
 
+    get constants() {
+        return Object.freeze({ TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' });
+    }
+
     isEnabled(configManager) {
         return configManager.getBool('enableHboMax');
     }

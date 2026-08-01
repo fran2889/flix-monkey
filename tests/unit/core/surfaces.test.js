@@ -201,11 +201,27 @@ describe('HBO Max surfaces', () => {
     it.each([
         ['\u2066\u2068Peacemaker\u2069\u2069. \u20682 of 20\u2069\u2069', 'Peacemaker'],
         ['Mr. & Mrs. Smith. 1 of 20.', 'Mr. & Mrs. Smith'],
+        ['Rooster. Row 1 of 8, Column 1 of 4', 'Rooster'],
+        ['Watch Peacemaker. Season 1, Episode 2: Best Friends for Never. 1 of 2.', 'Peacemaker'],
+        ['Watch Mel Brooks: The 99 Year Old Man!, Episode 2. 2 of 2.', 'Mel Brooks: The 99 Year Old Man!'],
+        ['Number 1: House of the Dragon. 1 of 10.', 'House of the Dragon'],
     ])('extracts %s', (ariaLabel, expected) => {
         const tile = document.createElement('a');
-        tile.dataset.sonicType = 'show';
+        tile.dataset.sonicType = ariaLabel.startsWith('Watch ') ? 'video' : 'show';
         tile.setAttribute('aria-label', ariaLabel);
         expect(extractHboMaxTitle(tile)).toBe(expected);
+    });
+
+    it('marks a Top 10 tile container for service-specific positioning', () => {
+        document.body.innerHTML = `
+            <div class="hbo-card">
+                <a data-testid="ranked_tile" data-sonic-type="show" aria-label="Number 1: House of the Dragon. 1 of 10."></a>
+            </div>
+        `;
+
+        const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface.title).toBe('House of the Dragon');
+        expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
     it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {
