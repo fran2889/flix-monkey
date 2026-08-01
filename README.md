@@ -7,7 +7,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
-See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
+See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix and HBO Max.
 
 ---
 
@@ -50,7 +50,7 @@ Use the links below to install the add-on for your browser.
 - **Color-Coded Ratings**: Rating badges change color based on thresholds (red < 5.0, green >= 8.5)
 - **Customizable**: Change badge position, choose rating provider, fade titles below a rating threshold, and more
 - **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, without rating)
-- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix tabs to prevent redundant lookups
+- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix and HBO Max tabs to prevent redundant lookups
 - **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
 
 ---
@@ -69,11 +69,12 @@ Access settings via:
 
 ### Display Options
 
-| Option                | Default  | Description                                                                       |
-| --------------------- | -------- | --------------------------------------------------------------------------------- |
-| Rating Badge Position | Top Left | Corner where rating badges appear                                                 |
-| Rotten Tomatoes       | No       | Display RT score. Only available when OMDb is the rating provider                 |
-| Metacritic            | No       | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+| Option                     | Default             | Description                                                                       |
+| -------------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| Enabled Streaming Services | Netflix and HBO Max | Run FlixMonkey on Netflix and HBO Max, both enabled by default                    |
+| Rating Badge Position      | Top Left            | Corner where rating badges appear                                                 |
+| Rotten Tomatoes            | No                  | Display RT score. Only available when OMDb is the rating provider                 |
+| Metacritic                 | No                  | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
 
 ### Rating Providers
 
