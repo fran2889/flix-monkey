@@ -17,7 +17,13 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { NETFLIX_SURFACES, NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces.js';
+import {
+    extractHboMaxTitle,
+    HboMaxSurfaceManager,
+    NETFLIX_SURFACES,
+    NetflixSurfaceManager,
+    SurfaceManager,
+} from '../../../src/core/surfaces.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
@@ -96,6 +102,21 @@ describe('SurfaceManager', () => {
         ).toEqual([]);
     });
 
+    it('uses a surface getTitle callback', () => {
+        const sm = new SurfaceManager(
+            {
+                card: {
+                    titleSelector: '[data-title]',
+                    containerSelector: '[data-title]',
+                    getTitle: el => el.dataset.title,
+                },
+            },
+            createMockLogger()
+        );
+        document.body.innerHTML = '<div data-title="Callback Title"></div>';
+        expect(sm.discover(document.body)[0].title).toBe('Callback Title');
+    });
+
     it('should set showFadeToggle to false for title-card surfaces', () => {
         const results = discover(`
             <div class="title-card"><a aria-label="Movie"></a></div>
@@ -130,6 +151,23 @@ describe('SurfaceManager', () => {
             </div>
         `);
         expect(results[0].showFadeToggle).toBe(false);
+    });
+});
+
+describe('HBO Max surfaces', () => {
+    it.each([
+        ['\u2066\u2068Peacemaker\u2069\u2069. \u20682 of 20\u2069\u2069', 'Peacemaker'],
+        ['Mr. & Mrs. Smith. 1 of 20.', 'Mr. & Mrs. Smith'],
+    ])('extracts %s', (ariaLabel, expected) => {
+        const tile = document.createElement('a');
+        tile.dataset.sonicType = 'show';
+        tile.setAttribute('aria-label', ariaLabel);
+        expect(extractHboMaxTitle(tile)).toBe(expected);
+    });
+
+    it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {
+        document.body.innerHTML = `<a data-testid="id_tile" data-sonic-type="${type}" aria-label="Title. 1 of 20."></a>`;
+        expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
     });
 });
 

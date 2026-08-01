@@ -20,7 +20,8 @@
  * @typedef {Object} SurfaceDefinition
  * @property {string} titleSelector - CSS selector for title elements
  * @property {string} containerSelector - CSS selector for container elements
- * @property {string} titleAttribute - Attribute name containing the title text
+ * @property {string} [titleAttribute] - Attribute name containing the title text
+ * @property {(element: Element) => string|null|undefined} [getTitle] - Callback that returns the title text
  * @property {boolean} fadeable - Whether this surface supports fading
  * @property {boolean} showFadeToggle - Whether to show fade toggle button
  */
@@ -108,7 +109,10 @@ export class SurfaceManager {
                 return;
             }
             titleEls.forEach(titleEl => {
-                const title = titleEl.getAttribute(surface.titleAttribute)?.trim() ?? null;
+                const rawTitle = surface.getTitle
+                    ? surface.getTitle(titleEl)
+                    : titleEl.getAttribute(surface.titleAttribute);
+                const title = rawTitle?.trim() ?? null;
                 if (!title) return;
                 let container = titleEl.closest(surface.containerSelector);
                 if (!container) {
@@ -137,5 +141,43 @@ export class SurfaceManager {
 export class NetflixSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(NETFLIX_SURFACES, logger);
+    }
+}
+
+/**
+ * Extracts a title from an HBO Max tile aria-label.
+ *
+ * @param {Element} tile - HBO Max tile element
+ * @returns {string|null} Extracted title, or null if the tile is unsupported
+ */
+export function extractHboMaxTitle(tile) {
+    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType)) return null;
+    const label = tile
+        .getAttribute('aria-label')
+        ?.replace(/[\u2066-\u2069]/g, '')
+        .trim();
+    const match = label?.match(/^(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u);
+    return match?.[1]?.trim() || null;
+}
+
+/**
+ * HBO Max-specific surface definitions for browse page tiles.
+ */
+export const HBO_MAX_SURFACES = Object.freeze({
+    TILE: Object.freeze({
+        titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
+        containerSelector: 'a[data-testid$="_tile"][data-sonic-type]',
+        getTitle: extractHboMaxTitle,
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+});
+
+/**
+ * HBO Max surface manager - discovers surfaces specific to the HBO Max UI.
+ */
+export class HboMaxSurfaceManager extends SurfaceManager {
+    constructor(logger) {
+        super(HBO_MAX_SURFACES, logger);
     }
 }
