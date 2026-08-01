@@ -234,6 +234,9 @@ describe('HBO Max surfaces', () => {
         ['a label without card-position metadata', 'Title'],
         ['incomplete card-position metadata', 'Title. 1 of'],
         ['a malformed Continue Watching season label', 'Watch Promo. Season 1st Look. 1 of 2.'],
+        ['a decimal Continue Watching season label', 'Watch Promo. Season 1.5. 1 of 2.'],
+        ['a malformed Continue Watching episode label', 'Watch Promo. Episode 2nd Look. 1 of 2.'],
+        ['a time-like Continue Watching episode label', 'Watch Promo. Episode 2:30. 1 of 2.'],
     ])('skips supported tiles with %s', (_description, ariaLabel) => {
         const tile = document.createElement('a');
         tile.dataset.testid = 'id_tile';
