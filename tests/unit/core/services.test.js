@@ -115,6 +115,12 @@ describe('HboMaxService', () => {
         assert.equal(service.SurfaceManager, HboMaxSurfaceManager);
     });
 
+    it('provides Top 10 badge positioning constants', () => {
+        const service = new HboMaxService();
+        assert.deepEqual(service.constants, { TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' });
+        assert(Object.isFrozen(service.constants));
+    });
+
     it('isEnabled returns true when enableHboMax is true', () => {
         const service = new HboMaxService();
         const mockConfig = { getBool: vi.fn().mockReturnValue(true) };

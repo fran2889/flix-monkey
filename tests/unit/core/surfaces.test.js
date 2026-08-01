@@ -233,10 +233,11 @@ describe('HBO Max surfaces', () => {
         ['a missing aria-label', undefined],
         ['a label without card-position metadata', 'Title'],
         ['incomplete card-position metadata', 'Title. 1 of'],
+        ['a malformed Continue Watching season label', 'Watch Promo. Season 1st Look. 1 of 2.'],
     ])('skips supported tiles with %s', (_description, ariaLabel) => {
         const tile = document.createElement('a');
         tile.dataset.testid = 'id_tile';
-        tile.dataset.sonicType = 'movie';
+        tile.dataset.sonicType = ariaLabel?.startsWith('Watch ') ? 'video' : 'movie';
         if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
         document.body.replaceChildren(tile);
 

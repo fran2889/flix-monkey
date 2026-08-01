@@ -160,7 +160,7 @@ export function extractHboMaxTitle(tile) {
     if (!label) return null;
 
     if (tile.dataset.sonicType === 'video') {
-        const match = label.match(/^Watch\s+(.+?)[.,]\s+(?:Season\s+\d+|Episode\s+\d+)/u);
+        const match = label.match(/^Watch\s+(.+?)[.,]\s+(?:Season|Episode)\s+\d+(?=[,.:])/u);
         return match?.[1]?.trim() || null;
     }
     if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType)) return null;

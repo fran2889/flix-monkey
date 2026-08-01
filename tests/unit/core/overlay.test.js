@@ -20,11 +20,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseHex } from '../../../src/core/color-utils.js';
 import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../src/core/constants.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
+import { HboMaxService } from '../../../src/core/services.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
 const NETFLIX_CONSTANTS = { TOP_10_BADGE: 'title-card-top-10' };
-const HBO_MAX_CONSTANTS = { TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' };
+const HBO_MAX_CONSTANTS = new HboMaxService().constants;
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -87,6 +88,13 @@ describe('OverlayRenderer', () => {
 
         it('should use the service-provided Top 10 offset for left-side corners', () => {
             const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), HBO_MAX_CONSTANTS);
+            renderer.injectStyles();
+            const style = document.head.querySelector('#fm-overlay-styles');
+            expect(style.textContent).toContain('.fm-hbo-top-10 .fm-rating-overlay { left: calc(30% + 6px); }');
+        });
+
+        it('should use the service-provided Top 10 offset for bottom-left corners', () => {
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'bottom-left' }), HBO_MAX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('#fm-overlay-styles');
             expect(style.textContent).toContain('.fm-hbo-top-10 .fm-rating-overlay { left: calc(30% + 6px); }');
