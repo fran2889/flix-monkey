@@ -7,6 +7,7 @@
     "permissions": ["storage"],
     "host_permissions": [
         "https://www.netflix.com/*",
+        "https://play.hbomax.com/*",
         "https://xmdbapi.com/*",
         "https://www.omdbapi.com/*",
         "https://imdb.iamidiotareyoutoo.com/*",
@@ -18,7 +19,7 @@
     "action": {},
     "content_scripts": [
         {
-            "matches": ["https://www.netflix.com/*"],
+            "matches": ["https://www.netflix.com/*", "https://play.hbomax.com/*"],
             "js": ["content.js"],
             "run_at": "document_idle"
         }
