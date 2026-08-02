@@ -670,13 +670,17 @@ describe('AgregarrApiClient', () => {
         const mockAdapter = createMockAdapter({
             httpFetch: vi.fn().mockResolvedValue({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] }),
         });
+        const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            mockLogger
         );
         expect(await client.search('Unknown')).toBeNull();
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            'No supported title-type results found in IMDb Suggestions for "Unknown"'
+        );
     });
 
     it('should build the correct IMDb Suggestions URL', async () => {
