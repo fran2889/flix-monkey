@@ -39,19 +39,6 @@ function parseRatings(ratings, sourcePattern) {
     return entry?.value ?? entry?.Value ?? null;
 }
 
-const TITLE_TYPE_MAP = {
-    Movie: TitleType.MOVIE,
-    movie: TitleType.MOVIE,
-    'TV Series': TitleType.SERIES,
-    series: TitleType.SERIES,
-    tvSeries: TitleType.SERIES,
-    tvMiniSeries: TitleType.SERIES,
-};
-
-function mapTitleType(apiValue) {
-    return TITLE_TYPE_MAP[apiValue] ?? null;
-}
-
 /**
  * Abstract base class for API clients.
  *
@@ -213,6 +200,12 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
+    #mapTitleType(apiValue) {
+        if (apiValue === 'Movie') return TitleType.MOVIE;
+        if (apiValue === 'TV Series') return TitleType.SERIES;
+        return null;
+    }
+
     async getStatus() {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
@@ -271,7 +264,7 @@ export class XmdbApiClient extends BaseApiClient {
             imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
-            type: mapTitleType(title_type) ?? searchTitle.type,
+            type: this.#mapTitleType(title_type) ?? searchTitle.type,
             source: null,
         });
     }
@@ -287,6 +280,12 @@ export class OmdbApiClient extends BaseApiClient {
             config,
             logger
         );
+    }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'series') return TitleType.SERIES;
+        return null;
     }
 
     async getStatus() {
@@ -316,7 +315,7 @@ export class OmdbApiClient extends BaseApiClient {
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
-            type: mapTitleType(apiType),
+            type: this.#mapTitleType(apiType),
             source: null,
         });
     }
@@ -339,6 +338,12 @@ export class AgregarrApiClient extends BaseApiClient {
             config,
             logger
         );
+    }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
+        return null;
     }
 
     async search(displayTitle) {
@@ -364,7 +369,7 @@ export class AgregarrApiClient extends BaseApiClient {
             imdbVotes: null,
             rtRating: null,
             mcRating: null,
-            type: mapTitleType(match.qid),
+            type: this.#mapTitleType(match.qid),
             source: null,
         });
     }
