@@ -14,7 +14,7 @@ Available as a Chrome extension, Firefox add-on, and Tampermonkey/Violentmonkey/
 
 📊 RATING PROVIDERS
 FlixMonkey supports multiple data sources:
-• FM-DB + Agregarr (default): IMDb ratings with no setup needed
+• Agregarr (default): IMDb ratings with no setup needed
 • OMDb: Recommended for full IMDb, Metacritic, and Rotten Tomatoes support with a free API key
 • XMDb: Supports IMDb and Metacritic with a free API key
 
