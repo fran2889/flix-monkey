@@ -29,7 +29,7 @@ describe('Preview Detail-Modal UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/surfaces/preview-detail.html'), 'utf8');
+        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/preview-detail.html'), 'utf8');
     });
 
     beforeEach(() => {

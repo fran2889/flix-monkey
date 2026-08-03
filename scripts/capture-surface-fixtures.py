@@ -1,431 +1,496 @@
 #!/usr/bin/env python3
-"""
-Captures and anonymises Netflix surface fixtures from a live Chromium session.
+"""Capture anonymized Netflix surface fixtures from Chromium on port 9222."""
 
-Usage:
-    python3 scripts/capture-surface-fixtures.py
-
-Prerequisites:
-    - Chromium launched with --remote-debugging-port=9222
-    - Netflix /browse page open and logged in
-
-Outputs:
-    tests/fixtures/surfaces/title-card.html
-    tests/fixtures/surfaces/standard-card.html
-    tests/fixtures/surfaces/preview-mini.html
-    tests/fixtures/surfaces/preview-detail.html
-    tests/fixtures/netflix-browse.html
-    tests/fixtures/netflix-search.html
-    tests/fixtures/netflix-hover.html
-    tests/fixtures/netflix-modal.html
-"""
-import json, os, re, socket, struct, time, urllib.parse, urllib.request
+import base64
+import json
+import os
+import re
+import socket
+import struct
+import time
+import urllib.parse
+import urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 
+
 # ---------------------------------------------------------------------------
-# CDP transport (no external dependencies)
+# CDP transport
 # ---------------------------------------------------------------------------
 
 def _find_netflix_ws():
     data = urllib.request.urlopen('http://localhost:9222/json/list').read()
-    pages = json.loads(data)
-    for p in pages:
-        url = p.get('url', '')
-        if p.get('type') == 'page':
-            parsed = urllib.parse.urlparse(url)
-            host = parsed.hostname
-            if host and (host == 'netflix.com' or host.endswith('.netflix.com')):
-                return p['webSocketDebuggerUrl'].replace('ws://localhost:9222', '')
+    for page in json.loads(data):
+        parsed = urllib.parse.urlparse(page.get('url', ''))
+        host = parsed.hostname
+        if page.get('type') == 'page' and host and (
+            host == 'netflix.com' or host.endswith('.netflix.com')
+        ):
+            return page['webSocketDebuggerUrl'].replace('ws://localhost:9222', '')
     raise RuntimeError('No Netflix page found on port 9222')
 
+
 def _connect(ws_path):
-    import base64
     key = base64.b64encode(os.urandom(16)).decode()
-    s = socket.create_connection(('localhost', 9222))
-    s.settimeout(15)
-    req = (
+    connection = socket.create_connection(('localhost', 9222))
+    connection.settimeout(15)
+    request = (
         f'GET {ws_path} HTTP/1.1\r\nHost: localhost:9222\r\n'
         'Upgrade: websocket\r\nConnection: Upgrade\r\n'
         f'Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n'
     )
-    s.sendall(req.encode())
-    buf = b''
-    while b'\r\n\r\n' not in buf:
-        buf += s.recv(4096)
-    return s
+    connection.sendall(request.encode())
+    response = b''
+    while b'\r\n\r\n' not in response:
+        response += connection.recv(4096)
+    return connection
 
-def _send(s, msg):
-    import base64, os
-    data = msg.encode()
+
+def _send(connection, message):
+    data = message.encode()
     mask = os.urandom(4)
-    n = len(data)
-    if n <= 125:
-        hdr = bytes([0x81, 0x80 | n]) + mask
-    elif n <= 65535:
-        hdr = bytes([0x81, 0xFE]) + struct.pack('>H', n) + mask
+    length = len(data)
+    if length <= 125:
+        header = bytes([0x81, 0x80 | length]) + mask
+    elif length <= 65535:
+        header = bytes([0x81, 0xFE]) + struct.pack('>H', length) + mask
     else:
-        hdr = bytes([0x81, 0xFF]) + struct.pack('>Q', n) + mask
-    s.sendall(hdr + bytes(b ^ mask[i % 4] for i, b in enumerate(data)))
+        header = bytes([0x81, 0xFF]) + struct.pack('>Q', length) + mask
+    payload = bytes(byte ^ mask[index % 4] for index, byte in enumerate(data))
+    connection.sendall(header + payload)
 
-def _recv(s):
-    def read(n):
-        buf = b''
-        while len(buf) < n:
-            buf += s.recv(n - len(buf))
-        return buf
-    h = read(2)
-    n = h[1] & 0x7F
-    if n == 126:
-        n = struct.unpack('>H', read(2))[0]
-    elif n == 127:
-        n = struct.unpack('>Q', read(8))[0]
-    return read(n).decode('utf-8', 'replace')
 
-_mid = 0
+def _recv(connection):
+    def read(length):
+        data = b''
+        while len(data) < length:
+            data += connection.recv(length - len(data))
+        return data
 
-def call(s, method, params=None):
-    global _mid
-    _mid += 1
-    m = _mid
-    _send(s, json.dumps({'id': m, 'method': method, 'params': params or {}}))
+    header = read(2)
+    length = header[1] & 0x7F
+    if length == 126:
+        length = struct.unpack('>H', read(2))[0]
+    elif length == 127:
+        length = struct.unpack('>Q', read(8))[0]
+    return read(length).decode('utf-8', 'replace')
+
+
+_message_id = 0
+
+
+def call(connection, method, params=None):
+    global _message_id
+    _message_id += 1
+    current_id = _message_id
+    _send(connection, json.dumps({
+        'id': current_id,
+        'method': method,
+        'params': params or {},
+    }))
     while True:
         try:
-            msg = json.loads(_recv(s))
+            message = json.loads(_recv(connection))
         except Exception:
             continue
-        if msg.get('id') == m:
-            return msg.get('result', {})
+        if message.get('id') == current_id:
+            return message.get('result', {})
 
-def ev(s, expr):
-    r = call(s, 'Runtime.evaluate', {'expression': expr, 'returnByValue': True})
-    res = r.get('result', {})
-    if res.get('subtype') == 'error':
-        raise RuntimeError(res.get('description', 'eval error'))
-    return res.get('value')
 
-def navigate(s, url):
-    call(s, 'Page.navigate', {'url': url})
+def evaluate(connection, expression):
+    result = call(connection, 'Runtime.evaluate', {
+        'expression': expression,
+        'returnByValue': True,
+    }).get('result', {})
+    if result.get('subtype') == 'error':
+        raise RuntimeError(result.get('description', 'Evaluation failed'))
+    return result.get('value')
+
+
+def navigate(connection, url):
+    call(connection, 'Page.navigate', {'url': url})
     time.sleep(3)
 
-def screenshot(s, path):
-    r = call(s, 'Page.captureScreenshot', {'format': 'png'})
-    if 'data' in r:
-        import base64
-        Path(path).write_bytes(base64.b64decode(r['data']))
 
 # ---------------------------------------------------------------------------
-# Anonymisation
+# Fixture sanitization
 # ---------------------------------------------------------------------------
 
-SYNTHETIC_TITLES = ['Bones', 'Avatar: The Last Airbender', 'Sweet Magnolias',
-                    'Breaking Bad', 'Narcos', 'Gladiator II']
+_TOKEN_RE = re.compile(r'^[A-Za-z0-9+/=_\-]{40,}$')
+_SENSITIVE_ATTRIBUTES = frozenset({
+    'data-list-id',
+    'data-lolomo-id',
+    'data-request-id',
+    'data-tracking-uuid',
+    'data-ui-tracking-context',
+})
+_TRACKING_QUERY_PARAMETERS = frozenset({
+    'g',
+    'lkid',
+    'lnktrk',
+    'tctx',
+    'trackid',
+    'trkid',
+})
+_PROGRESS_MEDIA_ATTRIBUTES = frozenset({
+    'data-entity-id',
+    'data-image-key',
+    'data-playable-id',
+    'data-supp-video-id',
+    'data-unified-entity-id',
+    'data-video-id',
+    'id',
+})
+_PROGRESS_MEDIA_URL_ATTRIBUTES = frozenset({'poster', 'src', 'srcset', 'style'})
+_MEDIA_URL_RE = re.compile(r'https?://[^\s,\'"\)]+')
+_VOID_TAGS = frozenset({
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+    'meta', 'param', 'source', 'track', 'wbr',
+})
 
-_TOKEN_RE = re.compile(r'^[A-Za-z0-9+/=_\-]{32,}$')
 
-def _looks_like_token(val):
-    """Heuristic: long opaque string or JWT."""
-    val = val.strip()
-    if val.startswith('ey') and val.count('.') == 2:
-        return True
-    return bool(_TOKEN_RE.match(val)) and len(val) >= 40
+def _strip_tracking_query(value):
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        params = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    except ValueError:
+        return value
+    filtered = [
+        (name, item)
+        for name, item in params
+        if name.lower() not in _TRACKING_QUERY_PARAMETERS
+    ]
+    return urllib.parse.urlunsplit((
+        parsed.scheme,
+        parsed.netloc,
+        parsed.path,
+        urllib.parse.urlencode(filtered),
+        parsed.fragment,
+    ))
 
 
-class _Anonymiser(HTMLParser):
-    """
-    Streaming HTML anonymiser.  Applies anonymisation rules in one pass:
-      - Removes <script> elements entirely
-      - Removes <link rel="stylesheet"> elements
-      - Strips avatar img src (profile picture, identified by context)
-      - Replaces profile display name text with 'Test User'
-      - Strips data-* attributes whose values look like auth tokens
-    Output is reconstructed HTML.
-    """
+class _Sanitizer(HTMLParser):
+    """Strip tracking data and replace progress-card viewing history."""
 
-    def __init__(self, profile_name: str = ''):
+    def __init__(self):
         super().__init__()
-        self._out = []
-        self._skip_depth = 0   # >0 while inside a skipped element
-        self._skip_tag = None
-        self._profile_name = profile_name
-        self._in_profile_text = False
+        self.output = []
+        self.skip_depth = 0
+        self.progress_depth = 0
+        self.progress_index = 0
+        self.progress_title = ''
+        self.progress_id = ''
 
-    # -- helpers -------------------------------------------------------------
-
-    def _attr_str(self, attrs):
-        parts = []
-        for name, val in attrs:
-            if val is None:
-                parts.append(name)
+    def _attributes(self, attrs):
+        result = []
+        asset = (
+            f'https://example.invalid/netflix/progress-card-'
+            f'{self.progress_index:02d}.jpg'
+        )
+        for name, value in attrs:
+            if value is None:
+                result.append((name, value))
                 continue
-            if name.startswith('data-') and _looks_like_token(val):
-                continue   # strip token-shaped data attributes
-            parts.append(f'{name}="{val}"')
+            normalized_name = name.lower().replace('_', '-')
+            if normalized_name in _SENSITIVE_ATTRIBUTES or _TOKEN_RE.match(value):
+                continue
+            if name in ('href', 'action'):
+                value = _strip_tracking_query(value)
+            if self.progress_depth:
+                if name == 'href':
+                    value = f'/browse?jbv={self.progress_id}'
+                elif name in ('src', 'poster', 'srcset'):
+                    value = asset
+                elif name in _PROGRESS_MEDIA_ATTRIBUTES:
+                    value = f'synthetic-progress-{self.progress_id}'
+                elif name in ('alt', 'aria-label', 'title') and value:
+                    value = self.progress_title
+                elif name == 'style' and 'url(' in value.lower():
+                    value = re.sub(r'url\([^)]*\)', f'url({asset})', value)
+            result.append((name, value))
+        return result
+
+    @staticmethod
+    def _format_attributes(attrs):
+        parts = [
+            name if value is None else f'{name}="{value}"'
+            for name, value in attrs
+        ]
         return (' ' + ' '.join(parts)) if parts else ''
 
-    # -- HTMLParser overrides ------------------------------------------------
-
     def handle_starttag(self, tag, attrs):
-        if self._skip_depth > 0:
-            self._skip_depth += 1
+        if self.skip_depth:
+            if tag not in _VOID_TAGS:
+                self.skip_depth += 1
             return
-
         attr_dict = dict(attrs)
-
-        # Skip <script> and <link rel=stylesheet> wholesale
         if tag == 'script':
-            self._skip_tag = 'script'
-            self._skip_depth = 1
+            self.skip_depth = 1
             return
-        if tag == 'link' and attr_dict.get('rel', '').lower() in ('stylesheet', 'preload', 'prefetch'):
-            # void element — just drop it
+        if tag == 'link' and attr_dict.get('rel', '').lower() in (
+            'stylesheet', 'preload', 'prefetch'
+        ):
             return
-
-        # Strip avatar src: the profile <img> sits inside the account menu
-        # and has a nflximg.net or nflxso.net URL in its src.
-        if tag == 'img':
-            clean = []
-            for name, val in attrs:
-                if name == 'src' and val and ('nflximg' in val or 'nflxso' in val) and attr_dict.get('class', '').startswith('profile'):
-                    clean.append((name, ''))
-                elif name.startswith('data-') and val and _looks_like_token(val):
-                    continue
-                else:
-                    clean.append((name, val))
-            attrs = clean
-
-        self._out.append(f'<{tag}{self._attr_str(attrs)}>')
+        if attr_dict.get('data-uia') == 'progress-card':
+            self.progress_index += 1
+            self.progress_depth = 1
+            self.progress_title = f'Synthetic Progress Title {self.progress_index:02d}'
+            self.progress_id = f'{99000000 + self.progress_index}'
+        elif self.progress_depth and tag not in _VOID_TAGS:
+            self.progress_depth += 1
+        attrs = self._attributes(attrs)
+        self.output.append(f'<{tag}{self._format_attributes(attrs)}>')
 
     def handle_endtag(self, tag):
-        if self._skip_depth > 0:
-            self._skip_depth -= 1
-            if self._skip_depth == 0:
-                self._skip_tag = None
+        if self.skip_depth:
+            self.skip_depth -= 1
             return
-        self._out.append(f'</{tag}>')
+        if self.progress_depth:
+            self.progress_depth -= 1
+            if not self.progress_depth:
+                self.progress_title = ''
+                self.progress_id = ''
+        self.output.append(f'</{tag}>')
 
     def handle_startendtag(self, tag, attrs):
-        if self._skip_depth > 0:
-            return
-        if tag == 'link' and dict(attrs).get('rel', '').lower() in ('stylesheet', 'preload', 'prefetch'):
-            return
-        self._out.append(f'<{tag}{self._attr_str(attrs)} />')
+        if not self.skip_depth:
+            attrs = self._attributes(attrs)
+            self.output.append(f'<{tag}{self._format_attributes(attrs)} />')
 
     def handle_data(self, data):
-        if self._skip_depth > 0:
-            return
-        # Replace profile display name
-        if self._profile_name and self._profile_name in data:
-            data = data.replace(self._profile_name, 'Test User')
-        self._out.append(data)
-
-    def handle_comment(self, data):
-        if self._skip_depth > 0:
-            return
+        if not self.skip_depth:
+            self.output.append(self.progress_title if self.progress_depth and data.strip() else data)
 
     def handle_entityref(self, name):
-        if self._skip_depth > 0:
-            return
-        self._out.append(f'&{name};')
+        if not self.skip_depth:
+            self.output.append(f'&{name};')
 
     def handle_charref(self, name):
-        if self._skip_depth > 0:
-            return
-        self._out.append(f'&#{name};')
-
-    def result(self):
-        return ''.join(self._out)
+        if not self.skip_depth:
+            self.output.append(f'&#{name};')
 
 
-def anonymise(html: str, profile_name: str = '') -> str:
-    p = _Anonymiser(profile_name)
-    p.feed(html)
-    return p.result()
+def sanitize(html):
+    sanitizer = _Sanitizer()
+    sanitizer.feed(html)
+    return ''.join(sanitizer.output)
 
 
-def remove_row_by_heading(html: str, heading: str) -> str:
-    """Remove the Netflix lolomo row whose visible heading contains `heading`."""
-    # Rows are large nested divs; use a simple state-machine approach on the
-    # raw HTML rather than a full DOM parse, since we only need to drop one row.
-    pattern = re.compile(
-        r'(<div[^>]*class="[^"]*lolomoRow[^"]*"[^>]*>)',
-        re.IGNORECASE
-    )
-    result = []
-    i = 0
-    while i < len(html):
-        m = pattern.search(html, i)
-        if not m:
-            result.append(html[i:])
-            break
-        result.append(html[i:m.start()])
-        # scan forward to find end of this row
-        depth = 1
-        j = m.end()
-        while j < len(html) and depth > 0:
-            open_tag = html.find('<div', j)
-            close_tag = html.find('</div>', j)
-            if open_tag != -1 and (close_tag == -1 or open_tag < close_tag):
-                depth += 1
-                j = open_tag + 4
-            elif close_tag != -1:
-                depth -= 1
-                j = close_tag + 6
-            else:
-                j = len(html)
-                break
-        row_html = html[m.start():j]
-        # Only include the row if its heading does NOT match
-        if heading.lower() not in row_html.lower():
-            result.append(row_html)
-        i = j
-    return ''.join(result)
+def _has_live_progress_media(card):
+    class MediaUrlParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.has_live_media = False
+
+        def handle_starttag(self, tag, attrs):
+            for name, value in attrs:
+                if name not in _PROGRESS_MEDIA_URL_ATTRIBUTES or not value:
+                    continue
+                for url in _MEDIA_URL_RE.findall(value):
+                    try:
+                        hostname = urllib.parse.urlsplit(url).hostname
+                    except ValueError:
+                        continue
+                    if hostname and (
+                        hostname == 'nflxso.net' or hostname.endswith('.nflxso.net')
+                    ):
+                        self.has_live_media = True
+
+    parser = MediaUrlParser()
+    parser.feed(card)
+    return parser.has_live_media
+
+
+_FORBIDDEN_FIXTURE_PATTERNS = (
+    'data-tracking-uuid',
+    'data-ui-tracking-context',
+    'data-request-id',
+    'data-list-id',
+    '/notification/',
+)
+
+
+def validate_fixture(path):
+    content = Path(path).read_text(encoding='utf-8')
+    for pattern in _FORBIDDEN_FIXTURE_PATTERNS:
+        if pattern.lower() in content.lower():
+            raise RuntimeError(f'{path}: retained private metadata {pattern}')
+    for card in re.findall(
+        r'<a[^>]*data-uia="progress-card"[^>]*>.*?</a>',
+        content,
+        re.DOTALL,
+    ):
+        if not re.search(r'aria-label="Synthetic Progress Title \d{2}"', card):
+            raise RuntimeError(f'{path}: progress-card title is not synthetic')
+        if _has_live_progress_media(card):
+            raise RuntimeError(f'{path}: progress-card media is not synthetic')
 
 
 # ---------------------------------------------------------------------------
 # Capture helpers
 # ---------------------------------------------------------------------------
 
-def capture_outer_html(s, selector):
-    return ev(s, f"""(() => {{
-        const el = document.querySelector({json.dumps(selector)});
-        return el ? el.outerHTML : null;
-    }})()""")
+ROOT = Path(__file__).parent.parent
+SURFACE_DIR = ROOT / 'tests/fixtures'
+FIXTURE_PATHS = (
+    SURFACE_DIR / 'title-card.html',
+    SURFACE_DIR / 'progress-card.html',
+    SURFACE_DIR / 'ranked-card.html',
+    SURFACE_DIR / 'standard-card.html',
+    SURFACE_DIR / 'preview-mini.html',
+    SURFACE_DIR / 'preview-detail.html',
+)
 
-def capture_row_html(s, selector):
-    """Capture outerHTML of all matching elements joined."""
-    return ev(s, f"""(() => {{
-        const els = [...document.querySelectorAll({json.dumps(selector)})];
-        return els.map(e => e.outerHTML).join('\\n');
-    }})()""")
 
-def get_profile_name(s):
-    return ev(s, """(() => {
-        const el = document.querySelector(
-            '.account-menu-item .profile-name, [data-uia="profile-name"], .profileName'
-        );
-        return el ? el.textContent.trim() : '';
-    })()""") or ''
+def capture_all(connection, selector, limit=0):
+    return evaluate(connection, f"""(() => {{
+        let elements = [...document.querySelectorAll({json.dumps(selector)})];
+        if ({limit}) elements = elements.slice(0, {limit});
+        return elements.map(element => element.outerHTML).join('\\n');
+    }})()""") or ''
 
-def hover_card(s, index=2):
-    pos = ev(s, f"""(() => {{
-        const cards = [...document.querySelectorAll('.title-card')];
-        const card = cards[{index}];
-        if (!card) return null;
-        const r = card.getBoundingClientRect();
-        return {{x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2)}};
-    }})()""")
-    if not pos:
-        raise RuntimeError('No title-card found to hover')
-    call(s, 'Input.dispatchMouseEvent', {'type': 'mouseMoved', 'x': pos['x'], 'y': pos['y']})
-    time.sleep(2.5)
 
-def click_more_info(s):
-    pos = ev(s, """(() => {
-        const btns = [...document.querySelectorAll('.previewModal--wrapper.mini-modal button')];
-        const last = btns[btns.length - 1];
-        if (!last) return null;
-        const r = last.getBoundingClientRect();
-        return {x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2)};
-    })()""")
-    if not pos:
-        raise RuntimeError('More Info button not found — hover a card first')
-    call(s, 'Input.dispatchMouseEvent', {'type': 'mouseMoved', 'x': pos['x'], 'y': pos['y']})
-    time.sleep(0.2)
-    call(s, 'Input.dispatchMouseEvent', {'type': 'mousePressed', 'x': pos['x'], 'y': pos['y'], 'button': 'left', 'clickCount': 1})
-    call(s, 'Input.dispatchMouseEvent', {'type': 'mouseReleased', 'x': pos['x'], 'y': pos['y'], 'button': 'left', 'clickCount': 1})
-    time.sleep(2.5)
+def capture_one(connection, selector):
+    return evaluate(connection, f"""(() => {{
+        const element = document.querySelector({json.dumps(selector)});
+        return element ? element.outerHTML : '';
+    }})()""") or ''
 
-def close_modal(s):
-    call(s, 'Input.dispatchKeyEvent', {'type': 'keyDown', 'key': 'Escape', 'code': 'Escape'})
+
+def require_capture(name, html):
+    if not html.strip():
+        raise RuntimeError(f'Could not capture required Netflix surface: {name}')
+    return html
+
+
+def save(path, html):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = f'<html><body>{sanitize(html)}</body></html>'
+    path.write_text(content, encoding='utf-8')
+    print(f'  wrote {path} ({len(content):,} chars)')
+
+
+def preserve(path, name):
+    existing = require_capture(name, path.read_text(encoding='utf-8'))
+    path.write_text(sanitize(existing), encoding='utf-8')
+    print(f'  {name} absent; preserving {path}')
+
+
+def materialize_browse_rows(connection):
+    evaluate(connection, 'window.scrollTo(0, document.body.scrollHeight)')
+    time.sleep(5)
+    evaluate(connection, 'window.scrollTo(0, 0)')
     time.sleep(1)
 
-def wrap(html):
-    return f'<html><body>{html}</body></html>'
 
-def save(path_str, html):
-    p = Path(path_str)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(html, encoding='utf-8')
-    print(f'  wrote {p} ({len(html):,} chars)')
+def hover_card(connection):
+    position = evaluate(connection, """(() => {
+        const cards = [...document.querySelectorAll(
+            '.title-card, [data-uia="standard-card"]'
+        )];
+        const card = cards.find(element => {
+            const rect = element.getBoundingClientRect();
+            return rect.width && rect.height && rect.bottom > 0 && rect.top < innerHeight;
+        });
+        if (!card) return null;
+        const rect = card.getBoundingClientRect();
+        return {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2};
+    })()""")
+    if not position:
+        return False
+    call(connection, 'Input.dispatchMouseEvent', {
+        'type': 'mouseMoved',
+        'x': position['x'],
+        'y': position['y'],
+    })
+    time.sleep(2.5)
+    return True
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
-ROOT = Path(__file__).parent.parent  # repo root
+def open_detail(connection):
+    position = evaluate(connection, """(() => {
+        const button = document.querySelector(
+            '.previewModal--wrapper.mini-modal [data-uia="expand-to-detail-button"]'
+        );
+        if (!button) return null;
+        const rect = button.getBoundingClientRect();
+        return {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2};
+    })()""")
+    if not position:
+        return False
+    for event_type in ('mousePressed', 'mouseReleased'):
+        call(connection, 'Input.dispatchMouseEvent', {
+            'type': event_type,
+            'x': position['x'],
+            'y': position['y'],
+            'button': 'left',
+            'clickCount': 1,
+        })
+    time.sleep(2.5)
+    return True
+
 
 def main():
-    ws_path = _find_netflix_ws()
-    print(f'Connecting to {ws_path}')
-    s = _connect(ws_path)
+    connection = _connect(_find_netflix_ws())
+    try:
+        print('[1/4] Browse cards')
+        navigate(connection, 'https://www.netflix.com/browse')
+        materialize_browse_rows(connection)
+        browse_surfaces = {
+            'title-card': '.title-card a[aria-label]',
+            'progress-card': '[data-uia="progress-card"][aria-label]',
+            'ranked-card': '[data-uia="ranked-card"][aria-label]',
+        }
+        for name, selector in browse_surfaces.items():
+            html = capture_all(connection, selector)
+            path = SURFACE_DIR / f'{name}.html'
+            if not html.strip():
+                preserve(path, name)
+            else:
+                save(path, require_capture(name, html))
 
-    # ---- 1. Browse page (title-card surface + full-page fixture) -----------
-    print('\n[1/4] Browse page — title-card surface')
-    navigate(s, 'https://www.netflix.com/browse')
-    profile_name = get_profile_name(s)
-    print(f'  Profile name detected: {repr(profile_name)}')
+        print('[2/4] Search cards')
+        navigate(connection, 'https://www.netflix.com/search?q=breaking+bad')
+        save(
+            SURFACE_DIR / 'standard-card.html',
+            require_capture(
+                'standard card',
+                capture_all(
+                    connection,
+                    '[data-uia="standard-card"][aria-label]',
+                    limit=6,
+                ),
+            ),
+        )
 
-    # Minimal surface extract: first two populated rows of title cards
-    row_html = ev(s, """(() => {
-        const rows = [...document.querySelectorAll('[class*="lolomoRow"]')].filter(
-            row => row.querySelector('.title-card .fallback-text')
-        ).slice(0, 2);
-        return rows.map(r => r.outerHTML).join('\\n');
-    })()""") or ''
-    row_html = remove_row_by_heading(row_html, 'My List')
-    row_html = remove_row_by_heading(row_html, 'Continue Watching')
-    save(ROOT / 'tests/fixtures/surfaces/title-card.html',
-         wrap(anonymise(row_html, profile_name)))
+        print('[3/4] Mini preview')
+        navigate(connection, 'https://www.netflix.com/browse')
+        time.sleep(1)
+        mini_html = ''
+        if hover_card(connection):
+            mini_html = capture_one(connection, '.previewModal--wrapper.mini-modal')
+        if mini_html.strip():
+            save(SURFACE_DIR / 'preview-mini.html', mini_html)
+        else:
+            preserve(SURFACE_DIR / 'preview-mini.html', 'mini preview')
 
-    # Full-page fixture: entire body content minus My List / Continue Watching
-    body_html = ev(s, 'document.body.outerHTML') or ''
-    body_html = remove_row_by_heading(body_html, 'My List')
-    body_html = remove_row_by_heading(body_html, 'Continue Watching')
-    save(ROOT / 'tests/fixtures/netflix-browse.html',
-         anonymise(body_html, profile_name))
+        print('[4/4] Detail preview')
+        detail_html = ''
+        if mini_html.strip() and open_detail(connection):
+            detail_html = capture_one(connection, '.previewModal--wrapper.detail-modal')
+        if detail_html.strip():
+            save(SURFACE_DIR / 'preview-detail.html', detail_html)
+        else:
+            preserve(SURFACE_DIR / 'preview-detail.html', 'detail preview')
 
-    # ---- 2. Search page (standard-card surface) ----------------------------
-    print('\n[2/4] Search page — standard-card surface')
-    navigate(s, 'https://www.netflix.com/search?q=breaking+bad')
+        for path in FIXTURE_PATHS:
+            require_capture(path.name, path.read_text(encoding='utf-8'))
+            validate_fixture(path)
+        print(f'privacy validation passed for {len(FIXTURE_PATHS)} fixtures')
+        print('Done.')
+    finally:
+        connection.close()
 
-    grid_html = ev(s, """(() => {
-        const cards = [...document.querySelectorAll('[data-uia="standard-card"]')].slice(0, 6);
-        const parent = cards[0]?.parentElement;
-        return parent ? parent.outerHTML : cards.map(c => c.outerHTML).join('\\n');
-    })()""") or ''
-    save(ROOT / 'tests/fixtures/surfaces/standard-card.html',
-         wrap(anonymise(grid_html, profile_name)))
-
-    body_html = ev(s, 'document.body.outerHTML') or ''
-    save(ROOT / 'tests/fixtures/netflix-search.html',
-         anonymise(body_html, profile_name))
-
-    # ---- 3. Hover mini-modal -----------------------------------------------
-    print('\n[3/4] Hover mini-modal — previewModal-mini surface')
-    navigate(s, 'https://www.netflix.com/browse')
-    time.sleep(1)
-    hover_card(s, index=2)
-
-    mini_html = capture_outer_html(s, '.previewModal--wrapper.mini-modal') or ''
-    save(ROOT / 'tests/fixtures/surfaces/preview-mini.html',
-         wrap(anonymise(mini_html, profile_name)))
-    save(ROOT / 'tests/fixtures/netflix-hover.html',
-         anonymise(mini_html, profile_name))
-
-    # ---- 4. Full detail modal ----------------------------------------------
-    print('\n[4/4] Full detail modal — previewModal-detail surface')
-    click_more_info(s)
-
-    detail_html = capture_outer_html(s, '.previewModal--wrapper.detail-modal') or ''
-    save(ROOT / 'tests/fixtures/surfaces/preview-detail.html',
-         wrap(anonymise(detail_html, profile_name)))
-    save(ROOT / 'tests/fixtures/netflix-modal.html',
-         anonymise(detail_html, profile_name))
-
-    close_modal(s)
-    s.close()
-    print('\nDone.')
 
 if __name__ == '__main__':
     main()

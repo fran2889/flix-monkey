@@ -29,7 +29,9 @@ describe('Browse UI Surface', () => {
     let surfaceManager, overlayRenderer, fixtureHtml;
 
     beforeAll(() => {
-        fixtureHtml = fs.readFileSync(path.resolve(__dirname, '../fixtures/netflix-browse.html'), 'utf8');
+        fixtureHtml = ['title-card.html', 'progress-card.html', 'ranked-card.html']
+            .map(file => fs.readFileSync(path.resolve(__dirname, `../fixtures/${file}`), 'utf8'))
+            .join('\n');
     });
 
     beforeEach(() => {
@@ -67,6 +69,27 @@ describe('Browse UI Surface', () => {
         expect(loading).not.toBeNull();
         expect(loading.textContent).toContain('IMDb');
         expect(loading.title).toContain('Fetching ratings');
+    });
+
+    it.each([
+        ['progress-card', '[data-uia="progress-card"]'],
+        ['ranked-card', '[data-uia="ranked-card"]'],
+    ])('should discover and inject on %s surfaces', (_name, selector) => {
+        const expectedContainer = document.querySelector(selector);
+        expect(expectedContainer).not.toBeNull();
+
+        const surface = surfaceManager
+            .discover(document.body)
+            .find(candidate => candidate.container === expectedContainer);
+
+        expect(surface).toMatchObject({
+            title: expectedContainer.getAttribute('aria-label'),
+            fadeable: true,
+            showFadeToggle: false,
+        });
+
+        overlayRenderer.injectLoadingOverlay(surface.container, surface.title);
+        expect(surface.container.querySelector('.fm-loading')).not.toBeNull();
     });
 
     it('should replace loading overlay with rating overlay on a browse card', () => {
