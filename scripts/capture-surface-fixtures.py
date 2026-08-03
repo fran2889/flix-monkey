@@ -141,6 +141,8 @@ _PROGRESS_MEDIA_ATTRIBUTES = frozenset({
     'data-video-id',
     'id',
 })
+_PROGRESS_MEDIA_URL_ATTRIBUTES = frozenset({'poster', 'src', 'srcset', 'style'})
+_MEDIA_URL_RE = re.compile(r'https?://[^\s,\'"\)]+')
 _VOID_TAGS = frozenset({
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
     'meta', 'param', 'source', 'track', 'wbr',
@@ -274,6 +276,31 @@ def sanitize(html):
     return ''.join(sanitizer.output)
 
 
+def _has_live_progress_media(card):
+    class MediaUrlParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.has_live_media = False
+
+        def handle_starttag(self, tag, attrs):
+            for name, value in attrs:
+                if name not in _PROGRESS_MEDIA_URL_ATTRIBUTES or not value:
+                    continue
+                for url in _MEDIA_URL_RE.findall(value):
+                    try:
+                        hostname = urllib.parse.urlsplit(url).hostname
+                    except ValueError:
+                        continue
+                    if hostname and (
+                        hostname == 'nflxso.net' or hostname.endswith('.nflxso.net')
+                    ):
+                        self.has_live_media = True
+
+    parser = MediaUrlParser()
+    parser.feed(card)
+    return parser.has_live_media
+
+
 _FORBIDDEN_FIXTURE_PATTERNS = (
     'data-tracking-uuid',
     'data-ui-tracking-context',
@@ -295,7 +322,7 @@ def validate_fixture(path):
     ):
         if not re.search(r'aria-label="Synthetic Progress Title \d{2}"', card):
             raise RuntimeError(f'{path}: progress-card title is not synthetic')
-        if 'occ-' in card or 'nflxso.net' in card:
+        if _has_live_progress_media(card):
             raise RuntimeError(f'{path}: progress-card media is not synthetic')
 
 

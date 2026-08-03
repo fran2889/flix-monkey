@@ -66,12 +66,23 @@ class FixtureSanitizerTest(unittest.TestCase):
             path = Path(directory) / 'fixture.html'
             path.write_text(
                 '<a data-uia="progress-card" aria-label="Synthetic Progress Title 01">'
-                '<img src="https://occ-1.nflxso.net/private.jpg"></a>',
+                '<img src="https://occ-1.nflxso.net/private.jpg" /></a>',
                 encoding='utf-8',
             )
 
             with self.assertRaisesRegex(RuntimeError, 'media is not synthetic'):
                 CAPTURE.validate_fixture(path)
+
+    def test_validator_allows_cdn_name_outside_media_hostname(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.html'
+            path.write_text(
+                '<a data-uia="progress-card" aria-label="Synthetic Progress Title 01">'
+                '<img src="https://example.invalid/image.jpg?source=nflxso.net"></a>',
+                encoding='utf-8',
+            )
+
+            CAPTURE.validate_fixture(path)
 
 
 if __name__ == '__main__':
