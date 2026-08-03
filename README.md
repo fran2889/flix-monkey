@@ -57,7 +57,7 @@ Use the links below to install the add-on for your browser.
 
 ## Settings
 
-> FlixMonkey supports multiple rating providers. The default (FM-DB + Agregarr) requires no API key but provides IMDb ratings only. OMDb and XMDb require free API keys, but they are more reliable and also provide Rotten Tomatoes and Metacritic scores.
+> FlixMonkey supports multiple rating providers. The default (Agregarr) requires no API key but provides IMDb ratings only. OMDb and XMDb require free API keys, but they are more reliable and also provide Rotten Tomatoes and Metacritic scores.
 
 Access settings via:
 
@@ -77,11 +77,11 @@ Access settings via:
 
 ### Rating Providers
 
-| Option          | Default          | Description                                                                                  |
-| --------------- | ---------------- | -------------------------------------------------------------------------------------------- |
-| Rating Provider | FM-DB + Agregarr | Active rating provider. Default uses FM-DB for IMDb ID lookup and Agregarr for IMDb ratings. |
-| OMDb API Key    | _empty_          | [Get a free API key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected    |
-| XMDb API Key    | _empty_          | [Get a free API key](https://xmdbapi.com/api-key). Required when XMDb is selected            |
+| Option          | Default  | Description                                                                                             |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| Rating Provider | Agregarr | Active rating provider. Default uses IMDb Suggestions for IMDb ID lookup and Agregarr for IMDb ratings. |
+| OMDb API Key    | _empty_  | [Get a free API key](https://www.omdbapi.com/apikey.aspx). Required when OMDb is selected               |
+| XMDb API Key    | _empty_  | [Get a free API key](https://xmdbapi.com/api-key). Required when XMDb is selected                       |
 
 ### Fade Settings
 
@@ -131,7 +131,7 @@ This usually means that the rating provider is failing or disabled. If the probl
 1. Open browser developer tools (F12) and check the Console tab for errors.
 2. Check the Console to see if your rating provider was disabled. Providers are auto-disabled for 1 hour after failures.
 3. Re-enable disabled providers in Settings to retry.
-4. Switch to a different rating provider. Default provider (FM-DB + Agregarr) can be unreliable.
+4. Switch to a different rating provider. Default provider (Agregarr) can be unreliable.
 
 **Rating shown does not match the rating on IMDb page**
 
@@ -197,14 +197,14 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (FM-DB, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (IMDb Suggestions, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
 
 **Third-party APIs:**
 
-By default, title lookups use [FM-DB](https://imdb.iamidiotareyoutoo.com/) for IMDb ID lookup and [Agregarr](https://agregarr.org/docs/imdb-ratings/) for ratings. When you opt-in to OMDb or XMDb (which requires your own API key), requests are made to [OMDb](https://www.omdbapi.com/) and/or [XMDb](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
+By default, title lookups use IMDb Suggestions for IMDb ID lookup and [Agregarr](https://agregarr.org/docs/imdb-ratings/) for ratings. When you opt-in to OMDb or XMDb (which requires your own API key), requests are made to [OMDb](https://www.omdbapi.com/) and/or [XMDb](https://xmdbapi.com/). Your use of these services is subject to their respective privacy policies.
 
 ---
 
