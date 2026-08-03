@@ -35,7 +35,7 @@
 // @grant        GM_registerMenuCommand
 // @connect      www.omdbapi.com
 // @connect      xmdbapi.com
-// @connect      imdb.iamidiotareyoutoo.com
+// @connect      v3.sg.media-imdb.com
 // @connect      api.agregarr.org
 // @run-at       document-idle
 // ==/UserScript==
