@@ -18,7 +18,7 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
 - **Test runner**: Vitest + jsdom + MSW
-- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb fallback (`imdb.iamidiotareyoutoo.com`)
+- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb Suggestions (`v3.sg.media-imdb.com`)
 
 ## Setup
 
@@ -389,7 +389,7 @@ npm run build && npm test
 ## Common Gotchas
 
 - **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.js` / `service-worker.js`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb fallback). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
+- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
 - **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.js`.
 - **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
