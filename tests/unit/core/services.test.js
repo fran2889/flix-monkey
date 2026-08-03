@@ -71,11 +71,6 @@ describe('NetflixService', () => {
         assert(Object.isFrozen(service.domains));
     });
 
-    it('provides TOP_10_BADGE constant', () => {
-        const service = new NetflixService();
-        assert.equal(service.constants.TOP_10_BADGE, 'title-card-top-10');
-    });
-
     it('returns constants as frozen object', () => {
         const service = new NetflixService();
         assert(Object.isFrozen(service.constants));
@@ -117,7 +112,10 @@ describe('HboMaxService', () => {
 
     it('provides Top 10 badge positioning constants', () => {
         const service = new HboMaxService();
-        assert.deepEqual(service.constants, { TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' });
+        assert.deepEqual(service.constants, {
+            TOP_10_SELECTORS: ['.fm-hbo-top-10'],
+            TOP_10_OFFSET: '30%',
+        });
         assert(Object.isFrozen(service.constants));
     });
 

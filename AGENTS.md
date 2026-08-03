@@ -18,7 +18,7 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
 - **Test runner**: Vitest + jsdom + MSW
-- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb fallback (`imdb.iamidiotareyoutoo.com`)
+- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb Suggestions (`v3.sg.media-imdb.com`)
 
 ## Setup
 
@@ -53,9 +53,9 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Developer Scripts
 
-| Script                                | Description                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/capture-surface-fixtures.py` | Captures and anonymises Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/surfaces/*.html` and refreshes `tests/fixtures/netflix-*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+| Script                                | Description                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
 
 ### Build Notes
 
@@ -90,16 +90,14 @@ Husky git hooks are installed automatically via the `prepare` script.
 ```
 tests/
   setup.js              # Global: MSW server lifecycle + jest-dom matchers
-  fixtures/             # HTML snapshots of Netflix DOM states for UI tests
-    netflix-browse.html
-    netflix-hover.html
-    netflix-modal.html
-    netflix-search.html
-    surfaces/             # Individual surface type fixtures
-      preview-detail.html
-      preview-mini.html
-      standard-card.html
-      title-card.html
+  fixtures/             # Targeted Netflix surface fixtures for UI tests
+    preview-detail.html
+    preview-mini.html
+    progress-card.html
+    ranked-card.html
+    standard-card.html
+    title-card.html
+  scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
     adapter.js          # Mock PlatformAdapter
     chrome.js           # chrome.* API stubs
@@ -265,17 +263,16 @@ class PlatformAdapter {
 
 ## Constants (`constants.js`)
 
-| Export                    | Value / Type  | Notes                                               |
-| ------------------------- | ------------- | --------------------------------------------------- |
-| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                                |
-| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                     |
-| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                               |
-| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request              |
-| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)        |
-| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                                |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names  |
-| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum                |
-| `TOP_10_BADGE`            | string        | CSS class identifying Netflix Top-10 badge elements |
+| Export                    | Value / Type  | Notes                                              |
+| ------------------------- | ------------- | -------------------------------------------------- |
+| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                               |
+| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                    |
+| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                              |
+| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request             |
+| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)       |
+| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                               |
+| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
+| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum               |
 
 ## Rate Limits (`rate-limits.js`)
 
@@ -392,7 +389,7 @@ npm run build && npm test
 ## Common Gotchas
 
 - **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.js` / `service-worker.js`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb fallback). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
+- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
 - **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.js`.
 - **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.

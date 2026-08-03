@@ -16,7 +16,7 @@
  * FlixMonkey. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { HboMaxSurfaceManager, NetflixSurfaceManager } from './surfaces.js';
+import { HboMaxSurfaceManager, NETFLIX_SURFACES, NetflixSurfaceManager } from './surfaces.js';
 
 /**
  * Base class for streaming service implementations.
@@ -60,7 +60,9 @@ export class NetflixService extends StreamingService {
     }
 
     get constants() {
-        return Object.freeze({ TOP_10_BADGE: 'title-card-top-10' });
+        return Object.freeze({
+            TOP_10_SELECTORS: Object.freeze(['.title-card-top-10', NETFLIX_SURFACES.RANKED_CARD.containerSelector]),
+        });
     }
 
     isEnabled(configManager) {
@@ -85,7 +87,7 @@ export class HboMaxService extends StreamingService {
     }
 
     get constants() {
-        return Object.freeze({ TOP_10_BADGE: 'fm-hbo-top-10', TOP_10_OFFSET: '30%' });
+        return Object.freeze({ TOP_10_SELECTORS: Object.freeze(['.fm-hbo-top-10']), TOP_10_OFFSET: '30%' });
     }
 
     isEnabled(configManager) {

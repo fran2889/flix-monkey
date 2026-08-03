@@ -39,19 +39,6 @@ function parseRatings(ratings, sourcePattern) {
     return entry?.value ?? entry?.Value ?? null;
 }
 
-const TITLE_TYPE_MAP = {
-    Movie: TitleType.MOVIE,
-    movie: TitleType.MOVIE,
-    'TV Series': TitleType.SERIES,
-    series: TitleType.SERIES,
-    tvSeries: TitleType.SERIES,
-    tvMiniSeries: TitleType.SERIES,
-};
-
-function mapTitleType(apiValue) {
-    return TITLE_TYPE_MAP[apiValue] ?? null;
-}
-
 /**
  * Abstract base class for API clients.
  *
@@ -213,6 +200,12 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
+    #mapTitleType(apiValue) {
+        if (apiValue === 'Movie') return TitleType.MOVIE;
+        if (apiValue === 'TV Series') return TitleType.SERIES;
+        return null;
+    }
+
     async getStatus() {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
@@ -271,7 +264,7 @@ export class XmdbApiClient extends BaseApiClient {
             imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
-            type: mapTitleType(title_type) ?? searchTitle.type,
+            type: this.#mapTitleType(title_type) ?? searchTitle.type,
             source: null,
         });
     }
@@ -287,6 +280,12 @@ export class OmdbApiClient extends BaseApiClient {
             config,
             logger
         );
+    }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'series') return TitleType.SERIES;
+        return null;
     }
 
     async getStatus() {
@@ -316,7 +315,7 @@ export class OmdbApiClient extends BaseApiClient {
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
-            type: mapTitleType(apiType),
+            type: this.#mapTitleType(apiType),
             source: null,
         });
     }
@@ -326,6 +325,8 @@ export class OmdbApiClient extends BaseApiClient {
         return searchTitle;
     }
 }
+
+const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
 export class AgregarrApiClient extends BaseApiClient {
     constructor(disabledManager, adapter, config, logger) {
@@ -339,30 +340,36 @@ export class AgregarrApiClient extends BaseApiClient {
         );
     }
 
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
+        return null;
+    }
+
     async search(displayTitle) {
-        const encoded = encodeURIComponent(displayTitle);
-        this.logger?.debug(`Searching FM-DB for title: "${displayTitle}"`);
-        const data = await this.queuedFetch(`https://imdb.iamidiotareyoutoo.com/search?q=${encoded}`, 0);
-        if (!data?.ok) {
-            this.logger?.info(`FM-DB search request failed for "${displayTitle}"`);
-            return null;
-        }
-        const results = data?.description;
+        const encoded = encodeURIComponent(displayTitle.toLowerCase());
+        this.logger?.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
+        const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
+        const results = data?.d;
         if (!results?.length) {
-            this.logger?.info(`No search results found in FM-DB for "${displayTitle}"`);
+            this.logger?.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
             return null;
         }
-        const match = results[0];
+        const match = results.find(result => AGREGARR_TITLE_TYPES.has(result.qid));
+        if (!match) {
+            this.logger?.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
+            return null;
+        }
         return new Title({
             displayTitle,
-            apiTitle: match['#TITLE'] ?? null,
-            imdbId: match['#IMDB_ID'] ?? null,
-            year: match['#YEAR'] ?? null,
+            apiTitle: match.l ?? null,
+            imdbId: match.id ?? null,
+            year: match.y ?? null,
             rating: null,
             imdbVotes: null,
             rtRating: null,
             mcRating: null,
-            type: null,
+            type: this.#mapTitleType(match.qid),
             source: null,
         });
     }

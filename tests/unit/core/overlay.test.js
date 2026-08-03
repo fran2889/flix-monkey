@@ -24,7 +24,9 @@ import { HboMaxService } from '../../../src/core/services.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
-const NETFLIX_CONSTANTS = { TOP_10_BADGE: 'title-card-top-10' };
+const NETFLIX_CONSTANTS = {
+    TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
+};
 const HBO_MAX_CONSTANTS = new HboMaxService().constants;
 
 describe('OverlayRenderer', () => {
@@ -72,18 +74,14 @@ describe('OverlayRenderer', () => {
             expect(style.textContent).toContain('flex-direction: column-reverse');
         });
 
-        it('should use TOP_10_BADGE constant in injected CSS', () => {
+        it('should offset configured Top 10 selectors for left-side corners', () => {
             const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), NETFLIX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
-        });
-
-        it('should include TOP_10_BADGE offset rule for left-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), NETFLIX_CONSTANTS);
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            expect(style.textContent).toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
+            NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+                expect(style.textContent).toContain(`${selector} .fm-rating-overlay`);
+            });
+            expect(style.textContent).toContain('left: calc(50% + 6px)');
         });
 
         it('should use the service-provided Top 10 offset for left-side corners', () => {
@@ -100,11 +98,13 @@ describe('OverlayRenderer', () => {
             expect(style.textContent).toContain('.fm-hbo-top-10 .fm-rating-overlay { left: calc(30% + 6px); }');
         });
 
-        it('should not include TOP_10_BADGE offset rule for right-side corners', () => {
+        it('should not offset configured Top 10 selectors for right-side corners', () => {
             const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }), NETFLIX_CONSTANTS);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            expect(style.textContent).not.toContain(`.${NETFLIX_CONSTANTS.TOP_10_BADGE}`);
+            NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+                expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
+            });
         });
     });
 

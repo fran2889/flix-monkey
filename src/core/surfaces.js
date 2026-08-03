@@ -52,6 +52,22 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
+    /** Browse-page Continue Watching cards. */
+    PROGRESS_CARD: Object.freeze({
+        titleSelector: '[data-uia="progress-card"][aria-label]',
+        containerSelector: '[data-uia="progress-card"]',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    /** Browse-page Top 10 cards. */
+    RANKED_CARD: Object.freeze({
+        titleSelector: '[data-uia="ranked-card"][aria-label]',
+        containerSelector: '[data-uia="ranked-card"]',
+        titleAttribute: 'aria-label',
+        fadeable: true,
+        showFadeToggle: false,
+    }),
     /**
      * Hover mini-modal (card mouse-over). Scoped to .mini-modal so the detail-modal surface
      * can target the same player container independently.

@@ -58,7 +58,7 @@ export const CONFIG_FIELDS = [
         label: 'Rating Provider',
         type: 'select',
         options: [
-            ['agregarr', 'FM-DB + Agregarr'],
+            ['agregarr', 'Agregarr'],
             ['omdb', 'OMDb'],
             ['xmdb', 'XMDb'],
         ],
