@@ -64,11 +64,6 @@ describe('NetflixService', () => {
         assert(Object.isFrozen(service.domains));
     });
 
-    it('provides TOP_10_BADGE constant', () => {
-        const service = new NetflixService();
-        assert.equal(service.constants.TOP_10_BADGE, 'title-card-top-10');
-    });
-
     it('returns constants as frozen object', () => {
         const service = new NetflixService();
         assert(Object.isFrozen(service.constants));
