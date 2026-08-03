@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/fran2889/flix-monkey/compare/v1.4.0...v1.4.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **api-clients:** restore IMDb suggestions for Agregarr ([#127](https://github.com/fran2889/flix-monkey/issues/127)) ([f79e291](https://github.com/fran2889/flix-monkey/commit/f79e29139e33d78e8baa3880441bc59378f73265))
+* **surfaces:** support new Netflix browse cards ([#126](https://github.com/fran2889/flix-monkey/issues/126)) ([21dfc31](https://github.com/fran2889/flix-monkey/commit/21dfc31fa182422b7f0850cf1f96860cec475fa7))
+
 ## [1.4.0](https://github.com/fran2889/flix-monkey/compare/v1.3.0...v1.4.0) (2026-07-11)
 
 
