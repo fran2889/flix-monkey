@@ -56,10 +56,11 @@ labels marked `LIVE` or `Upcoming`, as well as malformed labels. Returning no
 title causes discovery to skip the card rather than issue an incorrect API
 request.
 
-The tile link is the overlay container. It is fadeable and does not expose the
-hover-preview fade toggle, consistent with Netflix browse cards and HBO Max
-tiles. Shared fade settings and per-title fade overrides therefore work on
-Disney+ without service-specific changes.
+The parent `[data-testid="set-shelf-item"]` element is the overlay container,
+which keeps the renderer's IMDb link outside Disney+'s title link. It is
+fadeable and does not expose the hover-preview fade toggle, consistent with
+Netflix browse cards and HBO Max tiles. Shared fade settings and per-title fade
+overrides therefore work on Disney+ without service-specific changes.
 
 ## Runtime Behavior
 
