@@ -143,6 +143,14 @@ describe('SettingsUI', () => {
             expect(checkbox.checked).toBe(enableNetflixField.default);
         });
 
+        it('should render enableDisneyPlus as a checked checkbox by default', async () => {
+            await settingsUI.render(container);
+            const checkbox = container.querySelector('#fm-enableDisneyPlus');
+
+            expect(checkbox.type).toBe('checkbox');
+            expect(checkbox.checked).toBe(true);
+        });
+
         it('should render services group with "Enabled Streaming Services" label', async () => {
             await settingsUI.render(container);
             const servicesLabel = container.querySelector('.services-field .field-label');

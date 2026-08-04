@@ -41,6 +41,14 @@ export const CONFIG_FIELDS = [
         row: 'services',
     },
     {
+        key: 'enableDisneyPlus',
+        label: 'Disney+',
+        type: 'checkbox',
+        default: true,
+        title: 'Enable FlixMonkey on Disney+',
+        row: 'services',
+    },
+    {
         key: 'overlayCorner',
         label: 'Badge Position',
         type: 'select',
