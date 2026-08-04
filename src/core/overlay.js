@@ -57,6 +57,7 @@ export class OverlayRenderer {
         const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
         const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
         const TOP_10_SELECTORS = this.#serviceConstants.TOP_10_SELECTORS ?? [];
+        const TOP_10_OFFSET = this.#serviceConstants.TOP_10_OFFSET ?? '50%';
         let cssText = `
             .${this.#OVERLAY_CLASS} {
                 position: absolute;
@@ -98,7 +99,7 @@ export class OverlayRenderer {
         `;
         if (corner.includes('left') && TOP_10_SELECTORS.length) {
             const selectors = TOP_10_SELECTORS.map(selector => `${selector} .${this.#OVERLAY_CLASS}`);
-            cssText += `\n            ${selectors.join(',\n            ')} { left: calc(50% + 6px); }`;
+            cssText += `\n            ${selectors.join(',\n            ')} { left: calc(${TOP_10_OFFSET} + 6px); }`;
         }
         cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }

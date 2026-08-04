@@ -21,6 +21,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
+import { NetflixService } from '../../src/core/services.js';
 import { NetflixSurfaceManager } from '../../src/core/surfaces.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 import { createMockLogger } from '../mocks/logger.js';
@@ -37,7 +38,7 @@ describe('Browse UI Surface', () => {
     beforeEach(() => {
         document.body.innerHTML = fixtureHtml;
         surfaceManager = new NetflixSurfaceManager(createMockLogger());
-        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()));
+        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()), new NetflixService().constants);
         overlayRenderer.injectStyles();
     });
 

@@ -1,7 +1,7 @@
 {
     "name": "FlixMonkey",
     "version": "1.4.1",
-    "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.",
+    "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix and HBO Max.",
     "author": "fran",
     "license": "GPL-3.0-or-later",
     "homepage": "https://github.com/fran2889/flix-monkey",

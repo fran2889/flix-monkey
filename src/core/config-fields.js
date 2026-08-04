@@ -33,6 +33,14 @@ export const CONFIG_FIELDS = [
         row: 'services',
     },
     {
+        key: 'enableHboMax',
+        label: 'HBO Max',
+        type: 'checkbox',
+        default: true,
+        title: 'Enable FlixMonkey on HBO Max',
+        row: 'services',
+    },
+    {
         key: 'overlayCorner',
         label: 'Badge Position',
         type: 'select',

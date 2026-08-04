@@ -23,8 +23,12 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
-const NETFLIX_CONSTANTS = {
+const DEFAULT_OFFSET_CONSTANTS = {
     TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
+};
+const CUSTOM_OFFSET_CONSTANTS = {
+    TOP_10_SELECTORS: ['.custom-hbo-top-10'],
+    TOP_10_OFFSET: '30%',
 };
 
 describe('OverlayRenderer', () => {
@@ -72,24 +76,32 @@ describe('OverlayRenderer', () => {
             expect(style.textContent).toContain('flex-direction: column-reverse');
         });
 
-        it('should offset configured Top 10 selectors for left-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }), NETFLIX_CONSTANTS);
+        it.each([
+            ['top-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
+            ['bottom-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
+            ['top-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
+            ['bottom-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
+        ])('should offset Top 10 selectors for %s corners', (corner, serviceConstants, offset) => {
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), serviceConstants);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+            serviceConstants.TOP_10_SELECTORS.forEach(selector => {
                 expect(style.textContent).toContain(`${selector} .fm-rating-overlay`);
             });
-            expect(style.textContent).toContain('left: calc(50% + 6px)');
+            expect(style.textContent).toContain(`left: calc(${offset} + 6px)`);
         });
 
-        it('should not offset configured Top 10 selectors for right-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }), NETFLIX_CONSTANTS);
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
-                expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
-            });
-        });
+        it.each(['top-right', 'bottom-right'])(
+            'should not offset configured Top 10 selectors for %s corners',
+            corner => {
+                const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), DEFAULT_OFFSET_CONSTANTS);
+                renderer.injectStyles();
+                const style = document.head.querySelector('style');
+                DEFAULT_OFFSET_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+                    expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
+                });
+            }
+        );
     });
 
     describe('Overlay injection', () => {
