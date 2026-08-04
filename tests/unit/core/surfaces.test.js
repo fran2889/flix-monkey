@@ -19,6 +19,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     extractHboMaxTitle,
+    HBO_MAX_SURFACES,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
     NetflixSurfaceManager,
@@ -145,6 +146,24 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
     });
 
+    it('decorates a resolved container through the optional surface hook', () => {
+        document.body.innerHTML = '<div data-container><span data-title="Decorated Title"></span></div>';
+        const sm = new SurfaceManager(
+            {
+                card: {
+                    titleSelector: '[data-title]',
+                    getTitle: element => element.dataset.title,
+                    getContainer: element => element.parentElement,
+                    decorateContainer: container => container.classList.add('decorated'),
+                },
+            },
+            createMockLogger()
+        );
+
+        const [surface] = sm.discover(document.body);
+        expect(surface.container).toHaveClass('decorated');
+    });
+
     it('falls back to parentElement when a surface getContainer callback returns null', () => {
         document.body.innerHTML = `
             <div data-container>
@@ -227,6 +246,20 @@ describe('HBO Max surfaces', () => {
         const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
         expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
+    });
+
+    it('keeps HBO container resolution free of Top 10 decoration', () => {
+        document.body.innerHTML = `
+            <div class="hbo-card">
+                <a data-testid="ranked_tile" data-sonic-type="show" aria-label="Number 1: House of the Dragon. 1 of 10."></a>
+            </div>
+        `;
+        const tile = document.querySelector('a');
+
+        const container = HBO_MAX_SURFACES.TILE.getContainer(tile);
+
+        expect(container).toBe(tile.parentElement);
+        expect(container).not.toHaveClass('fm-hbo-top-10');
     });
 
     it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {

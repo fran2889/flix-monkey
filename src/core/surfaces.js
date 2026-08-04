@@ -21,12 +21,14 @@
  * @property {string} titleSelector - CSS selector for title elements
  * @property {(element: Element) => string|null|undefined} getTitle - Callback that returns the title text
  * @property {(element: Element) => Element|null|undefined} getContainer - Callback that returns the container
+ * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
  * @property {boolean} fadeable - Whether this surface supports fading
  * @property {boolean} showFadeToggle - Whether to show fade toggle button
  */
 
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
 const containerFromClosest = selector => element => element.closest(selector);
+const containerFromParent = element => element.parentElement;
 
 /**
  * Netflix-specific surface definitions for various UI surfaces.
@@ -136,6 +138,7 @@ export class SurfaceManager {
                     container = titleEl.parentElement;
                 }
                 if (!container || seen.has(container)) return;
+                surface.decorateContainer?.(container, titleEl);
                 seen.add(container);
                 results.push({
                     container,
@@ -165,10 +168,7 @@ export class NetflixSurfaceManager extends SurfaceManager {
  * @returns {string|null} Extracted title, or null if the tile is unsupported
  */
 export function extractHboMaxTitle(tile) {
-    const label = tile
-        .getAttribute('aria-label')
-        ?.replace(/[\u2066-\u2069]/g, '')
-        .trim();
+    const label = getNormalizedHboMaxAriaLabel(tile);
     if (!label) return null;
 
     if (tile.dataset.sonicType === 'video') {
@@ -184,11 +184,15 @@ export function extractHboMaxTitle(tile) {
     return match?.[1]?.trim() || null;
 }
 
-function isHboMaxTop10Tile(tile) {
-    const label = tile
+function getNormalizedHboMaxAriaLabel(tile) {
+    return tile
         .getAttribute('aria-label')
         ?.replace(/[\u2066-\u2069]/g, '')
         .trim();
+}
+
+function isHboMaxTop10Tile(tile) {
+    const label = getNormalizedHboMaxAriaLabel(tile);
     return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
 
@@ -199,10 +203,9 @@ export const HBO_MAX_SURFACES = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
-        getContainer: tile => {
-            const container = tile.parentElement;
-            container?.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(tile));
-            return container;
+        getContainer: containerFromParent,
+        decorateContainer: (container, tile) => {
+            container.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(tile));
         },
         fadeable: true,
         showFadeToggle: false,
