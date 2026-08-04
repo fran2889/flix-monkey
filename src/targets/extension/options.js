@@ -33,7 +33,7 @@ const disabledClientsManager = new DisabledClientsManager(adapter);
 const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
 ui.onSave = async () => {
     const tabs = await browser.tabs.query({
-        url: ['*://*.netflix.com/*', '*://play.hbomax.com/*'],
+        url: ['*://*.netflix.com/*', '*://play.hbomax.com/*', '*://www.disneyplus.com/*'],
     });
     await Promise.all(tabs.map(tab => browser.tabs.reload(tab.id)));
 };
