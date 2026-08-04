@@ -19,13 +19,14 @@
 /**
  * @typedef {Object} SurfaceDefinition
  * @property {string} titleSelector - CSS selector for title elements
- * @property {string} containerSelector - CSS selector for container elements
- * @property {string} [titleAttribute] - Attribute name containing the title text
- * @property {(element: Element) => string|null|undefined} [getTitle] - Callback that returns the title text
- * @property {(element: Element) => Element|null|undefined} [getContainer] - Callback that returns the container
+ * @property {(element: Element) => string|null|undefined} getTitle - Callback that returns the title text
+ * @property {(element: Element) => Element|null|undefined} getContainer - Callback that returns the container
  * @property {boolean} fadeable - Whether this surface supports fading
  * @property {boolean} showFadeToggle - Whether to show fade toggle button
  */
+
+const titleFromAttribute = attribute => element => element.getAttribute(attribute);
+const containerFromClosest = selector => element => element.closest(selector);
 
 /**
  * Netflix-specific surface definitions for various UI surfaces.
@@ -37,8 +38,8 @@ export const NETFLIX_SURFACES = Object.freeze({
      */
     TITLE_CARD: Object.freeze({
         titleSelector: '.title-card a[aria-label]',
-        containerSelector: '.title-card',
-        titleAttribute: 'aria-label',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('.title-card'),
         fadeable: true,
         showFadeToggle: false,
     }),
@@ -47,24 +48,24 @@ export const NETFLIX_SURFACES = Object.freeze({
      */
     SEARCH_CARD: Object.freeze({
         titleSelector: '[data-uia="standard-card"]',
-        containerSelector: '[data-uia="standard-card"]',
-        titleAttribute: 'aria-label',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="standard-card"]'),
         fadeable: true,
         showFadeToggle: false,
     }),
     /** Browse-page Continue Watching cards. */
     PROGRESS_CARD: Object.freeze({
         titleSelector: '[data-uia="progress-card"][aria-label]',
-        containerSelector: '[data-uia="progress-card"]',
-        titleAttribute: 'aria-label',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="progress-card"]'),
         fadeable: true,
         showFadeToggle: false,
     }),
     /** Browse-page Top 10 cards. */
     RANKED_CARD: Object.freeze({
         titleSelector: '[data-uia="ranked-card"][aria-label]',
-        containerSelector: '[data-uia="ranked-card"]',
-        titleAttribute: 'aria-label',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="ranked-card"]'),
         fadeable: true,
         showFadeToggle: false,
     }),
@@ -74,8 +75,8 @@ export const NETFLIX_SURFACES = Object.freeze({
      */
     PREVIEW_MINI: Object.freeze({
         titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
-        containerSelector: '.previewModal--player_container',
-        titleAttribute: 'alt',
+        getTitle: titleFromAttribute('alt'),
+        getContainer: containerFromClosest('.previewModal--player_container'),
         fadeable: false,
         showFadeToggle: true,
     }),
@@ -85,8 +86,8 @@ export const NETFLIX_SURFACES = Object.freeze({
      */
     PREVIEW_DETAIL: Object.freeze({
         titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
-        containerSelector: '.previewModal--player_container',
-        titleAttribute: 'alt',
+        getTitle: titleFromAttribute('alt'),
+        getContainer: containerFromClosest('.previewModal--player_container'),
         fadeable: false,
         showFadeToggle: false,
     }),
@@ -126,17 +127,12 @@ export class SurfaceManager {
                 return;
             }
             titleEls.forEach(titleEl => {
-                const rawTitle = surface.getTitle
-                    ? surface.getTitle(titleEl)
-                    : titleEl.getAttribute(surface.titleAttribute);
+                const rawTitle = surface.getTitle(titleEl);
                 const title = rawTitle?.trim() ?? null;
                 if (!title) return;
-                let container = surface.getContainer?.(titleEl);
-                if (!container) container = titleEl.closest(surface.containerSelector);
+                let container = surface.getContainer(titleEl);
                 if (!container) {
-                    this.#logger.warn('Surface container selector failed, falling back to parentElement', {
-                        selector: surface.containerSelector,
-                    });
+                    this.#logger.warn('Surface container resolver failed, falling back to parentElement');
                     container = titleEl.parentElement;
                 }
                 if (!container || seen.has(container)) return;
@@ -202,7 +198,6 @@ function isHboMaxTop10Tile(tile) {
 export const HBO_MAX_SURFACES = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
-        containerSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
         getContainer: tile => {
             const container = tile.parentElement;

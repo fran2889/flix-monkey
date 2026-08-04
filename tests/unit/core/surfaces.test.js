@@ -72,7 +72,7 @@ describe('SurfaceManager', () => {
         expect(results[0].title).toBe('First');
     });
 
-    it('should fall back to parentElement when containerSel does not match', () => {
+    it('should fall back to parentElement when the container resolver returns null', () => {
         const logger = createMockLogger();
         const sm = new SurfaceManager(NETFLIX_SURFACES, logger);
         const fakeParent = document.createElement('div');
@@ -86,9 +86,7 @@ describe('SurfaceManager', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
         expect(results[0].container).toBe(fakeParent);
-        expect(logger.warn).toHaveBeenCalledWith('Surface container selector failed, falling back to parentElement', {
-            selector: '.title-card',
-        });
+        expect(logger.warn).toHaveBeenCalledWith('Surface container resolver failed, falling back to parentElement');
     });
 
     it('should return empty array when querySelectorAll throws', () => {
@@ -102,13 +100,22 @@ describe('SurfaceManager', () => {
         ).toEqual([]);
     });
 
+    it('defines title and container callbacks without legacy selector fields', () => {
+        Object.values(NETFLIX_SURFACES).forEach(surface => {
+            expect(surface.getTitle).toEqual(expect.any(Function));
+            expect(surface.getContainer).toEqual(expect.any(Function));
+            expect(surface).not.toHaveProperty('titleAttribute');
+            expect(surface).not.toHaveProperty('containerSelector');
+        });
+    });
+
     it('uses a surface getTitle callback', () => {
         const sm = new SurfaceManager(
             {
                 card: {
                     titleSelector: '[data-title]',
-                    containerSelector: '[data-title]',
                     getTitle: el => el.dataset.title,
+                    getContainer: element => element,
                 },
             },
             createMockLogger()
@@ -117,7 +124,7 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
     });
 
-    it('uses a surface getContainer callback before the container selector', () => {
+    it('uses a surface getContainer callback', () => {
         const resolvedContainer = document.createElement('div');
         resolvedContainer.innerHTML = '<span data-title="Resolver Title"></span>';
         const selectorContainer = document.createElement('section');
@@ -128,8 +135,7 @@ describe('SurfaceManager', () => {
             {
                 card: {
                     titleSelector: '[data-title]',
-                    containerSelector: '[data-selector-container]',
-                    titleAttribute: 'data-title',
+                    getTitle: element => element.dataset.title,
                     getContainer: element => element.parentElement,
                 },
             },
@@ -139,7 +145,7 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
     });
 
-    it('uses the container selector when a surface getContainer callback returns null', () => {
+    it('falls back to parentElement when a surface getContainer callback returns null', () => {
         document.body.innerHTML = `
             <div data-container>
                 <span data-title="Fallback Title"></span>
@@ -149,8 +155,7 @@ describe('SurfaceManager', () => {
             {
                 card: {
                     titleSelector: '[data-title]',
-                    containerSelector: '[data-container]',
-                    titleAttribute: 'data-title',
+                    getTitle: element => element.dataset.title,
                     getContainer: () => null,
                 },
             },

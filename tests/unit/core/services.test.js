@@ -76,6 +76,13 @@ describe('NetflixService', () => {
         assert(Object.isFrozen(service.constants));
     });
 
+    it('provides Top 10 badge positioning selectors', () => {
+        const service = new NetflixService();
+        assert.deepEqual(service.constants, {
+            TOP_10_SELECTORS: ['.title-card-top-10', '[data-uia="ranked-card"]'],
+        });
+    });
+
     it('isEnabled returns true when enableNetflix is true', () => {
         const service = new NetflixService();
         const mockConfig = { getBool: vi.fn().mockReturnValue(true) };
