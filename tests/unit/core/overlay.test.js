@@ -23,10 +23,10 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
-const NETFLIX_CONSTANTS = {
+const DEFAULT_OFFSET_CONSTANTS = {
     TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
 };
-const HBO_MAX_CONSTANTS = {
+const CUSTOM_OFFSET_CONSTANTS = {
     TOP_10_SELECTORS: ['.custom-hbo-top-10'],
     TOP_10_OFFSET: '30%',
 };
@@ -77,11 +77,11 @@ describe('OverlayRenderer', () => {
         });
 
         it.each([
-            ['Netflix', 'top-left', NETFLIX_CONSTANTS, '50%'],
-            ['Netflix', 'bottom-left', NETFLIX_CONSTANTS, '50%'],
-            ['HBO Max', 'top-left', HBO_MAX_CONSTANTS, '30%'],
-            ['HBO Max', 'bottom-left', HBO_MAX_CONSTANTS, '30%'],
-        ])('should offset %s Top 10 selectors for %s corners', (_service, corner, serviceConstants, offset) => {
+            ['top-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
+            ['bottom-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
+            ['top-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
+            ['bottom-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
+        ])('should offset Top 10 selectors for %s corners', (corner, serviceConstants, offset) => {
             const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), serviceConstants);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
@@ -94,10 +94,10 @@ describe('OverlayRenderer', () => {
         it.each(['top-right', 'bottom-right'])(
             'should not offset configured Top 10 selectors for %s corners',
             corner => {
-                const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), NETFLIX_CONSTANTS);
+                const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), DEFAULT_OFFSET_CONSTANTS);
                 renderer.injectStyles();
                 const style = document.head.querySelector('style');
-                NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+                DEFAULT_OFFSET_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
                     expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
                 });
             }
