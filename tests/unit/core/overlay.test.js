@@ -20,14 +20,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseHex } from '../../../src/core/color-utils.js';
 import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../src/core/constants.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { HboMaxService } from '../../../src/core/services.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
 const NETFLIX_CONSTANTS = {
     TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
 };
-const HBO_MAX_CONSTANTS = new HboMaxService().constants;
+const HBO_MAX_CONSTANTS = {
+    TOP_10_SELECTORS: ['.custom-hbo-top-10'],
+    TOP_10_OFFSET: '30%',
+};
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {

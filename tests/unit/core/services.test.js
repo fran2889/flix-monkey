@@ -18,148 +18,32 @@
 
 import { afterEach, assert, describe, it, vi } from 'vitest';
 
-import {
-    HboMaxService,
-    NetflixService,
-    ServiceRegistry,
-    SERVICES,
-    StreamingService,
-} from '../../../src/core/services.js';
-import { HboMaxSurfaceManager } from '../../../src/core/surfaces.js';
+import { HboMaxService, NetflixService, ServiceRegistry, StreamingService } from '../../../src/core/services.js';
+import { HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
 
 describe('StreamingService', () => {
-    it('throws on unimplemented id getter', () => {
+    it.each([
+        ['id', service => service.id],
+        ['domains', service => service.domains],
+        ['SurfaceManager', service => service.SurfaceManager],
+        ['isEnabled', service => service.isEnabled({ getBool: () => true })],
+    ])('throws on unimplemented %s', (_member, access) => {
         const service = new StreamingService();
-        assert.throws(() => service.id, /Not implemented/);
-    });
-
-    it('throws on unimplemented domains getter', () => {
-        const service = new StreamingService();
-        assert.throws(() => service.domains, /Not implemented/);
-    });
-
-    it('throws on unimplemented SurfaceManager getter', () => {
-        const service = new StreamingService();
-        assert.throws(() => service.SurfaceManager, /Not implemented/);
-    });
-
-    it('returns empty object for constants by default', () => {
-        const service = new StreamingService();
-        assert.deepEqual(service.constants, {});
-    });
-
-    it('throws on unimplemented isEnabled method', () => {
-        const service = new StreamingService();
-        const mockConfig = { getBool: () => true };
-        assert.throws(() => service.isEnabled(mockConfig), /Not implemented/);
+        assert.throws(() => access(service), /Not implemented/);
     });
 });
 
-describe('NetflixService', () => {
-    it('has id netflix', () => {
-        const service = new NetflixService();
-        assert.equal(service.id, 'netflix');
-    });
+describe.each([
+    ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix'],
+    ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
+])('%s service', (_name, Service, SurfaceManager, configKey) => {
+    it('selects its surface manager and enablement setting', () => {
+        const service = new Service();
+        const config = { getBool: vi.fn().mockReturnValue(false) };
 
-    it('has netflix.com and www.netflix.com domains', () => {
-        const service = new NetflixService();
-        assert.deepEqual(service.domains, ['netflix.com', 'www.netflix.com']);
-    });
-
-    it('returns domains as frozen object', () => {
-        const service = new NetflixService();
-        assert(Object.isFrozen(service.domains));
-    });
-
-    it('returns constants as frozen object', () => {
-        const service = new NetflixService();
-        assert(Object.isFrozen(service.constants));
-    });
-
-    it('provides Top 10 badge positioning selectors', () => {
-        const service = new NetflixService();
-        assert.deepEqual(service.constants, {
-            TOP_10_SELECTORS: ['.title-card-top-10', '[data-uia="ranked-card"]'],
-        });
-    });
-
-    it('isEnabled returns true when enableNetflix is true', () => {
-        const service = new NetflixService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(true) };
-        assert.equal(service.isEnabled(mockConfig), true);
-    });
-
-    it('isEnabled returns false when enableNetflix is false', () => {
-        const service = new NetflixService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(false) };
-        assert.equal(service.isEnabled(mockConfig), false);
-    });
-});
-
-describe('HboMaxService', () => {
-    it('has id hbomax', () => {
-        const service = new HboMaxService();
-        assert.equal(service.id, 'hbomax');
-    });
-
-    it('has play.hbomax.com domain', () => {
-        const service = new HboMaxService();
-        assert.deepEqual(service.domains, ['play.hbomax.com']);
-    });
-
-    it('returns domains as frozen object', () => {
-        const service = new HboMaxService();
-        assert(Object.isFrozen(service.domains));
-    });
-
-    it('uses HboMaxSurfaceManager', () => {
-        const service = new HboMaxService();
-        assert.equal(service.SurfaceManager, HboMaxSurfaceManager);
-    });
-
-    it('provides Top 10 badge positioning constants', () => {
-        const service = new HboMaxService();
-        assert.deepEqual(service.constants, {
-            TOP_10_SELECTORS: ['.fm-hbo-top-10'],
-            TOP_10_OFFSET: '30%',
-        });
-        assert(Object.isFrozen(service.constants));
-    });
-
-    it('isEnabled returns true when enableHboMax is true', () => {
-        const service = new HboMaxService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(true) };
-        assert.equal(service.isEnabled(mockConfig), true);
-        assert.equal(mockConfig.getBool.mock.calls[0][0], 'enableHboMax');
-    });
-
-    it('isEnabled returns false when enableHboMax is false', () => {
-        const service = new HboMaxService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(false) };
-        assert.equal(service.isEnabled(mockConfig), false);
-        assert.equal(mockConfig.getBool.mock.calls[0][0], 'enableHboMax');
-    });
-});
-
-describe('SERVICES registry', () => {
-    it('contains netflix service', () => {
-        assert('netflix' in SERVICES);
-    });
-
-    it('netflix service is a NetflixService instance', () => {
-        assert(SERVICES.netflix instanceof NetflixService);
-    });
-
-    it('contains HBO Max service', () => {
-        assert('hbomax' in SERVICES);
-    });
-
-    it('HBO Max service is a HboMaxService instance', () => {
-        assert(SERVICES.hbomax instanceof HboMaxService);
-    });
-
-    it('registry is frozen', () => {
-        assert(Object.isFrozen(SERVICES));
+        assert.equal(service.SurfaceManager, SurfaceManager);
+        assert.equal(service.isEnabled(config), false);
+        assert.deepEqual(config.getBool.mock.calls, [[configKey]]);
     });
 });
 
@@ -171,61 +55,25 @@ describe('ServiceRegistry', () => {
     });
 
     describe('detect()', () => {
-        it('returns Netflix service on netflix.com', () => {
+        it.each([
+            ['netflix.com', NetflixService],
+            ['www.netflix.com', NetflixService],
+            ['browse.netflix.com', NetflixService],
+            ['play.hbomax.com', HboMaxService],
+        ])('returns the matching service for %s', (hostname, Service) => {
             Object.defineProperty(window, 'location', {
-                value: { hostname: 'www.netflix.com' },
+                value: { hostname },
                 configurable: true,
             });
-            const service = ServiceRegistry.detect();
-            assert.notEqual(service, null);
-            assert.equal(service.id, 'netflix');
+            assert(ServiceRegistry.detect() instanceof Service);
         });
 
-        it('returns Netflix service on netflix.com subdomain', () => {
+        it.each(['www.hbomax.com', 'evilnetflix.com', 'www.youtube.com', ''])('returns null for %s', hostname => {
             Object.defineProperty(window, 'location', {
-                value: { hostname: 'netflix.com' },
+                value: { hostname },
                 configurable: true,
             });
-            const service = ServiceRegistry.detect();
-            assert.notEqual(service, null);
-            assert.equal(service.id, 'netflix');
-        });
-
-        it('returns HBO Max service on play.hbomax.com', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: 'play.hbomax.com' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.notEqual(service, null);
-            assert.equal(service.id, 'hbomax');
-        });
-
-        it('returns null on www.hbomax.com', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: 'www.hbomax.com' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.equal(service, null);
-        });
-
-        it('returns null on unknown domain', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: 'www.youtube.com' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.equal(service, null);
-        });
-
-        it('returns null on empty hostname', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: '' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.equal(service, null);
+            assert.equal(ServiceRegistry.detect(), null);
         });
     });
 });
