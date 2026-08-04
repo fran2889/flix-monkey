@@ -18,6 +18,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    DisneyPlusSurfaceManager,
+    extractDisneyPlusTitle,
     extractHboMaxTitle,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
@@ -259,5 +261,47 @@ describe('HBO Max surfaces', () => {
 
         expect(extractHboMaxTitle(tile)).toBeNull();
         expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
+    });
+});
+
+describe('Disney+ surfaces', () => {
+    it.each([
+        [
+            'Subtitles Available Badge Avatar: Fire and Ash Rated 12+ Released 2025. Action and Adventure Select for details on this title.',
+            'Avatar: Fire and Ash',
+        ],
+        ['Dubbing Available Badge Zootropolis 2 Select for details on this title.', 'Zootropolis 2'],
+        ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
+        ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
+        ['Spider-Man: Homecoming Select for details on this title.', 'Spider-Man: Homecoming'],
+    ])('extracts a Disney+ title from %s', (ariaLabel, expected) => {
+        const tile = document.createElement('a');
+        tile.setAttribute('aria-label', ariaLabel);
+        expect(extractDisneyPlusTitle(tile)).toBe(expected);
+    });
+
+    it.each([
+        undefined,
+        'LIVE Started 47 minutes ago Senior League Baseball Choose Feed Entry',
+        'Upcoming 09/08 | 8:00pm New York XIST vs. Michigan Hybrid',
+        'Avatar: Fire and Ash',
+        'Select for details on this title.',
+    ])('rejects unsupported Disney+ labels: %s', ariaLabel => {
+        const tile = document.createElement('a');
+        if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
+        expect(extractDisneyPlusTitle(tile)).toBeNull();
+    });
+
+    it('uses the shelf-card parent as the fadeable Disney+ overlay container', () => {
+        document.body.innerHTML = `
+            <div data-testid="set-shelf-item">
+                <a data-testid="set-item" data-item-id="id" href="//en-gb/browse/entity-id"
+                   aria-label="Loki Disney+ Original Select for details on this title."></a>
+            </div>
+        `;
+
+        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: false });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 });

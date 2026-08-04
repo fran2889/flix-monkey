@@ -213,10 +213,56 @@ export const HBO_MAX_SURFACES = Object.freeze({
 });
 
 /**
+ * Extracts a title from a Disney+ tile aria-label.
+ *
+ * @param {Element} tile - Disney+ tile element
+ * @returns {string|null} Extracted title, or null if the tile is unsupported
+ */
+export function extractDisneyPlusTitle(tile) {
+    const label = tile
+        .getAttribute('aria-label')
+        ?.replace(/[\u2066-\u2069]/g, '')
+        .trim();
+    const detailsSuffix = 'Select for details on this title.';
+    if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return null;
+
+    const content = label
+        .slice(0, -detailsSuffix.length)
+        .replace(/^(?:(?:Subtitles|Dubbing) Available Badge\s+)+/u, '')
+        .trim();
+    const title = content
+        .split(/\s+(?:Rated\s+\S+|Released\s+\d{4}\b|(?:Disney\+|Hulu) Original(?: Series)?)(?=[.\s]|$)/u)[0]
+        ?.trim();
+    return title || null;
+}
+
+/**
+ * Disney+-specific surface definitions for browse page shelf cards.
+ */
+export const DISNEY_PLUS_SURFACES = Object.freeze({
+    SHELF_CARD: Object.freeze({
+        titleSelector: 'a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]',
+        getTitle: extractDisneyPlusTitle,
+        getContainer: containerFromParent,
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+});
+
+/**
  * HBO Max surface manager - discovers surfaces specific to the HBO Max UI.
  */
 export class HboMaxSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(HBO_MAX_SURFACES, logger);
+    }
+}
+
+/**
+ * Disney+ surface manager - discovers surfaces specific to Disney+ UI.
+ */
+export class DisneyPlusSurfaceManager extends SurfaceManager {
+    constructor(logger) {
+        super(DISNEY_PLUS_SURFACES, logger);
     }
 }
