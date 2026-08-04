@@ -274,6 +274,8 @@ describe('Disney+ surfaces', () => {
         ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
         ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
         ['Spider-Man: Homecoming Select for details on this title.', 'Spider-Man: Homecoming'],
+        ['Moana Action and Adventure Select for details on this title.', 'Moana'],
+        ['Lilo & Stitch Kids and Family Select for details on this title.', 'Lilo & Stitch'],
     ])('extracts a Disney+ title from %s', (ariaLabel, expected) => {
         const tile = document.createElement('a');
         tile.setAttribute('aria-label', ariaLabel);

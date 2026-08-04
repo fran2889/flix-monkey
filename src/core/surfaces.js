@@ -232,7 +232,8 @@ export function extractDisneyPlusTitle(tile) {
         .trim();
     const title = content
         .split(/\s+(?:Rated\s+\S+|Released\s+\d{4}\b|(?:Disney\+|Hulu) Original(?: Series)?)(?=[.\s]|$)/u)[0]
-        ?.trim();
+        ?.replace(/\s+(?:Action and Adventure|Kids and Family)$/u, '')
+        .trim();
     return title || null;
 }
 

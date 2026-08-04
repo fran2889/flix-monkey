@@ -136,7 +136,7 @@ This usually means that the rating provider is failing or disabled. If the probl
 
 **Rating shown does not match the rating on IMDb page**
 
-Titles are identified by name only, because Netflix, HBO Max, and Disney+ do not provide year or additional metadata. There can be a mismatch when multiple titles share the same name.
+FlixMonkey currently looks up titles by display name only, even when a service exposes additional card metadata. There can be a mismatch when multiple titles share the same name.
 
 1. Tooltip on the rating badge shows title and year as returned by the rating provider. Verify it matches the title on Netflix, HBO Max, or Disney+.
 2. If the tooltip confirms title match, the provider rating may be outdated since it isn't directly from IMDb. Recent releases have shorter cache times to ensure ratings are updated.
