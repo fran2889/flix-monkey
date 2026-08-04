@@ -45,7 +45,12 @@ describe('Disney+ browse UI surface', () => {
 
     it('discovers supported Disney+ cards and injects parent overlays', () => {
         const surfaces = surfaceManager.discover(document.body);
-        expect(surfaces.map(surface => surface.title)).toEqual(['Avatar: Fire and Ash', 'Loki', 'Moana']);
+        expect(surfaces.map(surface => surface.title)).toEqual([
+            'Avatar: Fire and Ash',
+            'Loki',
+            'Moana',
+            'How I Met Your Mother',
+        ]);
         expect(surfaces.every(({ container }) => container.matches('[data-testid="set-shelf-item"]'))).toBe(true);
         expect(surfaces.every(({ fadeable, showFadeToggle }) => fadeable && !showFadeToggle)).toBe(true);
 
@@ -56,8 +61,8 @@ describe('Disney+ browse UI surface', () => {
             });
         });
 
-        expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(3);
-        expect(document.querySelectorAll('[data-testid="set-shelf-item"] > .fm-rating-overlay')).toHaveLength(3);
+        expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(4);
+        expect(document.querySelectorAll('[data-testid="set-shelf-item"] > .fm-rating-overlay')).toHaveLength(4);
         expect(document.querySelectorAll('a a')).toHaveLength(0);
     });
 });

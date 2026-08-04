@@ -301,4 +301,23 @@ describe('Disney+ surfaces', () => {
         expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: false });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
+
+    it('discovers a Continue Watching title from its metadata', () => {
+        document.body.innerHTML = `
+            <section data-testid="set-section" data-set-style="continue_watching">
+                <div data-testid="set-shelf-item">
+                    <span data-testid="cw-set-item-wrapper">
+                        <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
+                        <a data-testid="cw-set-item-metadata" href="/browse/entity-title-id">
+                            <div>9m remaining</div><div>How I Met Your Mother</div>
+                        </a>
+                    </span>
+                </div>
+            </section>
+        `;
+
+        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: false });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+    });
 });
