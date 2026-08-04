@@ -74,21 +74,19 @@ describe('OverlayRenderer', () => {
             expect(style.textContent).toContain('flex-direction: column-reverse');
         });
 
-        it.each(['top-left', 'bottom-left'])('should offset configured Top 10 selectors for %s corners', corner => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), NETFLIX_CONSTANTS);
+        it.each([
+            ['Netflix', 'top-left', NETFLIX_CONSTANTS, '50%'],
+            ['Netflix', 'bottom-left', NETFLIX_CONSTANTS, '50%'],
+            ['HBO Max', 'top-left', HBO_MAX_CONSTANTS, '30%'],
+            ['HBO Max', 'bottom-left', HBO_MAX_CONSTANTS, '30%'],
+        ])('should offset %s Top 10 selectors for %s corners', (_service, corner, serviceConstants, offset) => {
+            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), serviceConstants);
             renderer.injectStyles();
             const style = document.head.querySelector('style');
-            NETFLIX_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
+            serviceConstants.TOP_10_SELECTORS.forEach(selector => {
                 expect(style.textContent).toContain(`${selector} .fm-rating-overlay`);
             });
-            expect(style.textContent).toContain('left: calc(50% + 6px)');
-        });
-
-        it.each(['top-left', 'bottom-left'])('should use the service-provided Top 10 offset for %s corners', corner => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), HBO_MAX_CONSTANTS);
-            renderer.injectStyles();
-            const style = document.head.querySelector('#fm-overlay-styles');
-            expect(style.textContent).toContain('.fm-hbo-top-10 .fm-rating-overlay { left: calc(30% + 6px); }');
+            expect(style.textContent).toContain(`left: calc(${offset} + 6px)`);
         });
 
         it.each(['top-right', 'bottom-right'])(
