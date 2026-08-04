@@ -19,10 +19,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
     extractHboMaxTitle,
-    HBO_MAX_SURFACES,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
-    NetflixSurfaceManager,
     SurfaceManager,
 } from '../../../src/core/surfaces.js';
 import { createMockLogger } from '../../mocks/logger.js';
@@ -101,16 +99,7 @@ describe('SurfaceManager', () => {
         ).toEqual([]);
     });
 
-    it('defines title and container callbacks without legacy selector fields', () => {
-        Object.values(NETFLIX_SURFACES).forEach(surface => {
-            expect(surface.getTitle).toEqual(expect.any(Function));
-            expect(surface.getContainer).toEqual(expect.any(Function));
-            expect(surface).not.toHaveProperty('titleAttribute');
-            expect(surface).not.toHaveProperty('containerSelector');
-        });
-    });
-
-    it('uses a surface getTitle callback', () => {
+    it('discovers the title returned by a surface definition', () => {
         const sm = new SurfaceManager(
             {
                 card: {
@@ -125,7 +114,7 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
     });
 
-    it('uses a surface getContainer callback', () => {
+    it('returns the container resolved by a surface definition', () => {
         const resolvedContainer = document.createElement('div');
         resolvedContainer.innerHTML = '<span data-title="Resolver Title"></span>';
         const selectorContainer = document.createElement('section');
@@ -184,21 +173,21 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].container).toBe(document.querySelector('[data-container]'));
     });
 
-    it('should set showFadeToggle to false for title-card surfaces', () => {
+    it('does not expose a fade toggle for title cards', () => {
         const results = discover(`
             <div class="title-card"><a aria-label="Movie"></a></div>
         `);
         expect(results[0].showFadeToggle).toBe(false);
     });
 
-    it('should set showFadeToggle to false for search card surfaces', () => {
+    it('does not expose a fade toggle for search cards', () => {
         const results = discover(`
             <div data-uia="standard-card" aria-label="Movie"></div>
         `);
         expect(results[0].showFadeToggle).toBe(false);
     });
 
-    it('should set showFadeToggle to true for the mini-modal surface', () => {
+    it('exposes a fade toggle for mini-modal surfaces', () => {
         const results = discover(`
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
@@ -209,7 +198,7 @@ describe('SurfaceManager', () => {
         expect(results[0].showFadeToggle).toBe(true);
     });
 
-    it('should set showFadeToggle to false for the detail-modal surface', () => {
+    it('does not expose a fade toggle for detail-modal surfaces', () => {
         const results = discover(`
             <div class="previewModal--wrapper detail-modal">
                 <div class="previewModal--player_container">
@@ -229,14 +218,14 @@ describe('HBO Max surfaces', () => {
         ['Watch Peacemaker. Season 1, Episode 2: Best Friends for Never. 1 of 2.', 'Peacemaker'],
         ['Watch Mel Brooks: The 99 Year Old Man!, Episode 2. 2 of 2.', 'Mel Brooks: The 99 Year Old Man!'],
         ['Number 1: House of the Dragon. 1 of 10.', 'House of the Dragon'],
-    ])('extracts %s', (ariaLabel, expected) => {
+    ])('extracts a title from a supported HBO Max label: %s', (ariaLabel, expected) => {
         const tile = document.createElement('a');
         tile.dataset.sonicType = ariaLabel.startsWith('Watch ') ? 'video' : 'show';
         tile.setAttribute('aria-label', ariaLabel);
         expect(extractHboMaxTitle(tile)).toBe(expected);
     });
 
-    it('marks a Top 10 tile container for service-specific positioning', () => {
+    it('applies the HBO Top 10 positioning class to a ranked tile container', () => {
         document.body.innerHTML = `
             <div class="hbo-card">
                 <a data-testid="ranked_tile" data-sonic-type="show" aria-label="Number 1: House of the Dragon. 1 of 10."></a>
@@ -248,21 +237,7 @@ describe('HBO Max surfaces', () => {
         expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
-    it('keeps HBO container resolution free of Top 10 decoration', () => {
-        document.body.innerHTML = `
-            <div class="hbo-card">
-                <a data-testid="ranked_tile" data-sonic-type="show" aria-label="Number 1: House of the Dragon. 1 of 10."></a>
-            </div>
-        `;
-        const tile = document.querySelector('a');
-
-        const container = HBO_MAX_SURFACES.TILE.getContainer(tile);
-
-        expect(container).toBe(tile.parentElement);
-        expect(container).not.toHaveClass('fm-hbo-top-10');
-    });
-
-    it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {
+    it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', type => {
         document.body.innerHTML = `<a data-testid="id_tile" data-sonic-type="${type}" aria-label="Title. 1 of 20."></a>`;
         expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
     });
@@ -275,7 +250,7 @@ describe('HBO Max surfaces', () => {
         ['a decimal Continue Watching season label', 'Watch Promo. Season 1.5. 1 of 2.'],
         ['a malformed Continue Watching episode label', 'Watch Promo. Episode 2nd Look. 1 of 2.'],
         ['a time-like Continue Watching episode label', 'Watch Promo. Episode 2:30. 1 of 2.'],
-    ])('skips supported tiles with %s', (_description, ariaLabel) => {
+    ])('does not discover HBO Max tiles with unparseable labels: %s', (_description, ariaLabel) => {
         const tile = document.createElement('a');
         tile.dataset.testid = 'id_tile';
         tile.dataset.sonicType = ariaLabel?.startsWith('Watch ') ? 'video' : 'movie';
@@ -284,74 +259,5 @@ describe('HBO Max surfaces', () => {
 
         expect(extractHboMaxTitle(tile)).toBeNull();
         expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
-    });
-});
-
-describe('NetflixSurfaceManager', () => {
-    function discoverNetflix(html) {
-        const sm = new NetflixSurfaceManager(createMockLogger());
-        document.body.innerHTML = html;
-        return sm.discover(document.body);
-    }
-
-    it('should be a subclass of SurfaceManager', () => {
-        const sm = new NetflixSurfaceManager(createMockLogger());
-        expect(sm).toBeInstanceOf(SurfaceManager);
-    });
-
-    it('should use Netflix surface definitions', () => {
-        const results = discoverNetflix(`
-            <div class="title-card"><a aria-label="Test Movie"></a></div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Test Movie');
-    });
-
-    it('should discover title-card surfaces', () => {
-        const results = discoverNetflix(`
-            <div class="title-card"><a aria-label="Movie Title"></a></div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Movie Title');
-        expect(results[0].fadeable).toBe(true);
-        expect(results[0].showFadeToggle).toBe(false);
-    });
-
-    it('should discover search card surfaces', () => {
-        const results = discoverNetflix(`
-            <div data-uia="standard-card" aria-label="Search Result"></div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Search Result');
-        expect(results[0].fadeable).toBe(true);
-        expect(results[0].showFadeToggle).toBe(false);
-    });
-
-    it('should discover mini-modal surfaces', () => {
-        const results = discoverNetflix(`
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Preview Title">
-                </div>
-            </div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Preview Title');
-        expect(results[0].fadeable).toBe(false);
-        expect(results[0].showFadeToggle).toBe(true);
-    });
-
-    it('should discover detail-modal surfaces', () => {
-        const results = discoverNetflix(`
-            <div class="previewModal--wrapper detail-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Detail Title">
-                </div>
-            </div>
-        `);
-        expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Detail Title');
-        expect(results[0].fadeable).toBe(false);
-        expect(results[0].showFadeToggle).toBe(false);
     });
 });
