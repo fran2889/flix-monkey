@@ -1,9 +1,9 @@
-FlixMonkey adds title ratings directly to Netflix, helping you decide what to watch before you press play.
+FlixMonkey adds title ratings directly to Netflix and HBO Max, helping you decide what to watch before you press play.
 
 Available as a Chrome extension, Firefox add-on, and Tampermonkey/Violentmonkey/Greasemonkey userscript.
 
 ⭐ FEATURES
-• View IMDb ratings directly on Netflix titles, with Metacritic and Rotten Tomatoes when available
+• View IMDb ratings directly on Netflix and HBO Max titles, with Metacritic and Rotten Tomatoes when available
 • Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
 • Skip low-rated titles by fading out anything below your chosen IMDb threshold
 

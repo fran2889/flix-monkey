@@ -88,11 +88,13 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
-    it('should wire onSave to reload Netflix tabs', async () => {
+    it('should wire onSave to reload Netflix and HBO Max tabs', async () => {
         expect(capturedInstance.onSave).toBeTypeOf('function');
         await capturedInstance.onSave();
 
-        expect(tabsQuerySpy).toHaveBeenCalledWith({ url: '*://*.netflix.com/*' });
+        expect(tabsQuerySpy).toHaveBeenCalledWith({
+            url: ['*://*.netflix.com/*', '*://play.hbomax.com/*'],
+        });
         expect(tabsReloadSpy).toHaveBeenCalledWith(1);
         expect(tabsReloadSpy).toHaveBeenCalledWith(42);
     });

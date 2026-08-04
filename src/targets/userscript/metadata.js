@@ -27,6 +27,7 @@
 // @downloadURL  https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js
 // @icon         __ICON__
 // @match        https://www.netflix.com/*
+// @match        https://play.hbomax.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue

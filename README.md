@@ -7,7 +7,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
-See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix.
+See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix and HBO Max.
 
 ---
 
@@ -50,7 +50,7 @@ Use the links below to install the add-on for your browser.
 - **Color-Coded Ratings**: Rating badges change color based on thresholds (red < 5.0, green >= 8.5)
 - **Customizable**: Change badge position, choose rating provider, fade titles below a rating threshold, and more
 - **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, without rating)
-- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix tabs to prevent redundant lookups
+- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix and HBO Max tabs to prevent redundant lookups
 - **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
 
 ---
@@ -69,11 +69,12 @@ Access settings via:
 
 ### Display Options
 
-| Option                | Default  | Description                                                                       |
-| --------------------- | -------- | --------------------------------------------------------------------------------- |
-| Rating Badge Position | Top Left | Corner where rating badges appear                                                 |
-| Rotten Tomatoes       | No       | Display RT score. Only available when OMDb is the rating provider                 |
-| Metacritic            | No       | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+| Option                     | Default             | Description                                                                       |
+| -------------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| Enabled Streaming Services | Netflix and HBO Max | Run FlixMonkey on Netflix and HBO Max, both enabled by default                    |
+| Rating Badge Position      | Top Left            | Corner where rating badges appear                                                 |
+| Rotten Tomatoes            | No                  | Display RT score. Only available when OMDb is the rating provider                 |
+| Metacritic                 | No                  | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
 
 ### Rating Providers
 
@@ -107,7 +108,7 @@ Access settings via:
 
 ### Settings Actions
 
-- **Save**: Apply configuration changes and refresh the Netflix tab
+- **Save**: Apply configuration changes and refresh applicable Netflix and HBO Max tabs
 - **Clear Cache**: Remove all cached ratings, forcing fresh lookups for all titles
 - **Reset Disabled Providers**: Re-enable any rating providers that were automatically disabled due to failures
 
@@ -121,7 +122,7 @@ Loading placeholder badges should show immediately, before the ratings are retri
 
 1. Verify the extension is enabled in your browser toolbar.
 2. For the userscript version, confirm your userscript manager is active and FlixMonkey script is loaded.
-3. Refresh the Netflix page.
+3. Refresh the Netflix or HBO Max page.
 4. Open browser developer tools (F12) and check the Console tab for errors.
 
 **Badges are showing but there are no ratings**
@@ -135,9 +136,9 @@ This usually means that the rating provider is failing or disabled. If the probl
 
 **Rating shown does not match the rating on IMDb page**
 
-Titles are identified by name only, because Netflix does not provide year or additional metadata. There can be a mismatch when multiple titles share the same name.
+Titles are identified by name only, because Netflix and HBO Max do not provide year or additional metadata. There can be a mismatch when multiple titles share the same name.
 
-1. Tooltip on the rating badge shows title and year as returned by the rating provider. Verify it matches the Netflix title.
+1. Tooltip on the rating badge shows title and year as returned by the rating provider. Verify it matches the title on Netflix or HBO Max.
 2. If the tooltip confirms title match, the provider rating may be outdated since it isn't directly from IMDb. Recent releases have shorter cache times to ensure ratings are updated.
 3. If the tooltip shows a different title, try selecting a different rating provider and clear the cache. This can help because providers have different result ordering logic.
 
@@ -158,7 +159,7 @@ Rating providers are rate-limited so FlixMonkey spreads requests over time. Rati
 
 **Still need help?**
 
-Netflix may change their layout, breaking title discovery or rating badge positioning. A new FlixMonkey version may have introduced a bug.
+Netflix or HBO Max may change its layout, breaking title discovery or rating badge positioning. A new FlixMonkey version may have introduced a bug.
 
 Please report these issues with as much detail as possible.
 
@@ -197,7 +198,7 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, the title names visible on the page are sent to third-party rating APIs (IMDb Suggestions, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or Netflix credentials are included in these requests.
+- **Title lookups**: When you browse Netflix or HBO Max, the title names visible on the page are sent to third-party rating APIs (IMDb Suggestions, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, Netflix credentials, or HBO Max credentials are included in these requests.
 - **Local storage only**: All cached ratings, settings, and API keys are stored exclusively in your browser's local extension storage (or userscript storage). This data never leaves your device except as part of the API requests described above.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.

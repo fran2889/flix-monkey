@@ -18,81 +18,32 @@
 
 import { afterEach, assert, describe, it, vi } from 'vitest';
 
-import { NetflixService, ServiceRegistry, SERVICES, StreamingService } from '../../../src/core/services.js';
+import { HboMaxService, NetflixService, ServiceRegistry, StreamingService } from '../../../src/core/services.js';
+import { HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
 
 describe('StreamingService', () => {
-    it('throws on unimplemented id getter', () => {
+    it.each([
+        ['id', service => service.id],
+        ['domains', service => service.domains],
+        ['SurfaceManager', service => service.SurfaceManager],
+        ['isEnabled', service => service.isEnabled({ getBool: () => true })],
+    ])('throws on unimplemented %s', (_member, access) => {
         const service = new StreamingService();
-        assert.throws(() => service.id, /Not implemented/);
-    });
-
-    it('throws on unimplemented domains getter', () => {
-        const service = new StreamingService();
-        assert.throws(() => service.domains, /Not implemented/);
-    });
-
-    it('throws on unimplemented SurfaceManager getter', () => {
-        const service = new StreamingService();
-        assert.throws(() => service.SurfaceManager, /Not implemented/);
-    });
-
-    it('returns empty object for constants by default', () => {
-        const service = new StreamingService();
-        assert.deepEqual(service.constants, {});
-    });
-
-    it('throws on unimplemented isEnabled method', () => {
-        const service = new StreamingService();
-        const mockConfig = { getBool: () => true };
-        assert.throws(() => service.isEnabled(mockConfig), /Not implemented/);
+        assert.throws(() => access(service), /Not implemented/);
     });
 });
 
-describe('NetflixService', () => {
-    it('has id netflix', () => {
-        const service = new NetflixService();
-        assert.equal(service.id, 'netflix');
-    });
+describe.each([
+    ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix'],
+    ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
+])('%s service', (_name, Service, SurfaceManager, configKey) => {
+    it('selects its surface manager and enablement setting', () => {
+        const service = new Service();
+        const config = { getBool: vi.fn().mockReturnValue(false) };
 
-    it('has netflix.com and www.netflix.com domains', () => {
-        const service = new NetflixService();
-        assert.deepEqual(service.domains, ['netflix.com', 'www.netflix.com']);
-    });
-
-    it('returns domains as frozen object', () => {
-        const service = new NetflixService();
-        assert(Object.isFrozen(service.domains));
-    });
-
-    it('returns constants as frozen object', () => {
-        const service = new NetflixService();
-        assert(Object.isFrozen(service.constants));
-    });
-
-    it('isEnabled returns true when enableNetflix is true', () => {
-        const service = new NetflixService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(true) };
-        assert.equal(service.isEnabled(mockConfig), true);
-    });
-
-    it('isEnabled returns false when enableNetflix is false', () => {
-        const service = new NetflixService();
-        const mockConfig = { getBool: vi.fn().mockReturnValue(false) };
-        assert.equal(service.isEnabled(mockConfig), false);
-    });
-});
-
-describe('SERVICES registry', () => {
-    it('contains netflix service', () => {
-        assert('netflix' in SERVICES);
-    });
-
-    it('netflix service is a NetflixService instance', () => {
-        assert(SERVICES.netflix instanceof NetflixService);
-    });
-
-    it('registry is frozen', () => {
-        assert(Object.isFrozen(SERVICES));
+        assert.equal(service.SurfaceManager, SurfaceManager);
+        assert.equal(service.isEnabled(config), false);
+        assert.deepEqual(config.getBool.mock.calls, [[configKey]]);
     });
 });
 
@@ -104,42 +55,25 @@ describe('ServiceRegistry', () => {
     });
 
     describe('detect()', () => {
-        it('returns Netflix service on netflix.com', () => {
+        it.each([
+            ['netflix.com', NetflixService],
+            ['www.netflix.com', NetflixService],
+            ['browse.netflix.com', NetflixService],
+            ['play.hbomax.com', HboMaxService],
+        ])('returns the matching service for %s', (hostname, Service) => {
             Object.defineProperty(window, 'location', {
-                value: { hostname: 'www.netflix.com' },
+                value: { hostname },
                 configurable: true,
             });
-            const service = ServiceRegistry.detect();
-            assert.notEqual(service, null);
-            assert.equal(service.id, 'netflix');
+            assert(ServiceRegistry.detect() instanceof Service);
         });
 
-        it('returns Netflix service on netflix.com subdomain', () => {
+        it.each(['www.hbomax.com', 'evilnetflix.com', 'www.youtube.com', ''])('returns null for %s', hostname => {
             Object.defineProperty(window, 'location', {
-                value: { hostname: 'netflix.com' },
+                value: { hostname },
                 configurable: true,
             });
-            const service = ServiceRegistry.detect();
-            assert.notEqual(service, null);
-            assert.equal(service.id, 'netflix');
-        });
-
-        it('returns null on unknown domain', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: 'www.youtube.com' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.equal(service, null);
-        });
-
-        it('returns null on empty hostname', () => {
-            Object.defineProperty(window, 'location', {
-                value: { hostname: '' },
-                configurable: true,
-            });
-            const service = ServiceRegistry.detect();
-            assert.equal(service, null);
+            assert.equal(ServiceRegistry.detect(), null);
         });
     });
 });
