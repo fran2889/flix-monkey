@@ -266,31 +266,24 @@ describe('HBO Max surfaces', () => {
 
 describe('Disney+ surfaces', () => {
     it.each([
-        [
-            'Subtitles Available Badge Avatar: Fire and Ash Rated 12+ Released 2025. Action and Adventure Select for details on this title.',
-            'Avatar: Fire and Ash',
-        ],
-        ['Dubbing Available Badge Zootropolis 2 Select for details on this title.', 'Zootropolis 2'],
-        ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
-        ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
-        ['Spider-Man: Homecoming Select for details on this title.', 'Spider-Man: Homecoming'],
-        ['Moana Action and Adventure Select for details on this title.', 'Moana'],
-        ['Lilo & Stitch Kids and Family Select for details on this title.', 'Lilo & Stitch'],
-    ])('extracts a Disney+ title from %s', (ariaLabel, expected) => {
+        ["Marvel Studios' The Avengers", "New Movie Badge Marvel Studios' The Avengers Rated 12+"],
+        ['The Devil Wears Prada 2', 'New Movie Badge The Devil Wears Prada 2 Rated 12+'],
+        ['Furious', 'Hulu Original Series New Episode Badge Furious Rated 18+'],
+        ['BLEACH: Thousand-Year Blood War', 'New Episode Badge BLEACH: Thousand-Year Blood War Rated 16+'],
+        ['The Bear', 'Hulu Original Series Subtitles Available Badge The Bear'],
+    ])('extracts the clean Disney+ title for %s', (title, ariaLabel) => {
         const tile = document.createElement('a');
         tile.setAttribute('aria-label', ariaLabel);
-        expect(extractDisneyPlusTitle(tile)).toBe(expected);
+        tile.innerHTML = `<img alt=""><img alt="${title}">`;
+
+        expect(extractDisneyPlusTitle(tile)).toBe(title);
     });
 
-    it.each([
-        undefined,
-        'LIVE Started 47 minutes ago Senior League Baseball Choose Feed Entry',
-        'Upcoming 09/08 | 8:00pm New York XIST vs. Michigan Hybrid',
-        'Avatar: Fire and Ash',
-        'Select for details on this title.',
-    ])('rejects unsupported Disney+ labels: %s', ariaLabel => {
+    it('rejects a Disney+ card without a clean title image', () => {
         const tile = document.createElement('a');
-        if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
+        tile.setAttribute('aria-label', 'New Movie Badge The Devil Wears Prada 2 Rated 12+');
+        tile.innerHTML = '<img alt="">';
+
         expect(extractDisneyPlusTitle(tile)).toBeNull();
     });
 
@@ -298,7 +291,9 @@ describe('Disney+ surfaces', () => {
         document.body.innerHTML = `
             <div data-testid="set-shelf-item">
                 <a data-testid="set-item" data-item-id="id" href="//en-gb/browse/entity-id"
-                   aria-label="Loki Disney+ Original Select for details on this title."></a>
+                   aria-label="Loki Disney+ Original Select for details on this title.">
+                    <img alt="Loki">
+                </a>
             </div>
         `;
 

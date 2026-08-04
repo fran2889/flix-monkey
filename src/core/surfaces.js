@@ -219,22 +219,7 @@ export const HBO_MAX_SURFACES = Object.freeze({
  * @returns {string|null} Extracted title, or null if the tile is unsupported
  */
 export function extractDisneyPlusTitle(tile) {
-    const label = tile
-        .getAttribute('aria-label')
-        ?.replace(/[\u2066-\u2069]/g, '')
-        .trim();
-    const detailsSuffix = 'Select for details on this title.';
-    if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return null;
-
-    const content = label
-        .slice(0, -detailsSuffix.length)
-        .replace(/^(?:(?:Subtitles|Dubbing) Available Badge\s+)+/u, '')
-        .trim();
-    const title = content
-        .split(/\s+(?:Rated\s+\S+|Released\s+\d{4}\b|(?:Disney\+|Hulu) Original(?: Series)?)(?=[.\s]|$)/u)[0]
-        ?.replace(/\s+(?:Action and Adventure|Kids and Family)$/u, '')
-        .trim();
-    return title || null;
+    return [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean) ?? null;
 }
 
 /**
