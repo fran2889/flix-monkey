@@ -279,9 +279,35 @@ describe('Disney+ surfaces', () => {
         expect(extractDisneyPlusTitle(tile)).toBe(title);
     });
 
-    it('rejects a Disney+ card without a clean title image', () => {
+    it.each([
+        [
+            'Subtitles Available Badge Avatar: Fire and Ash Rated 12+ Released 2025. Action and Adventure Select for details on this title.',
+            'Avatar: Fire and Ash',
+        ],
+        ['New Movie Badge The Devil Wears Prada 2 Select for details on this title.', 'The Devil Wears Prada 2'],
+        ['New Episode Badge Furious Hulu Original Series Select for details on this title.', 'Furious'],
+        ['New Season Peppa Pig Select for details on this title.', 'Peppa Pig'],
+        ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
+        ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
+        ['Moana Action and Adventure Select for details on this title.', 'Moana'],
+        ['Lilo & Stitch Kids and Family Select for details on this title.', 'Lilo & Stitch'],
+    ])('parses a Disney+ title from an accessible-name fallback: %s', (ariaLabel, expected) => {
         const tile = document.createElement('a');
-        tile.setAttribute('aria-label', 'New Movie Badge The Devil Wears Prada 2 Rated 12+');
+        tile.setAttribute('aria-label', ariaLabel);
+        tile.innerHTML = '<img alt="">';
+
+        expect(extractDisneyPlusTitle(tile)).toBe(expected);
+    });
+
+    it.each([
+        undefined,
+        'LIVE Started 47 minutes ago Senior League Baseball Choose Feed Entry',
+        'Upcoming 09/08 | 8:00pm New York XIST vs. Michigan Hybrid',
+        'Avatar: Fire and Ash',
+        'Select for details on this title.',
+    ])('rejects unsupported Disney+ accessible-name fallbacks: %s', ariaLabel => {
+        const tile = document.createElement('a');
+        if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
         tile.innerHTML = '<img alt="">';
 
         expect(extractDisneyPlusTitle(tile)).toBeNull();

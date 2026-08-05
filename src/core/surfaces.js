@@ -219,7 +219,30 @@ export const HBO_MAX_SURFACES = Object.freeze({
  * @returns {string|null} Extracted title, or null if the tile is unsupported
  */
 export function extractDisneyPlusTitle(tile) {
-    return [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean) ?? null;
+    const imageTitle = [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean);
+    if (imageTitle) return imageTitle;
+
+    const label = tile
+        .getAttribute('aria-label')
+        ?.replace(/[\u2066-\u2069]/g, '')
+        .trim();
+    const detailsSuffix = 'Select for details on this title.';
+    if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return null;
+
+    const content = label
+        .slice(0, -detailsSuffix.length)
+        .replace(
+            /^(?:(?:(?:Subtitles|Dubbing) Available|New (?:Movie|Series|Episode|Season)) Badge|New (?:Episode|Season))\s+/u,
+            ''
+        )
+        .trim();
+    const title = content
+        .split(
+            /\s+(?:Rated\s+\S+|Released\s+\d{4}\b|(?:Disney\+|Hulu) (?:Original(?: Series)?|Generic))(?=[.\s]|$)/u
+        )[0]
+        ?.replace(/\s+(?:Action and Adventure|Kids and Family)$/u, '')
+        .trim();
+    return title || null;
 }
 
 /**
