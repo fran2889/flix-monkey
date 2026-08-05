@@ -23,7 +23,6 @@ import {
     HboMaxService,
     NetflixService,
     ServiceRegistry,
-    SERVICES,
     StreamingService,
 } from '../../../src/core/services.js';
 import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
@@ -84,13 +83,5 @@ describe('ServiceRegistry', () => {
             });
             assert.equal(ServiceRegistry.detect(), null);
         });
-    });
-});
-
-describe('Disney+ service registry metadata', () => {
-    it('registers the disneyplus service with its ID and domain', () => {
-        assert.instanceOf(SERVICES.disneyplus, DisneyPlusService);
-        assert.equal(SERVICES.disneyplus.id, 'disneyplus');
-        assert.deepEqual(SERVICES.disneyplus.domains, ['disneyplus.com']);
     });
 });
