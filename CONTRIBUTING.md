@@ -71,4 +71,4 @@ and the AMO source-build instructions, see
 
 ## License
 
-By contributing to FlixMonkey, you agree that your contributions will be licensed under the GNU General Public License v3.0.
+By contributing to FlixMonkey, you agree that your contributions will be licensed under GPL-3.0-only.
