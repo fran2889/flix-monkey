@@ -1,6 +1,5 @@
 /**
  * SPDX-FileCopyrightText: 2026 Fran
- *
  * SPDX-License-Identifier: GPL-3.0-only
  */
 export const ALLOWED_DOMAINS = ['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com'];

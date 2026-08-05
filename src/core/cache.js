@@ -1,6 +1,5 @@
 /**
  * SPDX-FileCopyrightText: 2026 Fran
- *
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from './constants.js';
