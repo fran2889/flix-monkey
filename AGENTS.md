@@ -301,7 +301,7 @@ class PlatformAdapter {
 - **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).
 - **Testing**: Business logic changes must add or update tests covering the new logic.
 - **README**: Update if the change is user-facing or affects documented functionality.
-- **Protocol**: Always print a suggested commit message at the end of a task.
+- **Protocol**: Always print a suggested commit message at the end of a task if files were modified and changes were not committed.
 - **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
 - **Prose style**: Use the Oxford comma: "A, B, and C".
 - **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
