@@ -23,13 +23,13 @@ export const SETTINGS_STYLES = `
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 10px 25px 20px;
-    min-width: 480px;
+    width: min(480px, 100%);
 }
 .fm-settings-container * {
     box-sizing: border-box;
 }
 .fm-settings-container #fm-fields {
-    width: fit-content;
+    width: 100%;
     margin: 0 auto;
 }
 .fm-settings-container .field {
