@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Fran
+// SPDX-License-Identifier: GPL-3.0-only
 import { ZipArchive } from 'archiver';
 import fs from 'fs';
 import path from 'path';
