@@ -1,5 +1,6 @@
 # IDE settings
 .antigravitycli
+.chromium-debug-profile/
 .claude/
 .idea/
 .kiro/

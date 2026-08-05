@@ -20,6 +20,15 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {
+    it('enables Disney+ by default', () => {
+        expect(CONFIG_FIELDS.find(field => field.key === 'enableDisneyPlus')).toMatchObject({
+            label: 'Disney+',
+            type: 'checkbox',
+            default: true,
+            row: 'services',
+        });
+    });
+
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', field => {
             expect(field).toHaveProperty('key');

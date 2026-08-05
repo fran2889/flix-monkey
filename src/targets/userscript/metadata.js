@@ -28,6 +28,7 @@
 // @icon         __ICON__
 // @match        https://www.netflix.com/*
 // @match        https://play.hbomax.com/*
+// @match        https://www.disneyplus.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue

@@ -48,7 +48,7 @@ describe('SettingsUI', () => {
     });
 
     describe('Rendering', () => {
-        it('should render all config fields', async () => {
+        it('should render each config field from its definition', async () => {
             await settingsUI.render(container);
 
             CONFIG_FIELDS.forEach(field => {
@@ -68,6 +68,23 @@ describe('SettingsUI', () => {
                 } else {
                     expect(input.type).toBe('text');
                 }
+
+                if (field.type === 'select') {
+                    expect([...input.options].map(option => [option.value, option.textContent])).toEqual(
+                        field.options.map(option => (Array.isArray(option) ? option : [option, option]))
+                    );
+                }
+
+                if (field.labelUrl) {
+                    const link = label.querySelector('a');
+                    expect(link).not.toBeNull();
+                    expect(link.href).toBe(field.labelUrl);
+                    expect(link.target).toBe('_blank');
+                } else {
+                    expect(label.querySelector('a')).toBeNull();
+                }
+
+                expect(label.classList.contains('visually-hidden')).toBe(Boolean(field.labelHidden));
             });
         });
 
@@ -80,100 +97,65 @@ describe('SettingsUI', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
-        it('should render fields, action buttons, and status placeholder', async () => {
+        it('should not add vertical spacing when service controls wrap', async () => {
             await settingsUI.render(container);
 
-            expect(container.querySelectorAll('.field').length).toBeGreaterThan(0);
+            const style = document.head.querySelector('style#flixmonkey-settings-styles');
+            expect(style.textContent).toMatch(
+                /\.services-field \.services-group \{\s*display: flex;\s*align-items: center;\s*column-gap: 20px;\s*row-gap: 0;/u
+            );
+        });
+
+        it('should render action buttons and status placeholder', async () => {
+            await settingsUI.render(container);
+
             expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
             expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
             expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
             expect(container.querySelector('#fm-status')).not.toBeNull();
         });
 
-        it('should render overlayCorner as a select with all corner options', async () => {
+        it('should render the fixed IMDb rating control', async () => {
             await settingsUI.render(container);
-            const select = container.querySelector('#fm-overlayCorner');
 
-            expect(select.tagName).toBe('SELECT');
-            const values = [...select.options].map(o => o.value);
-            expect(values).toEqual(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-        });
-
-        it('should render apiClient select with [value, label] tuple options', async () => {
-            await settingsUI.render(container);
-            const select = container.querySelector('#fm-apiClient');
-
-            expect(select.tagName).toBe('SELECT');
-            const opt = [...select.options].find(o => o.value === 'agregarr');
-            expect(opt).toBeTruthy();
-            expect(opt.textContent).toBe('Agregarr');
-        });
-
-        it('should render showMcRating as a checked checkbox by default', async () => {
-            await settingsUI.render(container);
-            const checkbox = container.querySelector('#fm-showMcRating');
-
+            const checkbox = container.querySelector('#fm-showImdbRating');
             expect(checkbox.type).toBe('checkbox');
-            const showMcRatingField = CONFIG_FIELDS.find(f => f.key === 'showMcRating');
-            expect(checkbox.checked).toBe(showMcRatingField.default);
-        });
-
-        it('should render a labelUrl field label as an <a> link', async () => {
-            await settingsUI.render(container);
-            const label = container.querySelector('label[for="fm-omdbApiKey"]');
-            const link = label.querySelector('a');
-
-            expect(link).not.toBeNull();
-            expect(link.textContent).toBe('OMDb API Key');
-        });
-
-        it('should apply visually-hidden class to labelHidden field labels', async () => {
-            await settingsUI.render(container);
-            const label = container.querySelector('label[for="fm-fadeRatingThreshold"]');
-
-            expect(label.classList.contains('visually-hidden')).toBe(true);
-        });
-
-        it('should render enableNetflix as a checked checkbox by default', async () => {
-            await settingsUI.render(container);
-            const checkbox = container.querySelector('#fm-enableNetflix');
-
-            expect(checkbox.type).toBe('checkbox');
-            const enableNetflixField = CONFIG_FIELDS.find(f => f.key === 'enableNetflix');
-            expect(checkbox.checked).toBe(enableNetflixField.default);
-        });
-
-        it('should render services group with "Enabled Streaming Services" label', async () => {
-            await settingsUI.render(container);
-            const servicesLabel = container.querySelector('.services-field .field-label');
-
-            expect(servicesLabel).not.toBeNull();
-            expect(servicesLabel.textContent).toBe('Enabled Streaming Services');
+            expect(checkbox.checked).toBe(true);
+            expect(checkbox.disabled).toBe(true);
         });
     });
 
     describe('Field population', () => {
-        it('should populate fields with values from adapter', async () => {
-            mockAdapter.storageGetAll.mockResolvedValue({
-                xmdbApiKey: 'test-xmdb-key',
-                omdbApiKey: 'test-omdb-key',
-                apiClient: 'omdb',
-                showRtRating: false,
-            });
-            await settingsUI.render(container);
-
-            expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe('test-xmdb-key');
-            expect(container.querySelector('[id="fm-omdbApiKey"]').value).toBe('test-omdb-key');
-            expect(container.querySelector('[id="fm-apiClient"]').value).toBe('omdb');
-            expect(container.querySelector('[id="fm-showRtRating"]').checked).toBe(false);
-        });
-
-        it('should populate fields with default values if adapter returns nothing', async () => {
+        it('should populate every field with its default when storage is empty', async () => {
             mockAdapter.storageGetAll.mockResolvedValue(null);
             await settingsUI.render(container);
 
-            const xmdbField = CONFIG_FIELDS.find(f => f.key === 'xmdbApiKey');
-            expect(container.querySelector('[id="fm-xmdbApiKey"]').value).toBe(xmdbField.default);
+            CONFIG_FIELDS.forEach(field => {
+                const input = container.querySelector(`#fm-${field.key}`);
+                const value = field.type === 'checkbox' ? input.checked : input.value;
+                expect(value).toBe(field.default);
+            });
+        });
+
+        it('should populate every field with its stored value', async () => {
+            const storedSettings = Object.fromEntries(
+                CONFIG_FIELDS.map(field => {
+                    if (field.type === 'checkbox') return [field.key, !field.default];
+                    if (field.type === 'select') {
+                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
+                        return [field.key, optionValues.find(option => option !== field.default)];
+                    }
+                    return [field.key, `stored-${field.key}`];
+                })
+            );
+            mockAdapter.storageGetAll.mockResolvedValue(storedSettings);
+            await settingsUI.render(container);
+
+            CONFIG_FIELDS.forEach(field => {
+                const input = container.querySelector(`#fm-${field.key}`);
+                const value = field.type === 'checkbox' ? input.checked : input.value;
+                expect(value).toBe(storedSettings[field.key]);
+            });
         });
     });
 

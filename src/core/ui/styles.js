@@ -23,13 +23,13 @@ export const SETTINGS_STYLES = `
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 10px 25px 20px;
-    min-width: 480px;
+    width: min(480px, 100%);
 }
 .fm-settings-container * {
     box-sizing: border-box;
 }
 .fm-settings-container #fm-fields {
-    width: fit-content;
+    width: 100%;
     margin: 0 auto;
 }
 .fm-settings-container .field {
@@ -226,6 +226,27 @@ export const SETTINGS_STYLES = `
     align-items: center;
     gap: 20px;
     flex: 0 0 200px;
+}
+
+.fm-settings-container .services-field .services-group {
+    display: flex;
+    align-items: center;
+    column-gap: 20px;
+    row-gap: 0;
+    flex: 0 0 200px;
+    flex-wrap: wrap;
+}
+
+.fm-settings-container .services-field .services-group .field {
+    margin-bottom: 0;
+    flex: none;
+    gap: 6px;
+}
+
+.fm-settings-container .services-field .services-group .field .field-label {
+    flex: none;
+    text-align: left;
+    padding: 0;
 }
 
 .fm-settings-container .rating-checkbox {

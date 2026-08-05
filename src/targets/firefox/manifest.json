@@ -8,6 +8,7 @@
     "host_permissions": [
         "https://www.netflix.com/*",
         "https://play.hbomax.com/*",
+        "https://www.disneyplus.com/*",
         "https://xmdbapi.com/*",
         "https://www.omdbapi.com/*",
         "https://v3.sg.media-imdb.com/*",
@@ -19,7 +20,7 @@
     "action": {},
     "content_scripts": [
         {
-            "matches": ["https://www.netflix.com/*", "https://play.hbomax.com/*"],
+            "matches": ["https://www.netflix.com/*", "https://play.hbomax.com/*", "https://www.disneyplus.com/*"],
             "js": ["content.js"],
             "run_at": "document_idle"
         }
