@@ -231,7 +231,8 @@ export const SETTINGS_STYLES = `
 .fm-settings-container .services-field .services-group {
     display: flex;
     align-items: center;
-    gap: 20px;
+    column-gap: 20px;
+    row-gap: 0;
     flex: 0 0 200px;
     flex-wrap: wrap;
 }

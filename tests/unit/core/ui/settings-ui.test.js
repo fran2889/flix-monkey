@@ -97,6 +97,15 @@ describe('SettingsUI', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
+        it('should not add vertical spacing when service controls wrap', async () => {
+            await settingsUI.render(container);
+
+            const style = document.head.querySelector('style#flixmonkey-settings-styles');
+            expect(style.textContent).toMatch(
+                /\.services-field \.services-group \{\s*display: flex;\s*align-items: center;\s*column-gap: 20px;\s*row-gap: 0;/u
+            );
+        });
+
         it('should render action buttons and status placeholder', async () => {
             await settingsUI.render(container);
 
