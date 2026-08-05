@@ -13,6 +13,8 @@ project's licensing designation from GPL-3.0-or-later to GPL-3.0-only.
   metadata uses the strict GPL v3 identifier.
 - Remove license comments from HTML fixtures. They remain covered by the
   repository-level `LICENSE` file and are not subject to header linting.
+- Update README, contributing guidance, and store-description wording to use
+  the same GPL-3.0-only designation.
 
 ## Header Format
 
