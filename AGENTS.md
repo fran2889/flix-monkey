@@ -57,6 +57,16 @@ Husky git hooks are installed automatically via the `prepare` script.
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
 
+### Chromium Debugging
+
+Chrome DevTools CLI debugging must attach to Chromium launched from the repository root with this command:
+
+```bash
+chromium --remote-debugging-port=9222 --user-data-dir="$PWD/.chromium-debug-profile"
+```
+
+Reuse this persistent profile. Do not use temporary or fresh user-data directories.
+
 ### Build Notes
 
 - `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
