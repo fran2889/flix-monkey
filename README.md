@@ -69,12 +69,12 @@ Access settings via:
 
 ### Display Options
 
-| Option                     | Default                       | Description                                                                       |
-| -------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
-| Enabled Streaming Services | Netflix, HBO Max, and Disney+ | Run FlixMonkey on Netflix, HBO Max, and Disney+, all enabled by default           |
-| Rating Badge Position      | Top Left                      | Corner where rating badges appear                                                 |
-| Rotten Tomatoes            | No                            | Display RT score. Only available when OMDb is the rating provider                 |
-| Metacritic                 | No                            | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+| Option                | Default                       | Description                                                                       |
+| --------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
+| Show on               | Netflix, HBO Max, and Disney+ | Run FlixMonkey on Netflix, HBO Max, and Disney+, all enabled by default           |
+| Rating Badge Position | Top Left                      | Corner where rating badges appear                                                 |
+| Rotten Tomatoes       | No                            | Display RT score. Only available when OMDb is the rating provider                 |
+| Metacritic            | No                            | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
 
 ### Rating Providers
 

@@ -228,6 +228,26 @@ export const SETTINGS_STYLES = `
     flex: 0 0 200px;
 }
 
+.fm-settings-container .services-field .services-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 200px;
+    flex-wrap: wrap;
+}
+
+.fm-settings-container .services-field .services-group .field {
+    margin-bottom: 0;
+    flex: none;
+    gap: 6px;
+}
+
+.fm-settings-container .services-field .services-group .field .field-label {
+    flex: none;
+    text-align: left;
+    padding: 0;
+}
+
 .fm-settings-container .rating-checkbox {
     display: flex;
     align-items: center;
