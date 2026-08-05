@@ -18,6 +18,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    DisneyPlusSurfaceManager,
+    extractDisneyPlusTitle,
     extractHboMaxTitle,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
@@ -259,5 +261,89 @@ describe('HBO Max surfaces', () => {
 
         expect(extractHboMaxTitle(tile)).toBeNull();
         expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
+    });
+});
+
+describe('Disney+ surfaces', () => {
+    it.each([
+        ["Marvel Studios' The Avengers", "New Movie Badge Marvel Studios' The Avengers Rated 12+"],
+        ['The Devil Wears Prada 2', 'New Movie Badge The Devil Wears Prada 2 Rated 12+'],
+        ['Furious', 'Hulu Original Series New Episode Badge Furious Rated 18+'],
+        ['BLEACH: Thousand-Year Blood War', 'New Episode Badge BLEACH: Thousand-Year Blood War Rated 16+'],
+        ['The Bear', 'Hulu Original Series Subtitles Available Badge The Bear'],
+    ])('extracts the clean Disney+ title for %s', (title, ariaLabel) => {
+        const tile = document.createElement('a');
+        tile.setAttribute('aria-label', ariaLabel);
+        tile.innerHTML = `<img alt=""><img alt="${title}">`;
+
+        expect(extractDisneyPlusTitle(tile)).toBe(title);
+    });
+
+    it.each([
+        [
+            'Subtitles Available Badge Avatar: Fire and Ash Rated 12+ Released 2025. Action and Adventure Select for details on this title.',
+            'Avatar: Fire and Ash',
+        ],
+        ['New Movie Badge The Devil Wears Prada 2 Select for details on this title.', 'The Devil Wears Prada 2'],
+        ['New Episode Badge Furious Hulu Original Series Select for details on this title.', 'Furious'],
+        ['New Season Peppa Pig Select for details on this title.', 'Peppa Pig'],
+        ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
+        ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
+        ['Moana Action and Adventure Select for details on this title.', 'Moana'],
+        ['Lilo & Stitch Kids and Family Select for details on this title.', 'Lilo & Stitch'],
+    ])('parses a Disney+ title from an accessible-name fallback: %s', (ariaLabel, expected) => {
+        const tile = document.createElement('a');
+        tile.setAttribute('aria-label', ariaLabel);
+        tile.innerHTML = '<img alt="">';
+
+        expect(extractDisneyPlusTitle(tile)).toBe(expected);
+    });
+
+    it.each([
+        undefined,
+        'LIVE Started 47 minutes ago Senior League Baseball Choose Feed Entry',
+        'Upcoming 09/08 | 8:00pm New York XIST vs. Michigan Hybrid',
+        'Avatar: Fire and Ash',
+        'Select for details on this title.',
+    ])('rejects unsupported Disney+ accessible-name fallbacks: %s', ariaLabel => {
+        const tile = document.createElement('a');
+        if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
+        tile.innerHTML = '<img alt="">';
+
+        expect(extractDisneyPlusTitle(tile)).toBeNull();
+    });
+
+    it('uses the shelf-card parent as the fadeable Disney+ overlay container', () => {
+        document.body.innerHTML = `
+            <div data-testid="set-shelf-item">
+                <a data-testid="set-item" data-item-id="id" href="//en-gb/browse/entity-id"
+                   aria-label="Loki Disney+ Original Select for details on this title.">
+                    <img alt="Loki">
+                </a>
+            </div>
+        `;
+
+        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: false });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+    });
+
+    it('discovers a Continue Watching title from its metadata', () => {
+        document.body.innerHTML = `
+            <section data-testid="set-section" data-set-style="continue_watching">
+                <div data-testid="set-shelf-item">
+                    <span data-testid="cw-set-item-wrapper">
+                        <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
+                        <a data-testid="cw-set-item-metadata" href="/browse/entity-title-id">
+                            <div>9m remaining</div><div>How I Met Your Mother</div>
+                        </a>
+                    </span>
+                </div>
+            </section>
+        `;
+
+        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: false });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 });

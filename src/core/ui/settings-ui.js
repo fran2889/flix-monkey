@@ -95,7 +95,7 @@ export class SettingsUI {
 
                 const label = document.createElement('label');
                 label.className = 'field-label';
-                label.textContent = 'Enabled Streaming Services';
+                label.textContent = 'Show on';
                 label.title = 'Choose which streaming services to enable FlixMonkey on';
                 fieldDiv.appendChild(label);
 

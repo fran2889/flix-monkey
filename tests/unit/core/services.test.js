@@ -18,8 +18,14 @@
 
 import { afterEach, assert, describe, it, vi } from 'vitest';
 
-import { HboMaxService, NetflixService, ServiceRegistry, StreamingService } from '../../../src/core/services.js';
-import { HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
+import {
+    DisneyPlusService,
+    HboMaxService,
+    NetflixService,
+    ServiceRegistry,
+    StreamingService,
+} from '../../../src/core/services.js';
+import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
 
 describe('StreamingService', () => {
     it.each([
@@ -36,6 +42,7 @@ describe('StreamingService', () => {
 describe.each([
     ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix'],
     ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
+    ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus'],
 ])('%s service', (_name, Service, SurfaceManager, configKey) => {
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
@@ -60,6 +67,7 @@ describe('ServiceRegistry', () => {
             ['www.netflix.com', NetflixService],
             ['browse.netflix.com', NetflixService],
             ['play.hbomax.com', HboMaxService],
+            ['www.disneyplus.com', DisneyPlusService],
         ])('returns the matching service for %s', (hostname, Service) => {
             Object.defineProperty(window, 'location', {
                 value: { hostname },

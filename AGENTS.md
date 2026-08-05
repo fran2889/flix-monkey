@@ -57,6 +57,16 @@ Husky git hooks are installed automatically via the `prepare` script.
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
 
+### Chromium Debugging
+
+Chrome DevTools CLI debugging must attach to Chromium launched from the repository root with this command:
+
+```bash
+chromium --remote-debugging-port=9222 --user-data-dir="$PWD/.chromium-debug-profile"
+```
+
+Reuse this persistent profile. Do not use temporary or fresh user-data directories.
+
 ### Build Notes
 
 - `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
@@ -291,7 +301,7 @@ class PlatformAdapter {
 - **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).
 - **Testing**: Business logic changes must add or update tests covering the new logic.
 - **README**: Update if the change is user-facing or affects documented functionality.
-- **Protocol**: Always print a suggested commit message at the end of a task.
+- **Protocol**: Always print a suggested commit message at the end of a task if files were modified and changes were not committed.
 - **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
 - **Prose style**: Use the Oxford comma: "A, B, and C".
 - **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
