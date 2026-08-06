@@ -8,9 +8,7 @@ import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 
 /**
- * @typedef {Object} ClientStatus
- * @property {boolean} healthy - Whether the client is operational.
- * @property {string} [reason] - Human-readable explanation when `healthy` is `false`.
+ * @typedef {{healthy: true}|{healthy: false, reason: string}} ClientStatus
  */
 
 /**
@@ -116,7 +114,7 @@ export class BaseApiClient {
      * @param {string} url - Request URL.
      * @param {number} [priority=0] - Higher values are processed first.
      * @param {'json'|'text'} [responseType='json'] - Expected response format.
-     * @returns {Promise<*>} Parsed response body.
+     * @returns {Promise<unknown>} Parsed response body.
      */
     async queuedFetch(url, priority = 0, responseType = 'json') {
         return this.#queue.enqueue(
@@ -141,7 +139,7 @@ export class BaseApiClient {
         if (await this.isDisabled()) return null;
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
-        return new Title({ ...detailedTitle, source: this.#source });
+        return detailedTitle.withSource(this.#source);
     }
 
     /**

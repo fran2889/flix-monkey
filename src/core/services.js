@@ -9,22 +9,27 @@ import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager }
  * Base class for streaming service implementations.
  */
 export class StreamingService {
+    /** @returns {string} */
     get id() {
         throw new Error('Not implemented');
     }
 
+    /** @returns {readonly string[]} */
     get domains() {
         throw new Error('Not implemented');
     }
 
+    /** @returns {typeof NetflixSurfaceManager|typeof HboMaxSurfaceManager|typeof DisneyPlusSurfaceManager} */
     get SurfaceManager() {
         throw new Error('Not implemented');
     }
 
+    /** @returns {import('./overlay.js').ServicePresentation} */
     get constants() {
         return Object.freeze({});
     }
 
+    /** @param {import('./config-manager.js').ConfigManager} _configManager @returns {boolean} */
     isEnabled(_configManager) {
         throw new Error('Not implemented');
     }
@@ -116,6 +121,7 @@ export const SERVICES = Object.freeze({
  * Service detection utility.
  */
 export class ServiceRegistry {
+    /** @returns {StreamingService|null} */
     static detect() {
         const currentHost = window.location.hostname;
         for (const service of Object.values(SERVICES)) {

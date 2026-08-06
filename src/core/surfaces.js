@@ -9,8 +9,16 @@
  * @property {(element: Element) => string|null|undefined} getTitle - Callback that returns the title text
  * @property {(element: Element) => Element|null|undefined} getContainer - Callback that returns the container
  * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
- * @property {boolean} fadeable - Whether this surface supports fading
- * @property {boolean} showFadeToggle - Whether to show fade toggle button
+ * @property {boolean} [fadeable=false] - Whether this surface supports fading
+ * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button
+ */
+
+/**
+ * @typedef {Object} DiscoveredSurface
+ * @property {Element} container
+ * @property {string} title
+ * @property {boolean} fadeable
+ * @property {boolean} showFadeToggle
  */
 
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
@@ -103,7 +111,7 @@ export class SurfaceManager {
      * Discovers all surface containers with titles in the given root element.
      *
      * @param {Element|Document} root - The root element to search within
-     * @returns {Array<{container: Element, title: string, fadeable: boolean, showFadeToggle: boolean}>}
+     * @returns {DiscoveredSurface[]}
      */
     discover(root) {
         const seen = new Set();
@@ -130,8 +138,8 @@ export class SurfaceManager {
                 results.push({
                     container,
                     title,
-                    fadeable: surface.fadeable,
-                    showFadeToggle: surface.showFadeToggle,
+                    fadeable: surface.fadeable ?? false,
+                    showFadeToggle: surface.showFadeToggle ?? false,
                 });
             });
         });

@@ -7,7 +7,10 @@ import { FlixMonkeyError } from '../core/utils.js';
 /**
  * @typedef {Object} HttpFetchOptions
  * @property {'json'|'text'} [responseType='json'] - Expected response format.
+ * @property {number} [timeout] - Request timeout in milliseconds.
  */
+
+/** @typedef {string|boolean} StorageValue */
 
 /**
  * Abstract base class for platform adapters.
@@ -23,7 +26,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @returns {Promise<string|null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<StorageValue|null>} The stored value, or `null` if the key does not exist.
      */
     async storageGet(_key) {
         throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
@@ -33,7 +36,7 @@ export class PlatformAdapter {
      * Retrieves all key/value pairs from platform storage.
      *
      * @abstract
-     * @returns {Promise<Record<string, string>>} All stored entries.
+     * @returns {Promise<Record<string, StorageValue>>} All stored entries.
      */
     async storageGetAll() {
         throw new FlixMonkeyError('PlatformAdapter: storageGetAll() must be implemented by subclass');
@@ -44,7 +47,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @param {string} _value - Value to store.
+     * @param {StorageValue} _value - Value to store.
      * @returns {Promise<void>}
      */
     async storageSet(_key, _value) {
@@ -55,7 +58,7 @@ export class PlatformAdapter {
      * Stores multiple key/value pairs atomically in platform storage.
      *
      * @abstract
-     * @param {Record<string, string>} _values - Object of key/value pairs to store.
+     * @param {Record<string, StorageValue>} _values - Object of key/value pairs to store.
      * @returns {Promise<void>}
      */
     async storageSetMany(_values) {
@@ -91,7 +94,7 @@ export class PlatformAdapter {
      * @abstract
      * @param {string} _url - Request URL.
      * @param {HttpFetchOptions} [_options] - Fetch options.
-     * @returns {Promise<*>} Parsed response body (JSON object or string, depending on `responseType`).
+     * @returns {Promise<unknown>} Parsed response body (JSON object or string, depending on `responseType`).
      */
     async httpFetch(_url, _options) {
         throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
@@ -124,7 +127,7 @@ export class PlatformAdapter {
      * No-op by default; only `UserscriptAdapter` overrides this.
      *
      * @param {string} _label - Menu item label.
-     * @param {Function} _fn - Callback invoked when the menu item is selected.
+     * @param {() => void} _fn - Callback invoked when the menu item is selected.
      */
     registerMenuCommand(_label, _fn) {
         // No-op by default
@@ -141,7 +144,7 @@ export class PlatformAdapter {
      * **Live-read** adapters (`UserscriptAdapter`) leave this as a no-op because their
      * `configGet` reads from storage directly on every call and never needs a pre-seeded cache.
      *
-     * @param {Record<string, string|boolean>} _data - Config key/value pairs.
+     * @param {Record<string, StorageValue>} _data - Config key/value pairs.
      */
     setConfigData(_data) {}
 }

@@ -10,12 +10,24 @@ export class RequestQueue {
     #globalSyncKey;
     #adapter;
 
+    /**
+     * @param {number} [minInterval=1000]
+     * @param {string|null} [globalSyncKey=null]
+     * @param {import('../platform/adapter.js').PlatformAdapter|null} [adapter=null]
+     */
     constructor(minInterval = 1000, globalSyncKey = null, adapter = null) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
     }
 
+    /**
+     * @param {string} url
+     * @param {number} priority
+     * @param {(url: string, responseType: 'json'|'text') => Promise<unknown>} fetchFn
+     * @param {'json'|'text'} responseType
+     * @returns {Promise<unknown>}
+     */
     enqueue(url, priority, fetchFn, responseType) {
         return new Promise((resolve, reject) => {
             this.#queue.push({ url, priority, resolve, reject, fetchFn, responseType });
@@ -26,6 +38,7 @@ export class RequestQueue {
         });
     }
 
+    /** @returns {number} Number of rejected queued requests. */
     clear() {
         const count = this.#queue.length;
         while (this.#queue.length > 0) {

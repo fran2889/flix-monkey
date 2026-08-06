@@ -10,6 +10,12 @@ export class ApiClientManager {
     #disabledManager;
     #logger;
 
+    /**
+     * @param {import('./cache.js').CacheManager} cache
+     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('./api-clients.js').BaseApiClient} client
+     * @param {import('./logger.js').Logger} logger
+     */
     constructor(cache, disabledManager, client, logger) {
         this.#cache = cache;
         this.#disabledManager = disabledManager;
@@ -17,6 +23,12 @@ export class ApiClientManager {
         this.#logger = logger;
     }
 
+    /** @returns {import('./disabled-clients.js').DisabledClientsManager} */
+    get disabledManager() {
+        return this.#disabledManager;
+    }
+
+    /** @returns {Promise<string[]>} */
     async resetDisabledClients() {
         const reenabled = await this.#disabledManager.resetAll();
         if (reenabled.length > 0) {
@@ -27,6 +39,7 @@ export class ApiClientManager {
         return reenabled;
     }
 
+    /** @param {string} displayTitle @returns {Promise<Title>} */
     async getData(displayTitle) {
         const source = this.#client.source;
         const cached = await this.#cache.read(displayTitle, source);

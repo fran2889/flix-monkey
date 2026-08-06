@@ -4,7 +4,11 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CacheManager } from '../../../../src/core/cache.js';
 import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
+import { ConfigManager } from '../../../../src/core/config-manager.js';
+import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
+import { Logger } from '../../../../src/core/logger.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { createMockAdapter } from '../../../mocks/adapter.js';
 
@@ -16,17 +20,11 @@ describe('SettingsUI', () => {
     let mockDisabledClientsManager;
 
     beforeEach(() => {
-        mockAdapter = {
-            storageGetAll: vi.fn().mockResolvedValue({}),
-            storageSetMany: vi.fn().mockResolvedValue(),
-            setConfigData: vi.fn(),
-        };
-        mockCacheManager = {
-            clear: vi.fn().mockResolvedValue(),
-        };
-        mockDisabledClientsManager = {
-            resetAll: vi.fn().mockResolvedValue([]),
-        };
+        mockAdapter = createMockAdapter();
+        mockCacheManager = new CacheManager(mockAdapter, new ConfigManager(mockAdapter), new Logger(mockAdapter));
+        mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
+        vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
+        vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
         settingsUI = new SettingsUI(mockAdapter, undefined, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
         document.head.innerHTML = '';

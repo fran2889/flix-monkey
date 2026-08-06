@@ -5,6 +5,15 @@
 import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
 import { validateDomain } from './domains.js';
 
+/**
+ * @typedef {{data: unknown}|{error: string, status?: number, body?: string|null}} FetchProxyResponse
+ */
+
+/**
+ * @param {string} url
+ * @param {import('../../platform/adapter.js').HttpFetchOptions} [options]
+ * @returns {Promise<FetchProxyResponse>}
+ */
 export async function handleFetchMessage(url, options = {}) {
     const validation = validateDomain(url);
     if (!validation.valid) {

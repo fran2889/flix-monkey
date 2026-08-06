@@ -61,12 +61,12 @@ describe('WebExtensionAdapter', () => {
 
     it('httpFetch should send message to background and return data', async () => {
         browser.runtime.sendMessage.mockResolvedValue({ data: { success: true } });
-        const result = await adapter.httpFetch('https://api.example.com', { method: 'GET' });
+        const result = await adapter.httpFetch('https://api.example.com', { responseType: 'json' });
 
         expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
             type: 'FM_FETCH',
             url: 'https://api.example.com',
-            options: { method: 'GET' },
+            options: { responseType: 'json' },
         });
         expect(result.success).toBe(true);
     });

@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 /**
+ * @typedef {'xmdb'|'omdb'|'agregarr'} ApiSourceValue
+ * @typedef {'movie'|'series'} TitleTypeValue
+ */
+/**
  * @typedef {Object} TitleOptions
  * @property {string|null} [displayTitle=null] - Title as shown on the Netflix UI.
  * @property {string|null} [apiTitle=null] - Canonical title returned by the API.
@@ -12,8 +16,8 @@
  * @property {number|string|null} [imdbVotes=null] - IMDb vote count; coerced to integer.
  * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0-100); coerced to integer.
  * @property {number|string|null} [mcRating=null] - Metacritic score (0-100); leading digits extracted, coerced to integer.
- * @property {string|null} [source=null] - API source that produced this title (an `ApiSource` value).
- * @property {string|null} [type=null] - Title type (e.g. `"movie"`, `"series"`).
+ * @property {ApiSourceValue|null} [source=null] - API source that produced this title.
+ * @property {TitleTypeValue|null} [type=null] - Movie or series title type.
  */
 
 /**
@@ -40,9 +44,9 @@ export class Title {
     rtRating;
     /** @type {number|null} */
     mcRating;
-    /** @type {string|null} */
+    /** @type {ApiSourceValue|null} */
     source;
-    /** @type {string|null} */
+    /** @type {TitleTypeValue|null} */
     type;
 
     /** @param {TitleOptions} [options] */
@@ -99,9 +103,19 @@ export class Title {
     }
 
     /**
+     * Returns a copy with the API source replaced.
+     *
+     * @param {ApiSourceValue|null} source - API source that produced this title.
+     * @returns {Title}
+     */
+    withSource(source) {
+        return new Title({ ...this, source });
+    }
+
+    /**
      * Reconstitutes a `Title` from a plain object (e.g. a parsed cache entry).
      *
-     * @param {Object|null} obj - Plain object with `TitleOptions` shape.
+     * @param {unknown} obj - Parsed cache data with an optional `TitleOptions` shape.
      * @returns {Title|null} A new `Title` instance, or `null` if `obj` is falsy or not an object.
      */
     static fromJSON(obj) {
@@ -113,7 +127,7 @@ export class Title {
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The Netflix display title that was searched.
-     * @param {string|null} [source=null] - API source that produced the miss.
+     * @param {ApiSourceValue|null} [source=null] - API source that produced the miss.
      * @returns {Title}
      */
     static notFound(displayTitle, source = null) {
@@ -121,8 +135,8 @@ export class Title {
     }
 
     /**
-     * @param {*} val - Raw rating value from an API response.
-     * @param {(v: *) => number|null} converter - Type-specific parser.
+     * @param {unknown} val - Raw rating value from an API response.
+     * @param {(v: unknown) => number|null} converter - Type-specific parser.
      * @returns {number|null}
      */
     #normalizeRating(val, converter) {

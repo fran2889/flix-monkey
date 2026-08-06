@@ -33,6 +33,15 @@ export class FlixMonkeyApp {
     #fadeManager;
     #config;
 
+    /**
+     * @param {CacheManager} cache
+     * @param {ApiClientManager} api
+     * @param {OverlayRenderer} renderer
+     * @param {SurfaceManager} surfaces
+     * @param {FadeManager} fadeManager
+     * @param {ConfigManager} config
+     * @param {Logger} logger
+     */
     constructor(cache, api, renderer, surfaces, fadeManager, config, logger) {
         this.#cache = cache;
         this.#api = api;
@@ -46,6 +55,16 @@ export class FlixMonkeyApp {
             this.#pendingRoots.clear();
             runIdle(() => roots.forEach(root => this.decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
+    }
+
+    /** @returns {CacheManager} */
+    get cacheManager() {
+        return this.#cache;
+    }
+
+    /** @returns {DisabledClientsManager} */
+    get disabledManager() {
+        return this.#api.disabledManager;
     }
 
     disconnect() {
@@ -207,6 +226,10 @@ function createApiClient(config, disabledManager, adapter, logger) {
     return new ClientClass(disabledManager, adapter, config, logger);
 }
 
+/**
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+ * @returns {FlixMonkeyApp|null}
+ */
 export function startApp(adapter) {
     const currentService = ServiceRegistry.detect();
     if (!currentService) {
@@ -227,12 +250,5 @@ export function startApp(adapter) {
     const fadeManager = new FadeManager(adapter);
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger);
     app.init();
-    return {
-        clearCache: () => app.clearCache(),
-        resetDisabledClients: () => app.resetDisabledClients(),
-        disconnect: () => app.disconnect(),
-        redecorate: () => app.redecorate(),
-        cacheManager: cache,
-        disabledManager: disabledManager,
-    };
+    return app;
 }

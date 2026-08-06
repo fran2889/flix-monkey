@@ -72,6 +72,28 @@ describe('Title', () => {
         expect(title.rating).toBeNull();
     });
 
+    it('should return an immutable copy with only its source changed', () => {
+        const original = new Title({
+            displayTitle: 'Original',
+            apiTitle: 'Canonical',
+            imdbId: 'tt123',
+            year: 2024,
+            rating: 7.5,
+            imdbVotes: 1000,
+            rtRating: 80,
+            mcRating: 70,
+            source: 'omdb',
+            type: 'movie',
+        });
+
+        const updated = original.withSource('xmdb');
+
+        expect(updated).not.toBe(original);
+        expect(updated).toMatchObject({ ...original, source: 'xmdb' });
+        expect(Object.isFrozen(updated)).toBe(true);
+        expect(original.source).toBe('omdb');
+    });
+
     describe('hasRating', () => {
         it('should be true when rating is 0', () => {
             expect(new Title({ rating: 0 }).hasRating).toBe(true);

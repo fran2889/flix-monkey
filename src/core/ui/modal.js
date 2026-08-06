@@ -7,6 +7,7 @@ export class Modal {
     #returnFocus = null;
     #escHandler = null;
 
+    /** @param {string} title */
     constructor(title) {
         this.title = title;
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
@@ -42,10 +43,12 @@ export class Modal {
         this.overlay.appendChild(content);
     }
 
+    /** @returns {HTMLDivElement} */
     getContentContainer() {
         return this.overlay.querySelector('.fm-modal-body');
     }
 
+    /** @returns {void} */
     open() {
         if (this.#escHandler) return;
         document.body.appendChild(this.overlay);
@@ -58,6 +61,7 @@ export class Modal {
         document.addEventListener('keydown', this.#escHandler);
     }
 
+    /** @returns {void} */
     close() {
         if (this.#escHandler) {
             document.removeEventListener('keydown', this.#escHandler);

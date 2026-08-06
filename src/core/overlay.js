@@ -10,6 +10,12 @@ import {
     RATING_COLOR_RED,
 } from './constants.js';
 
+/**
+ * @typedef {Object} ServicePresentation
+ * @property {string[]} [TOP_10_SELECTORS]
+ * @property {string} [TOP_10_OFFSET]
+ */
+
 export const FADE_STATE_LABELS = {
     auto: 'Auto',
     always: 'Always',
@@ -24,8 +30,8 @@ export class OverlayRenderer {
     #serviceConstants;
 
     /**
-     * @param {ConfigManager} config - Application configuration
-     * @param {Object} [serviceConstants={}] - Service-specific constants (e.g., TOP_10_SELECTORS)
+     * @param {import('./config-manager.js').ConfigManager} config - Application configuration
+     * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      */
     constructor(config, serviceConstants = {}) {
         this.#config = config;
@@ -269,6 +275,7 @@ export class OverlayRenderer {
         return container;
     }
 
+    /** @param {Element} container */
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
@@ -281,19 +288,28 @@ export class OverlayRenderer {
         return container;
     }
 
+    /** @param {Element} container */
     injectLoadingOverlay(container) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         container.appendChild(this.#createLoadingOverlay());
     }
 
+    /** @param {Element} container */
     removeLoadingOverlay(container) {
         container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
     }
 
+    /** @param {Element} container @returns {boolean} */
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
+    /**
+     * @param {Element} container
+     * @param {import('./title.js').Title} titleObj
+     * @param {'always'|'never'|null} [fadeToggleState=null]
+     * @param {((element: Element) => void)|null} [onFadeToggleClick=null]
+     */
     injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = this.#createOverlay(titleObj);
@@ -304,10 +320,12 @@ export class OverlayRenderer {
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
+    /** @param {Element} container @returns {boolean} */
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
+    /** @param {Element} container @param {boolean} shouldFade */
     applyFade(container, shouldFade) {
         container.classList.toggle('fm-faded', shouldFade);
     }

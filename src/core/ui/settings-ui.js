@@ -13,13 +13,21 @@ export class SettingsUI {
     #container = null;
     #onSave = null;
 
+    /** @returns {(() => void|Promise<void>)|null} */
     get onSave() {
         return this.#onSave;
     }
+    /** @param {(() => void|Promise<void>)|null} fn */
     set onSave(fn) {
         this.#onSave = fn;
     }
 
+    /**
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
+     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
+     * @param {import('../cache.js').CacheManager} cacheManager
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
+     */
     constructor(adapter, fields = CONFIG_FIELDS, cacheManager, disabledClientsManager) {
         this.#adapter = adapter;
         this.#fields = fields;
@@ -27,6 +35,7 @@ export class SettingsUI {
         this.#disabledClientsManager = disabledClientsManager;
     }
 
+    /** @param {Element} container @returns {Promise<void>} */
     async render(container) {
         this.#container = container;
         this.#injectStyles();
@@ -313,6 +322,7 @@ export class SettingsUI {
         return errors;
     }
 
+    /** @returns {Promise<void>} */
     async save() {
         const errors = this.#validate();
         const statusDiv = this.#container.querySelector('#fm-status');
@@ -345,6 +355,7 @@ export class SettingsUI {
         }
     }
 
+    /** @returns {Promise<void>} */
     async clearCache() {
         const statusDiv = this.#container.querySelector('#fm-status');
         try {
@@ -357,6 +368,7 @@ export class SettingsUI {
         }
     }
 
+    /** @returns {Promise<void>} */
     async resetClients() {
         const statusDiv = this.#container.querySelector('#fm-status');
         try {

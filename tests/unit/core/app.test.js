@@ -336,6 +336,7 @@ describe('App', () => {
         const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? true : undefined) });
         const result = startApp(adapter);
         expect(result).not.toBeNull();
+        expect(result).toBeInstanceOf(FlixMonkeyApp);
         expect(result.clearCache).toBeDefined();
         expect(result.disconnect).toBeDefined();
     });

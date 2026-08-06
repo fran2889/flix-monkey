@@ -4,6 +4,11 @@
  */
 export const ALLOWED_DOMAINS = ['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com'];
 
+/**
+ * @typedef {{valid: true}|{valid: false, error: string}} DomainValidationResult
+ */
+
+/** @param {string} url @returns {DomainValidationResult} */
 export function validateDomain(url) {
     try {
         const urlObj = new URL(url);

@@ -20,9 +20,9 @@ export class FlixMonkeyError extends Error {
  * Creates a debounced function that delays invoking func until after wait milliseconds
  * have elapsed since the last time the debounced function was invoked.
  *
- * @param {Function} func The function to debounce.
+ * @param {() => void} func The function to debounce.
  * @param {number} wait The number of milliseconds to delay.
- * @returns {Function} Returns the new debounced function.
+ * @returns {() => void} Returns the new debounced function.
  */
 export function debounce(func, wait) {
     let timeout;
@@ -37,7 +37,7 @@ export function debounce(func, wait) {
  * Schedules a function to run during the browser's idle periods.
  * Falls back to setTimeout if requestIdleCallback is not available.
  *
- * @param {Function} func The function to schedule.
+ * @param {() => void} func The function to schedule.
  * @param {number} timeout Optional timeout after which the function will be run if it hasn't already.
  */
 export function runIdle(func, timeout = 2000) {
