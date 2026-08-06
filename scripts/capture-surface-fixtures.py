@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Fran
+# SPDX-License-Identifier: GPL-3.0-only
 """Capture anonymized Netflix surface fixtures from Chromium on port 9222."""
 
 import base64
