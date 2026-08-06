@@ -29,12 +29,10 @@ export class CacheManager {
         this.#logger = logger;
     }
 
-    /** @param {string} displayTitle @returns {string} */
     #getCacheKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
-    /** @param {Title} titleObj @returns {number} */
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));

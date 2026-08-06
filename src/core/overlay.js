@@ -275,7 +275,6 @@ export class OverlayRenderer {
         return container;
     }
 
-    /** @param {Element} container */
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
@@ -288,18 +287,15 @@ export class OverlayRenderer {
         return container;
     }
 
-    /** @param {Element} container */
     injectLoadingOverlay(container) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         container.appendChild(this.#createLoadingOverlay());
     }
 
-    /** @param {Element} container */
     removeLoadingOverlay(container) {
         container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
     }
 
-    /** @param {Element} container @returns {boolean} */
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
@@ -320,12 +316,10 @@ export class OverlayRenderer {
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
-    /** @param {Element} container @returns {boolean} */
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
-    /** @param {Element} container @param {boolean} shouldFade */
     applyFade(container, shouldFade) {
         container.classList.toggle('fm-faded', shouldFade);
     }

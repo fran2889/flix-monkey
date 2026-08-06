@@ -13,11 +13,9 @@ export class SettingsUI {
     #container = null;
     #onSave = null;
 
-    /** @returns {(() => void|Promise<void>)|null} */
     get onSave() {
         return this.#onSave;
     }
-    /** @param {(() => void|Promise<void>)|null} fn */
     set onSave(fn) {
         this.#onSave = fn;
     }
@@ -322,7 +320,6 @@ export class SettingsUI {
         return errors;
     }
 
-    /** @returns {Promise<void>} */
     async save() {
         const errors = this.#validate();
         const statusDiv = this.#container.querySelector('#fm-status');
@@ -355,7 +352,6 @@ export class SettingsUI {
         }
     }
 
-    /** @returns {Promise<void>} */
     async clearCache() {
         const statusDiv = this.#container.querySelector('#fm-status');
         try {
@@ -368,7 +364,6 @@ export class SettingsUI {
         }
     }
 
-    /** @returns {Promise<void>} */
     async resetClients() {
         const statusDiv = this.#container.querySelector('#fm-status');
         try {
