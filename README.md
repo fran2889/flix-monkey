@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
 [![Chrome Web Store Version](https://img.shields.io/chrome-web-store/v/ipbiebdbicmlajmbcghkcdkobmcaoadl.svg?label=Chrome)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
 [![Firefox Add-on Version](https://img.shields.io/amo/v/flixmonkey.svg?label=Firefox)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=build)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
@@ -211,4 +211,4 @@ By default, title lookups use IMDb Suggestions for IMDb ID lookup and [Agregarr]
 
 ## License
 
-[GPL-3.0-or-later](LICENSE)
+[GNU General Public License v3](LICENSE)
