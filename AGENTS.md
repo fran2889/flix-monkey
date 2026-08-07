@@ -299,41 +299,20 @@ class PlatformAdapter {
 
 ### JSDoc
 
-Use JSDoc to document integration contracts, not to annotate every method. An
-integration contract is a boundary that another module, platform target, or
-external service must consume correctly. Add or tighten JSDoc only when at
-least one of these is true:
+Use JSDoc for boundaries whose callers need documented semantics to consume
+correctly, not for every method. Document abstract and cross-platform
+contracts; non-obvious exported APIs and injected collaborators; persistence,
+messaging, HTTP, and external-data boundaries; and reused shapes, unions,
+constrained values, and serialization formats.
 
-- An abstract adapter, service, or other extension interface defines the
-  contract that implementations must follow.
-- An exported factory, constructor, or public method accepts multiple
-  collaborators, exposes a deliberately published collaborator, or has a
-  non-obvious input or result.
-- A value crosses a persistence, message-passing, HTTP/API, platform-adapter,
-  or target boundary.
-- A reusable data shape, discriminated result, constrained value set, or
-  serialization format needs a named contract.
-- A behavior has a non-obvious invariant, fallback, side effect, or lifecycle
-  requirement that callers must preserve.
+Document shared contracts at their defining interface or exported boundary.
+Implementations document only meaningful deviations. Use named `@typedef`s for
+reused shapes, `unknown` for untrusted input, and `import('./path.js').Type`
+for cross-module types. Explain only constraints, fallbacks, side effects, and
+lifecycle requirements that types do not convey.
 
-For those contracts:
-
-- Prefer named `@typedef`s for reused object shapes and discriminated unions;
-  use `unknown` rather than `*` for untrusted data.
-- Reference cross-module classes with `import('./path.js').Type`; keep
-  primitive types only when they constrain a meaningful domain value.
-- Document parameters and returns that form the contract. Explain constraints
-  and fallbacks that types alone do not convey.
-- Tighten an existing JSDoc contract when it is inaccurate or incomplete, but
-  do not add annotations merely to make a file look uniformly typed.
-
-Do not add JSDoc to private helpers, straightforward UI methods, ordinary
-getters/setters, or simple public methods when the name, implementation, and
-standard JavaScript types make the behavior clear. A getter needs JSDoc only
-when it exposes a non-obvious shape, lifecycle, or intentionally published
-internal collaborator. `@returns {void}`, obvious `Element` parameters, and
-repeated primitive annotations are noise unless they are part of an integration
-contract.
+Omit JSDoc for private helpers, simple pure utilities, routine DOM or UI glue,
+ordinary accessors, and self-evident primitive signatures.
 
 - **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this: a missing or malformed header is a lint error.
 - **Conventional Commits**: Enforced by `commitlint` via a Husky `commit-msg` hook. Format: `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
