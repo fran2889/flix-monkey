@@ -134,11 +134,6 @@ export class Title {
         return new Title({ displayTitle, source });
     }
 
-    /**
-     * @param {unknown} val - Raw rating value from an API response.
-     * @param {(v: unknown) => number|null} converter - Type-specific parser.
-     * @returns {number|null}
-     */
     #normalizeRating(val, converter) {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter ? converter(val) : val;

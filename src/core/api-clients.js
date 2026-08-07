@@ -14,7 +14,7 @@ import { Title } from './title.js';
 /**
  * Extracts a rating value from an OMDb-style `Ratings` array.
  *
- * @param {Array<{source?: string, Source?: string, value?: string, Value?: string}>|*} ratings
+ * @param {unknown} ratings
  * @param {RegExp} sourcePattern - Pattern to match against the `source`/`Source` field.
  * @returns {string|null} The raw rating string, or `null` if not found.
  */
