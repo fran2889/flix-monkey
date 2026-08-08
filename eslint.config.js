@@ -10,6 +10,7 @@ const commonRules = {
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    complexity: ['error', 16],
     'no-duplicate-imports': 'error',
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
