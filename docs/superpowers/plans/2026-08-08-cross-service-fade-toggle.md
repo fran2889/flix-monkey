@@ -13,7 +13,7 @@
 - Preserve the existing three-state override cycle: Auto -> Always -> Never -> Auto.
 - Render a toggle only when both `showFadeToggle` and the `enableFadeToggle` setting permit it.
 - Keep Netflix browse cards toggle-free and keep the Netflix mini preview as the sole Netflix toggle surface.
-- Reveal a rendered toggle with `:hover` and `:focus-within`; retain its layout space while hidden and prevent it receiving pointer input until revealed.
+- Render the toggle as a `button` and reveal it with `:hover` and `:focus-within`; retain its layout space while hidden with `visibility: hidden`, and prevent it receiving pointer input until revealed.
 - Use ASCII-only prose and retain GPL-3.0 headers on every changed source and test file.
 - Update README text for user-facing behavior changes.
 
@@ -22,7 +22,7 @@
 ## File Structure
 
 - `src/core/surfaces.js`: declares which service surfaces expose the existing fade toggle.
-- `src/core/overlay.js`: owns shared fade-toggle visibility CSS.
+- `src/core/overlay.js`: owns the semantic fade-toggle button and its shared visibility CSS.
 - `src/core/config-fields.js`: replaces Netflix-specific setting help text with cross-service wording.
 - `tests/unit/core/surfaces.test.js`: covers surface-definition flags without loading a service fixture.
 - `tests/unit/core/overlay.test.js`: validates the generated selector rules for hidden and revealed toggle states.
@@ -122,17 +122,28 @@
 **Interfaces:**
 
 - Consumes: `OverlayRenderer.injectOverlay(container, title, state, onFadeToggleClick)`, which already appends `.fm-fade-toggle` only for toggle-capable surfaces with the setting enabled.
-- Produces: a `.fm-fade-toggle` that is visually hidden and non-interactive by default, then visible and interactive whenever its container is hovered or contains focus.
+- Produces: a `.fm-fade-toggle` button that is hidden and non-interactive by default, then visible and interactive whenever its container is hovered or contains focus.
 
 - [ ] **Step 1: Write the failing CSS-content assertions**
 
     Extend the existing fade-toggle CSS test to assert the stylesheet includes each required declaration and selector:
 
     ```js
-    expect(css).toContain('.fm-rating-overlay .fm-fade-toggle { opacity: 0; pointer-events: none; }');
+    expect(css).toContain('visibility: hidden;');
+    expect(css).toContain('opacity: 0;');
+    expect(css).toContain('pointer-events: none;');
     expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
     expect(css).toContain(':focus-within > .fm-rating-overlay .fm-fade-toggle');
-    expect(css).toContain('opacity: 1; pointer-events: auto;');
+    expect(css).toContain('visibility: visible;');
+    expect(css).toContain('opacity: 1;');
+    expect(css).toContain('pointer-events: auto;');
+    ```
+
+    In the existing rendering test for the auto state, also assert that the control is a button:
+
+    ```js
+    expect(toggle.tagName).toBe('BUTTON');
+    expect(toggle.type).toBe('button');
     ```
 
 - [ ] **Step 2: Run the focused test to verify it fails**
@@ -145,7 +156,15 @@
 
     Expected: the fade-toggle CSS test fails because the hidden and reveal rules do not yet exist.
 
-- [ ] **Step 3: Add hidden and reveal rules without changing toggle creation or click handling**
+- [ ] **Step 3: Make the control a button and add hidden and reveal rules**
+
+    In `#createFadeToggle()`, create a semantic button and preserve the existing state, title, icon, and click-propagation behavior:
+
+    ```js
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'fm-fade-toggle';
+    ```
 
     Replace the current fade-toggle CSS block in `OverlayRenderer.injectStyles()` with this block. Its descendant relationship means only the container that owns the overlay reveals its toggle.
 
@@ -153,13 +172,16 @@
     cssText += `
         .${this.#OVERLAY_CLASS} .fm-fade-toggle {
             cursor: pointer;
+            border: 0;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
             transition: opacity 0.15s;
         }
         :hover > .${this.#OVERLAY_CLASS} .fm-fade-toggle,
         :focus-within > .${this.#OVERLAY_CLASS} .fm-fade-toggle {
             opacity: 1;
+            visibility: visible;
             pointer-events: auto;
         }
         .${this.#OVERLAY_CLASS} .fm-fade-toggle .fm-label { color: #aaa; }
@@ -167,7 +189,7 @@
     `;
     ```
 
-    Do not use `display: none`, remove the element, or change `#createFadeToggle()`: retaining the element preserves overlay layout and existing click propagation behavior.
+    Do not use `display: none` or remove the element: retaining the button preserves overlay layout and existing click propagation behavior. `visibility: hidden` excludes the button from tab order until a focused card child causes `:focus-within` to reveal it.
 
 - [ ] **Step 4: Run the focused test to verify it passes**
 
