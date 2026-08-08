@@ -26,8 +26,19 @@ describe('ConfigManager', () => {
                 }),
                 createMockLogger()
             );
-            expect(config.get('cacheTtlNoRating')).toBe(0);
+            expect(config.get('cacheTtlNoRating')).toBe('0');
             expect(config.get('omdbApiKey')).toBe('');
+        });
+
+        it('should normalize legacy string checkbox values to booleans', () => {
+            const config = new ConfigManager(
+                createMockAdapter({
+                    configGet: key => (key === 'showRtRating' ? 'true' : key === 'showMcRating' ? 'false' : undefined),
+                }),
+                createMockLogger()
+            );
+            expect(config.get('showRtRating')).toBe(true);
+            expect(config.get('showMcRating')).toBe(false);
         });
 
         it('should return CONFIG_DEFAULTS when adapter returns undefined', () => {
