@@ -99,7 +99,20 @@ export class OverlayRenderer {
             .fm-faded:hover { opacity: 1; }
         `;
         cssText += `
-            .${this.#OVERLAY_CLASS} .fm-fade-toggle { cursor: pointer; }
+            .${this.#OVERLAY_CLASS} .fm-fade-toggle {
+                cursor: pointer;
+                border: 0;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.15s;
+            }
+            :hover > .${this.#OVERLAY_CLASS} .fm-fade-toggle,
+            :focus-within > .${this.#OVERLAY_CLASS} .fm-fade-toggle {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
             .${this.#OVERLAY_CLASS} .fm-fade-toggle .fm-label { color: #aaa; }
             .${this.#OVERLAY_CLASS} .fm-fade-toggle--faded { opacity: 0.35; }
         `;
@@ -156,7 +169,8 @@ export class OverlayRenderer {
     }
 
     #createFadeToggle(state, onClick) {
-        const el = document.createElement('div');
+        const el = document.createElement('button');
+        el.type = 'button';
         el.className = 'fm-fade-toggle';
         el.dataset.state = state ?? 'auto';
         el.title = `Fade: ${FADE_STATE_LABELS[state ?? 'auto']}`;
