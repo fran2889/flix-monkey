@@ -86,11 +86,11 @@ Access settings via:
 
 ### Fade Settings
 
-| Option            | Default | Description                                         |
-| ----------------- | ------- | --------------------------------------------------- |
-| Fade Below Rating | No      | Fade titles rated below the threshold               |
-| Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)          |
-| Allow Override    | No      | Show button to override fade state in title preview |
+| Option            | Default | Description                                             |
+| ----------------- | ------- | ------------------------------------------------------- |
+| Fade Below Rating | No      | Fade titles rated below the threshold                   |
+| Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)              |
+| Allow Override    | No      | Show a fade override button on supported title surfaces |
 
 ### Cache Settings
 

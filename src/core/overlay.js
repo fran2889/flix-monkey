@@ -99,7 +99,16 @@ export class OverlayRenderer {
             .fm-faded:hover { opacity: 1; }
         `;
         cssText += `
-            .${this.#OVERLAY_CLASS} .fm-fade-toggle { cursor: pointer; }
+            .${this.#OVERLAY_CLASS} .fm-fade-toggle {
+                cursor: pointer;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.15s;
+            }
+            :hover > .${this.#OVERLAY_CLASS} .fm-fade-toggle {
+                opacity: 1;
+                pointer-events: auto;
+            }
             .${this.#OVERLAY_CLASS} .fm-fade-toggle .fm-label { color: #aaa; }
             .${this.#OVERLAY_CLASS} .fm-fade-toggle--faded { opacity: 0.35; }
         `;

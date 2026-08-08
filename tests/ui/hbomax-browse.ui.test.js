@@ -38,6 +38,7 @@ describe('HBO Max browse UI surface', () => {
             'Top Ten Movie',
         ]);
         expect(surfaces.every(({ container }) => container.matches('.hbo-card'))).toBe(true);
+        expect(surfaces.every(({ fadeable, showFadeToggle }) => fadeable && showFadeToggle)).toBe(true);
 
         surfaces.forEach(({ container }) => {
             overlayRenderer.injectOverlay(container, {
