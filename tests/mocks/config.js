@@ -10,7 +10,7 @@ import { createMockAdapter } from './adapter.js';
  * Boolean config keys that control optional features.
  * Used to create configs with all options enabled/disabled.
  */
-const BOOLEAN_CONFIG_KEYS = CONFIG_FIELDS.filter(f => f.type === 'checkbox').map(f => f.key);
+const BOOLEAN_CONFIG_KEYS = new Set(CONFIG_FIELDS.filter(f => f.type === 'checkbox').map(f => f.key));
 
 /**
  * Creates a ConfigManager with all boolean options set to true.
@@ -19,7 +19,7 @@ const BOOLEAN_CONFIG_KEYS = CONFIG_FIELDS.filter(f => f.type === 'checkbox').map
 export function createConfigWithAllOptionsEnabled() {
     return new ConfigManager(
         createMockAdapter({
-            configGet: key => (BOOLEAN_CONFIG_KEYS.includes(key) ? true : undefined),
+            configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? true : undefined),
         })
     );
 }
@@ -31,7 +31,7 @@ export function createConfigWithAllOptionsEnabled() {
 export function createConfigWithAllOptionsDisabled() {
     return new ConfigManager(
         createMockAdapter({
-            configGet: key => (BOOLEAN_CONFIG_KEYS.includes(key) ? false : undefined),
+            configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? false : undefined),
         })
     );
 }

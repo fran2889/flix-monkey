@@ -10,6 +10,9 @@ const commonRules = {
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    complexity: ['error', 16],
+    'default-param-last': 'error',
+    'no-nested-ternary': 'error',
     'no-duplicate-imports': 'error',
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
@@ -41,7 +44,14 @@ export default [
         },
         rules: commonRules,
     },
-    // 2. Browser & WebExtension globals (src, tests)
+    // 2. Production code must document intentional no-op functions.
+    {
+        files: ['src/**/*.js', 'scripts/**/*.js'],
+        rules: {
+            'no-empty-function': 'error',
+        },
+    },
+    // 3. Browser & WebExtension globals (src, tests)
     {
         files: ['src/**/*.js', 'tests/**/*.{js,cjs}'],
         languageOptions: {
@@ -53,7 +63,7 @@ export default [
             },
         },
     },
-    // 3. Vitest globals (tests)
+    // 4. Vitest globals (tests)
     {
         files: ['tests/**/*.{js,cjs}'],
         languageOptions: {
@@ -62,7 +72,7 @@ export default [
             },
         },
     },
-    // 4. Node.js globals (scripts, configs, tests)
+    // 5. Node.js globals (scripts, configs, tests)
     {
         files: ['scripts/**/*.js', '*.config.js', '*.config.cjs', 'tests/**/*.{js,cjs}'],
         languageOptions: {
@@ -71,7 +81,7 @@ export default [
             },
         },
     },
-    // 5. License header enforcement - src and tests only (isolated block)
+    // 6. License header enforcement - src and tests only (isolated block)
     // metadata.js is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
@@ -86,7 +96,7 @@ export default [
                     path: 'LICENSE_HEADER.template',
                     patterns: {
                         year: {
-                            pattern: '20\\d{2}(?:-\\d{4})?',
+                            pattern: String.raw`20\d{2}(?:-\d{4})?`,
                             defaultValue: new Date().getFullYear().toString(),
                         },
                     },

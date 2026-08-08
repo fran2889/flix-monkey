@@ -24,7 +24,7 @@ const VISUAL_SETTINGS = new Set([
     'fadeRatingThreshold',
 ]);
 
-(async () => {
+/* NOSONAR: MV3 content scripts are classic IIFE bundles, so top-level await is unavailable. */ (async () => {
     const adapter = new WebExtensionAdapter();
     const stored = await browser.storage.local.get(null);
     adapter.setConfigData(stored);

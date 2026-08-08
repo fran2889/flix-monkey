@@ -133,5 +133,7 @@ export class PlatformAdapter {
      *
      * @param {Record<string, StorageValue>} _data - Config key/value pairs.
      */
-    setConfigData(_data) {}
+    setConfigData(_data) {
+        // overridden in webextension.js
+    }
 }

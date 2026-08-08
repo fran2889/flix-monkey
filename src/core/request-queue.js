@@ -57,12 +57,7 @@ export class RequestQueue {
 
         while (this.#queue.length > 0) {
             const now = Date.now();
-            let lastGlobal = 0;
-            if (this.#globalSyncKey && this.#adapter) {
-                const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                const parsed = parseInt(str, 10);
-                lastGlobal = Number.isNaN(parsed) ? 0 : parsed;
-            }
+            const lastGlobal = this.#globalSyncKey && this.#adapter ? await this.#getLastGlobalRequestTime() : 0;
 
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
@@ -73,25 +68,39 @@ export class RequestQueue {
 
             // Re-read storage before claiming the timeslot to reduce cross-tab races
             if (this.#globalSyncKey && this.#adapter) {
-                const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                const parsed = parseInt(str, 10);
-                const freshGlobal = Number.isNaN(parsed) ? 0 : parsed;
+                const freshGlobal = await this.#getLastGlobalRequestTime();
                 if (Date.now() - freshGlobal < this.#minInterval) continue;
             }
 
-            this.#lastLocalReqTime = Date.now();
-            if (this.#globalSyncKey && this.#adapter) {
-                await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
-            }
-
-            const { url, resolve, reject, fetchFn, responseType } = this.#queue.shift();
-            try {
-                const result = await fetchFn(url, responseType);
-                resolve(result);
-            } catch (err) {
-                reject(err);
-            }
+            const needsGlobalSync = this.#claimNextRequestSlot();
+            if (needsGlobalSync) await this.#syncClaimedRequestSlot();
+            await this.#dispatchNextRequest();
         }
         this.#isProcessing = false;
+    }
+
+    async #getLastGlobalRequestTime() {
+        if (!this.#globalSyncKey || !this.#adapter) return 0;
+        const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
+        const parsedTime = Number.parseInt(storedTime, 10);
+        return Number.isNaN(parsedTime) ? 0 : parsedTime;
+    }
+
+    #claimNextRequestSlot() {
+        this.#lastLocalReqTime = Date.now();
+        return Boolean(this.#globalSyncKey && this.#adapter);
+    }
+
+    async #syncClaimedRequestSlot() {
+        await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
+    }
+
+    async #dispatchNextRequest() {
+        const { url, resolve, reject, fetchFn, responseType } = this.#queue.shift();
+        try {
+            resolve(await fetchFn(url, responseType));
+        } catch (error) {
+            reject(error);
+        }
     }
 }

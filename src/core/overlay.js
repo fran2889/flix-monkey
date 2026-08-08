@@ -219,11 +219,12 @@ export class OverlayRenderer {
     }
 
     #buildTooltip(titleParts, imdbId, apiTitle, year) {
-        const tooltipContent = titleParts.length
-            ? `${titleParts.join(' · ')} · Open IMDb`
-            : imdbId
-              ? 'IMDb: No rating · Open IMDb'
-              : 'IMDb: Not found · Search IMDb';
+        let tooltipContent = 'IMDb: Not found · Search IMDb';
+        if (titleParts.length) {
+            tooltipContent = `${titleParts.join(' · ')} · Open IMDb`;
+        } else if (imdbId) {
+            tooltipContent = 'IMDb: No rating · Open IMDb';
+        }
 
         if (apiTitle) {
             const titleLine = year ? `${apiTitle} (${year})` : apiTitle;
