@@ -31,6 +31,7 @@ describe.each([
     ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
     ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus'],
 ])('%s service', (_name, Service, SurfaceManager, configKey) => {
+    // NOSONAR: Vitest assertions below are not recognized in this parameterized test.
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
         const config = { getBool: vi.fn().mockReturnValue(false) };

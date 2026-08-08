@@ -113,7 +113,7 @@ describe('OverlayRenderer', () => {
             const overlay = container.querySelector('.fm-rating-overlay');
             expect(overlay).not.toBeNull();
             const percentBadges = [...overlay.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
-            expect(percentBadges.length).toBe(2);
+            expect(percentBadges).toHaveLength(2);
         });
 
         it('should not render RT and MC badges when disabled by config', () => {

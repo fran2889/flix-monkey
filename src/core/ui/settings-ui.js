@@ -22,11 +22,11 @@ export class SettingsUI {
 
     /**
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
-     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
      * @param {import('../cache.js').CacheManager} cacheManager
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
+     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
      */
-    constructor(adapter, fields = CONFIG_FIELDS, cacheManager, disabledClientsManager) {
+    constructor(adapter, cacheManager, disabledClientsManager, fields = CONFIG_FIELDS) {
         this.#adapter = adapter;
         this.#fields = fields;
         this.#cacheManager = cacheManager;
