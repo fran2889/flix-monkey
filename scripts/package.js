@@ -2,9 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { ZipArchive } from 'archiver';
-import fs from 'fs';
-import path from 'path';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
@@ -53,31 +54,27 @@ function zipDirectory(sourceDir, outPath) {
     });
 }
 
-async function main() {
-    try {
-        const chromeDir = path.join('dist', 'chrome');
-        const firefoxDir = path.join('dist', 'firefox');
-        let packaged = false;
+try {
+    const chromeDir = path.join('dist', 'chrome');
+    const firefoxDir = path.join('dist', 'firefox');
+    let packaged = false;
 
-        if (fs.existsSync(chromeDir)) {
-            verifyDistFiles(chromeDir, 'chrome');
-            await zipDirectory(chromeDir, path.join('dist', `FlixMonkey-v${version}-chrome.zip`));
-            packaged = true;
-        }
-
-        if (fs.existsSync(firefoxDir)) {
-            verifyDistFiles(firefoxDir, 'firefox');
-            await zipDirectory(firefoxDir, path.join('dist', `FlixMonkey-v${version}-firefox.xpi`));
-            packaged = true;
-        }
-
-        if (!packaged) {
-            console.warn('No extension directories found to package.');
-        }
-    } catch (error) {
-        console.error('Packaging failed:', error);
-        process.exit(1);
+    if (fs.existsSync(chromeDir)) {
+        verifyDistFiles(chromeDir, 'chrome');
+        await zipDirectory(chromeDir, path.join('dist', `FlixMonkey-v${version}-chrome.zip`));
+        packaged = true;
     }
-}
 
-main();
+    if (fs.existsSync(firefoxDir)) {
+        verifyDistFiles(firefoxDir, 'firefox');
+        await zipDirectory(firefoxDir, path.join('dist', `FlixMonkey-v${version}-firefox.xpi`));
+        packaged = true;
+    }
+
+    if (!packaged) {
+        console.warn('No extension directories found to package.');
+    }
+} catch (error) {
+    console.error('Packaging failed:', error);
+    process.exit(1);
+}

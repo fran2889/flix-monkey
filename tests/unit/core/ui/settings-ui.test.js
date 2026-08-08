@@ -25,7 +25,7 @@ describe('SettingsUI', () => {
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, undefined, mockCacheManager, mockDisabledClientsManager);
+        settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -255,7 +255,7 @@ describe('SettingsUI', () => {
                 default: false,
                 validate: validateFn,
             };
-            const ui = new SettingsUI(mockAdapter, [checkboxField], mockCacheManager, mockDisabledClientsManager);
+            const ui = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, [checkboxField]);
             await ui.render(container);
 
             const input = container.querySelector('#fm-testCheckbox');
@@ -330,8 +330,8 @@ describe('SettingsUI', () => {
             const container1 = document.createElement('div');
             const container2 = document.createElement('div');
             document.body.append(container1, container2);
-            const ui1 = new SettingsUI(adapter, undefined, { clear: vi.fn() }, { resetAll: vi.fn() });
-            const ui2 = new SettingsUI(adapter, undefined, { clear: vi.fn() }, { resetAll: vi.fn() });
+            const ui1 = new SettingsUI(adapter, { clear: vi.fn() }, { resetAll: vi.fn() });
+            const ui2 = new SettingsUI(adapter, { clear: vi.fn() }, { resetAll: vi.fn() });
             await ui1.render(container1);
             await ui2.render(container2);
             const statusInContainer1 = container1.querySelector('[id="fm-status"]');

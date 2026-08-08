@@ -33,7 +33,7 @@ adapter.registerMenuCommand('FlixMonkey Settings', () => {
     const { cacheManager, disabledClientsManager } = getSettingsDependencies();
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
-    const ui = new SettingsUI(adapter, undefined, cacheManager, disabledClientsManager);
+    const ui = new SettingsUI(adapter, cacheManager, disabledClientsManager);
     /*
      * Full page reload on save: GM_getValue already returns the freshest value, but
      * stateful app objects (ApiClientManager, CacheManager, logger) don't reinitialize

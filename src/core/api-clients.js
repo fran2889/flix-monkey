@@ -130,7 +130,7 @@ export class BaseApiClient {
      * Subclasses must override this method.
      *
      * @abstract
-     * @param {string} displayTitle - Title to search for.
+     * @param {string} _displayTitle - Title to search for.
      * @returns {Promise<import('./title.js').Title|null>} A Title with available metadata from search results,
      *   or `null` if no match was found.
      */
@@ -147,7 +147,7 @@ export class BaseApiClient {
      * - Override with details fetch values when available
      *
      * @abstract
-     * @param {import('./title.js').Title} searchTitle - Title returned by search().
+     * @param {import('./title.js').Title} _searchTitle - Title returned by search().
      * @returns {Promise<import('./title.js').Title|null>} A Title with ratings and details populated, or `null`
      *   if details could not be retrieved.
      */
@@ -273,7 +273,7 @@ export class OmdbApiClient extends BaseApiClient {
         }
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
-        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replace(/,/g, ''), 10) : null;
+        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
         return new Title({
             displayTitle,
             apiTitle: apiTitle ?? null,

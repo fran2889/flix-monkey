@@ -119,7 +119,9 @@ export const CONFIG_FIELDS = [
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(val);
-            return !isNaN(n) && n >= 0.0 && n <= 10.0 ? null : 'Fade threshold must be a number between 0 and 10';
+            return !Number.isNaN(n) && n >= 0.0 && n <= 10.0
+                ? null
+                : 'Fade threshold must be a number between 0 and 10';
         },
     },
     {

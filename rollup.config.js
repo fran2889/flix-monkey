@@ -1,7 +1,8 @@
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import path from 'path';
 import sharp from 'sharp';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
@@ -13,7 +14,7 @@ async function userscriptBanner() {
     const template = readFileSync('src/targets/userscript/metadata.js', 'utf8');
     return template
         .replace('__NAME__', name)
-        .replace(/__HOMEPAGE__/g, homepage)
+        .replaceAll('__HOMEPAGE__', homepage)
         .replace('__VERSION__', version)
         .replace('__DESCRIPTION__', description)
         .replace('__AUTHOR__', author)
@@ -31,10 +32,10 @@ function asciiEscape() {
             return {
                 code: code.replace(/\P{ASCII}/gu, ch => {
                     const cp = ch.codePointAt(0);
-                    if (cp <= 0xffff) return `\\u${cp.toString(16).padStart(4, '0')}`;
+                    if (cp <= 0xffff) return String.raw`\u${cp.toString(16).padStart(4, '0')}`;
                     const hi = Math.floor((cp - 0x10000) / 0x400) + 0xd800;
                     const lo = ((cp - 0x10000) % 0x400) + 0xdc00;
-                    return `\\u${hi.toString(16).padStart(4, '0')}\\u${lo.toString(16).padStart(4, '0')}`;
+                    return String.raw`\u${hi.toString(16).padStart(4, '0')}\u${lo.toString(16).padStart(4, '0')}`;
                 }),
             };
         },
