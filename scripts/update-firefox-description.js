@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import crypto from 'crypto';
-import { readFileSync } from 'fs';
-import https from 'https';
+import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import https from 'node:https';
 
 const DESCRIPTION_FILE = 'docs/store-description.txt';
 

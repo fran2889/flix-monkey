@@ -86,7 +86,7 @@ export default [
                     path: 'LICENSE_HEADER.template',
                     patterns: {
                         year: {
-                            pattern: '20\\d{2}(?:-\\d{4})?',
+                            pattern: String.raw`20\d{2}(?:-\d{4})?`,
                             defaultValue: new Date().getFullYear().toString(),
                         },
                     },

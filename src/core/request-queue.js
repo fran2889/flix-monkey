@@ -60,7 +60,7 @@ export class RequestQueue {
             let lastGlobal = 0;
             if (this.#globalSyncKey && this.#adapter) {
                 const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                const parsed = parseInt(str, 10);
+                const parsed = Number.parseInt(str, 10);
                 lastGlobal = Number.isNaN(parsed) ? 0 : parsed;
             }
 
@@ -74,7 +74,7 @@ export class RequestQueue {
             // Re-read storage before claiming the timeslot to reduce cross-tab races
             if (this.#globalSyncKey && this.#adapter) {
                 const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                const parsed = parseInt(str, 10);
+                const parsed = Number.parseInt(str, 10);
                 const freshGlobal = Number.isNaN(parsed) ? 0 : parsed;
                 if (Date.now() - freshGlobal < this.#minInterval) continue;
             }

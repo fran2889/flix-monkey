@@ -57,7 +57,7 @@ export class Title {
         this.imdbId = imdbId;
         this.year = year !== null && year !== undefined ? Number.parseInt(year, 10) : null;
         this.rating = this.#normalizeRating(rating, v => {
-            const num = parseFloat(v);
+            const num = Number.parseFloat(v);
             return Number.isNaN(num) ? null : num;
         });
         this.imdbVotes = this.#normalizeRating(imdbVotes, v => {
