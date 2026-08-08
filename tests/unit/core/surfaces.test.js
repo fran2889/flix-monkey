@@ -301,6 +301,14 @@ describe('Disney+ surfaces', () => {
         ['New Movie Badge The Devil Wears Prada 2 Select for details on this title.', 'The Devil Wears Prada 2'],
         ['New Episode Badge Furious Hulu Original Series Select for details on this title.', 'Furious'],
         ['New Season Peppa Pig Select for details on this title.', 'Peppa Pig'],
+        [
+            "New Badge Mickey Mouse Clubhouse+: Mickey's Country Farm Select for details on this title.",
+            "Mickey Mouse Clubhouse+: Mickey's Country Farm",
+        ],
+        [
+            'Disney+ Original Subtitles Available Badge Moon Knight Rated 16+ Released 2022. Super Heroes, Action and Adventure Select for details on this title.',
+            'Moon Knight',
+        ],
         ['The Doomies Disney+ Original Select for details on this title.', 'The Doomies'],
         ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
         ['Moana Action and Adventure Select for details on this title.', 'Moana'],
