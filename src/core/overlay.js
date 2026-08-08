@@ -10,6 +10,12 @@ import {
     RATING_COLOR_RED,
 } from './constants.js';
 
+/**
+ * @typedef {Object} ServicePresentation
+ * @property {string[]} [TOP_10_SELECTORS]
+ * @property {string} [TOP_10_OFFSET]
+ */
+
 export const FADE_STATE_LABELS = {
     auto: 'Auto',
     always: 'Always',
@@ -24,8 +30,8 @@ export class OverlayRenderer {
     #serviceConstants;
 
     /**
-     * @param {ConfigManager} config - Application configuration
-     * @param {Object} [serviceConstants={}] - Service-specific constants (e.g., TOP_10_SELECTORS)
+     * @param {import('./config-manager.js').ConfigManager} config - Application configuration
+     * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      */
     constructor(config, serviceConstants = {}) {
         this.#config = config;

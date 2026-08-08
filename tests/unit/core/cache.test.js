@@ -38,6 +38,13 @@ describe('CacheManager', () => {
         expect(result).toBeNull();
     });
 
+    it('should treat a cache entry without title data as a cache miss', async () => {
+        adapter.storageGet.mockResolvedValue(JSON.stringify({ data: null, expires: null }));
+
+        await expect(cacheManager.read('Missing Data', 'agregarr')).resolves.toBeNull();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
     it('should write data to storage', async () => {
         adapter.storageGet.mockResolvedValue(null);
         const title = new Title({ apiTitle: 'Test Title' });

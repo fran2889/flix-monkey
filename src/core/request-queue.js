@@ -10,12 +10,27 @@ export class RequestQueue {
     #globalSyncKey;
     #adapter;
 
+    /**
+     * @param {number} [minInterval=1000] - Minimum delay between dispatched requests.
+     * @param {string|null} [globalSyncKey=null] - Storage key used to coordinate the delay across tabs.
+     * @param {import('../platform/adapter.js').PlatformAdapter|null} [adapter=null] - When supplied with globalSyncKey, enables cross-tab coordination.
+     */
     constructor(minInterval = 1000, globalSyncKey = null, adapter = null) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
     }
 
+    /**
+     * Enqueues a request. Higher priority requests run first among work that has
+     * not started; an active request is never preempted.
+     *
+     * @param {string} url - Request URL supplied to fetchFn.
+     * @param {number} priority - Higher values run first.
+     * @param {(url: string, responseType: 'json'|'text') => Promise<unknown>} fetchFn - Request operation.
+     * @param {'json'|'text'} responseType - Response format supplied to fetchFn.
+     * @returns {Promise<unknown>} Result returned by fetchFn.
+     */
     enqueue(url, priority, fetchFn, responseType) {
         return new Promise((resolve, reject) => {
             this.#queue.push({ url, priority, resolve, reject, fetchFn, responseType });
@@ -26,6 +41,7 @@ export class RequestQueue {
         });
     }
 
+    /** Rejects pending requests without interrupting an active request. @returns {number} Rejected count. */
     clear() {
         const count = this.#queue.length;
         while (this.#queue.length > 0) {

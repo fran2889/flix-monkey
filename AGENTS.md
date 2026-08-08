@@ -236,7 +236,7 @@ All platform-specific I/O must go through the `adapter` instance. All abstract m
 ```js
 class PlatformAdapter {
     // All abstract; must be implemented:
-    async storageGet(key)           // Returns stored value or undefined
+    async storageGet(key)           // Returns stored value or null when the key is absent
     async storageGetAll()           // Returns all key/value pairs as object
     async storageSet(key, value)    // Stores a single key/value
     async storageSetMany(obj)       // Stores multiple key/values atomically
@@ -296,6 +296,24 @@ class PlatformAdapter {
 - **Async/Await**: Mandatory for storage and network operations.
 - **Private fields**: Use `#field` syntax for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
+
+### JSDoc
+
+Use JSDoc for boundaries whose callers need documented semantics to consume
+correctly, not for every method. Document abstract and cross-platform
+contracts; non-obvious exported APIs and injected collaborators; persistence,
+messaging, HTTP, and external-data boundaries; and reused shapes, unions,
+constrained values, and serialization formats.
+
+Document shared contracts at their defining interface or exported boundary.
+Implementations document only meaningful deviations. Use named `@typedef`s for
+reused shapes, `unknown` for untrusted input, and `import('./path.js').Type`
+for cross-module types. Explain only constraints, fallbacks, side effects, and
+lifecycle requirements that types do not convey.
+
+Omit JSDoc for private helpers, simple pure utilities, routine DOM or UI glue,
+ordinary accessors, and self-evident primitive signatures.
+
 - **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this: a missing or malformed header is a lint error.
 - **Conventional Commits**: Enforced by `commitlint` via a Husky `commit-msg` hook. Format: `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 - **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).

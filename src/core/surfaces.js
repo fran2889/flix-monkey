@@ -9,22 +9,24 @@
  * @property {(element: Element) => string|null|undefined} getTitle - Callback that returns the title text
  * @property {(element: Element) => Element|null|undefined} getContainer - Callback that returns the container
  * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
- * @property {boolean} fadeable - Whether this surface supports fading
- * @property {boolean} showFadeToggle - Whether to show fade toggle button
+ * @property {boolean} [fadeable=false] - Whether this surface supports fading
+ * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button
+ */
+
+/**
+ * @typedef {Object} DiscoveredSurface
+ * @property {Element} container
+ * @property {string} title
+ * @property {boolean} fadeable
+ * @property {boolean} showFadeToggle
  */
 
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
 const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
 
-/**
- * Netflix-specific surface definitions for various UI surfaces.
- * Named properties allow for easy reference: NETFLIX_SURFACES.TITLE_CARD, etc.
- */
 export const NETFLIX_SURFACES = Object.freeze({
-    /**
-     * Browse and genre page row cards. The <a> element carries the full title via aria-label.
-     */
+    // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
         titleSelector: '.title-card a[aria-label]',
         getTitle: titleFromAttribute('aria-label'),
@@ -32,9 +34,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /**
-     * Search result grid cards. The card element itself carries the full title via aria-label.
-     */
+    // Search result grid cards: the card element itself carries the full title via aria-label.
     SEARCH_CARD: Object.freeze({
         titleSelector: '[data-uia="standard-card"]',
         getTitle: titleFromAttribute('aria-label'),
@@ -42,7 +42,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /** Browse-page Continue Watching cards. */
+    // Browse-page Continue Watching cards.
     PROGRESS_CARD: Object.freeze({
         titleSelector: '[data-uia="progress-card"][aria-label]',
         getTitle: titleFromAttribute('aria-label'),
@@ -50,7 +50,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /** Browse-page Top 10 cards. */
+    // Browse-page Top 10 cards.
     RANKED_CARD: Object.freeze({
         titleSelector: '[data-uia="ranked-card"][aria-label]',
         getTitle: titleFromAttribute('aria-label'),
@@ -58,10 +58,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: true,
         showFadeToggle: false,
     }),
-    /**
-     * Hover mini-modal (card mouse-over). Scoped to .mini-modal so the detail-modal surface
-     * can target the same player container independently.
-     */
+    // Hover mini-modal: scope to .mini-modal so the detail modal can target the player container independently.
     PREVIEW_MINI: Object.freeze({
         titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
         getTitle: titleFromAttribute('alt'),
@@ -69,10 +66,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         fadeable: false,
         showFadeToggle: true,
     }),
-    /**
-     * Full "More Info" detail modal. The boxart <img alt> inside the player container
-     * is the only selector that matches in both mini and detail contexts.
-     */
+    // Full "More Info" modal: the boxart img[alt] is the only selector shared by mini and detail contexts.
     PREVIEW_DETAIL: Object.freeze({
         titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
         getTitle: titleFromAttribute('alt'),
@@ -82,17 +76,13 @@ export const NETFLIX_SURFACES = Object.freeze({
     }),
 });
 
-/**
- * Base surface manager - generic discovery logic that works for any streaming platform.
- * Accepts either an array of surface definitions or a named object (values will be used).
- */
 export class SurfaceManager {
     #SURFACES;
     #logger;
 
     /**
-     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Named surface definitions object
-     * @param {import('./logger.js').Logger} logger - Logger instance
+     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
+     * @param {import('./logger.js').Logger} logger - Receives selector and container-resolution failures.
      */
     constructor(surfaceDefs, logger) {
         this.#SURFACES = Object.values(surfaceDefs);
@@ -100,10 +90,11 @@ export class SurfaceManager {
     }
 
     /**
-     * Discovers all surface containers with titles in the given root element.
+     * Returns unique, valid surfaces discovered below root. Invalid selectors are ignored and
+     * missing containers fall back to the title element's parent.
      *
-     * @param {Element|Document} root - The root element to search within
-     * @returns {Array<{container: Element, title: string, fadeable: boolean, showFadeToggle: boolean}>}
+     * @param {Element|Document} root
+     * @returns {DiscoveredSurface[]}
      */
     discover(root) {
         const seen = new Set();
@@ -130,8 +121,8 @@ export class SurfaceManager {
                 results.push({
                     container,
                     title,
-                    fadeable: surface.fadeable,
-                    showFadeToggle: surface.showFadeToggle,
+                    fadeable: surface.fadeable ?? false,
+                    showFadeToggle: surface.showFadeToggle ?? false,
                 });
             });
         });
@@ -139,21 +130,12 @@ export class SurfaceManager {
     }
 }
 
-/**
- * Netflix surface manager - discovers surfaces specific to Netflix UI.
- */
 export class NetflixSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(NETFLIX_SURFACES, logger);
     }
 }
 
-/**
- * Extracts a title from an HBO Max tile aria-label.
- *
- * @param {Element} tile - HBO Max tile element
- * @returns {string|null} Extracted title, or null if the tile is unsupported
- */
 export function extractHboMaxTitle(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     if (!label) return null;
@@ -183,9 +165,6 @@ function isHboMaxTop10Tile(tile) {
     return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
 
-/**
- * HBO Max-specific surface definitions for browse page tiles.
- */
 export const HBO_MAX_SURFACES = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
@@ -199,12 +178,6 @@ export const HBO_MAX_SURFACES = Object.freeze({
     }),
 });
 
-/**
- * Extracts a title from a Disney+ tile aria-label.
- *
- * @param {Element} tile - Disney+ tile element
- * @returns {string|null} Extracted title, or null if the tile is unsupported
- */
 export function extractDisneyPlusTitle(tile) {
     const imageTitle = [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean);
     if (imageTitle) return imageTitle;
@@ -232,9 +205,6 @@ export function extractDisneyPlusTitle(tile) {
     return title || null;
 }
 
-/**
- * Disney+-specific surface definitions for browse page shelf cards.
- */
 export const DISNEY_PLUS_SURFACES = Object.freeze({
     SHELF_CARD: Object.freeze({
         titleSelector: 'a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]',
@@ -253,18 +223,12 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
     }),
 });
 
-/**
- * HBO Max surface manager - discovers surfaces specific to the HBO Max UI.
- */
 export class HboMaxSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(HBO_MAX_SURFACES, logger);
     }
 }
 
-/**
- * Disney+ surface manager - discovers surfaces specific to Disney+ UI.
- */
 export class DisneyPlusSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(DISNEY_PLUS_SURFACES, logger);

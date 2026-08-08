@@ -7,7 +7,10 @@ import { FlixMonkeyError } from '../core/utils.js';
 /**
  * @typedef {Object} HttpFetchOptions
  * @property {'json'|'text'} [responseType='json'] - Expected response format.
+ * @property {number} [timeout] - Request timeout in milliseconds.
  */
+
+/** @typedef {string|boolean} StorageValue - Values persisted by FlixMonkey. */
 
 /**
  * Abstract base class for platform adapters.
@@ -23,7 +26,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @returns {Promise<string|null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<StorageValue|null>} The stored value, or `null` if the key does not exist.
      */
     async storageGet(_key) {
         throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
@@ -33,7 +36,7 @@ export class PlatformAdapter {
      * Retrieves all key/value pairs from platform storage.
      *
      * @abstract
-     * @returns {Promise<Record<string, string>>} All stored entries.
+     * @returns {Promise<Record<string, StorageValue>>} All stored entries.
      */
     async storageGetAll() {
         throw new FlixMonkeyError('PlatformAdapter: storageGetAll() must be implemented by subclass');
@@ -44,7 +47,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @param {string} _value - Value to store.
+     * @param {StorageValue} _value - Value to store.
      * @returns {Promise<void>}
      */
     async storageSet(_key, _value) {
@@ -55,7 +58,7 @@ export class PlatformAdapter {
      * Stores multiple key/value pairs atomically in platform storage.
      *
      * @abstract
-     * @param {Record<string, string>} _values - Object of key/value pairs to store.
+     * @param {Record<string, StorageValue>} _values - Object of key/value pairs to store.
      * @returns {Promise<void>}
      */
     async storageSetMany(_values) {
@@ -85,13 +88,14 @@ export class PlatformAdapter {
     }
 
     /**
-     * Makes an HTTP request via the platform mechanism (GM_xmlhttpRequest or
-     * background-script fetch proxy).
+     * Makes an HTTP request through the platform's CORS-capable transport.
+     * Platform HTTP failures reported by implementations reject with a
+     * {@link FlixMonkeyError} that includes request failure details.
      *
      * @abstract
      * @param {string} _url - Request URL.
      * @param {HttpFetchOptions} [_options] - Fetch options.
-     * @returns {Promise<*>} Parsed response body (JSON object or string, depending on `responseType`).
+     * @returns {Promise<unknown>} Parsed response body (JSON object or string, depending on `responseType`).
      */
     async httpFetch(_url, _options) {
         throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
@@ -107,8 +111,7 @@ export class PlatformAdapter {
      *   `setConfigData()` and kept current by a `storage.onChanged` listener. The returned
      *   value is current as of the last storage-change event.
      *
-     * Regardless of model, the returned value must reflect the persisted state at the time
-     * of the call. `ConfigManager` treats `undefined` as "key absent" and falls back to
+     * `ConfigManager` treats `undefined` as "key absent" and falls back to
      * `CONFIG_DEFAULTS`.
      *
      * @abstract
@@ -119,29 +122,16 @@ export class PlatformAdapter {
         throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
     }
 
-    /**
-     * Registers a menu command in the platform UI (e.g. Tampermonkey menu).
-     * No-op by default; only `UserscriptAdapter` overrides this.
-     *
-     * @param {string} _label - Menu item label.
-     * @param {Function} _fn - Callback invoked when the menu item is selected.
-     */
+    /** Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing. */
     registerMenuCommand(_label, _fn) {
         // No-op by default
     }
 
     /**
-     * Pre-loads configuration data into the adapter.
+     * Seeds data for snapshot-based adapters before application startup. Live-read
+     * adapters leave this as a no-op.
      *
-     * Only needed by **snapshot-based** adapters (`WebExtensionAdapter`): called once before
-     * the app starts to seed the in-memory config cache from `browser.storage`. A
-     * `storage.onChanged` listener then keeps the same object current, so `configGet` can
-     * return synchronously without hitting async storage.
-     *
-     * **Live-read** adapters (`UserscriptAdapter`) leave this as a no-op because their
-     * `configGet` reads from storage directly on every call and never needs a pre-seeded cache.
-     *
-     * @param {Record<string, string|boolean>} _data - Config key/value pairs.
+     * @param {Record<string, StorageValue>} _data - Config key/value pairs.
      */
     setConfigData(_data) {}
 }

@@ -8,18 +8,9 @@ import { RequestQueue } from './request-queue.js';
 import { Title } from './title.js';
 
 /**
- * @typedef {Object} ClientStatus
- * @property {boolean} healthy - Whether the client is operational.
- * @property {string} [reason] - Human-readable explanation when `healthy` is `false`.
+ * @typedef {{healthy: true}|{healthy: false, reason: string}} ClientStatus
  */
 
-/**
- * Extracts a rating value from an OMDb-style `Ratings` array.
- *
- * @param {Array<{source?: string, Source?: string, value?: string, Value?: string}>|*} ratings
- * @param {RegExp} sourcePattern - Pattern to match against the `source`/`Source` field.
- * @returns {string|null} The raw rating string, or `null` if not found.
- */
 function parseRatings(ratings, sourcePattern) {
     if (!Array.isArray(ratings)) return null;
     const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
@@ -36,26 +27,20 @@ function parseRatings(ratings, sourcePattern) {
  * @abstract
  */
 export class BaseApiClient {
-    /** @type {RequestQueue} */
     #queue;
-    /** @type {string} */
     #source;
-    /** @type {DisabledClientsManager} */
     #disabledManager;
-    /** @type {PlatformAdapter} */
     #adapter;
-    /** @type {ConfigManager} */
     #config;
-    /** @type {Logger|null} */
     #logger;
 
     /**
-     * @param {RequestQueue} queue - Rate-limited request queue for this client.
-     * @param {string} source - `ApiSource` identifier (e.g. `ApiSource.OMDB`).
-     * @param {DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
-     * @param {PlatformAdapter} adapter - Platform adapter for HTTP and storage.
-     * @param {ConfigManager} config - Application configuration.
-     * @param {Logger|null} logger - Logger instance (may be `null` during tests).
+     * @param {import('./request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
+     * @param {typeof ApiSource[keyof typeof ApiSource]} source - `ApiSource` identifier (for example, `ApiSource.OMDB`).
+     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('./config-manager.js').ConfigManager} config - Application configuration.
+     * @param {import('./logger.js').Logger} [logger] - Logger instance when diagnostics are needed.
      */
     constructor(queue, source, disabledManager, adapter, config, logger) {
         this.#queue = queue;
@@ -66,27 +51,23 @@ export class BaseApiClient {
         this.#logger = logger;
     }
 
-    /** @returns {ConfigManager} */
     get config() {
         return this.#config;
     }
 
-    /** @returns {string} The `ApiSource` identifier for this client. */
     get source() {
         return this.#source;
     }
 
-    /** @returns {Logger|null} */
     get logger() {
         return this.#logger;
     }
 
-    /** @returns {Promise<boolean>} Whether this client is temporarily disabled. */
     async isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
 
-    /** @returns {Promise<ClientStatus>} */
+    /** @returns {Promise<ClientStatus>} A health result suitable for provider selection. */
     async getStatus() {
         if (await this.isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -99,8 +80,8 @@ export class BaseApiClient {
      *
      * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
      * @returns {Promise<void>}
-     * @note Any HTTP request already executing at the network level when `disable()` is called
-     *   cannot be aborted and may complete, but its result is discarded by the caller.
+     * @note Requests still waiting in this client's queue are removed. An HTTP request already
+     *   executing at the network level cannot be aborted and may still resolve after disable().
      */
     async disable(durationMs = CLIENT_DISABLE_DURATION) {
         const count = this.#queue.clear();
@@ -116,7 +97,7 @@ export class BaseApiClient {
      * @param {string} url - Request URL.
      * @param {number} [priority=0] - Higher values are processed first.
      * @param {'json'|'text'} [responseType='json'] - Expected response format.
-     * @returns {Promise<*>} Parsed response body.
+     * @returns {Promise<unknown>} Parsed response body.
      */
     async queuedFetch(url, priority = 0, responseType = 'json') {
         return this.#queue.enqueue(
@@ -128,11 +109,11 @@ export class BaseApiClient {
     }
 
     /**
-     * Fetches ratings for a Netflix title by running the search -> details pipeline.
+     * Fetches ratings for a streaming-service title through the search -> details pipeline.
      * Callers must gate through {@link getStatus} before invoking.
      *
-     * @param {string} displayTitle - Title as shown on the Netflix UI.
-     * @returns {Promise<Title|null>} Hydrated `Title` with ratings, or `null` if the
+     * @param {string} displayTitle - Title as shown by the streaming service.
+     * @returns {Promise<import('./title.js').Title|null>} Hydrated `Title` with ratings, or `null` if the
      *   title was not found.
      */
     async fetch(displayTitle) {
@@ -141,16 +122,16 @@ export class BaseApiClient {
         if (await this.isDisabled()) return null;
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
-        return new Title({ ...detailedTitle, source: this.#source });
+        return detailedTitle.withSource(this.#source);
     }
 
     /**
-     * Searches the API for a title matching the Netflix display name.
+     * Searches the API for a title matching the streaming-service display name.
      * Subclasses must override this method.
      *
      * @abstract
      * @param {string} displayTitle - Title to search for.
-     * @returns {Promise<Title|null>} A Title with available metadata from search results,
+     * @returns {Promise<import('./title.js').Title|null>} A Title with available metadata from search results,
      *   or `null` if no match was found.
      */
     async search(_displayTitle) {
@@ -166,8 +147,8 @@ export class BaseApiClient {
      * - Override with details fetch values when available
      *
      * @abstract
-     * @param {Title} searchTitle - Title returned by search().
-     * @returns {Promise<Title|null>} A Title with ratings and details populated, or `null`
+     * @param {import('./title.js').Title} searchTitle - Title returned by search().
+     * @returns {Promise<import('./title.js').Title|null>} A Title with ratings and details populated, or `null`
      *   if details could not be retrieved.
      */
     async getDetails(_searchTitle) {
