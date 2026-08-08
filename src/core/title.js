@@ -69,7 +69,7 @@ export class Title {
             return Number.isNaN(num) ? null : num;
         });
         this.mcRating = this.#normalizeRating(mcRating, v => {
-            const m = String(v).match(/^(\d+)/);
+            const m = /^(\d+)/.exec(String(v));
             return m ? Number.parseInt(m[1], 10) : null;
         });
         this.source = source ?? null;

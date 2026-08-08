@@ -109,56 +109,52 @@ function validateDescription(content) {
     return content;
 }
 
-async function main() {
+try {
+    // Read description file
+    logInfo(`Reading description from ${DESCRIPTION_FILE}`);
+    let content;
     try {
-        // Read description file
-        logInfo(`Reading description from ${DESCRIPTION_FILE}`);
-        let content;
-        try {
-            content = readFileSync(DESCRIPTION_FILE, 'utf8');
-        } catch (error) {
-            logError(`Failed to read ${DESCRIPTION_FILE}: ${error.message}`);
-            process.exit(1);
-        }
-
-        const description = validateDescription(content.trim());
-        logInfo(`Description length: ${description.length} characters`);
-
-        if (!description) {
-            logError('Description is empty');
-            process.exit(1);
-        }
-
-        // Generate JWT
-        const issuer = getEnv('AMO_JWT_ISSUER');
-        const secret = getEnv('AMO_JWT_SECRET');
-        const addonId = getEnv('AMO_ADDON_ID');
-
-        logInfo(`Using AMO API issuer: ${issuer.length > 20 ? issuer.substring(0, 20) + '...' : issuer}`);
-        logInfo(`Using AMO addon ID: ${addonId}`);
-        logInfo('Generating JWT for AMO API...');
-        const jwt = generateJWT(issuer, secret);
-        logInfo('JWT generated successfully');
-
-        // Update description
-        logInfo(`Updating Firefox AMO description for add-on ${addonId}`);
-        const payload = JSON.stringify({
-            description: { 'en-US': description },
-        });
-        logInfo(`Request payload: ${payload.substring(0, 200)}...`);
-
-        // URL-encode the addon ID to handle special characters like @
-        const encodedAddonId = encodeURIComponent(addonId);
-        logInfo(`Using encoded addon ID: ${encodedAddonId}`);
-        const result = await makeAMORequest('PATCH', `/addons/addon/${encodedAddonId}/`, jwt, payload);
-        logInfo('Firefox AMO description updated successfully');
-        logInfo(JSON.stringify(result, null, 2));
-
-        process.exit(0);
+        content = readFileSync(DESCRIPTION_FILE, 'utf8');
     } catch (error) {
-        logError(`Failed to update Firefox description: ${error.message}`);
+        logError(`Failed to read ${DESCRIPTION_FILE}: ${error.message}`);
         process.exit(1);
     }
-}
 
-main();
+    const description = validateDescription(content.trim());
+    logInfo(`Description length: ${description.length} characters`);
+
+    if (!description) {
+        logError('Description is empty');
+        process.exit(1);
+    }
+
+    // Generate JWT
+    const issuer = getEnv('AMO_JWT_ISSUER');
+    const secret = getEnv('AMO_JWT_SECRET');
+    const addonId = getEnv('AMO_ADDON_ID');
+
+    logInfo(`Using AMO API issuer: ${issuer.length > 20 ? issuer.substring(0, 20) + '...' : issuer}`);
+    logInfo(`Using AMO addon ID: ${addonId}`);
+    logInfo('Generating JWT for AMO API...');
+    const jwt = generateJWT(issuer, secret);
+    logInfo('JWT generated successfully');
+
+    // Update description
+    logInfo(`Updating Firefox AMO description for add-on ${addonId}`);
+    const payload = JSON.stringify({
+        description: { 'en-US': description },
+    });
+    logInfo(`Request payload: ${payload.substring(0, 200)}...`);
+
+    // URL-encode the addon ID to handle special characters like @
+    const encodedAddonId = encodeURIComponent(addonId);
+    logInfo(`Using encoded addon ID: ${encodedAddonId}`);
+    const result = await makeAMORequest('PATCH', `/addons/addon/${encodedAddonId}/`, jwt, payload);
+    logInfo('Firefox AMO description updated successfully');
+    logInfo(JSON.stringify(result, null, 2));
+
+    process.exit(0);
+} catch (error) {
+    logError(`Failed to update Firefox description: ${error.message}`);
+    process.exit(1);
+}

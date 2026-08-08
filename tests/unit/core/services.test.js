@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { afterEach, assert, describe, it, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 
 import {
     DisneyPlusService,
@@ -31,14 +31,14 @@ describe.each([
     ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
     ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus'],
 ])('%s service', (_name, Service, SurfaceManager, configKey) => {
-    // NOSONAR: Vitest assertions below are not recognized in this parameterized test.
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
         const config = { getBool: vi.fn().mockReturnValue(false) };
 
-        assert.equal(service.SurfaceManager, SurfaceManager);
-        assert.equal(service.isEnabled(config), false);
-        assert.deepEqual(config.getBool.mock.calls, [[configKey]]);
+        expect(service.SurfaceManager).toBe(SurfaceManager);
+        expect(service.isEnabled(config)).toBe(false);
+        expect(config.getBool).toHaveBeenCalledOnce();
+        expect(config.getBool).toHaveBeenCalledWith(configKey);
     });
 });
 

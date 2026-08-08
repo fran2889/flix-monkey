@@ -139,8 +139,8 @@ export class SettingsUI {
     #groupFields() {
         const groups = [];
         for (const field of this.#fields) {
-            const last = groups[groups.length - 1];
-            if (field.row && last && last.row === field.row) {
+            const last = groups.at(-1);
+            if (field.row && last?.row === field.row) {
                 last.fields.push(field);
             } else {
                 groups.push({ row: field.row, section: field.section, fields: [field] });
