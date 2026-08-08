@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0](https://github.com/fran2889/flix-monkey/compare/v1.4.1...v1.5.0) (2026-08-08)
+
+
+### Features
+
+* **fade:** expose fade overrides on Disney+ and HBO Max title cards ([#139](https://github.com/fran2889/flix-monkey/issues/139)) ([780c3d7](https://github.com/fran2889/flix-monkey/commit/780c3d714896fb7b02178e1abbedc27c81698d12))
+* **services:** add disney plus support ([#136](https://github.com/fran2889/flix-monkey/issues/136)) ([590b094](https://github.com/fran2889/flix-monkey/commit/590b094ffe72a66b21aab2729c32236965161c53))
+* **services:** add HBO Max support ([#128](https://github.com/fran2889/flix-monkey/issues/128)) ([02fd747](https://github.com/fran2889/flix-monkey/commit/02fd74721439f99ee18809046b27495befc212c8))
+
 ## [1.4.1](https://github.com/fran2889/flix-monkey/compare/v1.4.0...v1.4.1) (2026-08-03)
 
 
