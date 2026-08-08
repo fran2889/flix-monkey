@@ -10,7 +10,7 @@ import { FlixMonkeyError } from '../core/utils.js';
  * @property {number} [timeout] - Request timeout in milliseconds.
  */
 
-/** @typedef {string|boolean} StorageValue */
+/** @typedef {string|boolean} StorageValue - Values persisted by FlixMonkey. */
 
 /**
  * Abstract base class for platform adapters.
@@ -88,8 +88,9 @@ export class PlatformAdapter {
     }
 
     /**
-     * Makes an HTTP request via the platform mechanism (GM_xmlhttpRequest or
-     * background-script fetch proxy).
+     * Makes an HTTP request through the platform's CORS-capable transport.
+     * Platform HTTP failures reported by implementations reject with a
+     * {@link FlixMonkeyError} that includes request failure details.
      *
      * @abstract
      * @param {string} _url - Request URL.
@@ -110,8 +111,7 @@ export class PlatformAdapter {
      *   `setConfigData()` and kept current by a `storage.onChanged` listener. The returned
      *   value is current as of the last storage-change event.
      *
-     * Regardless of model, the returned value must reflect the persisted state at the time
-     * of the call. `ConfigManager` treats `undefined` as "key absent" and falls back to
+     * `ConfigManager` treats `undefined` as "key absent" and falls back to
      * `CONFIG_DEFAULTS`.
      *
      * @abstract
@@ -122,27 +122,14 @@ export class PlatformAdapter {
         throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
     }
 
-    /**
-     * Registers a menu command in the platform UI (e.g. Tampermonkey menu).
-     * No-op by default; only `UserscriptAdapter` overrides this.
-     *
-     * @param {string} _label - Menu item label.
-     * @param {() => void} _fn - Callback invoked when the menu item is selected.
-     */
+    /** Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing. */
     registerMenuCommand(_label, _fn) {
         // No-op by default
     }
 
     /**
-     * Pre-loads configuration data into the adapter.
-     *
-     * Only needed by **snapshot-based** adapters (`WebExtensionAdapter`): called once before
-     * the app starts to seed the in-memory config cache from `browser.storage`. A
-     * `storage.onChanged` listener then keeps the same object current, so `configGet` can
-     * return synchronously without hitting async storage.
-     *
-     * **Live-read** adapters (`UserscriptAdapter`) leave this as a no-op because their
-     * `configGet` reads from storage directly on every call and never needs a pre-seeded cache.
+     * Seeds data for snapshot-based adapters before application startup. Live-read
+     * adapters leave this as a no-op.
      *
      * @param {Record<string, StorageValue>} _data - Config key/value pairs.
      */

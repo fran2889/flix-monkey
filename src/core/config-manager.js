@@ -20,7 +20,15 @@ export class ConfigManager {
         this.#logger = logger;
     }
 
-    /** @param {ConfigKey} key @returns {string|boolean} */
+    /**
+     * Returns the configured value for a known key.
+     *
+     * Throws FlixMonkeyError for an unknown key. Absent values, invalid select
+     * values, and adapter read failures fall back to CONFIG_DEFAULTS.
+     *
+     * @param {ConfigKey} key
+     * @returns {string|boolean}
+     */
     get(key) {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
@@ -35,21 +43,18 @@ export class ConfigManager {
         }
     }
 
-    /** @param {ConfigKey} key @returns {number} */
     getInt(key) {
         const val = this.get(key);
         const num = Number.parseInt(val, 10);
         return Number.isNaN(num) ? Number.parseInt(CONFIG_DEFAULTS[key], 10) : num;
     }
 
-    /** @param {ConfigKey} key @returns {number} */
     getFloat(key) {
         const val = this.get(key);
         const num = Number.parseFloat(val);
         return Number.isNaN(num) ? Number.parseFloat(CONFIG_DEFAULTS[key]) : num;
     }
 
-    /** @param {ConfigKey} key @returns {boolean} */
     getBool(key) {
         return String(this.get(key)) === 'true';
     }

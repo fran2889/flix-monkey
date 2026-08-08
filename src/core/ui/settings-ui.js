@@ -33,7 +33,6 @@ export class SettingsUI {
         this.#disabledClientsManager = disabledClientsManager;
     }
 
-    /** @param {Element} container @returns {Promise<void>} */
     async render(container) {
         this.#container = container;
         this.#injectStyles();

@@ -8,7 +8,7 @@
  */
 /**
  * @typedef {Object} TitleOptions
- * @property {string|null} [displayTitle=null] - Title as shown on the Netflix UI.
+ * @property {string|null} [displayTitle=null] - Title as shown by the streaming service.
  * @property {string|null} [apiTitle=null] - Canonical title returned by the API.
  * @property {string|null} [imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
  * @property {number|string|null} [year=null] - Release year; coerced to integer.
@@ -28,25 +28,15 @@
  * to the appropriate number type per field.
  */
 export class Title {
-    /** @type {string|null} */
     displayTitle;
-    /** @type {string|null} */
     apiTitle;
-    /** @type {string|null} */
     imdbId;
-    /** @type {number|null} */
     year;
-    /** @type {number|null} */
     rating;
-    /** @type {number|null} */
     imdbVotes;
-    /** @type {number|null} */
     rtRating;
-    /** @type {number|null} */
     mcRating;
-    /** @type {ApiSourceValue|null} */
     source;
-    /** @type {TitleTypeValue|null} */
     type;
 
     /** @param {TitleOptions} [options] */
@@ -87,7 +77,6 @@ export class Title {
         Object.freeze(this);
     }
 
-    /** @returns {boolean} `true` if at least one rating (IMDb, Metacritic, or RT) is present. */
     get hasRating() {
         return this.rating !== null || this.rtRating !== null || this.mcRating !== null;
     }
@@ -103,10 +92,8 @@ export class Title {
     }
 
     /**
-     * Returns a copy with the API source replaced.
-     *
-     * @param {ApiSourceValue|null} source - API source that produced this title.
-     * @returns {Title}
+     * @param {ApiSourceValue} source - API source that produced this title.
+     * @returns {Title} A new immutable Title with this source.
      */
     withSource(source) {
         return new Title({ ...this, source });
@@ -126,7 +113,7 @@ export class Title {
     /**
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
-     * @param {string} displayTitle - The Netflix display title that was searched.
+     * @param {string} displayTitle - The streaming-service title that was searched.
      * @param {ApiSourceValue|null} [source=null] - API source that produced the miss.
      * @returns {Title}
      */

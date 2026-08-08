@@ -300,12 +300,6 @@ export class OverlayRenderer {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
-    /**
-     * @param {Element} container
-     * @param {import('./title.js').Title} titleObj
-     * @param {'always'|'never'|null} [fadeToggleState=null]
-     * @param {((element: Element) => void)|null} [onFadeToggleClick=null]
-     */
     injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = this.#createOverlay(titleObj);

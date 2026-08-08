@@ -5,39 +5,58 @@
 
 import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager } from './surfaces.js';
 
+/** @typedef {new (logger: import('./logger.js').Logger) => import('./surfaces.js').SurfaceManager} ServiceSurfaceManager */
+
 /**
- * Base class for streaming service implementations.
+ * Abstract contract for a supported streaming service. Implementations provide
+ * a stable, unique, lowercase service ID; hostname suffixes used by
+ * ServiceRegistry; a surface-manager constructor; presentation constants; and
+ * an enablement predicate backed by ConfigManager.
+ *
+ * @abstract
  */
 export class StreamingService {
-    /** @returns {string} */
+    /**
+     * @abstract
+     * @returns {string} Stable, unique, lowercase service identifier used for service-specific configuration.
+     */
     get id() {
         throw new Error('Not implemented');
     }
 
-    /** @returns {readonly string[]} */
+    /**
+     * @abstract
+     * @returns {ReadonlyArray<string>} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
+     */
     get domains() {
         throw new Error('Not implemented');
     }
 
-    /** @returns {typeof NetflixSurfaceManager|typeof HboMaxSurfaceManager|typeof DisneyPlusSurfaceManager} */
+    /**
+     * @abstract
+     * @returns {ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
+     */
     get SurfaceManager() {
         throw new Error('Not implemented');
     }
 
-    /** @returns {import('./overlay.js').ServicePresentation} */
+    /**
+     * @returns {import('./overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
+     */
     get constants() {
         return Object.freeze({});
     }
 
-    /** @param {import('./config-manager.js').ConfigManager} _configManager @returns {boolean} */
+    /**
+     * @abstract
+     * @param {import('./config-manager.js').ConfigManager} configManager - Current application configuration.
+     * @returns {boolean} Whether decoration is enabled for this service.
+     */
     isEnabled(_configManager) {
         throw new Error('Not implemented');
     }
 }
 
-/**
- * Netflix service implementation.
- */
 export class NetflixService extends StreamingService {
     get id() {
         return 'netflix';
@@ -62,9 +81,6 @@ export class NetflixService extends StreamingService {
     }
 }
 
-/**
- * HBO Max service implementation.
- */
 export class HboMaxService extends StreamingService {
     get id() {
         return 'hbomax';
@@ -87,9 +103,6 @@ export class HboMaxService extends StreamingService {
     }
 }
 
-/**
- * Disney+ service implementation.
- */
 export class DisneyPlusService extends StreamingService {
     get id() {
         return 'disneyplus';
@@ -108,20 +121,13 @@ export class DisneyPlusService extends StreamingService {
     }
 }
 
-/**
- * Registry of all supported services.
- */
 export const SERVICES = Object.freeze({
     netflix: new NetflixService(),
     hbomax: new HboMaxService(),
     disneyplus: new DisneyPlusService(),
 });
 
-/**
- * Service detection utility.
- */
 export class ServiceRegistry {
-    /** @returns {StreamingService|null} */
     static detect() {
         const currentHost = window.location.hostname;
         for (const service of Object.values(SERVICES)) {

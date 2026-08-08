@@ -4,7 +4,8 @@
  */
 
 /**
- * Custom error class for FlixMonkey.
+ * Error used at application boundaries. HTTP request failures may include the
+ * request URL, response status, and response body metadata.
  */
 export class FlixMonkeyError extends Error {
     constructor(message, url = null, status = null, body = null) {
@@ -16,14 +17,6 @@ export class FlixMonkeyError extends Error {
     }
 }
 
-/**
- * Creates a debounced function that delays invoking func until after wait milliseconds
- * have elapsed since the last time the debounced function was invoked.
- *
- * @param {() => void} func The function to debounce.
- * @param {number} wait The number of milliseconds to delay.
- * @returns {() => void} Returns the new debounced function.
- */
 export function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -34,11 +27,8 @@ export function debounce(func, wait) {
 }
 
 /**
- * Schedules a function to run during the browser's idle periods.
- * Falls back to setTimeout if requestIdleCallback is not available.
- *
- * @param {() => void} func The function to schedule.
- * @param {number} timeout Optional timeout after which the function will be run if it hasn't already.
+ * Schedules work with requestIdleCallback and its timeout when available;
+ * otherwise schedules it with setTimeout.
  */
 export function runIdle(func, timeout = 2000) {
     if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
@@ -48,13 +38,6 @@ export function runIdle(func, timeout = 2000) {
     }
 }
 
-/**
- * Converts a string to a slug by lowercasing, replacing non-alphanumeric sequences with underscores,
- * and trimming leading/trailing underscores.
- *
- * @param {string} str The string to slugify.
- * @returns {string} The slugified string.
- */
 export function slugify(str) {
     return str
         .toLowerCase()

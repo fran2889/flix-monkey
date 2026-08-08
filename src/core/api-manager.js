@@ -23,12 +23,10 @@ export class ApiClientManager {
         this.#logger = logger;
     }
 
-    /** @returns {import('./disabled-clients.js').DisabledClientsManager} */
     get disabledManager() {
         return this.#disabledManager;
     }
 
-    /** @returns {Promise<string[]>} */
     async resetDisabledClients() {
         const reenabled = await this.#disabledManager.resetAll();
         if (reenabled.length > 0) {
@@ -39,7 +37,13 @@ export class ApiClientManager {
         return reenabled;
     }
 
-    /** @param {string} displayTitle @returns {Promise<Title>} */
+    /**
+     * Resolves rating data from cache or the configured client. Failed lookups return a
+     * not-found Title; client errors with a 4xx status disable that client.
+     *
+     * @param {string} displayTitle
+     * @returns {Promise<Title>}
+     */
     async getData(displayTitle) {
         const source = this.#client.source;
         const cached = await this.#cache.read(displayTitle, source);

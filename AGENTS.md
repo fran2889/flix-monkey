@@ -236,7 +236,7 @@ All platform-specific I/O must go through the `adapter` instance. All abstract m
 ```js
 class PlatformAdapter {
     // All abstract; must be implemented:
-    async storageGet(key)           // Returns stored value or undefined
+    async storageGet(key)           // Returns stored value or null when the key is absent
     async storageGetAll()           // Returns all key/value pairs as object
     async storageSet(key, value)    // Stores a single key/value
     async storageSetMany(obj)       // Stores multiple key/values atomically
