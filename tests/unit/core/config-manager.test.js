@@ -26,7 +26,7 @@ describe('ConfigManager', () => {
                 }),
                 createMockLogger()
             );
-            expect(config.get('cacheTtlNoRating')).toBe('0');
+            expect(config.get('cacheTtlNoRating')).toBe(0);
             expect(config.get('omdbApiKey')).toBe('');
         });
 
