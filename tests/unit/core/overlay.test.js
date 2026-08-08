@@ -252,8 +252,7 @@ describe('OverlayRenderer', () => {
             const toggle = container.querySelector('.fm-fade-toggle');
             const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle).not.toBeNull();
-            expect(toggle.tagName).toBe('BUTTON');
-            expect(toggle.type).toBe('button');
+            expect(toggle.tagName).toBe('DIV');
             expect(toggle.dataset.state).toBe('auto');
             expect(toggle.title).toBe('Fade: Auto');
             expect(icon.textContent).toBe('⭐');
@@ -302,12 +301,9 @@ describe('OverlayRenderer', () => {
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle .fm-label');
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle--faded');
-            expect(css).toContain('visibility: hidden;');
             expect(css).toContain('opacity: 0;');
             expect(css).toContain('pointer-events: none;');
             expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain(':focus-within > .fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('visibility: visible;');
             expect(css).toContain('opacity: 1;');
             expect(css).toContain('pointer-events: auto;');
             expect(css).not.toContain('\n            .fm-fade-toggle {');

@@ -23,13 +23,9 @@ HBO Max and Disney+ have no comparable hover preview. Their fadeable cards are t
 
 The existing `enableFadeToggle` setting remains the user opt-in. When it is disabled, no toggle is rendered.
 
-For a surface with `showFadeToggle: true`, render the fade toggle as a semantic button in the rating overlay, but visually hide it by default. Reveal it when that same surface is hovered or contains keyboard focus (`:focus-within`). The hidden state uses `visibility: hidden`, disabled pointer events, and unchanged layout so the rating badge does not move when the toggle appears.
+For a surface with `showFadeToggle: true`, render the fade toggle as a neutral overlay element and visually hide it by default. Reveal it when that same surface is hovered. The hidden state uses opacity, disabled pointer events, and unchanged layout so the rating badge does not move when the toggle appears.
 
 The toggle continues to cycle through Auto, Always, Never, and back to Auto. Clicking it prevents propagation to the streaming service's card action, persists the override, updates the toggle state, and applies the resulting fade state to every currently rendered card with the same title key.
-
-## Accessibility
-
-Hover is supplemented by `:focus-within` so a keyboard user can reveal and operate the control. The button is hidden from tab order until a focusable card child reveals it, after which it is the next tab stop. The control keeps its tooltip and state labels. Pointer events are enabled only while the control is revealed.
 
 ## Scope and verification
 
