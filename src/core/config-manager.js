@@ -24,24 +24,25 @@ export class ConfigManager {
      * Returns the configured value for a known key.
      *
      * Throws FlixMonkeyError for an unknown key. Absent values, invalid select
-     * values, and adapter read failures fall back to CONFIG_DEFAULTS. Present
-     * values are normalized to the configured field type.
+     * values, and adapter read failures fall back to CONFIG_DEFAULTS. Returned
+     * values are normalized to strings; use the typed accessors for conversion.
      *
      * @param {ConfigKey} key
-     * @returns {string|boolean}
+     * @returns {string}
      */
     get(key) {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
             const val = this.#adapter.configGet(key);
-            if (val === undefined || val === null) return CONFIG_DEFAULTS[key];
-            const normalizedVal = typeof CONFIG_DEFAULTS[key] === 'boolean' ? String(val) === 'true' : String(val);
+            const defaultValue = String(CONFIG_DEFAULTS[key]);
+            if (val === undefined || val === null) return defaultValue;
+            const normalizedVal = String(val);
             const allowed = CONFIG_SELECT_ALLOWED[key];
-            if (allowed && !allowed.includes(normalizedVal)) return CONFIG_DEFAULTS[key];
+            if (allowed && !allowed.includes(normalizedVal)) return defaultValue;
             return normalizedVal;
         } catch (err) {
             this.#logger?.warn('ConfigManager.get error, using fallback', { key, err });
-            return CONFIG_DEFAULTS[key];
+            return String(CONFIG_DEFAULTS[key]);
         }
     }
 
@@ -58,6 +59,6 @@ export class ConfigManager {
     }
 
     getBool(key) {
-        return String(this.get(key)) === 'true';
+        return this.get(key) === 'true';
     }
 }

@@ -20,25 +20,17 @@ describe('ConfigManager', () => {
         });
 
         it('should handle falsy but valid values (0 and empty string)', () => {
-            const config = new ConfigManager(
-                createMockAdapter({
-                    configGet: key => (key === 'cacheTtlNoRating' ? 0 : key === 'omdbApiKey' ? '' : undefined),
-                }),
-                createMockLogger()
-            );
+            const values = { cacheTtlNoRating: 0, omdbApiKey: '' };
+            const config = new ConfigManager(createMockAdapter({ configGet: key => values[key] }), createMockLogger());
             expect(config.get('cacheTtlNoRating')).toBe('0');
             expect(config.get('omdbApiKey')).toBe('');
         });
 
-        it('should normalize legacy string checkbox values to booleans', () => {
-            const config = new ConfigManager(
-                createMockAdapter({
-                    configGet: key => (key === 'showRtRating' ? 'true' : key === 'showMcRating' ? 'false' : undefined),
-                }),
-                createMockLogger()
-            );
-            expect(config.get('showRtRating')).toBe(true);
-            expect(config.get('showMcRating')).toBe(false);
+        it('should normalize legacy string checkbox values to strings', () => {
+            const values = { showRtRating: 'true', showMcRating: 'false' };
+            const config = new ConfigManager(createMockAdapter({ configGet: key => values[key] }), createMockLogger());
+            expect(config.get('showRtRating')).toBe('true');
+            expect(config.get('showMcRating')).toBe('false');
         });
 
         it('should return CONFIG_DEFAULTS when adapter returns undefined', () => {
@@ -106,7 +98,7 @@ describe('ConfigManager', () => {
 
         it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
             const config = new ConfigManager(createMockAdapter(), createMockLogger());
-            expect(config.get(key)).toBe(expectedValue);
+            expect(config.get(key)).toBe(String(expectedValue));
         });
     });
 
