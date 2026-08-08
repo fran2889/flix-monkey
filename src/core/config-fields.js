@@ -127,7 +127,7 @@ export const CONFIG_FIELDS = [
         label: 'Allow Override',
         type: 'checkbox',
         default: false,
-        title: 'Allow manual override of fade state in hover preview',
+        title: 'Allow manual override of fade state on supported title surfaces',
         row: 'fade-settings',
     },
     {

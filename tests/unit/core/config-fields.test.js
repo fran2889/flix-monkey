@@ -16,6 +16,12 @@ describe('core/config-fields', () => {
         });
     });
 
+    it('describes the fade override without naming a Netflix preview', () => {
+        expect(CONFIG_FIELDS.find(field => field.key === 'enableFadeToggle').title).toBe(
+            'Allow manual override of fade state on supported title surfaces'
+        );
+    });
+
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', field => {
             expect(field).toHaveProperty('key');
