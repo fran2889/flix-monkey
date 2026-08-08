@@ -111,12 +111,6 @@ function validateDescription(content) {
 
 async function main() {
     try {
-        // Dry-run mode
-        const dryRun = process.env.DRY_RUN === 'true';
-        if (dryRun) {
-            logInfo('DRY RUN MODE - no changes will be made');
-        }
-
         // Read description file
         logInfo(`Reading description from ${DESCRIPTION_FILE}`);
         let content;
@@ -133,13 +127,6 @@ async function main() {
         if (!description) {
             logError('Description is empty');
             process.exit(1);
-        }
-
-        if (dryRun) {
-            logInfo('Dry run complete. Description would be:');
-            logInfo(description.substring(0, 200) + '...');
-            logInfo('To run for real, omit the DRY_RUN=true environment variable.');
-            process.exit(0);
         }
 
         // Generate JWT
