@@ -5,6 +5,22 @@
 import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
 import { validateDomain } from './domains.js';
 
+/**
+ * @typedef {{data: unknown}|{error: string, status?: number, body?: string|null}} FetchProxyResponse
+ * Response returned by the extension background relay. Error bodies are capped
+ * at 200 characters when an HTTP response is available.
+ */
+
+/**
+ * Fetches an allowlisted external URL for content scripts. URL validation and
+ * fetch/request failures return the error branch. Options are destructured
+ * without validation, so malformed values such as `null` can throw before the
+ * request begins.
+ *
+ * @param {string} url - Requested URL, validated against ALLOWED_DOMAINS.
+ * @param {import('../../platform/adapter.js').HttpFetchOptions} [options={}] - Requested response format and timeout.
+ * @returns {Promise<FetchProxyResponse>} Relay result for the runtime message response.
+ */
 export async function handleFetchMessage(url, options = {}) {
     const validation = validateDomain(url);
     if (!validation.valid) {

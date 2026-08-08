@@ -4,11 +4,14 @@
  */
 import { vi } from 'vitest';
 
+import { Logger } from '../../src/core/logger.js';
+import { createMockAdapter } from './adapter.js';
+
 export function createMockLogger() {
-    return {
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-    };
+    const logger = new Logger(createMockAdapter());
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'info').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'error').mockImplementation(() => {});
+    return logger;
 }

@@ -103,6 +103,22 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
     });
 
+    it('defaults optional surface display flags to false', () => {
+        const sm = new SurfaceManager(
+            {
+                card: {
+                    titleSelector: '[data-title]',
+                    getTitle: element => element.dataset.title,
+                    getContainer: element => element,
+                },
+            },
+            createMockLogger()
+        );
+        document.body.innerHTML = '<div data-title="Default Flags"></div>';
+
+        expect(sm.discover(document.body)[0]).toMatchObject({ fadeable: false, showFadeToggle: false });
+    });
+
     it('returns the container resolved by a surface definition', () => {
         const resolvedContainer = document.createElement('div');
         resolvedContainer.innerHTML = '<span data-title="Resolver Title"></span>';

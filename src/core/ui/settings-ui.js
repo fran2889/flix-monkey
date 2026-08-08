@@ -20,6 +20,12 @@ export class SettingsUI {
         this.#onSave = fn;
     }
 
+    /**
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
+     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
+     * @param {import('../cache.js').CacheManager} cacheManager
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
+     */
     constructor(adapter, fields = CONFIG_FIELDS, cacheManager, disabledClientsManager) {
         this.#adapter = adapter;
         this.#fields = fields;

@@ -3,12 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/**
- * Parse hex color string to RGB object.
- *
- * @param {string} hex - Hex color string with leading # (e.g., '#ff0000')
- * @returns {{r: number, g: number, b: number}} RGB object with values 0-255
- */
 export function parseHex(hex) {
     return {
         r: parseInt(hex.slice(1, 3), 16),
@@ -17,14 +11,6 @@ export function parseHex(hex) {
     };
 }
 
-/**
- * Convert RGB color values to HSL color space.
- *
- * @param {number} r - Red component (0-255)
- * @param {number} g - Green component (0-255)
- * @param {number} b - Blue component (0-255)
- * @returns {{h: number, s: number, l: number}} HSL object (h: 0-360, s: 0-1, l: 0-1)
- */
 export function rgbToHsl(r, g, b) {
     const rf = r / 255;
     const gf = g / 255;
@@ -56,14 +42,6 @@ export function rgbToHsl(r, g, b) {
     return { h, s, l };
 }
 
-/**
- * Convert HSL color values to RGB color space.
- *
- * @param {number} h - Hue (0-360)
- * @param {number} s - Saturation (0-1)
- * @param {number} l - Lightness (0-1)
- * @returns {{r: number, g: number, b: number}} RGB object with values 0-255
- */
 export function hslToRgb(h, s, l) {
     if (s === 0) {
         const val = Math.round(l * 255);
@@ -85,14 +63,6 @@ export function hslToRgb(h, s, l) {
     };
 }
 
-/**
- * Helper function for HSL to RGB conversion.
- *
- * @param {number} p - First parameter
- * @param {number} q - Second parameter
- * @param {number} t - Third parameter (0-1)
- * @returns {number} RGB component value (0-1)
- */
 export function hueToRgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
@@ -102,16 +72,6 @@ export function hueToRgb(p, q, t) {
     return p;
 }
 
-/**
- * Interpolate between two hex colors using HSL color space.
- * Produces smoother gradients that pass through true yellow when going from red to green.
- * RGB values are clamped to stay within the bounds of the endpoint colors.
- *
- * @param {number} progress - Interpolation progress (0 = start, 1 = end)
- * @param {string} startHex - Starting color as hex string (e.g., '#ff0000')
- * @param {string} endHex - Ending color as hex string (e.g., '#00dd00')
- * @returns {string} RGB color string in format 'rgb(r, g, b)'
- */
 export function interpolateColor(progress, startHex, endHex) {
     const startRgb = parseHex(startHex);
     const endRgb = parseHex(endHex);

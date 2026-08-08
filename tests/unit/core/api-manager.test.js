@@ -185,9 +185,9 @@ describe('ApiClientManager', () => {
 
     it('should log on successful data retrieval', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const title = new Title({ apiTitle: 'Logged Movie', source: 'test-source' });
+        const title = new Title({ apiTitle: 'Logged Movie', source: 'agregarr' });
         const mockClient = {
-            source: 'test-source',
+            source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
             fetch: vi.fn().mockResolvedValue(title),
         };
@@ -195,7 +195,7 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(mockCache, {}, mockClient, mockLogger);
         await manager.getData('Logged Movie');
         expect(mockLogger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from test-source')
+            expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from agregarr')
         );
     });
 });
