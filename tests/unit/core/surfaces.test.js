@@ -216,6 +216,17 @@ describe('SurfaceManager', () => {
 });
 
 describe('HBO Max surfaces', () => {
+    it('marks show tiles as fadeable toggle surfaces', () => {
+        document.body.innerHTML = `
+            <div class="hbo-card">
+                <a data-testid="movie_tile" data-sonic-type="show" aria-label="Movie. 1 of 20."></a>
+            </div>
+        `;
+
+        const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
+        expect(surface).toMatchObject({ title: 'Movie', fadeable: true, showFadeToggle: true });
+    });
+
     it.each([
         ['\u2066\u2068Peacemaker\u2069\u2069. \u20682 of 20\u2069\u2069', 'Peacemaker'],
         ['Mr. & Mrs. Smith. 1 of 20.', 'Mr. & Mrs. Smith'],
@@ -327,7 +338,7 @@ describe('Disney+ surfaces', () => {
         `;
 
         const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
-        expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: false });
+        expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 
@@ -346,7 +357,7 @@ describe('Disney+ surfaces', () => {
         `;
 
         const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
-        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: false });
+        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 });

@@ -39,7 +39,7 @@ describe('Disney+ browse UI surface', () => {
             'How I Met Your Mother',
         ]);
         expect(surfaces.every(({ container }) => container.matches('[data-testid="set-shelf-item"]'))).toBe(true);
-        expect(surfaces.every(({ fadeable, showFadeToggle }) => fadeable && !showFadeToggle)).toBe(true);
+        expect(surfaces.every(({ fadeable, showFadeToggle }) => fadeable && showFadeToggle)).toBe(true);
 
         surfaces.forEach(({ container }) => {
             overlayRenderer.injectOverlay(container, {

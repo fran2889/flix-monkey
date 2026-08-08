@@ -252,6 +252,7 @@ describe('OverlayRenderer', () => {
             const toggle = container.querySelector('.fm-fade-toggle');
             const icon = toggle.querySelector('.fm-fade-toggle-icon');
             expect(toggle).not.toBeNull();
+            expect(toggle.tagName).toBe('DIV');
             expect(toggle.dataset.state).toBe('auto');
             expect(toggle.title).toBe('Fade: Auto');
             expect(icon.textContent).toBe('⭐');
@@ -293,14 +294,16 @@ describe('OverlayRenderer', () => {
             expect(onClick).toHaveBeenCalledWith(toggle);
         });
 
-        it('should include fm-fade-toggle CSS scoped under fm-rating-overlay', () => {
+        it('should hide fade toggle until its surface is hovered', () => {
             const renderer = new OverlayRenderer(createConfig());
             renderer.injectStyles();
             const css = document.head.querySelector('#fm-overlay-styles').textContent;
             expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle .fm-label');
-            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle--faded');
-            expect(css).not.toContain('\n            .fm-fade-toggle {');
+            expect(css).toContain('opacity: 0;');
+            expect(css).toContain('pointer-events: none;');
+            expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
+            expect(css).toContain('opacity: 1;');
+            expect(css).toContain('pointer-events: auto;');
         });
     });
 

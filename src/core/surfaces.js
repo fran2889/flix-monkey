@@ -174,7 +174,7 @@ export const HBO_MAX_SURFACES = Object.freeze({
             container.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(tile));
         },
         fadeable: true,
-        showFadeToggle: false,
+        showFadeToggle: true,
     }),
 });
 
@@ -211,7 +211,7 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         getTitle: extractDisneyPlusTitle,
         getContainer: containerFromParent,
         fadeable: true,
-        showFadeToggle: false,
+        showFadeToggle: true,
     }),
     CONTINUE_WATCHING: Object.freeze({
         titleSelector:
@@ -219,7 +219,7 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         getTitle: wrapper => wrapper.querySelector('[data-testid="cw-set-item-metadata"]')?.children[1]?.textContent,
         getContainer: containerFromClosest('[data-testid="set-shelf-item"]'),
         fadeable: true,
-        showFadeToggle: false,
+        showFadeToggle: true,
     }),
 });
 
