@@ -27,14 +27,14 @@ const containerFromParent = element => element.parentElement;
 const HBO_MAX_TITLE_PATTERNS = Object.freeze([
     /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
     /^(.+)\. Row \d+ of \d+, Column \d+ of \d+(?:\. (?:New Episode|Released in \d{4}))?\.?$/u,
-    /^(.+)\. \d+ of \d+(?:\. (?:New|New Episode|Leaving Soon))?\.?$/u,
+    /^(.+)\. \d+ of \d+(?:\. (?:Just Added|New|New Episode|Leaving Soon))?\.?$/u,
 ]);
 const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
 ]);
 const DISNEY_PLUS_PREFIX_BLOCK =
-    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series|Episode) Badge|New Season|New Badge) )+/u;
+    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series) Badge|New (?:Episode|Season)(?: Badge)?|New Badge) )+/u;
 const DISNEY_PLUS_TITLE_END =
     /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
 
@@ -133,7 +133,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = surface.getContainer(titleEl);
                 if (!container) {
-                    this.#logger.warn('Surface container resolver failed, falling back to parentElement');
+                    this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
                     container = titleEl.parentElement;
                 }
                 if (!container || seen.has(container)) return;
@@ -236,7 +236,9 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         titleSelector:
             '[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]',
         getTitle: wrapper => wrapper.querySelector('[data-testid="cw-set-item-metadata"]')?.children[1]?.textContent,
-        getContainer: containerFromClosest('[data-testid="set-shelf-item"]'),
+        getContainer: containerFromClosest(
+            '[data-testid="set-shelf-item"], [data-testid="set-shelf-item-shelf-pagination-spy"]'
+        ),
         fadeable: true,
         showFadeToggle: true,
     }),
