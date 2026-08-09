@@ -38,6 +38,14 @@ const DISNEY_PLUS_PREFIX_BLOCK =
 const DISNEY_PLUS_TITLE_END =
     /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
 
+function canonicalizeDisneyPlusTitle(title) {
+    const canonicalTitle = title
+        .replace(/^A Marvel Television Special Presentation [\u2014-] /u, '')
+        .replace(/^Marvel Studios' /u, '');
+    const starWarsEpisode = /^Star Wars: (.+) \(Episode ([IVXLCDM]+)\)$/u.exec(canonicalTitle);
+    return starWarsEpisode ? `Star Wars: Episode ${starWarsEpisode[2]} - ${starWarsEpisode[1]}` : canonicalTitle;
+}
+
 export const NETFLIX_SURFACES = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
@@ -196,7 +204,7 @@ export const HBO_MAX_SURFACES = Object.freeze({
 
 export function extractDisneyPlusTitle(tile) {
     const imageTitle = [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean);
-    if (imageTitle) return imageTitle;
+    if (imageTitle) return canonicalizeDisneyPlusTitle(imageTitle);
 
     const label = tile
         .getAttribute('aria-label')
@@ -211,7 +219,7 @@ export function extractDisneyPlusTitle(tile) {
         .replace(DISNEY_PLUS_PREFIX_BLOCK, '')
         .split(DISNEY_PLUS_TITLE_END)[0]
         .trim();
-    return title || null;
+    return title ? canonicalizeDisneyPlusTitle(title) : null;
 }
 
 export const DISNEY_PLUS_SURFACES = Object.freeze({

@@ -280,7 +280,19 @@ describe('HBO Max surfaces', () => {
 
 describe('Disney+ surfaces', () => {
     it.each([
-        ["Marvel Studios' The Avengers", "New Movie Badge Marvel Studios' The Avengers Rated 12+"],
+        ['A Marvel Television Special Presentation \u2014 The Punisher: One Last Kill', 'The Punisher: One Last Kill'],
+        ["Marvel Studios' The Avengers", 'The Avengers'],
+        ['Star Wars: The Phantom Menace (Episode I)', 'Star Wars: Episode I - The Phantom Menace'],
+        ['Star Wars: Attack of the Clones (Episode II)', 'Star Wars: Episode II - Attack of the Clones'],
+    ])('canonicalizes the Disney+ title %s', (input, expected) => {
+        const tile = document.createElement('a');
+        tile.innerHTML = `<img alt="${input}">`;
+
+        expect(extractDisneyPlusTitle(tile)).toBe(expected);
+    });
+
+    it.each([
+        ['The Avengers', "New Movie Badge Marvel Studios' The Avengers Rated 12+"],
         ['The Devil Wears Prada 2', 'New Movie Badge The Devil Wears Prada 2 Rated 12+'],
         ['Furious', 'Hulu Original Series New Episode Badge Furious Rated 18+'],
         ['BLEACH: Thousand-Year Blood War', 'New Episode Badge BLEACH: Thousand-Year Blood War Rated 16+'],
