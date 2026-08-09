@@ -117,6 +117,26 @@ describe('core/utils', () => {
     });
 
     describe('slugify', () => {
+        it('preserves legacy ASCII title keys', () => {
+            expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
+            expect(slugify('Test: Movie')).toBe('test_movie');
+        });
+
+        it('returns distinct non-empty keys for non-ASCII titles', () => {
+            const korean = slugify('\uAE30\uC0DD\uCDA9');
+            const japanese = slugify('\u5BC4\u751F\u7345');
+
+            expect(korean).toMatch(/^u:/);
+            expect(japanese).toMatch(/^u:/);
+            expect(korean).not.toBe(japanese);
+            expect(korean).not.toBe('');
+            expect(japanese).not.toBe('');
+        });
+
+        it('normalizes equivalent Unicode title forms', () => {
+            expect(slugify('Caf\u00E9')).toBe(slugify('Cafe\u0301'));
+        });
+
         it('should lowercase and replace non-alphanumeric sequences with underscores', () => {
             expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
             expect(slugify('Test: Movie')).toBe('test_movie');

@@ -38,8 +38,13 @@ export function runIdle(func, timeout = 2000) {
 }
 
 export function slugify(str) {
-    return str
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_|_$/g, '');
+    // eslint-disable-next-line no-control-regex
+    if (/^[\x00-\x7F]*$/.test(str)) {
+        return str
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_|_$/g, '');
+    }
+
+    return `u:${encodeURIComponent(str.trim().normalize('NFKC').toLowerCase())}`;
 }
