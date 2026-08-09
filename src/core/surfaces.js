@@ -26,7 +26,7 @@ const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
 const HBO_MAX_TITLE_PATTERNS = Object.freeze([
     /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
-    /^(.+)\. Row \d+ of \d+, Column \d+ of \d+(?:\. (?:New Episode|Released in \d{4}))?\.?$/u,
+    /^(.+)\. Row \d+ of \d+, Column \d+ of \d+\.?/u,
     /^(.+)\. \d+ of \d+(?:\. (?:Just Added|New|New Episode|Leaving Soon))?\.?$/u,
 ]);
 const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
