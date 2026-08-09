@@ -398,4 +398,26 @@ describe('Disney+ surfaces', () => {
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
         expect(logger.warn).not.toHaveBeenCalled();
     });
+
+    it('discovers a Continue Watching title from the standard shelf container', () => {
+        document.body.innerHTML = `
+            <section data-testid="set-section" data-set-style="continue_watching">
+                <div data-testid="set-shelf-item">
+                    <span data-testid="cw-set-item-wrapper">
+                        <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
+                        <a data-testid="cw-set-item-metadata" href="/browse/entity-title-id">
+                            <div>9m remaining</div><div>How I Met Your Mother</div>
+                        </a>
+                    </span>
+                </div>
+            </section>
+        `;
+
+        const logger = createMockLogger();
+        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
+
+        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(logger.warn).not.toHaveBeenCalled();
+    });
 });

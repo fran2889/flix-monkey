@@ -236,7 +236,9 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         titleSelector:
             '[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]',
         getTitle: wrapper => wrapper.querySelector('[data-testid="cw-set-item-metadata"]')?.children[1]?.textContent,
-        getContainer: containerFromClosest('[data-testid="set-shelf-item-shelf-pagination-spy"]'),
+        getContainer: containerFromClosest(
+            '[data-testid="set-shelf-item"], [data-testid="set-shelf-item-shelf-pagination-spy"]'
+        ),
         fadeable: true,
         showFadeToggle: true,
     }),
