@@ -327,8 +327,12 @@ describe('Disney+ surfaces', () => {
             'Avatar: Fire and Ash',
         ],
         ['New Movie Badge The Devil Wears Prada 2 Select for details on this title.', 'The Devil Wears Prada 2'],
+        ['New Movie The Movie Select for details on this title.', 'New Movie The Movie'],
+        ['New Series The Series Select for details on this title.', 'New Series The Series'],
         ['New Episode Badge Furious Hulu Original Series Select for details on this title.', 'Furious'],
         ['New Season Peppa Pig Select for details on this title.', 'Peppa Pig'],
+        ['New Season Badge The Bear Select for details on this title.', 'The Bear'],
+        ['New Episode Abbott Elementary Select for details on this title.', 'Abbott Elementary'],
         [
             "New Badge Mickey Mouse Clubhouse+: Mickey's Country Farm Select for details on this title.",
             "Mickey Mouse Clubhouse+: Mickey's Country Farm",

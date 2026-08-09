@@ -34,7 +34,7 @@ const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
 ]);
 const DISNEY_PLUS_PREFIX_BLOCK =
-    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series|Episode) Badge|New Season|New Badge) )+/u;
+    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series) Badge|New (?:Episode|Season)(?: Badge)?|New Badge) )+/u;
 const DISNEY_PLUS_TITLE_END =
     /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
 
