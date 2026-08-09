@@ -24,6 +24,27 @@
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
 const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
+const HBO_MAX_TITLE_PATTERNS = Object.freeze([
+    /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
+    /^(.+)\. Row \d+ of \d+, Column \d+ of \d+(?:\. (?:New Episode|Released in \d{4}))?\.?$/u,
+    /^(.+)\. \d+ of \d+(?:\. (?:New|New Episode|Leaving Soon))?\.?$/u,
+]);
+const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
+    /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
+    /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
+]);
+const DISNEY_PLUS_PREFIX_BLOCK =
+    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series|Episode) Badge|New Season|New Badge) )+/u;
+const DISNEY_PLUS_TITLE_END =
+    /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
+
+function canonicalizeDisneyPlusTitle(title) {
+    const canonicalTitle = title
+        .replace(/^A Marvel Television Special Presentation [\u2014-] /u, '')
+        .replace(/^Marvel Studios' /u, '');
+    const starWarsEpisode = /^Star Wars: (.+) \(Episode ([IVXLCDM]+)\)$/u.exec(canonicalTitle);
+    return starWarsEpisode ? `Star Wars: Episode ${starWarsEpisode[2]} - ${starWarsEpisode[1]}` : canonicalTitle;
+}
 
 export const NETFLIX_SURFACES = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
@@ -141,16 +162,19 @@ export function extractHboMaxTitle(tile) {
     if (!label) return null;
 
     if (tile.dataset.sonicType === 'video') {
-        const match = label.match(/^Watch\s+(.+?)[.,]\s+(?:Season|Episode)\s+\d+(?=(?:[,.]\s|:\s|[,.]$))/u);
-        return match?.[1]?.trim() || null;
+        for (const pattern of HBO_MAX_WATCH_TITLE_PATTERNS) {
+            const title = label.match(pattern)?.[1]?.trim();
+            if (title) return title;
+        }
+        return null;
     }
     if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType)) return null;
 
-    const match =
-        label.match(/^Number\s+\d+:\s+(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u) ??
-        label.match(/^(.+?)\.\s+Row\s+\d+\s+of\s+\d+,\s+Column\s+\d+\s+of\s+\d+(?:\.|$)/u) ??
-        label.match(/^(.+?)\.\s+\d+\s+\D+\s+\d+(?:\.|$)/u);
-    return match?.[1]?.trim() || null;
+    for (const pattern of HBO_MAX_TITLE_PATTERNS) {
+        const title = label.match(pattern)?.[1]?.trim();
+        if (title) return title;
+    }
+    return null;
 }
 
 function getNormalizedHboMaxAriaLabel(tile) {
@@ -179,8 +203,10 @@ export const HBO_MAX_SURFACES = Object.freeze({
 });
 
 export function extractDisneyPlusTitle(tile) {
-    const imageTitle = [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean);
-    if (imageTitle) return imageTitle;
+    const imageTitle = [...tile.querySelectorAll('img[alt]:not([data-testid="set-item-rating"] img)')]
+        .map(image => image.alt.trim())
+        .find(Boolean);
+    if (imageTitle) return canonicalizeDisneyPlusTitle(imageTitle);
 
     const label = tile
         .getAttribute('aria-label')
@@ -189,20 +215,13 @@ export function extractDisneyPlusTitle(tile) {
     const detailsSuffix = 'Select for details on this title.';
     if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return null;
 
-    const content = label
+    const title = label
         .slice(0, -detailsSuffix.length)
-        .replace(
-            /^(?:(?:(?:Subtitles|Dubbing) Available|New (?:Movie|Series|Episode|Season)) Badge|New (?:Episode|Season))\s+/u,
-            ''
-        )
+        .trim()
+        .replace(DISNEY_PLUS_PREFIX_BLOCK, '')
+        .split(DISNEY_PLUS_TITLE_END)[0]
         .trim();
-    const title = content
-        .split(
-            /\s+(?:Rated\s+\S+|Released\s+\d{4}\b|(?:Disney\+|Hulu) (?:Original(?: Series)?|Generic))(?=[.\s]|$)/u
-        )[0]
-        ?.replace(/\s+(?:Action and Adventure|Kids and Family)$/u, '')
-        .trim();
-    return title || null;
+    return title ? canonicalizeDisneyPlusTitle(title) : null;
 }
 
 export const DISNEY_PLUS_SURFACES = Object.freeze({
