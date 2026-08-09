@@ -74,7 +74,9 @@ describe('SurfaceManager', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
         expect(results[0].container).toBe(fakeParent);
-        expect(logger.warn).toHaveBeenCalledWith('Surface container resolver failed, falling back to parentElement');
+        expect(logger.warn).toHaveBeenCalledWith(
+            'Surface container resolver failed for Orphan, falling back to parentElement'
+        );
     });
 
     it('should return empty array when querySelectorAll throws', () => {
@@ -230,6 +232,7 @@ describe('HBO Max surfaces', () => {
     it.each([
         ['\u2066\u2068Peacemaker\u2069\u2069. \u20682 of 20\u2069\u2069', 'Peacemaker'],
         ['Mr. & Mrs. Smith. 1 of 20.', 'Mr. & Mrs. Smith'],
+        ['Outcry. 8 of 20. Just Added', 'Outcry'],
         ['Rooster. Row 1 of 8, Column 1 of 4', 'Rooster'],
         ['Watch Peacemaker. Season 1, Episode 2: Best Friends for Never. 1 of 2.', 'Peacemaker'],
         ['Watch Mel Brooks: The 99 Year Old Man!, Episode 2. 2 of 2.', 'Mel Brooks: The 99 Year Old Man!'],
@@ -325,8 +328,12 @@ describe('Disney+ surfaces', () => {
             'Avatar: Fire and Ash',
         ],
         ['New Movie Badge The Devil Wears Prada 2 Select for details on this title.', 'The Devil Wears Prada 2'],
+        ['New Movie The Movie Select for details on this title.', 'New Movie The Movie'],
+        ['New Series The Series Select for details on this title.', 'New Series The Series'],
         ['New Episode Badge Furious Hulu Original Series Select for details on this title.', 'Furious'],
         ['New Season Peppa Pig Select for details on this title.', 'Peppa Pig'],
+        ['New Season Badge The Bear Select for details on this title.', 'The Bear'],
+        ['New Episode Abbott Elementary Select for details on this title.', 'Abbott Elementary'],
         [
             "New Badge Mickey Mouse Clubhouse+: Mickey's Country Farm Select for details on this title.",
             "Mickey Mouse Clubhouse+: Mickey's Country Farm",
@@ -379,6 +386,27 @@ describe('Disney+ surfaces', () => {
     it('discovers a Continue Watching title from its metadata', () => {
         document.body.innerHTML = `
             <section data-testid="set-section" data-set-style="continue_watching">
+                <div data-testid="set-shelf-item-shelf-pagination-spy">
+                    <span data-testid="cw-set-item-wrapper">
+                        <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
+                        <a data-testid="cw-set-item-metadata" href="/browse/entity-title-id">
+                            <div>9m remaining</div><div>How I Met Your Mother</div>
+                        </a>
+                    </span>
+                </div>
+            </section>
+        `;
+
+        const logger = createMockLogger();
+        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
+        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
+        expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('discovers a Continue Watching title from the standard shelf container', () => {
+        document.body.innerHTML = `
+            <section data-testid="set-section" data-set-style="continue_watching">
                 <div data-testid="set-shelf-item">
                     <span data-testid="cw-set-item-wrapper">
                         <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
@@ -390,8 +418,11 @@ describe('Disney+ surfaces', () => {
             </section>
         `;
 
-        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        const logger = createMockLogger();
+        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
+
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 });
