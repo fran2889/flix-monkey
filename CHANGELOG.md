@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.1](https://github.com/fran2889/flix-monkey/compare/v1.5.0...v1.5.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **cache:** encode unicode title keys ([#148](https://github.com/fran2889/flix-monkey/issues/148)) ([bd8dd90](https://github.com/fran2889/flix-monkey/commit/bd8dd909d1fbf620591325458f2d79eeec19510e))
+* **logging:** include title in diagnostics ([#153](https://github.com/fran2889/flix-monkey/issues/153)) ([d3f39d8](https://github.com/fran2889/flix-monkey/commit/d3f39d8d9538fa68780d7674e2aedeae44a0c768))
+* **surfaces:** restore Disney Plus title prefixes ([#151](https://github.com/fran2889/flix-monkey/issues/151)) ([7a1f361](https://github.com/fran2889/flix-monkey/commit/7a1f36108f808b1d651c09d97d5e13872fd1467f))
+* **surfaces:** support Disney+ Continue Watching cards ([#149](https://github.com/fran2889/flix-monkey/issues/149)) ([d82df00](https://github.com/fran2889/flix-monkey/commit/d82df0079a1fa73d0d5bca2f35c7544a89aecd93))
+* **surfaces:** support HBO Just Added tiles ([#150](https://github.com/fran2889/flix-monkey/issues/150)) ([372f749](https://github.com/fran2889/flix-monkey/commit/372f749611ede33d80333d551fe7e8cbf4be49bf))
+* **surfaces:** support HBO search tile metadata ([#154](https://github.com/fran2889/flix-monkey/issues/154)) ([20dfc41](https://github.com/fran2889/flix-monkey/commit/20dfc41159a7fc02e210c3fa549bfe83b6aed28e))
+
 ## [1.5.0](https://github.com/fran2889/flix-monkey/compare/v1.4.1...v1.5.0) (2026-08-08)
 
 
