@@ -38,8 +38,7 @@ export function runIdle(func, timeout = 2000) {
 }
 
 export function slugify(str) {
-    // eslint-disable-next-line no-control-regex
-    if (/^[\x00-\x7F]*$/.test(str)) {
+    if (/^[^\u0080-\uFFFF]*$/.test(str)) {
         return str
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '_')
