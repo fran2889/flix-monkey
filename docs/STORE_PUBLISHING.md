@@ -125,8 +125,6 @@ This ensures store listings stay in sync with the repository.
 
 1. Navigate to **Actions** > **Update Store Description** in the GitHub repository
 2. Click **Run workflow**
-3. Optionally enable **Dry run** to test without making actual changes
-4. Click **Run workflow**
 
 Uses the AMO credentials documented in
 [Required Repository Secrets](#required-repository-secrets).
