@@ -133,7 +133,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = surface.getContainer(titleEl);
                 if (!container) {
-                    this.#logger.warn('Surface container resolver failed, falling back to parentElement');
+                    this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
                     container = titleEl.parentElement;
                 }
                 if (!container || seen.has(container)) return;
@@ -236,7 +236,9 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         titleSelector:
             '[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]',
         getTitle: wrapper => wrapper.querySelector('[data-testid="cw-set-item-metadata"]')?.children[1]?.textContent,
-        getContainer: containerFromClosest('[data-testid="set-shelf-item"]'),
+        getContainer: containerFromClosest(
+            '[data-testid="set-shelf-item"], [data-testid="set-shelf-item-shelf-pagination-spy"]'
+        ),
         fadeable: true,
         showFadeToggle: true,
     }),
