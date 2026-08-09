@@ -32,8 +32,6 @@ Add tests that prove:
 - Existing ASCII title keys are unchanged.
 - Distinct Korean and Japanese titles generate distinct, non-empty keys.
 - Mixed ASCII and Unicode titles preserve their Unicode distinction.
-- Cache entries for distinct Unicode titles use distinct storage keys.
-- In-flight lookup deduplication and fade overrides are isolated by the new keys.
 
 ## Scope
 
