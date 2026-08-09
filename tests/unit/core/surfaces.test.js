@@ -74,7 +74,9 @@ describe('SurfaceManager', () => {
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
         expect(results[0].container).toBe(fakeParent);
-        expect(logger.warn).toHaveBeenCalledWith('Surface container resolver failed, falling back to parentElement');
+        expect(logger.warn).toHaveBeenCalledWith(
+            'Surface container resolver failed for Orphan, falling back to parentElement'
+        );
     });
 
     it('should return empty array when querySelectorAll throws', () => {

@@ -133,7 +133,7 @@ export class SurfaceManager {
                 if (!title) return;
                 let container = surface.getContainer(titleEl);
                 if (!container) {
-                    this.#logger.warn('Surface container resolver failed, falling back to parentElement');
+                    this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
                     container = titleEl.parentElement;
                 }
                 if (!container || seen.has(container)) return;
