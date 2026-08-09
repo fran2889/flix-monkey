@@ -377,7 +377,7 @@ describe('App', () => {
 
         await vi.waitFor(
             () => {
-                expect(logSpy).toHaveBeenCalledWith('Failed to decorate container', expect.any(Error));
+                expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
             },
             { timeout: 2000 }
         );
@@ -400,7 +400,7 @@ describe('App', () => {
         // Advance past INFLIGHT_TIMEOUT_MS (30000ms)
         await vi.advanceTimersByTimeAsync(31_000);
 
-        expect(logSpy).toHaveBeenCalledWith('Failed to decorate container', expect.any(Error));
+        expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
         logSpy.mockRestore();
     });
 

@@ -98,12 +98,13 @@ describe('CacheManager', () => {
         expect(result.displayTitle).toBe('Indefinite Title');
     });
 
-    it('should return null and log a warning when JSON parsing fails in read', async () => {
+    it('should return null and log the display title when JSON parsing fails in read', async () => {
         adapter.storageGet.mockResolvedValue('invalid-json{');
         const result = await cacheManager.read('Some Title', 'agregarr');
         expect(result).toBeNull();
         expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
             key: 'fmc:some_title',
+            displayTitle: 'Some Title',
         });
     });
 

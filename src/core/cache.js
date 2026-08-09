@@ -66,7 +66,7 @@ export class CacheManager {
             if (!titleObj || (!titleObj.hasRating && titleObj.source !== activeSource)) return null;
             return titleObj;
         } catch {
-            this.#logger.warn('Cache entry corrupt, treating as miss', { key });
+            this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
             return null;
         }
     }
