@@ -232,6 +232,7 @@ describe('HBO Max surfaces', () => {
     it.each([
         ['\u2066\u2068Peacemaker\u2069\u2069. \u20682 of 20\u2069\u2069', 'Peacemaker'],
         ['Mr. & Mrs. Smith. 1 of 20.', 'Mr. & Mrs. Smith'],
+        ['Outcry. 8 of 20. Just Added', 'Outcry'],
         ['Rooster. Row 1 of 8, Column 1 of 4', 'Rooster'],
         ['Watch Peacemaker. Season 1, Episode 2: Best Friends for Never. 1 of 2.', 'Peacemaker'],
         ['Watch Mel Brooks: The 99 Year Old Man!, Episode 2. 2 of 2.', 'Mel Brooks: The 99 Year Old Man!'],
