@@ -38,12 +38,17 @@ export function runIdle(func, timeout = 2000) {
 }
 
 export function slugify(str) {
-    if (/^[^\u0080-\uFFFF]*$/.test(str)) {
-        return str
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/^_|_$/g, '');
+    let slug = '';
+
+    for (const char of str.normalize('NFKC').toLowerCase()) {
+        if (/^[a-z0-9]$/.test(char)) {
+            slug += char;
+        } else if (char.codePointAt(0) > 0x7f && /[\p{L}\p{N}]/u.test(char)) {
+            slug += encodeURIComponent(char);
+        } else if (slug && !slug.endsWith('_')) {
+            slug += '_';
+        }
     }
 
-    return `u:${encodeURIComponent(str.trim().normalize('NFKC').toLowerCase())}`;
+    return slug.replace(/_$/, '');
 }
