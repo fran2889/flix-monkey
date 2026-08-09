@@ -137,6 +137,15 @@ describe('core/utils', () => {
             expect(slugify('Caf\u00E9')).toBe(slugify('Cafe\u0301'));
         });
 
+        it('encodes mixed ASCII and Unicode title keys reversibly', () => {
+            const ascii = slugify('Amelie');
+            const unicode = slugify('Am\u00E9lie');
+
+            expect(ascii).not.toBe(unicode);
+            expect(unicode).toMatch(/^u:/);
+            expect(decodeURIComponent(unicode.slice(2))).toBe('am\u00E9lie');
+        });
+
         it('should lowercase and replace non-alphanumeric sequences with underscores', () => {
             expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
             expect(slugify('Test: Movie')).toBe('test_movie');
