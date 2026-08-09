@@ -160,7 +160,7 @@ export class FlixMonkeyApp {
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
             this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
-                this.#logger.error('Failed to decorate container', err)
+                this.#logger.error(`Failed to decorate "${title}"`, err)
             );
         });
     }
