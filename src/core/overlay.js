@@ -253,8 +253,7 @@ export class OverlayRenderer {
         imdbLink.addEventListener('click', e => e.stopPropagation());
 
         const titleParts = [];
-        // eslint-disable-next-line eqeqeq
-        if (rating != null) {
+        if (rating !== null && rating !== undefined) {
             const formatted = this.#formatImdbRating(rating);
             const votesStr = this.#formatVoteCount(imdbVotes);
             const voteText = votesStr ? ` (${votesStr} votes)` : '';
@@ -268,15 +267,13 @@ export class OverlayRenderer {
         container.appendChild(imdbLink);
 
         // RT
-        // eslint-disable-next-line eqeqeq
-        if (this.#config.getBool('showRtRating') && rtRating != null) {
+        if (this.#config.getBool('showRtRating') && rtRating !== null && rtRating !== undefined) {
             const formatted = this.#formatPercentRating(rtRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('RT', formatted, 'fm-rt')));
         }
 
         // MC
-        // eslint-disable-next-line eqeqeq
-        if (this.#config.getBool('showMcRating') && mcRating != null) {
+        if (this.#config.getBool('showMcRating') && mcRating !== null && mcRating !== undefined) {
             const formatted = this.#formatPercentRating(mcRating);
             container.appendChild(addStopPropagation(this.#createRatingElement('MC', formatted, 'fm-mc')));
         }
