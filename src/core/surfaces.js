@@ -203,7 +203,9 @@ export const HBO_MAX_SURFACES = Object.freeze({
 });
 
 export function extractDisneyPlusTitle(tile) {
-    const imageTitle = [...tile.querySelectorAll('img[alt]')].map(image => image.alt.trim()).find(Boolean);
+    const imageTitle = [...tile.querySelectorAll('img[alt]:not([data-testid="set-item-rating"] img)')]
+        .map(image => image.alt.trim())
+        .find(Boolean);
     if (imageTitle) return canonicalizeDisneyPlusTitle(imageTitle);
 
     const label = tile

@@ -279,6 +279,20 @@ describe('HBO Max surfaces', () => {
 });
 
 describe('Disney+ surfaces', () => {
+    it('ignores a maturity-rating image alt when extracting a Disney+ title', () => {
+        const tile = document.createElement('a');
+        tile.setAttribute(
+            'aria-label',
+            'Subtitles Available Badge The Artful Dodger Hulu Original Series Rated 16+ Released 2023. Drama, Action and Adventure genre. Select for details on this title.'
+        );
+        tile.innerHTML = `
+            <img alt="">
+            <div data-testid="set-item-rating"><img alt="16+"></div>
+        `;
+
+        expect(extractDisneyPlusTitle(tile)).toBe('The Artful Dodger');
+    });
+
     it.each([
         ['A Marvel Television Special Presentation \u2014 The Punisher: One Last Kill', 'The Punisher: One Last Kill'],
         ["Marvel Studios' The Avengers", 'The Avengers'],
