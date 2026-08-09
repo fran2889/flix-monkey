@@ -143,6 +143,7 @@ describe('core/utils', () => {
 
             expect(ascii).not.toBe(unicode);
             expect(unicode).toMatch(/^u:/);
+            expect(unicode).toBe('u:am%C3%A9lie');
             expect(decodeURIComponent(unicode.slice(2))).toBe('am\u00E9lie');
         });
 
