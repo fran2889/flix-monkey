@@ -381,7 +381,7 @@ describe('Disney+ surfaces', () => {
     it('discovers a Continue Watching title from its metadata', () => {
         document.body.innerHTML = `
             <section data-testid="set-section" data-set-style="continue_watching">
-                <div data-testid="set-shelf-item">
+                <div data-testid="set-shelf-item-shelf-pagination-spy">
                     <span data-testid="cw-set-item-wrapper">
                         <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
                         <a data-testid="cw-set-item-metadata" href="/browse/entity-title-id">
@@ -392,8 +392,10 @@ describe('Disney+ surfaces', () => {
             </section>
         `;
 
-        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        const logger = createMockLogger();
+        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
-        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 });
