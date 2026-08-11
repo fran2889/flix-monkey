@@ -1,6 +1,6 @@
 {
     "name": "FlixMonkey: IMDb Ratings for Netflix, Disney+ & HBO Max",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix, HBO Max, and Disney+.",
     "author": "fran",
     "license": "GPL-3.0-only",
