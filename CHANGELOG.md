@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/fran2889/flix-monkey/compare/v1.5.1...v1.5.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* add transparency to icon image ([#160](https://github.com/fran2889/flix-monkey/issues/160)) ([03ac536](https://github.com/fran2889/flix-monkey/commit/03ac53639ad44ccd5dc2fb3ad3766b89131a5d49))
+
 ## [1.5.1](https://github.com/fran2889/flix-monkey/compare/v1.5.0...v1.5.1) (2026-08-09)
 
 
