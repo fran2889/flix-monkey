@@ -4,19 +4,35 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const { executeMigrations } = vi.hoisted(() => ({
+    executeMigrations: vi.fn(),
+}));
+
+vi.mock('../../../../src/targets/extension/migrations.js', () => ({
+    createExtensionMigrationExecutor: () => executeMigrations,
+}));
+
 describe('Firefox Background Script', () => {
     let messageListener;
+    let installedListener;
     let actionListener;
 
     beforeEach(async () => {
         vi.resetModules();
         vi.useFakeTimers();
+        executeMigrations.mockReset();
+        executeMigrations.mockResolvedValue();
 
         global.browser = {
             runtime: {
                 onMessage: {
                     addListener: vi.fn(fn => {
                         messageListener = fn;
+                    }),
+                },
+                onInstalled: {
+                    addListener: vi.fn(fn => {
+                        installedListener = fn;
                     }),
                 },
                 openOptionsPage: vi.fn(),
@@ -41,6 +57,29 @@ describe('Firefox Background Script', () => {
         };
 
         await import('../../../../src/targets/firefox/background.js');
+    });
+
+    it.each([{ reason: 'install' }, { reason: 'update' }])(
+        'runs migrations when the extension is $reason',
+        async details => {
+            installedListener(details);
+            await Promise.resolve();
+            expect(executeMigrations).toHaveBeenCalledOnce();
+        }
+    );
+
+    it('runs migrations for authenticated migration messages', async () => {
+        const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: undefined });
+
+        expect(executeMigrations).toHaveBeenCalledOnce();
+        expect(result).toEqual({});
+    });
+
+    it('ignores migration messages from a foreign sender', async () => {
+        const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' });
+
+        expect(result).toBeUndefined();
+        expect(executeMigrations).not.toHaveBeenCalled();
     });
 
     it('should ignore non-FM_FETCH messages', async () => {
