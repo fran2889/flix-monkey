@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/fran2889/flix-monkey/compare/v1.5.2...v1.5.3) (2026-08-15)
+
+
+### Bug Fixes
+
+* separate npm and display name ([#162](https://github.com/fran2889/flix-monkey/issues/162)) ([fc3cd80](https://github.com/fran2889/flix-monkey/commit/fc3cd808afd32e24a97b975ae329475da77a42b4))
+
 ## [1.5.2](https://github.com/fran2889/flix-monkey/compare/v1.5.1...v1.5.2) (2026-08-13)
 
 
