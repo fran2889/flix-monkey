@@ -15,6 +15,7 @@
 - `fm_data_version` is the one global data version key. Absent, malformed, and negative values are version `0`.
 - Migrations have unique, strictly ascending positive integer versions and expose `upgrade(adapter)`, not `up(adapter)`.
 - A failed upgrade invokes optional `onFailure(adapter, error)`, records that version even if recovery fails, logs the outcome, and lets startup continue.
+- An unexpected runner failure, such as a storage API failure while reading or recording the version, is not recoverable: the extension background reports it and content or options abort bootstrap for that load.
 - Migrations may change cache, configuration, or any stored data. Do not add old-schema branches to cache or configuration consumers.
 - Use ASCII-only prose and the Oxford comma. Finish with `npm run lint && npm run format:check && npm test && npm run build`.
 
@@ -200,7 +201,7 @@ export function createExtensionMigrationExecutor() {
 }
 ```
 
-Each background entry creates one executor. Add `runtime.onInstalled` that calls it and logs unexpected rejection with `console.error`. In Chrome, handle the migration message after the same-extension sender check, call `executeMigrations().then(() => sendResponse({}), error => sendResponse({ error: error.message }))`, and return `true`. In Firefox's async listener, await execution and return `{}`. Preserve current `FM_FETCH` behavior and the sender check.
+Each background entry creates one executor. Add `runtime.onInstalled` that calls it and logs unexpected rejection with `console.error`. In Chrome, handle the migration message after the same-extension sender check, call `executeMigrations().then(() => sendResponse({}), error => sendResponse({ error: error.message }))`, and return `true`. In Firefox's async listener, await execution and return `{}`; let an unexpected rejection reject the message. Preserve current `FM_FETCH` behavior and the sender check.
 
 - [ ] **Step 4: Verify focused behavior**
 
@@ -253,16 +254,17 @@ Expected: FAIL because content reads first and options constructs immediately.
 
 - [ ] **Step 3: Add startup gates**
 
-At the start of the existing content async IIFE:
+At the start of the existing content async IIFE, reject an error response before any storage read:
 
 ```js
-await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
+const migrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
+if (migrationResponse?.error) throw new Error(migrationResponse.error);
 const stored = await browser.storage.local.get(null);
 ```
 
 Keep the remaining snapshot/listener/app sequence unchanged.
 
-Refactor options into an async IIFE. Construct the adapter, await the same message, then construct `Logger`, `ConfigManager`, `CacheManager`, `DisabledClientsManager`, and `SettingsUI`. Keep the exact save/reload URL patterns and call `ui.render(document.body)` last.
+Refactor options into an async IIFE. Construct the adapter, await the same message, and throw if the response contains `error`; then construct `Logger`, `ConfigManager`, `CacheManager`, `DisabledClientsManager`, and `SettingsUI`. Keep the exact save/reload URL patterns and call `ui.render(document.body)` last.
 
 - [ ] **Step 4: Verify focused behavior**
 
