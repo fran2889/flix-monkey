@@ -1,7 +1,7 @@
 {
     "name": "flix-monkey",
     "displayName": "FlixMonkey",
-    "version": "1.5.2",
+    "version": "1.5.3",
     "description": "See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix, HBO Max, and Disney+.",
     "author": "fran",
     "license": "GPL-3.0-only",
