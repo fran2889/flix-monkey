@@ -6,14 +6,14 @@ import resolve from '@rollup/plugin-node-resolve';
 import sharp from 'sharp';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
-const { name, homepage, version, description, author, license } = pkg;
+const { displayName, homepage, version, description, author, license } = pkg;
 
 async function userscriptBanner() {
     const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
     const iconBase64 = iconBuffer.toString('base64');
     const template = readFileSync('src/targets/userscript/metadata.js', 'utf8');
     return template
-        .replace('__NAME__', name)
+        .replace('__NAME__', displayName)
         .replaceAll('__HOMEPAGE__', homepage)
         .replace('__VERSION__', version)
         .replace('__DESCRIPTION__', description)
@@ -80,7 +80,7 @@ function injectManifestMetadata(srcPath, destPath) {
         generateBundle() {
             mkdirSync(path.dirname(destPath), { recursive: true });
             const manifest = JSON.parse(readFileSync(srcPath, 'utf8'));
-            manifest.name = name;
+            manifest.name = displayName;
             manifest.version = version;
             manifest.description = description;
             manifest.homepage_url = homepage;
