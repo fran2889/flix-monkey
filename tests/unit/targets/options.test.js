@@ -9,6 +9,8 @@ let renderSpy;
 let capturedInstance;
 let tabsQuerySpy;
 let tabsReloadSpy;
+let migrationPromise;
+let resolveMigrations;
 
 vi.mock('../../../src/core/ui/settings-ui.js', () => ({
     SettingsUI: class {
@@ -31,7 +33,7 @@ vi.mock('webextension-polyfill', () => ({
             },
         },
         runtime: {
-            sendMessage: vi.fn().mockResolvedValue({ data: {} }),
+            sendMessage: vi.fn(() => migrationPromise),
             id: 'test-extension-id',
         },
         tabs: {
@@ -60,22 +62,54 @@ vi.mock('../../../src/core/disabled-clients.js', () => ({
 }));
 
 describe('options.js entry point', () => {
+    let browser;
+
     beforeEach(async () => {
         vi.resetModules();
+        vi.clearAllMocks();
+
+        migrationPromise = new Promise(resolve => {
+            resolveMigrations = resolve;
+        });
 
         capturedInstance = null;
         renderSpy = vi.fn().mockResolvedValue(undefined);
         tabsQuerySpy = vi.fn().mockResolvedValue([{ id: 1 }, { id: 42 }]);
         tabsReloadSpy = vi.fn().mockResolvedValue(undefined);
 
-        await import('../../../src/targets/extension/options.js');
+        browser = (await import('webextension-polyfill')).default;
     });
 
-    it('should call SettingsUI.render with document.body', () => {
+    async function startAfterMigrations() {
+        const entryImport = import('../../../src/targets/extension/options.js');
+        await entryImport;
+        resolveMigrations({});
+        await Promise.resolve();
+        await Promise.resolve();
+    }
+
+    it('waits for migrations before rendering settings', async () => {
+        const entryImport = import('../../../src/targets/extension/options.js');
+        await entryImport;
+
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });
+        expect(renderSpy).not.toHaveBeenCalled();
+
+        resolveMigrations({});
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(renderSpy).toHaveBeenCalledWith(document.body);
+        expect(renderSpy).toHaveBeenCalledAfter(browser.runtime.sendMessage);
+    });
+
+    it('should call SettingsUI.render with document.body', async () => {
+        await startAfterMigrations();
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
     it('should wire onSave to reload Netflix, HBO Max, and Disney+ tabs', async () => {
+        await startAfterMigrations();
         expect(capturedInstance.onSave).toBeTypeOf('function');
         await capturedInstance.onSave();
 

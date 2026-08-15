@@ -8,6 +8,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // They are mutated in beforeEach so each test run gets a fresh state.
 let onChangedListener;
 let mockAppHandle;
+let migrationPromise;
+let resolveMigrations;
 
 vi.mock('webextension-polyfill', () => ({
     default: {
@@ -23,7 +25,7 @@ vi.mock('webextension-polyfill', () => ({
             },
         },
         runtime: {
-            sendMessage: vi.fn().mockResolvedValue({ data: {} }),
+            sendMessage: vi.fn(() => migrationPromise),
             id: 'test-extension-id',
         },
     },
@@ -35,9 +37,15 @@ vi.mock('../../../src/core/app.js', () => ({
 
 describe('content.js entry point', () => {
     let startAppSpy;
+    let browser;
 
     beforeEach(async () => {
         vi.resetModules();
+        vi.clearAllMocks();
+
+        migrationPromise = new Promise(resolve => {
+            resolveMigrations = resolve;
+        });
 
         // Reset the captured listener and app handle for each test run.
         onChangedListener = undefined;
@@ -52,47 +60,75 @@ describe('content.js entry point', () => {
         startAppSpy = appModule.startApp;
         vi.mocked(startAppSpy).mockReturnValue(mockAppHandle);
 
-        await import('../../../src/targets/extension/content.js');
-
-        // The content.js IIFE is async; wait one microtask tick so that the
-        // await browser.storage.local.get(null) resolves before assertions run.
-        await Promise.resolve();
+        browser = (await import('webextension-polyfill')).default;
     });
 
-    it('should call startApp once', () => {
+    async function startAfterMigrations() {
+        const entryImport = import('../../../src/targets/extension/content.js');
+        await entryImport;
+        resolveMigrations({});
+        await Promise.resolve();
+        await Promise.resolve();
+    }
+
+    it('waits for migrations before reading storage and starting the app', async () => {
+        const entryImport = import('../../../src/targets/extension/content.js');
+        await entryImport;
+
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });
+        expect(browser.storage.local.get).not.toHaveBeenCalled();
+        expect(startAppSpy).not.toHaveBeenCalled();
+
+        resolveMigrations({});
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(browser.storage.local.get).toHaveBeenCalledAfter(browser.runtime.sendMessage);
+        expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
+    });
+
+    it('should call startApp once', async () => {
+        await startAfterMigrations();
         expect(startAppSpy).toHaveBeenCalledOnce();
     });
 
-    it('should register a storage.onChanged listener', () => {
+    it('should register a storage.onChanged listener', async () => {
+        await startAfterMigrations();
         expect(onChangedListener).toBeDefined();
     });
 
-    it('should call redecorate when overlayCorner changes', () => {
+    it('should call redecorate when overlayCorner changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should call redecorate when showRtRating changes', () => {
+    it('should call redecorate when showRtRating changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ showRtRating: { newValue: true } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should call redecorate when showMcRating changes', () => {
+    it('should call redecorate when showMcRating changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ showMcRating: { newValue: false } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should call redecorate when enableFadeUnderRating changes', () => {
+    it('should call redecorate when enableFadeUnderRating changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ enableFadeUnderRating: { newValue: true } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should call redecorate when fadeRatingThreshold changes', () => {
+    it('should call redecorate when fadeRatingThreshold changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ fadeRatingThreshold: { newValue: 50 } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should not call redecorate when an unrelated key changes', () => {
+    it('should not call redecorate when an unrelated key changes', async () => {
+        await startAfterMigrations();
         onChangedListener({ someOtherKey: { newValue: 'value' } });
         expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
     });
