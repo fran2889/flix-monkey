@@ -21,6 +21,8 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         'bottom-right': 'bottom:6px;right:6px;',
     };
     const resolvedCorner = Object.hasOwn(cornerStyles, corner) ? corner : 'top-left';
+    const resolvedTop10Selectors = top10Selectors ?? [];
+    const resolvedTop10Offset = top10Offset ?? '50%';
     const positionCss = cornerStyles[resolvedCorner];
     const flexDirection = resolvedCorner.includes('bottom') ? 'column-reverse' : 'column';
     let cssText = `
@@ -62,9 +64,9 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
             .${overlayClass} .fm-na { color: #aaa; }
             .${overlayClass} .fm-search { font-size: 11px; color: #ccc; }
         `;
-    if (resolvedCorner.includes('left') && top10Selectors.length) {
-        const selectors = top10Selectors.map(selector => `${selector} .${overlayClass}`);
-        cssText += `\n            ${selectors.join(',\n            ')} { left: calc(${top10Offset} + 6px); }`;
+    if (resolvedCorner.includes('left') && resolvedTop10Selectors.length) {
+        const selectors = resolvedTop10Selectors.map(selector => `${selector} .${overlayClass}`);
+        cssText += `\n            ${selectors.join(',\n            ')} { left: calc(${resolvedTop10Offset} + 6px); }`;
     }
     cssText += `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }

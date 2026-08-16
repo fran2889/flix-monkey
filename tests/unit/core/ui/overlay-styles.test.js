@@ -31,6 +31,27 @@ describe('buildOverlayStyles', () => {
         expect(css).toContain('left: calc(30% + 6px)');
     });
 
+    it('treats null Top 10 selectors as an empty list', () => {
+        const css = buildOverlayStyles({
+            overlayClass: 'fm-rating-overlay',
+            corner: 'top-left',
+            top10Selectors: null,
+        });
+
+        expect(css).not.toContain('left: calc(');
+    });
+
+    it('uses the default Top 10 offset when the configured offset is null', () => {
+        const css = buildOverlayStyles({
+            overlayClass: 'fm-rating-overlay',
+            corner: 'top-left',
+            top10Selectors: ['.ranked'],
+            top10Offset: null,
+        });
+
+        expect(css).toContain('left: calc(50% + 6px)');
+    });
+
     it.each([
         ['top-left', '50%'],
         ['bottom-left', '50%'],

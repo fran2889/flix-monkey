@@ -40,11 +40,13 @@ describe('OverlayRenderer', () => {
 
             rendererA.injectStyles();
             const existingStyle = document.head.querySelector('#fm-overlay-styles');
+            const originalCssText = existingStyle.textContent;
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
 
             rendererB.injectStyles();
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
             expect(document.head.querySelector('#fm-overlay-styles')).toBe(existingStyle);
+            expect(existingStyle.textContent).not.toBe(originalCssText);
         });
     });
 
