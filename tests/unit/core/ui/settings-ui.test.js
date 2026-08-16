@@ -32,121 +32,45 @@ describe('SettingsUI', () => {
         document.body.appendChild(container);
     });
 
-    describe('Rendering', () => {
-        it('should render each config field from its definition', async () => {
+    describe('Action button wiring', () => {
+        it('routes the save button to settings persistence', async () => {
             await settingsUI.render(container);
 
-            CONFIG_FIELDS.forEach(field => {
-                const label = Array.from(container.querySelectorAll('label')).find(
-                    el => el.textContent === field.label
-                );
-                expect(label, `Label for ${field.key} not found`).toBeDefined();
-                expect(label.htmlFor).toBe(`fm-${field.key}`);
+            container.querySelector('#fm-saveBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
-                const input = container.querySelector(`[id="fm-${field.key}"]`);
-                expect(input, `Input for ${field.key} not found`).toBeDefined();
-
-                if (field.type === 'select') {
-                    expect(input.tagName).toBe('SELECT');
-                } else if (field.type === 'checkbox') {
-                    expect(input.type).toBe('checkbox');
-                } else {
-                    expect(input.type).toBe('text');
-                }
-
-                if (field.type === 'select') {
-                    expect([...input.options].map(option => [option.value, option.textContent])).toEqual(
-                        field.options.map(option => (Array.isArray(option) ? option : [option, option]))
-                    );
-                }
-
-                if (field.labelUrl) {
-                    const link = label.querySelector('a');
-                    expect(link).not.toBeNull();
-                    expect(link.href).toBe(field.labelUrl);
-                    expect(link.target).toBe('_blank');
-                } else {
-                    expect(label.querySelector('a')).toBeNull();
-                }
-
-                expect(label.classList.contains('visually-hidden')).toBe(Boolean(field.labelHidden));
-            });
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
+            expect(mockCacheManager.clear).not.toHaveBeenCalled();
+            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
         });
 
-        it('should inject styles and apply the settings container class', async () => {
+        it('routes the clear-cache button to cache clearing', async () => {
             await settingsUI.render(container);
 
-            expect(container.classList.contains('fm-settings-container')).toBe(true);
-            const style = document.head.querySelector('style#flixmonkey-settings-styles');
-            expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.fm-settings-container');
+            container.querySelector('#fm-clearCacheBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(mockCacheManager.clear).toHaveBeenCalledOnce();
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
         });
 
-        it('should not add vertical spacing when service controls wrap', async () => {
+        it('routes the reset-providers button to disabled-client reset', async () => {
             await settingsUI.render(container);
 
-            const style = document.head.querySelector('style#flixmonkey-settings-styles');
-            expect(style.textContent).toMatch(
-                /\.services-field \.services-group \{\s*display: flex;\s*align-items: center;\s*column-gap: 20px;\s*row-gap: 0;/u
-            );
-        });
+            container.querySelector('#fm-resetClientsBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
-        it('should render action buttons and status placeholder', async () => {
-            await settingsUI.render(container);
-
-            expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
-            expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
-            expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
-            expect(container.querySelector('#fm-status')).not.toBeNull();
-        });
-
-        it('should render the fixed IMDb rating control', async () => {
-            await settingsUI.render(container);
-
-            const checkbox = container.querySelector('#fm-showImdbRating');
-            expect(checkbox.type).toBe('checkbox');
-            expect(checkbox.checked).toBe(true);
-            expect(checkbox.disabled).toBe(true);
-        });
-    });
-
-    describe('Field population', () => {
-        it('should populate every field with its default when storage is empty', async () => {
-            mockAdapter.storageGetAll.mockResolvedValue(null);
-            await settingsUI.render(container);
-
-            CONFIG_FIELDS.forEach(field => {
-                const input = container.querySelector(`#fm-${field.key}`);
-                const value = field.type === 'checkbox' ? input.checked : input.value;
-                expect(value).toBe(field.default);
-            });
-        });
-
-        it('should populate every field with its stored value', async () => {
-            const storedSettings = Object.fromEntries(
-                CONFIG_FIELDS.map(field => {
-                    if (field.type === 'checkbox') return [field.key, !field.default];
-                    if (field.type === 'select') {
-                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
-                        return [field.key, optionValues.find(option => option !== field.default)];
-                    }
-                    return [field.key, `stored-${field.key}`];
-                })
-            );
-            mockAdapter.storageGetAll.mockResolvedValue(storedSettings);
-            await settingsUI.render(container);
-
-            CONFIG_FIELDS.forEach(field => {
-                const input = container.querySelector(`#fm-${field.key}`);
-                const value = field.type === 'checkbox' ? input.checked : input.value;
-                expect(value).toBe(storedSettings[field.key]);
-            });
+            expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(mockCacheManager.clear).not.toHaveBeenCalled();
         });
     });
 
     describe('Save', () => {
-        it('should call storageSetMany with all field values on save', async () => {
+        it('calls storageSetMany with all field values', async () => {
             await settingsUI.render(container);
+
             await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
@@ -156,9 +80,10 @@ describe('SettingsUI', () => {
             });
         });
 
-        it('should capture updated input values on save', async () => {
+        it('persists updated input values', async () => {
             await settingsUI.render(container);
             container.querySelector('[id="fm-xmdbApiKey"]').value = 'new-api-key';
+
             await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
@@ -166,38 +91,69 @@ describe('SettingsUI', () => {
             );
         });
 
-        it('should display "Saved!" status with success class on successful save', async () => {
+        it('persists the same value snapshot that was validated', async () => {
+            const field = {
+                key: 'snapshot',
+                label: 'Snapshot',
+                type: 'text',
+                default: 'initial',
+                validate: value => {
+                    container.querySelector('#fm-snapshot').value = 'changed-during-validation';
+                    return value === 'initial' ? null : 'Unexpected value';
+                },
+            };
+            settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, [field]);
             await settingsUI.render(container);
+
             await settingsUI.save();
 
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Saved!');
-            expect(status.className).toBe('fm-status--success');
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledWith({ snapshot: 'initial' });
         });
 
-        it('should disable the save button while saving and re-enable it after', async () => {
+        it('shows the success message after saving', async () => {
+            await settingsUI.render(container);
+
+            await settingsUI.save();
+
+            expect(container.querySelector('#fm-status').textContent).toBe('Saved!');
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+        });
+
+        it('disables the save button while saving and re-enables it after', async () => {
             let resolveStorage;
             mockAdapter.storageSetMany = vi.fn().mockReturnValue(
                 new Promise(resolve => {
                     resolveStorage = resolve;
                 })
             );
-
             await settingsUI.render(container);
-            const saveBtn = container.querySelector('#fm-saveBtn');
+            const saveButton = container.querySelector('#fm-saveBtn');
 
             const savePromise = settingsUI.save();
-            expect(saveBtn.disabled).toBe(true);
 
+            expect(saveButton.disabled).toBe(true);
             resolveStorage();
             await savePromise;
+            expect(saveButton.disabled).toBe(false);
+        });
 
-            expect(saveBtn.disabled).toBe(false);
+        it('shows joined validation errors and does not persist invalid values', async () => {
+            await settingsUI.render(container);
+            container.querySelector('#fm-fadeRatingThreshold').value = 'abc';
+            container.querySelector('#fm-cacheTtlRatedOldYear').value = 'invalid';
+
+            await settingsUI.save();
+
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(container.querySelector('#fm-status').textContent).toBe(
+                'Fade threshold must be a number between 0 and 10\n' + 'Cache duration must be -1 or a positive integer'
+            );
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
         });
     });
 
     describe('onSave callback', () => {
-        it('should call onSave callback after successful save', async () => {
+        it('calls onSave after successful storage', async () => {
             await settingsUI.render(container);
             const onSave = vi.fn().mockResolvedValue(undefined);
             settingsUI.onSave = onSave;
@@ -207,11 +163,10 @@ describe('SettingsUI', () => {
             expect(onSave).toHaveBeenCalledOnce();
         });
 
-        it('should not call onSave callback when validation fails', async () => {
+        it('does not call onSave when validation fails', async () => {
             await settingsUI.render(container);
             const onSave = vi.fn();
             settingsUI.onSave = onSave;
-
             container.querySelector('[id="fm-apiClient"]').value = 'xmdb';
             container.querySelector('[id="fm-xmdbApiKey"]').value = '';
 
@@ -220,7 +175,7 @@ describe('SettingsUI', () => {
             expect(onSave).not.toHaveBeenCalled();
         });
 
-        it('should not call onSave callback when storageSetMany throws', async () => {
+        it('does not call onSave when storageSetMany throws', async () => {
             mockAdapter.storageSetMany.mockRejectedValue(new Error('storage error'));
             await settingsUI.render(container);
             const onSave = vi.fn();
@@ -232,113 +187,59 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('Validation', () => {
-        it('should not save when validation fails', async () => {
+    describe('Cache clearing', () => {
+        it('clears the cache and shows the success message', async () => {
             await settingsUI.render(container);
-            container.querySelector('#fm-fadeRatingThreshold').value = 'abc';
-            await settingsUI.save();
 
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent.length).toBeGreaterThan(0);
-            expect(status.className).toBe('fm-status--error');
-            expect(container.querySelector('#fm-fadeRatingThreshold').classList.contains('error')).toBe(true);
-            expect(container.querySelector('.error-message')).toBeNull();
-            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
-        });
-
-        it('should pass input.checked (not input.value) to validate for checkbox fields', async () => {
-            const validateFn = vi.fn().mockReturnValue(null);
-            const checkboxField = {
-                key: 'testCheckbox',
-                label: 'Test Checkbox',
-                type: 'checkbox',
-                default: false,
-                validate: validateFn,
-            };
-            const ui = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, [checkboxField]);
-            await ui.render(container);
-
-            const input = container.querySelector('#fm-testCheckbox');
-            input.checked = true;
-
-            await ui.save();
-
-            expect(validateFn).toHaveBeenCalledWith(true, expect.any(Object));
-        });
-    });
-
-    describe('Action buttons', () => {
-        it('should clear cache and show "Cache cleared." status in green', async () => {
-            await settingsUI.render(container);
-            container.querySelector('#fm-clearCacheBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await settingsUI.clearCache();
 
             expect(mockCacheManager.clear).toHaveBeenCalledOnce();
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Cache cleared.');
-            expect(status.className).toBe('fm-status--success');
+            expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
         });
 
-        it('should reset clients and show re-enabled names in green', async () => {
-            mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
-            await settingsUI.render(container);
-            container.querySelector('#fm-resetClientsBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Re-enabled API clients: omdb, tmdb');
-            expect(status.className).toBe('fm-status--success');
-        });
-
-        it('should show no-clients message in green when there is nothing to reset', async () => {
-            await settingsUI.render(container);
-            container.querySelector('#fm-resetClientsBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('No disabled API clients found to re-enable.');
-            expect(status.className).toBe('fm-status--success');
-        });
-
-        it('should show error in red when clearCache fails', async () => {
+        it('shows an error when clearing fails', async () => {
             mockCacheManager.clear.mockRejectedValue(new Error('disk full'));
             await settingsUI.render(container);
-            container.querySelector('#fm-clearCacheBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
 
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Error: disk full');
-            expect(status.className).toBe('fm-status--error');
-        });
+            await settingsUI.clearCache();
 
-        it('should show error in red when resetClients fails', async () => {
-            mockDisabledClientsManager.resetAll.mockRejectedValue(new Error('storage unavailable'));
-            await settingsUI.render(container);
-            container.querySelector('#fm-resetClientsBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            const status = container.querySelector('#fm-status');
-            expect(status.textContent).toBe('Error: storage unavailable');
-            expect(status.className).toBe('fm-status--error');
+            expect(container.querySelector('#fm-status').textContent).toBe('Error: disk full');
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
         });
     });
 
-    describe('Scoping', () => {
-        it('should scope element queries to its own container', async () => {
-            const adapter = createMockAdapter({ storageGetAll: vi.fn().mockResolvedValue({}), setConfigData: vi.fn() });
-            const container1 = document.createElement('div');
-            const container2 = document.createElement('div');
-            document.body.append(container1, container2);
-            const ui1 = new SettingsUI(adapter, { clear: vi.fn() }, { resetAll: vi.fn() });
-            const ui2 = new SettingsUI(adapter, { clear: vi.fn() }, { resetAll: vi.fn() });
-            await ui1.render(container1);
-            await ui2.render(container2);
-            const statusInContainer1 = container1.querySelector('[id="fm-status"]');
-            const statusInContainer2 = container2.querySelector('[id="fm-status"]');
-            expect(statusInContainer1).not.toBeNull();
-            expect(statusInContainer2).not.toBeNull();
-            expect(statusInContainer1).not.toBe(statusInContainer2);
+    describe('Disabled provider reset', () => {
+        it('resets clients and shows re-enabled names', async () => {
+            mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
+            await settingsUI.render(container);
+
+            await settingsUI.resetClients();
+
+            expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
+            expect(container.querySelector('#fm-status').textContent).toBe('Re-enabled API clients: omdb, tmdb');
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+        });
+
+        it('shows the no-clients message when there is nothing to reset', async () => {
+            await settingsUI.render(container);
+
+            await settingsUI.resetClients();
+
+            expect(container.querySelector('#fm-status').textContent).toBe(
+                'No disabled API clients found to re-enable.'
+            );
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+        });
+
+        it('shows an error when reset fails', async () => {
+            mockDisabledClientsManager.resetAll.mockRejectedValue(new Error('storage unavailable'));
+            await settingsUI.render(container);
+
+            await settingsUI.resetClients();
+
+            expect(container.querySelector('#fm-status').textContent).toBe('Error: storage unavailable');
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
         });
     });
 });

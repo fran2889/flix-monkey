@@ -29,22 +29,6 @@ export class CacheManager {
         this.#logger = logger;
     }
 
-    #getCacheKey(displayTitle) {
-        return `${this.#prefix}${slugify(displayTitle)}`;
-    }
-
-    #calculateTtl(titleObj) {
-        const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
-        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
-        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
-        const currentYear = new Date().getFullYear();
-        const isOldRelease = currentYear - titleObj.year > 1;
-        const ttlDays = isOldRelease
-            ? this.#config.getInt('cacheTtlRatedOldYear')
-            : this.#config.getInt('cacheTtlRatedNewYear');
-        return getTtlMs(ttlDays);
-    }
-
     /**
      * Reads a non-expired cached title. Cached lookup misses are valid only when
      * they were produced by the currently active API source.
@@ -71,6 +55,10 @@ export class CacheManager {
         }
     }
 
+    #getCacheKey(displayTitle) {
+        return `${this.#prefix}${slugify(displayTitle)}`;
+    }
+
     /**
      * Persists a Title as a JSON CacheEntry using the TTL selected from its
      * rating and release year.
@@ -88,6 +76,18 @@ export class CacheManager {
             expires: ttl === Infinity ? null : now + ttl,
         };
         await this.#adapter.storageSet(key, JSON.stringify(entry));
+    }
+
+    #calculateTtl(titleObj) {
+        const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
+        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
+        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
+        const currentYear = new Date().getFullYear();
+        const isOldRelease = currentYear - titleObj.year > 1;
+        const ttlDays = isOldRelease
+            ? this.#config.getInt('cacheTtlRatedOldYear')
+            : this.#config.getInt('cacheTtlRatedNewYear');
+        return getTtlMs(ttlDays);
     }
 
     async clear() {
