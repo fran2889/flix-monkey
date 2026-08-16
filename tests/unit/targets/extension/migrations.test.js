@@ -10,9 +10,9 @@ const { Logger, runMigrations, WebExtensionAdapter } = vi.hoisted(() => ({
     WebExtensionAdapter: vi.fn(),
 }));
 
-vi.mock('../../../src/core/logger.js', () => ({ Logger }));
-vi.mock('../../../src/core/migrations.js', () => ({ runMigrations }));
-vi.mock('../../../src/platform/webextension.js', () => ({ WebExtensionAdapter }));
+vi.mock('../../../../src/core/logger.js', () => ({ Logger }));
+vi.mock('../../../../src/core/migrations.js', () => ({ runMigrations }));
+vi.mock('../../../../src/platform/webextension.js', () => ({ WebExtensionAdapter }));
 
 describe('createExtensionMigrationExecutor', () => {
     it('shares one in-flight migration run with concurrent callers', async () => {
@@ -22,7 +22,7 @@ describe('createExtensionMigrationExecutor', () => {
         });
         runMigrations.mockReturnValueOnce(migrationsComplete);
 
-        const { createExtensionMigrationExecutor } = await import('../../../src/targets/extension/migrations.js');
+        const { createExtensionMigrationExecutor } = await import('../../../../src/targets/extension/migrations.js');
         const executeMigrations = createExtensionMigrationExecutor();
 
         const first = executeMigrations();
