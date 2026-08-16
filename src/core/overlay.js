@@ -47,11 +47,12 @@ export class OverlayRenderer {
         }
     }
 
-    clearAllOverlays() {
-        document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {
-            el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);
-            el.remove();
-        });
+    hasOverlay(container) {
+        return container.hasAttribute(this.#OVERLAY_ATTR);
+    }
+
+    isLoading(container) {
+        return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
     ensureRelative(container) {
@@ -61,14 +62,6 @@ export class OverlayRenderer {
     injectLoadingOverlay(container) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS));
-    }
-
-    removeLoadingOverlay(container) {
-        container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
-    }
-
-    isLoading(container) {
-        return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
     injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
@@ -85,11 +78,18 @@ export class OverlayRenderer {
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
-    hasOverlay(container) {
-        return container.hasAttribute(this.#OVERLAY_ATTR);
+    removeLoadingOverlay(container) {
+        container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
     }
 
     applyFade(container, shouldFade) {
         container.classList.toggle('fm-faded', shouldFade);
+    }
+
+    clearAllOverlays() {
+        document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {
+            el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);
+            el.remove();
+        });
     }
 }

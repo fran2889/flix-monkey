@@ -85,10 +85,15 @@ describe('buildOverlayStyles', () => {
         const css = buildOverlayStyles({ overlayClass: 'fm-rating-overlay', corner: 'top-left' });
 
         expect(css).toContain('.fm-rating-overlay > *');
-        expect(css).toContain('pointer-events: none;');
-        expect(css).toContain('pointer-events: auto;');
         expect(css).toContain('.fm-faded { opacity: 0.30; transition: opacity 0.2s; }');
         expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
         expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
+    });
+
+    it('keeps the overlay noninteractive while direct badges and links remain interactive', () => {
+        const css = buildOverlayStyles({ overlayClass: 'fm-rating-overlay', corner: 'top-left' });
+
+        expect(css).toMatch(/\.fm-rating-overlay\s*\{[\s\S]*?pointer-events: none;/);
+        expect(css).toMatch(/\.fm-rating-overlay > \*\s*\{[\s\S]*?cursor: default;[\s\S]*?pointer-events: auto;/);
     });
 });
