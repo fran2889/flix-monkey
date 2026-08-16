@@ -24,78 +24,6 @@
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
 const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
-const HBO_MAX_TITLE_PATTERNS = Object.freeze([
-    /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
-    /^(.+)\. Row \d+ of \d+, Column \d+ of \d+\.?/u,
-    /^(.+)\. \d+ of \d+(?:\. (?:Just Added|New|New Episode|Leaving Soon))?\.?$/u,
-]);
-const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
-    /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
-    /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
-]);
-const DISNEY_PLUS_PREFIX_BLOCK =
-    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series) Badge|New (?:Episode|Season)(?: Badge)?|New Badge) )+/u;
-const DISNEY_PLUS_TITLE_END =
-    /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
-
-function canonicalizeDisneyPlusTitle(title) {
-    const canonicalTitle = title
-        .replace(/^A Marvel Television Special Presentation [\u2014-] /u, '')
-        .replace(/^Marvel Studios' /u, '');
-    const starWarsEpisode = /^Star Wars: (.+) \(Episode ([IVXLCDM]+)\)$/u.exec(canonicalTitle);
-    return starWarsEpisode ? `Star Wars: Episode ${starWarsEpisode[2]} - ${starWarsEpisode[1]}` : canonicalTitle;
-}
-
-export const NETFLIX_SURFACES = Object.freeze({
-    // Browse and genre page row cards: the <a> element carries the full title via aria-label.
-    TITLE_CARD: Object.freeze({
-        titleSelector: '.title-card a[aria-label]',
-        getTitle: titleFromAttribute('aria-label'),
-        getContainer: containerFromClosest('.title-card'),
-        fadeable: true,
-        showFadeToggle: false,
-    }),
-    // Search result grid cards: the card element itself carries the full title via aria-label.
-    SEARCH_CARD: Object.freeze({
-        titleSelector: '[data-uia="standard-card"]',
-        getTitle: titleFromAttribute('aria-label'),
-        getContainer: containerFromClosest('[data-uia="standard-card"]'),
-        fadeable: true,
-        showFadeToggle: false,
-    }),
-    // Browse-page Continue Watching cards.
-    PROGRESS_CARD: Object.freeze({
-        titleSelector: '[data-uia="progress-card"][aria-label]',
-        getTitle: titleFromAttribute('aria-label'),
-        getContainer: containerFromClosest('[data-uia="progress-card"]'),
-        fadeable: true,
-        showFadeToggle: false,
-    }),
-    // Browse-page Top 10 cards.
-    RANKED_CARD: Object.freeze({
-        titleSelector: '[data-uia="ranked-card"][aria-label]',
-        getTitle: titleFromAttribute('aria-label'),
-        getContainer: containerFromClosest('[data-uia="ranked-card"]'),
-        fadeable: true,
-        showFadeToggle: false,
-    }),
-    // Hover mini-modal: scope to .mini-modal so the detail modal can target the player container independently.
-    PREVIEW_MINI: Object.freeze({
-        titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
-        getTitle: titleFromAttribute('alt'),
-        getContainer: containerFromClosest('.previewModal--player_container'),
-        fadeable: false,
-        showFadeToggle: true,
-    }),
-    // Full "More Info" modal: the boxart img[alt] is the only selector shared by mini and detail contexts.
-    PREVIEW_DETAIL: Object.freeze({
-        titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
-        getTitle: titleFromAttribute('alt'),
-        getContainer: containerFromClosest('.previewModal--player_container'),
-        fadeable: false,
-        showFadeToggle: false,
-    }),
-});
 
 export class SurfaceManager {
     #SURFACES;
@@ -151,11 +79,72 @@ export class SurfaceManager {
     }
 }
 
+export const NETFLIX_SURFACES = Object.freeze({
+    // Browse and genre page row cards: the <a> element carries the full title via aria-label.
+    TITLE_CARD: Object.freeze({
+        titleSelector: '.title-card a[aria-label]',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('.title-card'),
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    // Search result grid cards: the card element itself carries the full title via aria-label.
+    SEARCH_CARD: Object.freeze({
+        titleSelector: '[data-uia="standard-card"]',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="standard-card"]'),
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    // Browse-page Continue Watching cards.
+    PROGRESS_CARD: Object.freeze({
+        titleSelector: '[data-uia="progress-card"][aria-label]',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="progress-card"]'),
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    // Browse-page Top 10 cards.
+    RANKED_CARD: Object.freeze({
+        titleSelector: '[data-uia="ranked-card"][aria-label]',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('[data-uia="ranked-card"]'),
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    // Hover mini-modal: scope to .mini-modal so the detail modal can target the player container independently.
+    PREVIEW_MINI: Object.freeze({
+        titleSelector: '.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]',
+        getTitle: titleFromAttribute('alt'),
+        getContainer: containerFromClosest('.previewModal--player_container'),
+        fadeable: false,
+        showFadeToggle: true,
+    }),
+    // Full "More Info" modal: the boxart img[alt] is the only selector shared by mini and detail contexts.
+    PREVIEW_DETAIL: Object.freeze({
+        titleSelector: '.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]',
+        getTitle: titleFromAttribute('alt'),
+        getContainer: containerFromClosest('.previewModal--player_container'),
+        fadeable: false,
+        showFadeToggle: false,
+    }),
+});
+
 export class NetflixSurfaceManager extends SurfaceManager {
     constructor(logger) {
         super(NETFLIX_SURFACES, logger);
     }
 }
+
+const HBO_MAX_TITLE_PATTERNS = Object.freeze([
+    /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
+    /^(.+)\. Row \d+ of \d+, Column \d+ of \d+\.?/u,
+    /^(.+)\. \d+ of \d+(?:\. (?:Just Added|New|New Episode|Leaving Soon))?\.?$/u,
+]);
+const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
+    /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
+    /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
+]);
 
 export function extractHboMaxTitle(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
@@ -202,6 +191,25 @@ export const HBO_MAX_SURFACES = Object.freeze({
     }),
 });
 
+export class HboMaxSurfaceManager extends SurfaceManager {
+    constructor(logger) {
+        super(HBO_MAX_SURFACES, logger);
+    }
+}
+
+const DISNEY_PLUS_PREFIX_BLOCK =
+    /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series) Badge|New (?:Episode|Season)(?: Badge)?|New Badge) )+/u;
+const DISNEY_PLUS_TITLE_END =
+    /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
+
+function canonicalizeDisneyPlusTitle(title) {
+    const canonicalTitle = title
+        .replace(/^A Marvel Television Special Presentation [\u2014-] /u, '')
+        .replace(/^Marvel Studios' /u, '');
+    const starWarsEpisode = /^Star Wars: (.+) \(Episode ([IVXLCDM]+)\)$/u.exec(canonicalTitle);
+    return starWarsEpisode ? `Star Wars: Episode ${starWarsEpisode[2]} - ${starWarsEpisode[1]}` : canonicalTitle;
+}
+
 export function extractDisneyPlusTitle(tile) {
     const imageTitle = [...tile.querySelectorAll('img[alt]:not([data-testid="set-item-rating"] img)')]
         .map(image => image.alt.trim())
@@ -243,12 +251,6 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
         showFadeToggle: true,
     }),
 });
-
-export class HboMaxSurfaceManager extends SurfaceManager {
-    constructor(logger) {
-        super(HBO_MAX_SURFACES, logger);
-    }
-}
 
 export class DisneyPlusSurfaceManager extends SurfaceManager {
     constructor(logger) {

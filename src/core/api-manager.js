@@ -23,20 +23,6 @@ export class ApiClientManager {
         this.#logger = logger;
     }
 
-    get disabledManager() {
-        return this.#disabledManager;
-    }
-
-    async resetDisabledClients() {
-        const reenabled = await this.#disabledManager.resetAll();
-        if (reenabled.length > 0) {
-            this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
-        } else {
-            this.#logger.info('No disabled API clients found to re-enable');
-        }
-        return reenabled;
-    }
-
     /**
      * Resolves rating data from cache or the configured client. Failed lookups return a
      * not-found Title; client errors with a 4xx status disable that client.
@@ -75,5 +61,19 @@ export class ApiClientManager {
             );
             return Title.notFound(displayTitle, source);
         }
+    }
+
+    async resetDisabledClients() {
+        const reenabled = await this.#disabledManager.resetAll();
+        if (reenabled.length > 0) {
+            this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
+        } else {
+            this.#logger.info('No disabled API clients found to re-enable');
+        }
+        return reenabled;
+    }
+
+    get disabledManager() {
+        return this.#disabledManager;
     }
 }

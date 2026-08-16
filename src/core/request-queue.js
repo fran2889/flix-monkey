@@ -41,16 +41,6 @@ export class RequestQueue {
         });
     }
 
-    /** Rejects pending requests without interrupting an active request. @returns {number} Rejected count. */
-    clear() {
-        const count = this.#queue.length;
-        while (this.#queue.length > 0) {
-            const item = this.#queue.shift();
-            item.reject(new Error('Client Disabled'));
-        }
-        return count;
-    }
-
     async #process() {
         if (this.#isProcessing) return;
         this.#isProcessing = true;
@@ -102,5 +92,15 @@ export class RequestQueue {
         } catch (error) {
             reject(error);
         }
+    }
+
+    /** Rejects pending requests without interrupting an active request. @returns {number} Rejected count. */
+    clear() {
+        const count = this.#queue.length;
+        while (this.#queue.length > 0) {
+            const item = this.#queue.shift();
+            item.reject(new Error('Client Disabled'));
+        }
+        return count;
     }
 }

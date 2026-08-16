@@ -57,112 +57,15 @@ export class FlixMonkeyApp {
         }, DECORATION_DEBOUNCE_MS);
     }
 
-    /** @returns {CacheManager} */
-    get cacheManager() {
-        return this.#cache;
-    }
-
-    /** @returns {DisabledClientsManager} */
-    get disabledManager() {
-        return this.#api.disabledManager;
-    }
-
-    disconnect() {
-        this.#observer?.disconnect();
-        this.#observer = null;
-        if (this.#boundDisconnect) {
-            window.removeEventListener('beforeunload', this.#boundDisconnect);
-            this.#boundDisconnect = null;
-        }
-        if (this.#navigationPatched) {
-            history.pushState = this.#originalPushState;
-            history.replaceState = this.#originalReplaceState;
-            window.removeEventListener('popstate', this.#popstateHandler);
-            this.#navigationPatched = false;
-        }
-    }
-
-    async clearCache() {
-        await this.#cache.clear();
-    }
-
-    async resetDisabledClients() {
-        return await this.#api.resetDisabledClients();
-    }
-
-    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
-        if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
-
-        const dedupKey = slugify(displayTitle);
-
-        this.#renderer.ensureRelative(container);
-        this.#renderer.injectLoadingOverlay(container);
-
-        /*
-         * Yield to the event loop so the browser can paint the loading overlay
-         * before executing potentially synchronous microtasks. GM storage APIs
-         * (like GM_getValue) can be synchronously blocking in some userscript managers,
-         * which is the reason for the explicit yield before cache reads.
-         */
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
-
-        let promise = this.#inFlight.get(dedupKey);
-        if (!promise) {
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS)
-            );
-            promise = Promise.race([this.#api.getData(displayTitle), timeoutPromise]).finally(() =>
-                this.#inFlight.delete(dedupKey)
-            );
-            this.#inFlight.set(dedupKey, promise);
-        }
-
-        try {
-            const data = await promise;
-            if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
-                const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
-                this.#renderer.applyFade(container, shouldFade);
-                if (fadeable) container.dataset.fmKey = dedupKey;
-                const onFadeToggleClick = showFadeToggle
-                    ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el)
-                    : null;
-                this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
-            }
-        } finally {
-            this.#renderer.removeLoadingOverlay(container);
-        }
-    }
-
-    async #handleFadeToggleClick(dedupKey, rating, toggleBadgeEl) {
-        const domState = toggleBadgeEl.dataset.state;
-        const currentState = domState === 'auto' ? null : domState;
-        const nextState = this.#fadeManager.nextState(currentState);
-        await this.#fadeManager.setOverride(dedupKey, nextState);
-        toggleBadgeEl.dataset.state = nextState ?? 'auto';
-        toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
-        const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
-        icon.textContent = nextState === null ? '⭐' : '👁️';
-        icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
-        const shouldFade = this.#fadeManager.shouldFade(nextState, rating, this.#config);
-        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
-            this.#renderer.applyFade(c, shouldFade);
-        });
-    }
-
-    redecorate() {
+    init() {
+        // #initialised is never reset: one app instance, one lifetime.
+        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
+        this.#initialised = true;
         this.#renderer.injectStyles();
-        this.#renderer.clearAllOverlays();
+        this.#initNavigationObservers();
         this.decorateRoot(document);
-    }
-
-    decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
-            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
-                this.#logger.error(`Failed to decorate "${title}"`, err)
-            );
-        });
+        this.#boundDisconnect = () => this.disconnect();
+        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
     #initNavigationObservers() {
@@ -203,15 +106,122 @@ export class FlixMonkeyApp {
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    init() {
-        // #initialised is never reset: one app instance, one lifetime.
-        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
-        this.#initialised = true;
+    decorateRoot(root) {
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
+            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
+                this.#logger.error(`Failed to decorate "${title}"`, err)
+            );
+        });
+    }
+
+    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
+        if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
+
+        const dedupKey = slugify(displayTitle);
+
+        this.#renderer.ensureRelative(container);
+        this.#renderer.injectLoadingOverlay(container);
+
+        /*
+         * Yield to the event loop so the browser can paint the loading overlay
+         * before executing potentially synchronous microtasks. GM storage APIs
+         * (like GM_getValue) can be synchronously blocking in some userscript managers,
+         * which is the reason for the explicit yield before cache reads.
+         */
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const fadeOverride = fadeable || showFadeToggle ? await this.#getFadeOverride(dedupKey) : null;
+        const request = this.#getTitleRequest(dedupKey, displayTitle);
+
+        try {
+            const data = await request;
+            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
+        } finally {
+            this.#renderer.removeLoadingOverlay(container);
+        }
+    }
+
+    #getFadeOverride(dedupKey) {
+        return this.#fadeManager.getOverride(dedupKey);
+    }
+
+    #getTitleRequest(dedupKey, displayTitle) {
+        const existing = this.#inFlight.get(dedupKey);
+        if (existing) return existing;
+
+        const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+        });
+        const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+            this.#inFlight.delete(dedupKey);
+        });
+        this.#inFlight.set(dedupKey, request);
+        return request;
+    }
+
+    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
+        if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
+
+        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
+        this.#renderer.applyFade(container, shouldFade);
+        if (fadeable) container.dataset.fmKey = dedupKey;
+        const onFadeToggleClick = showFadeToggle ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el) : null;
+        this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
+    }
+
+    async #handleFadeToggleClick(dedupKey, rating, toggleBadgeEl) {
+        const domState = toggleBadgeEl.dataset.state;
+        const currentState = domState === 'auto' ? null : domState;
+        const nextState = this.#fadeManager.nextState(currentState);
+        await this.#fadeManager.setOverride(dedupKey, nextState);
+        toggleBadgeEl.dataset.state = nextState ?? 'auto';
+        toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
+        const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
+        icon.textContent = nextState === null ? '⭐' : '👁️';
+        icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
+        const shouldFade = this.#fadeManager.shouldFade(nextState, rating, this.#config);
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
+            this.#renderer.applyFade(c, shouldFade);
+        });
+    }
+
+    redecorate() {
         this.#renderer.injectStyles();
-        this.#initNavigationObservers();
+        this.#renderer.clearAllOverlays();
         this.decorateRoot(document);
-        this.#boundDisconnect = () => this.disconnect();
-        window.addEventListener('beforeunload', this.#boundDisconnect);
+    }
+
+    async clearCache() {
+        await this.#cache.clear();
+    }
+
+    async resetDisabledClients() {
+        return await this.#api.resetDisabledClients();
+    }
+
+    disconnect() {
+        this.#observer?.disconnect();
+        this.#observer = null;
+        if (this.#boundDisconnect) {
+            window.removeEventListener('beforeunload', this.#boundDisconnect);
+            this.#boundDisconnect = null;
+        }
+        if (this.#navigationPatched) {
+            history.pushState = this.#originalPushState;
+            history.replaceState = this.#originalReplaceState;
+            window.removeEventListener('popstate', this.#popstateHandler);
+            this.#navigationPatched = false;
+        }
+    }
+
+    /** @returns {CacheManager} */
+    get cacheManager() {
+        return this.#cache;
+    }
+
+    /** @returns {DisabledClientsManager} */
+    get disabledManager() {
+        return this.#api.disabledManager;
     }
 }
 
