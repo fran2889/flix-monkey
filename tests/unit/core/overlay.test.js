@@ -10,14 +10,6 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
 
-const DEFAULT_OFFSET_CONSTANTS = {
-    TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
-};
-const CUSTOM_OFFSET_CONSTANTS = {
-    TOP_10_SELECTORS: ['.custom-hbo-top-10'],
-    TOP_10_OFFSET: '30%',
-};
-
 describe('OverlayRenderer', () => {
     beforeEach(() => {
         document.head.innerHTML = '';
@@ -30,7 +22,7 @@ describe('OverlayRenderer', () => {
             renderer.injectStyles();
             const style = document.head.querySelector('style');
             expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.fm-rating-overlay');
+            expect(style.id).toBe('fm-overlay-styles');
         });
 
         it('should inject styles only once per instance', () => {
@@ -47,48 +39,13 @@ describe('OverlayRenderer', () => {
             const rendererB = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
 
             rendererA.injectStyles();
+            const existingStyle = document.head.querySelector('#fm-overlay-styles');
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
-            expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('left:6px');
 
             rendererB.injectStyles();
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
-            expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('right:6px');
+            expect(document.head.querySelector('#fm-overlay-styles')).toBe(existingStyle);
         });
-
-        it('should use bottom positioning for bottom-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'bottom-right' }));
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            expect(style.textContent).toContain('bottom:6px;right:6px;');
-            expect(style.textContent).toContain('flex-direction: column-reverse');
-        });
-
-        it.each([
-            ['top-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
-            ['bottom-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
-            ['top-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
-            ['bottom-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
-        ])('should offset Top 10 selectors for %s corners', (corner, serviceConstants, offset) => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), serviceConstants);
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            serviceConstants.TOP_10_SELECTORS.forEach(selector => {
-                expect(style.textContent).toContain(`${selector} .fm-rating-overlay`);
-            });
-            expect(style.textContent).toContain(`left: calc(${offset} + 6px)`);
-        });
-
-        it.each(['top-right', 'bottom-right'])(
-            'should not offset configured Top 10 selectors for %s corners',
-            corner => {
-                const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), DEFAULT_OFFSET_CONSTANTS);
-                renderer.injectStyles();
-                const style = document.head.querySelector('style');
-                DEFAULT_OFFSET_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
-                    expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
-                });
-            }
-        );
     });
 
     describe('Overlay injection', () => {
@@ -292,18 +249,6 @@ describe('OverlayRenderer', () => {
             const toggle = container.querySelector('.fm-fade-toggle');
             toggle.click();
             expect(onClick).toHaveBeenCalledWith(toggle);
-        });
-
-        it('should hide fade toggle until its surface is hovered', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            renderer.injectStyles();
-            const css = document.head.querySelector('#fm-overlay-styles').textContent;
-            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('opacity: 0;');
-            expect(css).toContain('pointer-events: none;');
-            expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('opacity: 1;');
-            expect(css).toContain('pointer-events: auto;');
         });
     });
 

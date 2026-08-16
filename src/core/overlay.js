@@ -9,6 +9,7 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from './constants.js';
+import { buildOverlayStyles } from './ui/overlay-styles.js';
 
 /**
  * @typedef {Object} ServicePresentation
@@ -40,78 +41,12 @@ export class OverlayRenderer {
 
     injectStyles() {
         const existing = document.getElementById('fm-overlay-styles');
-        const cornerStyles = {
-            'top-left': 'top:6px;left:6px;',
-            'top-right': 'top:6px;right:6px;',
-            'bottom-left': 'bottom:6px;left:6px;',
-            'bottom-right': 'bottom:6px;right:6px;',
-        };
-        const corner = this.#config.get('overlayCorner');
-        const positionCss = cornerStyles[corner] ?? cornerStyles['top-left'];
-        const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
-        const TOP_10_SELECTORS = this.#serviceConstants.TOP_10_SELECTORS ?? [];
-        const TOP_10_OFFSET = this.#serviceConstants.TOP_10_OFFSET ?? '50%';
-        let cssText = `
-            .${this.#OVERLAY_CLASS} {
-                position: absolute;
-                ${positionCss}
-                z-index: 9999;
-                display: flex;
-                flex-direction: ${flexDirection};
-                gap: 4px;
-                pointer-events: none;
-            }
-            .${this.#OVERLAY_CLASS} > * {
-                background: rgba(0,0,0,0.72);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 12px;
-                font-weight: 700;
-                line-height: 1;
-                padding: 4px 6px;
-                border-radius: 4px;
-                cursor: default;
-                text-decoration: none;
-                white-space: nowrap;
-                pointer-events: auto;
-                transition: background 0.15s;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-            .${this.#OVERLAY_CLASS} a {
-                cursor: pointer;
-            }
-            .${this.#OVERLAY_CLASS} > *:hover { background: rgba(0,0,0,0.92); }
-            .${this.#OVERLAY_CLASS} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
-            .${this.#OVERLAY_CLASS} .fm-imdb { color: #f5c518; }
-            .${this.#OVERLAY_CLASS} .fm-rt { color: #fa320a; }
-            .${this.#OVERLAY_CLASS} .fm-mc { color: #6ac; }
-            .${this.#OVERLAY_CLASS} .fm-value { color: #fff; }
-            .${this.#OVERLAY_CLASS} .fm-na { color: #aaa; }
-            .${this.#OVERLAY_CLASS} .fm-search { font-size: 11px; color: #ccc; }
-        `;
-        if (corner.includes('left') && TOP_10_SELECTORS.length) {
-            const selectors = TOP_10_SELECTORS.map(selector => `${selector} .${this.#OVERLAY_CLASS}`);
-            cssText += `\n            ${selectors.join(',\n            ')} { left: calc(${TOP_10_OFFSET} + 6px); }`;
-        }
-        cssText += `
-            .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
-            .fm-faded:hover { opacity: 1; }
-        `;
-        cssText += `
-            .${this.#OVERLAY_CLASS} .fm-fade-toggle {
-                cursor: pointer;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.15s;
-            }
-            :hover > .${this.#OVERLAY_CLASS} .fm-fade-toggle {
-                opacity: 1;
-                pointer-events: auto;
-            }
-            .${this.#OVERLAY_CLASS} .fm-fade-toggle .fm-label { color: #aaa; }
-            .${this.#OVERLAY_CLASS} .fm-fade-toggle--faded { opacity: 0.35; }
-        `;
+        const cssText = buildOverlayStyles({
+            overlayClass: this.#OVERLAY_CLASS,
+            corner: this.#config.get('overlayCorner'),
+            top10Selectors: this.#serviceConstants.TOP_10_SELECTORS,
+            top10Offset: this.#serviceConstants.TOP_10_OFFSET,
+        });
         if (existing) {
             existing.textContent = cssText;
         } else {
