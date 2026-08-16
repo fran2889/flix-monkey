@@ -25,6 +25,9 @@ const VISUAL_SETTINGS = new Set([
 ]);
 
 /* NOSONAR: MV3 content scripts are classic IIFE bundles, so top-level await is unavailable. */ (async () => {
+    const migrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
+    if (migrationResponse?.error) throw new Error(migrationResponse.error);
+
     const adapter = new WebExtensionAdapter();
     const stored = await browser.storage.local.get(null);
     adapter.setConfigData(stored);

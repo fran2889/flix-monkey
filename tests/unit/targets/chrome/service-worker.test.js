@@ -4,13 +4,24 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const { executeMigrations } = vi.hoisted(() => ({
+    executeMigrations: vi.fn(),
+}));
+
+vi.mock('../../../../src/targets/extension/migrations.js', () => ({
+    createExtensionMigrationExecutor: () => executeMigrations,
+}));
+
 describe('Chrome Service Worker', () => {
     let messageListener;
+    let installedListener;
     let actionListener;
 
     beforeEach(async () => {
         vi.resetModules();
         vi.useFakeTimers();
+        executeMigrations.mockReset();
+        executeMigrations.mockResolvedValue();
 
         global.chrome = {
             runtime: {
@@ -18,6 +29,11 @@ describe('Chrome Service Worker', () => {
                 onMessage: {
                     addListener: vi.fn(fn => {
                         messageListener = fn;
+                    }),
+                },
+                onInstalled: {
+                    addListener: vi.fn(fn => {
+                        installedListener = fn;
                     }),
                 },
                 openOptionsPage: vi.fn(),
@@ -42,6 +58,34 @@ describe('Chrome Service Worker', () => {
         };
 
         await import('../../../../src/targets/chrome/service-worker.js');
+    });
+
+    it.each([{ reason: 'install' }, { reason: 'update' }])(
+        'runs migrations when the extension is $reason',
+        async details => {
+            installedListener(details);
+            await Promise.resolve();
+            expect(executeMigrations).toHaveBeenCalledOnce();
+        }
+    );
+
+    it('runs migrations for authenticated migration messages', async () => {
+        const sendResponse = vi.fn();
+        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+        expect(result).toBe(true);
+        await Promise.resolve();
+        expect(executeMigrations).toHaveBeenCalledOnce();
+        expect(sendResponse).toHaveBeenCalledWith({});
+    });
+
+    it('ignores migration messages from a foreign sender', () => {
+        const sendResponse = vi.fn();
+        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' }, sendResponse);
+
+        expect(result).toBe(false);
+        expect(executeMigrations).not.toHaveBeenCalled();
+        expect(sendResponse).not.toHaveBeenCalled();
     });
 
     it('should ignore non-FM_FETCH messages', () => {
