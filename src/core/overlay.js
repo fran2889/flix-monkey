@@ -47,14 +47,6 @@ export class OverlayRenderer {
         }
     }
 
-    hasOverlay(container) {
-        return container.hasAttribute(this.#OVERLAY_ATTR);
-    }
-
-    isLoading(container) {
-        return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
-    }
-
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
@@ -91,5 +83,13 @@ export class OverlayRenderer {
             el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);
             el.remove();
         });
+    }
+
+    hasOverlay(container) {
+        return container.hasAttribute(this.#OVERLAY_ATTR);
+    }
+
+    isLoading(container) {
+        return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 }

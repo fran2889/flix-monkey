@@ -93,7 +93,7 @@ describe('buildOverlayStyles', () => {
     it('keeps the overlay noninteractive while direct badges and links remain interactive', () => {
         const css = buildOverlayStyles({ overlayClass: 'fm-rating-overlay', corner: 'top-left' });
 
-        expect(css).toMatch(/\.fm-rating-overlay\s*\{[\s\S]*?pointer-events: none;/);
-        expect(css).toMatch(/\.fm-rating-overlay > \*\s*\{[\s\S]*?cursor: default;[\s\S]*?pointer-events: auto;/);
+        expect(css).toMatch(/\.fm-rating-overlay\s*\{[^}]*pointer-events: none;/);
+        expect(css).toMatch(/\.fm-rating-overlay > \*\s*\{[^}]*cursor: default;[^}]*pointer-events: auto;/);
     });
 });
