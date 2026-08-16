@@ -42,10 +42,6 @@ export class Modal {
         this.overlay.appendChild(content);
     }
 
-    getContentContainer() {
-        return this.overlay.querySelector('.fm-modal-body');
-    }
-
     open() {
         if (this.#escHandler) return;
         document.body.appendChild(this.overlay);
@@ -65,5 +61,9 @@ export class Modal {
         }
         this.overlay.remove();
         this.#returnFocus?.focus();
+    }
+
+    getContentContainer() {
+        return this.overlay.querySelector('.fm-modal-body');
     }
 }

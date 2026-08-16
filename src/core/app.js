@@ -57,37 +57,61 @@ export class FlixMonkeyApp {
         }, DECORATION_DEBOUNCE_MS);
     }
 
-    /** @returns {CacheManager} */
-    get cacheManager() {
-        return this.#cache;
+    init() {
+        // #initialised is never reset: one app instance, one lifetime.
+        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
+        this.#initialised = true;
+        this.#renderer.injectStyles();
+        this.#initNavigationObservers();
+        this.decorateRoot(document);
+        this.#boundDisconnect = () => this.disconnect();
+        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
-    /** @returns {DisabledClientsManager} */
-    get disabledManager() {
-        return this.#api.disabledManager;
+    #initNavigationObservers() {
+        if (this.#navigationPatched) return;
+        this.#navigationPatched = true;
+
+        this.#originalPushState = history.pushState;
+        this.#originalReplaceState = history.replaceState;
+
+        history.pushState = (...args) => {
+            this.#originalPushState.apply(history, args);
+            this.#debouncedDecorate();
+        };
+        history.replaceState = (...args) => {
+            this.#originalReplaceState.apply(history, args);
+            this.#debouncedDecorate();
+        };
+
+        this.#popstateHandler = () => this.#debouncedDecorate();
+        window.addEventListener('popstate', this.#popstateHandler);
+
+        this.#observer = new MutationObserver(mutations => {
+            try {
+                let hasElements = false;
+                for (const m of mutations) {
+                    for (const n of m.addedNodes) {
+                        if (n.nodeType === Node.ELEMENT_NODE) {
+                            hasElements = true;
+                            this.#pendingRoots.add(m.target);
+                        }
+                    }
+                }
+                if (hasElements) this.#debouncedDecorate();
+            } catch (err) {
+                this.#logger.error('Mutation observer error', err);
+            }
+        });
+        this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    disconnect() {
-        this.#observer?.disconnect();
-        this.#observer = null;
-        if (this.#boundDisconnect) {
-            window.removeEventListener('beforeunload', this.#boundDisconnect);
-            this.#boundDisconnect = null;
-        }
-        if (this.#navigationPatched) {
-            history.pushState = this.#originalPushState;
-            history.replaceState = this.#originalReplaceState;
-            window.removeEventListener('popstate', this.#popstateHandler);
-            this.#navigationPatched = false;
-        }
-    }
-
-    async clearCache() {
-        await this.#cache.clear();
-    }
-
-    async resetDisabledClients() {
-        return await this.#api.resetDisabledClients();
+    decorateRoot(root) {
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
+            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
+                this.#logger.error(`Failed to decorate "${title}"`, err)
+            );
+        });
     }
 
     async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
@@ -167,61 +191,37 @@ export class FlixMonkeyApp {
         this.decorateRoot(document);
     }
 
-    decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
-            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
-                this.#logger.error(`Failed to decorate "${title}"`, err)
-            );
-        });
+    async clearCache() {
+        await this.#cache.clear();
     }
 
-    #initNavigationObservers() {
-        if (this.#navigationPatched) return;
-        this.#navigationPatched = true;
-
-        this.#originalPushState = history.pushState;
-        this.#originalReplaceState = history.replaceState;
-
-        history.pushState = (...args) => {
-            this.#originalPushState.apply(history, args);
-            this.#debouncedDecorate();
-        };
-        history.replaceState = (...args) => {
-            this.#originalReplaceState.apply(history, args);
-            this.#debouncedDecorate();
-        };
-
-        this.#popstateHandler = () => this.#debouncedDecorate();
-        window.addEventListener('popstate', this.#popstateHandler);
-
-        this.#observer = new MutationObserver(mutations => {
-            try {
-                let hasElements = false;
-                for (const m of mutations) {
-                    for (const n of m.addedNodes) {
-                        if (n.nodeType === Node.ELEMENT_NODE) {
-                            hasElements = true;
-                            this.#pendingRoots.add(m.target);
-                        }
-                    }
-                }
-                if (hasElements) this.#debouncedDecorate();
-            } catch (err) {
-                this.#logger.error('Mutation observer error', err);
-            }
-        });
-        this.#observer.observe(document.body, { childList: true, subtree: true });
+    async resetDisabledClients() {
+        return await this.#api.resetDisabledClients();
     }
 
-    init() {
-        // #initialised is never reset: one app instance, one lifetime.
-        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
-        this.#initialised = true;
-        this.#renderer.injectStyles();
-        this.#initNavigationObservers();
-        this.decorateRoot(document);
-        this.#boundDisconnect = () => this.disconnect();
-        window.addEventListener('beforeunload', this.#boundDisconnect);
+    disconnect() {
+        this.#observer?.disconnect();
+        this.#observer = null;
+        if (this.#boundDisconnect) {
+            window.removeEventListener('beforeunload', this.#boundDisconnect);
+            this.#boundDisconnect = null;
+        }
+        if (this.#navigationPatched) {
+            history.pushState = this.#originalPushState;
+            history.replaceState = this.#originalReplaceState;
+            window.removeEventListener('popstate', this.#popstateHandler);
+            this.#navigationPatched = false;
+        }
+    }
+
+    /** @returns {CacheManager} */
+    get cacheManager() {
+        return this.#cache;
+    }
+
+    /** @returns {DisabledClientsManager} */
+    get disabledManager() {
+        return this.#api.disabledManager;
     }
 }
 
