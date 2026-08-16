@@ -51,63 +51,6 @@ export class BaseApiClient {
         this.#logger = logger;
     }
 
-    get config() {
-        return this.#config;
-    }
-
-    get source() {
-        return this.#source;
-    }
-
-    get logger() {
-        return this.#logger;
-    }
-
-    async isDisabled() {
-        return this.#disabledManager.isDisabled(this.#source);
-    }
-
-    /** @returns {Promise<ClientStatus>} A health result suitable for provider selection. */
-    async getStatus() {
-        if (await this.isDisabled()) {
-            return { healthy: false, reason: 'Temporarily disabled due to errors' };
-        }
-        return { healthy: true };
-    }
-
-    /**
-     * Disables this client, purges its queued requests, and logs a warning.
-     *
-     * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
-     * @returns {Promise<void>}
-     * @note Requests still waiting in this client's queue are removed. An HTTP request already
-     *   executing at the network level cannot be aborted and may still resolve after disable().
-     */
-    async disable(durationMs = CLIENT_DISABLE_DURATION) {
-        const count = this.#queue.clear();
-        await this.#disabledManager.disable(this.#source, durationMs);
-        this.#logger?.warn(
-            `${this.source} disabled for ${durationMs / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
-        );
-    }
-
-    /**
-     * Enqueues an HTTP request through the rate-limited queue.
-     *
-     * @param {string} url - Request URL.
-     * @param {number} [priority=0] - Higher values are processed first.
-     * @param {'json'|'text'} [responseType='json'] - Expected response format.
-     * @returns {Promise<unknown>} Parsed response body.
-     */
-    async queuedFetch(url, priority = 0, responseType = 'json') {
-        return this.#queue.enqueue(
-            url,
-            priority,
-            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
-            responseType
-        );
-    }
-
     /**
      * Fetches ratings for a streaming-service title through the search -> details pipeline.
      * Callers must gate through {@link getStatus} before invoking.
@@ -123,6 +66,18 @@ export class BaseApiClient {
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
         return detailedTitle.withSource(this.#source);
+    }
+
+    /** @returns {Promise<ClientStatus>} A health result suitable for provider selection. */
+    async getStatus() {
+        if (await this.isDisabled()) {
+            return { healthy: false, reason: 'Temporarily disabled due to errors' };
+        }
+        return { healthy: true };
+    }
+
+    async isDisabled() {
+        return this.#disabledManager.isDisabled(this.#source);
     }
 
     /**
@@ -154,6 +109,51 @@ export class BaseApiClient {
     async getDetails(_searchTitle) {
         throw new Error('Not implemented');
     }
+
+    /**
+     * Enqueues an HTTP request through the rate-limited queue.
+     *
+     * @param {string} url - Request URL.
+     * @param {number} [priority=0] - Higher values are processed first.
+     * @param {'json'|'text'} [responseType='json'] - Expected response format.
+     * @returns {Promise<unknown>} Parsed response body.
+     */
+    async queuedFetch(url, priority = 0, responseType = 'json') {
+        return this.#queue.enqueue(
+            url,
+            priority,
+            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
+            responseType
+        );
+    }
+
+    /**
+     * Disables this client, purges its queued requests, and logs a warning.
+     *
+     * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
+     * @returns {Promise<void>}
+     * @note Requests still waiting in this client's queue are removed. An HTTP request already
+     *   executing at the network level cannot be aborted and may still resolve after disable().
+     */
+    async disable(durationMs = CLIENT_DISABLE_DURATION) {
+        const count = this.#queue.clear();
+        await this.#disabledManager.disable(this.#source, durationMs);
+        this.#logger?.warn(
+            `${this.source} disabled for ${durationMs / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
+        );
+    }
+
+    get source() {
+        return this.#source;
+    }
+
+    get config() {
+        return this.#config;
+    }
+
+    get logger() {
+        return this.#logger;
+    }
 }
 
 export class XmdbApiClient extends BaseApiClient {
@@ -166,12 +166,6 @@ export class XmdbApiClient extends BaseApiClient {
             config,
             logger
         );
-    }
-
-    #mapTitleType(apiValue) {
-        if (apiValue === 'Movie') return TitleType.MOVIE;
-        if (apiValue === 'TV Series') return TitleType.SERIES;
-        return null;
     }
 
     async getStatus() {
@@ -236,6 +230,12 @@ export class XmdbApiClient extends BaseApiClient {
             source: null,
         });
     }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'Movie') return TitleType.MOVIE;
+        if (apiValue === 'TV Series') return TitleType.SERIES;
+        return null;
+    }
 }
 
 export class OmdbApiClient extends BaseApiClient {
@@ -248,12 +248,6 @@ export class OmdbApiClient extends BaseApiClient {
             config,
             logger
         );
-    }
-
-    #mapTitleType(apiValue) {
-        if (apiValue === 'movie') return TitleType.MOVIE;
-        if (apiValue === 'series') return TitleType.SERIES;
-        return null;
     }
 
     async getStatus() {
@@ -288,6 +282,12 @@ export class OmdbApiClient extends BaseApiClient {
         });
     }
 
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'series') return TitleType.SERIES;
+        return null;
+    }
+
     async getDetails(searchTitle) {
         // Pass-through: OMDb already fetched all details (including ratings) in search()
         return searchTitle;
@@ -306,12 +306,6 @@ export class AgregarrApiClient extends BaseApiClient {
             config,
             logger
         );
-    }
-
-    #mapTitleType(apiValue) {
-        if (apiValue === 'movie') return TitleType.MOVIE;
-        if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
-        return null;
     }
 
     async search(displayTitle) {
@@ -340,6 +334,12 @@ export class AgregarrApiClient extends BaseApiClient {
             type: this.#mapTitleType(match.qid),
             source: null,
         });
+    }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
+        return null;
     }
 
     async getDetails(searchTitle) {

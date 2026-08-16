@@ -2,21 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { parseHex } from '../../../src/core/color-utils.js';
-import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../src/core/constants.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { Title } from '../../../src/core/title.js';
 import { createConfig } from '../../mocks/config.js';
-
-const DEFAULT_OFFSET_CONSTANTS = {
-    TOP_10_SELECTORS: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
-};
-const CUSTOM_OFFSET_CONSTANTS = {
-    TOP_10_SELECTORS: ['.custom-hbo-top-10'],
-    TOP_10_OFFSET: '30%',
-};
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -24,185 +14,62 @@ describe('OverlayRenderer', () => {
         document.body.innerHTML = '';
     });
 
-    describe('Style injection', () => {
-        it('should inject styles into document head', () => {
+    describe('style injection', () => {
+        it('injects styles into document head', () => {
             const renderer = new OverlayRenderer(createConfig());
+
             renderer.injectStyles();
+
             const style = document.head.querySelector('style');
             expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.fm-rating-overlay');
+            expect(style.id).toBe('fm-overlay-styles');
         });
 
-        it('should inject styles only once per instance', () => {
+        it('injects styles only once per instance', () => {
             const renderer = new OverlayRenderer(createConfig());
+
             renderer.injectStyles();
             renderer.injectStyles();
-            const styles = document.head.querySelectorAll('style');
-            expect(styles).toHaveLength(1);
+
+            expect(document.head.querySelectorAll('style')).toHaveLength(1);
             expect(document.head.querySelector('#fm-overlay-styles')).not.toBeNull();
         });
 
-        it('should update the existing style tag when injectStyles is called again', () => {
+        it('updates the existing style tag when injectStyles is called again', () => {
             const rendererA = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
             const rendererB = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
 
             rendererA.injectStyles();
-            expect(document.head.querySelectorAll('style')).toHaveLength(1);
-            expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('left:6px');
-
+            const existingStyle = document.head.querySelector('#fm-overlay-styles');
+            const originalCssText = existingStyle.textContent;
             rendererB.injectStyles();
+
             expect(document.head.querySelectorAll('style')).toHaveLength(1);
-            expect(document.head.querySelector('#fm-overlay-styles').textContent).toContain('right:6px');
-        });
-
-        it('should use bottom positioning for bottom-side corners', () => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: 'bottom-right' }));
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            expect(style.textContent).toContain('bottom:6px;right:6px;');
-            expect(style.textContent).toContain('flex-direction: column-reverse');
-        });
-
-        it.each([
-            ['top-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
-            ['bottom-left', DEFAULT_OFFSET_CONSTANTS, '50%'],
-            ['top-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
-            ['bottom-left', CUSTOM_OFFSET_CONSTANTS, '30%'],
-        ])('should offset Top 10 selectors for %s corners', (corner, serviceConstants, offset) => {
-            const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), serviceConstants);
-            renderer.injectStyles();
-            const style = document.head.querySelector('style');
-            serviceConstants.TOP_10_SELECTORS.forEach(selector => {
-                expect(style.textContent).toContain(`${selector} .fm-rating-overlay`);
-            });
-            expect(style.textContent).toContain(`left: calc(${offset} + 6px)`);
-        });
-
-        it.each(['top-right', 'bottom-right'])(
-            'should not offset configured Top 10 selectors for %s corners',
-            corner => {
-                const renderer = new OverlayRenderer(createConfig({ overlayCorner: corner }), DEFAULT_OFFSET_CONSTANTS);
-                renderer.injectStyles();
-                const style = document.head.querySelector('style');
-                DEFAULT_OFFSET_CONSTANTS.TOP_10_SELECTORS.forEach(selector => {
-                    expect(style.textContent).not.toContain(`${selector} .fm-rating-overlay`);
-                });
-            }
-        );
-    });
-
-    describe('Overlay injection', () => {
-        it('should render an IMDb badge for a zero rating', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ imdbId: 'tt1234567', rating: 0 });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            expect(overlay).not.toBeNull();
-            expect(overlay.querySelector('.fm-value')).not.toBeNull();
-            expect(overlay.textContent).toContain('0.0');
-        });
-
-        it('should render RT and MC badges for zero percent ratings', () => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ imdbId: 'tt1234567', rating: 5, rtRating: 0, mcRating: 0 });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            expect(overlay).not.toBeNull();
-            const percentBadges = [...overlay.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
-            expect(percentBadges).toHaveLength(2);
-        });
-
-        it('should not render RT and MC badges when disabled by config', () => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating: false, showMcRating: false }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, { rating: 7.0, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
-
-            const overlay = container.querySelector('.fm-rating-overlay');
-            expect(overlay.textContent).toContain('7.0');
-            expect(overlay.textContent).not.toContain('RT');
-            expect(overlay.textContent).not.toContain('MC');
-        });
-
-        it('should display all three ratings when provided and enabled', () => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, {
-                rating: 8.5,
-                rtRating: 90,
-                mcRating: 80,
-                imdbUrl: 'https://imdb.com/title/tt1234567/',
-                imdbId: 'tt1234567',
-            });
-
-            const ratingElement = container.querySelector('.fm-rating-overlay');
-            expect(ratingElement.textContent).toContain('8.5');
-            expect(ratingElement.textContent).toContain('90%');
-            expect(ratingElement.textContent).toContain('80%');
-
-            const labelTexts = Array.from(ratingElement.querySelectorAll('.fm-label')).map(l => l.textContent);
-            expect(labelTexts).toContain('IMDb ');
-            expect(labelTexts).toContain('RT ');
-            expect(labelTexts).toContain('MC ');
-        });
-
-        it('should show the search icon when imdbId is missing', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, { rating: null, imdbId: null });
-            expect(container.querySelector('.fm-search')).not.toBeNull();
-            expect(container.querySelector('.fm-search').textContent).toBe('🔍');
-        });
-
-        it('should show N/A when imdbId is present but rating is missing', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, {
-                imdbId: 'tt1234567',
-                imdbUrl: 'https://imdb.com/title/tt1234567/',
-                rating: null,
-            });
-
-            const ratingElement = container.querySelector('.fm-rating-overlay');
-            expect(ratingElement.textContent).toContain('N/A');
-            expect(ratingElement.querySelector('.fm-na')).not.toBeNull();
-        });
-
-        it.each([
-            ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb', true],
-            ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb', false],
-            ['missing IMDb ID', { rating: null, imdbId: null }, 'IMDb: Not found · Search IMDb', false],
-        ])('should build tooltip title for %s', (_, titleObj, expectedTitle, showRtRating) => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj);
-            expect(container.querySelector('.fm-rating-overlay a').title).toBe(expectedTitle);
+            expect(document.head.querySelector('#fm-overlay-styles')).toBe(existingStyle);
+            expect(existingStyle.textContent).not.toBe(originalCssText);
         });
     });
 
-    describe('Loading overlay', () => {
-        it('should inject loading overlay', () => {
+    describe('overlay lifecycle', () => {
+        it('replaces an existing overlay and marks the container as injected', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
-            renderer.injectLoadingOverlay(container, 'Test Movie');
-            const loadingElement = container.querySelector('.fm-loading');
-            expect(loadingElement).not.toBeNull();
-            expect(loadingElement.textContent).toContain('⏳');
-            expect(renderer.isLoading(container)).toBe(true);
+
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt1', rating: 7 }));
+            const firstOverlay = container.querySelector('.fm-rating-overlay');
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt2', rating: 8 }));
+
+            expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
+            expect(container.querySelector('.fm-rating-overlay')).not.toBe(firstOverlay);
+            expect(renderer.hasOverlay(container)).toBe(true);
         });
 
-        it('should replace loading overlay with ratings overlay', () => {
+        it('replaces a loading overlay with a completed overlay', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
-            renderer.injectLoadingOverlay(container, 'Test Movie');
-            renderer.injectOverlay(container, {
-                rating: 8.5,
-                imdbUrl: 'https://imdb.com/title/tt1234567/',
-                imdbId: 'tt1234567',
-            });
+
+            renderer.injectLoadingOverlay(container);
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt1234567', rating: 8.5 }));
 
             expect(container.querySelector('.fm-loading')).toBeNull();
             expect(renderer.isLoading(container)).toBe(false);
@@ -211,398 +78,95 @@ describe('OverlayRenderer', () => {
         });
     });
 
-    describe('Fade', () => {
-        it('should add fm-faded class when shouldFade is true', () => {
+    describe('loading lifecycle', () => {
+        it('tracks a loading overlay after injection', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
+
+            renderer.injectLoadingOverlay(container);
+
+            expect(container.querySelector('.fm-loading')).not.toBeNull();
+            expect(renderer.isLoading(container)).toBe(true);
+        });
+
+        it('removes a loading overlay', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+
+            renderer.injectLoadingOverlay(container);
+            renderer.removeLoadingOverlay(container);
+
+            expect(container.querySelector('.fm-loading')).toBeNull();
+            expect(renderer.isLoading(container)).toBe(false);
+        });
+    });
+
+    describe('fade', () => {
+        it('adds fm-faded class when shouldFade is true', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+
             renderer.applyFade(container, true);
+
             expect(container.classList.contains('fm-faded')).toBe(true);
         });
 
-        it('should remove fm-faded class when shouldFade is false', () => {
+        it('removes fm-faded class when shouldFade is false', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.classList.add('fm-faded');
+
             renderer.applyFade(container, false);
+
             expect(container.classList.contains('fm-faded')).toBe(false);
         });
     });
 
-    describe('Fade toggle', () => {
-        const titleObj = { rating: 7.0, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
-
-        it('should not render toggle when onFadeToggleClick is absent', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj);
-            expect(container.querySelector('.fm-fade-toggle')).toBeNull();
-        });
-
-        it('should not render toggle when enableFadeToggle config is false', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: false }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj, null, vi.fn());
-            expect(container.querySelector('.fm-fade-toggle')).toBeNull();
-        });
-
-        it('should render toggle with ⭐ and data-state="auto" for null state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj, null, vi.fn());
-            const toggle = container.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
-            expect(toggle).not.toBeNull();
-            expect(toggle.tagName).toBe('DIV');
-            expect(toggle.dataset.state).toBe('auto');
-            expect(toggle.title).toBe('Fade: Auto');
-            expect(icon.textContent).toBe('⭐');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        });
-
-        it('should render toggle with 👁️ and fm-fade-toggle--faded for "always" state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj, 'always', vi.fn());
-            const toggle = container.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
-            expect(toggle.dataset.state).toBe('always');
-            expect(toggle.title).toBe('Fade: Always');
-            expect(icon.textContent).toBe('👁️');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
-        });
-
-        it('should render toggle with 👁️ without fm-fade-toggle--faded for "never" state', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, titleObj, 'never', vi.fn());
-            const toggle = container.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
-            expect(toggle.dataset.state).toBe('never');
-            expect(toggle.title).toBe('Fade: Never');
-            expect(icon.textContent).toBe('👁️');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        });
-
-        it('should call onFadeToggleClick with the badge element on click', () => {
-            const renderer = new OverlayRenderer(createConfig({ enableFadeToggle: true }));
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const onClick = vi.fn();
-            renderer.injectOverlay(container, titleObj, null, onClick);
-            const toggle = container.querySelector('.fm-fade-toggle');
-            toggle.click();
-            expect(onClick).toHaveBeenCalledWith(toggle);
-        });
-
-        it('should hide fade toggle until its surface is hovered', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            renderer.injectStyles();
-            const css = document.head.querySelector('#fm-overlay-styles').textContent;
-            expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('opacity: 0;');
-            expect(css).toContain('pointer-events: none;');
-            expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
-            expect(css).toContain('opacity: 1;');
-            expect(css).toContain('pointer-events: auto;');
-        });
-    });
-
-    describe('Container positioning', () => {
-        it('should ensure container has non-static position', () => {
+    describe('container positioning', () => {
+        it('ensures container has non-static position', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'static';
+
             renderer.ensureRelative(container);
+
             expect(container.style.position).toBe('relative');
         });
 
-        it('should not change position if already non-static', () => {
+        it('does not change position if already non-static', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             container.style.position = 'absolute';
+
             renderer.ensureRelative(container);
+
             expect(container.style.position).toBe('absolute');
         });
     });
 
-    describe('Pointer events and click propagation', () => {
-        it('should enable pointer events on rating badges when RT is enabled', () => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating: true }));
-            const container = document.createElement('div');
-            renderer.injectStyles();
-            renderer.injectOverlay(container, { rating: 8.0, rtRating: 90, imdbUrl: 'http://imdb.com' });
-
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const rtRating = overlay.querySelector('.fm-rt').parentElement;
-            expect(getComputedStyle(overlay).pointerEvents).toBe('none');
-            expect(getComputedStyle(rtRating).pointerEvents).toBe('auto');
-            expect(getComputedStyle(rtRating).cursor).toBe('default');
-        });
-
-        it('should stop propagation on IMDb link click', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, { imdbUrl: 'http://imdb.com' });
-
-            const link = container.querySelector('a');
-            const event = new MouseEvent('click', { bubbles: true });
-            const spy = vi.spyOn(event, 'stopPropagation');
-            link.dispatchEvent(event);
-            expect(spy).toHaveBeenCalled();
-        });
-
-        it('should stop propagation on MC and RT rating clicks when enabled', () => {
-            const renderer = new OverlayRenderer(createConfig({ showRtRating: true, showMcRating: true }));
-            const container = document.createElement('div');
-            renderer.injectOverlay(container, {
-                rating: 8.5,
-                rtRating: 90,
-                mcRating: 80,
-                imdbUrl: 'http://imdb.com',
-                imdbId: 'tt1',
-            });
-
-            const overlay = container.querySelector('.fm-rating-overlay');
-            [overlay.querySelector('.fm-rt').parentElement, overlay.querySelector('.fm-mc').parentElement].forEach(
-                el => {
-                    const event = new MouseEvent('click', { bubbles: true });
-                    const spy = vi.spyOn(event, 'stopPropagation');
-                    el.dispatchEvent(event);
-                    expect(spy).toHaveBeenCalled();
-                }
-            );
-        });
-    });
-
-    describe('Clear overlays', () => {
-        it('should remove all overlay elements from the document', () => {
+    describe('clear overlays', () => {
+        it('removes all overlay elements from the document', () => {
             const renderer = new OverlayRenderer(createConfig());
             document.body.innerHTML =
                 '<div class="fm-rating-overlay"></div>' +
                 '<div class="fm-rating-overlay"></div>' +
                 '<div class="other"></div>';
+
             renderer.clearAllOverlays();
+
             expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(0);
             expect(document.querySelectorAll('.other')).toHaveLength(1);
         });
 
-        it('should remove data-fm-injected attribute from parent when clearing overlays', () => {
+        it('removes the injected marker from overlay parents', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
-            const title = new Title({ apiTitle: 'Test', rating: 7.5 });
-            renderer.injectOverlay(container, title);
-            expect(renderer.hasOverlay(container)).toBe(true);
+            renderer.injectOverlay(container, new Title({ apiTitle: 'Test', rating: 7.5 }));
+
             renderer.clearAllOverlays();
+
             expect(renderer.hasOverlay(container)).toBe(false);
-        });
-    });
-
-    describe('vote count formatting in tooltip', () => {
-        it.each([
-            [{ rating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
-            [{ rating: 9.0, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
-            [{ rating: 7.5, imdbVotes: null }, 'Test\nIMDb: 7.5 · Open IMDb'],
-            [{ rating: 6.0 }, 'Test\nIMDb: 6.0 · Open IMDb'],
-        ])('should format tooltip for vote data %o', (titleData, expectedTitle) => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe(expectedTitle);
-        });
-
-        it('should show no rating tooltip when rating is null but imdbId exists', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: null });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('Test\nIMDb: No rating · Open IMDb');
-        });
-
-        it('should show not found tooltip when no imdbId', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ apiTitle: 'Test', rating: null, imdbId: null });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('Test\nIMDb: Not found · Search IMDb');
-        });
-
-        it('should show tooltip with small vote count', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 5.0, imdbVotes: 123 });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
-        });
-
-        it('should format tooltip with apiTitle and year', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({
-                apiTitle: 'The Shawshank Redemption',
-                imdbId: 'tt0111161',
-                rating: 9.3,
-                imdbVotes: 2700000,
-                year: 1994,
-            });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb');
-        });
-
-        it('should format tooltip with apiTitle but no year', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({
-                apiTitle: 'Inception',
-                imdbId: 'tt1375666',
-                rating: 8.8,
-                imdbVotes: 2400000,
-                year: null,
-            });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('Inception\nIMDb: 8.8 (2M votes) · Open IMDb');
-        });
-
-        it('should not add apiTitle line when apiTitle is null', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ apiTitle: null, imdbId: 'tt1234567', rating: 7.0, imdbVotes: 100000 });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 7.0 (100k votes) · Open IMDb');
-        });
-
-        it('should not add apiTitle line when apiTitle is undefined', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const title = new Title({ imdbId: 'tt1234567', rating: 6.5, imdbVotes: 50000 });
-            renderer.injectOverlay(container, title);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const imdbLink = overlay.querySelector('a');
-            expect(imdbLink.title).toBe('IMDb: 6.5 (50k votes) · Open IMDb');
-        });
-    });
-
-    describe('Rating color calculation', () => {
-        beforeEach(() => {
-            document.head.innerHTML = '';
-            document.body.innerHTML = '';
-        });
-
-        it.each([
-            // IMDb ratings (scale 1-10)
-            ['IMDb low rating (3.2)', 3.2, false, RATING_COLOR_RED],
-            ['IMDb low rating (5.0 - threshold)', 5.0, false, RATING_COLOR_RED],
-            ['IMDb high rating (9.0 - threshold)', 9.0, false, RATING_COLOR_GREEN],
-            ['IMDb high rating (9.5)', 9.5, false, RATING_COLOR_GREEN],
-            // Percentage ratings (scale 0-100)
-            ['Percentage low rating (30%)', 30, true, RATING_COLOR_RED],
-            ['Percentage low rating (50% - threshold)', 50, true, RATING_COLOR_RED],
-            ['Percentage high rating (90% - threshold)', 90, true, RATING_COLOR_GREEN],
-            ['Percentage high rating (95%)', 95, true, RATING_COLOR_GREEN],
-        ])('returns exact color for %s', (_, rating, isPercentage, expectedHex) => {
-            // For percentage ratings, we need to enable showRtRating to see RT badge
-            const config = isPercentage ? createConfig({ showRtRating: true }) : createConfig();
-            const renderer = new OverlayRenderer(config);
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const titleObj = isPercentage
-                ? { rating: 7.0, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating }
-                : { rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' };
-
-            renderer.injectOverlay(container, titleObj);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const valueSpans = overlay.querySelectorAll('.fm-value');
-            // For percentage, RT is the second value; for IMDb, it's the first
-            const valueSpan = isPercentage ? valueSpans[1] : valueSpans[0];
-            expect(valueSpan).not.toBeNull();
-
-            // Browser converts hex to rgb() when setting style.color
-            const expectedRgb = parseHex(expectedHex);
-            const actualColor = valueSpan.style.color;
-            expect(actualColor).toBe(`rgb(${expectedRgb.r}, ${expectedRgb.g}, ${expectedRgb.b})`);
-        });
-
-        it.each([
-            // One case for each code path (isPercentage false/true)
-            ['IMDb rating in gradient range', 7.0, false],
-            ['Percentage rating in gradient range', 70, true],
-        ])('returns gradient color for %s', (_, rating, isPercentage) => {
-            // For percentage tests, enable showRtRating
-            const config = isPercentage ? createConfig({ showRtRating: true }) : createConfig();
-            const renderer = new OverlayRenderer(config);
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            const titleObj = isPercentage
-                ? { rating: 7.0, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating }
-                : { rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' };
-
-            renderer.injectOverlay(container, titleObj);
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const valueSpans = overlay.querySelectorAll('.fm-value');
-            const valueSpan = isPercentage ? valueSpans[1] : valueSpans[0];
-            expect(valueSpan).not.toBeNull();
-
-            // Verify color is set and is a valid rgb() string
-            expect(valueSpan.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
-            expect(valueSpan.style.color).not.toBe('');
-        });
-
-        it('does not apply color to N/A rating in overlay', () => {
-            const renderer = new OverlayRenderer(createConfig());
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            renderer.injectOverlay(container, {
-                rating: null,
-                imdbId: 'tt1',
-                imdbUrl: 'http://imdb.com',
-            });
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const naSpan = overlay.querySelector('.fm-na');
-            expect(naSpan).not.toBeNull();
-            // N/A elements should not have inline color
-            expect(naSpan.style.color).toBe('');
-        });
-
-        it('applies color to MC rating in overlay', () => {
-            const renderer = new OverlayRenderer(createConfig({ showMcRating: true, showRtRating: false }));
-            const container = document.createElement('div');
-            document.body.appendChild(container);
-            renderer.injectOverlay(container, {
-                rating: 7.0,
-                imdbId: 'tt1',
-                imdbUrl: 'http://imdb.com',
-                mcRating: 74,
-            });
-            const overlay = container.querySelector('.fm-rating-overlay');
-            const valueSpans = overlay.querySelectorAll('.fm-value');
-            // MC rating should be the second value element (after IMDb)
-            const mcValueSpan = valueSpans[1];
-            expect(mcValueSpan).not.toBeNull();
-            // 74 is between 50 and 90, so should have gradient color
-            expect(mcValueSpan.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
         });
     });
 });

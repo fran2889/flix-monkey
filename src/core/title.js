@@ -77,6 +77,11 @@ export class Title {
         Object.freeze(this);
     }
 
+    #normalizeRating(val, converter) {
+        if (val === null || val === undefined || val === '' || val === 'N/A') return null;
+        return converter ? converter(val) : val;
+    }
+
     get hasRating() {
         return this.rating !== null || this.rtRating !== null || this.mcRating !== null;
     }
@@ -119,10 +124,5 @@ export class Title {
      */
     static notFound(displayTitle, source = null) {
         return new Title({ displayTitle, source });
-    }
-
-    #normalizeRating(val, converter) {
-        if (val === null || val === undefined || val === '' || val === 'N/A') return null;
-        return converter ? converter(val) : val;
     }
 }
