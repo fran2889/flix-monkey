@@ -106,33 +106,43 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
-
-        let promise = this.#inFlight.get(dedupKey);
-        if (!promise) {
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS)
-            );
-            promise = Promise.race([this.#api.getData(displayTitle), timeoutPromise]).finally(() =>
-                this.#inFlight.delete(dedupKey)
-            );
-            this.#inFlight.set(dedupKey, promise);
-        }
+        const fadeOverride = await this.#getFadeOverride(dedupKey, fadeable, showFadeToggle);
+        const request = this.#getTitleRequest(dedupKey, displayTitle);
 
         try {
-            const data = await promise;
-            if (!this.#renderer.hasOverlay(container) && document.contains(container)) {
-                const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
-                this.#renderer.applyFade(container, shouldFade);
-                if (fadeable) container.dataset.fmKey = dedupKey;
-                const onFadeToggleClick = showFadeToggle
-                    ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el)
-                    : null;
-                this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
-            }
+            const data = await request;
+            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
+    }
+
+    async #getFadeOverride(dedupKey, fadeable, showFadeToggle) {
+        return fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
+    }
+
+    #getTitleRequest(dedupKey, displayTitle) {
+        const existing = this.#inFlight.get(dedupKey);
+        if (existing) return existing;
+
+        const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+        });
+        const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+            this.#inFlight.delete(dedupKey);
+        });
+        this.#inFlight.set(dedupKey, request);
+        return request;
+    }
+
+    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
+        if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
+
+        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
+        this.#renderer.applyFade(container, shouldFade);
+        if (fadeable) container.dataset.fmKey = dedupKey;
+        const onFadeToggleClick = showFadeToggle ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el) : null;
+        this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
     }
 
     async #handleFadeToggleClick(dedupKey, rating, toggleBadgeEl) {
