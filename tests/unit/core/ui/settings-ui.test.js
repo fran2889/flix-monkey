@@ -32,6 +32,41 @@ describe('SettingsUI', () => {
         document.body.appendChild(container);
     });
 
+    describe('Action button wiring', () => {
+        it('routes the save button to settings persistence', async () => {
+            await settingsUI.render(container);
+
+            container.querySelector('#fm-saveBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
+            expect(mockCacheManager.clear).not.toHaveBeenCalled();
+            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
+        });
+
+        it('routes the clear-cache button to cache clearing', async () => {
+            await settingsUI.render(container);
+
+            container.querySelector('#fm-clearCacheBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(mockCacheManager.clear).toHaveBeenCalledOnce();
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
+        });
+
+        it('routes the reset-providers button to disabled-client reset', async () => {
+            await settingsUI.render(container);
+
+            container.querySelector('#fm-resetClientsBtn').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(mockCacheManager.clear).not.toHaveBeenCalled();
+        });
+    });
+
     describe('Save', () => {
         it('calls storageSetMany with all field values', async () => {
             await settingsUI.render(container);
@@ -102,13 +137,18 @@ describe('SettingsUI', () => {
             expect(saveButton.disabled).toBe(false);
         });
 
-        it('does not persist values when validation fails', async () => {
+        it('shows joined validation errors and does not persist invalid values', async () => {
             await settingsUI.render(container);
             container.querySelector('#fm-fadeRatingThreshold').value = 'abc';
+            container.querySelector('#fm-cacheTtlRatedOldYear').value = 'invalid';
 
             await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(container.querySelector('#fm-status').textContent).toBe(
+                'Fade threshold must be a number between 0 and 10\n' + 'Cache duration must be -1 or a positive integer'
+            );
+            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
         });
     });
 
