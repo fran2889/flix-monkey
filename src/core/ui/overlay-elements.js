@@ -121,10 +121,10 @@ function buildTooltip(titleParts, imdbId, apiTitle, year) {
 }
 
 function appendImdbRating(imdbLink, title) {
-    const { rating, imdbId, imdbVotes } = title;
+    const { imdbRating, imdbId, imdbVotes } = title;
     const titleParts = [];
-    if (rating !== null && rating !== undefined) {
-        const formatted = formatImdbRating(rating);
+    if (imdbRating !== null && imdbRating !== undefined) {
+        const formatted = formatImdbRating(imdbRating);
         const votesStr = formatVoteCount(imdbVotes);
         const voteText = votesStr ? ` (${votesStr} votes)` : '';
         imdbLink.appendChild(createRatingElement('IMDb', formatted, 'fm-imdb'));

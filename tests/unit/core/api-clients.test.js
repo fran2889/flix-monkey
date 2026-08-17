@@ -99,7 +99,7 @@ describe('XmdbApiClient', () => {
         expect(result.imdbId).toBe('m1');
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.year).toBe(2020);
-        expect(result.rating).toBeNull();
+        expect(result.imdbRating).toBeNull();
     });
 
     it('should return null if no search results found', async () => {
@@ -358,7 +358,7 @@ describe('OmdbApiClient', () => {
         );
         const result = await client.search('Movie 1');
 
-        expect(result.rating).toBe(8.0);
+        expect(result.imdbRating).toBe(8.0);
         expect(result.imdbId).toBe('tt1');
     });
 
@@ -705,7 +705,7 @@ describe('AgregarrApiClient', () => {
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.imdbId).toBe('tt1');
         expect(result.year).toBe(2020);
-        expect(result.rating).toBe(8.8);
+        expect(result.imdbRating).toBe(8.8);
         expect(result.rtRating).toBeNull();
         expect(result.mcRating).toBeNull();
         expect(result.type).toBe('movie');
@@ -729,7 +729,7 @@ describe('AgregarrApiClient', () => {
             type: 'series',
         });
         const result = await client.getDetails(searchResult);
-        expect(result.rating).toBeNull();
+        expect(result.imdbRating).toBeNull();
         expect(result.type).toBe('series');
     });
 
@@ -752,7 +752,7 @@ describe('AgregarrApiClient', () => {
         expect(result.displayTitle).toBe('Movie 1');
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.imdbId).toBe('tt1');
-        expect(result.rating).toBe(8.8);
+        expect(result.imdbRating).toBe(8.8);
         expect(result.source).toBe('agregarr');
         expect(result.type).toBe('movie');
     });

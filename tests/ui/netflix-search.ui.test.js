@@ -56,7 +56,7 @@ describe('Search UI Surface', () => {
         const { container } = surfaces[0];
 
         overlayRenderer.injectOverlay(container, {
-            rating: 7.4,
+            imdbRating: 7.4,
             imdbUrl: 'https://www.imdb.com/title/tt9876543/',
             imdbId: 'tt9876543',
         });

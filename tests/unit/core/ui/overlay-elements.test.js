@@ -24,7 +24,7 @@ function createOverlay(title, options = {}) {
 
 describe('createOverlayElement', () => {
     it('builds the IMDb rating link', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', rating: 7.5 }));
+        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 7.5 }));
 
         expect(element.className).toBe('fm-rating-overlay');
         expect(element.querySelector('a').href).toContain('/title/tt1234567/');
@@ -32,14 +32,14 @@ describe('createOverlayElement', () => {
     });
 
     it('renders IMDb badge for a zero rating', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', rating: 0 }));
+        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 0 }));
 
         expect(element.querySelector('.fm-value')).not.toBeNull();
         expect(element.textContent).toContain('0.0');
     });
 
     it('renders RT and MC badges for zero percent ratings when enabled', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', rating: 5, rtRating: 0, mcRating: 0 }), {
+        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 5, rtRating: 0, mcRating: 0 }), {
             showRtRating: true,
             showMcRating: true,
         });
@@ -49,7 +49,7 @@ describe('createOverlayElement', () => {
     });
 
     it('does not render optional ratings when disabled', () => {
-        const element = createOverlay({ rating: 7, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
+        const element = createOverlay({ imdbRating: 7, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
 
         expect(element.textContent).toContain('7.0');
         expect(element.textContent).not.toContain('RT');
@@ -59,7 +59,7 @@ describe('createOverlayElement', () => {
     it('displays all ratings when provided and enabled', () => {
         const element = createOverlay(
             {
-                rating: 8.5,
+                imdbRating: 8.5,
                 rtRating: 90,
                 mcRating: 80,
                 imdbUrl: 'https://imdb.com/title/tt1234567/',
@@ -78,7 +78,7 @@ describe('createOverlayElement', () => {
     });
 
     it('shows the search icon when imdbId is missing', () => {
-        const element = createOverlay({ rating: null, imdbId: null });
+        const element = createOverlay({ imdbRating: null, imdbId: null });
 
         expect(element.querySelector('.fm-search')).not.toBeNull();
         expect(element.querySelector('.fm-search').textContent).toBe('🔍');
@@ -88,7 +88,7 @@ describe('createOverlayElement', () => {
         const element = createOverlay({
             imdbId: 'tt1234567',
             imdbUrl: 'https://imdb.com/title/tt1234567/',
-            rating: null,
+            imdbRating: null,
         });
 
         expect(element.textContent).toContain('N/A');
@@ -96,9 +96,9 @@ describe('createOverlayElement', () => {
     });
 
     it.each([
-        ['normal ratings', { rating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb'],
-        ['no ratings but IMDb ID present', { rating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
-        ['missing IMDb ID', { rating: null, imdbId: null }, 'IMDb: Not found · Search IMDb'],
+        ['normal ratings', { imdbRating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb'],
+        ['no ratings but IMDb ID present', { imdbRating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
+        ['missing IMDb ID', { imdbRating: null, imdbId: null }, 'IMDb: Not found · Search IMDb'],
     ])('builds the tooltip title for %s', (_, title, expectedTitle) => {
         const element = createOverlay(title, { showRtRating: true });
 
@@ -116,7 +116,7 @@ describe('createOverlayElement', () => {
     });
 
     describe('fade toggle', () => {
-        const title = { rating: 7, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
+        const title = { imdbRating: 7, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
 
         it('does not render the toggle when the click callback is absent', () => {
             const element = createOverlay(title, { showFadeToggle: true });
@@ -196,7 +196,7 @@ describe('createOverlayElement', () => {
 
         it('stops propagation on enabled MC and RT rating clicks', () => {
             const element = createOverlay(
-                { rating: 8.5, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com', imdbId: 'tt1' },
+                { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com', imdbId: 'tt1' },
                 { showRtRating: true, showMcRating: true }
             );
 
@@ -213,10 +213,10 @@ describe('createOverlayElement', () => {
 
     describe('vote count formatting in tooltip', () => {
         it.each([
-            [{ rating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
-            [{ rating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
-            [{ rating: 7.5, imdbVotes: null }, 'Test\nIMDb: 7.5 · Open IMDb'],
-            [{ rating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
+            [{ imdbRating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
+            [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: null }, 'Test\nIMDb: 7.5 · Open IMDb'],
+            [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
         ])('formats tooltip for vote data %o', (titleData, expectedTitle) => {
             const element = createOverlay(new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData }));
 
@@ -225,7 +225,7 @@ describe('createOverlayElement', () => {
 
         it('formats a small vote count', () => {
             const element = createOverlay(
-                new Title({ apiTitle: 'Test', imdbId: 'tt1234567', rating: 5, imdbVotes: 123 })
+                new Title({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 })
             );
 
             expect(element.querySelector('a').title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
@@ -236,7 +236,7 @@ describe('createOverlayElement', () => {
                 new Title({
                     apiTitle: 'The Shawshank Redemption',
                     imdbId: 'tt0111161',
-                    rating: 9.3,
+                    imdbRating: 9.3,
                     imdbVotes: 2700000,
                     year: 1994,
                 })
@@ -249,7 +249,7 @@ describe('createOverlayElement', () => {
 
         it('formats apiTitle without a year', () => {
             const element = createOverlay(
-                new Title({ apiTitle: 'Inception', imdbId: 'tt1375666', rating: 8.8, imdbVotes: 2400000 })
+                new Title({ apiTitle: 'Inception', imdbId: 'tt1375666', imdbRating: 8.8, imdbVotes: 2400000 })
             );
 
             expect(element.querySelector('a').title).toBe('Inception\nIMDb: 8.8 (2M votes) · Open IMDb');
@@ -265,10 +265,10 @@ describe('createOverlayElement', () => {
         ])('uses the threshold color for %s', (_, rating, isPercentage, expectedHex) => {
             const element = isPercentage
                 ? createOverlay(
-                      { rating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
+                      { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
                       { showRtRating: true }
                   )
-                : createOverlay({ rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+                : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
             const expectedRgb = parseHex(expectedHex);
@@ -282,10 +282,10 @@ describe('createOverlayElement', () => {
         ])('uses a gradient color for %s', (_, rating, isPercentage) => {
             const element = isPercentage
                 ? createOverlay(
-                      { rating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
+                      { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
                       { showRtRating: true }
                   )
-                : createOverlay({ rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+                : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
@@ -293,14 +293,14 @@ describe('createOverlayElement', () => {
         });
 
         it('does not apply color to N/A', () => {
-            const element = createOverlay({ rating: null, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+            const element = createOverlay({ imdbRating: null, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
 
             expect(element.querySelector('.fm-na').style.color).toBe('');
         });
 
         it('applies a gradient color to MC ratings', () => {
             const element = createOverlay(
-                { rating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', mcRating: 74 },
+                { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', mcRating: 74 },
                 { showMcRating: true }
             );
 

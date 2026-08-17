@@ -59,7 +59,7 @@ describe('Preview Mini-Modal UI Surface', () => {
         const { container } = results[0];
 
         overlayRenderer.injectOverlay(container, {
-            rating: 7.8,
+            imdbRating: 7.8,
             imdbUrl: 'https://www.imdb.com/title/tt0762107/',
             imdbId: 'tt0762107',
         });

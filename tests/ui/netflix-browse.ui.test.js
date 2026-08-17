@@ -87,7 +87,7 @@ describe('Browse UI Surface', () => {
         overlayRenderer.injectLoadingOverlay(container, title);
 
         const titleObj = {
-            rating: 8.5,
+            imdbRating: 8.5,
             imdbUrl: 'https://www.imdb.com/title/tt1234567/',
             imdbId: 'tt1234567',
         };

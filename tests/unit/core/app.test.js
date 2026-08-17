@@ -446,7 +446,7 @@ describe('App', () => {
         const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             new Title({
                 apiTitle: 'Test Movie',
-                rating: 7.0,
+                imdbRating: 7.0,
             })
         );
         appRef = startApp(mockAdapter);
@@ -510,7 +510,7 @@ describe('App', () => {
         document.body.removeChild(container);
 
         // Now resolve the data - document.contains(container) is now false
-        resolveData(new Title({ apiTitle: 'Detach Test', rating: 7.0 }));
+        resolveData(new Title({ apiTitle: 'Detach Test', imdbRating: 7.0 }));
         await Promise.resolve();
         await Promise.resolve();
 
@@ -526,7 +526,7 @@ describe('App', () => {
         `;
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ rating: 7.0, imdbId: 'tt1' }));
+            .mockResolvedValue(new Title({ imdbRating: 7.0, imdbId: 'tt1' }));
         appRef = startApp(createMockAdapter());
         await vi.waitFor(() => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
@@ -550,7 +550,7 @@ describe('App', () => {
         `;
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ rating: 5.0, imdbId: 'tt2' }));
+            .mockResolvedValue(new Title({ imdbRating: 5.0, imdbId: 'tt2' }));
         appRef = startApp(createMockAdapter());
         await vi.waitFor(() => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
@@ -578,7 +578,7 @@ describe('App', () => {
         });
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             new Title({
-                rating: 7.0,
+                imdbRating: 7.0,
                 imdbId: 'tt3',
             })
         );
@@ -608,7 +608,7 @@ describe('App', () => {
         });
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             new Title({
-                rating: 7.0,
+                imdbRating: 7.0,
                 imdbId: 'tt5',
             })
         );
@@ -643,7 +643,7 @@ describe('App', () => {
         });
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             new Title({
-                rating: 5.0,
+                imdbRating: 5.0,
                 imdbId: 'tt4',
             })
         );
