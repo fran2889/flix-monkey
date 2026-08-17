@@ -13,9 +13,40 @@
  */
 
 export const DATA_VERSION_KEY = 'fm_data_version';
+const CACHE_PREFIX = 'fmc:';
+
+async function migrateImdbRating(adapter) {
+    const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+    const updates = {};
+    let migrated = 0;
+    let skipped = 0;
+
+    for (const key of keys) {
+        const raw = await adapter.storageGet(key);
+        let entry;
+        try {
+            entry = JSON.parse(raw);
+        } catch {
+            skipped += 1;
+            continue;
+        }
+        const data = entry?.data;
+        if (!data || typeof data !== 'object' || Array.isArray(data) || !Object.hasOwn(data, 'rating')) {
+            skipped += 1;
+            continue;
+        }
+        if (!Object.hasOwn(data, 'imdbRating')) data.imdbRating = data.rating;
+        delete data.rating;
+        updates[key] = JSON.stringify(entry);
+        migrated += 1;
+    }
+
+    if (migrated > 0) await adapter.storageSetMany(updates);
+    return { migrated, skipped };
+}
 
 /** @type {ReadonlyArray<StorageMigration>} */
-export const MIGRATIONS = Object.freeze([]);
+export const MIGRATIONS = Object.freeze([{ version: 1, upgrade: migrateImdbRating }]);
 
 /**
  * Run each migration newer than the stored data version.

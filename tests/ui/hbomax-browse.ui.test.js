@@ -42,7 +42,7 @@ describe('HBO Max browse UI surface', () => {
 
         surfaces.forEach(({ container }) => {
             overlayRenderer.injectOverlay(container, {
-                rating: 8.5,
+                imdbRating: 8.5,
                 imdbUrl: 'https://www.imdb.com/title/tt1234567/',
             });
         });

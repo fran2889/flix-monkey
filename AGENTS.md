@@ -177,9 +177,10 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | `config-fields.js`    | Single source of truth for all settings definitions and defaults         |
 | `fade-manager.js`     | Manages fade state overrides for individual titles                       |
 | `logger.js`           | Centralized logging; honours the `debug` config flag                     |
+| `migrations.js`       | Versioned persistent-storage migrations tracked by `fm_data_version`     |
 | `rate-limits.js`      | Per-client rate limit intervals                                          |
 | `utils.js`            | Shared helpers; defines `FlixMonkeyError`                                |
-| `title.js`            | Pure data class representing a movie/show title                          |
+| `title.js`            | Pure title data class; IMDb scores use the `imdbRating` field            |
 | `constants.js`        | Shared constants: timing values, `ApiSource` enum, `TitleType` enum      |
 
 **`src/core/ui/`**: Shared UI components
@@ -250,6 +251,19 @@ class PlatformAdapter {
     setConfigData(data)             // Pre-loads config data (WebExtensionAdapter overrides this)
 }
 ```
+
+## Storage Migrations (`migrations.js`)
+
+`MIGRATIONS` contains persistent-storage upgrades in strictly increasing
+integer version order. `runMigrations()` compares this registry with the
+stored `fm_data_version`, runs newer migrations before application startup,
+and advances the stored version even when a migration or its recovery handler
+fails. Migration version 1 renames cached `Title.rating` data to
+`Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.
+
+When changing a persisted shape, append a new migration version and add unit
+tests for transformed, already-current, and malformed data. Do not edit or
+reuse a released migration version.
 
 ## Settings (`config-fields.js`)
 
