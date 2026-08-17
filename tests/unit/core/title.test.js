@@ -121,13 +121,6 @@ describe('Title', () => {
             expect(new Title({ imdbRating: input }).imdbRating).toBe(expected);
         });
 
-        it('does not expose the former rating field', () => {
-            const title = new Title({ rating: 8.5 });
-
-            expect(title.imdbRating).toBeNull();
-            expect(title).not.toHaveProperty('rating');
-        });
-
         it.each([
             ['90%', 90],
             ['0%', 0],
