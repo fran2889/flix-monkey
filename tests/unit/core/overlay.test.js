@@ -55,9 +55,9 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
 
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt1', rating: 7 }));
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt1', imdbRating: 7 }));
             const firstOverlay = container.querySelector('.fm-rating-overlay');
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt2', rating: 8 }));
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt2', imdbRating: 8 }));
 
             expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
             expect(container.querySelector('.fm-rating-overlay')).not.toBe(firstOverlay);
@@ -69,7 +69,7 @@ describe('OverlayRenderer', () => {
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container);
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt1234567', rating: 8.5 }));
+            renderer.injectOverlay(container, new Title({ imdbId: 'tt1234567', imdbRating: 8.5 }));
 
             expect(container.querySelector('.fm-loading')).toBeNull();
             expect(renderer.isLoading(container)).toBe(false);
@@ -162,7 +162,7 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
-            renderer.injectOverlay(container, new Title({ apiTitle: 'Test', rating: 7.5 }));
+            renderer.injectOverlay(container, new Title({ apiTitle: 'Test', imdbRating: 7.5 }));
 
             renderer.clearAllOverlays();
 

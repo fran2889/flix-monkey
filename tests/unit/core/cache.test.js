@@ -59,7 +59,7 @@ describe('CacheManager', () => {
     });
 
     it('should write and read cache entry', async () => {
-        const titleData = { displayTitle: 'Test Title', year: 2026, rating: '8.0' };
+        const titleData = { displayTitle: 'Test Title', year: 2026, imdbRating: '8.0' };
         const titleObj = new Title(titleData);
         adapter.storageGet.mockResolvedValue(JSON.stringify({ data: titleObj, expires: Date.now() + 10000 }));
         await cacheManager.write('Test Title', titleObj);
@@ -92,7 +92,7 @@ describe('CacheManager', () => {
     });
 
     it('should return valid entry for indefinite cache expiration (null)', async () => {
-        const titleObj = new Title({ displayTitle: 'Indefinite Title', rating: '8.0' });
+        const titleObj = new Title({ displayTitle: 'Indefinite Title', imdbRating: '8.0' });
         adapter.storageGet.mockResolvedValue(JSON.stringify({ data: titleObj, expires: null }));
         const result = await cacheManager.read('Indefinite Title', 'agregarr');
         expect(result.displayTitle).toBe('Indefinite Title');
@@ -125,11 +125,11 @@ describe('CacheManager', () => {
     });
 
     it('should return rated entry regardless of source mismatch', async () => {
-        const titleObj = new Title({ displayTitle: 'Good Movie', rating: '8.0', source: 'omdb' });
+        const titleObj = new Title({ displayTitle: 'Good Movie', imdbRating: '8.0', source: 'omdb' });
         adapter.storageGet.mockResolvedValue(JSON.stringify({ data: titleObj, expires: Date.now() + 100000 }));
         const result = await cacheManager.read('Good Movie', 'agregarr');
         expect(result).not.toBeNull();
-        expect(result.rating).toBe(8.0);
+        expect(result.imdbRating).toBe(8.0);
     });
 
     it('should treat not-found entry with null source as cache miss', async () => {

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DATA_VERSION_KEY, runMigrations } from '../../../src/core/migrations.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
@@ -112,5 +112,81 @@ describe('runMigrations', () => {
         ['non-function onFailure', [{ version: 1, upgrade: vi.fn(), onFailure: true }]],
     ])('rejects %s registries', async (_name, migrations) => {
         await expect(runMigrations(createMockAdapter(), logger, migrations)).rejects.toThrow();
+    });
+});
+
+describe('default migrations', () => {
+    const logger = { info: vi.fn(), error: vi.fn() };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('renames cached rating fields while preserving cache metadata', async () => {
+        const entries = {
+            'fmc:first': JSON.stringify({
+                data: { displayTitle: 'First', rating: '8.5', rtRating: 90 },
+                expires: 12345,
+            }),
+            'fmc:second': JSON.stringify({
+                data: { displayTitle: 'Second', rating: null, imdbRating: 7.2 },
+                expires: null,
+            }),
+            'fmc:third': JSON.stringify({
+                data: { displayTitle: 'Third', rating: 9.1 },
+                expires: 67890,
+            }),
+            'fmc:not-found': JSON.stringify({
+                data: { displayTitle: 'Missing', rating: null },
+                expires: 54321,
+            }),
+        };
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+        });
+
+        await runMigrations(adapter, logger);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith({
+            'fmc:first': JSON.stringify({
+                data: { displayTitle: 'First', rtRating: 90, imdbRating: '8.5' },
+                expires: 12345,
+            }),
+            'fmc:second': JSON.stringify({
+                data: { displayTitle: 'Second', imdbRating: 7.2 },
+                expires: null,
+            }),
+            'fmc:third': JSON.stringify({
+                data: { displayTitle: 'Third', imdbRating: 9.1 },
+                expires: 67890,
+            }),
+            'fmc:not-found': JSON.stringify({
+                data: { displayTitle: 'Missing', imdbRating: null },
+                expires: 54321,
+            }),
+        });
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, skipped: 0 });
+    });
+
+    it('leaves malformed and current-schema cache entries untouched', async () => {
+        const entries = {
+            'fmc:malformed': '{bad json',
+            'fmc:no-data': JSON.stringify({ expires: 12345 }),
+            'fmc:array-data': JSON.stringify({ data: [{ rating: 8.5 }], expires: 12345 }),
+            'fmc:current': JSON.stringify({ data: { imdbRating: 8.5 }, expires: 12345 }),
+        };
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+        });
+
+        await runMigrations(adapter, logger);
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, skipped: 4 });
     });
 });

@@ -162,14 +162,16 @@ export class FlixMonkeyApp {
     #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
-        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.rating, this.#config);
+        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating, this.#config);
         this.#renderer.applyFade(container, shouldFade);
         if (fadeable) container.dataset.fmKey = dedupKey;
-        const onFadeToggleClick = showFadeToggle ? el => this.#handleFadeToggleClick(dedupKey, data.rating, el) : null;
+        const onFadeToggleClick = showFadeToggle
+            ? el => this.#handleFadeToggleClick(dedupKey, data.imdbRating, el)
+            : null;
         this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
     }
 
-    async #handleFadeToggleClick(dedupKey, rating, toggleBadgeEl) {
+    async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {
         const domState = toggleBadgeEl.dataset.state;
         const currentState = domState === 'auto' ? null : domState;
         const nextState = this.#fadeManager.nextState(currentState);
@@ -179,7 +181,7 @@ export class FlixMonkeyApp {
         const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
         icon.textContent = nextState === null ? '⭐' : '👁️';
         icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
-        const shouldFade = this.#fadeManager.shouldFade(nextState, rating, this.#config);
+        const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating, this.#config);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c, shouldFade);
         });

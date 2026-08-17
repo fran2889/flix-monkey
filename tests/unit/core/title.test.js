@@ -61,7 +61,7 @@ describe('Title', () => {
     it('should create notFound title with default null source', () => {
         const title = Title.notFound('Missing Movie');
         expect(title.displayTitle).toBe('Missing Movie');
-        expect(title.rating).toBeNull();
+        expect(title.imdbRating).toBeNull();
         expect(title.source).toBeNull();
     });
 
@@ -69,7 +69,7 @@ describe('Title', () => {
         const title = Title.notFound('Missing Movie', 'omdb');
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.source).toBe('omdb');
-        expect(title.rating).toBeNull();
+        expect(title.imdbRating).toBeNull();
     });
 
     it('should return an immutable copy with only its source changed', () => {
@@ -78,7 +78,7 @@ describe('Title', () => {
             apiTitle: 'Canonical',
             imdbId: 'tt123',
             year: 2024,
-            rating: 7.5,
+            imdbRating: 7.5,
             imdbVotes: 1000,
             rtRating: 80,
             mcRating: 70,
@@ -95,8 +95,8 @@ describe('Title', () => {
     });
 
     describe('hasRating', () => {
-        it('should be true when rating is 0', () => {
-            expect(new Title({ rating: 0 }).hasRating).toBe(true);
+        it('should be true when imdbRating is 0', () => {
+            expect(new Title({ imdbRating: 0 }).hasRating).toBe(true);
         });
         it('should be true when rtRating is "0%"', () => {
             expect(new Title({ rtRating: '0%' }).hasRating).toBe(true);
@@ -109,7 +109,7 @@ describe('Title', () => {
         });
     });
 
-    describe('rating normalization', () => {
+    describe('IMDb rating normalization', () => {
         it.each([
             ['N/A', null],
             ['', null],
@@ -117,8 +117,15 @@ describe('Title', () => {
             [undefined, null],
             ['8.5', 8.5],
             [0, 0],
-        ])('normalizes rating %s -> %s', (input, expected) => {
-            expect(new Title({ rating: input }).rating).toBe(expected);
+        ])('normalizes imdbRating %s -> %s', (input, expected) => {
+            expect(new Title({ imdbRating: input }).imdbRating).toBe(expected);
+        });
+
+        it('does not expose the former rating field', () => {
+            const title = new Title({ rating: 8.5 });
+
+            expect(title.imdbRating).toBeNull();
+            expect(title).not.toHaveProperty('rating');
         });
 
         it.each([
@@ -192,19 +199,19 @@ describe('Title', () => {
 
     describe('immutability', () => {
         it('should not allow mutation of fields after construction', () => {
-            const title = new Title({ displayTitle: 'Original', rating: 7.5 });
+            const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
             try {
                 title.displayTitle = 'Mutated';
             } catch {
                 /* frozen in strict mode */
             }
             try {
-                title.rating = 0;
+                title.imdbRating = 0;
             } catch {
                 /* frozen in strict mode */
             }
             expect(title.displayTitle).toBe('Original');
-            expect(title.rating).toBe(7.5);
+            expect(title.imdbRating).toBe(7.5);
         });
     });
 });

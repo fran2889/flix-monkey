@@ -39,7 +39,7 @@ function expectCommonTitleFields(result, source, { displayTitle, apiTitleContain
     if (year !== undefined) expect(result.year).toBe(year);
     expect(result.source).toBe(source);
     if (type !== undefined) expect(result.type).toBe(type);
-    expectImdbRating(result.rating);
+    expectImdbRating(result.imdbRating);
 }
 
 function expectImdbRating(rating, label = 'IMDb rating') {

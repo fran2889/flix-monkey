@@ -59,7 +59,7 @@ describe('ApiClientManager', () => {
         expect(result.source).toBe('omdb');
         expect(mockCache.write).toHaveBeenCalledWith(
             'Unknown Movie',
-            expect.objectContaining({ source: 'omdb', rating: null })
+            expect.objectContaining({ source: 'omdb', imdbRating: null })
         );
     });
 
