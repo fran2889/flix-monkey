@@ -168,10 +168,10 @@ describe('default migrations', () => {
             }),
         });
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, skipped: 0 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, deleted: 0 });
     });
 
-    it('leaves malformed and current-schema cache entries untouched', async () => {
+    it('deletes malformed entries and keeps valid entries without rating', async () => {
         const entries = {
             'fmc:malformed': '{bad json',
             'fmc:no-data': JSON.stringify({ expires: 12345 }),
@@ -181,12 +181,51 @@ describe('default migrations', () => {
         const adapter = createMockAdapter({
             storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
         });
 
         await runMigrations(adapter, logger);
 
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:malformed');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:no-data');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:array-data');
+        expect(adapter.storageDelete).not.toHaveBeenCalledWith('fmc:current');
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, skipped: 4 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, deleted: 3 });
+    });
+
+    it('clears cache on migration failure via onFailure handler', async () => {
+        const entries = {
+            'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
+            'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
+        };
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+        const error = new Error('migration failed');
+
+        await runMigrations(adapter, logger, [
+            {
+                version: 1,
+                upgrade: vi.fn().mockRejectedValue(error),
+                onFailure: vi.fn().mockImplementation(async adapter => {
+                    const keys = await adapter.storageGetKeys('fmc:');
+                    await Promise.all(keys.map(key => adapter.storageDelete(key)));
+                    return { cleared: keys.length };
+                }),
+            },
+        ]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:second');
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Migration 1 failed'), error);
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 recovery completed'), {
+            cleared: 2,
+        });
     });
 });

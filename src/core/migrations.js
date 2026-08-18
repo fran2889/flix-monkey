@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {Record<string, unknown> | undefined} MigrationSummary */
+/** @typedef {{ migrated?: number, deleted?: number }} MigrationSummary */
 
 /**
  * @typedef {object} StorageMigration
@@ -15,11 +15,17 @@
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
+async function clearCache(adapter) {
+    const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+    await Promise.all(keys.map(key => adapter.storageDelete(key)));
+    return { cleared: keys.length };
+}
+
 async function migrateImdbRating(adapter) {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
     const updates = {};
     let migrated = 0;
-    let skipped = 0;
+    let deleted = 0;
 
     for (const key of keys) {
         const raw = await adapter.storageGet(key);
@@ -27,12 +33,17 @@ async function migrateImdbRating(adapter) {
         try {
             entry = JSON.parse(raw);
         } catch {
-            skipped += 1;
+            await adapter.storageDelete(key);
+            deleted += 1;
             continue;
         }
         const data = entry?.data;
-        if (!data || typeof data !== 'object' || Array.isArray(data) || !Object.hasOwn(data, 'rating')) {
-            skipped += 1;
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            await adapter.storageDelete(key);
+            deleted += 1;
+            continue;
+        }
+        if (!Object.hasOwn(data, 'rating')) {
             continue;
         }
         if (!Object.hasOwn(data, 'imdbRating')) data.imdbRating = data.rating;
@@ -42,11 +53,11 @@ async function migrateImdbRating(adapter) {
     }
 
     if (migrated > 0) await adapter.storageSetMany(updates);
-    return { migrated, skipped };
+    return { migrated, deleted };
 }
 
 /** @type {ReadonlyArray<StorageMigration>} */
-export const MIGRATIONS = Object.freeze([{ version: 1, upgrade: migrateImdbRating }]);
+export const MIGRATIONS = Object.freeze([{ version: 1, upgrade: migrateImdbRating, onFailure: clearCache }]);
 
 /**
  * Run each migration newer than the stored data version.
