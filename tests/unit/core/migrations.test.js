@@ -12,15 +12,16 @@ describe('runMigrations', () => {
 
     it.each([null, 'bad', '-1', -1])('treats %j as version zero', async stored => {
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(stored) });
-        const upgrade = vi.fn().mockResolvedValue({ transformed: 2, removed: 1 });
+        const upgrade = vi.fn().mockResolvedValue({ migrated: 2, skipped: 0, deleted: 1 });
 
         await runMigrations(adapter, logger, [{ version: 1, upgrade }]);
 
         expect(upgrade).toHaveBeenCalledWith(adapter);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 completed'), {
-            transformed: 2,
-            removed: 1,
+            migrated: 2,
+            skipped: 0,
+            deleted: 1,
         });
     });
 
@@ -43,7 +44,7 @@ describe('runMigrations', () => {
 
     it('runs recovery, logs it, and advances after upgrade failure', async () => {
         const error = new Error('bad cache entry');
-        const onFailure = vi.fn().mockResolvedValue({ removed: 4 });
+        const onFailure = vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 4 });
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('0') });
 
         await runMigrations(adapter, logger, [{ version: 1, upgrade: vi.fn().mockRejectedValue(error), onFailure }]);
@@ -52,7 +53,9 @@ describe('runMigrations', () => {
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Migration 1 failed'), error);
         expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 recovery completed'), {
-            removed: 4,
+            migrated: 0,
+            skipped: 0,
+            deleted: 4,
         });
     });
 
@@ -168,7 +171,7 @@ describe('default migrations', () => {
             }),
         });
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, deleted: 0 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, skipped: 0, deleted: 0 });
     });
 
     it('deletes malformed entries and keeps valid entries without rating', async () => {
@@ -192,7 +195,7 @@ describe('default migrations', () => {
         expect(adapter.storageDelete).not.toHaveBeenCalledWith('fmc:current');
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, deleted: 3 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, skipped: 1, deleted: 3 });
     });
 
     it('clears cache on migration failure via onFailure handler', async () => {
@@ -214,7 +217,7 @@ describe('default migrations', () => {
                 onFailure: vi.fn().mockImplementation(async adapter => {
                     const keys = await adapter.storageGetKeys('fmc:');
                     await Promise.all(keys.map(key => adapter.storageDelete(key)));
-                    return { cleared: keys.length };
+                    return { migrated: 0, skipped: 0, deleted: keys.length };
                 }),
             },
         ]);
@@ -225,7 +228,9 @@ describe('default migrations', () => {
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Migration 1 failed'), error);
         expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 recovery completed'), {
-            cleared: 2,
+            migrated: 0,
+            skipped: 0,
+            deleted: 2,
         });
     });
 });
