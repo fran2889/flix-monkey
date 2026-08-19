@@ -8,6 +8,7 @@
 /**
  * @typedef {object} StorageMigration
  * @property {number} version
+ * @property {string} description
  * @property {(adapter: import('../platform/adapter.js').PlatformAdapter) => Promise<MigrationSummary>} upgrade
  * @property {(adapter: import('../platform/adapter.js').PlatformAdapter, error: unknown) => Promise<MigrationSummary>} [onFailure]
  */
@@ -25,6 +26,7 @@ async function clearCache(adapter) {
 export const MIGRATIONS = Object.freeze([
     {
         version: 1,
+        description: 'Rename cached Title.rating to Title.imdbRating',
         upgrade: async adapter => {
             const keys = await adapter.storageGetKeys(CACHE_PREFIX);
             const updates = {};
@@ -86,15 +88,21 @@ export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
 
         try {
             const summary = await migration.upgrade(adapter);
-            logger.info(`Migration ${migration.version} completed`, summary);
+            logger.info(`Migration ${migration.version} (${migration.description}) completed`, summary);
         } catch (error) {
-            logger.error(`Migration ${migration.version} failed`, error);
+            logger.error(`Migration ${migration.version} (${migration.description}) failed`, error);
             if (migration.onFailure) {
                 try {
                     const summary = await migration.onFailure(adapter, error);
-                    logger.info(`Migration ${migration.version} recovery completed`, summary);
+                    logger.info(
+                        `Migration ${migration.version} (${migration.description}) recovery completed`,
+                        summary
+                    );
                 } catch (recoveryError) {
-                    logger.error(`Migration ${migration.version} recovery failed`, recoveryError);
+                    logger.error(
+                        `Migration ${migration.version} (${migration.description}) recovery failed`,
+                        recoveryError
+                    );
                 }
             }
         }
@@ -126,6 +134,9 @@ function validateMigrations(migrations) {
         }
         if (migration.version <= previousVersion) {
             throw new TypeError('Migration versions must be strictly increasing');
+        }
+        if (typeof migration.description !== 'string' || migration.description.trim() === '') {
+            throw new TypeError('Migration description must be a non-empty string');
         }
         if (typeof migration.upgrade !== 'function') {
             throw new TypeError('Migration upgrade must be a function');
