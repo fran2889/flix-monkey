@@ -118,84 +118,109 @@ describe('runMigrations', () => {
     });
 });
 
-describe('default migrations', () => {
+describe('migration 1', () => {
     const logger = { info: vi.fn(), error: vi.fn() };
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('renames cached rating fields while preserving cache metadata', async () => {
-        const entries = {
-            'fmc:first': JSON.stringify({
-                data: { displayTitle: 'First', rating: '8.5', rtRating: 90 },
-                expires: 12345,
-            }),
-            'fmc:second': JSON.stringify({
-                data: { displayTitle: 'Second', rating: null, imdbRating: 7.2 },
-                expires: null,
-            }),
-            'fmc:third': JSON.stringify({
-                data: { displayTitle: 'Third', rating: 9.1 },
-                expires: 67890,
-            }),
-            'fmc:not-found': JSON.stringify({
-                data: { displayTitle: 'Missing', rating: null },
-                expires: 54321,
-            }),
-        };
+    it.each([
+        [
+            'string rating',
+            {
+                inputData: { displayTitle: 'Test', rating: '8.5', rtRating: 90 },
+                expectedData: { displayTitle: 'Test', rtRating: 90, imdbRating: '8.5' },
+            },
+        ],
+        [
+            'numeric rating',
+            {
+                inputData: { displayTitle: 'Test', rating: 9.1 },
+                expectedData: { displayTitle: 'Test', imdbRating: 9.1 },
+            },
+        ],
+        [
+            'null rating',
+            {
+                inputData: { displayTitle: 'Test', rating: null },
+                expectedData: { displayTitle: 'Test', imdbRating: null },
+            },
+        ],
+        [
+            'both rating and imdbRating',
+            {
+                inputData: { displayTitle: 'Test', rating: null, imdbRating: 7.2 },
+                expectedData: { displayTitle: 'Test', imdbRating: 7.2 },
+            },
+        ],
+    ])('migrates entries with rating field: %s', async (_desc, { inputData, expectedData }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data: inputData, expires }) };
+        const expected = { [key]: JSON.stringify({ data: expectedData, expires }) };
+        const result = { migrated: 1, skipped: 0, deleted: 0 };
+
         const adapter = createMockAdapter({
-            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
         });
 
         await runMigrations(adapter, logger);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
-        expect(adapter.storageSetMany).toHaveBeenCalledWith({
-            'fmc:first': JSON.stringify({
-                data: { displayTitle: 'First', rtRating: 90, imdbRating: '8.5' },
-                expires: 12345,
-            }),
-            'fmc:second': JSON.stringify({
-                data: { displayTitle: 'Second', imdbRating: 7.2 },
-                expires: null,
-            }),
-            'fmc:third': JSON.stringify({
-                data: { displayTitle: 'Third', imdbRating: 9.1 },
-                expires: 67890,
-            }),
-            'fmc:not-found': JSON.stringify({
-                data: { displayTitle: 'Missing', imdbRating: null },
-                expires: 54321,
-            }),
-        });
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, skipped: 0, deleted: 0 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', result);
     });
 
-    it('deletes malformed entries and keeps valid entries without rating', async () => {
-        const entries = {
-            'fmc:malformed': '{bad json',
-            'fmc:no-data': JSON.stringify({ expires: 12345 }),
-            'fmc:array-data': JSON.stringify({ data: [{ rating: 8.5 }], expires: 12345 }),
-            'fmc:current': JSON.stringify({ data: { imdbRating: 8.5 }, expires: 12345 }),
-        };
+    it.each([
+        ['preserves imdbRating field', { data: { imdbRating: 8.5 } }],
+        ['skips entries without rating', { data: { displayTitle: 'Test' } }],
+    ])('skips valid entries without rating: %s', async (_desc, { data }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data, expires }) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
         const adapter = createMockAdapter({
-            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
             storageDelete: vi.fn().mockResolvedValue(undefined),
         });
 
         await runMigrations(adapter, logger);
 
-        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:malformed');
-        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:no-data');
-        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:array-data');
-        expect(adapter.storageDelete).not.toHaveBeenCalledWith('fmc:current');
+        expect(adapter.storageDelete).not.toHaveBeenCalled();
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, skipped: 1, deleted: 3 });
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', result);
+    });
+
+    it.each([
+        ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes entries without data', { value: { expires: 12345 } }],
+        ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const deletedKeys = [key];
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+
+        await runMigrations(adapter, logger);
+
+        for (const k of deletedKeys) {
+            expect(adapter.storageDelete).toHaveBeenCalledWith(k);
+        }
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', result);
     });
 
     it('clears cache on migration failure via onFailure handler', async () => {
