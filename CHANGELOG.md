@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/fran2889/flix-monkey/compare/v1.5.3...v1.6.0) (2026-08-20)
+
+
+### Features
+
+* **storage:** add data migrations ([#164](https://github.com/fran2889/flix-monkey/issues/164)) ([41fb3b6](https://github.com/fran2889/flix-monkey/commit/41fb3b6535d66d98d368d3422693968f3d5df74f))
+
 ## [1.5.3](https://github.com/fran2889/flix-monkey/compare/v1.5.2...v1.5.3) (2026-08-15)
 
 
