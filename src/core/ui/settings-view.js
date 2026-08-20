@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 /**
@@ -15,6 +16,7 @@ export class SettingsView {
     #fields;
     #actions;
     #container = null;
+    #debounceTimer = null;
 
     /**
      * @param {typeof import('../config-fields.js').CONFIG_FIELDS} fields
@@ -30,6 +32,7 @@ export class SettingsView {
         this.#injectStyles();
         container.className = 'fm-settings-container';
         container.replaceChildren(this.#createFields(settings), this.#createActions(), this.#createStatus());
+        this.#setupAutoSave();
     }
 
     #injectStyles() {
@@ -269,6 +272,23 @@ export class SettingsView {
         const status = document.createElement('div');
         status.id = 'fm-status';
         return status;
+    }
+
+    #setupAutoSave() {
+        const inputs = this.#container.querySelectorAll('.field-input');
+        for (const input of inputs) {
+            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
+                this.#debounceTimer = setTimeout(() => {
+                    try {
+                        this.#actions.onSave();
+                    } catch {
+                        // Stop errors in onSave from breaking event handlers
+                    }
+                }, AUTOSAVE_DEBOUNCE_MS);
+            });
+        }
     }
 
     readValues() {
