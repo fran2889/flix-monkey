@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach,describe, it } from 'vitest';
+import { beforeEach, describe, it } from 'vitest';
 
 import { ConfigManager } from '../../src/core/config-manager.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
