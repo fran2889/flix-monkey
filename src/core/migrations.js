@@ -68,6 +68,16 @@ export const MIGRATIONS = Object.freeze([
 ]);
 
 /**
+ * Get a migration by its version number.
+ *
+ * @param {number} version
+ * @returns {StorageMigration | undefined}
+ */
+export function getMigrationByVersion(version) {
+    return MIGRATIONS.find(m => m.version === version);
+}
+
+/**
  * Run each migration newer than the stored data version.
  *
  * A failed upgrade, including a failed recovery handler, deliberately advances

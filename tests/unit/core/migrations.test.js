@@ -4,8 +4,10 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DATA_VERSION_KEY, runMigrations } from '../../../src/core/migrations.js';
+import { DATA_VERSION_KEY, getMigrationByVersion, runMigrations } from '../../../src/core/migrations.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+
+const migration1 = getMigrationByVersion(1);
 
 describe('runMigrations', () => {
     const logger = { info: vi.fn(), error: vi.fn() };
@@ -131,7 +133,7 @@ describe('runMigrations', () => {
     });
 });
 
-describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
+describe(`migration ${migration1.version}: ${migration1.description}`, () => {
     const logger = { info: vi.fn(), error: vi.fn() };
 
     beforeEach(() => {
@@ -179,13 +181,13 @@ describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
         });
 
-        await runMigrations(adapter, logger);
+        await runMigrations(adapter, logger, [migration1]);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
         expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.info).toHaveBeenCalledWith(
-            'Migration 1 (Rename cached Title.rating to Title.imdbRating) completed',
+            `Migration ${migration1.version} (${migration1.description}) completed`,
             result
         );
     });
@@ -205,13 +207,13 @@ describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
             storageDelete: vi.fn().mockResolvedValue(undefined),
         });
 
-        await runMigrations(adapter, logger);
+        await runMigrations(adapter, logger, [migration1]);
 
         expect(adapter.storageDelete).not.toHaveBeenCalled();
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.info).toHaveBeenCalledWith(
-            'Migration 1 (Rename cached Title.rating to Title.imdbRating) completed',
+            `Migration ${migration1.version} (${migration1.description}) completed`,
             result
         );
     });
@@ -232,7 +234,7 @@ describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
             storageDelete: vi.fn().mockResolvedValue(undefined),
         });
 
-        await runMigrations(adapter, logger);
+        await runMigrations(adapter, logger, [migration1]);
 
         for (const k of deletedKeys) {
             expect(adapter.storageDelete).toHaveBeenCalledWith(k);
@@ -240,12 +242,12 @@ describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.info).toHaveBeenCalledWith(
-            'Migration 1 (Rename cached Title.rating to Title.imdbRating) completed',
+            `Migration ${migration1.version} (${migration1.description}) completed`,
             result
         );
     });
 
-    it('clears cache on migration failure via onFailure handler', async () => {
+    it('clears cache on failure via onFailure handler', async () => {
         const entries = {
             'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
             'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
@@ -255,36 +257,25 @@ describe('migration 1: Rename cached Title.rating to Title.imdbRating', () => {
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
             storageDelete: vi.fn().mockResolvedValue(undefined),
         });
-        const error = new Error('migration failed');
 
-        await runMigrations(adapter, logger, [
-            {
-                version: 1,
-                description: 'Test migration',
-                upgrade: vi.fn().mockRejectedValue(error),
-                onFailure: vi.fn().mockImplementation(async adapter => {
-                    const keys = await adapter.storageGetKeys('fmc:');
-                    await Promise.all(keys.map(key => adapter.storageDelete(key)));
-                    return { migrated: 0, skipped: 0, deleted: keys.length };
-                }),
-            },
-        ]);
+        const failingMigration1 = {
+            ...migration1,
+            upgrade: vi.fn().mockRejectedValue(new Error('migration failed')),
+        };
+
+        await runMigrations(adapter, logger, [failingMigration1]);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:second');
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
         expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining('Migration 1 (Test migration) failed'),
-            error
+            expect.stringContaining(`Migration ${migration1.version} (${migration1.description}) failed`),
+            expect.any(Error)
         );
         expect(logger.info).toHaveBeenCalledWith(
-            expect.stringContaining('Migration 1 (Test migration) recovery completed'),
-            {
-                migrated: 0,
-                skipped: 0,
-                deleted: 2,
-            }
+            expect.stringContaining(`Migration ${migration1.version} (${migration1.description}) recovery completed`),
+            { migrated: 0, skipped: 0, deleted: 2 }
         );
     });
 });
