@@ -108,15 +108,12 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
-    it('should wire onSave to reload Netflix, HBO Max, and Disney+ tabs', async () => {
+    it('should wire onSave to an empty async function', async () => {
         await startAfterMigrations();
         expect(capturedInstance.onSave).toBeTypeOf('function');
         await capturedInstance.onSave();
 
-        expect(tabsQuerySpy).toHaveBeenCalledWith({
-            url: ['*://*.netflix.com/*', '*://play.hbomax.com/*', '*://www.disneyplus.com/*'],
-        });
-        expect(tabsReloadSpy).toHaveBeenCalledWith(1);
-        expect(tabsReloadSpy).toHaveBeenCalledWith(42);
+        expect(tabsQuerySpy).not.toHaveBeenCalled();
+        expect(tabsReloadSpy).not.toHaveBeenCalled();
     });
 });

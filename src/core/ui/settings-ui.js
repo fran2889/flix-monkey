@@ -45,7 +45,6 @@ export class SettingsUI {
         this.#view.setSaveDisabled(true);
         try {
             await this.#adapter.storageSetMany(values);
-            this.#view.showStatus('Saved!', 'success');
             await this.#onSave?.();
         } finally {
             this.#view.setSaveDisabled(false);
