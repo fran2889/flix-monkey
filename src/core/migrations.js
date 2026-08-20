@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {Record<string, unknown> | undefined} MigrationSummary */
+/** @typedef {{ migrated?: number, skipped?: number, deleted?: number }} MigrationSummary */
 
 /**
  * @typedef {object} StorageMigration
  * @property {number} version
+ * @property {string} description
  * @property {(adapter: import('../platform/adapter.js').PlatformAdapter) => Promise<MigrationSummary>} upgrade
  * @property {(adapter: import('../platform/adapter.js').PlatformAdapter, error: unknown) => Promise<MigrationSummary>} [onFailure]
  */
@@ -15,38 +16,66 @@
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
-async function migrateImdbRating(adapter) {
+async function clearCache(adapter) {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
-    const updates = {};
-    let migrated = 0;
-    let skipped = 0;
-
-    for (const key of keys) {
-        const raw = await adapter.storageGet(key);
-        let entry;
-        try {
-            entry = JSON.parse(raw);
-        } catch {
-            skipped += 1;
-            continue;
-        }
-        const data = entry?.data;
-        if (!data || typeof data !== 'object' || Array.isArray(data) || !Object.hasOwn(data, 'rating')) {
-            skipped += 1;
-            continue;
-        }
-        if (!Object.hasOwn(data, 'imdbRating')) data.imdbRating = data.rating;
-        delete data.rating;
-        updates[key] = JSON.stringify(entry);
-        migrated += 1;
-    }
-
-    if (migrated > 0) await adapter.storageSetMany(updates);
-    return { migrated, skipped };
+    await Promise.all(keys.map(key => adapter.storageDelete(key)));
+    return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
 /** @type {ReadonlyArray<StorageMigration>} */
-export const MIGRATIONS = Object.freeze([{ version: 1, upgrade: migrateImdbRating }]);
+export const MIGRATIONS = Object.freeze([
+    {
+        version: 1,
+        description: 'Rename cached Title.rating to Title.imdbRating',
+        upgrade: async adapter => {
+            const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+            const updates = {};
+            let migrated = 0;
+            let skipped = 0;
+            let deleted = 0;
+
+            for (const key of keys) {
+                const raw = await adapter.storageGet(key);
+                let entry;
+                try {
+                    entry = JSON.parse(raw);
+                } catch {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const data = entry?.data;
+                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                if (!Object.hasOwn(data, 'rating')) {
+                    skipped += 1;
+                    continue;
+                }
+                if (!Object.hasOwn(data, 'imdbRating')) data.imdbRating = data.rating;
+                delete data.rating;
+                updates[key] = JSON.stringify(entry);
+                migrated += 1;
+            }
+
+            if (migrated > 0) await adapter.storageSetMany(updates);
+            return { migrated, skipped, deleted };
+        },
+        onFailure: clearCache,
+    },
+]);
+
+/**
+ * Get a migration by its version number.
+ *
+ * @param {number} version
+ * @returns {StorageMigration | undefined}
+ */
+export function getMigrationByVersion(version) {
+    return MIGRATIONS.find(m => m.version === version);
+}
 
 /**
  * Run each migration newer than the stored data version.
@@ -69,15 +98,21 @@ export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
 
         try {
             const summary = await migration.upgrade(adapter);
-            logger.info(`Migration ${migration.version} completed`, summary);
+            logger.info(`Migration ${migration.version} (${migration.description}) completed`, summary);
         } catch (error) {
-            logger.error(`Migration ${migration.version} failed`, error);
+            logger.error(`Migration ${migration.version} (${migration.description}) failed`, error);
             if (migration.onFailure) {
                 try {
                     const summary = await migration.onFailure(adapter, error);
-                    logger.info(`Migration ${migration.version} recovery completed`, summary);
+                    logger.info(
+                        `Migration ${migration.version} (${migration.description}) recovery completed`,
+                        summary
+                    );
                 } catch (recoveryError) {
-                    logger.error(`Migration ${migration.version} recovery failed`, recoveryError);
+                    logger.error(
+                        `Migration ${migration.version} (${migration.description}) recovery failed`,
+                        recoveryError
+                    );
                 }
             }
         }
@@ -109,6 +144,9 @@ function validateMigrations(migrations) {
         }
         if (migration.version <= previousVersion) {
             throw new TypeError('Migration versions must be strictly increasing');
+        }
+        if (typeof migration.description !== 'string' || migration.description.trim() === '') {
+            throw new TypeError('Migration description must be a non-empty string');
         }
         if (typeof migration.upgrade !== 'function') {
             throw new TypeError('Migration upgrade must be a function');

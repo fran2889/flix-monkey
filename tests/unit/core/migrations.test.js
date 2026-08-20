@@ -4,32 +4,35 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DATA_VERSION_KEY, runMigrations } from '../../../src/core/migrations.js';
+import { DATA_VERSION_KEY, getMigrationByVersion, runMigrations } from '../../../src/core/migrations.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+
+const migration1 = getMigrationByVersion(1);
 
 describe('runMigrations', () => {
     const logger = { info: vi.fn(), error: vi.fn() };
 
     it.each([null, 'bad', '-1', -1])('treats %j as version zero', async stored => {
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(stored) });
-        const upgrade = vi.fn().mockResolvedValue({ transformed: 2, removed: 1 });
+        const upgrade = vi.fn().mockResolvedValue({ migrated: 2, skipped: 0, deleted: 1 });
 
-        await runMigrations(adapter, logger, [{ version: 1, upgrade }]);
+        await runMigrations(adapter, logger, [{ version: 1, description: 'Test migration', upgrade }]);
 
         expect(upgrade).toHaveBeenCalledWith(adapter);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 completed'), {
-            transformed: 2,
-            removed: 1,
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 (Test migration) completed'), {
+            migrated: 2,
+            skipped: 0,
+            deleted: 1,
         });
     });
 
     it('runs only newer migrations in ascending order', async () => {
         const calls = [];
         const migrations = [
-            { version: 1, upgrade: vi.fn() },
-            { version: 2, upgrade: vi.fn(async () => calls.push(2)) },
-            { version: 3, upgrade: vi.fn(async () => calls.push(3)) },
+            { version: 1, description: 'First', upgrade: vi.fn() },
+            { version: 2, description: 'Second', upgrade: vi.fn(async () => calls.push(2)) },
+            { version: 3, description: 'Third', upgrade: vi.fn(async () => calls.push(3)) },
         ];
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('1') });
 
@@ -43,31 +46,43 @@ describe('runMigrations', () => {
 
     it('runs recovery, logs it, and advances after upgrade failure', async () => {
         const error = new Error('bad cache entry');
-        const onFailure = vi.fn().mockResolvedValue({ removed: 4 });
+        const onFailure = vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 4 });
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('0') });
 
-        await runMigrations(adapter, logger, [{ version: 1, upgrade: vi.fn().mockRejectedValue(error), onFailure }]);
+        await runMigrations(adapter, logger, [
+            { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(error), onFailure },
+        ]);
 
         expect(onFailure).toHaveBeenCalledWith(adapter, error);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Migration 1 failed'), error);
-        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 recovery completed'), {
-            removed: 4,
-        });
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('Migration 1 (Test migration) failed'),
+            error
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+            expect.stringContaining('Migration 1 (Test migration) recovery completed'),
+            {
+                migrated: 0,
+                skipped: 0,
+                deleted: 4,
+            }
+        );
     });
 
     it('does not write when all migrations are current', async () => {
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('2') });
         await runMigrations(adapter, logger, [
-            { version: 1, upgrade: vi.fn() },
-            { version: 2, upgrade: vi.fn() },
+            { version: 1, description: 'First', upgrade: vi.fn() },
+            { version: 2, description: 'Second', upgrade: vi.fn() },
         ]);
         expect(adapter.storageSet).not.toHaveBeenCalled();
     });
 
     it('advances without recovery when onFailure is absent', async () => {
         const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(0) });
-        await runMigrations(adapter, logger, [{ version: 1, upgrade: vi.fn().mockRejectedValue(new Error('bad')) }]);
+        await runMigrations(adapter, logger, [
+            { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(new Error('bad')) },
+        ]);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
     });
 
@@ -78,13 +93,14 @@ describe('runMigrations', () => {
         await runMigrations(adapter, logger, [
             {
                 version: 1,
+                description: 'Test migration',
                 upgrade: vi.fn().mockRejectedValue(new Error('upgrade bad')),
                 onFailure: vi.fn().mockRejectedValue(recoveryError),
             },
-            { version: 2, upgrade: vi.fn(async () => calls.push(2)) },
+            { version: 2, description: 'Second migration', upgrade: vi.fn(async () => calls.push(2)) },
         ]);
         expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining('Migration 1 recovery failed'),
+            expect.stringContaining('Migration 1 (Test migration) recovery failed'),
             recoveryError
         );
         expect(calls).toEqual([2]);
@@ -95,98 +111,171 @@ describe('runMigrations', () => {
         [
             'duplicate versions',
             [
-                { version: 1, upgrade: vi.fn() },
-                { version: 1, upgrade: vi.fn() },
+                { version: 1, description: 'First', upgrade: vi.fn() },
+                { version: 1, description: 'Second', upgrade: vi.fn() },
             ],
         ],
         [
             'unordered versions',
             [
-                { version: 2, upgrade: vi.fn() },
-                { version: 1, upgrade: vi.fn() },
+                { version: 2, description: 'Second', upgrade: vi.fn() },
+                { version: 1, description: 'First', upgrade: vi.fn() },
             ],
         ],
-        ['zero version', [{ version: 0, upgrade: vi.fn() }]],
-        ['non-integer version', [{ version: 1.5, upgrade: vi.fn() }]],
-        ['missing upgrade', [{ version: 1 }]],
-        ['non-function onFailure', [{ version: 1, upgrade: vi.fn(), onFailure: true }]],
+        ['zero version', [{ version: 0, description: 'Bad', upgrade: vi.fn() }]],
+        ['non-integer version', [{ version: 1.5, description: 'Bad', upgrade: vi.fn() }]],
+        ['missing upgrade', [{ version: 1, description: 'Bad' }]],
+        ['non-function onFailure', [{ version: 1, description: 'Bad', upgrade: vi.fn(), onFailure: true }]],
+        ['missing description', [{ version: 1, upgrade: vi.fn() }]],
+        ['empty description', [{ version: 1, description: '', upgrade: vi.fn() }]],
     ])('rejects %s registries', async (_name, migrations) => {
         await expect(runMigrations(createMockAdapter(), logger, migrations)).rejects.toThrow();
     });
 });
 
-describe('default migrations', () => {
+describe(`migration ${migration1.version}: ${migration1.description}`, () => {
     const logger = { info: vi.fn(), error: vi.fn() };
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('renames cached rating fields while preserving cache metadata', async () => {
-        const entries = {
-            'fmc:first': JSON.stringify({
-                data: { displayTitle: 'First', rating: '8.5', rtRating: 90 },
-                expires: 12345,
-            }),
-            'fmc:second': JSON.stringify({
-                data: { displayTitle: 'Second', rating: null, imdbRating: 7.2 },
-                expires: null,
-            }),
-            'fmc:third': JSON.stringify({
-                data: { displayTitle: 'Third', rating: 9.1 },
-                expires: 67890,
-            }),
-            'fmc:not-found': JSON.stringify({
-                data: { displayTitle: 'Missing', rating: null },
-                expires: 54321,
-            }),
-        };
+    it.each([
+        [
+            'string rating',
+            {
+                inputData: { displayTitle: 'Test', rating: '8.5', rtRating: 90 },
+                expectedData: { displayTitle: 'Test', rtRating: 90, imdbRating: '8.5' },
+            },
+        ],
+        [
+            'numeric rating',
+            {
+                inputData: { displayTitle: 'Test', rating: 9.1 },
+                expectedData: { displayTitle: 'Test', imdbRating: 9.1 },
+            },
+        ],
+        [
+            'null rating',
+            {
+                inputData: { displayTitle: 'Test', rating: null },
+                expectedData: { displayTitle: 'Test', imdbRating: null },
+            },
+        ],
+        [
+            'both rating and imdbRating',
+            {
+                inputData: { displayTitle: 'Test', rating: null, imdbRating: 7.2 },
+                expectedData: { displayTitle: 'Test', imdbRating: 7.2 },
+            },
+        ],
+    ])('migrates entries with rating field: %s', async (_desc, { inputData, expectedData }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data: inputData, expires }) };
+        const expected = { [key]: JSON.stringify({ data: expectedData, expires }) };
+        const result = { migrated: 1, skipped: 0, deleted: 0 };
+
         const adapter = createMockAdapter({
-            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
         });
 
-        await runMigrations(adapter, logger);
+        await runMigrations(adapter, logger, [migration1]);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
-        expect(adapter.storageSetMany).toHaveBeenCalledWith({
-            'fmc:first': JSON.stringify({
-                data: { displayTitle: 'First', rtRating: 90, imdbRating: '8.5' },
-                expires: 12345,
-            }),
-            'fmc:second': JSON.stringify({
-                data: { displayTitle: 'Second', imdbRating: 7.2 },
-                expires: null,
-            }),
-            'fmc:third': JSON.stringify({
-                data: { displayTitle: 'Third', imdbRating: 9.1 },
-                expires: 67890,
-            }),
-            'fmc:not-found': JSON.stringify({
-                data: { displayTitle: 'Missing', imdbRating: null },
-                expires: 54321,
-            }),
-        });
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 4, skipped: 0 });
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1.version} (${migration1.description}) completed`,
+            result
+        );
     });
 
-    it('leaves malformed and current-schema cache entries untouched', async () => {
+    it.each([
+        ['preserves imdbRating field', { data: { imdbRating: 8.5 } }],
+        ['skips entries without rating', { data: { displayTitle: 'Test' } }],
+    ])('skips valid entries without rating: %s', async (_desc, { data }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data, expires }) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+
+        await runMigrations(adapter, logger, [migration1]);
+
+        expect(adapter.storageDelete).not.toHaveBeenCalled();
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1.version} (${migration1.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes entries without data', { value: { expires: 12345 } }],
+        ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const deletedKeys = [key];
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+
+        await runMigrations(adapter, logger, [migration1]);
+
+        for (const k of deletedKeys) {
+            expect(adapter.storageDelete).toHaveBeenCalledWith(k);
+        }
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1.version} (${migration1.description}) completed`,
+            result
+        );
+    });
+
+    it('clears cache on failure via onFailure handler', async () => {
         const entries = {
-            'fmc:malformed': '{bad json',
-            'fmc:no-data': JSON.stringify({ expires: 12345 }),
-            'fmc:array-data': JSON.stringify({ data: [{ rating: 8.5 }], expires: 12345 }),
-            'fmc:current': JSON.stringify({ data: { imdbRating: 8.5 }, expires: 12345 }),
+            'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
+            'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
         };
         const adapter = createMockAdapter({
             storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
             storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
         });
 
-        await runMigrations(adapter, logger);
+        const failingMigration1 = {
+            ...migration1,
+            upgrade: vi.fn().mockRejectedValue(new Error('migration failed')),
+        };
 
-        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        await runMigrations(adapter, logger, [failingMigration1]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:second');
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
-        expect(logger.info).toHaveBeenCalledWith('Migration 1 completed', { migrated: 0, skipped: 4 });
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration1.version} (${migration1.description}) failed`),
+            expect.any(Error)
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration1.version} (${migration1.description}) recovery completed`),
+            { migrated: 0, skipped: 0, deleted: 2 }
+        );
     });
 });
