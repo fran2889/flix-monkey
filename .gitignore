@@ -1,21 +1,17 @@
 # IDE settings
-.antigravitycli
-.chromium-debug-profile/
-.claude/
 .idea/
-.kiro/
-.vscode/
 
 # OS metadata
 .DS_Store
 Thumbs.db
 
-# Node.js
+# Build
 .env
 coverage/
 dist/
-web-ext-artifacts/
 node_modules/
 test-results/
+web-ext-artifacts/
 
+.chromium-debug-profile/
 .worktrees/
