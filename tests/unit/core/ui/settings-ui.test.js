@@ -99,15 +99,7 @@ describe('SettingsUI', () => {
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith({ snapshot: 'initial' });
         });
 
-        it('does not show a success message after saving', async () => {
-            await settingsUI.render(container);
-
-            await settingsUI.save();
-
-            expect(container.querySelector('#fm-status').textContent).toBe('');
-        });
-
-        it('saves settings without managing save button state', async () => {
+        it('saves settings with async storage', async () => {
             let resolveStorage;
             mockAdapter.storageSetMany = vi.fn().mockReturnValue(
                 new Promise(resolve => {

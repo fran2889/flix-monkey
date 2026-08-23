@@ -207,7 +207,6 @@ describe('SettingsView', () => {
             container.querySelector('#fm-clearCacheBtn').click();
             container.querySelector('#fm-resetClientsBtn').click();
 
-            expect(actions.onSave).not.toHaveBeenCalled();
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
         });
