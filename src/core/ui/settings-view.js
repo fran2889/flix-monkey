@@ -239,7 +239,6 @@ export class SettingsView {
         const actions = document.createElement('div');
         actions.className = 'actions';
         actions.append(
-            this.#createAction('fm-saveBtn', 'Save', '', '', this.#actions.onSave),
             this.#createAction(
                 'fm-clearCacheBtn',
                 'Clear Cache',
@@ -318,8 +317,7 @@ export class SettingsView {
         status.className = `fm-status--${type}`;
     }
 
-    setSaveDisabled(disabled) {
-        const saveButton = this.#container.querySelector('[id="fm-saveBtn"]');
-        if (saveButton) saveButton.disabled = disabled;
+    setSaveDisabled() {
+        // No-op: Save button removed, autosave handles persistence
     }
 }

@@ -33,17 +33,6 @@ describe('SettingsUI', () => {
     });
 
     describe('Action button wiring', () => {
-        it('routes the save button to settings persistence', async () => {
-            await settingsUI.render(container);
-
-            container.querySelector('#fm-saveBtn').click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
-            expect(mockCacheManager.clear).not.toHaveBeenCalled();
-            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
-        });
-
         it('routes the clear-cache button to cache clearing', async () => {
             await settingsUI.render(container);
 
@@ -118,7 +107,7 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status').textContent).toBe('');
         });
 
-        it('disables the save button while saving and re-enables it after', async () => {
+        it('saves settings without managing save button state', async () => {
             let resolveStorage;
             mockAdapter.storageSetMany = vi.fn().mockReturnValue(
                 new Promise(resolve => {
@@ -126,14 +115,12 @@ describe('SettingsUI', () => {
                 })
             );
             await settingsUI.render(container);
-            const saveButton = container.querySelector('#fm-saveBtn');
 
             const savePromise = settingsUI.save();
 
-            expect(saveButton.disabled).toBe(true);
             resolveStorage();
             await savePromise;
-            expect(saveButton.disabled).toBe(false);
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
         });
 
         it('shows joined validation errors and does not persist invalid values', async () => {
@@ -151,38 +138,33 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('onSave callback', () => {
-        it('calls onSave after successful storage', async () => {
+    describe('Autosave integration', () => {
+        it('saves settings without external callback', async () => {
             await settingsUI.render(container);
-            const onSave = vi.fn().mockResolvedValue(undefined);
-            settingsUI.onSave = onSave;
 
             await settingsUI.save();
 
-            expect(onSave).toHaveBeenCalledOnce();
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
         });
 
-        it('does not call onSave when validation fails', async () => {
+        it('does not persist invalid values during autosave flow', async () => {
             await settingsUI.render(container);
-            const onSave = vi.fn();
-            settingsUI.onSave = onSave;
             container.querySelector('[id="fm-apiClient"]').value = 'xmdb';
             container.querySelector('[id="fm-xmdbApiKey"]').value = '';
 
             await settingsUI.save();
 
-            expect(onSave).not.toHaveBeenCalled();
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(container.querySelector('#fm-status').textContent).toBe('XMDb API Key is required');
         });
 
-        it('does not call onSave when storageSetMany throws', async () => {
+        it('handles storage errors during save', async () => {
             mockAdapter.storageSetMany.mockRejectedValue(new Error('storage error'));
             await settingsUI.render(container);
-            const onSave = vi.fn();
-            settingsUI.onSave = onSave;
 
             await expect(settingsUI.save()).rejects.toThrow('storage error');
 
-            expect(onSave).not.toHaveBeenCalled();
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
         });
     });
 

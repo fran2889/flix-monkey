@@ -101,7 +101,6 @@ describe('SettingsView', () => {
         it('renders action buttons and status placeholder', () => {
             view.render(container, {});
 
-            expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
             expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
             expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
             expect(container.querySelector('#fm-status')).not.toBeNull();
@@ -205,11 +204,10 @@ describe('SettingsView', () => {
         it('wires each button to its supplied action', () => {
             view.render(container, {});
 
-            container.querySelector('#fm-saveBtn').click();
             container.querySelector('#fm-clearCacheBtn').click();
             container.querySelector('#fm-resetClientsBtn').click();
 
-            expect(actions.onSave).toHaveBeenCalledOnce();
+            expect(actions.onSave).not.toHaveBeenCalled();
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
         });

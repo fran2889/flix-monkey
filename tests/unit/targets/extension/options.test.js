@@ -108,12 +108,9 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
-    it('should wire onSave to an empty async function', async () => {
+    it('should render settings UI without onSave callback', async () => {
         await startAfterMigrations();
-        expect(capturedInstance.onSave).toBeTypeOf('function');
-        await capturedInstance.onSave();
-
-        expect(tabsQuerySpy).not.toHaveBeenCalled();
-        expect(tabsReloadSpy).not.toHaveBeenCalled();
+        expect(capturedInstance).not.toBeNull();
+        expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 });

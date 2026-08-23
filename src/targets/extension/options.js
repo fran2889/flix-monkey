@@ -22,8 +22,5 @@ import { WebExtensionAdapter } from '../../platform/webextension.js';
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
     const ui = new SettingsUI(adapter, cacheManager, disabledClientsManager);
-    ui.onSave = async () => {
-        // Empty function: auto-save handles persistence, content script listens for storage changes
-    };
     ui.render(document.body);
 })();

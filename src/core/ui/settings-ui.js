@@ -10,7 +10,6 @@ export class SettingsUI {
     #cacheManager;
     #disabledClientsManager;
     #view;
-    #onSave = null;
 
     /**
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
@@ -45,7 +44,6 @@ export class SettingsUI {
         this.#view.setSaveDisabled(true);
         try {
             await this.#adapter.storageSetMany(values);
-            await this.#onSave?.();
         } finally {
             this.#view.setSaveDisabled(false);
         }
@@ -71,13 +69,5 @@ export class SettingsUI {
         } catch (err) {
             this.#view.showStatus(`Error: ${err.message}`, 'error');
         }
-    }
-
-    get onSave() {
-        return this.#onSave;
-    }
-
-    set onSave(fn) {
-        this.#onSave = fn;
     }
 }

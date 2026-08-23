@@ -35,9 +35,6 @@ function openSettings() {
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
     const ui = new SettingsUI(adapter, cacheManager, disabledClientsManager);
-    ui.onSave = () => {
-        modal.close();
-    };
     ui.render(container).then(() => {
         modal.open();
     });
