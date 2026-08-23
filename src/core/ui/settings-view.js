@@ -282,8 +282,8 @@ export class SettingsView {
                 this.#debounceTimer = setTimeout(() => {
                     try {
                         this.#actions.onSave();
-                    } catch {
-                        // Stop errors in onSave from breaking event handlers
+                    } catch (err) {
+                        console.error('Settings auto-save error:', err);
                     }
                 }, AUTOSAVE_DEBOUNCE_MS);
             });
@@ -315,9 +315,5 @@ export class SettingsView {
         const status = this.#container.querySelector('[id="fm-status"]');
         status.textContent = message;
         status.className = `fm-status--${type}`;
-    }
-
-    setSaveDisabled() {
-        // No-op: Save button removed, autosave handles persistence
     }
 }

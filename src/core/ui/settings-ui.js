@@ -41,12 +41,7 @@ export class SettingsUI {
             return;
         }
 
-        this.#view.setSaveDisabled(true);
-        try {
-            await this.#adapter.storageSetMany(values);
-        } finally {
-            this.#view.setSaveDisabled(false);
-        }
+        await this.#adapter.storageSetMany(values);
     }
 
     async clearCache() {
