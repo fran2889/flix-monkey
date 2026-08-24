@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
 import { SettingsView } from '../../../../src/core/ui/settings-view.js';
@@ -101,7 +101,6 @@ describe('SettingsView', () => {
         it('renders action buttons and status placeholder', () => {
             view.render(container, {});
 
-            expect(container.querySelector('#fm-saveBtn')).not.toBeNull();
             expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
             expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
             expect(container.querySelector('#fm-status')).not.toBeNull();
@@ -205,11 +204,9 @@ describe('SettingsView', () => {
         it('wires each button to its supplied action', () => {
             view.render(container, {});
 
-            container.querySelector('#fm-saveBtn').click();
             container.querySelector('#fm-clearCacheBtn').click();
             container.querySelector('#fm-resetClientsBtn').click();
 
-            expect(actions.onSave).toHaveBeenCalledOnce();
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
         });
@@ -233,6 +230,170 @@ describe('SettingsView', () => {
             expect(container.querySelector('[id="fm-status"]').textContent).toBe('First');
             expect(container.querySelector('[id="fm-status"]').className).toBe('fm-status--success');
             expect(otherContainer.querySelector('[id="fm-status"]').textContent).toBe('');
+        });
+    });
+
+    describe('Auto-save', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('uses change event for checkboxes', () => {
+            const fields = [{ key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false }];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const checkbox = container.querySelector('#fm-checkboxField');
+
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('uses input event for text fields', () => {
+            const fields = [{ key: 'textField', label: 'Text', type: 'text', default: '' }];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const textInput = container.querySelector('#fm-textField');
+
+            textInput.value = 'new-value';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('uses input event for select fields', () => {
+            const fields = [
+                {
+                    key: 'selectField',
+                    label: 'Select',
+                    type: 'select',
+                    default: 'option1',
+                    options: ['option1', 'option2'],
+                },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const select = container.querySelector('#fm-selectField');
+
+            select.value = 'option2';
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('debounces save calls on rapid text input changes', () => {
+            view.render(container, {});
+            const textInput = container.querySelector('#fm-xmdbApiKey');
+
+            textInput.value = 'a';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+            textInput.value = 'ab';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+            textInput.value = 'abc';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(500);
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(500);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('triggers save after debounce period on text input', () => {
+            view.render(container, {});
+            const textInput = container.querySelector('#fm-xmdbApiKey');
+
+            textInput.value = 'new-api-key';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(1000);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('triggers save immediately on checkbox change', () => {
+            view.render(container, {});
+            const checkbox = container.querySelector('#fm-debug');
+
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('triggers save on select change', () => {
+            view.render(container, {});
+            const select = container.querySelector('#fm-apiClient');
+
+            select.value = 'omdb';
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('debounces multiple rapid changes into a single save', () => {
+            view.render(container, {});
+            const textInput = container.querySelector('#fm-xmdbApiKey');
+
+            for (let i = 0; i < 10; i++) {
+                textInput.value = `value${i}`;
+                textInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(1000);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('uses change event for rating checkboxes', () => {
+            view.render(container, {});
+            const checkbox = container.querySelector('#fm-showRtRating');
+
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+            vi.advanceTimersByTime(1000);
+            expect(actions.onSave).toHaveBeenCalledOnce();
+        });
+
+        it('cancels previous debounce timer when new event occurs', () => {
+            view.render(container, {});
+            const textInput = container.querySelector('#fm-xmdbApiKey');
+
+            textInput.value = 'first';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            vi.advanceTimersByTime(500);
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            textInput.value = 'second';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            vi.advanceTimersByTime(500);
+            expect(actions.onSave).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(500);
+            expect(actions.onSave).toHaveBeenCalledOnce();
         });
     });
 });
