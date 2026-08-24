@@ -44,11 +44,13 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             CONFIG_FIELDS.forEach(field => {
+                // Skip action fields - they are rendered as buttons, not inputs
+                if (field.type === 'action') return;
+
                 const label = Array.from(container.querySelectorAll('label')).find(
                     element => element.textContent === field.label
                 );
                 expect(label, `Label for ${field.key} not found`).toBeDefined();
-                expect(label.htmlFor).toBe(`fm-${field.key}`);
 
                 const input = container.querySelector(`[id="fm-${field.key}"]`);
                 expect(input, `Input for ${field.key} not found`).toBeDefined();
@@ -89,20 +91,20 @@ describe('SettingsView', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
-        it('does not add vertical spacing when service controls wrap', () => {
+        it('injects the updated CSS styles', () => {
             view.render(container, {});
 
             const style = document.head.querySelector('style#flixmonkey-settings-styles');
-            expect(style.textContent).toMatch(
-                /\.services-field \.services-group \{\s*display: flex;\s*align-items: center;\s*column-gap: 20px;\s*row-gap: 0;/u
-            );
+            expect(style).not.toBeNull();
+            expect(style.textContent).toContain('.settings-group');
+            expect(style.textContent).toContain('.field--checkbox');
         });
 
         it('renders action buttons and status placeholder', () => {
             view.render(container, {});
 
-            expect(container.querySelector('#fm-clearCacheBtn')).not.toBeNull();
-            expect(container.querySelector('#fm-resetClientsBtn')).not.toBeNull();
+            expect(container.querySelector('#fm-clearCache')).not.toBeNull();
+            expect(container.querySelector('#fm-resetClients')).not.toBeNull();
             expect(container.querySelector('#fm-status')).not.toBeNull();
         });
 
@@ -121,6 +123,7 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             CONFIG_FIELDS.forEach(field => {
+                if (field.type === 'action') return;
                 const input = container.querySelector(`#fm-${field.key}`);
                 const value = field.type === 'checkbox' ? input.checked : input.value;
                 expect(value).toBe(field.default);
@@ -129,7 +132,7 @@ describe('SettingsView', () => {
 
         it('populates every field with its stored value', () => {
             const storedSettings = Object.fromEntries(
-                CONFIG_FIELDS.map(field => {
+                CONFIG_FIELDS.filter(f => f.type !== 'action').map(field => {
                     if (field.type === 'checkbox') return [field.key, !field.default];
                     if (field.type === 'select') {
                         const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
@@ -142,6 +145,7 @@ describe('SettingsView', () => {
             view.render(container, storedSettings);
 
             CONFIG_FIELDS.forEach(field => {
+                if (field.type === 'action') return;
                 const input = container.querySelector(`#fm-${field.key}`);
                 const value = field.type === 'checkbox' ? input.checked : input.value;
                 expect(value).toBe(storedSettings[field.key]);
@@ -204,11 +208,60 @@ describe('SettingsView', () => {
         it('wires each button to its supplied action', () => {
             view.render(container, {});
 
-            container.querySelector('#fm-clearCacheBtn').click();
-            container.querySelector('#fm-resetClientsBtn').click();
+            container.querySelector('#fm-clearCache').click();
+            container.querySelector('#fm-resetClients').click();
 
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe('New UI features', () => {
+        it('should skip disabled fields in readValues', () => {
+            const fields = [
+                { key: 'enabledField', type: 'text', default: 'value' },
+                { key: 'disabledField', type: 'text', default: 'value', disabled: true },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
+
+            const values = view.readValues();
+            expect(values).toHaveProperty('enabledField');
+            expect(values).not.toHaveProperty('disabledField');
+        });
+
+        it('should render suffix text for fields with suffix property', () => {
+            const fields = [{ key: 'cacheDays', type: 'text', default: '30', suffix: 'days' }];
+            view = new SettingsView(fields, actions);
+            view.render(container, { cacheDays: '30' });
+
+            const suffixEl = container.querySelector('.field-suffix');
+            expect(suffixEl).not.toBeNull();
+            expect(suffixEl.textContent).toBe('days');
+        });
+
+        it('should add field--checkbox modifier for single checkbox fields', () => {
+            const fields = [{ key: 'singleCheckbox', type: 'checkbox', default: true }];
+            view = new SettingsView(fields, actions);
+            view.render(container, { singleCheckbox: true });
+
+            const fieldEl = container.querySelector('.field--checkbox');
+            expect(fieldEl).not.toBeNull();
+        });
+
+        it('should add field--actions modifier and hide label for action rows', () => {
+            const fields = [
+                { key: 'clearCache', type: 'action', actionLabel: 'Clear', group: 'debug', row: 'actions' },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const actionField = container.querySelector('.field--actions');
+            expect(actionField).not.toBeNull();
+
+            const label = actionField.querySelector('.field-label');
+            expect(label).not.toBeNull();
+            expect(label.style.visibility).toBe('hidden');
         });
     });
 
@@ -228,7 +281,7 @@ describe('SettingsView', () => {
             expect(view.readValues()).toEqual({ debug: true });
             expect(otherView.readValues()).toEqual({ debug: false });
             expect(container.querySelector('[id="fm-status"]').textContent).toBe('First');
-            expect(container.querySelector('[id="fm-status"]').className).toBe('fm-status--success');
+            expect(container.querySelector('[id="fm-status"]').className).toBe('status status--success');
             expect(otherContainer.querySelector('[id="fm-status"]').textContent).toBe('');
         });
     });

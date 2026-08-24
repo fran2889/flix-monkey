@@ -60,6 +60,16 @@ export class SettingsView {
         const ungroupedFields = [];
 
         for (const field of this.#fields) {
+            // Include action fields in grouping
+            if (field.type === 'action' && field.group && GROUPS[field.group]) {
+                const groupId = field.group;
+                if (!fieldsByGroup[groupId]) {
+                    fieldsByGroup[groupId] = [];
+                }
+                fieldsByGroup[groupId].push(field);
+                continue;
+            }
+
             if (field.type === 'action') continue;
             if (field.group && GROUPS[field.group]) {
                 const groupId = field.group;
@@ -148,54 +158,65 @@ export class SettingsView {
         return container;
     }
 
-    #createFieldRow(row, settings) {
-        const fieldElement = document.createElement('div');
+    #getFieldClassName(row) {
+        const hasActions = row.fields.every(f => f.type === 'action');
+        const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
 
-        const isActionRow = row.fields.every(f => f.type === 'action');
-        const isCheckboxRow = row.fields.length > 1 && row.fields.every(f => f.type === 'checkbox');
-        const isSingleCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
+        if (hasActions) return 'field field--actions';
+        if (isLoneCheckbox) return 'field field--checkbox';
+        return 'field';
+    }
 
-        if (isActionRow) {
-            fieldElement.className = 'field field--actions';
-        } else if (isSingleCheckbox) {
-            fieldElement.className = 'field field--checkbox';
-        } else {
-            fieldElement.className = 'field';
-        }
-
+    #createFieldLabel(row) {
         const label = document.createElement('label');
         label.className = 'field-label';
 
-        if (isActionRow) {
+        const rowLabel = ROW_LABELS[row.id] || row.fields[0].label;
+        const onlyField = row.fields[0];
+
+        if (row.fields.every(f => f.type === 'action')) {
             label.textContent = '\u00A0';
             label.style.visibility = 'hidden';
+        } else if (row.fields.length === 1 && onlyField.labelUrl) {
+            const link = document.createElement('a');
+            link.href = onlyField.labelUrl;
+            link.target = '_blank';
+            link.textContent = rowLabel;
+            label.appendChild(link);
         } else {
-            const rowLabel = ROW_LABELS[row.id] || row.fields[0].label;
             label.textContent = rowLabel;
-            if (row.fields[0] && !row.fields[0].labelUrl) {
-                label.htmlFor = `fm-${row.fields[0].key}`;
+            if (row.fields.length === 1 && !onlyField.labelUrl) {
+                label.htmlFor = `fm-${onlyField.key}`;
             }
         }
 
-        fieldElement.appendChild(label);
+        return label;
+    }
 
+    #createFieldValueContainer(row, settings) {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
-        if (isCheckboxRow) {
+        const hasActions = row.fields.every(f => f.type === 'action');
+        const isCheckboxGroup = row.fields.length > 1 && row.fields.every(f => f.type === 'checkbox');
+
+        if (hasActions) {
+            for (const field of row.fields) {
+                const btn = this.#createActionField(field);
+                valueContainer.appendChild(btn);
+            }
+        } else if (isCheckboxGroup) {
             const checkboxes = document.createElement('div');
             checkboxes.className = 'checkboxes';
 
             for (const field of row.fields) {
                 const item = document.createElement('div');
                 item.className = 'service-item';
-
                 const input = this.#createInput(field, settings);
                 const cbLabel = document.createElement('label');
                 cbLabel.className = 'field-label';
                 cbLabel.textContent = field.label;
                 cbLabel.htmlFor = `fm-${field.key}`;
-
                 item.append(input, cbLabel);
                 checkboxes.appendChild(item);
             }
@@ -214,7 +235,19 @@ export class SettingsView {
             }
         }
 
+        return valueContainer;
+    }
+
+    #createFieldRow(row, settings) {
+        const fieldElement = document.createElement('div');
+        fieldElement.className = this.#getFieldClassName(row);
+
+        const label = this.#createFieldLabel(row);
+        fieldElement.appendChild(label);
+
+        const valueContainer = this.#createFieldValueContainer(row, settings);
         fieldElement.appendChild(valueContainer);
+
         return fieldElement;
     }
 
