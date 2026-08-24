@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
+import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {
     it('enables Disney+ by default', () => {
@@ -114,6 +114,71 @@ describe('core/config-fields', () => {
             } else if (field.type === 'text' || field.type === 'select') {
                 expect(typeof field.default).toBe('string');
             }
+        });
+    });
+
+    describe('UI metadata exports', () => {
+        it('should export GROUPS with all required groups', () => {
+            expect(GROUPS).toHaveProperty('services');
+            expect(GROUPS).toHaveProperty('display');
+            expect(GROUPS).toHaveProperty('providers');
+            expect(GROUPS).toHaveProperty('fade');
+            expect(GROUPS).toHaveProperty('cache');
+            expect(GROUPS).toHaveProperty('debug');
+        });
+
+        it('should have correct group structure', () => {
+            Object.entries(GROUPS).forEach(([, value]) => {
+                expect(value).toHaveProperty('label');
+                expect(value).toHaveProperty('icon');
+                expect(typeof value.label).toBe('string');
+                expect(typeof value.icon).toBe('string');
+            });
+        });
+
+        it('should export ROW_LABELS with services and ratings-display', () => {
+            expect(ROW_LABELS.services).toBe('Show on');
+            expect(ROW_LABELS['ratings-display']).toBe('Show');
+        });
+
+        it('should have cache fields with suffix property', () => {
+            const cacheFields = CONFIG_FIELDS.filter(f => f.group === 'cache' && f.type === 'text');
+            expect(cacheFields.length).toBeGreaterThan(0);
+            cacheFields.forEach(field => {
+                expect(field).toHaveProperty('suffix');
+                expect(field.suffix).toBe('days');
+            });
+        });
+
+        it('should have showImdbRating field with disabled property', () => {
+            const imdbField = CONFIG_FIELDS.find(f => f.key === 'showImdbRating');
+            expect(imdbField).toBeDefined();
+            expect(imdbField.disabled).toBe(true);
+        });
+
+        it('should have action fields for clearCache and resetClients', () => {
+            const clearCacheField = CONFIG_FIELDS.find(f => f.key === 'clearCache');
+            const resetClientsField = CONFIG_FIELDS.find(f => f.key === 'resetClients');
+
+            expect(clearCacheField).toBeDefined();
+            expect(clearCacheField.type).toBe('action');
+            expect(clearCacheField.group).toBe('debug');
+            expect(clearCacheField.actionLabel).toBe('Clear Cache');
+
+            expect(resetClientsField).toBeDefined();
+            expect(resetClientsField.type).toBe('action');
+            expect(resetClientsField.group).toBe('debug');
+            expect(resetClientsField.actionLabel).toBe('Reset Providers');
+        });
+
+        it('should have all fields with group property', () => {
+            CONFIG_FIELDS.forEach(field => {
+                if (field.type !== 'action') {
+                    expect(field).toHaveProperty('group');
+                    expect(typeof field.group).toBe('string');
+                    expect(Object.keys(GROUPS)).toContain(field.group);
+                }
+            });
         });
     });
 });
