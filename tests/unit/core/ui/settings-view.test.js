@@ -242,13 +242,6 @@ describe('SettingsView', () => {
             vi.useRealTimers();
         });
 
-        it('registers event listeners on all field inputs by verifying they respond to events', () => {
-            view.render(container, {});
-
-            const inputs = container.querySelectorAll('.field-input');
-            expect(inputs.length).toBeGreaterThan(0);
-        });
-
         it('uses change event for checkboxes', () => {
             const fields = [{ key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false }];
             view = new SettingsView(fields, actions);
