@@ -148,6 +148,7 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '6.0',
         title: 'IMDb rating threshold (0-10)',
+        short: true,
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(val);
@@ -174,6 +175,7 @@ export const CONFIG_FIELDS = [
         row: 'cache-fields',
         validate: validateCacheTtl,
         suffix: 'days',
+        short: true,
     },
     {
         key: 'cacheTtlRatedNewYear',
@@ -185,6 +187,7 @@ export const CONFIG_FIELDS = [
         row: 'cache-fields',
         validate: validateCacheTtl,
         suffix: 'days',
+        short: true,
     },
     {
         key: 'cacheTtlNoRating',
@@ -196,6 +199,7 @@ export const CONFIG_FIELDS = [
         row: 'cache-fields',
         validate: validateCacheTtl,
         suffix: 'days',
+        short: true,
     },
     {
         key: 'debug',

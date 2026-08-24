@@ -304,7 +304,7 @@ export class SettingsView {
             input.disabled = true;
         }
 
-        if (field.labelUrl) {
+        if (field.short) {
             input.classList.add('short');
         }
 
