@@ -5,7 +5,7 @@
 export const SETTINGS_STYLES = `/* =============================================
    CSS CUSTOM PROPERTIES
    ============================================= */
-.fm-settings-container :root {
+:root {
     /* Colors - Background */
     --color-bg-primary: #141414;
     --color-bg-secondary: #1e1e1e;
