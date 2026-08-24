@@ -10,18 +10,20 @@ export class SettingsUI {
     #cacheManager;
     #disabledClientsManager;
     #view;
-    #onSave = null;
+    #logger;
 
     /**
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
      * @param {import('../cache.js').CacheManager} cacheManager
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
+     * @param {import('../logger.js').Logger} logger
      * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
      */
-    constructor(adapter, cacheManager, disabledClientsManager, fields = CONFIG_FIELDS) {
+    constructor(adapter, cacheManager, disabledClientsManager, logger, fields = CONFIG_FIELDS) {
         this.#adapter = adapter;
         this.#cacheManager = cacheManager;
         this.#disabledClientsManager = disabledClientsManager;
+        this.#logger = logger;
         this.#view = new SettingsView(fields, {
             onSave: () => this.save(),
             onClearCache: () => this.clearCache(),
@@ -35,20 +37,17 @@ export class SettingsUI {
     }
 
     async save() {
-        const values = this.#view.readValues();
-        const errors = this.#view.validate(values);
-        if (errors.length > 0) {
-            this.#view.showStatus(errors.join('\n'), 'error');
-            return;
-        }
-
-        this.#view.setSaveDisabled(true);
         try {
+            const values = this.#view.readValues();
+            const errors = this.#view.validate(values);
+            if (errors.length > 0) {
+                this.#view.showStatus(errors.join('\n'), 'error');
+                return;
+            }
+
             await this.#adapter.storageSetMany(values);
-            this.#view.showStatus('Saved!', 'success');
-            await this.#onSave?.();
-        } finally {
-            this.#view.setSaveDisabled(false);
+        } catch (err) {
+            this.#logger.error('Settings save error:', err);
         }
     }
 
@@ -72,13 +71,5 @@ export class SettingsUI {
         } catch (err) {
             this.#view.showStatus(`Error: ${err.message}`, 'error');
         }
-    }
-
-    get onSave() {
-        return this.#onSave;
-    }
-
-    set onSave(fn) {
-        this.#onSave = fn;
     }
 }

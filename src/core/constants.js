@@ -5,6 +5,7 @@
 export const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 export const CACHE_TTL_INFINITE = -1;
 export const DECORATION_DEBOUNCE_MS = 250;
+export const AUTOSAVE_DEBOUNCE_MS = 1000;
 export const INFLIGHT_TIMEOUT_MS = 30_000;
 export const CLIENT_DISABLE_DURATION = 60 * 60 * 1000; // 1 hour
 export const DEFAULT_FETCH_TIMEOUT = 8000;

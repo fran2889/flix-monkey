@@ -122,13 +122,6 @@ export const SETTINGS_STYLES = `
     cursor: pointer;
     transition: background 0.2s;
 }
-.fm-settings-container #fm-saveBtn {
-    background: #e50914;
-    color: #fff;
-}
-.fm-settings-container #fm-saveBtn:hover {
-    background: #f40612;
-}
 .fm-settings-container .secondary {
     background: #e1e1e1;
     color: #333;
