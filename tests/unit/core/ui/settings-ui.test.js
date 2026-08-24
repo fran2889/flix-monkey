@@ -11,6 +11,7 @@ import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js
 import { Logger } from '../../../../src/core/logger.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { createMockAdapter } from '../../../mocks/adapter.js';
+import { createMockLogger } from '../../../mocks/logger.js';
 
 describe('SettingsUI', () => {
     let mockAdapter;
@@ -18,14 +19,16 @@ describe('SettingsUI', () => {
     let container;
     let mockCacheManager;
     let mockDisabledClientsManager;
+    let mockLogger;
 
     beforeEach(() => {
         mockAdapter = createMockAdapter();
         mockCacheManager = new CacheManager(mockAdapter, new ConfigManager(mockAdapter), new Logger(mockAdapter));
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
+        mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager);
+        settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger);
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -91,7 +94,7 @@ describe('SettingsUI', () => {
                     return value === 'initial' ? null : 'Unexpected value';
                 },
             };
-            settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, [field]);
+            settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger, [field]);
             await settingsUI.render(container);
 
             await settingsUI.save();
@@ -154,9 +157,10 @@ describe('SettingsUI', () => {
             mockAdapter.storageSetMany.mockRejectedValue(new Error('storage error'));
             await settingsUI.render(container);
 
-            await expect(settingsUI.save()).rejects.toThrow('storage error');
+            await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
+            expect(mockLogger.error).toHaveBeenCalledWith('Settings save error:', expect.any(Error));
         });
     });
 

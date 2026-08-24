@@ -350,53 +350,6 @@ describe('SettingsView', () => {
             expect(actions.onSave).toHaveBeenCalledOnce();
         });
 
-        it('handles synchronous errors in onSave without crashing', () => {
-            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-            actions.onSave.mockImplementation(() => {
-                throw new Error('Save failed');
-            });
-
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
-
-            textInput.value = 'test';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-            expect(consoleErrorSpy).toHaveBeenCalledWith('Settings auto-save error:', expect.any(Error));
-
-            consoleErrorSpy.mockRestore();
-        });
-
-        it('continues to work after a synchronous error in onSave', () => {
-            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-            let callCount = 0;
-            actions.onSave.mockImplementation(() => {
-                callCount++;
-                if (callCount === 1) throw new Error('First error');
-            });
-
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
-
-            textInput.value = 'test1';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-            expect(consoleErrorSpy).toHaveBeenCalledOnce();
-
-            textInput.value = 'test2';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledTimes(2);
-
-            consoleErrorSpy.mockRestore();
-        });
-
         it('debounces multiple rapid changes into a single save', () => {
             view.render(container, {});
             const textInput = container.querySelector('#fm-xmdbApiKey');

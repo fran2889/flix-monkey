@@ -279,12 +279,8 @@ export class SettingsView {
             const eventType = input.type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, () => {
                 if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
-                this.#debounceTimer = setTimeout(() => {
-                    try {
-                        this.#actions.onSave();
-                    } catch (err) {
-                        console.error('Settings auto-save error:', err);
-                    }
+                this.#debounceTimer = setTimeout(async () => {
+                    await this.#actions.onSave();
                 }, AUTOSAVE_DEBOUNCE_MS);
             });
         }
