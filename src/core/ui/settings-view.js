@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 /**
@@ -15,6 +16,7 @@ export class SettingsView {
     #fields;
     #actions;
     #container = null;
+    #debounceTimer = null;
 
     /**
      * @param {typeof import('../config-fields.js').CONFIG_FIELDS} fields
@@ -30,6 +32,7 @@ export class SettingsView {
         this.#injectStyles();
         container.className = 'fm-settings-container';
         container.replaceChildren(this.#createFields(settings), this.#createActions(), this.#createStatus());
+        this.#setupAutoSave();
     }
 
     #injectStyles() {
@@ -236,7 +239,6 @@ export class SettingsView {
         const actions = document.createElement('div');
         actions.className = 'actions';
         actions.append(
-            this.#createAction('fm-saveBtn', 'Save', '', '', this.#actions.onSave),
             this.#createAction(
                 'fm-clearCacheBtn',
                 'Clear Cache',
@@ -271,6 +273,19 @@ export class SettingsView {
         return status;
     }
 
+    #setupAutoSave() {
+        const inputs = this.#container.querySelectorAll('.field-input');
+        for (const input of inputs) {
+            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
+                this.#debounceTimer = setTimeout(async () => {
+                    await this.#actions.onSave();
+                }, AUTOSAVE_DEBOUNCE_MS);
+            });
+        }
+    }
+
     readValues() {
         const values = {};
         for (const field of this.#fields) {
@@ -296,10 +311,5 @@ export class SettingsView {
         const status = this.#container.querySelector('[id="fm-status"]');
         status.textContent = message;
         status.className = `fm-status--${type}`;
-    }
-
-    setSaveDisabled(disabled) {
-        const saveButton = this.#container.querySelector('[id="fm-saveBtn"]');
-        if (saveButton) saveButton.disabled = disabled;
     }
 }
