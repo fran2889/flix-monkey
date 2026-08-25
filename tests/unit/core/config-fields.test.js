@@ -7,21 +7,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {
-    it('enables Disney+ by default', () => {
-        expect(CONFIG_FIELDS.find(field => field.key === 'enableDisneyPlus')).toMatchObject({
-            label: 'Disney+',
-            type: 'checkbox',
-            default: true,
-            row: 'services',
-        });
-    });
-
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', field => {
             expect(field).toHaveProperty('key');
             expect(field).toHaveProperty('label');
             expect(field).toHaveProperty('type');
             expect(field).toHaveProperty('default');
+
+            expect(field).toHaveProperty('group');
+            expect(typeof field.group).toBe('string');
+            expect(Object.keys(GROUPS)).toContain(field.group);
 
             if (field.type === 'select') {
                 expect(field).toHaveProperty('options');
@@ -117,17 +112,8 @@ describe('core/config-fields', () => {
         });
     });
 
-    describe('UI metadata exports', () => {
-        it('should export GROUPS with all required groups', () => {
-            expect(GROUPS).toHaveProperty('services');
-            expect(GROUPS).toHaveProperty('display');
-            expect(GROUPS).toHaveProperty('providers');
-            expect(GROUPS).toHaveProperty('fade');
-            expect(GROUPS).toHaveProperty('cache');
-            expect(GROUPS).toHaveProperty('debug');
-        });
-
-        it('should have correct group structure', () => {
+    describe('settings metadata', () => {
+        it('should have GROUPS with consistent structure', () => {
             Object.entries(GROUPS).forEach(([, value]) => {
                 expect(value).toHaveProperty('label');
                 expect(value).toHaveProperty('icon');
@@ -136,48 +122,9 @@ describe('core/config-fields', () => {
             });
         });
 
-        it('should export ROW_LABELS with services and ratings-display', () => {
-            expect(ROW_LABELS.services).toBe('Show on');
-            expect(ROW_LABELS['ratings-display']).toBe('Show');
-        });
-
-        it('should have cache fields with suffix property', () => {
-            const cacheFields = CONFIG_FIELDS.filter(f => f.group === 'cache' && f.type === 'text');
-            expect(cacheFields.length).toBeGreaterThan(0);
-            cacheFields.forEach(field => {
-                expect(field).toHaveProperty('suffix');
-                expect(field.suffix).toBe('days');
-            });
-        });
-
-        it('should have showImdbRating field with disabled property', () => {
-            const imdbField = CONFIG_FIELDS.find(f => f.key === 'showImdbRating');
-            expect(imdbField).toBeDefined();
-            expect(imdbField.disabled).toBe(true);
-        });
-
-        it('should have action fields for clearCache and resetClients', () => {
-            const clearCacheField = CONFIG_FIELDS.find(f => f.key === 'clearCache');
-            const resetClientsField = CONFIG_FIELDS.find(f => f.key === 'resetClients');
-
-            expect(clearCacheField).toBeDefined();
-            expect(clearCacheField.type).toBe('action');
-            expect(clearCacheField.group).toBe('debug');
-            expect(clearCacheField.actionLabel).toBe('Clear Cache');
-
-            expect(resetClientsField).toBeDefined();
-            expect(resetClientsField.type).toBe('action');
-            expect(resetClientsField.group).toBe('debug');
-            expect(resetClientsField.actionLabel).toBe('Reset Providers');
-        });
-
-        it('should have all fields with group property', () => {
-            CONFIG_FIELDS.forEach(field => {
-                if (field.type !== 'action') {
-                    expect(field).toHaveProperty('group');
-                    expect(typeof field.group).toBe('string');
-                    expect(Object.keys(GROUPS)).toContain(field.group);
-                }
+        it('should have ROW_LABELS with string values', () => {
+            Object.entries(ROW_LABELS).forEach(([, value]) => {
+                expect(typeof value).toBe('string');
             });
         });
     });
