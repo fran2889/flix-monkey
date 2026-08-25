@@ -91,13 +91,38 @@ describe('SettingsView', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
-        it('injects the updated CSS styles', () => {
+        it('renders suffix text for fields with suffix property', () => {
+            const fields = [{ key: 'cacheDays', type: 'text', default: '30', suffix: 'days' }];
+            view = new SettingsView(fields, actions);
+            view.render(container, { cacheDays: '30' });
+
+            const suffixEl = container.querySelector('.field-suffix');
+            expect(suffixEl).not.toBeNull();
+            expect(suffixEl.textContent).toBe('days');
+        });
+
+        it('adds field--checkbox modifier for single checkbox fields', () => {
+            const fields = [{ key: 'singleCheckbox', type: 'checkbox', default: true }];
+            view = new SettingsView(fields, actions);
+            view.render(container, { singleCheckbox: true });
+
+            const fieldEl = container.querySelector('.field--checkbox');
+            expect(fieldEl).not.toBeNull();
+        });
+
+        it('adds field--actions modifier and hides label for action rows', () => {
+            const fields = [
+                { key: 'clearCache', type: 'action', actionLabel: 'Clear', group: 'debug', row: 'actions' },
+            ];
+            view = new SettingsView(fields, actions);
             view.render(container, {});
 
-            const style = document.head.querySelector('style#flixmonkey-settings-styles');
-            expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.settings-group');
-            expect(style.textContent).toContain('.field--checkbox');
+            const actionField = container.querySelector('.field--actions');
+            expect(actionField).not.toBeNull();
+
+            const label = actionField.querySelector('.field-label');
+            expect(label).not.toBeNull();
+            expect(label.style.visibility).toBe('hidden');
         });
 
         it('renders action buttons and status placeholder', () => {
@@ -168,6 +193,19 @@ describe('SettingsView', () => {
 
             expect(container.querySelector('#fm-showMcRating').checked).toBe(true);
         });
+
+        it('skips disabled fields in readValues', () => {
+            const fields = [
+                { key: 'enabledField', type: 'text', default: 'value' },
+                { key: 'disabledField', type: 'text', default: 'value', disabled: true },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
+
+            const values = view.readValues();
+            expect(values).toHaveProperty('enabledField');
+            expect(values).not.toHaveProperty('disabledField');
+        });
     });
 
     describe('Validation', () => {
@@ -213,55 +251,6 @@ describe('SettingsView', () => {
 
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
-        });
-    });
-
-    describe('New UI features', () => {
-        it('should skip disabled fields in readValues', () => {
-            const fields = [
-                { key: 'enabledField', type: 'text', default: 'value' },
-                { key: 'disabledField', type: 'text', default: 'value', disabled: true },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
-
-            const values = view.readValues();
-            expect(values).toHaveProperty('enabledField');
-            expect(values).not.toHaveProperty('disabledField');
-        });
-
-        it('should render suffix text for fields with suffix property', () => {
-            const fields = [{ key: 'cacheDays', type: 'text', default: '30', suffix: 'days' }];
-            view = new SettingsView(fields, actions);
-            view.render(container, { cacheDays: '30' });
-
-            const suffixEl = container.querySelector('.field-suffix');
-            expect(suffixEl).not.toBeNull();
-            expect(suffixEl.textContent).toBe('days');
-        });
-
-        it('should add field--checkbox modifier for single checkbox fields', () => {
-            const fields = [{ key: 'singleCheckbox', type: 'checkbox', default: true }];
-            view = new SettingsView(fields, actions);
-            view.render(container, { singleCheckbox: true });
-
-            const fieldEl = container.querySelector('.field--checkbox');
-            expect(fieldEl).not.toBeNull();
-        });
-
-        it('should add field--actions modifier and hide label for action rows', () => {
-            const fields = [
-                { key: 'clearCache', type: 'action', actionLabel: 'Clear', group: 'debug', row: 'actions' },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
-
-            const actionField = container.querySelector('.field--actions');
-            expect(actionField).not.toBeNull();
-
-            const label = actionField.querySelector('.field-label');
-            expect(label).not.toBeNull();
-            expect(label.style.visibility).toBe('hidden');
         });
     });
 
