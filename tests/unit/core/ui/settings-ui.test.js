@@ -39,7 +39,7 @@ describe('SettingsUI', () => {
         it('routes the clear-cache button to cache clearing', async () => {
             await settingsUI.render(container);
 
-            container.querySelector('#fm-clearCacheBtn').click();
+            container.querySelector('#fm-clearCache').click();
             await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(mockCacheManager.clear).toHaveBeenCalledOnce();
@@ -50,7 +50,7 @@ describe('SettingsUI', () => {
         it('routes the reset-providers button to disabled-client reset', async () => {
             await settingsUI.render(container);
 
-            container.querySelector('#fm-resetClientsBtn').click();
+            container.querySelector('#fm-resetClients').click();
             await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
@@ -68,7 +68,9 @@ describe('SettingsUI', () => {
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
             const saved = mockAdapter.storageSetMany.mock.calls[0][0];
             CONFIG_FIELDS.forEach(field => {
-                expect(Object.hasOwn(saved, field.key)).toBe(true);
+                if (field.type !== 'action' && !field.disabled) {
+                    expect(Object.hasOwn(saved, field.key)).toBe(true);
+                }
             });
         });
 
@@ -129,7 +131,7 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status').textContent).toBe(
                 'Fade threshold must be a number between 0 and 10\n' + 'Cache duration must be -1 or a positive integer'
             );
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
+            expect(container.querySelector('#fm-status').className).toBe('status status--error');
         });
     });
 
@@ -172,7 +174,7 @@ describe('SettingsUI', () => {
 
             expect(mockCacheManager.clear).toHaveBeenCalledOnce();
             expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+            expect(container.querySelector('#fm-status').className).toBe('status status--success');
         });
 
         it('shows an error when clearing fails', async () => {
@@ -182,7 +184,7 @@ describe('SettingsUI', () => {
             await settingsUI.clearCache();
 
             expect(container.querySelector('#fm-status').textContent).toBe('Error: disk full');
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
+            expect(container.querySelector('#fm-status').className).toBe('status status--error');
         });
     });
 
@@ -195,7 +197,7 @@ describe('SettingsUI', () => {
 
             expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
             expect(container.querySelector('#fm-status').textContent).toBe('Re-enabled API clients: omdb, tmdb');
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+            expect(container.querySelector('#fm-status').className).toBe('status status--success');
         });
 
         it('shows the no-clients message when there is nothing to reset', async () => {
@@ -206,7 +208,7 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status').textContent).toBe(
                 'No disabled API clients found to re-enable.'
             );
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--success');
+            expect(container.querySelector('#fm-status').className).toBe('status status--success');
         });
 
         it('shows an error when reset fails', async () => {
@@ -216,7 +218,7 @@ describe('SettingsUI', () => {
             await settingsUI.resetClients();
 
             expect(container.querySelector('#fm-status').textContent).toBe('Error: storage unavailable');
-            expect(container.querySelector('#fm-status').className).toBe('fm-status--error');
+            expect(container.querySelector('#fm-status').className).toBe('status status--error');
         });
     });
 });

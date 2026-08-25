@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { GROUPS, ROW_LABELS } from '../config-fields.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
@@ -19,7 +20,7 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof import('../config-fields.js').CONFIG_FIELDS} fields
+     * @param {typeof CONFIG_FIELDS} fields
      * @param {SettingsActions} actions
      */
     constructor(fields, actions) {
@@ -31,7 +32,16 @@ export class SettingsView {
         this.#container = container;
         this.#injectStyles();
         container.className = 'fm-settings-container';
-        container.replaceChildren(this.#createFields(settings), this.#createActions(), this.#createStatus());
+
+        const layout = document.createElement('div');
+        layout.className = 'settings-layout';
+
+        for (const group of this.#groupFieldsByGroup()) {
+            layout.appendChild(this.#createGroupElement(group, settings));
+        }
+
+        layout.appendChild(this.#createStatus());
+        container.replaceChildren(layout);
         this.#setupAutoSave();
     }
 
@@ -44,163 +54,233 @@ export class SettingsView {
         }
     }
 
-    #createFields(settings) {
-        const container = document.createElement('div');
-        container.id = 'fm-fields';
-
-        for (const group of this.#groupFields()) {
-            if (group.section) container.appendChild(this.#createSection(group.section));
-            container.appendChild(this.#createGroup(group, settings));
-        }
-
-        return container;
-    }
-
-    #groupFields() {
+    #groupFieldsByGroup() {
         const groups = [];
+        const fieldsByGroup = {};
+        const ungroupedFields = [];
+
         for (const field of this.#fields) {
-            const last = groups.at(-1);
-            if (field.row && last?.row === field.row) {
-                last.fields.push(field);
+            // Include action fields in grouping
+            if (field.type === 'action' && field.group && GROUPS[field.group]) {
+                const groupId = field.group;
+                if (!fieldsByGroup[groupId]) {
+                    fieldsByGroup[groupId] = [];
+                }
+                fieldsByGroup[groupId].push(field);
+                continue;
+            }
+
+            if (field.type === 'action') continue;
+            if (field.group && GROUPS[field.group]) {
+                const groupId = field.group;
+                if (!fieldsByGroup[groupId]) {
+                    fieldsByGroup[groupId] = [];
+                }
+                fieldsByGroup[groupId].push(field);
             } else {
-                groups.push({ row: field.row, section: field.section, fields: [field] });
+                ungroupedFields.push(field);
             }
         }
 
-        for (const group of groups) {
-            group.isRatingsGroup = group.row === 'ratings-display';
-            group.isServicesGroup = group.row === 'services';
+        for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
+            const groupInfo = GROUPS[groupId];
+            groups.push({
+                id: groupId,
+                label: groupInfo.label,
+                icon: groupInfo.icon,
+                fields: this.#groupFieldsByRow(fields),
+            });
+        }
+
+        // Handle ungrouped fields (for backward compatibility with tests)
+        if (ungroupedFields.length > 0) {
+            groups.push({
+                id: 'ungrouped',
+                label: '',
+                icon: '',
+                fields: this.#groupFieldsByRow(ungroupedFields),
+                isUngrouped: true,
+            });
         }
 
         return groups;
     }
 
-    #createSection(section) {
-        const header = document.createElement('div');
-        header.className = 'section-header';
-        header.textContent = section;
-        return header;
-    }
-
-    #createGroup(group, settings) {
-        const container = document.createElement('div');
-        const parent = group.row ? container : document.createDocumentFragment();
-        if (group.row) container.className = `field-row ${group.row}`;
-
-        if (group.isRatingsGroup) {
-            parent.appendChild(this.#createRatingsField(group, settings));
-        } else if (group.isServicesGroup) {
-            parent.appendChild(this.#createServicesField(group, settings));
-        } else {
-            for (const field of group.fields) parent.appendChild(this.#createField(field, settings));
-        }
-
-        return parent;
-    }
-
-    #createRatingsField(group, settings) {
-        const field = this.#createSpecialField(
-            'ratings-field',
-            'Show Ratings',
-            'Choose which ratings to display on thumbnails'
-        );
-        const checkboxes = document.createElement('div');
-        checkboxes.className = 'ratings-group';
-        checkboxes.appendChild(this.#createRatingCheckbox('showImdbRating', 'IMDb', true, settings));
-
-        for (const key of ['showMcRating', 'showRtRating']) {
-            const ratingField = group.fields.find(candidate => candidate.key === key);
-            if (ratingField) {
-                checkboxes.appendChild(this.#createRatingCheckbox(key, ratingField.label, false, settings));
+    #groupFieldsByRow(fields) {
+        const rows = {};
+        for (const field of fields) {
+            const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
+            if (!rows[rowId]) {
+                rows[rowId] = { id: rowId, fields: [] };
             }
+            rows[rowId].fields.push(field);
         }
-
-        field.appendChild(checkboxes);
-        return field;
+        return Object.values(rows);
     }
 
-    #createSpecialField(className, labelText, title) {
-        const field = document.createElement('div');
-        field.className = `field ${className}`;
-        field.appendChild(this.#createLabel(labelText, null, title));
-        return field;
-    }
-
-    #createLabel(text, htmlFor, title = null) {
-        const label = document.createElement('label');
-        label.className = 'field-label';
-        if (title !== null) label.title = title;
-        if (htmlFor !== null) label.htmlFor = htmlFor;
-        label.textContent = text;
-        return label;
-    }
-
-    #createRatingCheckbox(key, labelText, isDisabled, settings) {
-        const field = document.createElement('div');
-        field.className = 'rating-checkbox';
-
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.className = 'field-input';
-        input.id = `fm-${key}`;
-        input.name = key;
-        const defaultValue = this.#fields.find(field => field.key === key)?.default || false;
-        input.checked = isDisabled ? true : this.#settingValue(key, settings, defaultValue);
-        input.disabled = isDisabled;
-
-        field.append(input, this.#createLabel(labelText, input.id));
-        return field;
-    }
-
-    #settingValue(key, settings, defaultValue) {
-        return settings[key] !== undefined ? settings[key] : defaultValue;
-    }
-
-    #createServicesField(group, settings) {
-        const field = this.#createSpecialField(
-            'services-field',
-            'Show on',
-            'Choose which streaming services to enable FlixMonkey on'
-        );
-        const checkboxes = document.createElement('div');
-        checkboxes.className = 'services-group';
-
-        for (const serviceField of group.fields) {
-            if (serviceField.row === 'services') {
-                checkboxes.appendChild(this.#createField(serviceField, settings));
-            }
-        }
-
-        field.appendChild(checkboxes);
-        return field;
-    }
-
-    #createField(field, settings) {
+    #createGroupElement(group, settings) {
         const container = document.createElement('div');
-        container.className = 'field';
-        const label = this.#createFieldLabel(field);
-        const input = this.#createInput(field, settings);
 
-        if (field.type === 'checkbox') {
-            container.append(input, label);
+        if (group.isUngrouped) {
+            container.className = 'settings-group';
         } else {
-            container.append(label, input);
+            container.className = 'settings-group';
+
+            const header = document.createElement('div');
+            header.className = 'settings-group-header';
+
+            const icon = document.createElement('span');
+            icon.className = 'settings-group-icon';
+            icon.textContent = group.icon;
+
+            const title = document.createElement('span');
+            title.className = 'settings-group-title';
+            title.textContent = group.label;
+
+            header.append(icon, title);
+            container.appendChild(header);
+        }
+
+        for (const row of group.fields) {
+            const fieldElement = this.#createFieldRow(row, settings);
+            container.appendChild(fieldElement);
+
+            // Handle action fields that belong to this group
+            const actionFields = this.#fields.filter(
+                f => f.type === 'action' && f.group === group.id && f.row === row.id
+            );
+            for (const actionField of actionFields) {
+                const actionElement = this.#createActionField(actionField);
+                container.appendChild(actionElement);
+            }
         }
 
         return container;
     }
 
-    #createFieldLabel(field) {
-        const label = this.#createLabel(field.label, `fm-${field.key}`, field.title || '');
-        if (field.labelUrl) {
+    #getFieldClassName(row) {
+        const hasActions = row.fields.every(f => f.type === 'action');
+        const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
+
+        if (hasActions) return 'field field--actions';
+        if (isLoneCheckbox) return 'field field--checkbox';
+        return 'field';
+    }
+
+    #createFieldLabel(row) {
+        const label = document.createElement('label');
+        label.className = 'field-label';
+
+        const rowLabel = ROW_LABELS[row.id] || row.fields[0].label;
+        const onlyField = row.fields[0];
+
+        if (row.fields.every(f => f.type === 'action')) {
+            label.textContent = '\u00A0';
+            label.style.visibility = 'hidden';
+        } else if (row.fields.length === 1 && onlyField.labelUrl) {
             const link = document.createElement('a');
-            link.href = field.labelUrl;
+            link.href = onlyField.labelUrl;
             link.target = '_blank';
-            link.textContent = field.label;
-            label.replaceChildren(link);
+            link.textContent = rowLabel;
+            label.appendChild(link);
+        } else {
+            label.textContent = rowLabel;
+            if (row.fields.length === 1 && !onlyField.labelUrl) {
+                label.htmlFor = `fm-${onlyField.key}`;
+            }
         }
-        if (field.labelHidden) label.classList.add('visually-hidden');
+
         return label;
+    }
+
+    #createFieldValueContainer(row, settings) {
+        const valueContainer = document.createElement('div');
+        valueContainer.className = 'field-value';
+
+        const hasActions = row.fields.every(f => f.type === 'action');
+        const isCheckboxGroup = row.fields.length > 1 && row.fields.every(f => f.type === 'checkbox');
+
+        if (hasActions) {
+            for (const field of row.fields) {
+                const btn = this.#createActionField(field);
+                valueContainer.appendChild(btn);
+            }
+        } else if (isCheckboxGroup) {
+            const checkboxes = document.createElement('div');
+            checkboxes.className = 'checkboxes';
+
+            for (const field of row.fields) {
+                const item = document.createElement('div');
+                item.className = 'service-item';
+                const input = this.#createInput(field, settings);
+                const cbLabel = document.createElement('label');
+                cbLabel.className = 'field-label';
+                cbLabel.textContent = field.label;
+                cbLabel.htmlFor = `fm-${field.key}`;
+                item.append(input, cbLabel);
+                checkboxes.appendChild(item);
+            }
+
+            valueContainer.appendChild(checkboxes);
+        } else {
+            for (const field of row.fields) {
+                if (field.type === 'action') {
+                    const btn = this.#createActionField(field);
+                    valueContainer.appendChild(btn);
+                } else if (field.suffix) {
+                    valueContainer.appendChild(this.#createInputWithSuffix(field, settings));
+                } else {
+                    valueContainer.appendChild(this.#createInput(field, settings));
+                }
+            }
+        }
+
+        return valueContainer;
+    }
+
+    #createFieldRow(row, settings) {
+        const fieldElement = document.createElement('div');
+        fieldElement.className = this.#getFieldClassName(row);
+
+        const label = this.#createFieldLabel(row);
+        fieldElement.appendChild(label);
+
+        const valueContainer = this.#createFieldValueContainer(row, settings);
+        fieldElement.appendChild(valueContainer);
+
+        return fieldElement;
+    }
+
+    #createActionField(field) {
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.id = `fm-${field.key}`;
+        btn.textContent = field.actionLabel;
+        btn.addEventListener('click', () => {
+            if (field.key === 'clearCache') {
+                this.#actions.onClearCache();
+            } else if (field.key === 'resetClients') {
+                this.#actions.onResetClients();
+            }
+        });
+        return btn;
+    }
+
+    #createInputWithSuffix(field, settings) {
+        const container = document.createElement('div');
+        container.className = 'input-with-suffix';
+
+        const input = this.#createInput(field, settings);
+        container.appendChild(input);
+
+        if (field.suffix) {
+            const suffix = document.createElement('span');
+            suffix.className = 'field-suffix';
+            suffix.textContent = field.suffix;
+            container.appendChild(suffix);
+        }
+
+        return container;
     }
 
     #createInput(field, settings) {
@@ -220,6 +300,14 @@ export class SettingsView {
             input.value = this.#settingValue(field.key, settings, field.default);
         }
 
+        if (field.disabled) {
+            input.disabled = true;
+        }
+
+        if (field.short) {
+            input.classList.add('short');
+        }
+
         return input;
     }
 
@@ -235,41 +323,14 @@ export class SettingsView {
         }
     }
 
-    #createActions() {
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        actions.append(
-            this.#createAction(
-                'fm-clearCacheBtn',
-                'Clear Cache',
-                'secondary',
-                'Delete all cached ratings to force fresh rating lookups',
-                this.#actions.onClearCache
-            ),
-            this.#createAction(
-                'fm-resetClientsBtn',
-                'Reset Disabled Providers',
-                'secondary',
-                'Re-enable rating providers that were automatically disabled due to errors',
-                this.#actions.onResetClients
-            )
-        );
-        return actions;
-    }
-
-    #createAction(id, text, className, title, action) {
-        const button = document.createElement('button');
-        button.id = id;
-        if (className) button.className = className;
-        button.textContent = text;
-        if (title) button.title = title;
-        button.onclick = () => action();
-        return button;
+    #settingValue(key, settings, defaultValue) {
+        return settings[key] !== undefined ? settings[key] : defaultValue;
     }
 
     #createStatus() {
         const status = document.createElement('div');
         status.id = 'fm-status';
+        status.className = 'status';
         return status;
     }
 
@@ -289,8 +350,16 @@ export class SettingsView {
     readValues() {
         const values = {};
         for (const field of this.#fields) {
+            if (field.type === 'action') continue;
+            if (field.disabled) continue;
             const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
-            if (input) values[field.key] = input.type === 'checkbox' ? input.checked : input.value;
+            if (input) {
+                if (field.type === 'checkbox') {
+                    values[field.key] = input.checked;
+                } else {
+                    values[field.key] = input.value;
+                }
+            }
         }
         return values;
     }
@@ -298,6 +367,8 @@ export class SettingsView {
     validate(values) {
         const errors = [];
         for (const field of this.#fields) {
+            if (field.type === 'action') continue;
+            if (field.disabled) continue;
             const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
             if (!input) continue;
             const error = field.validate ? field.validate(values[field.key], values) : null;
@@ -309,7 +380,9 @@ export class SettingsView {
 
     showStatus(message, type) {
         const status = this.#container.querySelector('[id="fm-status"]');
-        status.textContent = message;
-        status.className = `fm-status--${type}`;
+        if (status) {
+            status.textContent = message;
+            status.className = type ? `status status--${type}` : 'status';
+        }
     }
 }

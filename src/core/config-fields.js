@@ -10,10 +10,25 @@ function validateCacheTtl(val) {
     return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Cache duration must be -1 or a positive integer';
 }
 
+export const GROUPS = {
+    services: { label: 'Streaming Services', icon: '📺' },
+    display: { label: 'Display Settings', icon: '🎨' },
+    providers: { label: 'Rating Providers', icon: '📊' },
+    fade: { label: 'Fade Settings', icon: '🌑' },
+    cache: { label: 'Cache Settings', icon: '💾' },
+    debug: { label: 'Debug', icon: '🐛' },
+};
+
+export const ROW_LABELS = {
+    services: 'Show on',
+    'ratings-display': 'Show',
+};
+
 export const CONFIG_FIELDS = [
     {
         key: 'enableNetflix',
         label: 'Netflix',
+        group: 'services',
         type: 'checkbox',
         default: true,
         title: 'Enable FlixMonkey on Netflix',
@@ -22,6 +37,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'enableHboMax',
         label: 'HBO Max',
+        group: 'services',
         type: 'checkbox',
         default: true,
         title: 'Enable FlixMonkey on HBO Max',
@@ -30,6 +46,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'enableDisneyPlus',
         label: 'Disney+',
+        group: 'services',
         type: 'checkbox',
         default: true,
         title: 'Enable FlixMonkey on Disney+',
@@ -38,6 +55,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'overlayCorner',
         label: 'Badge Position',
+        group: 'display',
         type: 'select',
         options: [
             ['top-left', 'Top Left'],
@@ -49,8 +67,19 @@ export const CONFIG_FIELDS = [
         title: 'Badge position on thumbnails',
     },
     {
+        key: 'showImdbRating',
+        label: 'IMDb',
+        group: 'display',
+        type: 'checkbox',
+        default: true,
+        title: 'IMDb score is always shown',
+        row: 'ratings-display',
+        disabled: true,
+    },
+    {
         key: 'apiClient',
         label: 'Rating Provider',
+        group: 'providers',
         type: 'select',
         options: [
             ['agregarr', 'Agregarr'],
@@ -63,6 +92,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'omdbApiKey',
         label: 'OMDb API Key',
+        group: 'providers',
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
         type: 'text',
         default: '',
@@ -75,6 +105,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'xmdbApiKey',
         label: 'XMDb API Key',
+        group: 'providers',
         labelUrl: 'https://xmdbapi.com/api-key',
         type: 'text',
         default: '',
@@ -87,6 +118,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'showMcRating',
         label: 'Metacritic',
+        group: 'display',
         type: 'checkbox',
         default: false,
         title: 'Show Metacritic score',
@@ -95,6 +127,7 @@ export const CONFIG_FIELDS = [
     {
         key: 'showRtRating',
         label: 'Rotten Tomatoes',
+        group: 'display',
         type: 'checkbox',
         default: false,
         title: 'Show Rotten Tomatoes score',
@@ -102,20 +135,20 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'enableFadeUnderRating',
-        label: 'Fade Below Rating',
+        label: 'Fade below rating',
+        group: 'fade',
         type: 'checkbox',
         default: false,
         title: 'Fade thumbnails rated below threshold',
-        row: 'fade-settings',
     },
     {
         key: 'fadeRatingThreshold',
-        label: 'Fade threshold',
+        label: 'Threshold',
+        group: 'fade',
         type: 'text',
         default: '6.0',
         title: 'IMDb rating threshold (0-10)',
-        row: 'fade-settings',
-        labelHidden: true,
+        short: true,
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(val);
@@ -126,47 +159,74 @@ export const CONFIG_FIELDS = [
     },
     {
         key: 'enableFadeToggle',
-        label: 'Allow Override',
+        label: 'Allow override',
+        group: 'fade',
         type: 'checkbox',
         default: false,
         title: 'Allow manual override of fade state on supported title surfaces',
-        row: 'fade-settings',
     },
     {
         key: 'cacheTtlRatedOldYear',
         label: 'Older Titles',
+        group: 'cache',
         type: 'text',
         default: String(CACHE_TTL_INFINITE),
         title: 'Cache duration (days) for older titles. -1 = forever',
-        section: 'Cache Settings',
         row: 'cache-fields',
         validate: validateCacheTtl,
+        suffix: 'days',
+        short: true,
     },
     {
         key: 'cacheTtlRatedNewYear',
         label: 'Recent Titles',
+        group: 'cache',
         type: 'text',
         default: '30',
         title: 'Cache duration (days) for recent titles',
         row: 'cache-fields',
         validate: validateCacheTtl,
+        suffix: 'days',
+        short: true,
     },
     {
         key: 'cacheTtlNoRating',
         label: 'No Rating',
+        group: 'cache',
         type: 'text',
         default: '1',
         title: 'Cache duration (days) for titles without ratings',
         row: 'cache-fields',
         validate: validateCacheTtl,
+        suffix: 'days',
+        short: true,
     },
     {
         key: 'debug',
         label: 'Enable debug logging',
+        group: 'debug',
         type: 'checkbox',
         default: true,
         title: 'Enable debug logging in console',
         row: 'debug-settings',
+    },
+    {
+        key: 'clearCache',
+        type: 'action',
+        group: 'debug',
+        row: 'action-clearCache',
+        label: '',
+        actionLabel: 'Clear Cache',
+        default: null,
+    },
+    {
+        key: 'resetClients',
+        type: 'action',
+        group: 'debug',
+        row: 'action-resetClients',
+        label: '',
+        actionLabel: 'Reset Providers',
+        default: null,
     },
 ];
 

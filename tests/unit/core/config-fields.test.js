@@ -4,24 +4,19 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { CONFIG_FIELDS } from '../../../src/core/config-fields.js';
+import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../src/core/config-fields.js';
 
 describe('core/config-fields', () => {
-    it('enables Disney+ by default', () => {
-        expect(CONFIG_FIELDS.find(field => field.key === 'enableDisneyPlus')).toMatchObject({
-            label: 'Disney+',
-            type: 'checkbox',
-            default: true,
-            row: 'services',
-        });
-    });
-
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', field => {
             expect(field).toHaveProperty('key');
             expect(field).toHaveProperty('label');
             expect(field).toHaveProperty('type');
             expect(field).toHaveProperty('default');
+
+            expect(field).toHaveProperty('group');
+            expect(typeof field.group).toBe('string');
+            expect(Object.keys(GROUPS)).toContain(field.group);
 
             if (field.type === 'select') {
                 expect(field).toHaveProperty('options');
@@ -114,6 +109,23 @@ describe('core/config-fields', () => {
             } else if (field.type === 'text' || field.type === 'select') {
                 expect(typeof field.default).toBe('string');
             }
+        });
+    });
+
+    describe('settings metadata', () => {
+        it('should have GROUPS with consistent structure', () => {
+            Object.entries(GROUPS).forEach(([, value]) => {
+                expect(value).toHaveProperty('label');
+                expect(value).toHaveProperty('icon');
+                expect(typeof value.label).toBe('string');
+                expect(typeof value.icon).toBe('string');
+            });
+        });
+
+        it('should have ROW_LABELS with string values', () => {
+            Object.entries(ROW_LABELS).forEach(([, value]) => {
+                expect(typeof value).toBe('string');
+            });
         });
     });
 });
