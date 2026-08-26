@@ -91,6 +91,14 @@ describe('SettingsView', () => {
             expect(style.textContent).toContain('.fm-settings-container');
         });
 
+        it('injects modal styles along with settings styles', () => {
+            view.render(container, {});
+
+            const style = document.head.querySelector('style#flixmonkey-settings-styles');
+            expect(style).not.toBeNull();
+            expect(style.textContent).toContain('.fm-modal-overlay');
+        });
+
         it('renders suffix text for fields with suffix property', () => {
             const fields = [{ key: 'cacheDays', type: 'text', default: '30', suffix: 'days' }];
             view = new SettingsView(fields, actions);
