@@ -20,8 +20,9 @@ export const GROUPS = {
 };
 
 export const ROW_LABELS = {
-    services: 'Show on',
-    'ratings-display': 'Show',
+    services: { label: 'Show on', title: 'Enable ratings on these streaming services' },
+    'ratings-display': { label: 'Show', title: 'Show these rating sources on thumbnails' },
+    'cache-fields': { label: 'Cache', title: 'Cache duration for different title types' },
 };
 
 export const CONFIG_FIELDS = [
