@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/fran2889/flix-monkey/compare/v1.5.3...v1.6.0) (2026-08-29)
+
+
+### Features
+
+* **settings:** auto-save on change, remove success message and tab refresh ([#172](https://github.com/fran2889/flix-monkey/issues/172)) ([70aa261](https://github.com/fran2889/flix-monkey/commit/70aa26112f0b42153ab2d1877865f71ac3fa5050))
+* **storage:** add data migrations ([#164](https://github.com/fran2889/flix-monkey/issues/164)) ([41fb3b6](https://github.com/fran2889/flix-monkey/commit/41fb3b6535d66d98d368d3422693968f3d5df74f))
+* update settings UI design ([#175](https://github.com/fran2889/flix-monkey/issues/175)) ([eeb3f41](https://github.com/fran2889/flix-monkey/commit/eeb3f41b9c31cba29ecbf04652ff1f143c54ef91))
+
+
+### Bug Fixes
+
+* **settings-view:** add modal styles and injection test ([#180](https://github.com/fran2889/flix-monkey/issues/180)) ([33e14ca](https://github.com/fran2889/flix-monkey/commit/33e14ca364286124d36e224c2c63ce8f7c43fb06))
+
 ## [1.5.3](https://github.com/fran2889/flix-monkey/compare/v1.5.2...v1.5.3) (2026-08-15)
 
 
