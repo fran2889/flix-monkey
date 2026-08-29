@@ -72,6 +72,66 @@ export const SETTINGS_STYLES = `/* =============================================
 }
 
 /* =============================================
+   MODAL STYLES
+   ============================================= */
+.fm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2147483647 !important;
+}
+
+.fm-modal-content {
+    background: var(--color-bg-primary);
+    border: var(--border-width-thin) solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-xl);
+    max-inline-size: min(100%, 60rem);
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.fm-modal-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-block-end: var(--space-xl);
+    position: relative;
+}
+
+.fm-modal-title {
+    color: var(--color-accent);
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+}
+
+.fm-modal-close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    inset-inline-end: 0;
+}
+
+.fm-modal-close:hover {
+    color: var(--color-text-primary);
+}
+
+.fm-modal-body {
+    padding: 0 var(--space-xs);
+}
+
+/* =============================================
    BASE STYLES
    ============================================= */
 .fm-settings-container {
