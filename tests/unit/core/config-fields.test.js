@@ -122,9 +122,13 @@ describe('core/config-fields', () => {
             });
         });
 
-        it('should have ROW_LABELS with string values', () => {
+        it('should have ROW_LABELS with label and optional title properties', () => {
             Object.entries(ROW_LABELS).forEach(([, value]) => {
-                expect(typeof value).toBe('string');
+                expect(value).toHaveProperty('label');
+                expect(typeof value.label).toBe('string');
+                if (value.title !== undefined) {
+                    expect(typeof value.title).toBe('string');
+                }
             });
         });
     });
