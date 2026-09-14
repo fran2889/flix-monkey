@@ -20,8 +20,8 @@ export const GROUPS = {
 };
 
 export const ROW_LABELS = {
-    services: 'Show on',
-    'ratings-display': 'Show',
+    services: { label: 'Show on', title: 'Enable ratings on these streaming services' },
+    'ratings-display': { label: 'Show', title: 'Show these ratings on thumbnails' },
 };
 
 export const CONFIG_FIELDS = [
@@ -31,7 +31,6 @@ export const CONFIG_FIELDS = [
         group: 'services',
         type: 'checkbox',
         default: true,
-        title: 'Enable FlixMonkey on Netflix',
         row: 'services',
     },
     {
@@ -40,7 +39,6 @@ export const CONFIG_FIELDS = [
         group: 'services',
         type: 'checkbox',
         default: true,
-        title: 'Enable FlixMonkey on HBO Max',
         row: 'services',
     },
     {
@@ -49,7 +47,6 @@ export const CONFIG_FIELDS = [
         group: 'services',
         type: 'checkbox',
         default: true,
-        title: 'Enable FlixMonkey on Disney+',
         row: 'services',
     },
     {
@@ -64,7 +61,7 @@ export const CONFIG_FIELDS = [
             ['bottom-right', 'Bottom Right'],
         ],
         default: 'top-left',
-        title: 'Badge position on thumbnails',
+        title: 'Position of the rating badge on thumbnails',
     },
     {
         key: 'showImdbRating',
@@ -72,7 +69,6 @@ export const CONFIG_FIELDS = [
         group: 'display',
         type: 'checkbox',
         default: true,
-        title: 'IMDb score is always shown',
         row: 'ratings-display',
         disabled: true,
     },
@@ -87,7 +83,7 @@ export const CONFIG_FIELDS = [
             ['xmdb', 'XMDb'],
         ],
         default: 'agregarr',
-        title: 'Rating data source',
+        title: 'Active rating provider. Agregarr requires no API key',
     },
     {
         key: 'omdbApiKey',
@@ -96,7 +92,7 @@ export const CONFIG_FIELDS = [
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
         type: 'text',
         default: '',
-        title: 'OMDb key. Needed if OMDb is selected',
+        title: 'Required for OMDb ratings',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'omdb') return null;
             return val && val.length > 0 ? null : 'OMDb API Key is required';
@@ -109,7 +105,7 @@ export const CONFIG_FIELDS = [
         labelUrl: 'https://xmdbapi.com/api-key',
         type: 'text',
         default: '',
-        title: 'XMDb key. Needed if XMDb is selected',
+        title: 'Required for XMDb ratings',
         validate: (val, allValues) => {
             if (allValues?.apiClient !== 'xmdb') return null;
             return val && val.length > 0 ? null : 'XMDb API Key is required';
@@ -121,7 +117,6 @@ export const CONFIG_FIELDS = [
         group: 'display',
         type: 'checkbox',
         default: false,
-        title: 'Show Metacritic score',
         row: 'ratings-display',
     },
     {
@@ -130,7 +125,6 @@ export const CONFIG_FIELDS = [
         group: 'display',
         type: 'checkbox',
         default: false,
-        title: 'Show Rotten Tomatoes score',
         row: 'ratings-display',
     },
     {
@@ -139,7 +133,7 @@ export const CONFIG_FIELDS = [
         group: 'fade',
         type: 'checkbox',
         default: false,
-        title: 'Fade thumbnails rated below threshold',
+        title: 'Fade thumbnails with IMDb rating below the threshold',
     },
     {
         key: 'fadeRatingThreshold',
@@ -147,7 +141,7 @@ export const CONFIG_FIELDS = [
         group: 'fade',
         type: 'text',
         default: '6.0',
-        title: 'IMDb rating threshold (0-10)',
+        title: 'IMDb rating threshold (0.0-10.0)',
         short: true,
         validate: val => {
             if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
@@ -163,7 +157,7 @@ export const CONFIG_FIELDS = [
         group: 'fade',
         type: 'checkbox',
         default: false,
-        title: 'Allow manual override of fade state on supported title surfaces',
+        title: 'Enable manual title fade toggle',
     },
     {
         key: 'cacheTtlRatedOldYear',
@@ -171,8 +165,7 @@ export const CONFIG_FIELDS = [
         group: 'cache',
         type: 'text',
         default: String(CACHE_TTL_INFINITE),
-        title: 'Cache duration (days) for older titles. -1 = forever',
-        row: 'cache-fields',
+        title: 'Cache duration for titles released over a year ago. -1 = forever',
         validate: validateCacheTtl,
         suffix: 'days',
         short: true,
@@ -183,8 +176,7 @@ export const CONFIG_FIELDS = [
         group: 'cache',
         type: 'text',
         default: '30',
-        title: 'Cache duration (days) for recent titles',
-        row: 'cache-fields',
+        title: 'Cache duration for titles released within the last year',
         validate: validateCacheTtl,
         suffix: 'days',
         short: true,
@@ -195,19 +187,18 @@ export const CONFIG_FIELDS = [
         group: 'cache',
         type: 'text',
         default: '1',
-        title: 'Cache duration (days) for titles without ratings',
-        row: 'cache-fields',
+        title: 'Cache duration for titles without a rating',
         validate: validateCacheTtl,
         suffix: 'days',
         short: true,
     },
     {
         key: 'debug',
-        label: 'Enable debug logging',
+        label: 'Debug logging',
         group: 'debug',
         type: 'checkbox',
         default: true,
-        title: 'Enable debug logging in console',
+        title: 'Show detailed logs in browser console',
         row: 'debug-settings',
     },
     {

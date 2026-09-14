@@ -171,10 +171,13 @@ export class SettingsView {
         const label = document.createElement('label');
         label.className = 'field-label';
 
-        const rowLabel = ROW_LABELS[row.id] || row.fields[0].label;
+        const rowLabelObj = ROW_LABELS[row.id];
+        const rowLabel = rowLabelObj?.label || row.fields[0].label;
         const onlyField = row.fields[0];
+        const hasActions = row.fields.every(f => f.type === 'action');
+        const tooltip = hasActions ? '' : rowLabelObj?.title || row.fields[0].title || '';
 
-        if (row.fields.every(f => f.type === 'action')) {
+        if (hasActions) {
             label.textContent = '\u00A0';
             label.style.visibility = 'hidden';
         } else if (row.fields.length === 1 && onlyField.labelUrl) {
@@ -182,11 +185,17 @@ export class SettingsView {
             link.href = onlyField.labelUrl;
             link.target = '_blank';
             link.textContent = rowLabel;
+            if (tooltip) {
+                link.title = tooltip;
+            }
             label.appendChild(link);
         } else {
             label.textContent = rowLabel;
             if (row.fields.length === 1 && !onlyField.labelUrl) {
                 label.htmlFor = `fm-${onlyField.key}`;
+            }
+            if (tooltip) {
+                label.title = tooltip;
             }
         }
 
