@@ -800,4 +800,95 @@ describe('AgregarrApiClient', () => {
         const result = await client.getDetails(searchResult);
         expect(result.imdbVotes).toBeNull();
     });
+
+    describe('BaseApiClient short-circuit fetch', () => {
+        it('should skip search when imdbId is provided', async () => {
+            class TestClient extends AgregarrApiClient {
+                searchCalled = false;
+                getDetailsCalled = false;
+                constructor() {
+                    super(
+                        { isDisabled: vi.fn().mockResolvedValue(false) },
+                        createMockAdapter({ httpFetch: vi.fn() }),
+                        { get: _k => 'key' },
+                        createMockLogger()
+                    );
+                }
+                async search() {
+                    this.searchCalled = true;
+                    return new Title({ displayTitle: 'Test', imdbId: 'tt123' });
+                }
+                async getDetails(searchTitle) {
+                    this.getDetailsCalled = true;
+                    return new Title({ ...searchTitle, imdbRating: '8.0' });
+                }
+            }
+            const client = new TestClient();
+            const result = await client.fetch('Test Movie', 'tt123');
+            expect(client.searchCalled).toBe(false);
+            expect(client.getDetailsCalled).toBe(true);
+            expect(result.imdbRating).toBe(8.0);
+        });
+
+        it('should call search when imdbId is not provided', async () => {
+            class TestClient extends AgregarrApiClient {
+                searchCalled = false;
+                getDetailsCalled = false;
+                constructor() {
+                    super(
+                        { isDisabled: vi.fn().mockResolvedValue(false) },
+                        createMockAdapter({ httpFetch: vi.fn() }),
+                        { get: _k => 'key' },
+                        createMockLogger()
+                    );
+                }
+                async search(displayTitle) {
+                    this.searchCalled = true;
+                    return new Title({ displayTitle, imdbId: 'tt123' });
+                }
+                async getDetails(searchTitle) {
+                    this.getDetailsCalled = true;
+                    return new Title({ ...searchTitle, imdbRating: '8.0' });
+                }
+            }
+            const client = new TestClient();
+            const result = await client.fetch('Test Movie');
+            expect(client.searchCalled).toBe(true);
+            expect(client.getDetailsCalled).toBe(true);
+            expect(result.imdbRating).toBe(8.0);
+        });
+    });
+
+    describe('OMDbApiClient getDetails with minimal Title', () => {
+        it('should use ID endpoint when searchTitle has imdbId', async () => {
+            const mockResponse = {
+                Response: 'True',
+                imdbID: 'tt1234567',
+                Title: 'Test Movie',
+                Year: '2024',
+                imdbRating: '8.5',
+                imdbVotes: '1000',
+                Ratings: [],
+                Type: 'movie',
+            };
+            const client = new OmdbApiClient(
+                { isDisabled: vi.fn().mockResolvedValue(false) },
+                createMockAdapter({}),
+                { get: _k => 'test-api-key' },
+                createMockLogger()
+            );
+            client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+            const minimalTitle = new Title({ displayTitle: 'Test', imdbId: 'tt1234567' });
+            const result = await client.getDetails(minimalTitle);
+
+            expect(result).not.toBeNull();
+            expect(result.imdbId).toBe('tt1234567');
+            expect(result.imdbRating).toBe(8.5);
+            expect(result.apiTitle).toBe('Test Movie');
+            expect(client.queuedFetch).toHaveBeenCalledWith(
+                'https://www.omdbapi.com/?apikey=test-api-key&i=tt1234567',
+                1
+            );
+        });
+    });
 });

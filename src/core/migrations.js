@@ -65,6 +65,67 @@ export const MIGRATIONS = Object.freeze([
         },
         onFailure: clearCache,
     },
+    {
+        version: 2,
+        description: 'Pull displayTitle and imdbId to cache entry top level',
+        upgrade: async adapter => {
+            const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+            const updates = {};
+            let migrated = 0;
+            let skipped = 0;
+            let deleted = 0;
+
+            for (const key of keys) {
+                const raw = await adapter.storageGet(key);
+                let entry;
+                try {
+                    entry = JSON.parse(raw);
+                } catch {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const data = entry?.data;
+                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                // Check if entry already has top-level displayTitle (new format)
+                if (Object.hasOwn(entry, 'displayTitle') && Object.hasOwn(entry, 'imdbId')) {
+                    skipped += 1;
+                    continue;
+                }
+                // Old format: extract from data and remove from data
+                const displayTitle = data.displayTitle;
+                const imdbId = data.imdbId ?? null;
+
+                // Can't migrate without displayTitle (must be a string)
+                if (!displayTitle || typeof displayTitle !== 'string') {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+
+                // Remove displayTitle and imdbId from data (they're now stored at entry level)
+                delete data.displayTitle;
+                delete data.imdbId;
+
+                // Create new entry with top-level fields
+                updates[key] = JSON.stringify({
+                    displayTitle,
+                    imdbId,
+                    data,
+                    expires: entry.expires,
+                });
+                migrated += 1;
+            }
+
+            if (migrated > 0) await adapter.storageSetMany(updates);
+            return { migrated, skipped, deleted };
+        },
+        onFailure: clearCache,
+    },
 ]);
 
 /**
