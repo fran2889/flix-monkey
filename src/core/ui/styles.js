@@ -142,6 +142,7 @@ export const SETTINGS_STYLES = `/* =============================================
     max-block-size: 100%;
     overflow-y: auto;
     padding: var(--space-sm);
+    margin: 0;
 }
 
 .fm-settings-container * {
