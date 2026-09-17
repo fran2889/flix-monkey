@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/fran2889/flix-monkey/compare/v1.6.0...v1.6.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* **firefox:** fix settings bottom margin ([#191](https://github.com/fran2889/flix-monkey/issues/191)) ([61dc5b9](https://github.com/fran2889/flix-monkey/commit/61dc5b949e9688efa67adc2a3be698c8a6f7e3fb))
+
 ## [1.6.0](https://github.com/fran2889/flix-monkey/compare/v1.5.3...v1.6.0) (2026-09-14)
 
 
