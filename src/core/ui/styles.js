@@ -138,7 +138,9 @@ export const SETTINGS_STYLES = `/* =============================================
     font-family: var(--font-family);
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
-    min-block-size: 100vh;
+    min-block-size: min(80vh, 100%);
+    max-block-size: 100%;
+    overflow-y: auto;
     padding: var(--space-sm);
 }
 
@@ -172,6 +174,10 @@ export const SETTINGS_STYLES = `/* =============================================
     border-radius: var(--border-radius-md);
     padding: var(--space-md);
     margin-block-end: var(--space-md);
+}
+
+.fm-settings-container .settings-group:last-child {
+    margin-block-end: 0;
 }
 
 .fm-settings-container .settings-group-header {
