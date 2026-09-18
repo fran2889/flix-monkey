@@ -5,13 +5,16 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiClientManager } from '../../../src/core/api-manager.js';
+import { CacheEntry } from '../../../src/core/cache.js';
 import { Title } from '../../../src/core/title.js';
 import { FlixMonkeyError } from '../../../src/core/utils.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('ApiClientManager', () => {
     it('should return cached data if available', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue({ apiTitle: 'Cached Movie' }), write: vi.fn() };
+        const titleObj = new Title({ apiTitle: 'Cached Movie', imdbRating: '8.0', source: 'agregarr' });
+        const entry = new CacheEntry('Some Title', null, titleObj.toCacheJSON(), Date.now() + 100000);
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
         const mockClient = { source: 'agregarr' };
         const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
         const result = await manager.getData('Some Title');
@@ -197,5 +200,72 @@ describe('ApiClientManager', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from agregarr')
         );
+    });
+
+    describe('cache refresh optimization', () => {
+        it('should use short-circuit fetch when cache entry is expired with imdbId', async () => {
+            const expiredEntry = {
+                displayTitle: 'Cached Movie',
+                imdbId: 'tt123',
+                data: null,
+                expires: Date.now() - 1000,
+            };
+            const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
+            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+            const mockClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie', imdbId: 'tt123' })),
+            };
+            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+            await manager.getData('Cached Movie');
+            expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', 'tt123');
+        });
+
+        it('should use full fetch when cache entry is expired without imdbId', async () => {
+            const expiredEntry = {
+                displayTitle: 'No ID Movie',
+                imdbId: null,
+                data: null,
+                expires: Date.now() - 1000,
+            };
+            const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
+            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+            const mockClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'No ID Movie' })),
+            };
+            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+            await manager.getData('No ID Movie');
+            expect(mockClient.fetch).toHaveBeenCalledWith('No ID Movie');
+            expect(mockClient.fetch).not.toHaveBeenCalledWith('No ID Movie', null);
+        });
+
+        it('should return cached title for valid non-expired entry', async () => {
+            const titleObj = new Title({
+                displayTitle: 'Fresh Movie',
+                apiTitle: 'Fresh Movie',
+                imdbId: 'tt456',
+                imdbRating: '8.0',
+            });
+            const validEntry = {
+                displayTitle: 'Fresh Movie',
+                imdbId: 'tt456',
+                data: titleObj.toCacheJSON(),
+                expires: Date.now() + 100000,
+            };
+            const entry = CacheEntry.fromJSON(JSON.stringify(validEntry));
+            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+            const mockClient = {
+                source: 'agregarr',
+                getStatus: vi.fn(),
+                fetch: vi.fn(),
+            };
+            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+            const result = await manager.getData('Fresh Movie');
+            expect(result).toEqual(titleObj);
+            expect(mockClient.fetch).not.toHaveBeenCalled();
+        });
     });
 });

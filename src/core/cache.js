@@ -7,10 +7,73 @@ import { Title } from './title.js';
 import { slugify } from './utils.js';
 
 /**
- * @typedef {Object} CacheEntry
- * @property {import('./title.js').TitleOptions} data - Serialized Title fields.
- * @property {number|null} expires - Unix timestamp in milliseconds, or `null` when the entry never expires.
+ * Cache entry encapsulating both metadata and API data.
+ * Provides clean separation between search keys (displayTitle, imdbId)
+ * and API-returned data (Title fields).
  */
+class CacheEntry {
+    #displayTitle;
+    #imdbId;
+    #data;
+    #expires;
+
+    /**
+     * @param {string} displayTitle - Netflix display title (search key)
+     * @param {string|null} imdbId - IMDb ID for short-circuit optimization
+     * @param {Object} data - Title data without displayTitle
+     * @param {number|null} expires - Expiry timestamp or null for never expires
+     */
+    constructor(displayTitle, imdbId, data, expires) {
+        this.#displayTitle = displayTitle;
+        this.#imdbId = imdbId;
+        this.#data = data;
+        this.#expires = expires;
+    }
+
+    get displayTitle() {
+        return this.#displayTitle;
+    }
+
+    get imdbId() {
+        return this.#imdbId;
+    }
+
+    get isExpired() {
+        return this.#expires !== null && Date.now() > this.#expires;
+    }
+
+    /**
+     * Reconstructs the full Title from cache data.
+     * @returns {Title|null} Hydrated Title, or null if data is missing
+     */
+    getTitle() {
+        if (!this.#data) return null;
+        return Title.fromCacheJSON(this.#data, this.#displayTitle);
+    }
+
+    /**
+     * Deserializes from JSON storage format.
+     * @param {string} raw - Raw JSON string from storage
+     * @returns {CacheEntry} New CacheEntry instance
+     */
+    static fromJSON(raw) {
+        const obj = JSON.parse(raw);
+        return new CacheEntry(obj.displayTitle, obj.imdbId, obj.data, obj.expires);
+    }
+
+    /**
+     * Serializes to JSON storage format.
+     * @returns {Object} Plain object for JSON serialization
+     */
+    toJSON() {
+        return {
+            displayTitle: this.#displayTitle,
+            imdbId: this.#imdbId,
+            data: this.#data,
+            expires: this.#expires,
+        };
+    }
+}
 
 export class CacheManager {
     #prefix = 'fmc:';
@@ -30,25 +93,25 @@ export class CacheManager {
     }
 
     /**
-     * Reads a non-expired cached title. Cached lookup misses are valid only when
-     * they were produced by the currently active API source.
+     * Reads a cache entry by display title. Returns a CacheEntry for both
+     * hits and expired entries (which may be used for short-circuit refresh).
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
      * @param {string} activeSource - API source currently selected for lookups.
-     * @returns {Promise<Title|null>} Hydrated title, or `null` for a miss, expiry, or corrupt entry.
+     * @returns {Promise<CacheEntry|null>} Cache entry, or null for a complete cache miss.
      */
     async read(displayTitle, activeSource) {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;
         try {
-            /** @type {CacheEntry} */
-            const entry = JSON.parse(raw);
-            const expired = entry.expires !== null && Date.now() > entry.expires;
-            if (expired) return null;
-            const titleObj = Title.fromJSON(entry.data);
-            if (!titleObj || (!titleObj.hasRating && titleObj.source !== activeSource)) return null;
-            return titleObj;
+            const entry = CacheEntry.fromJSON(raw);
+            const titleObj = entry.getTitle();
+            // For non-expired entries, validate against active source
+            if (!entry.isExpired) {
+                if (!titleObj || (!titleObj.hasRating && titleObj.source !== activeSource)) return null;
+            }
+            return entry;
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
             return null;
@@ -60,8 +123,9 @@ export class CacheManager {
     }
 
     /**
-     * Persists a Title as a JSON CacheEntry using the TTL selected from its
-     * rating and release year.
+     * Persists a Title as a CacheEntry using the TTL selected from its
+     * rating and release year. Stores displayTitle and imdbId at the top
+     * level, with Title data (excluding displayTitle) in the data field.
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
      * @param {Title} titleObj - Title to serialize.
@@ -71,10 +135,12 @@ export class CacheManager {
         const key = this.#getCacheKey(displayTitle);
         const now = Date.now();
         const ttl = this.#calculateTtl(titleObj);
-        const entry = {
-            data: titleObj,
-            expires: ttl === Infinity ? null : now + ttl,
-        };
+        const entry = new CacheEntry(
+            displayTitle,
+            titleObj.imdbId,
+            titleObj.toCacheJSON(),
+            ttl === Infinity ? null : now + ttl
+        );
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
 
@@ -97,3 +163,5 @@ export class CacheManager {
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
 }
+
+export { CacheEntry };
