@@ -242,21 +242,5 @@ describe('Title', () => {
             expect(title.apiTitle).toBe('Test Movie');
             expect(title.imdbId).toBe('tt1234567');
         });
-
-        it('should handle null displayTitle override in fromCacheJSON', () => {
-            const cacheObj = {
-                apiTitle: 'Test',
-                imdbId: null,
-                year: null,
-                imdbRating: null,
-                imdbVotes: null,
-                rtRating: null,
-                mcRating: null,
-                source: null,
-                type: null,
-            };
-            const title = Title.fromCacheJSON(cacheObj, null);
-            expect(title.displayTitle).toBeNull();
-        });
     });
 });

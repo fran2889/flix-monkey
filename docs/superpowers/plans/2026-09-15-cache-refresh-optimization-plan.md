@@ -339,12 +339,6 @@ class CacheEntry {
     }
 }
 
-/**
- * @typedef {Object} LegacyCacheEntry
- * @property {import('./title.js').TitleOptions} data - Serialized Title fields.
- * @property {number|null} expires - Unix timestamp in milliseconds, or `null` when the entry never expires.
- */
-
 export class CacheManager {
     #prefix = 'fmc:';
     #adapter;
