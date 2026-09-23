@@ -872,5 +872,51 @@ describe('AgregarrApiClient', () => {
                 1
             );
         });
+
+        it('should return searchTitle directly when it has apiTitle', async () => {
+            const mockAdapter = createMockAdapter({ httpFetch: vi.fn() });
+            const client = new OmdbApiClient(
+                { isDisabled: vi.fn().mockResolvedValue(false) },
+                mockAdapter,
+                { get: _k => 'key' },
+                createMockLogger()
+            );
+            const searchTitle = new Title({
+                displayTitle: 'Test Movie',
+                apiTitle: 'Test Movie',
+                imdbId: 'tt123',
+                year: 2020,
+            });
+            const result = await client.getDetails(searchTitle);
+            expect(result).toBe(searchTitle);
+            expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
+        });
+
+        it('should preserve existing title data when OMDb returns partial response', async () => {
+            const mockResponse = {
+                Response: 'True',
+                imdbID: 'tt123',
+                Title: 'Updated Title',
+                Type: 'movie',
+            };
+            const client = new OmdbApiClient(
+                { isDisabled: vi.fn().mockResolvedValue(false) },
+                createMockAdapter({}),
+                { get: _k => 'test-api-key' },
+                createMockLogger()
+            );
+            client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+            const minimalTitle = new Title({
+                displayTitle: 'Test',
+                imdbId: 'tt123',
+                apiTitle: null,
+                year: 2020,
+                imdbRating: '7.5',
+            });
+            const result = await client.getDetails(minimalTitle);
+            expect(result.apiTitle).toBe('Updated Title');
+            expect(result.year).toBe(2020);
+            expect(result.imdbRating).toBe('7.5');
+        });
     });
 });

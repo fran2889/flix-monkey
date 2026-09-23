@@ -286,5 +286,20 @@ describe('ApiClientManager', () => {
             await manager.getData('Stale Movie');
             expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
         });
+
+        it('should use full fetch when cache entry has data but null imdbId', async () => {
+            const titleObj = new Title({ apiTitle: 'Cached Movie', imdbRating: '8.0' });
+            const entry = new CacheEntry('Cached Movie', null, titleObj.toCacheJSON(), Date.now() + 100000);
+            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+            const mockClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie' })),
+            };
+            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+            await manager.getData('Cached Movie');
+            expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie');
+            expect(mockClient.fetch).not.toHaveBeenCalledWith('Cached Movie', null);
+        });
     });
 });
