@@ -38,11 +38,14 @@ describe('CacheManager', () => {
         expect(result).toBeNull();
     });
 
-    it('should treat a cache entry without title data as a cache miss', async () => {
+    it('should return cache entry even without title data', async () => {
         const entry = new CacheEntry('Missing Data', null, null, Date.now() + 10000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
 
-        await expect(cacheManager.read('Missing Data', 'agregarr')).resolves.toBeNull();
+        const result = await cacheManager.read('Missing Data', 'agregarr');
+        expect(result).not.toBeNull();
+        expect(result).toBeInstanceOf(CacheEntry);
+        expect(result.getTitle()).toBeNull();
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
@@ -131,12 +134,16 @@ describe('CacheManager', () => {
         expect(title.source).toBe('agregarr');
     });
 
-    it('should return null for not-found entry when source does not match active source', async () => {
+    it('should return not-found entry when source does not match active source', async () => {
         const titleObj = Title.notFound('Missing Movie', 'omdb');
         const entry = new CacheEntry('Missing Movie', null, titleObj.toCacheJSON(), Date.now() + 100000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Missing Movie', 'agregarr');
-        expect(result).toBeNull();
+        expect(result).not.toBeNull();
+        const title = result.getTitle();
+        expect(title).not.toBeNull();
+        expect(title.hasRating).toBe(false);
+        expect(title.source).toBe('omdb');
     });
 
     it('should return rated entry regardless of source mismatch', async () => {
@@ -148,12 +155,15 @@ describe('CacheManager', () => {
         expect(result.getTitle().imdbRating).toBe(8.0);
     });
 
-    it('should treat not-found entry with null source as cache miss', async () => {
+    it('should return not-found entry with null source', async () => {
         const titleObj = Title.notFound('Old Entry');
         const entry = new CacheEntry('Old Entry', null, titleObj.toCacheJSON(), Date.now() + 100000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Old Entry', 'agregarr');
-        expect(result).toBeNull();
+        expect(result).not.toBeNull();
+        const title = result.getTitle();
+        expect(title).not.toBeNull();
+        expect(title.hasRating).toBe(false);
     });
 
     it('should produce the same cache key for titles that differ only by punctuation', async () => {

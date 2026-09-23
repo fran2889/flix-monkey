@@ -267,5 +267,24 @@ describe('ApiClientManager', () => {
             expect(result).toEqual(titleObj);
             expect(mockClient.fetch).not.toHaveBeenCalled();
         });
+
+        it('should use short-circuit fetch for non-expired entry with imdbId but invalid data', async () => {
+            const invalidEntry = {
+                displayTitle: 'Stale Movie',
+                imdbId: 'tt789',
+                data: null,
+                expires: Date.now() + 100000,
+            };
+            const entry = CacheEntry.fromJSON(JSON.stringify(invalidEntry));
+            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+            const mockClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Stale Movie', imdbId: 'tt789' })),
+            };
+            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+            await manager.getData('Stale Movie');
+            expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
+        });
     });
 });

@@ -106,11 +106,7 @@ export class CacheManager {
         if (!raw) return null;
         try {
             const entry = CacheEntry.fromJSON(raw);
-            const titleObj = entry.getTitle();
-            // For non-expired entries, validate against active source
-            if (!entry.isExpired) {
-                if (!titleObj || (!titleObj.hasRating && titleObj.source !== activeSource)) return null;
-            }
+            // Always return entry; ApiClientManager handles validation and short-circuit logic
             return entry;
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });

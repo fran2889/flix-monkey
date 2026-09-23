@@ -42,26 +42,25 @@ export class ApiClientManager {
             if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
                 return titleObj;
             }
-            return Title.notFound(displayTitle, source);
         }
 
-        // Expired entry with imdbId: short-circuit to getDetails
+        // Entry with imdbId (expired OR non-expired without valid data): refresh
         if (entry?.imdbId) {
-            return await this.#fetchWithHint(displayTitle, entry.imdbId);
+            return await this.#fetch(displayTitle, entry.imdbId);
         }
 
-        // Cache miss or expired without imdbId: full fetch
+        // Cache miss or no imdbId: full fetch
         return await this.#fetch(displayTitle);
     }
 
-    async #fetch(displayTitle) {
+    async #fetch(displayTitle, imdbId = null) {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
             return Title.notFound(displayTitle, this.#client.source);
         }
 
         try {
-            const data = await this.#client.fetch(displayTitle);
+            const data = await this.#client.fetch(displayTitle, imdbId);
             if (!data) {
                 const notFound = Title.notFound(displayTitle, this.#client.source);
                 await this.#cache.write(displayTitle, notFound);
@@ -77,35 +76,6 @@ export class ApiClientManager {
             }
             this.#logger[isHttpError ? 'error' : 'warn'](
                 `Failed to fetch ratings for "${displayTitle}": ${err.message}`,
-                { url: err.url ?? null, status: err.status ?? null, body: err.body ?? null }
-            );
-            return Title.notFound(displayTitle, this.#client.source);
-        }
-    }
-
-    async #fetchWithHint(displayTitle, imdbId) {
-        const status = await this.#client.getStatus();
-        if (!status.healthy) {
-            return Title.notFound(displayTitle, this.#client.source);
-        }
-
-        try {
-            const data = await this.#client.fetch(displayTitle, imdbId);
-            if (!data) {
-                const notFound = Title.notFound(displayTitle, this.#client.source);
-                await this.#cache.write(displayTitle, notFound);
-                return notFound;
-            }
-            await this.#cache.write(displayTitle, data);
-            this.#logger.debug(`Refreshed ratings for "${displayTitle}" from ${data.source}`);
-            return data;
-        } catch (err) {
-            const isHttpError = Number.isInteger(err.status) && err.status >= 400;
-            if (isHttpError && err.status < 500) {
-                await this.#client.disable();
-            }
-            this.#logger[isHttpError ? 'error' : 'warn'](
-                `Failed to refresh ratings for "${displayTitle}": ${err.message}`,
                 { url: err.url ?? null, status: err.status ?? null, body: err.body ?? null }
             );
             return Title.notFound(displayTitle, this.#client.source);

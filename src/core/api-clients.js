@@ -61,19 +61,15 @@ export class BaseApiClient {
      *   title was not found.
      */
     async fetch(displayTitle, imdbId = null) {
-        // Short-circuit: if imdbId provided, skip search and go straight to getDetails
         if (imdbId) {
             const minimalTitle = new Title({ displayTitle, imdbId });
-            if (await this.isDisabled()) return null;
             const detailedTitle = await this.getDetails(minimalTitle);
             if (!detailedTitle) return null;
             return detailedTitle.withSource(this.#source);
         }
 
-        // Standard flow: search then details
         const searchTitle = await this.search(displayTitle);
         if (!searchTitle) return null;
-        if (await this.isDisabled()) return null;
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
         return detailedTitle.withSource(this.#source);
@@ -276,28 +272,26 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
-        const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
-        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
-        return new Title({
-            displayTitle,
-            apiTitle: apiTitle ?? null,
-            imdbId: imdbID ?? null,
-            year: releaseYear,
-            imdbRating,
-            imdbVotes: votes,
-            rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
-            mcRating: parseRatings(Ratings, /Metacritic/i),
-            type: this.#mapTitleType(apiType),
-            source: null,
-        });
+        return this.#parseOmdbResponse(json,
+            new Title({
+                displayTitle,
+                apiTitle: null,
+                imdbId: null,
+                year: null,
+                imdbRating: null,
+                imdbVotes: null,
+                rtRating: null,
+                mcRating: null,
+                type: null,
+                source: null,
+            })
+        );
     }
 
     async getDetails(searchTitle) {
-        // If we have an imdbId, fetch by ID; otherwise use the standard search-based flow
-        // Note: searchTitle may be a minimal Title with only displayTitle and imdbId
-        const id = searchTitle.imdbId;
-        if (id) {
+        // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
+        if (searchTitle.imdbId && searchTitle.apiTitle == null) {
+            const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
             this.logger?.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
@@ -306,23 +300,8 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger?.info(`No OMDb results found for ID: ${id}`);
                 return null;
             }
-            const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
-            const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
-            const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
-            return new Title({
-                displayTitle: searchTitle.displayTitle,
-                apiTitle: apiTitle ?? null,
-                imdbId: imdbID ?? id,
-                year: releaseYear,
-                imdbRating,
-                imdbVotes: votes,
-                rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
-                mcRating: parseRatings(Ratings, /Metacritic/i),
-                type: this.#mapTitleType(apiType),
-                source: null,
-            });
+            return this.#parseOmdbResponse(json, searchTitle);
         }
-        // Standard pass-through: OMDb search already fetched all details
         return searchTitle;
     }
 
@@ -330,6 +309,30 @@ export class OmdbApiClient extends BaseApiClient {
         if (apiValue === 'movie') return TitleType.MOVIE;
         if (apiValue === 'series') return TitleType.SERIES;
         return null;
+    }
+
+    /**
+     * Parses OMDb JSON response into a Title, using fallback values from existing title.
+     * @param {Object} json - OMDb API response
+     * @param {import('./title.js').Title} fallbackTitle - Title to use as fallback for missing fields
+     * @returns {import('./title.js').Title}
+     */
+    #parseOmdbResponse(json, fallbackTitle) {
+        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
+        const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
+        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
+        return new Title({
+            displayTitle: fallbackTitle.displayTitle,
+            apiTitle: apiTitle ?? fallbackTitle.apiTitle,
+            imdbId: imdbID ?? fallbackTitle.imdbId,
+            year: releaseYear ?? fallbackTitle.year,
+            imdbRating: imdbRating ?? fallbackTitle.imdbRating,
+            imdbVotes: votes ?? fallbackTitle.imdbVotes,
+            rtRating: parseRatings(Ratings, /Rotten Tomatoes/i) ?? fallbackTitle.rtRating,
+            mcRating: parseRatings(Ratings, /Metacritic/i) ?? fallbackTitle.mcRating,
+            type: this.#mapTitleType(apiType) ?? fallbackTitle.type,
+            source: null,
+        });
     }
 }
 
