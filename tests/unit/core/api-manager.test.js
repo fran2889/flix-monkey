@@ -202,135 +202,133 @@ describe('ApiClientManager', () => {
         );
     });
 
-    describe('cache refresh optimization', () => {
-        it('should use short-circuit fetch when cache entry is expired with imdbId', async () => {
-            const expiredEntry = {
-                displayTitle: 'Cached Movie',
-                imdbId: 'tt123',
-                data: null,
-                expires: Date.now() - 1000,
-            };
-            const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
-            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie', imdbId: 'tt123' })),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            await manager.getData('Cached Movie');
-            expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', 'tt123');
-        });
+    it('should use short-circuit fetch when cache entry is expired with imdbId', async () => {
+        const expiredEntry = {
+            displayTitle: 'Cached Movie',
+            imdbId: 'tt123',
+            data: null,
+            expires: Date.now() - 1000,
+        };
+        const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie', imdbId: 'tt123' })),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        await manager.getData('Cached Movie');
+        expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', 'tt123');
+    });
 
-        it('should use full fetch when cache entry is expired without imdbId', async () => {
-            const expiredEntry = {
-                displayTitle: 'No ID Movie',
-                imdbId: null,
-                data: null,
-                expires: Date.now() - 1000,
-            };
-            const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
-            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'No ID Movie' })),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            await manager.getData('No ID Movie');
-            expect(mockClient.fetch).toHaveBeenCalledWith('No ID Movie', null);
-        });
+    it('should use full fetch when cache entry is expired without imdbId', async () => {
+        const expiredEntry = {
+            displayTitle: 'No ID Movie',
+            imdbId: null,
+            data: null,
+            expires: Date.now() - 1000,
+        };
+        const entry = CacheEntry.fromJSON(JSON.stringify(expiredEntry));
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'No ID Movie' })),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        await manager.getData('No ID Movie');
+        expect(mockClient.fetch).toHaveBeenCalledWith('No ID Movie', null);
+    });
 
-        it('should return cached title for valid non-expired entry', async () => {
-            const titleObj = new Title({
-                displayTitle: 'Fresh Movie',
-                apiTitle: 'Fresh Movie',
-                imdbId: 'tt456',
-                imdbRating: '8.0',
-            });
-            const validEntry = {
-                displayTitle: 'Fresh Movie',
-                imdbId: 'tt456',
-                data: titleObj.toCacheJSON(),
-                expires: Date.now() + 100000,
-            };
-            const entry = CacheEntry.fromJSON(JSON.stringify(validEntry));
-            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn(),
-                fetch: vi.fn(),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            const result = await manager.getData('Fresh Movie');
-            expect(result).toEqual(titleObj);
-            expect(mockClient.fetch).not.toHaveBeenCalled();
+    it('should return cached title for valid non-expired entry', async () => {
+        const titleObj = new Title({
+            displayTitle: 'Fresh Movie',
+            apiTitle: 'Fresh Movie',
+            imdbId: 'tt456',
+            imdbRating: '8.0',
         });
+        const validEntry = {
+            displayTitle: 'Fresh Movie',
+            imdbId: 'tt456',
+            data: titleObj.toCacheJSON(),
+            expires: Date.now() + 100000,
+        };
+        const entry = CacheEntry.fromJSON(JSON.stringify(validEntry));
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn(),
+            fetch: vi.fn(),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        const result = await manager.getData('Fresh Movie');
+        expect(result).toEqual(titleObj);
+        expect(mockClient.fetch).not.toHaveBeenCalled();
+    });
 
-        it('should use short-circuit fetch for non-expired entry with imdbId but invalid data', async () => {
-            const invalidEntry = {
-                displayTitle: 'Stale Movie',
-                imdbId: 'tt789',
-                data: null,
-                expires: Date.now() + 100000,
-            };
-            const entry = CacheEntry.fromJSON(JSON.stringify(invalidEntry));
-            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Stale Movie', imdbId: 'tt789' })),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            await manager.getData('Stale Movie');
-            expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
-        });
+    it('should use short-circuit fetch for non-expired entry with imdbId but invalid data', async () => {
+        const invalidEntry = {
+            displayTitle: 'Stale Movie',
+            imdbId: 'tt789',
+            data: null,
+            expires: Date.now() + 100000,
+        };
+        const entry = CacheEntry.fromJSON(JSON.stringify(invalidEntry));
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Stale Movie', imdbId: 'tt789' })),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        await manager.getData('Stale Movie');
+        expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
+    });
 
-        it('should use full fetch when cache entry has data but null imdbId', async () => {
-            const titleObj = new Title({ apiTitle: 'Cached Movie' });
-            const entry = new CacheEntry('Cached Movie', null, titleObj.toCacheJSON(), Date.now() - 1000);
-            const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie' })),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            await manager.getData('Cached Movie');
-            expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', null);
-        });
+    it('should use full fetch when cache entry has data but null imdbId', async () => {
+        const titleObj = new Title({ apiTitle: 'Cached Movie' });
+        const entry = new CacheEntry('Cached Movie', null, titleObj.toCacheJSON(), Date.now() - 1000);
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie' })),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        await manager.getData('Cached Movie');
+        expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', null);
+    });
 
-        it('should retry with imdbId when provider was changed and original provider returned no ratings', async () => {
-            const cachedTitle = new Title({
-                displayTitle: 'Provider Switch Movie',
-                imdbId: 'tt1234567',
-                imdbRating: null,
-                source: 'omdb',
-            });
-            const entry = new CacheEntry(
-                'Provider Switch Movie',
-                'tt1234567',
-                cachedTitle.toCacheJSON(),
-                Date.now() + 100000
-            );
-            const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
-            const mockClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(
-                    new Title({
-                        apiTitle: 'Provider Switch Movie',
-                        imdbId: 'tt1234567',
-                        imdbRating: '7.5',
-                        source: 'agregarr',
-                    })
-                ),
-            };
-            const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
-            const result = await manager.getData('Provider Switch Movie');
-            expect(mockClient.fetch).toHaveBeenCalledWith('Provider Switch Movie', 'tt1234567');
-            expect(result.imdbRating).toBe(7.5);
-            expect(result.source).toBe('agregarr');
+    it('should retry with imdbId when provider was changed and original provider returned no ratings', async () => {
+        const cachedTitle = new Title({
+            displayTitle: 'Provider Switch Movie',
+            imdbId: 'tt1234567',
+            imdbRating: null,
+            source: 'omdb',
         });
+        const entry = new CacheEntry(
+            'Provider Switch Movie',
+            'tt1234567',
+            cachedTitle.toCacheJSON(),
+            Date.now() + 100000
+        );
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(
+                new Title({
+                    apiTitle: 'Provider Switch Movie',
+                    imdbId: 'tt1234567',
+                    imdbRating: '7.5',
+                    source: 'agregarr',
+                })
+            ),
+        };
+        const manager = new ApiClientManager(mockCache, {}, mockClient, createMockLogger());
+        const result = await manager.getData('Provider Switch Movie');
+        expect(mockClient.fetch).toHaveBeenCalledWith('Provider Switch Movie', 'tt1234567');
+        expect(result.imdbRating).toBe(7.5);
+        expect(result.source).toBe('agregarr');
     });
 });

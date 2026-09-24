@@ -143,29 +143,6 @@ describe('CacheManager', () => {
         expect(key1).toBe(key2);
         expect(key1).toBe('fmc:test_title');
     });
-});
-
-describe('CacheEntry class', () => {
-    let adapter;
-    let cacheManager;
-    let config;
-    let mockLogger;
-
-    beforeEach(() => {
-        adapter = createMockAdapter({
-            storageGet: vi.fn(),
-            storageSet: vi.fn(),
-            storageDelete: vi.fn(),
-            storageGetKeys: vi.fn(),
-        });
-        mockLogger = createMockLogger();
-        config = createConfig({
-            cacheTtlNoRating: '1',
-            cacheTtlRatedNewYear: '30',
-            cacheTtlRatedOldYear: '-1',
-        });
-        cacheManager = new CacheManager(adapter, config, mockLogger);
-    });
 
     it('should store displayTitle and imdbId at top level', async () => {
         const title = new Title({ displayTitle: 'Test', apiTitle: 'Test', imdbId: 'tt123', year: 2024 });

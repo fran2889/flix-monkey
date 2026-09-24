@@ -208,39 +208,37 @@ describe('Title', () => {
         });
     });
 
-    describe('cache serialization', () => {
-        it('should return object without displayTitle from toCacheJSON', () => {
-            const title = new Title({
-                displayTitle: 'Test Movie',
-                apiTitle: 'Test Movie',
-                imdbId: 'tt1234567',
-                year: 2024,
-                imdbRating: '8.5',
-            });
-            const cacheObj = title.toCacheJSON();
-            expect(cacheObj).not.toHaveProperty('displayTitle');
-            expect(cacheObj.apiTitle).toBe('Test Movie');
-            expect(cacheObj.imdbId).toBe('tt1234567');
-            expect(cacheObj.year).toBe(2024);
-            expect(cacheObj.imdbRating).toBe(8.5);
+    it('should return object without displayTitle from toCacheJSON', () => {
+        const title = new Title({
+            displayTitle: 'Test Movie',
+            apiTitle: 'Test Movie',
+            imdbId: 'tt1234567',
+            year: 2024,
+            imdbRating: '8.5',
         });
+        const cacheObj = title.toCacheJSON();
+        expect(cacheObj).not.toHaveProperty('displayTitle');
+        expect(cacheObj.apiTitle).toBe('Test Movie');
+        expect(cacheObj.imdbId).toBe('tt1234567');
+        expect(cacheObj.year).toBe(2024);
+        expect(cacheObj.imdbRating).toBe(8.5);
+    });
 
-        it('should reconstruct Title with displayTitle from fromCacheJSON', () => {
-            const cacheObj = {
-                apiTitle: 'Test Movie',
-                imdbId: 'tt1234567',
-                year: 2024,
-                imdbRating: '8.5',
-                imdbVotes: null,
-                rtRating: null,
-                mcRating: null,
-                source: null,
-                type: null,
-            };
-            const title = Title.fromCacheJSON(cacheObj, 'Original Title');
-            expect(title.displayTitle).toBe('Original Title');
-            expect(title.apiTitle).toBe('Test Movie');
-            expect(title.imdbId).toBe('tt1234567');
-        });
+    it('should reconstruct Title with displayTitle from fromCacheJSON', () => {
+        const cacheObj = {
+            apiTitle: 'Test Movie',
+            imdbId: 'tt1234567',
+            year: 2024,
+            imdbRating: '8.5',
+            imdbVotes: null,
+            rtRating: null,
+            mcRating: null,
+            source: null,
+            type: null,
+        };
+        const title = Title.fromCacheJSON(cacheObj, 'Original Title');
+        expect(title.displayTitle).toBe('Original Title');
+        expect(title.apiTitle).toBe('Test Movie');
+        expect(title.imdbId).toBe('tt1234567');
     });
 });
