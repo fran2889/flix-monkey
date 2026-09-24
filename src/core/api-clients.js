@@ -272,7 +272,8 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
-        return this.#parseOmdbResponse(json,
+        return this.#parseOmdbResponse(
+            json,
             new Title({
                 displayTitle,
                 apiTitle: null,
