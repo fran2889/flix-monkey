@@ -287,15 +287,9 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger?.info(`No OMDb results found for ID: ${id}`);
                 return null;
             }
-            return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId, searchTitle.apiTitle);
+            return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
         }
         return searchTitle;
-    }
-
-    #mapTitleType(apiValue) {
-        if (apiValue === 'movie') return TitleType.MOVIE;
-        if (apiValue === 'series') return TitleType.SERIES;
-        return null;
     }
 
     /**
@@ -303,16 +297,15 @@ export class OmdbApiClient extends BaseApiClient {
      * @param {Object} json - OMDb API response
      * @param {string} displayTitle - Display title from streaming service
      * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
-     * @param {string|null} [fallbackApiTitle=null] - Fallback API title from search results
      * @returns {import('./title.js').Title}
      */
-    #parseOmdbResponse(json, displayTitle, fallbackImdbId = null, fallbackApiTitle = null) {
+    #parseOmdbResponse(json, displayTitle, fallbackImdbId = null) {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
         return new Title({
             displayTitle,
-            apiTitle: apiTitle ?? fallbackApiTitle,
+            apiTitle,
             imdbId: imdbID ?? fallbackImdbId,
             year: releaseYear,
             imdbRating,
@@ -322,6 +315,12 @@ export class OmdbApiClient extends BaseApiClient {
             type: this.#mapTitleType(apiType),
             source: null,
         });
+    }
+
+    #mapTitleType(apiValue) {
+        if (apiValue === 'movie') return TitleType.MOVIE;
+        if (apiValue === 'series') return TitleType.SERIES;
+        return null;
     }
 }
 
