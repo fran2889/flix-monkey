@@ -916,7 +916,7 @@ describe('AgregarrApiClient', () => {
             const result = await client.getDetails(minimalTitle);
             expect(result.apiTitle).toBe('Updated Title');
             expect(result.year).toBe(2020);
-            expect(result.imdbRating).toBe('7.5');
+            expect(result.imdbRating).toBe(7.5);
         });
     });
 });

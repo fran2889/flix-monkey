@@ -34,7 +34,7 @@ describe('CacheManager', () => {
 
     it('should return null when cache is empty', async () => {
         adapter.storageGet.mockResolvedValue(null);
-        const result = await cacheManager.read('Some Title', 'agregarr');
+        const result = await cacheManager.read('Some Title');
         expect(result).toBeNull();
     });
 
@@ -42,7 +42,7 @@ describe('CacheManager', () => {
         const entry = new CacheEntry('Missing Data', null, null, Date.now() + 10000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
 
-        const result = await cacheManager.read('Missing Data', 'agregarr');
+        const result = await cacheManager.read('Missing Data');
         expect(result).not.toBeNull();
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result.getTitle()).toBeNull();
@@ -72,7 +72,7 @@ describe('CacheManager', () => {
         });
         await cacheManager.write('Test Title', titleObj);
         expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.any(String));
-        const entry = await cacheManager.read('Test Title', 'agregarr');
+        const entry = await cacheManager.read('Test Title');
         expect(entry).not.toBeNull();
         const result = entry.getTitle();
         expect(result.displayTitle).toEqual(titleObj.displayTitle);
@@ -87,7 +87,7 @@ describe('CacheManager', () => {
         const titleObj = new Title(titleData);
         const entry = new CacheEntry('Old Title', null, titleObj.toCacheJSON(), now - 1000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Old Title', 'agregarr');
+        const result = await cacheManager.read('Old Title');
         expect(result).not.toBeNull();
         expect(result.isExpired).toBe(true);
         vi.useRealTimers();
@@ -107,14 +107,14 @@ describe('CacheManager', () => {
         const titleObj = new Title({ displayTitle: 'Indefinite Title', imdbRating: '8.0' });
         const entry = new CacheEntry('Indefinite Title', null, titleObj.toCacheJSON(), null);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Indefinite Title', 'agregarr');
+        const result = await cacheManager.read('Indefinite Title');
         expect(result).not.toBeNull();
         expect(result.getTitle().displayTitle).toBe('Indefinite Title');
     });
 
     it('should return null and log the display title when JSON parsing fails in read', async () => {
         adapter.storageGet.mockResolvedValue('invalid-json{');
-        const result = await cacheManager.read('Some Title', 'agregarr');
+        const result = await cacheManager.read('Some Title');
         expect(result).toBeNull();
         expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
             key: 'fmc:some_title',
@@ -122,48 +122,15 @@ describe('CacheManager', () => {
         });
     });
 
-    it('should return not-found entry when source matches active source', async () => {
-        const titleObj = Title.notFound('Missing Movie', 'agregarr');
-        const entry = new CacheEntry('Missing Movie', null, titleObj.toCacheJSON(), Date.now() + 100000);
+    it('should return cache entry for cache hit', async () => {
+        const titleObj = new Title({ displayTitle: 'Cached Movie', imdbRating: '8.0', source: 'omdb' });
+        const entry = new CacheEntry('Cached Movie', 'tt123', titleObj.toCacheJSON(), Date.now() + 100000);
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Missing Movie', 'agregarr');
+        const result = await cacheManager.read('Cached Movie');
         expect(result).not.toBeNull();
-        const title = result.getTitle();
-        expect(title).not.toBeNull();
-        expect(title.hasRating).toBe(false);
-        expect(title.source).toBe('agregarr');
-    });
-
-    it('should return not-found entry when source does not match active source', async () => {
-        const titleObj = Title.notFound('Missing Movie', 'omdb');
-        const entry = new CacheEntry('Missing Movie', null, titleObj.toCacheJSON(), Date.now() + 100000);
-        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Missing Movie', 'agregarr');
-        expect(result).not.toBeNull();
-        const title = result.getTitle();
-        expect(title).not.toBeNull();
-        expect(title.hasRating).toBe(false);
-        expect(title.source).toBe('omdb');
-    });
-
-    it('should return rated entry regardless of source mismatch', async () => {
-        const titleObj = new Title({ displayTitle: 'Good Movie', imdbRating: '8.0', source: 'omdb' });
-        const entry = new CacheEntry('Good Movie', null, titleObj.toCacheJSON(), Date.now() + 100000);
-        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Good Movie', 'agregarr');
-        expect(result).not.toBeNull();
+        expect(result).toBeInstanceOf(CacheEntry);
+        expect(result.imdbId).toBe('tt123');
         expect(result.getTitle().imdbRating).toBe(8.0);
-    });
-
-    it('should return not-found entry with null source', async () => {
-        const titleObj = Title.notFound('Old Entry');
-        const entry = new CacheEntry('Old Entry', null, titleObj.toCacheJSON(), Date.now() + 100000);
-        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Old Entry', 'agregarr');
-        expect(result).not.toBeNull();
-        const title = result.getTitle();
-        expect(title).not.toBeNull();
-        expect(title.hasRating).toBe(false);
     });
 
     it('should produce the same cache key for titles that differ only by punctuation', async () => {
@@ -231,7 +198,7 @@ describe('CacheEntry class', () => {
             expires: now + 10000,
         };
         adapter.storageGet.mockResolvedValue(JSON.stringify(entryData));
-        const result = await cacheManager.read('Cached Movie', 'agregarr');
+        const result = await cacheManager.read('Cached Movie');
         expect(result).not.toBeNull();
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result.getTitle()).toBeInstanceOf(Title);
@@ -259,7 +226,7 @@ describe('CacheEntry class', () => {
             expires: now - 1000,
         };
         adapter.storageGet.mockResolvedValue(JSON.stringify(entryData));
-        const result = await cacheManager.read('Expired Movie', 'agregarr');
+        const result = await cacheManager.read('Expired Movie');
         expect(result).not.toBeNull();
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result.isExpired).toBe(true);
@@ -269,7 +236,7 @@ describe('CacheEntry class', () => {
 
     it('should return null for cache miss', async () => {
         adapter.storageGet.mockResolvedValue(null);
-        const result = await cacheManager.read('Missing Movie', 'agregarr');
+        const result = await cacheManager.read('Missing Movie');
         expect(result).toBeNull();
     });
 });

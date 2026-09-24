@@ -97,10 +97,9 @@ export class CacheManager {
      * hits and expired entries (which may be used for short-circuit refresh).
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
-     * @param {string} activeSource - API source currently selected for lookups.
      * @returns {Promise<CacheEntry|null>} Cache entry, or null for a complete cache miss.
      */
-    async read(displayTitle, activeSource) {
+    async read(displayTitle) {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;

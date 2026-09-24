@@ -34,7 +34,7 @@ export class ApiClientManager {
      */
     async getData(displayTitle) {
         const source = this.#client.source;
-        const entry = await this.#cache.read(displayTitle, source);
+        const entry = await this.#cache.read(displayTitle);
 
         // Cache hit: non-expired entry with valid title
         if (entry && !entry.isExpired) {
