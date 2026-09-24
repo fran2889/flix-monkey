@@ -892,7 +892,7 @@ describe('AgregarrApiClient', () => {
             expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
         });
 
-        it('should preserve existing title data when OMDb returns partial response', async () => {
+        it('should update apiTitle from OMDb response when fallback has null apiTitle', async () => {
             const mockResponse = {
                 Response: 'True',
                 imdbID: 'tt123',
@@ -910,13 +910,11 @@ describe('AgregarrApiClient', () => {
                 displayTitle: 'Test',
                 imdbId: 'tt123',
                 apiTitle: null,
-                year: 2020,
-                imdbRating: '7.5',
             });
             const result = await client.getDetails(minimalTitle);
             expect(result.apiTitle).toBe('Updated Title');
-            expect(result.year).toBe(2020);
-            expect(result.imdbRating).toBe(7.5);
+            expect(result.imdbId).toBe('tt123');
+            expect(result.displayTitle).toBe('Test');
         });
     });
 });

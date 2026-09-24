@@ -272,21 +272,7 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
-        return this.#parseOmdbResponse(
-            json,
-            new Title({
-                displayTitle,
-                apiTitle: null,
-                imdbId: null,
-                year: null,
-                imdbRating: null,
-                imdbVotes: null,
-                rtRating: null,
-                mcRating: null,
-                type: null,
-                source: null,
-            })
-        );
+        return this.#parseOmdbResponse(json, displayTitle);
     }
 
     async getDetails(searchTitle) {
@@ -301,7 +287,7 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger?.info(`No OMDb results found for ID: ${id}`);
                 return null;
             }
-            return this.#parseOmdbResponse(json, searchTitle);
+            return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId, searchTitle.apiTitle);
         }
         return searchTitle;
     }
@@ -313,25 +299,27 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     /**
-     * Parses OMDb JSON response into a Title, using fallback values from existing title.
+     * Parses OMDb JSON response into a Title.
      * @param {Object} json - OMDb API response
-     * @param {import('./title.js').Title} fallbackTitle - Title to use as fallback for missing fields
+     * @param {string} displayTitle - Display title from streaming service
+     * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
+     * @param {string|null} [fallbackApiTitle=null] - Fallback API title from search results
      * @returns {import('./title.js').Title}
      */
-    #parseOmdbResponse(json, fallbackTitle) {
+    #parseOmdbResponse(json, displayTitle, fallbackImdbId = null, fallbackApiTitle = null) {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
         return new Title({
-            displayTitle: fallbackTitle.displayTitle,
-            apiTitle: apiTitle ?? fallbackTitle.apiTitle,
-            imdbId: imdbID ?? fallbackTitle.imdbId,
-            year: releaseYear ?? fallbackTitle.year,
-            imdbRating: imdbRating ?? fallbackTitle.imdbRating,
-            imdbVotes: votes ?? fallbackTitle.imdbVotes,
-            rtRating: parseRatings(Ratings, /Rotten Tomatoes/i) ?? fallbackTitle.rtRating,
-            mcRating: parseRatings(Ratings, /Metacritic/i) ?? fallbackTitle.mcRating,
-            type: this.#mapTitleType(apiType) ?? fallbackTitle.type,
+            displayTitle,
+            apiTitle: apiTitle ?? fallbackApiTitle,
+            imdbId: imdbID ?? fallbackImdbId,
+            year: releaseYear,
+            imdbRating,
+            imdbVotes: votes,
+            rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
+            mcRating: parseRatings(Ratings, /Metacritic/i),
+            type: this.#mapTitleType(apiType),
             source: null,
         });
     }
