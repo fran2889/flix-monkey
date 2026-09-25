@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/fran2889/flix-monkey/compare/v1.6.1...v1.7.0) (2026-09-25)
+
+
+### Features
+
+* **cache:** reuse imdbId when refreshing cache ([#190](https://github.com/fran2889/flix-monkey/issues/190)) ([769c9c2](https://github.com/fran2889/flix-monkey/commit/769c9c2b81a02329a087f175deecfac2318667eb))
+
 ## [1.6.1](https://github.com/fran2889/flix-monkey/compare/v1.6.0...v1.6.1) (2026-09-17)
 
 
