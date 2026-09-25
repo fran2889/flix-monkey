@@ -56,13 +56,20 @@ export class BaseApiClient {
      * Callers must gate through {@link getStatus} before invoking.
      *
      * @param {string} displayTitle - Title as shown by the streaming service.
+     * @param {string|null} [imdbId=null] - Optional IMDb ID for short-circuiting search.
      * @returns {Promise<import('./title.js').Title|null>} Hydrated `Title` with ratings, or `null` if the
      *   title was not found.
      */
-    async fetch(displayTitle) {
+    async fetch(displayTitle, imdbId = null) {
+        if (imdbId) {
+            const minimalTitle = new Title({ displayTitle, imdbId });
+            const detailedTitle = await this.getDetails(minimalTitle);
+            if (!detailedTitle) return null;
+            return detailedTitle.withSource(this.#source);
+        }
+
         const searchTitle = await this.search(displayTitle);
         if (!searchTitle) return null;
-        if (await this.isDisabled()) return null;
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
         return detailedTitle.withSource(this.#source);
@@ -265,13 +272,41 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger?.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
+        return this.#parseOmdbResponse(json, displayTitle);
+    }
+
+    async getDetails(searchTitle) {
+        // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
+        if (searchTitle.imdbId && searchTitle.apiTitle === null) {
+            const id = searchTitle.imdbId;
+            const apiKey = this.config.get('omdbApiKey');
+            const params = new URLSearchParams({ apikey: apiKey, i: id });
+            this.logger?.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
+            const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
+            if (json.Response === 'False') {
+                this.logger?.info(`No OMDb results found for ID: ${id}`);
+                return null;
+            }
+            return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
+        }
+        return searchTitle;
+    }
+
+    /**
+     * Parses OMDb JSON response into a Title.
+     * @param {Object} json - OMDb API response
+     * @param {string} displayTitle - Display title from streaming service
+     * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
+     * @returns {import('./title.js').Title}
+     */
+    #parseOmdbResponse(json, displayTitle, fallbackImdbId = null) {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? Year.match(/^\d{4}/)?.[0] : null;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
         return new Title({
             displayTitle,
-            apiTitle: apiTitle ?? null,
-            imdbId: imdbID ?? null,
+            apiTitle,
+            imdbId: imdbID ?? fallbackImdbId,
             year: releaseYear,
             imdbRating,
             imdbVotes: votes,
@@ -286,11 +321,6 @@ export class OmdbApiClient extends BaseApiClient {
         if (apiValue === 'movie') return TitleType.MOVIE;
         if (apiValue === 'series') return TitleType.SERIES;
         return null;
-    }
-
-    async getDetails(searchTitle) {
-        // Pass-through: OMDb already fetched all details (including ratings) in search()
-        return searchTitle;
     }
 }
 

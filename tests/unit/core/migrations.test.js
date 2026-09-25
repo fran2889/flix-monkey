@@ -279,3 +279,148 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
         );
     });
 });
+
+const migration2 = getMigrationByVersion(2);
+
+describe(`migration ${migration2.version}: ${migration2.description}`, () => {
+    const logger = { info: vi.fn(), error: vi.fn() };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it.each([
+        [
+            'entry with displayTitle and imdbId in data',
+            {
+                inputData: { displayTitle: 'Test Movie', imdbId: 'tt1234567', imdbRating: 8.5 },
+                expectedDisplayTitle: 'Test Movie',
+                expectedImdbId: 'tt1234567',
+                expectedData: { imdbId: 'tt1234567', imdbRating: 8.5 },
+            },
+        ],
+        [
+            'entry with only displayTitle in data',
+            {
+                inputData: { displayTitle: 'Another Movie' },
+                expectedDisplayTitle: 'Another Movie',
+                expectedImdbId: null,
+                expectedData: {},
+            },
+        ],
+        [
+            'entry with displayTitle and imdbId and other fields in data',
+            {
+                inputData: { displayTitle: 'Third Movie', imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
+                expectedDisplayTitle: 'Third Movie',
+                expectedImdbId: 'tt333',
+                expectedData: { imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
+            },
+        ],
+    ])(
+        'migrates old format entries: %s',
+        async (_desc, { inputData, expectedDisplayTitle, expectedImdbId, expectedData }) => {
+            const key = 'fmc:test-movie';
+            const expires = 12345;
+            const oldEntry = { data: inputData, expires };
+            const entries = { [key]: JSON.stringify(oldEntry) };
+            const expectedEntry = {
+                displayTitle: expectedDisplayTitle,
+                imdbId: expectedImdbId,
+                data: expectedData,
+                expires,
+            };
+            const expected = { [key]: JSON.stringify(expectedEntry) };
+            const result = { migrated: 1, skipped: 0, deleted: 0 };
+
+            const adapter = createMockAdapter({
+                storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+                storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            });
+
+            await runMigrations(adapter, logger, [migration2]);
+
+            expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+            expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
+            expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+            expect(logger.info).toHaveBeenCalledWith(
+                `Migration ${migration2.version} (${migration2.description}) completed`,
+                result
+            );
+        }
+    );
+
+    it('skips entries already in new format', async () => {
+        const key = 'fmc:new-format';
+        const expires = 12345;
+        const newEntry = { displayTitle: 'New Movie', imdbId: 'tt111', data: { imdbRating: 9.0 }, expires };
+        const entries = { [key]: JSON.stringify(newEntry) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+        });
+
+        await runMigrations(adapter, logger, [migration2]);
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2.version} (${migration2.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['entries without displayTitle in data', { data: { imdbId: 'tt222', imdbRating: 7.5 }, expires: 12345 }],
+        ['entries with null displayTitle in data', { data: { displayTitle: null, imdbId: 'tt999' }, expires: 12345 }],
+        ['entries with non-string displayTitle in data', { data: { displayTitle: 123 }, expires: 12345 }],
+    ])('deletes entries that cannot be migrated: %s', async (_desc, entry) => {
+        const key = 'fmc:test';
+        const entries = { [key]: JSON.stringify(entry) };
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+
+        await runMigrations(adapter, logger, [migration2]);
+
+        expect(adapter.storageDelete).toHaveBeenCalledWith(key);
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2.version} (${migration2.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes entries without data', { value: { expires: 12345 } }],
+        ['deletes entries with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = createMockAdapter({
+            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
+            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
+            storageDelete: vi.fn().mockResolvedValue(undefined),
+        });
+
+        await runMigrations(adapter, logger, [migration2]);
+
+        expect(adapter.storageDelete).toHaveBeenCalledWith(key);
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2.version} (${migration2.description}) completed`,
+            result
+        );
+    });
+});
