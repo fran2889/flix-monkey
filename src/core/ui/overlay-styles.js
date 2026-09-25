@@ -88,21 +88,23 @@ function buildFadeToggleStyles(overlayClass) {
 
 function buildIconBadgeStyles(overlayClass) {
     return `
-            .${overlayClass} .fm-overlay-icons {
-                display: inline-flex;
-                margin-left: 4px;
-                gap: 2px;
-            }
             .${overlayClass} .fm-icon-badge {
                 display: none;
                 cursor: pointer;
-                padding: 0 2px;
                 font-size: 0.8em;
                 opacity: 0.8;
                 pointer-events: auto;
+                margin-left: 2px;
             }
             .${overlayClass} .fm-icon-badge:hover {
                 opacity: 1;
+            }
+            .${overlayClass} a.fm-icons-visible .fm-icon-badge {
+                display: inline;
+            }
+            .${overlayClass}.fm-top-right a .fm-icon-badge,
+            .${overlayClass}.fm-bottom-right a .fm-icon-badge {
+                order: -1;
             }
         `;
 }

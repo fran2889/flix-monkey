@@ -90,6 +90,7 @@ export class OverlayRenderer {
             onEditClick: onEditClick ?? this.#onEditClick,
             onRefreshClick: onRefreshClick ?? this.#onRefreshClick,
             displayTitle: displayTitle ?? titleObj.displayTitle ?? '',
+            corner: this.#config.get('overlayCorner'),
         });
         container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');
