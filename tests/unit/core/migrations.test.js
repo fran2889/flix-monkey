@@ -296,7 +296,7 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
                 inputData: { displayTitle: 'Test Movie', imdbId: 'tt1234567', imdbRating: 8.5 },
                 expectedDisplayTitle: 'Test Movie',
                 expectedImdbId: 'tt1234567',
-                expectedData: { imdbRating: 8.5 },
+                expectedData: { imdbId: 'tt1234567', imdbRating: 8.5 },
             },
         ],
         [
@@ -314,7 +314,7 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
                 inputData: { displayTitle: 'Third Movie', imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
                 expectedDisplayTitle: 'Third Movie',
                 expectedImdbId: 'tt333',
-                expectedData: { year: 2024, imdbRating: 9.0 },
+                expectedData: { imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
             },
         ],
     ])(
