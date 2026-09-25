@@ -163,11 +163,24 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
  * @param {boolean} options.showFadeToggle - Whether fade toggles are enabled.
  * @param {'auto'|'always'|'never'|null} options.fadeToggleState - Current fade override state.
  * @param {((element: HTMLElement) => void)|null} options.onFadeToggleClick - Fade-toggle click handler.
+ * @param {((displayTitle: string) => void)|null} options.onEditClick - Edit icon click handler.
+ * @param {((displayTitle: string) => void)|null} options.onRefreshClick - Refresh icon click handler.
+ * @param {string} [options.displayTitle=''] - The display title for this overlay.
  * @returns {HTMLElement} Completed overlay element.
  */
 export function createOverlayElement(
     title,
-    { overlayClass, showRtRating, showMcRating, showFadeToggle, fadeToggleState, onFadeToggleClick }
+    {
+        overlayClass,
+        showRtRating,
+        showMcRating,
+        showFadeToggle,
+        fadeToggleState,
+        onFadeToggleClick,
+        onEditClick = null,
+        onRefreshClick = null,
+        displayTitle = '',
+    }
 ) {
     const container = document.createElement('div');
     container.className = overlayClass;
@@ -192,7 +205,57 @@ export function createOverlayElement(
 
     imdbLink.title = buildTooltip(titleParts, imdbId, apiTitle, year);
     appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick);
+
+    if (onEditClick && displayTitle) {
+        const iconContainer = document.createElement('span');
+        iconContainer.className = 'fm-overlay-icons';
+
+        const editIcon = createIconBadge('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle));
+        const refreshIcon = createIconBadge('↻', 'Refresh ratings', () => onRefreshClick(displayTitle));
+
+        iconContainer.appendChild(editIcon);
+        iconContainer.appendChild(refreshIcon);
+        container.appendChild(iconContainer);
+
+        setupHoverTimer(imdbLink, iconContainer);
+    }
+
     return container;
+}
+
+function createIconBadge(emoji, titleText, onClick) {
+    const badge = document.createElement('span');
+    badge.className = 'fm-icon-badge';
+    badge.textContent = emoji;
+    badge.title = titleText;
+    badge.style.display = 'none';
+    badge.addEventListener('click', e => {
+        e.stopPropagation();
+        onClick();
+    });
+    return badge;
+}
+
+function setupHoverTimer(badgeElement, iconContainer) {
+    let timer = null;
+
+    badgeElement.addEventListener('mouseenter', () => {
+        timer = setTimeout(() => {
+            iconContainer.querySelectorAll('.fm-icon-badge').forEach(el => {
+                el.style.display = 'inline';
+            });
+        }, 1000);
+    });
+
+    badgeElement.addEventListener('mouseleave', () => {
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        iconContainer.querySelectorAll('.fm-icon-badge').forEach(el => {
+            el.style.display = 'none';
+        });
+    });
 }
 
 /**

@@ -86,6 +86,27 @@ function buildFadeToggleStyles(overlayClass) {
         `;
 }
 
+function buildIconBadgeStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-overlay-icons {
+                display: inline-flex;
+                margin-left: 4px;
+                gap: 2px;
+            }
+            .${overlayClass} .fm-icon-badge {
+                display: none;
+                cursor: pointer;
+                padding: 0 2px;
+                font-size: 0.8em;
+                opacity: 0.8;
+                pointer-events: auto;
+            }
+            .${overlayClass} .fm-icon-badge:hover {
+                opacity: 1;
+            }
+        `;
+}
+
 export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',
@@ -103,5 +124,6 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         buildTop10OffsetStyles(overlayClass, resolvedCorner, resolvedTop10Selectors, resolvedTop10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
+        buildIconBadgeStyles(overlayClass),
     ].join('');
 }

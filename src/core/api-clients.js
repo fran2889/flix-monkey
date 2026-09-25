@@ -33,6 +33,7 @@ export class BaseApiClient {
     #adapter;
     #config;
     #logger;
+    #overrideManager;
 
     /**
      * @param {import('./request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
@@ -41,14 +42,16 @@ export class BaseApiClient {
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('./config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('./logger.js').Logger} [logger] - Logger instance when diagnostics are needed.
+     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} [overrideManager] - Manager for IMDb ID overrides.
      */
-    constructor(queue, source, disabledManager, adapter, config, logger) {
+    constructor(queue, source, disabledManager, adapter, config, logger, overrideManager = null) {
         this.#queue = queue;
         this.#source = source;
         this.#disabledManager = disabledManager;
         this.#adapter = adapter;
         this.#config = config;
         this.#logger = logger;
+        this.#overrideManager = overrideManager;
     }
 
     /**
@@ -60,6 +63,22 @@ export class BaseApiClient {
      *   title was not found.
      */
     async fetch(displayTitle) {
+        if (this.#overrideManager) {
+            const overrideId = await this.#overrideManager.getImdbId(displayTitle);
+            if (overrideId) {
+                this.#logger?.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
+                const searchTitle = new Title({
+                    displayTitle,
+                    imdbId: overrideId,
+                });
+                const detailedTitle = await this.getDetails(searchTitle);
+                if (detailedTitle) {
+                    return detailedTitle.withSource(this.#source);
+                }
+                return null;
+            }
+        }
+
         const searchTitle = await this.search(displayTitle);
         if (!searchTitle) return null;
         if (await this.isDisabled()) return null;
@@ -157,14 +176,15 @@ export class BaseApiClient {
 }
 
 export class XmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger) {
+    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
             ApiSource.XMDB,
             disabledManager,
             adapter,
             config,
-            logger
+            logger,
+            overrideManager
         );
     }
 
@@ -239,14 +259,15 @@ export class XmdbApiClient extends BaseApiClient {
 }
 
 export class OmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger) {
+    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter),
             ApiSource.OMDB,
             disabledManager,
             adapter,
             config,
-            logger
+            logger,
+            overrideManager
         );
     }
 
@@ -297,14 +318,15 @@ export class OmdbApiClient extends BaseApiClient {
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
 export class AgregarrApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger) {
+    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.AGREGARR], null, adapter),
             ApiSource.AGREGARR,
             disabledManager,
             adapter,
             config,
-            logger
+            logger,
+            overrideManager
         );
     }
 
