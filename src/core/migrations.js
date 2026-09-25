@@ -108,7 +108,6 @@ export const MIGRATIONS = Object.freeze([
                 }
 
                 // Remove displayTitle from data (it's now stored at entry level)
-                // imdbId is kept in data for Title reconstruction
                 delete data.displayTitle;
 
                 // Create new entry with top-level fields
