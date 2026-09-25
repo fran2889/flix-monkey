@@ -4,6 +4,8 @@
  */
 import { Title } from './title.js';
 
+/** @typedef {import('./cache.js').CacheEntry} CacheEntry */
+
 export class ApiClientManager {
     #cache;
     #client;
@@ -32,18 +34,35 @@ export class ApiClientManager {
      */
     async getData(displayTitle) {
         const source = this.#client.source;
-        const cached = await this.#cache.read(displayTitle, source);
-        if (cached !== null) return cached;
+        const entry = await this.#cache.read(displayTitle);
 
+        // Cache hit: non-expired entry with valid title
+        if (entry && !entry.isExpired) {
+            const titleObj = entry.getTitle();
+            if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
+                return titleObj;
+            }
+        }
+
+        // Entry with imdbId (expired OR non-expired without valid data): refresh
+        if (entry?.imdbId) {
+            return await this.#fetch(displayTitle, entry.imdbId);
+        }
+
+        // Cache miss or no imdbId: full fetch
+        return await this.#fetch(displayTitle);
+    }
+
+    async #fetch(displayTitle, imdbId = null) {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
-            return Title.notFound(displayTitle, source);
+            return Title.notFound(displayTitle, this.#client.source);
         }
 
         try {
-            const data = await this.#client.fetch(displayTitle);
+            const data = await this.#client.fetch(displayTitle, imdbId);
             if (!data) {
-                const notFound = Title.notFound(displayTitle, source);
+                const notFound = Title.notFound(displayTitle, this.#client.source);
                 await this.#cache.write(displayTitle, notFound);
                 return notFound;
             }
@@ -59,7 +78,7 @@ export class ApiClientManager {
                 `Failed to fetch ratings for "${displayTitle}": ${err.message}`,
                 { url: err.url ?? null, status: err.status ?? null, body: err.body ?? null }
             );
-            return Title.notFound(displayTitle, source);
+            return Title.notFound(displayTitle, this.#client.source);
         }
     }
 
