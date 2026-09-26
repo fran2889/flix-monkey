@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, overlayOffset?: string}}>} */
+/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, topTenOffset?: string}}>} */
 export default [
   {
     name: "Disney+ SHELF_CARD surface",

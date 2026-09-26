@@ -10,7 +10,7 @@ import { expect } from 'vitest';
  *
  * @param {import('../../src/core/surfaces.js').SurfaceManager} surfaceManager
  * @param {import('../../src/core/overlay.js').OverlayRenderer} overlayRenderer
- * @param {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, overlayOffset?: string}}>} fixtures
+ * @param {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, topTenOffset?: string}}>} fixtures
  */
 export function testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures) {
     fixtures.forEach(entry => {
@@ -21,8 +21,8 @@ export function testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures) {
         expect(surface.title).toBe(entry.expected.title);
         expect(surface.fadeable).toBe(entry.expected.fadeable);
         expect(surface.showFadeToggle).toBe(entry.expected.showFadeToggle);
-        if (entry.expected.overlayOffset !== undefined) {
-            expect(surface.overlayOffset).toBe(entry.expected.overlayOffset);
+        if (entry.expected.topTenOffset !== undefined) {
+            expect(surface.topTenOffset).toBe(entry.expected.topTenOffset);
         }
         overlayRenderer.injectOverlay(
             surface.container,
@@ -33,7 +33,7 @@ export function testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures) {
             },
             null,
             null,
-            surface.overlayOffset
+            surface.topTenOffset
         );
         expect(surface.container.querySelector('.fm-rating-overlay')).not.toBeNull();
     });

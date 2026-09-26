@@ -11,7 +11,7 @@
  * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
  * @property {boolean} [fadeable=false] - Whether this surface supports fading
  * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button
- * @property {string} [overlayOffset] - Optional horizontal offset for overlay positioning (e.g., '30%')
+ * @property {string} [topTenOffset] - Optional horizontal offset for Top 10 overlay positioning (e.g., '30%')
  */
 
 /**
@@ -20,7 +20,7 @@
  * @property {string} title
  * @property {boolean} fadeable
  * @property {boolean} showFadeToggle
- * @property {string} [overlayOffset]
+ * @property {string} [topTenOffset]
  */
 
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
@@ -74,7 +74,7 @@ export class SurfaceManager {
                     title,
                     fadeable: surface.fadeable ?? false,
                     showFadeToggle: surface.showFadeToggle ?? false,
-                    overlayOffset: surface.overlayOffset,
+                    topTenOffset: surface.topTenOffset,
                 });
             });
         });
@@ -98,7 +98,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         getContainer: containerFromClosest('.title-card'),
         fadeable: true,
         showFadeToggle: false,
-        overlayOffset: '50%',
+        topTenOffset: '50%',
     }),
     // Search result grid cards: the card element itself carries the full title via aria-label.
     SEARCH_CARD: Object.freeze({
@@ -123,7 +123,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         getContainer: containerFromClosest('[data-uia="ranked-card"]'),
         fadeable: true,
         showFadeToggle: false,
-        overlayOffset: '50%',
+        topTenOffset: '50%',
     }),
     // Hover mini-modal: scope to .mini-modal so the detail modal can target the player container independently.
     PREVIEW_MINI: Object.freeze({
@@ -200,7 +200,7 @@ export const HBO_MAX_SURFACES = Object.freeze({
         getContainer: containerFromParent,
         fadeable: true,
         showFadeToggle: true,
-        overlayOffset: '30%',
+        topTenOffset: '30%',
     }),
 });
 

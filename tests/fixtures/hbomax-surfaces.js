@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, overlayOffset?: string}}>} */
+/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, topTenOffset?: string}}>} */
 export default [
   {
     name: "HBO Max TILE surface",
@@ -29,7 +29,7 @@ export default [
       title: "House of the Dragon",
       fadeable: true,
       showFadeToggle: true,
-      overlayOffset: '30%'
+      topTenOffset: '30%'
     }
   }
 ];

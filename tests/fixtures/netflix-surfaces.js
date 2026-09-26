@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, overlayOffset?: string}}>} */
+/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, topTenOffset?: string}}>} */
 export default [
   {
     name: "Netflix TITLE_CARD surface",
@@ -71,7 +71,7 @@ export default [
       title: "Stranger Things",
       fadeable: true,
       showFadeToggle: false,
-      overlayOffset: '50%'
+      topTenOffset: '50%'
     }
   },
   {
@@ -94,7 +94,7 @@ export default [
       title: "Squid Game",
       fadeable: true,
       showFadeToggle: false,
-      overlayOffset: '50%'
+      topTenOffset: '50%'
     }
   },
   {

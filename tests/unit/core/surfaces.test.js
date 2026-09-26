@@ -253,7 +253,7 @@ describe('HBO Max surfaces', () => {
 
         const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
-        expect(surface.overlayOffset).toBe('30%');
+        expect(surface.topTenOffset).toBe('30%');
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', type => {

@@ -59,7 +59,7 @@ export class OverlayRenderer {
         container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS));
     }
 
-    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null, overlayOffset = null) {
+    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null, topTenOffset = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = createOverlayElement(titleObj, {
             overlayClass: this.#OVERLAY_CLASS,
@@ -72,8 +72,8 @@ export class OverlayRenderer {
             onRefreshClick: this.#onRefreshClick,
         });
         const corner = this.#config.get('overlayCorner');
-        if (overlayOffset && corner.includes('left')) {
-            overlay.style.left = `calc(${overlayOffset} + 6px)`;
+        if (topTenOffset && corner.includes('left')) {
+            overlay.style.left = `calc(${topTenOffset} + 6px)`;
         }
         container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');

@@ -107,14 +107,14 @@ export class FlixMonkeyApp {
     }
 
     decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle, overlayOffset }) => {
-            this.#decorateContainer(container, title, fadeable, showFadeToggle, overlayOffset).catch(err =>
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle, topTenOffset }) => {
+            this.#decorateContainer(container, title, fadeable, showFadeToggle, topTenOffset).catch(err =>
                 this.#logger.error(`Failed to decorate "${title}"`, err)
             );
         });
     }
 
-    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle, overlayOffset) {
+    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle, topTenOffset) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const dedupKey = slugify(displayTitle);
@@ -135,7 +135,7 @@ export class FlixMonkeyApp {
 
         try {
             const data = await request;
-            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, overlayOffset });
+            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, topTenOffset });
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
@@ -159,7 +159,7 @@ export class FlixMonkeyApp {
         return request;
     }
 
-    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, overlayOffset }) {
+    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, topTenOffset }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating, this.#config);
@@ -173,7 +173,7 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            overlayOffset
+            topTenOffset
         );
     }
 
