@@ -60,6 +60,33 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const result = await client.fetch('Unknown');
         expect(result).toBeNull();
     });
+
+    it('should return Title with override ID when override exists but getDetails returns null', async () => {
+        const mockAdapter = createMockAdapter({
+            httpFetch: vi.fn().mockResolvedValue(null),
+        });
+        const mockOverrideManager = {
+            getImdbId: vi.fn().mockResolvedValue('tt1234567'),
+        };
+        const client = new XmdbApiClient(
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockAdapter,
+            { get: _k => 'key' },
+            createMockLogger(),
+            mockOverrideManager
+        );
+        // Mock getDetails to return null (details fetch failed)
+        client.getDetails = vi.fn().mockResolvedValue(null);
+
+        const result = await client.fetch('Some Title');
+
+        expect(result).not.toBeNull();
+        expect(result.imdbId).toBe('tt1234567');
+        expect(result.displayTitle).toBe('Some Title');
+        expect(result.imdbRating).toBeNull();
+        expect(result.source).toBe('xmdb');
+        expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Some Title');
+    });
 });
 
 describe('XmdbApiClient', () => {

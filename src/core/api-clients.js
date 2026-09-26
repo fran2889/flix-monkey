@@ -81,7 +81,9 @@ export class BaseApiClient {
                 if (detailedTitle) {
                     return detailedTitle.withSource(this.#source);
                 }
-                return null;
+                // Return Title with override ID even if details fetch failed
+                // This preserves the ID for direct IMDb links and cache optimization
+                return searchTitle.withSource(this.#source);
             }
         }
 
