@@ -25,26 +25,11 @@ function buildBaseStyles(overlayClass, positionCss, flexDirection) {
                 pointer-events: none;
             }
             .${overlayClass} > * {
-                background: rgba(0,0,0,0.72);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 12px;
-                font-weight: 700;
-                line-height: 1;
-                padding: 4px 6px;
-                border-radius: 4px;
-                cursor: default;
-                text-decoration: none;
-                white-space: nowrap;
                 pointer-events: auto;
-                transition: background 0.15s;
-                display: flex;
-                align-items: center;
-                gap: 4px;
             }
             .${overlayClass} a {
                 cursor: pointer;
             }
-            .${overlayClass} > *:hover { background: rgba(0,0,0,0.92); }
             .${overlayClass} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
             .${overlayClass} .fm-imdb { color: #f5c518; }
             .${overlayClass} .fm-rt { color: #fa320a; }
@@ -72,10 +57,20 @@ function buildFadeStyles() {
 function buildFadeToggleStyles(overlayClass) {
     return `
             .${overlayClass} .fm-fade-toggle {
+                background: rgba(0,0,0,0.72);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1;
+                padding: 4px 6px;
+                border-radius: 4px;
                 cursor: pointer;
-                opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.15s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                opacity: 0;
             }
             :hover > .${overlayClass} .fm-fade-toggle {
                 opacity: 1;
@@ -83,6 +78,109 @@ function buildFadeToggleStyles(overlayClass) {
             }
             .${overlayClass} .fm-fade-toggle .fm-label { color: #aaa; }
             .${overlayClass} .fm-fade-toggle--faded { opacity: 0.35; }
+        `;
+}
+
+function buildRatingsWrapperStyles(overlayClass, corner) {
+    return `
+            .${overlayClass} .fm-ratings-wrapper {
+                display: grid;
+                grid-template-columns: max-content auto;
+                gap: 4px 2px;
+                justify-items: start;
+            }
+            .${overlayClass} .fm-imdb {
+                grid-column: 1;
+            }
+            .${overlayClass} .fm-actions {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .${overlayClass} .fm-rt,
+            .${overlayClass} .fm-mc {
+                grid-column: 1;
+            }
+            .${overlayClass}.fm-top-right .fm-imdb {
+                grid-column: 2;
+            }
+            .${overlayClass}.fm-top-right .fm-actions,
+            .${overlayClass}.fm-bottom-right .fm-actions {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            .${overlayClass}.fm-top-right .fm-rt,
+            .${overlayClass}.fm-top-right .fm-mc,
+            .${overlayClass}.fm-bottom-right .fm-rt,
+            .${overlayClass}.fm-bottom-right .fm-mc {
+                grid-column: 2;
+            }
+        `;
+}
+
+function buildRatingBadgeStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-rating-badge {
+                background: rgba(0,0,0,0.72);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1;
+                padding: 4px 6px;
+                border-radius: 4px;
+                cursor: default;
+                text-decoration: none;
+                white-space: nowrap;
+                pointer-events: auto;
+                transition: background 0.15s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                justify-content: center;
+            }
+            .${overlayClass} .fm-rating-badge:hover {
+                background: rgba(0,0,0,0.92);
+            }
+        `;
+}
+
+function buildActionsStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-actions {
+                display: flex;
+                gap: 2px;
+                opacity: 0;
+                transition: opacity 0.2s;
+                justify-content: center;
+            }
+            .${overlayClass} .fm-actions-visible {
+                opacity: 1;
+            }
+        `;
+}
+
+function buildIconButtonStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-icon-btn {
+                background: rgba(40, 40, 40, 0.95);
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.8em;
+                opacity: 0.9;
+                pointer-events: auto;
+                padding: 2px 4px;
+                border-radius: 3px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.15s, opacity 0.15s;
+            }
+            .${overlayClass} .fm-icon-btn:hover {
+                background: rgba(60, 60, 60, 0.95);
+                opacity: 1;
+            }
+            .${overlayClass} .fm-icon-btn:active {
+                background: rgba(20, 20, 20, 0.95);
+            }
         `;
 }
 
@@ -126,6 +224,10 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         buildTop10OffsetStyles(overlayClass, resolvedCorner, resolvedTop10Selectors, resolvedTop10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
+        buildRatingsWrapperStyles(overlayClass, resolvedCorner),
+        buildRatingBadgeStyles(overlayClass),
+        buildActionsStyles(overlayClass),
+        buildIconButtonStyles(overlayClass),
         buildIconBadgeStyles(overlayClass),
     ].join('');
 }

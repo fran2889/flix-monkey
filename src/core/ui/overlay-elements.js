@@ -137,13 +137,29 @@ function appendImdbRating(imdbLink, title) {
     return titleParts;
 }
 
-function appendOptionalRating(container, shouldShow, label, rating, className) {
-    if (shouldShow && rating !== null && rating !== undefined) {
-        const formatted = formatPercentRating(rating);
-        const badge = createRatingElement(label, formatted, className);
-        badge.addEventListener('click', e => e.stopPropagation());
-        container.appendChild(badge);
-    }
+function createOptionalRatingBadge(label, rating, className, showRating) {
+    if (!showRating || rating === null || rating === undefined) return null;
+    const formatted = formatPercentRating(rating);
+    const badge = createRatingElement(label, formatted, className);
+    badge.classList.add('fm-rating-badge');
+    badge.addEventListener('click', e => e.stopPropagation());
+    return badge;
+}
+
+function setupHoverActions(ratingsWrapper, actionsContainer, delayMs = 1000) {
+    let hoverTimeout = null;
+    ratingsWrapper.addEventListener('mouseenter', () => {
+        hoverTimeout = setTimeout(() => {
+            actionsContainer.classList.add('fm-actions-visible');
+        }, delayMs);
+    });
+    ratingsWrapper.addEventListener('mouseleave', () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+        }
+        actionsContainer.classList.remove('fm-actions-visible');
+    });
 }
 
 function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick) {
@@ -192,61 +208,65 @@ export function createOverlayElement(
 
     const { imdbId, rtRating, mcRating, apiTitle, year } = title;
 
-    // IMDb (Interactive Link)
+    // Ratings wrapper: hover target for all badges
+    const ratingsWrapper = document.createElement('div');
+    ratingsWrapper.className = 'fm-ratings-wrapper';
+
+    // IMDb (Interactive Link) - now a direct child of wrapper
     const imdbLink = document.createElement('a');
     imdbLink.target = '_blank';
     imdbLink.rel = 'noopener noreferrer';
     imdbLink.href = title.imdbUrl;
     imdbLink.addEventListener('click', e => e.stopPropagation());
+    imdbLink.classList.add('fm-rating-badge', 'fm-imdb');
 
     const titleParts = appendImdbRating(imdbLink, title);
-    container.appendChild(imdbLink);
 
-    // RT
-    appendOptionalRating(container, showRtRating, 'RT', rtRating, 'fm-rt');
-
-    // MC
-    appendOptionalRating(container, showMcRating, 'MC', mcRating, 'fm-mc');
-
-    imdbLink.title = buildTooltip(titleParts, imdbId, apiTitle, year);
-    appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick);
+    // Actions container: separate from IMDb badge with own background
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'fm-actions';
 
     if (onEditClick && displayTitle) {
-        const editIcon = createIconBadge('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle, imdbId));
-        const refreshIcon = createIconBadge('🔄', 'Refresh ratings', () => onRefreshClick(displayTitle));
-
-        imdbLink.appendChild(editIcon);
-        imdbLink.appendChild(refreshIcon);
-
-        let hoverTimeout = null;
-        imdbLink.addEventListener('mouseenter', () => {
-            hoverTimeout = setTimeout(() => {
-                imdbLink.classList.add('fm-icons-visible');
-            }, 2000);
-        });
-        imdbLink.addEventListener('mouseleave', () => {
-            if (hoverTimeout) {
-                clearTimeout(hoverTimeout);
-                hoverTimeout = null;
-            }
-            imdbLink.classList.remove('fm-icons-visible');
-        });
+        const editIcon = createIconButton('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle, imdbId));
+        const refreshIcon = createIconButton('🔄', 'Refresh ratings', () => onRefreshClick(displayTitle));
+        actionsContainer.appendChild(editIcon);
+        actionsContainer.appendChild(refreshIcon);
+        setupHoverActions(ratingsWrapper, actionsContainer, 1000);
     }
+
+    ratingsWrapper.appendChild(imdbLink);
+    
+    if (onEditClick && displayTitle) {
+        ratingsWrapper.appendChild(actionsContainer);
+    }
+
+    // RT
+    const rtBadge = createOptionalRatingBadge('RT', rtRating, 'fm-rt', showRtRating);
+    if (rtBadge) ratingsWrapper.appendChild(rtBadge);
+
+    // MC
+    const mcBadge = createOptionalRatingBadge('MC', mcRating, 'fm-mc', showMcRating);
+    if (mcBadge) ratingsWrapper.appendChild(mcBadge);
+
+    container.appendChild(ratingsWrapper);
+
+    imdbLink.title = buildTooltip(titleParts, imdbId, apiTitle, year);
+    appendFadeToggle(ratingsWrapper, showFadeToggle, fadeToggleState, onFadeToggleClick);
 
     return container;
 }
 
-function createIconBadge(emoji, titleText, onClick) {
-    const badge = document.createElement('span');
-    badge.className = 'fm-icon-badge';
-    badge.textContent = emoji;
-    badge.title = titleText;
-    badge.addEventListener('click', e => {
+function createIconButton(emoji, titleText, onClick) {
+    const btn = document.createElement('span');
+    btn.className = 'fm-icon-btn';
+    btn.textContent = emoji;
+    btn.title = titleText;
+    btn.addEventListener('click', e => {
         e.preventDefault();
         e.stopPropagation();
         onClick();
     });
-    return badge;
+    return btn;
 }
 
 /**
