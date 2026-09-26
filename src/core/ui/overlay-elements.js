@@ -212,7 +212,7 @@ export function createOverlayElement(
     appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick);
 
     if (onEditClick && displayTitle) {
-        const editIcon = createIconBadge('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle));
+        const editIcon = createIconBadge('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle, imdbId));
         const refreshIcon = createIconBadge('🔄', 'Refresh ratings', () => onRefreshClick(displayTitle));
 
         imdbLink.appendChild(editIcon);
@@ -242,6 +242,7 @@ function createIconBadge(emoji, titleText, onClick) {
     badge.textContent = emoji;
     badge.title = titleText;
     badge.addEventListener('click', e => {
+        e.preventDefault();
         e.stopPropagation();
         onClick();
     });

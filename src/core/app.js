@@ -67,12 +67,16 @@ export class FlixMonkeyApp {
     /**
      * Handler for edit icon click - sets or updates IMDb ID override.
      * @param {string} displayTitle - The title to set override for
+     * @param {string|null} imdbId - Current IMDb ID from API (used as fallback if no override exists)
      */
-    async #handleEditClick(displayTitle) {
-        const imdbId = prompt(`IMDb ID for ${displayTitle}:`);
-        if (imdbId === null) return;
+    async #handleEditClick(displayTitle, imdbId = null) {
+        const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
+        const promptMessage = `IMDb ID for ${displayTitle}:`;
+        const defaultValue = currentOverride || imdbId || '';
+        const userInput = prompt(promptMessage, defaultValue);
+        if (userInput === null) return;
 
-        const extracted = this.#extractImdbId(imdbId);
+        const extracted = this.#extractImdbId(userInput);
         if (!extracted) {
             alert('Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)');
             return;
@@ -235,7 +239,7 @@ export class FlixMonkeyApp {
 
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating, this.#config);
         this.#renderer.applyFade(container, shouldFade);
-        if (fadeable) container.dataset.fmKey = dedupKey;
+        container.dataset.fmKey = dedupKey;
         const onFadeToggleClick = showFadeToggle
             ? el => this.#handleFadeToggleClick(dedupKey, data.imdbRating, el)
             : null;
@@ -245,7 +249,7 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            this.#overrideManager ? this.handleEditClick : null,
+            this.#overrideManager ? (d, id) => this.handleEditClick(d, id) : null,
             this.#overrideManager ? this.handleRefreshClick : null,
             displayTitle
         );
