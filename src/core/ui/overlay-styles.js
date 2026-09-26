@@ -72,7 +72,7 @@ function buildFadeToggleStyles(overlayClass) {
                 gap: 4px;
                 opacity: 0;
             }
-            :hover > .${overlayClass} .fm-fade-toggle {
+            .${overlayClass}:hover .fm-fade-toggle {
                 opacity: 1;
                 pointer-events: auto;
             }

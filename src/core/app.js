@@ -89,7 +89,7 @@ export class FlixMonkeyApp {
     }
 
     /**
-     * Handler for refresh icon click - clears cache and re-fetches.
+     * Handler for refresh icon click - clears single cache entry and triggers re-decoration.
      * @param {string} displayTitle - The title to refresh
      */
     async #handleRefreshClick(displayTitle) {
@@ -109,7 +109,7 @@ export class FlixMonkeyApp {
         if (/^tt\d+$/.test(trimmed)) {
             return trimmed;
         }
-        const match = trimmed.match(/(?:imdb\.com\/title\/|tt)(\d+)/);
+        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
         if (match) {
             return `tt${match[1]}`;
         }
@@ -123,6 +123,7 @@ export class FlixMonkeyApp {
      */
     #redecorateTitle(dedupKey, displayTitle) {
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+            if (!document.contains(container)) return;
             container.removeAttribute('data-fm-injected');
             this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>

@@ -64,6 +64,11 @@ export class BaseApiClient {
      *   title was not found.
      */
     async fetch(displayTitle, imdbId = null) {
+        // Check if client is disabled first, before any fetch attempts
+        if (await this.isDisabled()) {
+            return null;
+        }
+
         if (this.#overrideManager) {
             const overrideId = await this.#overrideManager.getImdbId(displayTitle);
             if (overrideId) {
@@ -89,7 +94,6 @@ export class BaseApiClient {
 
         const searchTitle = await this.search(displayTitle);
         if (!searchTitle) return null;
-        if (await this.isDisabled()) return null;
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;
         return detailedTitle.withSource(this.#source);

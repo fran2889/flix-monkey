@@ -148,18 +148,20 @@ function createOptionalRatingBadge(label, rating, className, showRating) {
 
 function setupHoverActions(ratingsWrapper, actionsContainer, delayMs = 1000) {
     let hoverTimeout = null;
-    ratingsWrapper.addEventListener('mouseenter', () => {
-        hoverTimeout = setTimeout(() => {
-            actionsContainer.classList.add('fm-actions-visible');
-        }, delayMs);
-    });
-    ratingsWrapper.addEventListener('mouseleave', () => {
+    const clearHover = () => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
             hoverTimeout = null;
         }
         actionsContainer.classList.remove('fm-actions-visible');
+    };
+    ratingsWrapper.addEventListener('mouseenter', () => {
+        clearHover();
+        hoverTimeout = setTimeout(() => {
+            actionsContainer.classList.add('fm-actions-visible');
+        }, delayMs);
     });
+    ratingsWrapper.addEventListener('mouseleave', clearHover);
 }
 
 function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick) {
@@ -231,8 +233,8 @@ export function createOverlayElement(
     actionsContainer.className = 'fm-actions';
 
     if (onEditClick && displayTitle) {
-        const editIcon = createIconButton('✏️', 'Edit IMDb ID', () => onEditClick(displayTitle, imdbId));
-        const refreshIcon = createIconButton('🔄', 'Refresh ratings', () => onRefreshClick(displayTitle));
+        const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
+        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle));
         actionsContainer.appendChild(editIcon);
         actionsContainer.appendChild(refreshIcon);
         imdbRow.appendChild(actionsContainer);
@@ -258,6 +260,13 @@ export function createOverlayElement(
     return container;
 }
 
+/**
+ * Creates an icon button for overlay actions.
+ * @param {string} emoji - The emoji character to display
+ * @param {string} titleText - Tooltip text for the button
+ * @param {() => void} onClick - Click handler
+ * @returns {HTMLElement} Icon button element
+ */
 function createIconButton(emoji, titleText, onClick) {
     const btn = document.createElement('span');
     btn.className = 'fm-icon-btn';
@@ -269,10 +278,6 @@ function createIconButton(emoji, titleText, onClick) {
         onClick();
     });
     return btn;
-}
-
-function createIconBadge(emoji, titleText, onClick) {
-    return createIconButton(emoji, titleText, onClick);
 }
 
 /**
