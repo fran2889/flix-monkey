@@ -540,7 +540,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should not stamp data-fm-key on non-fadeable mini-modal containers', async () => {
+    it('should stamp data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
         document.body.innerHTML = `
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
@@ -560,7 +560,7 @@ describe('App', () => {
         await vi.waitFor(() => {
             if (!container.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
         });
-        expect(container.dataset.fmKey).toBeUndefined();
+        expect(container.dataset.fmKey).toBeTruthy();
         spy.mockRestore();
     });
 

@@ -204,14 +204,6 @@ function buildRatingBadgeStyles(overlayClass) {
         `;
 }
 
-function buildImdbLinkStyles(overlayClass) {
-    return `
-            .${overlayClass} .fm-imdb {
-                color: #f5c518;
-            }
-        `;
-}
-
 export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',

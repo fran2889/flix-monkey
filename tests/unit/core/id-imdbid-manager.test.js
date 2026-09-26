@@ -33,14 +33,14 @@ describe('IdImdbIdManager', () => {
 
         it('handles special characters in title', async () => {
             mockAdapter.storageGet.mockImplementation(key => {
-                if (key === 'fm-imdbid:the-matrix-reloaded') {
+                if (key === 'fm-imdbid:the_matrix_reloaded') {
                     return Promise.resolve('"tt0242653"');
                 }
                 return Promise.resolve(null);
             });
             const result = await manager.getImdbId('The Matrix: Reloaded!');
             expect(result).toBe('tt0242653');
-            expect(mockAdapter.storageGet).toHaveBeenCalledWith('fm-imdbid:the-matrix-reloaded');
+            expect(mockAdapter.storageGet).toHaveBeenCalledWith('fm-imdbid:the_matrix_reloaded');
         });
 
         it('returns null when storage returns undefined', async () => {
@@ -52,15 +52,16 @@ describe('IdImdbIdManager', () => {
 
     describe('setImdbId', () => {
         it('stores imdbId and retrieves it', async () => {
+            mockAdapter.storageGet.mockResolvedValue('"tt0133093"');
             await manager.setImdbId('The Matrix', 'tt0133093');
             const result = await manager.getImdbId('The Matrix');
             expect(result).toBe('tt0133093');
-            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm-imdbid:the-matrix', '"tt0133093"');
+            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm-imdbid:the_matrix', '"tt0133093"');
         });
 
         it('stores imdbId with special characters in title', async () => {
             await manager.setImdbId('The Matrix: Reloaded!', 'tt0242653');
-            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm-imdbid:the-matrix-reloaded', '"tt0242653"');
+            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm-imdbid:the_matrix_reloaded', '"tt0242653"');
         });
     });
 });

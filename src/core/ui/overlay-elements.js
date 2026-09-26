@@ -234,7 +234,9 @@ export function createOverlayElement(
 
     if (onEditClick && displayTitle) {
         const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
-        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle));
+        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
+            onRefreshClick(displayTitle)
+        );
         actionsContainer.appendChild(editIcon);
         actionsContainer.appendChild(refreshIcon);
         imdbRow.appendChild(actionsContainer);
