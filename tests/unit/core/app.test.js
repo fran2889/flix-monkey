@@ -662,4 +662,192 @@ describe('App', () => {
         const card = document.querySelector('.title-card');
         expect(card.classList.contains('fm-faded')).toBe(true);
     });
+
+    it('should return null when ServiceRegistry.detect returns null', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
+        const result = startApp(createMockAdapter());
+        expect(result).toBeNull();
+    });
+
+    it('should return null when ServiceRegistry.detect returns undefined', async () => {
+        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
+        const result = startApp(createMockAdapter());
+        expect(result).toBeNull();
+    });
+
+    describe('IMDb ID override handlers', () => {
+        let mockOverrideManager;
+
+        beforeEach(() => {
+            mockOverrideManager = {
+                getImdbId: vi.fn().mockResolvedValue(null),
+                setImdbId: vi.fn().mockResolvedValue(undefined),
+            };
+        });
+
+        it('handleEditClick should cancel when userInput is null', async () => {
+            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                removeLoadingOverlay: vi.fn(),
+            };
+            const app = new FlixMonkeyApp(
+                mockCache,
+                {},
+                mockRenderer,
+                { discover: () => [] },
+                {},
+                {},
+                createMockLogger(),
+                mockOverrideManager
+            );
+
+            // Mock prompt to return null (user cancelled)
+            const originalPrompt = window.prompt;
+            window.prompt = vi.fn().mockReturnValue(null);
+
+            try {
+                await app.handleEditClick('Test Movie');
+                expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+                expect(mockCache.delete).not.toHaveBeenCalled();
+            } finally {
+                window.prompt = originalPrompt;
+            }
+        });
+
+        it('handleEditClick should show alert for invalid IMDb ID', async () => {
+            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                removeLoadingOverlay: vi.fn(),
+            };
+            const app = new FlixMonkeyApp(
+                mockCache,
+                {},
+                mockRenderer,
+                { discover: () => [] },
+                {},
+                {},
+                createMockLogger(),
+                mockOverrideManager
+            );
+
+            const originalPrompt = window.prompt;
+            const originalAlert = window.alert;
+            window.prompt = vi.fn().mockReturnValue('invalid-id');
+            window.alert = vi.fn();
+
+            try {
+                await app.handleEditClick('Test Movie');
+                expect(window.alert).toHaveBeenCalledWith(
+                    'Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)'
+                );
+                expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+            } finally {
+                window.prompt = originalPrompt;
+                window.alert = originalAlert;
+            }
+        });
+
+        it('handleEditClick should set override and clear cache for valid IMDb ID', async () => {
+            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                removeLoadingOverlay: vi.fn(),
+                injectOverlay: vi.fn(),
+            };
+            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+
+            const app = new FlixMonkeyApp(
+                mockCache,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
+                mockRenderer,
+                mockSurfaces,
+                {},
+                {},
+                createMockLogger(),
+                mockOverrideManager
+            );
+
+            const originalPrompt = window.prompt;
+            window.prompt = vi.fn().mockReturnValue('tt0133093');
+
+            try {
+                await app.handleEditClick('Test Movie');
+                expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
+                expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            } finally {
+                window.prompt = originalPrompt;
+            }
+        });
+
+        it('handleEditClick should set override and clear cache for IMDb URL input', async () => {
+            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                removeLoadingOverlay: vi.fn(),
+                injectOverlay: vi.fn(),
+            };
+            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+
+            const app = new FlixMonkeyApp(
+                mockCache,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
+                mockRenderer,
+                mockSurfaces,
+                {},
+                {},
+                createMockLogger(),
+                mockOverrideManager
+            );
+
+            const originalPrompt = window.prompt;
+            window.prompt = vi.fn().mockReturnValue('https://www.imdb.com/title/tt0133093/');
+
+            try {
+                await app.handleEditClick('Test Movie');
+                expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
+                expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            } finally {
+                window.prompt = originalPrompt;
+            }
+        });
+
+        it('handleRefreshClick should clear cache and trigger re-decoration', async () => {
+            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                removeLoadingOverlay: vi.fn(),
+                injectOverlay: vi.fn(),
+            };
+            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+
+            const app = new FlixMonkeyApp(
+                mockCache,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
+                mockRenderer,
+                mockSurfaces,
+                {},
+                {},
+                createMockLogger(),
+                mockOverrideManager
+            );
+
+            // Set up a container with the data-fm-key attribute
+            const container = document.createElement('div');
+            container.setAttribute('data-fm-key', 'test_movie');
+            document.body.appendChild(container);
+
+            await app.handleRefreshClick('Test Movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
+        });
+    });
 });

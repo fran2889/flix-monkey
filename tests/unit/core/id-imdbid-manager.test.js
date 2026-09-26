@@ -63,5 +63,11 @@ describe('IdImdbIdManager', () => {
             await manager.setImdbId('The Matrix: Reloaded!', 'tt0242653');
             expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm-imdbid:the_matrix_reloaded', '"tt0242653"');
         });
+
+        it('handles corrupt storage data gracefully', async () => {
+            mockAdapter.storageGet.mockResolvedValue('not-valid-json{');
+            const result = await manager.getImdbId('Corrupt Movie');
+            expect(result).toBeNull();
+        });
     });
 });

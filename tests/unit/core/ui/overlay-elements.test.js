@@ -307,4 +307,119 @@ describe('createOverlayElement', () => {
             expect(element.querySelectorAll('.fm-value')[1].style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
         });
     });
+
+    describe('IMDb ID override and refresh actions', () => {
+        it('should render edit and refresh icons when onEditClick and onRefreshClick are provided', () => {
+            const onEditClick = vi.fn();
+            const onRefreshClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                {
+                    onEditClick,
+                    onRefreshClick,
+                    displayTitle: 'Test Movie',
+                }
+            );
+
+            expect(element.querySelector('.fm-icon-btn')).not.toBeNull();
+            const iconButtons = element.querySelectorAll('.fm-icon-btn');
+            expect(iconButtons).toHaveLength(2);
+            expect(iconButtons[0].textContent).toBe('✏️');
+            expect(iconButtons[1].textContent).toBe('🔄');
+        });
+
+        it('should not render edit and refresh icons when handlers are not provided', () => {
+            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
+
+            expect(element.querySelector('.fm-icon-btn')).toBeNull();
+        });
+
+        it('should add corner class when corner option is provided', () => {
+            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
+
+            expect(element.classList.contains('fm-bottom-right')).toBe(true);
+        });
+
+        it('should add ratings wrapper element', () => {
+            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
+
+            expect(element.querySelector('.fm-ratings-wrapper')).not.toBeNull();
+        });
+
+        it('should add imdb-row element when actions are present', () => {
+            const onEditClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                { onEditClick, displayTitle: 'Test' }
+            );
+
+            expect(element.querySelector('.fm-imdb-row')).not.toBeNull();
+        });
+
+        it('should add actions container when handlers are present', () => {
+            const onEditClick = vi.fn();
+            const onRefreshClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                { onEditClick, onRefreshClick, displayTitle: 'Test' }
+            );
+
+            expect(element.querySelector('.fm-actions')).not.toBeNull();
+        });
+
+        it('should call onEditClick when edit icon is clicked', () => {
+            const onEditClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onEditClick, displayTitle: 'Test Movie' }
+            );
+
+            const editIcon = element.querySelector('.fm-icon-btn');
+            editIcon.click();
+
+            expect(onEditClick).toHaveBeenCalledWith('Test Movie', 'tt1234567');
+        });
+
+        it('should call onRefreshClick when refresh icon is clicked', () => {
+            const onEditClick = vi.fn();
+            const onRefreshClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onEditClick, onRefreshClick, displayTitle: 'Test Movie' }
+            );
+
+            const iconButtons = element.querySelectorAll('.fm-icon-btn');
+            // Refresh is the second button
+            iconButtons[1].click();
+
+            expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
+        });
+
+        it('should prevent default and stop propagation on icon button click', () => {
+            const onEditClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onEditClick, displayTitle: 'Test Movie' }
+            );
+
+            const editIcon = element.querySelector('.fm-icon-btn');
+            const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+
+            editIcon.dispatchEvent(event);
+
+            expect(event.defaultPrevented).toBe(true);
+            expect(onEditClick).toHaveBeenCalled();
+        });
+
+        it('should add fm-rating-badge class to rating badges', () => {
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, rtRating: 80, mcRating: 70 },
+                { showRtRating: true, showMcRating: true }
+            );
+
+            const ratingBadges = element.querySelectorAll('.fm-rating-badge');
+            expect(ratingBadges.length).toBeGreaterThan(0);
+            expect(ratingBadges[0].classList.contains('fm-imdb')).toBe(true);
+        });
+    });
 });

@@ -2,11 +2,12 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { createConfig } from '../../mocks/config.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
@@ -936,5 +937,167 @@ describe('AgregarrApiClient', () => {
         expect(client.searchCalled).toBe(true);
         expect(client.getDetailsCalled).toBe(true);
         expect(result.imdbRating).toBe(8.0);
+    });
+
+    describe('IMDb ID override support', () => {
+        let mockOverrideManager;
+        let mockLogger;
+
+        beforeEach(() => {
+            mockOverrideManager = {
+                getImdbId: vi.fn().mockResolvedValue(null),
+            };
+            mockLogger = { debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
+        });
+
+        it('should use override IMDb ID when available', async () => {
+            const mockAdapter = createMockAdapter({
+                httpFetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({ name: 'Overridden Movie', ratings: [{ source: 'imdb', value: '8.5' }] }),
+                }),
+            });
+            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+
+            mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
+
+            const client = new AgregarrApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                createConfig({}),
+                mockLogger,
+                mockOverrideManager
+            );
+
+            // Mock getDetails to return a title
+            vi.spyOn(client, 'getDetails').mockResolvedValue(
+                new Title({ displayTitle: 'Overridden Movie', imdbId: 'tt9999999', imdbRating: 8.5 })
+            );
+
+            const result = await client.fetch('Test Movie');
+
+            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result.imdbId).toBe('tt9999999');
+            expect(result.imdbRating).toBe(8.5);
+        });
+
+        it('should use displayTitle from override fetch when details fetch fails', async () => {
+            const mockAdapter = createMockAdapter({
+                httpFetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: () => Promise.resolve({ name: 'Overridden Movie', ratings: [] }),
+                }),
+            });
+            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+
+            mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
+
+            const client = new AgregarrApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                createConfig({}),
+                mockLogger,
+                mockOverrideManager
+            );
+
+            // Mock getDetails to return null (simulating a failed details fetch)
+            vi.spyOn(client, 'getDetails').mockResolvedValue(null);
+
+            const result = await client.fetch('Test Movie');
+
+            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
+            // Should still return a Title with the override ID even if details fetch failed
+            expect(result.imdbId).toBe('tt9999999');
+            expect(result.displayTitle).toBe('Test Movie');
+        });
+
+        it('should fall back to normal search when no override exists', async () => {
+            const mockAdapter = createMockAdapter({
+                httpFetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: () => Promise.resolve({ name: 'Normal Movie', ratings: [{ source: 'imdb', value: '7.5' }] }),
+                }),
+            });
+            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+
+            mockOverrideManager.getImdbId.mockResolvedValue(null);
+
+            const client = new AgregarrApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                createConfig({}),
+                mockLogger,
+                mockOverrideManager
+            );
+
+            // Mock search to return a title
+            vi.spyOn(client, 'search').mockResolvedValue(
+                new Title({ displayTitle: 'Normal Movie', imdbId: 'tt1111111' })
+            );
+            vi.spyOn(client, 'getDetails').mockResolvedValue(
+                new Title({ displayTitle: 'Normal Movie', imdbId: 'tt1111111', imdbRating: 7.5 })
+            );
+
+            const result = await client.fetch('Test Movie');
+
+            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result.imdbRating).toBe(7.5);
+        });
+
+        it('should check if client is disabled before any fetch attempts', async () => {
+            const mockAdapter = createMockAdapter({
+                httpFetch: vi.fn().mockResolvedValue({ ok: true, json: () => ({}) }),
+            });
+            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(true), markDisabled: vi.fn() };
+            mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
+
+            const client = new AgregarrApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                createConfig({}),
+                mockLogger,
+                mockOverrideManager
+            );
+
+            const result = await client.fetch('Test Movie');
+
+            expect(result).toBeNull();
+            expect(mockOverrideManager.getImdbId).not.toHaveBeenCalled();
+            // Should not attempt any fetch or check override when disabled
+        });
+
+        it('should pass overrideManager to subclass constructors', () => {
+            const mockDisabledManager = { isDisabled: vi.fn(), markDisabled: vi.fn() };
+            const mockAdapter = createMockAdapter();
+            const mockConfig = createConfig({});
+
+            const xmdbClient = new XmdbApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                mockConfig,
+                mockLogger,
+                mockOverrideManager
+            );
+            const omdbClient = new OmdbApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                mockConfig,
+                mockLogger,
+                mockOverrideManager
+            );
+            const agregarrClient = new AgregarrApiClient(
+                mockDisabledManager,
+                mockAdapter,
+                mockConfig,
+                mockLogger,
+                mockOverrideManager
+            );
+
+            // Clients should be created successfully with overrideManager
+            expect(xmdbClient).toBeInstanceOf(XmdbApiClient);
+            expect(omdbClient).toBeInstanceOf(OmdbApiClient);
+            expect(agregarrClient).toBeInstanceOf(AgregarrApiClient);
+        });
     });
 });
