@@ -9,8 +9,6 @@
  * @param {object} options - Overlay style options.
  * @param {string} options.overlayClass - Rating overlay class name.
  * @param {string} options.corner - Configured overlay corner.
- * @param {string[]} [options.top10Selectors=[]] - Ranked-card selectors requiring an offset.
- * @param {string} [options.top10Offset='50%'] - Horizontal offset for ranked cards.
  * @returns {string} CSS for the rating overlay.
  */
 function buildBaseStyles(overlayClass, positionCss, flexDirection) {
@@ -55,13 +53,6 @@ function buildBaseStyles(overlayClass, positionCss, flexDirection) {
         `;
 }
 
-function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offset) {
-    if (!corner.includes('left') || !top10Selectors.length) return '';
-
-    const selectors = top10Selectors.map(selector => `${selector} .${overlayClass}`);
-    return `\n            ${selectors.join(',\n            ')} { left: calc(${top10Offset} + 6px); }`;
-}
-
 function buildFadeStyles() {
     return `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
@@ -86,7 +77,7 @@ function buildFadeToggleStyles(overlayClass) {
         `;
 }
 
-export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
+export function buildOverlayStyles({ overlayClass, corner }) {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',
         'top-right': 'top:6px;right:6px;',
@@ -94,13 +85,10 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         'bottom-right': 'bottom:6px;right:6px;',
     };
     const resolvedCorner = Object.hasOwn(cornerStyles, corner) ? corner : 'top-left';
-    const resolvedTop10Selectors = top10Selectors ?? [];
-    const resolvedTop10Offset = top10Offset ?? '50%';
     const positionCss = cornerStyles[resolvedCorner];
     const flexDirection = resolvedCorner.includes('bottom') ? 'column-reverse' : 'column';
     return [
         buildBaseStyles(overlayClass, positionCss, flexDirection),
-        buildTop10OffsetStyles(overlayClass, resolvedCorner, resolvedTop10Selectors, resolvedTop10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
     ].join('');

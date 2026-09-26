@@ -11,6 +11,7 @@
  * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
  * @property {boolean} [fadeable=false] - Whether this surface supports fading
  * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button
+ * @property {string} [overlayOffset] - Optional horizontal offset for overlay positioning (e.g., '30%')
  */
 
 /**
@@ -19,6 +20,7 @@
  * @property {string} title
  * @property {boolean} fadeable
  * @property {boolean} showFadeToggle
+ * @property {string} [overlayOffset]
  */
 
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
@@ -72,6 +74,7 @@ export class SurfaceManager {
                     title,
                     fadeable: surface.fadeable ?? false,
                     showFadeToggle: surface.showFadeToggle ?? false,
+                    overlayOffset: surface.overlayOffset,
                 });
             });
         });
@@ -82,11 +85,20 @@ export class SurfaceManager {
 export const NETFLIX_SURFACES = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
-        titleSelector: '.title-card a[aria-label]',
+        titleSelector: '.title-card:not(.title-card-top-10) a[aria-label]',
         getTitle: titleFromAttribute('aria-label'),
         getContainer: containerFromClosest('.title-card'),
         fadeable: true,
         showFadeToggle: false,
+    }),
+    // Browse-page Top 10 row cards: same structure but with top-10 modifier class.
+    TITLE_CARD_TOP_10: Object.freeze({
+        titleSelector: '.title-card.title-card-top-10 a[aria-label]',
+        getTitle: titleFromAttribute('aria-label'),
+        getContainer: containerFromClosest('.title-card'),
+        fadeable: true,
+        showFadeToggle: false,
+        overlayOffset: '50%',
     }),
     // Search result grid cards: the card element itself carries the full title via aria-label.
     SEARCH_CARD: Object.freeze({
@@ -111,6 +123,7 @@ export const NETFLIX_SURFACES = Object.freeze({
         getContainer: containerFromClosest('[data-uia="ranked-card"]'),
         fadeable: true,
         showFadeToggle: false,
+        overlayOffset: '50%',
     }),
     // Hover mini-modal: scope to .mini-modal so the detail modal can target the player container independently.
     PREVIEW_MINI: Object.freeze({
@@ -173,21 +186,21 @@ function getNormalizedHboMaxAriaLabel(tile) {
         .trim();
 }
 
-function isHboMaxTop10Tile(tile) {
-    const label = getNormalizedHboMaxAriaLabel(tile);
-    return /^Number\s+\d+:\s+/u.test(label ?? '');
-}
-
 export const HBO_MAX_SURFACES = Object.freeze({
     TILE: Object.freeze({
-        titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
+        titleSelector: 'a[data-testid$="_tile"][data-sonic-type]:not([aria-label^="\u2066\u2068Number "])',
         getTitle: extractHboMaxTitle,
         getContainer: containerFromParent,
-        decorateContainer: (container, tile) => {
-            container.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(tile));
-        },
         fadeable: true,
         showFadeToggle: true,
+    }),
+    TOP_10_TILE: Object.freeze({
+        titleSelector: 'a[data-testid$="_tile"][data-sonic-type][aria-label^="\u2066\u2068Number "]',
+        getTitle: extractHboMaxTitle,
+        getContainer: containerFromParent,
+        fadeable: true,
+        showFadeToggle: true,
+        overlayOffset: '30%',
     }),
 });
 

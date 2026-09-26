@@ -244,16 +244,16 @@ describe('HBO Max surfaces', () => {
         expect(extractHboMaxTitle(tile)).toBe(expected);
     });
 
-    it('applies the HBO Top 10 positioning class to a ranked tile container', () => {
+    it('discovers HBO Max top-10 tiles with overlay offset', () => {
         document.body.innerHTML = `
             <div class="hbo-card">
-                <a data-testid="ranked_tile" data-sonic-type="show" aria-label="Number 1: House of the Dragon. 1 of 10."></a>
+                <a data-testid="ranked_tile" data-sonic-type="show" aria-label="\u2066\u2068Number 1: House of the Dragon. 1 of 10."></a>
             </div>
         `;
 
         const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
-        expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
+        expect(surface.overlayOffset).toBe('30%');
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', type => {

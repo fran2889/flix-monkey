@@ -41,13 +41,6 @@ export class StreamingService {
     }
 
     /**
-     * @returns {import('./overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
-     */
-    get constants() {
-        return Object.freeze({});
-    }
-
-    /**
      * @abstract
      * @param {import('./config-manager.js').ConfigManager} configManager - Current application configuration.
      * @returns {boolean} Whether decoration is enabled for this service.
@@ -71,9 +64,7 @@ export class NetflixService extends StreamingService {
     }
 
     get constants() {
-        return Object.freeze({
-            TOP_10_SELECTORS: Object.freeze(['.title-card-top-10', '[data-uia="ranked-card"]']),
-        });
+        return Object.freeze({});
     }
 
     isEnabled(configManager) {
@@ -95,7 +86,7 @@ export class HboMaxService extends StreamingService {
     }
 
     get constants() {
-        return Object.freeze({ TOP_10_SELECTORS: Object.freeze(['.fm-hbo-top-10']), TOP_10_OFFSET: '30%' });
+        return Object.freeze({});
     }
 
     isEnabled(configManager) {
