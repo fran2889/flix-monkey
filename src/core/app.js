@@ -85,7 +85,7 @@ export class FlixMonkeyApp {
         const dedupKey = slugify(displayTitle);
         await this.#overrideManager.setImdbId(displayTitle, extracted);
         await this.#cache.delete(dedupKey);
-        this.#redecorateTitle(dedupKey, displayTitle);
+        this.#redecorateTitle(dedupKey);
     }
 
     /**
@@ -95,7 +95,7 @@ export class FlixMonkeyApp {
     async #handleRefreshClick(displayTitle) {
         const dedupKey = slugify(displayTitle);
         await this.#cache.delete(dedupKey);
-        this.#redecorateTitle(dedupKey, displayTitle);
+        this.#redecorateTitle(dedupKey);
     }
 
     /**
@@ -119,15 +119,16 @@ export class FlixMonkeyApp {
     /**
      * Re-decorate all containers for a specific title.
      * @param {string} dedupKey - The slugified title key
-     * @param {string} displayTitle - The original display title (used for consistent cache key generation)
      */
-    #redecorateTitle(dedupKey, displayTitle) {
+    #redecorateTitle(dedupKey) {
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
             const titleEl = container.querySelector('[aria-label], [alt]');
             if (titleEl) {
+                const title = titleEl.getAttribute('aria-label') || titleEl.getAttribute('alt') || '';
                 container.removeAttribute('data-fm-injected');
-                this.#decorateContainer(container, displayTitle, false, false).catch(err =>
-                    this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
+                this.#renderer.removeLoadingOverlay(container);
+                this.#decorateContainer(container, title, false, false).catch(err =>
+                    this.#logger.error(`Failed to redecorate "${title}"`, err)
                 );
             }
         });
