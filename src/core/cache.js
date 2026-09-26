@@ -157,6 +157,18 @@ export class CacheManager {
         await Promise.all(keys.map(key => this.#adapter.storageDelete(key)));
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
+
+    /**
+     * Deletes a single cache entry by display title.
+     *
+     * @param {string} displayTitle - Streaming-service title used to derive the cache key.
+     * @returns {Promise<void>}
+     */
+    async delete(displayTitle) {
+        const key = this.#getCacheKey(displayTitle);
+        await this.#adapter.storageDelete(key);
+        this.#logger.debug(`Cache entry deleted: ${key}`);
+    }
 }
 
 export { CacheEntry };
