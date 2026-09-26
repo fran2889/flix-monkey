@@ -137,13 +137,31 @@ function appendImdbRating(imdbLink, title) {
     return titleParts;
 }
 
-function appendOptionalRating(container, shouldShow, label, rating, className) {
-    if (shouldShow && rating !== null && rating !== undefined) {
-        const formatted = formatPercentRating(rating);
-        const badge = createRatingElement(label, formatted, className);
-        badge.addEventListener('click', e => e.stopPropagation());
-        container.appendChild(badge);
-    }
+function createOptionalRatingBadge(label, rating, className, showRating) {
+    if (!showRating || rating === null || rating === undefined) return null;
+    const formatted = formatPercentRating(rating);
+    const badge = createRatingElement(label, formatted, className);
+    badge.classList.add('fm-rating-badge');
+    badge.addEventListener('click', e => e.stopPropagation());
+    return badge;
+}
+
+function setupHoverActions(ratingsWrapper, actionsContainer, delayMs = 1000) {
+    let hoverTimeout = null;
+    const clearHover = () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+        }
+        actionsContainer.classList.remove('fm-actions-visible');
+    };
+    ratingsWrapper.addEventListener('mouseenter', () => {
+        clearHover();
+        hoverTimeout = setTimeout(() => {
+            actionsContainer.classList.add('fm-actions-visible');
+        }, delayMs);
+    });
+    ratingsWrapper.addEventListener('mouseleave', clearHover);
 }
 
 function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick) {
@@ -163,16 +181,42 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
  * @param {boolean} options.showFadeToggle - Whether fade toggles are enabled.
  * @param {'auto'|'always'|'never'|null} options.fadeToggleState - Current fade override state.
  * @param {((element: HTMLElement) => void)|null} options.onFadeToggleClick - Fade-toggle click handler.
+ * @param {((displayTitle: string) => void)|null} options.onEditClick - Edit icon click handler.
+ * @param {((displayTitle: string) => void)|null} options.onRefreshClick - Refresh icon click handler.
+ * @param {string} [options.displayTitle=''] - The display title for this overlay.
+ * @param {string} [options.corner=''] - The overlay corner position (e.g., 'top-left', 'top-right').
  * @returns {HTMLElement} Completed overlay element.
  */
 export function createOverlayElement(
     title,
-    { overlayClass, showRtRating, showMcRating, showFadeToggle, fadeToggleState, onFadeToggleClick }
+    {
+        overlayClass,
+        showRtRating,
+        showMcRating,
+        showFadeToggle,
+        fadeToggleState,
+        onFadeToggleClick,
+        onEditClick = null,
+        onRefreshClick = null,
+        displayTitle = '',
+        corner = '',
+    }
 ) {
     const container = document.createElement('div');
     container.className = overlayClass;
+    if (corner) {
+        container.classList.add(`fm-${corner}`);
+    }
 
     const { imdbId, rtRating, mcRating, apiTitle, year } = title;
+
+    // Ratings wrapper: hover target for all badges
+    const ratingsWrapper = document.createElement('div');
+    ratingsWrapper.className = 'fm-ratings-wrapper';
+
+    // IMDb row: contains IMDb badge + actions
+    const imdbRow = document.createElement('div');
+    imdbRow.className = 'fm-imdb-row';
 
     // IMDb (Interactive Link)
     const imdbLink = document.createElement('a');
@@ -180,19 +224,60 @@ export function createOverlayElement(
     imdbLink.rel = 'noopener noreferrer';
     imdbLink.href = title.imdbUrl;
     imdbLink.addEventListener('click', e => e.stopPropagation());
+    imdbLink.classList.add('fm-rating-badge', 'fm-imdb');
 
     const titleParts = appendImdbRating(imdbLink, title);
-    container.appendChild(imdbLink);
+
+    // Actions container: separate from IMDb badge with own background
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'fm-actions';
+
+    if (onEditClick && displayTitle) {
+        const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
+        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle));
+        actionsContainer.appendChild(editIcon);
+        actionsContainer.appendChild(refreshIcon);
+        imdbRow.appendChild(actionsContainer);
+        setupHoverActions(ratingsWrapper, actionsContainer, 1000);
+    }
+
+    imdbRow.appendChild(imdbLink);
+    ratingsWrapper.appendChild(imdbRow);
 
     // RT
-    appendOptionalRating(container, showRtRating, 'RT', rtRating, 'fm-rt');
+    const rtBadge = createOptionalRatingBadge('RT', rtRating, 'fm-rt', showRtRating);
+    if (rtBadge) ratingsWrapper.appendChild(rtBadge);
 
     // MC
-    appendOptionalRating(container, showMcRating, 'MC', mcRating, 'fm-mc');
+    const mcBadge = createOptionalRatingBadge('MC', mcRating, 'fm-mc', showMcRating);
+    if (mcBadge) ratingsWrapper.appendChild(mcBadge);
+
+    container.appendChild(ratingsWrapper);
 
     imdbLink.title = buildTooltip(titleParts, imdbId, apiTitle, year);
-    appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick);
+    appendFadeToggle(ratingsWrapper, showFadeToggle, fadeToggleState, onFadeToggleClick);
+
     return container;
+}
+
+/**
+ * Creates an icon button for overlay actions.
+ * @param {string} emoji - The emoji character to display
+ * @param {string} titleText - Tooltip text for the button
+ * @param {() => void} onClick - Click handler
+ * @returns {HTMLElement} Icon button element
+ */
+function createIconButton(emoji, titleText, onClick) {
+    const btn = document.createElement('span');
+    btn.className = 'fm-icon-btn';
+    btn.textContent = emoji;
+    btn.title = titleText;
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+    });
+    return btn;
 }
 
 /**
