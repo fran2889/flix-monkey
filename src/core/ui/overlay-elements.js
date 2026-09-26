@@ -212,7 +212,11 @@ export function createOverlayElement(
     const ratingsWrapper = document.createElement('div');
     ratingsWrapper.className = 'fm-ratings-wrapper';
 
-    // IMDb (Interactive Link) - now a direct child of wrapper
+    // IMDb row: contains IMDb badge + actions
+    const imdbRow = document.createElement('div');
+    imdbRow.className = 'fm-imdb-row';
+
+    // IMDb (Interactive Link)
     const imdbLink = document.createElement('a');
     imdbLink.target = '_blank';
     imdbLink.rel = 'noopener noreferrer';
@@ -231,14 +235,12 @@ export function createOverlayElement(
         const refreshIcon = createIconButton('🔄', 'Refresh ratings', () => onRefreshClick(displayTitle));
         actionsContainer.appendChild(editIcon);
         actionsContainer.appendChild(refreshIcon);
+        imdbRow.appendChild(actionsContainer);
         setupHoverActions(ratingsWrapper, actionsContainer, 1000);
     }
 
-    ratingsWrapper.appendChild(imdbLink);
-    
-    if (onEditClick && displayTitle) {
-        ratingsWrapper.appendChild(actionsContainer);
-    }
+    imdbRow.appendChild(imdbLink);
+    ratingsWrapper.appendChild(imdbRow);
 
     // RT
     const rtBadge = createOptionalRatingBadge('RT', rtRating, 'fm-rt', showRtRating);
@@ -267,6 +269,10 @@ function createIconButton(emoji, titleText, onClick) {
         onClick();
     });
     return btn;
+}
+
+function createIconBadge(emoji, titleText, onClick) {
+    return createIconButton(emoji, titleText, onClick);
 }
 
 /**

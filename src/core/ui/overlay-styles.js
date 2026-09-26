@@ -81,64 +81,37 @@ function buildFadeToggleStyles(overlayClass) {
         `;
 }
 
-function buildRatingsWrapperStyles(overlayClass, corner) {
+function buildRatingsWrapperStyles(overlayClass) {
     return `
             .${overlayClass} .fm-ratings-wrapper {
-                display: grid;
-                grid-template-columns: max-content auto;
-                gap: 4px 2px;
-                justify-items: start;
-            }
-            .${overlayClass} .fm-imdb {
-                grid-column: 1;
-            }
-            .${overlayClass} .fm-actions {
-                grid-column: 2;
-                grid-row: 1;
-            }
-            .${overlayClass} .fm-rt,
-            .${overlayClass} .fm-mc {
-                grid-column: 1;
-            }
-            .${overlayClass}.fm-top-right .fm-imdb {
-                grid-column: 2;
-            }
-            .${overlayClass}.fm-top-right .fm-actions,
-            .${overlayClass}.fm-bottom-right .fm-actions {
-                grid-column: 1;
-                grid-row: 1;
-            }
-            .${overlayClass}.fm-top-right .fm-rt,
-            .${overlayClass}.fm-top-right .fm-mc,
-            .${overlayClass}.fm-bottom-right .fm-rt,
-            .${overlayClass}.fm-bottom-right .fm-mc {
-                grid-column: 2;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                align-items: flex-start;
             }
         `;
 }
 
-function buildRatingBadgeStyles(overlayClass) {
+function buildImdbRowStyles(overlayClass) {
     return `
-            .${overlayClass} .fm-rating-badge {
-                background: rgba(0,0,0,0.72);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 12px;
-                font-weight: 700;
-                line-height: 1;
-                padding: 4px 6px;
-                border-radius: 4px;
-                cursor: default;
-                text-decoration: none;
-                white-space: nowrap;
-                pointer-events: auto;
-                transition: background 0.15s;
+            .${overlayClass} .fm-imdb-row {
                 display: flex;
                 align-items: center;
-                gap: 4px;
-                justify-content: center;
+                gap: 2px;
             }
-            .${overlayClass} .fm-rating-badge:hover {
-                background: rgba(0,0,0,0.92);
+            .${overlayClass} .fm-imdb-row .fm-imdb {
+                order: 0;
+            }
+            .${overlayClass} .fm-imdb-row .fm-actions {
+                order: 1;
+            }
+            .${overlayClass}.fm-top-right .fm-imdb-row .fm-imdb,
+            .${overlayClass}.fm-bottom-right .fm-imdb-row .fm-imdb {
+                order: 1;
+            }
+            .${overlayClass}.fm-top-right .fm-imdb-row .fm-actions,
+            .${overlayClass}.fm-bottom-right .fm-imdb-row .fm-actions {
+                order: 0;
             }
         `;
 }
@@ -150,7 +123,6 @@ function buildActionsStyles(overlayClass) {
                 gap: 2px;
                 opacity: 0;
                 transition: opacity 0.2s;
-                justify-content: center;
             }
             .${overlayClass} .fm-actions-visible {
                 opacity: 1;
@@ -207,6 +179,39 @@ function buildIconBadgeStyles(overlayClass) {
         `;
 }
 
+function buildRatingBadgeStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-rating-badge {
+                background: rgba(0,0,0,0.72);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1;
+                padding: 4px 6px;
+                border-radius: 4px;
+                cursor: default;
+                text-decoration: none;
+                white-space: nowrap;
+                pointer-events: auto;
+                transition: background 0.15s;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .${overlayClass} .fm-rating-badge:hover {
+                background: rgba(0,0,0,0.92);
+            }
+        `;
+}
+
+function buildImdbLinkStyles(overlayClass) {
+    return `
+            .${overlayClass} .fm-imdb {
+                color: #f5c518;
+            }
+        `;
+}
+
 export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',
@@ -224,7 +229,8 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         buildTop10OffsetStyles(overlayClass, resolvedCorner, resolvedTop10Selectors, resolvedTop10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
-        buildRatingsWrapperStyles(overlayClass, resolvedCorner),
+        buildRatingsWrapperStyles(overlayClass),
+        buildImdbRowStyles(overlayClass),
         buildRatingBadgeStyles(overlayClass),
         buildActionsStyles(overlayClass),
         buildIconButtonStyles(overlayClass),
