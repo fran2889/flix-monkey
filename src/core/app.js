@@ -125,6 +125,7 @@ export class FlixMonkeyApp {
             const titleEl = container.querySelector('[aria-label], [alt]');
             if (titleEl) {
                 const title = titleEl.getAttribute('aria-label') || titleEl.getAttribute('alt') || '';
+                container.removeAttribute('data-fm-injected');
                 this.#decorateContainer(container, title, false, false).catch(err =>
                     this.#logger.error(`Failed to redecorate "${title}"`, err)
                 );
