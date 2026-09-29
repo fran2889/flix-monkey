@@ -3,18 +3,26 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/**
- * Builds the CSS used to render rating overlays.
- *
- * @param {object} options - Overlay style options.
- * @param {string} options.overlayClass - Rating overlay class name.
- * @param {string} options.corner - Configured overlay corner.
- * @param {string[]} [options.top10Selectors=[]] - Ranked-card selectors requiring an offset.
- * @param {string} [options.top10Offset='50%'] - Horizontal offset for ranked cards.
- * @returns {string} CSS for the rating overlay.
- */
+const CSS_VARS = `
+    :root {
+        --fm-bg-badge: rgba(0, 0, 0, 0.72);
+        --fm-bg-badge-hover: rgba(0, 0, 0, 0.92);
+        --fm-bg-icon-btn: rgba(40, 40, 40, 0.95);
+        --fm-bg-icon-btn-hover: rgba(60, 60, 60, 0.95);
+        --fm-bg-icon-btn-active: rgba(20, 20, 20, 0.95);
+        --fm-font-badge: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --fm-color-imdb: #f5c518;
+        --fm-color-rt: #fa320a;
+        --fm-color-mc: #6ac;
+        --fm-color-value: #fff;
+        --fm-color-na: #aaa;
+        --fm-color-search: #ccc;
+    }
+`;
+
 function buildBaseStyles(overlayClass, positionCss, flexDirection) {
     return `
+            ${CSS_VARS}
             .${overlayClass} {
                 position: absolute;
                 ${positionCss}
@@ -31,20 +39,21 @@ function buildBaseStyles(overlayClass, positionCss, flexDirection) {
                 cursor: pointer;
             }
             .${overlayClass} .fm-label { font-size: 10px; letter-spacing: 0.03em; }
-            .${overlayClass} .fm-imdb { color: #f5c518; }
-            .${overlayClass} .fm-rt { color: #fa320a; }
-            .${overlayClass} .fm-mc { color: #6ac; }
-            .${overlayClass} .fm-value { color: #fff; }
-            .${overlayClass} .fm-na { color: #aaa; }
-            .${overlayClass} .fm-search { font-size: 11px; color: #ccc; }
+            .${overlayClass} .fm-imdb { color: var(--fm-color-imdb); }
+            .${overlayClass} .fm-rt { color: var(--fm-color-rt); }
+            .${overlayClass} .fm-mc { color: var(--fm-color-mc); }
+            .${overlayClass} .fm-value { color: var(--fm-color-value); }
+            .${overlayClass} .fm-na { color: var(--fm-color-na); }
+            .${overlayClass} .fm-search { font-size: 11px; color: var(--fm-color-search); }
         `;
 }
 
 function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offset) {
-    if (!corner.includes('left') || !top10Selectors.length) return '';
+    if (!corner.includes('left') || !top10Selectors?.length) return '';
 
     const selectors = top10Selectors.map(selector => `${selector} .${overlayClass}`);
-    return `\n            ${selectors.join(',\n            ')} { left: calc(${top10Offset} + 6px); }`;
+    const offset = top10Offset ?? '50%';
+    return `\n            ${selectors.join(',\n            ')} { left: calc(${offset} + 6px); }`;
 }
 
 function buildFadeStyles() {
@@ -57,8 +66,8 @@ function buildFadeStyles() {
 function buildFadeToggleStyles(overlayClass) {
     return `
             .${overlayClass} .fm-fade-toggle {
-                background: rgba(0,0,0,0.72);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                background: var(--fm-bg-badge);
+                font-family: var(--fm-font-badge);
                 font-size: 12px;
                 font-weight: 700;
                 line-height: 1;
@@ -76,7 +85,7 @@ function buildFadeToggleStyles(overlayClass) {
                 opacity: 1;
                 pointer-events: auto;
             }
-            .${overlayClass} .fm-fade-toggle .fm-label { color: #aaa; }
+            .${overlayClass} .fm-fade-toggle .fm-label { color: var(--fm-color-na); }
             .${overlayClass} .fm-fade-toggle--faded { opacity: 0.35; }
         `;
 }
@@ -133,8 +142,8 @@ function buildActionsStyles(overlayClass) {
 function buildIconButtonStyles(overlayClass) {
     return `
             .${overlayClass} .fm-icon-btn {
-                background: rgba(40, 40, 40, 0.95);
-                color: #fff;
+                background: var(--fm-bg-icon-btn);
+                color: var(--fm-color-value);
                 cursor: pointer;
                 font-size: 0.8em;
                 opacity: 0.9;
@@ -147,11 +156,11 @@ function buildIconButtonStyles(overlayClass) {
                 transition: background 0.15s, opacity 0.15s;
             }
             .${overlayClass} .fm-icon-btn:hover {
-                background: rgba(60, 60, 60, 0.95);
+                background: var(--fm-bg-icon-btn-hover);
                 opacity: 1;
             }
             .${overlayClass} .fm-icon-btn:active {
-                background: rgba(20, 20, 20, 0.95);
+                background: var(--fm-bg-icon-btn-active);
             }
         `;
 }
@@ -182,8 +191,8 @@ function buildIconBadgeStyles(overlayClass) {
 function buildRatingBadgeStyles(overlayClass) {
     return `
             .${overlayClass} .fm-rating-badge {
-                background: rgba(0,0,0,0.72);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                background: var(--fm-bg-badge);
+                font-family: var(--fm-font-badge);
                 font-size: 12px;
                 font-weight: 700;
                 line-height: 1;
@@ -199,7 +208,7 @@ function buildRatingBadgeStyles(overlayClass) {
                 gap: 4px;
             }
             .${overlayClass} .fm-rating-badge:hover {
-                background: rgba(0,0,0,0.92);
+                background: var(--fm-bg-badge-hover);
             }
         `;
 }
@@ -212,13 +221,11 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         'bottom-right': 'bottom:6px;right:6px;',
     };
     const resolvedCorner = Object.hasOwn(cornerStyles, corner) ? corner : 'top-left';
-    const resolvedTop10Selectors = top10Selectors ?? [];
-    const resolvedTop10Offset = top10Offset ?? '50%';
     const positionCss = cornerStyles[resolvedCorner];
     const flexDirection = resolvedCorner.includes('bottom') ? 'column-reverse' : 'column';
     return [
         buildBaseStyles(overlayClass, positionCss, flexDirection),
-        buildTop10OffsetStyles(overlayClass, resolvedCorner, resolvedTop10Selectors, resolvedTop10Offset),
+        buildTop10OffsetStyles(overlayClass, resolvedCorner, top10Selectors, top10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
         buildRatingsWrapperStyles(overlayClass),
