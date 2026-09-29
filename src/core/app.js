@@ -43,9 +43,9 @@ export class FlixMonkeyApp {
      * @param {FadeManager} fadeManager
      * @param {ConfigManager} config
      * @param {Logger} logger
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} [overrideManager]
+     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager
      */
-    constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager = null) {
+    constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
@@ -311,7 +311,7 @@ export class FlixMonkeyApp {
     }
 }
 
-function createApiClient(config, disabledManager, adapter, logger, overrideManager = null) {
+function createApiClient(config, disabledManager, adapter, logger, overrideManager) {
     const provider = config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,

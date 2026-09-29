@@ -42,9 +42,9 @@ export class BaseApiClient {
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('./config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('./logger.js').Logger} [logger] - Logger instance when diagnostics are needed.
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} [overrideManager] - Manager for IMDb ID overrides.
+     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager - Manager for IMDb ID overrides.
      */
-    constructor(queue, source, disabledManager, adapter, config, logger, overrideManager = null) {
+    constructor(queue, source, disabledManager, adapter, config, logger, overrideManager) {
         this.#queue = queue;
         this.#source = source;
         this.#disabledManager = disabledManager;
@@ -69,22 +69,20 @@ export class BaseApiClient {
             return null;
         }
 
-        if (this.#overrideManager) {
-            const overrideId = await this.#overrideManager.getImdbId(displayTitle);
-            if (overrideId) {
-                this.#logger?.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
-                const searchTitle = new Title({
-                    displayTitle,
-                    imdbId: overrideId,
-                });
-                const detailedTitle = await this.getDetails(searchTitle);
-                if (detailedTitle) {
-                    return detailedTitle.withSource(this.#source);
-                }
-                // Return Title with override ID even if details fetch failed
-                // This preserves the ID for direct IMDb links and cache optimization
-                return searchTitle.withSource(this.#source);
+        const overrideId = await this.#overrideManager.getImdbId(displayTitle);
+        if (overrideId) {
+            this.#logger?.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
+            const searchTitle = new Title({
+                displayTitle,
+                imdbId: overrideId,
+            });
+            const detailedTitle = await this.getDetails(searchTitle);
+            if (detailedTitle) {
+                return detailedTitle.withSource(this.#source);
             }
+            // Return Title with override ID even if details fetch failed
+            // This preserves the ID for direct IMDb links and cache optimization
+            return searchTitle.withSource(this.#source);
         }
 
         if (imdbId) {
@@ -190,7 +188,7 @@ export class BaseApiClient {
 }
 
 export class XmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
+    constructor(disabledManager, adapter, config, logger, overrideManager) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
             ApiSource.XMDB,
@@ -273,7 +271,7 @@ export class XmdbApiClient extends BaseApiClient {
 }
 
 export class OmdbApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
+    constructor(disabledManager, adapter, config, logger, overrideManager) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.OMDB], null, adapter),
             ApiSource.OMDB,
@@ -355,7 +353,7 @@ export class OmdbApiClient extends BaseApiClient {
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
 export class AgregarrApiClient extends BaseApiClient {
-    constructor(disabledManager, adapter, config, logger, overrideManager = null) {
+    constructor(disabledManager, adapter, config, logger, overrideManager) {
         super(
             new RequestQueue(RATE_LIMITS[ApiSource.AGREGARR], null, adapter),
             ApiSource.AGREGARR,

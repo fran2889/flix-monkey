@@ -10,12 +10,16 @@ import { createMockAdapter } from '../../mocks/adapter.js';
 import { createConfig } from '../../mocks/config.js';
 import { createMockLogger } from '../../mocks/logger.js';
 
+const mockOverrideManager = {
+    getImdbId: vi.fn().mockResolvedValue(null),
+};
+
 describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return healthy status when not disabled', async () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger());
+        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger(), mockOverrideManager);
         const status = await client.getStatus();
         expect(status).toEqual({ healthy: true });
     });
@@ -24,7 +28,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(true),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger());
+        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger(), mockOverrideManager);
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
         expect(status.reason).toBeDefined();
@@ -40,7 +44,8 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
 
         await expect(client.fetch('Some Title')).rejects.toThrow('Network error');
@@ -56,7 +61,8 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Unknown');
         expect(result).toBeNull();
@@ -103,7 +109,8 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
         expect(result.imdbId).toBe('m1');
@@ -122,7 +129,8 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         expect(await client.search('Movie 1')).toBeNull();
     });
@@ -152,7 +160,8 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         expect(await client.search('Movie 1')).toBeNull();
     });
@@ -189,7 +198,8 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
         expect(result.year).toBe(2020);
@@ -204,7 +214,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.getDetails(new Title({ imdbId: 'm1', displayTitle: 'Movie 1' }));
         expect(result).toBeNull();
@@ -227,7 +238,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
         expect(result.type).toBe('movie');
@@ -250,7 +262,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Show 1');
         expect(result.type).toBe('series');
@@ -272,7 +285,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Short 1');
         expect(result.type).toBeNull();
@@ -310,7 +324,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.getDetails(new Title({ imdbId: 'tt0000000', displayTitle: 'nonexistent' }));
         expect(result).toBeNull();
@@ -340,7 +355,8 @@ describe('XmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.getDetails(new Title({ imdbId: 'tt1', displayTitle: 'Test' }));
         expect(result.imdbVotes).toBe(2500000);
@@ -364,7 +380,8 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
 
@@ -397,7 +414,8 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
         expect(result.year).toBeNull();
@@ -422,7 +440,8 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
 
@@ -445,7 +464,8 @@ describe('OmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
         expect(result.type).toBe('movie');
@@ -466,7 +486,8 @@ describe('OmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Show 1');
         expect(result.type).toBe('series');
@@ -497,7 +518,8 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Unknown');
         expect(result).toBeNull();
@@ -516,7 +538,8 @@ describe('OmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Test');
         expect(result.imdbVotes).toBe(2500000);
@@ -534,7 +557,8 @@ describe('OmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Test');
         expect(result.imdbVotes).toBeNull();
@@ -556,7 +580,7 @@ describe('OmdbApiClient', () => {
             isDisabled: vi.fn().mockResolvedValue(false),
             disable: vi.fn().mockResolvedValue(undefined),
         };
-        const client = new OmdbApiClient(mockDisabledManager, mockAdapter, { get: () => 'apikey' }, createMockLogger());
+        const client = new OmdbApiClient(mockDisabledManager, mockAdapter, { get: () => 'apikey' }, createMockLogger(), mockOverrideManager);
         const result = await client.fetch('Some Title');
         expect(result).not.toBeNull();
         expect(result.mcRating).toBe(80);
@@ -596,7 +620,8 @@ describe('OmdbApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const searchTitle = new Title({
             displayTitle: 'Test Movie',
@@ -650,7 +675,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.search('Movie 1');
         expect(result.imdbId).toBe('tt0003');
@@ -671,7 +697,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
 
         const result = await client.search('Show 1');
@@ -687,7 +714,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
     });
@@ -715,7 +743,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
     });
@@ -759,7 +788,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         await client.search('Movie 1');
         const calledUrl = httpFetch.mock.calls[0][0];
@@ -774,7 +804,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const searchResult = new Title({
             imdbId: 'tt1',
@@ -801,7 +832,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const searchResult = new Title({
             imdbId: 'tt4',
@@ -828,7 +860,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
         expect(result.displayTitle).toBe('Movie 1');
@@ -846,7 +879,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         await client.search('Élite');
         const calledUrl = httpFetch.mock.calls[0][0];
@@ -861,7 +895,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
         const result = await client.getDetails(searchResult);
@@ -876,7 +911,8 @@ describe('AgregarrApiClient', () => {
             { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            createMockLogger()
+            createMockLogger(),
+            mockOverrideManager
         );
         const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
         const result = await client.getDetails(searchResult);
@@ -892,7 +928,8 @@ describe('AgregarrApiClient', () => {
                     { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockAdapter({ httpFetch: vi.fn() }),
                     { get: _k => 'key' },
-                    createMockLogger()
+                    createMockLogger(),
+                    mockOverrideManager
                 );
             }
             async search() {
@@ -920,7 +957,8 @@ describe('AgregarrApiClient', () => {
                     { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockAdapter({ httpFetch: vi.fn() }),
                     { get: _k => 'key' },
-                    createMockLogger()
+                    createMockLogger(),
+                    mockOverrideManager
                 );
             }
             async search(displayTitle) {
