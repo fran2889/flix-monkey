@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean}}>} */
+/** @type {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean, topTenOffset?: string}}>} */
 export default [
   {
     name: "Netflix TITLE_CARD surface",
@@ -70,7 +70,31 @@ export default [
     expected: {
       title: "Stranger Things",
       fadeable: true,
-      showFadeToggle: false
+      showFadeToggle: false,
+      topTenOffset: '50%'
+    }
+  },
+  {
+    name: "Netflix TITLE_CARD_TOP_10 surface",
+    html: `<div class="slider-item slider-item-0">
+      <div class="title-card-container" data-uia="title-card-container">
+        <div id="title-card-1-0" class="title-card title-card-top-10">
+          <div class="ptrack-content">
+            <a href="/watch/80239866" role="link" aria-label="Squid Game" tabindex="0" class="slider-refocus">
+              <div class="boxart-container boxart-rounded boxart-size-16x9">
+                <img class="boxart-image boxart-image-in-padded-container" src="https://example.com/img.jpg" alt="">
+              </div>
+            </a>
+          </div>
+          <div class="bob-container"></div>
+        </div>
+      </div>
+    </div>`,
+    expected: {
+      title: "Squid Game",
+      fadeable: true,
+      showFadeToggle: false,
+      topTenOffset: '50%'
     }
   },
   {

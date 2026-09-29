@@ -7,26 +7,23 @@ import { buildOverlayStyles } from './ui/overlay-styles.js';
 
 export { FADE_STATE_LABELS } from './ui/overlay-elements.js';
 
-/**
- * @typedef {Object} ServicePresentation
- * @property {string[]} [TOP_10_SELECTORS]
- * @property {string} [TOP_10_OFFSET]
- */
-
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
     #LOADING_CLASS = 'fm-loading';
     #config;
-    #serviceConstants;
+    #onEditClick;
+    #onRefreshClick;
 
     /**
      * @param {import('./config-manager.js').ConfigManager} config - Application configuration
-     * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
+     * @param {((displayTitle: string) => void)|null} [onEditClick] - Edit icon click handler
+     * @param {((displayTitle: string) => void)|null} [onRefreshClick] - Refresh icon click handler
      */
-    constructor(config, serviceConstants = {}) {
+    constructor(config, onEditClick = null, onRefreshClick = null) {
         this.#config = config;
-        this.#serviceConstants = serviceConstants;
+        this.#onEditClick = onEditClick;
+        this.#onRefreshClick = onRefreshClick;
     }
 
     injectStyles() {
@@ -34,8 +31,6 @@ export class OverlayRenderer {
         const cssText = buildOverlayStyles({
             overlayClass: this.#OVERLAY_CLASS,
             corner: this.#config.get('overlayCorner'),
-            top10Selectors: this.#serviceConstants.TOP_10_SELECTORS,
-            top10Offset: this.#serviceConstants.TOP_10_OFFSET,
         });
         if (existing) {
             existing.textContent = cssText;
@@ -64,7 +59,7 @@ export class OverlayRenderer {
         container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS));
     }
 
-    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null) {
+    injectOverlay(container, titleObj, fadeToggleState = null, onFadeToggleClick = null, topTenOffset = null) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = createOverlayElement(titleObj, {
             overlayClass: this.#OVERLAY_CLASS,
@@ -73,7 +68,13 @@ export class OverlayRenderer {
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
             fadeToggleState,
             onFadeToggleClick,
+            onEditClick: this.#onEditClick,
+            onRefreshClick: this.#onRefreshClick,
         });
+        const corner = this.#config.get('overlayCorner');
+        if (topTenOffset && corner.includes('left')) {
+            overlay.style.left = `calc(${topTenOffset} + 6px)`;
+        }
         container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }

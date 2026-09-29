@@ -107,14 +107,14 @@ export class FlixMonkeyApp {
     }
 
     decorateRoot(root) {
-        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
-            this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
+        this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle, topTenOffset }) => {
+            this.#decorateContainer(container, title, fadeable, showFadeToggle, topTenOffset).catch(err =>
                 this.#logger.error(`Failed to decorate "${title}"`, err)
             );
         });
     }
 
-    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
+    async #decorateContainer(container, displayTitle, fadeable, showFadeToggle, topTenOffset) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const dedupKey = slugify(displayTitle);
@@ -135,7 +135,7 @@ export class FlixMonkeyApp {
 
         try {
             const data = await request;
-            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
+            this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, topTenOffset });
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
@@ -159,7 +159,7 @@ export class FlixMonkeyApp {
         return request;
     }
 
-    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
+    #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride, topTenOffset }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating, this.#config);
@@ -168,7 +168,13 @@ export class FlixMonkeyApp {
         const onFadeToggleClick = showFadeToggle
             ? el => this.#handleFadeToggleClick(dedupKey, data.imdbRating, el)
             : null;
-        this.#renderer.injectOverlay(container, data, showFadeToggle ? fadeOverride : null, onFadeToggleClick);
+        this.#renderer.injectOverlay(
+            container,
+            data,
+            showFadeToggle ? fadeOverride : null,
+            onFadeToggleClick,
+            topTenOffset
+        );
     }
 
     async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {
@@ -258,7 +264,7 @@ export function startApp(adapter) {
     const client = createApiClient(configManager, disabledManager, adapter, logger);
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const surfaces = new currentService.SurfaceManager(logger);
-    const renderer = new OverlayRenderer(configManager, currentService.constants);
+    const renderer = new OverlayRenderer(configManager);
     const fadeManager = new FadeManager(adapter);
     const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger);
     app.init();
