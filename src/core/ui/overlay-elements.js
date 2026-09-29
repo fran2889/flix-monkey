@@ -181,10 +181,10 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
  * @param {boolean} options.showFadeToggle - Whether fade toggles are enabled.
  * @param {'auto'|'always'|'never'|null} options.fadeToggleState - Current fade override state.
  * @param {((element: HTMLElement) => void)|null} options.onFadeToggleClick - Fade-toggle click handler.
+ * @param {string} options.corner - The overlay corner position (e.g., 'top-left', 'top-right').
  * @param {((displayTitle: string) => void)|null} options.onEditClick - Edit icon click handler.
  * @param {((displayTitle: string) => void)|null} options.onRefreshClick - Refresh icon click handler.
  * @param {string} [options.displayTitle=''] - The display title for this overlay.
- * @param {string} [options.corner=''] - The overlay corner position (e.g., 'top-left', 'top-right').
  * @returns {HTMLElement} Completed overlay element.
  */
 export function createOverlayElement(
@@ -196,10 +196,10 @@ export function createOverlayElement(
         showFadeToggle,
         fadeToggleState,
         onFadeToggleClick,
+        corner,
         onEditClick = null,
         onRefreshClick = null,
         displayTitle = '',
-        corner = '',
     }
 ) {
     const container = document.createElement('div');

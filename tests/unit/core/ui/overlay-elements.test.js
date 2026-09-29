@@ -334,7 +334,7 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-icon-btn')).toBeNull();
         });
 
-        it('should add corner class when corner option is provided', () => {
+        it('should add corner class', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
 
             expect(element.classList.contains('fm-bottom-right')).toBe(true);
