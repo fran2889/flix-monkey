@@ -95,9 +95,10 @@ export class CacheManager {
     /**
      * Reads a cache entry by display title. Returns a CacheEntry for both
      * hits and expired entries (which may be used for short-circuit refresh).
+     * Returns null for complete cache misses or corrupt entries.
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
-     * @returns {Promise<CacheEntry|null>} Cache entry, or null for a complete cache miss.
+     * @returns {Promise<CacheEntry|null>} Cache entry (including expired), or null for miss/corrupt.
      */
     async read(displayTitle) {
         const key = this.#getCacheKey(displayTitle);
@@ -156,6 +157,18 @@ export class CacheManager {
         const count = keys.length;
         await Promise.all(keys.map(key => this.#adapter.storageDelete(key)));
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
+    }
+
+    /**
+     * Deletes a single cache entry by display title.
+     *
+     * @param {string} displayTitle - Streaming-service title used to derive the cache key.
+     * @returns {Promise<void>}
+     */
+    async delete(displayTitle) {
+        const key = this.#getCacheKey(displayTitle);
+        await this.#adapter.storageDelete(key);
+        this.#logger.debug(`Cache entry deleted: ${key}`);
     }
 }
 

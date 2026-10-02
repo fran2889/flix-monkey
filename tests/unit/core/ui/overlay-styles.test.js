@@ -87,13 +87,14 @@ describe('buildOverlayStyles', () => {
         expect(css).toContain('.fm-rating-overlay > *');
         expect(css).toContain('.fm-faded { opacity: 0.30; transition: opacity 0.2s; }');
         expect(css).toContain('.fm-rating-overlay .fm-fade-toggle');
-        expect(css).toContain(':hover > .fm-rating-overlay .fm-fade-toggle');
+        expect(css).toContain('.fm-rating-overlay:hover .fm-fade-toggle');
     });
 
     it('keeps the overlay noninteractive while direct badges and links remain interactive', () => {
         const css = buildOverlayStyles({ overlayClass: 'fm-rating-overlay', corner: 'top-left' });
 
         expect(css).toMatch(/\.fm-rating-overlay\s*\{[^}]*pointer-events: none;/);
-        expect(css).toMatch(/\.fm-rating-overlay > \*\s*\{[^}]*cursor: default;[^}]*pointer-events: auto;/);
+        expect(css).toMatch(/\.fm-rating-overlay > \*\s*\{[^}]*pointer-events: auto;/);
+        expect(css).toMatch(/\.fm-rating-overlay\s+\.fm-rating-badge[^}]*cursor:\s*default;/);
     });
 });
