@@ -27,7 +27,7 @@ describe('SettingsUI', () => {
         mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger);
+        settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -95,7 +95,7 @@ describe('SettingsUI', () => {
                     return value === 'initial' ? null : 'Unexpected value';
                 },
             };
-            settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger, [field]);
+            settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);
             await settingsUI.render(container);
 
             await settingsUI.save();

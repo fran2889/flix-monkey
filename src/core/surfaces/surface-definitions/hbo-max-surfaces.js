@@ -21,7 +21,7 @@ function getNormalizedHboMaxAriaLabel(tile) {
         .trim();
 }
 
-function extractHboMaxTitle(tile) {
+export function extractHboMaxTitle(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     if (!label) return null;
 

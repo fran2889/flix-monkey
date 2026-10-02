@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
-import { slugify } from '../utils/';
+import { slugify } from '../utils/index.js';
 import { CacheEntry } from './cache-entry.js';
 
 export class CacheManager {

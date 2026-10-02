@@ -26,9 +26,9 @@ describe('AgregarrApiClient', () => {
             }),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -48,9 +48,9 @@ describe('AgregarrApiClient', () => {
             }),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -65,9 +65,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({ d: [] }),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -80,10 +80,11 @@ describe('AgregarrApiClient', () => {
         });
         const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            mockLogger
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockLogger,
+            undefined
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -94,9 +95,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({}),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -109,10 +110,11 @@ describe('AgregarrApiClient', () => {
         });
         const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            mockLogger
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockLogger,
+            undefined
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -124,10 +126,11 @@ describe('AgregarrApiClient', () => {
         });
         const mockLogger = createMockLogger();
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
-            mockLogger
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockLogger,
+            undefined
         );
         expect(await client.search('Unknown')).toBeNull();
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -139,9 +142,9 @@ describe('AgregarrApiClient', () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = createMockAdapter({ httpFetch });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -155,9 +158,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -183,9 +186,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt4', rating: null, votes: null }]),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -211,9 +214,9 @@ describe('AgregarrApiClient', () => {
                 .mockResolvedValueOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -230,9 +233,9 @@ describe('AgregarrApiClient', () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = createMockAdapter({ httpFetch });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -246,9 +249,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -262,9 +265,9 @@ describe('AgregarrApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: null }]),
         });
         const client = new AgregarrApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             undefined,
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -279,9 +282,9 @@ describe('AgregarrApiClient', () => {
             getDetailsCalled = false;
             constructor() {
                 super(
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockAdapter({ httpFetch: vi.fn() }),
                     { get: _k => 'key' },
+                    { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockLogger(),
                     mockOverrideManager
                 );
@@ -308,9 +311,9 @@ describe('AgregarrApiClient', () => {
             getDetailsCalled = false;
             constructor() {
                 super(
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockAdapter({ httpFetch: vi.fn() }),
                     { get: _k => 'key' },
+                    { isDisabled: vi.fn().mockResolvedValue(false) },
                     createMockLogger(),
                     mockOverrideManager
                 );
@@ -339,7 +342,7 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager = {
                 getImdbId: vi.fn().mockResolvedValue(null),
             };
-            mockLogger = { debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
+            mockLogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
         });
 
         it('should use override IMDb ID when available', async () => {
@@ -355,9 +358,9 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 createConfig({}),
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
@@ -386,9 +389,9 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 createConfig({}),
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
@@ -416,9 +419,9 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager.getImdbId.mockResolvedValue(null);
 
             const client = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 createConfig({}),
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
@@ -444,9 +447,9 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 createConfig({}),
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
@@ -471,9 +474,9 @@ describe('AgregarrApiClient', () => {
             });
 
             const client = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 createConfig({}),
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );

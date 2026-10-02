@@ -11,8 +11,8 @@ import {
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
     SurfaceManager,
-} from '../../../src/core/surfaces/';
-import { createMockLogger } from '../../mocks/logger.js';
+} from '../../../../src/core/surfaces/index.js';
+import { createMockLogger } from '../../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
     function discover(html) {

@@ -4,11 +4,11 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CacheEntry, CacheManager } from '../../../src/core/cache/';
-import { Title } from '../../../src/core/title.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
-import { createConfig } from '../../mocks/config.js';
-import { createMockLogger } from '../../mocks/logger.js';
+import { CacheEntry, CacheManager } from '../../../../src/core/cache/index.js';
+import { Title } from '../../../../src/core/title.js';
+import { createMockAdapter } from '../../../mocks/adapter.js';
+import { createConfig } from '../../../mocks/config.js';
+import { createMockLogger } from '../../../mocks/logger.js';
 
 describe('CacheManager', () => {
     let adapter;

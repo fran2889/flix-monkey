@@ -2,18 +2,18 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index.js';
 import { ApiClientManager } from './api-manager.js';
-import { CacheManager } from './cache/';
-import { ConfigManager } from './config/';
+import { CacheManager } from './cache/index.js';
+import { ConfigManager } from './config/index.js';
 import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
 import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
 import { IdOverrideManager } from './id-override-manager.js';
 import { Logger } from './logger.js';
 import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
-import { ServiceRegistry } from './services/';
-import { debounce, runIdle, slugify } from './utils/';
+import { ServiceRegistry } from './services/index.js';
+import { debounce, runIdle, slugify } from './utils/index.js';
 
 export class FlixMonkeyApp {
     #api;

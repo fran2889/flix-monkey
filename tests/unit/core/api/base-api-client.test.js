@@ -18,9 +18,9 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             isDisabled: vi.fn().mockResolvedValue(false),
         };
         const client = new XmdbApiClient(
-            mockDisabledManager,
             {},
             { get: _k => 'key' },
+            mockDisabledManager,
             createMockLogger(),
             mockOverrideManager
         );
@@ -33,9 +33,9 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             isDisabled: vi.fn().mockResolvedValue(true),
         };
         const client = new XmdbApiClient(
-            mockDisabledManager,
             {},
             { get: _k => 'key' },
+            mockDisabledManager,
             createMockLogger(),
             mockOverrideManager
         );
@@ -49,11 +49,11 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
         });
         const client = new XmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -66,11 +66,11 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             httpFetch: vi.fn().mockResolvedValue({ results: [] }),
         });
         const client = new XmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -86,9 +86,9 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
         };
         const client = new XmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );

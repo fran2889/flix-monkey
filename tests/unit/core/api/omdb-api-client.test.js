@@ -25,11 +25,11 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -41,10 +41,11 @@ describe('OmdbApiClient', () => {
 
     it('should return unhealthy status when API key is missing', async () => {
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockAdapter(),
             { get: () => '' },
-            createMockLogger()
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            createMockLogger(),
+            undefined
         );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
@@ -59,11 +60,11 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -85,11 +86,11 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -111,9 +112,9 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -133,9 +134,9 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -149,10 +150,11 @@ describe('OmdbApiClient', () => {
         });
         const mockLogger = createMockLogger();
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
-            mockLogger
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockLogger,
+            undefined
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -163,11 +165,11 @@ describe('OmdbApiClient', () => {
             httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             {
                 get: _k => 'key',
             },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -185,9 +187,9 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -204,9 +206,9 @@ describe('OmdbApiClient', () => {
             }),
         });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -231,9 +233,9 @@ describe('OmdbApiClient', () => {
             disable: vi.fn().mockResolvedValue(undefined),
         };
         const client = new OmdbApiClient(
-            mockDisabledManager,
             mockAdapter,
             { get: () => 'apikey' },
+            mockDisabledManager,
             createMockLogger(),
             mockOverrideManager
         );
@@ -254,10 +256,11 @@ describe('OmdbApiClient', () => {
             Type: 'movie',
         };
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockAdapter({}),
             { get: _k => 'test-api-key' },
-            createMockLogger()
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            createMockLogger(),
+            undefined
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = new Title({ displayTitle: 'Test', imdbId: 'tt1234567' });
@@ -273,9 +276,9 @@ describe('OmdbApiClient', () => {
     it('should return searchTitle directly when it has apiTitle', async () => {
         const mockAdapter = createMockAdapter({ httpFetch: vi.fn() });
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             mockAdapter,
             { get: _k => 'key' },
+            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockLogger(),
             mockOverrideManager
         );
@@ -298,10 +301,11 @@ describe('OmdbApiClient', () => {
             Type: 'movie',
         };
         const client = new OmdbApiClient(
-            { isDisabled: vi.fn().mockResolvedValue(false) },
             createMockAdapter({}),
             { get: _k => 'test-api-key' },
-            createMockLogger()
+            { isDisabled: vi.fn().mockResolvedValue(false) },
+            createMockLogger(),
+            undefined
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = new Title({

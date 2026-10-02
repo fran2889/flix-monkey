@@ -4,10 +4,10 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { ConfigManager } from '../../../src/core/config/';
-import { CONFIG_DEFAULTS } from '../../../src/core/config-fields.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
-import { createMockLogger } from '../../mocks/logger.js';
+import { CONFIG_DEFAULTS } from '../../../../src/core/config/config-fields.js';
+import { ConfigManager } from '../../../../src/core/config/index.js';
+import { createMockAdapter } from '../../../mocks/adapter.js';
+import { createMockLogger } from '../../../mocks/logger.js';
 
 describe('ConfigManager', () => {
     describe('get', () => {

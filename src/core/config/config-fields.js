@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CACHE_TTL_INFINITE } from './constants.js';
+import { CACHE_TTL_INFINITE } from '../constants.js';
 
 function validateCacheTtl(val) {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';

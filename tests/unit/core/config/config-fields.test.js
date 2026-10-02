@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../src/core/config-fields.js';
+import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/config-fields.js';
 
 describe('core/config-fields', () => {
     describe('field structures', () => {
