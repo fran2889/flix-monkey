@@ -16,7 +16,7 @@ import { createMockLogger } from '../../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
     function discover(html) {
-        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
+        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
         document.body.innerHTML = html;
         return sm.discover(document.body);
     }
@@ -45,7 +45,7 @@ describe('SurfaceManager', () => {
             parentElement: document.body,
             getAttribute: () => null,
         };
-        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
+        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
         expect(sm.discover({ querySelectorAll: () => [mockEl] })).toHaveLength(0);
     });
 
@@ -62,7 +62,7 @@ describe('SurfaceManager', () => {
 
     it('should fall back to parentElement when the container resolver returns null', () => {
         const logger = createMockLogger();
-        const sm = new SurfaceManager(NETFLIX_SURFACES, logger);
+        const sm = new SurfaceManager(logger, NETFLIX_SURFACES);
         const fakeParent = document.createElement('div');
         fakeParent.className = 'orphan-parent';
         const mockTitleEl = {
@@ -80,7 +80,7 @@ describe('SurfaceManager', () => {
     });
 
     it('should return empty array when querySelectorAll throws', () => {
-        const sm = new SurfaceManager(NETFLIX_SURFACES, createMockLogger());
+        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
         expect(
             sm.discover({
                 querySelectorAll: () => {
@@ -92,14 +92,14 @@ describe('SurfaceManager', () => {
 
     it('discovers the title returned by a surface definition', () => {
         const sm = new SurfaceManager(
+            createMockLogger(),
             {
                 card: {
                     titleSelector: '[data-title]',
                     getTitle: el => el.dataset.title,
                     getContainer: element => element,
                 },
-            },
-            createMockLogger()
+            }
         );
         document.body.innerHTML = '<div data-title="Callback Title"></div>';
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
@@ -107,14 +107,14 @@ describe('SurfaceManager', () => {
 
     it('defaults optional surface display flags to false', () => {
         const sm = new SurfaceManager(
+            createMockLogger(),
             {
                 card: {
                     titleSelector: '[data-title]',
                     getTitle: element => element.dataset.title,
                     getContainer: element => element,
                 },
-            },
-            createMockLogger()
+            }
         );
         document.body.innerHTML = '<div data-title="Default Flags"></div>';
 
@@ -129,14 +129,14 @@ describe('SurfaceManager', () => {
         selectorContainer.appendChild(resolvedContainer);
         document.body.replaceChildren(selectorContainer);
         const sm = new SurfaceManager(
+            createMockLogger(),
             {
                 card: {
                     titleSelector: '[data-title]',
                     getTitle: element => element.dataset.title,
                     getContainer: element => element.parentElement,
                 },
-            },
-            createMockLogger()
+            }
         );
 
         expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
@@ -145,6 +145,7 @@ describe('SurfaceManager', () => {
     it('decorates a resolved container through the optional surface hook', () => {
         document.body.innerHTML = '<div data-container><span data-title="Decorated Title"></span></div>';
         const sm = new SurfaceManager(
+            createMockLogger(),
             {
                 card: {
                     titleSelector: '[data-title]',
@@ -152,8 +153,7 @@ describe('SurfaceManager', () => {
                     getContainer: element => element.parentElement,
                     decorateContainer: container => container.classList.add('decorated'),
                 },
-            },
-            createMockLogger()
+            }
         );
 
         const [surface] = sm.discover(document.body);
@@ -167,14 +167,14 @@ describe('SurfaceManager', () => {
             </div>
         `;
         const sm = new SurfaceManager(
+            createMockLogger(),
             {
                 card: {
                     titleSelector: '[data-title]',
                     getTitle: element => element.dataset.title,
                     getContainer: () => null,
                 },
-            },
-            createMockLogger()
+            }
         );
 
         expect(sm.discover(document.body)[0].container).toBe(document.querySelector('[data-container]'));

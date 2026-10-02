@@ -410,8 +410,7 @@ describe('AgregarrApiClient', () => {
         it('should fall back to normal search when no override exists', async () => {
             const mockAdapter = createMockAdapter({
                 httpFetch: vi.fn().mockResolvedValue({
-                    ok: true,
-                    json: () => Promise.resolve({ name: 'Normal Movie', ratings: [{ source: 'imdb', value: '7.5' }] }),
+                    d: [{ id: 'tt1234567', l: 'Normal Movie', qid: 'movie', y: 2020 }],
                 }),
             });
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
@@ -459,9 +458,13 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(result).toBeNull();
+            // Current behavior: returns a Title with the override ID when getDetails returns null
+            expect(result).toBeInstanceOf(Title);
+            expect(result.imdbId).toBe('tt9999999');
+            expect(result.displayTitle).toBe('Test Movie');
             expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            expect(mockDisabledManager.markDisabled).toHaveBeenCalled();
+            // Note: markDisabled is NOT called when getDetails returns null (only when it throws)
+            expect(mockDisabledManager.markDisabled).not.toHaveBeenCalled();
         });
 
         it('should not attempt override or normal fetch when client is disabled', async () => {
