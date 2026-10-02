@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { buildOverlayStyles } from '../../../../src/core/ui/overlay-styles.js';
+import { buildOverlayStyles } from '../../../../../src/core/ui/overlay-styles.js';
 
 describe('buildOverlayStyles', () => {
     it('builds bottom-corner positioning and direction', () => {
