@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { hslToRgb, hueToRgb, interpolateColor, parseHex, rgbToHsl } from '../../../src/core/color-utils.js';
+import { hslToRgb, hueToRgb, interpolateColor, parseHex, rgbToHsl } from '../../../src/core/utils/color-utils.js';
 
 describe('Color Utilities', () => {
     describe('parseHex', () => {

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CONFIG_FIELDS } from '../config-fields.js';
+import { CONFIG_FIELDS } from '../config/';
 import { SettingsView } from './settings-view.js';
 
 export class SettingsUI {
@@ -14,7 +14,7 @@ export class SettingsUI {
 
     /**
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../cache.js').CacheManager} cacheManager
+     * @param {import('../cache/').CacheManager} cacheManager
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
      * @param {import('../logger.js').Logger} logger
      * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]

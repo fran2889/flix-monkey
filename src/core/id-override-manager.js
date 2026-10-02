@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { slugify } from './utils.js';
+import { slugify } from './utils/';
 
 /**
  * Manages per-title ID overrides stored persistently.

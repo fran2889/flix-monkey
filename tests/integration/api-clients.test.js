@@ -4,8 +4,8 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api-clients';
-import { ConfigManager } from '../../src/core/config-manager';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api/';
+import { ConfigManager } from '../../src/core/config/';
 import { ApiSource, TitleType } from '../../src/core/constants';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
 import { IdOverrideManager } from '../../src/core/id-override-manager';

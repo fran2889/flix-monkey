@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CacheEntry, CacheManager } from '../../../src/core/cache.js';
+import { CacheEntry, CacheManager } from '../../../src/core/cache/';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createConfig } from '../../mocks/config.js';

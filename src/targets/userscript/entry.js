@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { startApp } from '../../core/app.js';
-import { CacheManager } from '../../core/cache.js';
+import { CacheManager } from '../../core/cache/';
 import { ConfigManager } from '../../core/config-manager.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 import { Logger } from '../../core/logger.js';

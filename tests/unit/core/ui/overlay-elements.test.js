@@ -4,10 +4,10 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { parseHex } from '../../../../src/core/color-utils.js';
 import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../../src/core/constants.js';
 import { Title } from '../../../../src/core/title.js';
 import { createLoadingOverlayElement, createOverlayElement } from '../../../../src/core/ui/overlay-elements.js';
+import { parseHex } from '../../../../src/core/utils/color-utils.js';
 
 const defaultOptions = {
     overlayClass: 'fm-rating-overlay',

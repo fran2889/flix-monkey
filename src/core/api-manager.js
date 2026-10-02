@@ -4,7 +4,7 @@
  */
 import { Title } from './title.js';
 
-/** @typedef {import('./cache.js').CacheEntry} CacheEntry */
+/** @typedef {import('./cache/').CacheEntry} CacheEntry */
 
 export class ApiClientManager {
     #cache;
@@ -13,9 +13,9 @@ export class ApiClientManager {
     #logger;
 
     /**
-     * @param {import('./cache.js').CacheManager} cache
+     * @param {import('./cache/').CacheManager} cache
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./api-clients.js').BaseApiClient} client
+     * @param {import('./api/').BaseApiClient} client
      * @param {import('./logger.js').Logger} logger
      */
     constructor(cache, disabledManager, client, logger) {

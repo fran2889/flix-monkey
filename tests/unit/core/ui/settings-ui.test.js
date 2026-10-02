@@ -4,9 +4,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CacheManager } from '../../../../src/core/cache.js';
-import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
-import { ConfigManager } from '../../../../src/core/config-manager.js';
+import { CacheManager } from '../../../../src/core/cache/';
+import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
 import { Logger } from '../../../../src/core/logger.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';

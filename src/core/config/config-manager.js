@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { FlixMonkeyError } from '../utils/';
 import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
-import { FlixMonkeyError } from './utils.js';
 
 /** @typedef {keyof typeof CONFIG_DEFAULTS} ConfigKey */
 

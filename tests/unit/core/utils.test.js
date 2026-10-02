@@ -4,7 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { debounce, FlixMonkeyError, runIdle, slugify } from '../../../src/core/utils.js';
+import { debounce, FlixMonkeyError, runIdle, slugify } from '../../../src/core/utils/';
 
 describe('core/utils', () => {
     beforeEach(() => {

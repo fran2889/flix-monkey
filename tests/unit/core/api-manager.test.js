@@ -5,9 +5,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiClientManager } from '../../../src/core/api-manager.js';
-import { CacheEntry } from '../../../src/core/cache.js';
+import { CacheEntry } from '../../../src/core/cache/';
 import { Title } from '../../../src/core/title.js';
-import { FlixMonkeyError } from '../../../src/core/utils.js';
+import { FlixMonkeyError } from '../../../src/core/utils/';
 import { createMockLogger } from '../../mocks/logger.js';
 
 describe('ApiClientManager', () => {

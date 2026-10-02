@@ -5,7 +5,7 @@
 import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
-import { FlixMonkeyError } from '../core/utils.js';
+import { FlixMonkeyError } from '../core/utils/';
 import { PlatformAdapter } from './adapter.js';
 
 export class WebExtensionAdapter extends PlatformAdapter {

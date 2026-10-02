@@ -2,13 +2,13 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { interpolateColor } from '../color-utils.js';
 import {
     RATING_COLOR_GREEN,
     RATING_COLOR_HIGH_THRESHOLD,
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants.js';
+import { interpolateColor } from '../utils/color-utils.js';
 
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',

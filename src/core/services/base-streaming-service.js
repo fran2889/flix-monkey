@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {new (logger: import('../logger.js').Logger) => import('../surfaces.js').SurfaceManager} ServiceSurfaceManager */
+/** @typedef {new (logger: import('../logger.js').Logger) => import('../surfaces/').SurfaceManager} ServiceSurfaceManager */
 
 /**
  * Abstract contract for a supported streaming service. Implementations provide

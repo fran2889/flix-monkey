@@ -4,7 +4,7 @@
  */
 import browser from 'webextension-polyfill';
 
-import { CacheManager } from '../../core/cache.js';
+import { CacheManager } from '../../core/cache/';
 import { ConfigManager } from '../../core/config-manager.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 import { Logger } from '../../core/logger.js';

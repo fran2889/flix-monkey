@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { DisneyPlusSurfaceManager } from '../surfaces.js';
+import { DisneyPlusSurfaceManager } from '../surfaces/';
 import { StreamingService } from './base-streaming-service.js';
 
 export class DisneyPlusService extends StreamingService {

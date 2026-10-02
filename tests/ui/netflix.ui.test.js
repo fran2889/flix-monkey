@@ -4,10 +4,10 @@
  */
 import { beforeEach, describe, it } from 'vitest';
 
-import { ConfigManager } from '../../src/core/config-manager.js';
+import { NetflixSurfaceManager } from '../../../src/core/surfaces/';
+import { ConfigManager } from '../../src/core/config/';
 import { OverlayRenderer } from '../../src/core/overlay.js';
-import { NetflixService } from '../../src/core/services.js';
-import { NetflixSurfaceManager } from '../../src/core/surfaces.js';
+import { NetflixService } from '../../src/core/services/';
 import fixtures from '../fixtures/netflix-surfaces.js';
 import { testSurfaceFixtures } from '../helpers/surface-tests.js';
 import { createMockAdapter } from '../mocks/adapter.js';

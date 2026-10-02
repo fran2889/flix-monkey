@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api-clients.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../src/core/api/';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createConfig } from '../../mocks/config.js';

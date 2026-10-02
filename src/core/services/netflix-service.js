@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { NetflixSurfaceManager } from '../surfaces.js';
+import { NetflixSurfaceManager } from '../surfaces/';
 import { StreamingService } from './base-streaming-service.js';
 
 export class NetflixService extends StreamingService {

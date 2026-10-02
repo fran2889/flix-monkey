@@ -4,7 +4,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { ConfigManager } from '../../../src/core/config-manager.js';
+import { ConfigManager } from '../../../src/core/config/';
 import { FadeManager } from '../../../src/core/fade-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 

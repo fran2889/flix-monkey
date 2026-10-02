@@ -11,8 +11,8 @@ import {
     NetflixService,
     ServiceRegistry,
     StreamingService,
-} from '../../../src/core/services.js';
-import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces.js';
+} from '../../../src/core/services/';
+import { DisneyPlusSurfaceManager, HboMaxSurfaceManager, NetflixSurfaceManager } from '../../../src/core/surfaces/';
 
 describe('StreamingService', () => {
     it.each([
