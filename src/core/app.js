@@ -59,10 +59,30 @@ export class FlixMonkeyApp {
             this.#pendingRoots.clear();
             runIdle(() => roots.forEach(root => this.decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
-
-        this.handleEditClick = this.#handleEditClick.bind(this);
-        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
     }
+
+    // Static methods
+
+    /**
+     * @param {import('./config-manager.js').ConfigManager} config
+     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('./logger.js').Logger} logger
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
+     * @returns {import('./api/').BaseApiClient}
+     */
+    static createApiClient(config, disabledManager, adapter, logger, overrideManager) {
+        const provider = config.get('apiClient').trim().toLowerCase();
+        const clientMap = {
+            [ApiSource.AGREGARR]: AgregarrApiClient,
+            [ApiSource.XMDB]: XmdbApiClient,
+            [ApiSource.OMDB]: OmdbApiClient,
+        };
+        const ClientClass = clientMap[provider] ?? AgregarrApiClient;
+        return new ClientClass(disabledManager, adapter, config, logger, overrideManager);
+    }
+
+    // Private methods that need to be defined before lifecycle methods
 
     /**
      * Handler for edit icon click - sets or updates IMDb ID override.
@@ -98,39 +118,7 @@ export class FlixMonkeyApp {
         this.#redecorateTitle(dedupKey, displayTitle);
     }
 
-    /**
-     * Extract IMDb ID from user input (direct ID or URL).
-     * @param {string} input - User input
-     * @returns {string|null} Extracted IMDb ID or null if invalid
-     */
-    #extractImdbId(input) {
-        if (!input) return null;
-        const trimmed = input.trim();
-        if (/^tt\d+$/.test(trimmed)) {
-            return trimmed;
-        }
-        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
-        if (match) {
-            return `tt${match[1]}`;
-        }
-        return null;
-    }
-
-    /**
-     * Re-decorate all containers for a specific title.
-     * @param {string} dedupKey - The slugified title key
-     * @param {string} displayTitle - The original display title (used for consistent API calls)
-     */
-    #redecorateTitle(dedupKey, displayTitle) {
-        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            if (!document.contains(container)) return;
-            container.removeAttribute('data-fm-injected');
-            this.#renderer.removeLoadingOverlay(container);
-            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
-                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
-            );
-        });
-    }
+    // Lifecycle methods
 
     init() {
         // #initialised is never reset: one app instance, one lifetime.
@@ -138,6 +126,8 @@ export class FlixMonkeyApp {
         this.#initialised = true;
         this.#renderer.injectStyles();
         this.#initNavigationObservers();
+        this.handleEditClick = this.#handleEditClick.bind(this);
+        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
         this.decorateRoot(document);
         this.#boundDisconnect = () => this.disconnect();
         window.addEventListener('beforeunload', this.#boundDisconnect);
@@ -180,6 +170,8 @@ export class FlixMonkeyApp {
         });
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
+
+    // Public methods in call order
 
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
@@ -300,6 +292,42 @@ export class FlixMonkeyApp {
         }
     }
 
+    // Private methods under their first public caller
+
+    /**
+     * Extract IMDb ID from user input (direct ID or URL).
+     * @param {string} input - User input
+     * @returns {string|null} Extracted IMDb ID or null if invalid
+     */
+    #extractImdbId(input) {
+        if (!input) return null;
+        const trimmed = input.trim();
+        if (/^tt\d+$/.test(trimmed)) {
+            return trimmed;
+        }
+        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
+        if (match) {
+            return `tt${match[1]}`;
+        }
+        return null;
+    }
+
+    /**
+     * Re-decorate all containers for a specific title.
+     * @param {string} dedupKey - The slugified title key
+     * @param {string} displayTitle - The original display title (used for consistent API calls)
+     */
+    #redecorateTitle(dedupKey, displayTitle) {
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+            if (!document.contains(container)) return;
+            container.removeAttribute('data-fm-injected');
+            this.#renderer.removeLoadingOverlay(container);
+            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
+                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
+            );
+        });
+    }
+
     /** @returns {CacheManager} */
     get cacheManager() {
         return this.#cache;
@@ -309,17 +337,6 @@ export class FlixMonkeyApp {
     get disabledManager() {
         return this.#api.disabledManager;
     }
-}
-
-function createApiClient(config, disabledManager, adapter, logger, overrideManager) {
-    const provider = config.get('apiClient').trim().toLowerCase();
-    const clientMap = {
-        [ApiSource.AGREGARR]: AgregarrApiClient,
-        [ApiSource.XMDB]: XmdbApiClient,
-        [ApiSource.OMDB]: OmdbApiClient,
-    };
-    const ClientClass = clientMap[provider] ?? AgregarrApiClient;
-    return new ClientClass(disabledManager, adapter, config, logger, overrideManager);
 }
 
 /**
@@ -340,7 +357,7 @@ export function startApp(adapter) {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = createApiClient(configManager, disabledManager, adapter, logger, overrideManager);
+    const client = FlixMonkeyApp.createApiClient(configManager, disabledManager, adapter, logger, overrideManager);
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);

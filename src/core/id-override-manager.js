@@ -38,6 +38,12 @@ export class IdOverrideManager {
         }
     }
 
+    // Private methods under their first public caller (getImdbId)
+
+    #getKey(displayTitle) {
+        return `${this.#prefix}${slugify(displayTitle)}`;
+    }
+
     /**
      * Store ID override for a title.
      *
@@ -48,9 +54,5 @@ export class IdOverrideManager {
     async setImdbId(displayTitle, imdbId) {
         const key = this.#getKey(displayTitle);
         await this.#adapter.storageSet(key, JSON.stringify({ imdbId }));
-    }
-
-    #getKey(displayTitle) {
-        return `${this.#prefix}${slugify(displayTitle)}`;
     }
 }

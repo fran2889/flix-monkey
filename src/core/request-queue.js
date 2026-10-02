@@ -21,6 +21,8 @@ export class RequestQueue {
         this.#adapter = adapter;
     }
 
+    // Public methods in call order
+
     /**
      * Enqueues a request. Higher priority requests run first among work that has
      * not started; an active request is never preempted.
@@ -40,6 +42,8 @@ export class RequestQueue {
             this.#process();
         });
     }
+
+    // Private methods under their first public caller (enqueue)
 
     async #process() {
         if (this.#isProcessing) return;

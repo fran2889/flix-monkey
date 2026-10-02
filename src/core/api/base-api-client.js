@@ -46,6 +46,8 @@ export class BaseApiClient {
         this.#source = source;
     }
 
+    // Public methods in call order
+
     /**
      * Fetches ratings for a streaming-service title through the search -> details pipeline.
      * Callers must gate through getStatus before invoking.
@@ -55,7 +57,7 @@ export class BaseApiClient {
      * @returns {Promise<import('../title.js').Title|null>} Hydrated Title with ratings, or null if not found.
      */
     async fetch(displayTitle, imdbId = null) {
-        if (await this.isDisabled()) {
+        if (await this.#isDisabled()) {
             return null;
         }
 
@@ -89,7 +91,7 @@ export class BaseApiClient {
 
     /** @returns {Promise<ClientStatus>} A health result suitable for provider selection. */
     async getStatus() {
-        if (await this.isDisabled()) {
+        if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
         }
         return { healthy: true };
@@ -130,7 +132,7 @@ export class BaseApiClient {
 
     // Private methods in call order under their first public caller
 
-    async isDisabled() {
+    async #isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
 

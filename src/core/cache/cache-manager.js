@@ -47,6 +47,8 @@ export class CacheManager {
         }
     }
 
+    // Private methods under their first public caller (read)
+
     #getCacheKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
@@ -72,6 +74,8 @@ export class CacheManager {
         );
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
+
+    // Private methods under their first public caller (write)
 
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
