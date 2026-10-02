@@ -17,7 +17,7 @@ export const ApiSource = Object.freeze({
 });
 
 export const RATING_COLOR_LOW_THRESHOLD = 5.0; // IMDb: <=5.0, RT/MC: <=50%
-export const RATING_COLOR_HIGH_THRESHOLD = 8.5; // IMDb: <=8.5, RT/MC: <=85%
+export const RATING_COLOR_HIGH_THRESHOLD = 8.5; // IMDb: >=8.5, RT/MC: >=85%
 
 export const RATING_COLOR_RED = '#ff0000';
 export const RATING_COLOR_GREEN = '#00dd00';

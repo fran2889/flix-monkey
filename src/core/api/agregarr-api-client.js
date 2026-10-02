@@ -64,6 +64,8 @@ export class AgregarrApiClient extends BaseApiClient {
             });
             return null;
         }
+        // Agregarr supplies ratings only in the details response; every identity
+        // field comes from the search result that produced `id`.
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: searchTitle.apiTitle,

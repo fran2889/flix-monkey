@@ -52,6 +52,8 @@ export class RequestQueue {
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
                 await new Promise(r => setTimeout(r, wait));
+                // Re-read storage after waiting, then restart the loop: another tab may
+                // have claimed the slot while this one slept.
                 continue;
             }
 

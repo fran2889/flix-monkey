@@ -8,7 +8,7 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants.js';
-import { interpolateColor } from '../utils/index.js';
+import { interpolateColor } from '../utils/color-utils.js';
 
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',

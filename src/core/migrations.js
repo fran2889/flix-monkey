@@ -95,6 +95,7 @@ export const MIGRATIONS = Object.freeze([
                     skipped += 1;
                     continue;
                 }
+                // Old format: identity fields are nested inside `data`.
                 const displayTitle = data.displayTitle;
                 const imdbId = data.imdbId ?? null;
 
@@ -107,6 +108,8 @@ export const MIGRATIONS = Object.freeze([
 
                 delete data.displayTitle;
 
+                // New format: identity fields hoisted to the entry level, `data`
+                // keeps only the rating payload. `expires` is preserved.
                 updates[key] = JSON.stringify({
                     displayTitle,
                     imdbId,
