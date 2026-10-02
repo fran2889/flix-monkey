@@ -115,13 +115,13 @@ Both ✏️ and ↻ icons are rendered inside square badges matching the existin
     - Add click handlers for both icons
 
 4. **FlixMonkeyApp**
-    - Instantiate `IdImdbIdManager` with adapter
+    - Instantiate `IdOverrideManager` with adapter
     - Pass `overrideManager` to ApiClientManager and OverlayRenderer
     - Handle override submission: validate, store, trigger refetch
     - Handle refresh: clear cache, trigger re-decorate
 
 5. **startApp()**
-    - Create `IdImdbIdManager` instance
+    - Create `IdOverrideManager` instance
     - Inject into ApiClientManager
 
 ### Unchanged Components
@@ -151,7 +151,7 @@ User submits "tt1234567" or URL
     ↓
 Parse → validate → extract ID
     ↓
-IdImdbIdManager.setImdbId(slugifiedTitle, imdbId)
+IdOverrideManager.setImdbId(slugifiedTitle, imdbId)
     ↓
 CacheManager.delete(slugifiedTitle)
     ↓
@@ -163,7 +163,7 @@ Cache miss (we just cleared it)
     ↓
 BaseApiClient.fetch(displayTitle)
     ↓
-IdImdbIdManager.getImdbId(displayTitle) → returns imdbId
+IdOverrideManager.getImdbId(displayTitle) → returns imdbId
     ↓
 Create Title with displayTitle + override imdbId
     ↓
@@ -183,7 +183,7 @@ Cache miss
     ↓
 BaseApiClient.fetch(displayTitle)
     ↓
-IdImdbIdManager.getImdbId(displayTitle) → null
+IdOverrideManager.getImdbId(displayTitle) → null
     ↓
 client.search(displayTitle)
     ↓
@@ -219,9 +219,9 @@ Platform adapter storage (same as cache and fade overrides):
 
 ### Key Format
 
-`fm-imdbid:{slugifiedTitle}`
+`fm-idoverride:{slugifiedTitle}`
 
-- Example: `fm-imdbid:the-matrix`
+- Example: `fm-idoverride:the-matrix`
 - Uses the same `slugify()` utility as cache keys for consistency
 
 ### Value
@@ -234,7 +234,7 @@ Persistent - survives page refreshes and browser restarts. No TTL; overrides are
 
 ### Future-Proofing
 
-The `fm-imdbid:` prefix reserves the namespace for potential other ID type overrides in the future (e.g., `fm-tmdbid:`).
+The `fm-idoverride:` prefix reserves the namespace for potential other ID type overrides in the future (e.g., `fm-tmdbid:`).
 
 ---
 
@@ -259,7 +259,7 @@ The `fm-imdbid:` prefix reserves the namespace for potential other ID type overr
 
 ### No Override Fallback
 
-If `IdImdbIdManager` fails to read, treat as no override and proceed with normal search flow.
+If `IdOverrideManager` fails to read, treat as no override and proceed with normal search flow.
 
 ---
 
@@ -267,7 +267,7 @@ If `IdImdbIdManager` fails to read, treat as no override and proceed with normal
 
 ### Unit Tests
 
-- `IdImdbIdManager`: get/set with various title strings including edge cases (empty, special characters, Unicode)
+- `IdOverrideManager`: get/set with various title strings including edge cases (empty, special characters, Unicode)
 - ID parsing: validate extraction from `tt1234567` format and various URL formats
 - `BaseApiClient.fetch()`: verify override path bypasses search, normal path uses search
 

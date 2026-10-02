@@ -249,8 +249,8 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            this.#overrideManager ? (d, id) => this.handleEditClick(d, id) : null,
-            this.#overrideManager ? this.handleRefreshClick : null,
+            (d, id) => this.handleEditClick(d, id),
+            this.handleRefreshClick,
             displayTitle
         );
     }
