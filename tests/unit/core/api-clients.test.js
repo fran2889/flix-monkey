@@ -19,7 +19,13 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger(), mockOverrideManager);
+        const client = new XmdbApiClient(
+            mockDisabledManager,
+            {},
+            { get: _k => 'key' },
+            createMockLogger(),
+            mockOverrideManager
+        );
         const status = await client.getStatus();
         expect(status).toEqual({ healthy: true });
     });
@@ -28,7 +34,13 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(true),
         };
-        const client = new XmdbApiClient(mockDisabledManager, {}, { get: _k => 'key' }, createMockLogger(), mockOverrideManager);
+        const client = new XmdbApiClient(
+            mockDisabledManager,
+            {},
+            { get: _k => 'key' },
+            createMockLogger(),
+            mockOverrideManager
+        );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
         expect(status.reason).toBeDefined();
@@ -580,7 +592,13 @@ describe('OmdbApiClient', () => {
             isDisabled: vi.fn().mockResolvedValue(false),
             disable: vi.fn().mockResolvedValue(undefined),
         };
-        const client = new OmdbApiClient(mockDisabledManager, mockAdapter, { get: () => 'apikey' }, createMockLogger(), mockOverrideManager);
+        const client = new OmdbApiClient(
+            mockDisabledManager,
+            mockAdapter,
+            { get: () => 'apikey' },
+            createMockLogger(),
+            mockOverrideManager
+        );
         const result = await client.fetch('Some Title');
         expect(result).not.toBeNull();
         expect(result.mcRating).toBe(80);
