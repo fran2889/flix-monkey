@@ -19,6 +19,11 @@ export function parseRatings(ratings, sourcePattern) {
 }
 
 /**
+ * Agregarr supported title types for filtering search results.
+ */
+export const AGREGARR_TITLE_TYPES = Object.freeze(new Set(['movie', 'tvSeries', 'tvMiniSeries']));
+
+/**
  * Maps XMDb title type to canonical TitleType.
  *
  * @param {string|null} apiValue - XMDb API title type value
