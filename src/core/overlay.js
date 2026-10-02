@@ -9,7 +9,7 @@ export { FADE_STATE_LABELS } from './ui/overlay-elements.js';
 
 /**
  * @typedef {Object} ServicePresentation
- * @property {string[]} [TOP_10_SELECTORS]
+ * @property {readonly string[]} [TOP_10_SELECTORS]
  * @property {string} [TOP_10_OFFSET]
  */
 

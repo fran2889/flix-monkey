@@ -22,6 +22,9 @@ export class NetflixService extends StreamingService {
         return NetflixSurfaceManager;
     }
 
+    /**
+     * @returns {import('../overlay.js').ServicePresentation}
+     */
     get constants() {
         return Object.freeze({
             TOP_10_SELECTORS: Object.freeze(['.title-card-top-10', '[data-uia="ranked-card"]']),

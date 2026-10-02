@@ -42,7 +42,7 @@ export class FlixMonkeyApp {
      * @param {FadeManager} fadeManager
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
      * @param {OverlayRenderer} renderer
-     * @param {SurfaceManager} surfaces
+     * @param {import('./surfaces/index.js').SurfaceManager} surfaces
      * @param {ApiClientManager} api
      */
     constructor(config, logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {

@@ -20,7 +20,7 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof CONFIG_FIELDS} fields
+     * @param {typeof import('../config/config-fields.js').CONFIG_FIELDS} fields
      * @param {SettingsActions} actions
      */
     constructor(fields, actions) {

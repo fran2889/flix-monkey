@@ -22,6 +22,9 @@ export class HboMaxService extends StreamingService {
         return HboMaxSurfaceManager;
     }
 
+    /**
+     * @returns {import('../overlay.js').ServicePresentation}
+     */
     get constants() {
         return Object.freeze({ TOP_10_SELECTORS: Object.freeze(['.fm-hbo-top-10']), TOP_10_OFFSET: '30%' });
     }
