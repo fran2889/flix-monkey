@@ -30,10 +30,10 @@ export class SurfaceManager {
     #logger;
 
     /**
-     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
      * @param {import('../logger.js').Logger} logger - Receives selector and container-resolution failures.
+     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
      */
-    constructor(surfaceDefs, logger) {
+    constructor(logger, surfaceDefs) {
         this.#SURFACES = Object.values(surfaceDefs);
         this.#logger = logger;
     }

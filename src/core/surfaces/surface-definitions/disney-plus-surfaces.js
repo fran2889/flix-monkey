@@ -61,6 +61,6 @@ export const DISNEY_PLUS_SURFACES = Object.freeze({
 
 export class DisneyPlusSurfaceManager extends SurfaceManager {
     constructor(logger) {
-        super(DISNEY_PLUS_SURFACES, logger);
+        super(logger, DISNEY_PLUS_SURFACES);
     }
 }

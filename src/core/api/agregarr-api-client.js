@@ -17,7 +17,7 @@ export class AgregarrApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(RATE_LIMITS[ApiSource.AGREGARR], null, adapter),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR], null),
             ApiSource.AGREGARR
         );
     }

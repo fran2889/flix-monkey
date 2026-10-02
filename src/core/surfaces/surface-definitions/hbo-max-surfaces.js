@@ -62,6 +62,6 @@ export const HBO_MAX_SURFACES = Object.freeze({
 
 export class HboMaxSurfaceManager extends SurfaceManager {
     constructor(logger) {
-        super(HBO_MAX_SURFACES, logger);
+        super(logger, HBO_MAX_SURFACES);
     }
 }

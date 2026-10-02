@@ -17,7 +17,7 @@ export class XmdbApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(RATE_LIMITS[ApiSource.XMDB], 'fm_last_req', adapter),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.XMDB], 'fm_last_req'),
             ApiSource.XMDB
         );
     }

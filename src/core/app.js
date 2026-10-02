@@ -36,16 +36,16 @@ export class FlixMonkeyApp {
     #overrideManager;
 
     /**
-     * @param {CacheManager} cache
-     * @param {ApiClientManager} api
-     * @param {OverlayRenderer} renderer
-     * @param {SurfaceManager} surfaces
-     * @param {FadeManager} fadeManager
      * @param {ConfigManager} config
      * @param {Logger} logger
+     * @param {CacheManager} cache
+     * @param {FadeManager} fadeManager
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
+     * @param {OverlayRenderer} renderer
+     * @param {SurfaceManager} surfaces
+     * @param {ApiClientManager} api
      */
-    constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager) {
+    constructor(config, logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
@@ -64,14 +64,14 @@ export class FlixMonkeyApp {
     // Static methods
 
     /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
      * @param {import('./config-manager.js').ConfigManager} config
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
      * @param {import('./logger.js').Logger} logger
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
      * @returns {import('./api/').BaseApiClient}
      */
-    static createApiClient(config, disabledManager, adapter, logger, overrideManager) {
+    static createApiClient(adapter, config, disabledManager, logger, overrideManager) {
         const provider = config.get('apiClient').trim().toLowerCase();
         const clientMap = {
             [ApiSource.AGREGARR]: AgregarrApiClient,
@@ -79,7 +79,7 @@ export class FlixMonkeyApp {
             [ApiSource.OMDB]: OmdbApiClient,
         };
         const ClientClass = clientMap[provider] ?? AgregarrApiClient;
-        return new ClientClass(disabledManager, adapter, config, logger, overrideManager);
+        return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
     }
 
     // Private methods that need to be defined before lifecycle methods
@@ -357,12 +357,12 @@ export function startApp(adapter) {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = FlixMonkeyApp.createApiClient(configManager, disabledManager, adapter, logger, overrideManager);
-    const api = new ApiClientManager(cache, disabledManager, client, logger);
+    const client = FlixMonkeyApp.createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
+    const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter);
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger, overrideManager);
+    const app = new FlixMonkeyApp(configManager, logger, cache, fadeManager, overrideManager, renderer, surfaces, api);
     app.init();
     return app;
 }

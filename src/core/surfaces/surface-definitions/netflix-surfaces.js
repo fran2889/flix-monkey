@@ -57,6 +57,6 @@ export const NETFLIX_SURFACES = Object.freeze({
 
 export class NetflixSurfaceManager extends SurfaceManager {
     constructor(logger) {
-        super(NETFLIX_SURFACES, logger);
+        super(logger, NETFLIX_SURFACES);
     }
 }

@@ -13,12 +13,12 @@ export class ApiClientManager {
     #logger;
 
     /**
+     * @param {import('./logger.js').Logger} logger
      * @param {import('./cache/').CacheManager} cache
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
      * @param {import('./api/').BaseApiClient} client
-     * @param {import('./logger.js').Logger} logger
      */
-    constructor(cache, disabledManager, client, logger) {
+    constructor(logger, cache, disabledManager, client) {
         this.#cache = cache;
         this.#disabledManager = disabledManager;
         this.#client = client;
