@@ -9,7 +9,7 @@ import { ConfigManager } from './config-manager.js';
 import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
 import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
-import { IdImdbIdManager } from './id-imdbid-manager.js';
+import { IdOverrideManager } from './id-override-manager.js';
 import { Logger } from './logger.js';
 import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
 import { ServiceRegistry } from './services.js';
@@ -43,7 +43,7 @@ export class FlixMonkeyApp {
      * @param {FadeManager} fadeManager
      * @param {ConfigManager} config
      * @param {Logger} logger
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
      */
     constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager) {
         this.#cache = cache;
@@ -339,7 +339,7 @@ export function startApp(adapter) {
     }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
-    const overrideManager = new IdImdbIdManager(adapter);
+    const overrideManager = new IdOverrideManager(adapter);
     const client = createApiClient(configManager, disabledManager, adapter, logger, overrideManager);
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const surfaces = new currentService.SurfaceManager(logger);

@@ -87,13 +87,13 @@ Both ✏️ and ↻ icons are rendered inside square badges matching the existin
 
 ### New Component
 
-**IdImdbIdManager**
+**IdOverrideManager**
 
-- Responsibility: Storage-only class for per-title IMDb ID overrides
+- Responsibility: Storage-only class for per-title ID overrides
 - Methods:
     - `getImdbId(displayTitle): Promise<string | null>` - Retrieve stored IMDb ID for a title
     - `setImdbId(displayTitle, imdbId): Promise<void>` - Store IMDb ID override for a title
-- Storage: Uses platform adapter storage with key format `fm-imdbid:{slugifiedTitle}`
+- Storage: Uses platform adapter storage with key format `fm-idoverride:{slugifiedTitle}`, storing `{ imdbId: "tt1234567" }` objects
 - Dependencies: PlatformAdapter
 
 ### Modified Components

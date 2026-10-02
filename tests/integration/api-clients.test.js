@@ -8,7 +8,7 @@ import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/
 import { ConfigManager } from '../../src/core/config-manager';
 import { ApiSource, TitleType } from '../../src/core/constants';
 import { DisabledClientsManager } from '../../src/core/disabled-clients';
-import { IdImdbIdManager } from '../../src/core/id-imdbid-manager';
+import { IdOverrideManager } from '../../src/core/id-override-manager';
 import { Title } from '../../src/core/title';
 import { createMockAdapter } from '../mocks/adapter.js';
 
@@ -31,7 +31,7 @@ const adapter = {
     storageSet: async () => {},
 };
 const disabledManager = new DisabledClientsManager(adapter);
-const overrideManager = new IdImdbIdManager(adapter);
+const overrideManager = new IdOverrideManager(adapter);
 
 function expectCommonTitleFields(result, source, { displayTitle, apiTitleContains, imdbId, year, type }) {
     expect(result).toBeInstanceOf(Title);

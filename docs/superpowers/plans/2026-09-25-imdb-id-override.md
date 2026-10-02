@@ -10,7 +10,7 @@
 
 **Goal:** Add per-title IMDb ID override capability allowing users to correct search mismatches
 
-**Architecture:** New `IdImdbIdManager` class for persistent storage of per-title IMDb ID overrides. Modified `BaseApiClient.fetch()` to check override before search and bypass to `getDetails()` when override exists. UI adds ✏️ (edit) and ↻ (refresh) icons on IMDb badge hover with 1-second delay. Override takes precedence over search; once set, can only be updated, not cleared.
+**Architecture:** New `IdOverrideManager` class for persistent storage of per-title IMDb ID overrides. Modified `BaseApiClient.fetch()` to check override before search and bypass to `getDetails()` when override exists. UI adds ✏️ (edit) and ↻ (refresh) icons on IMDb badge hover with 1-second delay. Override takes precedence over search; once set, can only be updated, not cleared.
 
 **Tech Stack:** JavaScript ES2022, existing FlixMonkey architecture, platform adapter pattern
 
@@ -41,33 +41,33 @@
 
 ## File Structure
 
-| File                                   | Responsibility                                             |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `src/core/id-imdbid-manager.js`        | **NEW** - Storage for per-title IMDb ID overrides          |
-| `src/core/api-clients.js`              | **MODIFY** - `BaseApiClient` checks override before search |
-| `src/core/api-manager.js`              | **MODIFY** - Inject `IdImdbIdManager` into clients         |
-| `src/core/overlay.js`                  | **MODIFY** - Pass override/refresh handlers to renderer    |
-| `src/core/ui/overlay-elements.js`      | **MODIFY** - Create ✏️ and ↻ icons with hover timer        |
-| `src/core/app.js`                      | **MODIFY** - Wire up override manager and UI handlers      |
-| `tests/unit/id-imdbid-manager.test.js` | **NEW** - Unit tests for IdImdbIdManager                   |
-| `tests/unit/api-clients.test.js`       | **MODIFY** - Add tests for override path in fetch          |
-| `tests/ui/overlay.test.js`             | **MODIFY** - Add tests for hover icons                     |
+| File                                     | Responsibility                                             |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `src/core/id-override-manager.js`        | **NEW** - Storage for per-title IMDb ID overrides          |
+| `src/core/api-clients.js`                | **MODIFY** - `BaseApiClient` checks override before search |
+| `src/core/api-manager.js`                | **MODIFY** - Inject `IdOverrideManager` into clients       |
+| `src/core/overlay.js`                    | **MODIFY** - Pass override/refresh handlers to renderer    |
+| `src/core/ui/overlay-elements.js`        | **MODIFY** - Create ✏️ and ↻ icons with hover timer        |
+| `src/core/app.js`                        | **MODIFY** - Wire up override manager and UI handlers      |
+| `tests/unit/id-override-manager.test.js` | **NEW** - Unit tests for IdOverrideManager                 |
+| `tests/unit/api-clients.test.js`         | **MODIFY** - Add tests for override path in fetch          |
+| `tests/ui/overlay.test.js`               | **MODIFY** - Add tests for hover icons                     |
 
 ---
 
 ---
 
-## Task 1: Create IdImdbIdManager Class
+## Task 1: Create IdOverrideManager Class
 
 **Files:**
 
-- Create: `src/core/id-imdbid-manager.js`
-- Test: `tests/unit/id-imdbid-manager.test.js`
+- Create: `src/core/id-override-manager.js`
+- Test: `tests/unit/id-override-manager.test.js`
 
 **Interfaces:**
 
 - Consumes: `PlatformAdapter` (from app.js constructor)
-- Produces: `IdImdbIdManager` class with methods:
+- Produces: `IdOverrideManager` class with methods:
     - `getImdbId(displayTitle: string): Promise<string \| null>`
     - `setImdbId(displayTitle: string, imdbId: string): Promise<void>`
 
@@ -78,10 +78,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { IdImdbIdManager } from '../../src/core/id-imdbid-manager.js';
+import { IdOverrideManager } from '../../src/core/id-override-manager.js';
 import { assert } from 'vitest';
 
-describe('IdImdbIdManager', () => {
+describe('IdOverrideManager', () => {
     let manager;
     let mockAdapter;
 
@@ -90,7 +90,7 @@ describe('IdImdbIdManager', () => {
             storageGet: vi.fn().mockResolvedValue(null),
             storageSet: vi.fn().mockResolvedValue(undefined),
         };
-        manager = new IdImdbIdManager(mockAdapter);
+        manager = new IdOverrideManager(mockAdapter);
     });
 
     describe('getImdbId', () => {
@@ -110,10 +110,10 @@ describe('IdImdbIdManager', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npm test -- --run tests/unit/id-imdbid-manager.test.js`
-Expected: FAIL with "Cannot find module"/"IdImdbIdManager is not defined"
+Run: `npm test -- --run tests/unit/id-override-manager.test.js`
+Expected: FAIL with "Cannot find module"/"IdOverrideManager is not defined"
 
-- [ ] **Step 3: Write minimal implementation of IdImdbIdManager**
+- [ ] **Step 3: Write minimal implementation of IdOverrideManager**
 
 ```javascript
 /**
@@ -126,9 +126,9 @@ Expected: FAIL with "Cannot find module"/"IdImdbIdManager is not defined"
  * Overrides allow users to correct search mismatches by specifying
  * the correct IMDb ID for a streaming service title.
  */
-export class IdImdbIdManager {
+export class IdOverrideManager {
     #adapter;
-    #prefix = 'fm-imdbid:';
+    #prefix = 'fm-idoverride:';
 
     /**
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter
@@ -187,7 +187,7 @@ Update the implementation:
 ```javascript
 import { slugify } from './utils.js';
 
-export class IdImdbIdManager {
+export class IdOverrideManager {
     // ...
     #getKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
@@ -197,12 +197,12 @@ export class IdImdbIdManager {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `npm test -- --run tests/unit/id-imdbid-manager.test.js`
+Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Add test for setImdbId**
 
-Add to `tests/unit/id-imdbid-manager.test.js`:
+Add to `tests/unit/id-override-manager.test.js`:
 
 ```javascript
 describe('setImdbId', () => {
@@ -210,7 +210,7 @@ describe('setImdbId', () => {
         await manager.setImdbId('The Matrix', 'tt0133093');
         const result = await manager.getImdbId('The Matrix');
         assert.equal(result, 'tt0133093');
-        assert.equal(mockAdapter.storageSet.mock.calls[0][0], 'fm-imdbid:the-matrix');
+        assert.equal(mockAdapter.storageSet.mock.calls[0][0], 'fm-idoverride:the-matrix');
         assert.equal(mockAdapter.storageSet.mock.calls[0][1], '"tt0133093"');
     });
 });
@@ -218,7 +218,7 @@ describe('setImdbId', () => {
 
 - [ ] **Step 7: Run tests again**
 
-Run: `npm test -- --run tests/unit/id-imdbid-manager.test.js`
+Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
 
 - [ ] **Step 8: Add test for special characters in title**
@@ -231,20 +231,20 @@ it('handles titles with special characters', async () => {
     const result = await manager.getImdbId('The Matrix: Reloaded!');
     assert.equal(result, 'tt0242653');
     // Verify key uses slugified version
-    assert.equal(mockAdapter.storageSet.mock.calls[0][0], 'fm-imdbid:the-matrix-reloaded');
+    assert.equal(mockAdapter.storageSet.mock.calls[0][0], 'fm-idoverride:the-matrix-reloaded');
 });
 ```
 
 - [ ] **Step 9: Run tests and commit**
 
-Run: `npm test -- --run tests/unit/id-imdbid-manager.test.js`
+Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
 
 Commit:
 
 ```bash
-git add tests/unit/id-imdbid-manager.test.js src/core/id-imdbid-manager.js
-git commit -m "feat: add IdImdbIdManager for per-title IMDb ID overrides"
+git add tests/unit/id-override-manager.test.js src/core/id-override-manager.js
+git commit -m "feat: add IdOverrideManager for per-title IMDb ID overrides"
 ```
 
 ---
@@ -258,7 +258,7 @@ git commit -m "feat: add IdImdbIdManager for per-title IMDb ID overrides"
 
 **Interfaces:**
 
-- Consumes: `IdImdbIdManager` instance passed to constructor
+- Consumes: `IdOverrideManager` instance passed to constructor
 - Produces: Modified `BaseApiClient.fetch()` that checks override before search
 
 - [ ] **Step 1: Write failing test for override path**
@@ -266,7 +266,7 @@ git commit -m "feat: add IdImdbIdManager for per-title IMDb ID overrides"
 Add to `tests/unit/api-clients.test.js`:
 
 ```javascript
-import { IdImdbIdManager } from '../core/id-imdbid-manager.js';
+import { IdOverrideManager } from '../core/id-override-manager.js';
 // ... existing imports
 
 describe('BaseApiClient with override', () => {
@@ -317,7 +317,7 @@ export class BaseApiClient {
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter
      * @param {import('./config-manager.js').ConfigManager} config
      * @param {import('./logger.js').Logger} [logger]
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager  // NEW
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager  // NEW
      */
     constructor(queue, source, disabledManager, adapter, config, logger, overrideManager = null) {
         this.#queue = queue;
@@ -450,13 +450,13 @@ git commit -m "feat(api): add override path to BaseApiClient.fetch()"
 
 **Interfaces:**
 
-- Consumes: `IdImdbIdManager` instance
+- Consumes: `IdOverrideManager` instance
 - Produces: Modified manager that passes overrideManager to clients
 
 - [ ] **Step 1: Modify ApiClientManager constructor**
 
 ```javascript
-import { IdImdbIdManager } from './id-imdbid-manager.js';
+import { IdOverrideManager } from './id-override-manager.js';
 
 export class ApiClientManager {
     #cache;
@@ -470,7 +470,7 @@ export class ApiClientManager {
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
      * @param {import('./api-clients.js').BaseApiClient} client
      * @param {import('./logger.js').Logger} logger
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager  // NEW
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager  // NEW
      */
     constructor(cache, disabledManager, client, logger, overrideManager = null) {
         this.#cache = cache;
@@ -531,7 +531,7 @@ If ApiClientManager creates clients internally, then we need to pass overrideMan
 
 **Interfaces:**
 
-- Consumes: `IdImdbIdManager` instance
+- Consumes: `IdOverrideManager` instance
 - Produces: Modified `createApiClient` that passes overrideManager to clients
 
 - [ ] **Step 1: Modify createApiClient to accept overrideManager**
@@ -567,7 +567,7 @@ export function startApp(adapter) {
     }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
-    const overrideManager = new IdImdbIdManager(adapter); // NEW
+    const overrideManager = new IdOverrideManager(adapter); // NEW
     const client = createApiClient(configManager, disabledManager, adapter, logger, overrideManager); // MODIFIED
     const api = new ApiClientManager(cache, disabledManager, client, logger);
     const surfaces = new currentService.SurfaceManager(logger);
@@ -588,7 +588,7 @@ Expected: All existing tests pass (or fix any failures)
 
 ```bash
 git add src/core/app.js
-git commit -m "feat(app): inject IdImdbIdManager into API client creation"
+git commit -m "feat(app): inject IdOverrideManager into API client creation"
 ```
 
 ---
@@ -610,7 +610,7 @@ git commit -m "feat(app): inject IdImdbIdManager into API client creation"
 Add to `tests/ui/overlay.test.js`:
 
 ```javascript
-import { IdImdbIdManager } from '../../src/core/id-imdbid-manager.js';
+import { IdOverrideManager } from '../../src/core/id-override-manager.js';
 
 describe('Overlay with override UI', () => {
     it('shows edit and refresh icons after 1s hover', async () => {
@@ -645,7 +645,7 @@ export class OverlayRenderer {
     /**
      * @param {import('./config-manager.js').ConfigManager} config
      * @param {Object} [serviceConstants={}]
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} [overrideManager]
+     * @param {import('./id-override-manager.js').IdOverrideManager} [overrideManager]
      * @param {((displayTitle: string) => void)} [onEditClick]
      * @param {((displayTitle: string) => void)} [onRefreshClick]
      */
@@ -839,7 +839,7 @@ git commit -m "feat(ui): add edit and refresh icons to IMDb badge overlay"
 
 **Interfaces:**
 
-- Consumes: `IdImdbIdManager` from startApp
+- Consumes: `IdOverrideManager` from startApp
 - Produces: Handler functions for edit and refresh
 
 - [ ] **Step 1: Modify FlixMonkeyApp to accept overrideManager**
@@ -873,7 +873,7 @@ export class FlixMonkeyApp {
      * @param {FadeManager} fadeManager
      * @param {ConfigManager} config
      * @param {Logger} logger
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager  // NEW
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager  // NEW
      */
     constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager = null) {
         this.#cache = cache;
@@ -975,7 +975,7 @@ export class FlixMonkeyApp {
 In `src/core/app.js`:
 
 ```javascript
-const overrideManager = new IdImdbIdManager(adapter);
+const overrideManager = new IdOverrideManager(adapter);
 // ... existing code
 const app = new FlixMonkeyApp(
     cache,
@@ -1007,13 +1007,13 @@ git commit -m "feat: wire up override manager and UI handlers in FlixMonkeyApp"
 
 **Files:**
 
-- Create: `tests/unit/id-imdbid-manager.test.js` (already started in Task 1)
+- Create: `tests/unit/id-override-manager.test.js` (already started in Task 1)
 - Modify: `tests/unit/api-clients.test.js`
 - Modify: `tests/unit/overlay.test.js`
 
-- [ ] **Step 1: Complete IdImdbIdManager tests**
+- [ ] **Step 1: Complete IdOverrideManager tests**
 
-Ensure `tests/unit/id-imdbid-manager.test.js` covers:
+Ensure `tests/unit/id-override-manager.test.js` covers:
 
 - getImdbId with no override
 - getImdbId with existing override
@@ -1060,7 +1060,7 @@ Expected: All tests pass with 90%+ coverage
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/unit/id-imdbid-manager.test.js tests/unit/api-clients.test.js tests/unit/app.test.js
+git add tests/unit/id-override-manager.test.js tests/unit/api-clients.test.js tests/unit/app.test.js
 git commit -m "test: add tests for IMDb ID override functionality"
 ```
 
@@ -1104,7 +1104,7 @@ git commit -m "feat: complete IMDb ID override feature implementation"
 - ✅ User Experience: Covered in Task 4 (UI) and Task 5 (handlers)
 - ✅ Architecture: Covered across all tasks
 - ✅ Data Flow: Covered in Task 2 (BaseApiClient) and Task 5 (handlers)
-- ✅ Storage: Covered in Task 1 (IdImdbIdManager)
+- ✅ Storage: Covered in Task 1 (IdOverrideManager)
 - ✅ Error Handling: Covered in Task 5 (validation) and Task 2 (fetch errors)
 - ✅ Testing: Covered in Task 6
 - ✅ No clear functionality: Confirmed in design, not implemented
@@ -1117,7 +1117,7 @@ git commit -m "feat: complete IMDb ID override feature implementation"
 
 ### 3. Type Consistency
 
-- `IdImdbIdManager` used consistently across all tasks
+- `IdOverrideManager` used consistently across all tasks
 - Method signatures match: `getImdbId(displayTitle)`, `setImdbId(displayTitle, imdbId)`
 - Handler signatures consistent: `onEditClick(displayTitle)`, `onRefreshClick(displayTitle)`
 

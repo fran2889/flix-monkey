@@ -5,13 +5,13 @@
 import { slugify } from './utils.js';
 
 /**
- * Manages per-title IMDb ID overrides stored persistently.
+ * Manages per-title ID overrides stored persistently.
  * Overrides allow users to correct search mismatches by specifying
- * the correct IMDb ID for a streaming service title.
+ * the correct ID for a streaming service title.
  */
-export class IdImdbIdManager {
+export class IdOverrideManager {
     #adapter;
-    #prefix = 'fm-imdbid:';
+    #prefix = 'fm-idoverride:';
 
     /**
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter
@@ -21,7 +21,7 @@ export class IdImdbIdManager {
     }
 
     /**
-     * Retrieve stored IMDb ID override for a title.
+     * Retrieve stored ID override for a title.
      *
      * @param {string} displayTitle - The streaming service display title
      * @returns {Promise<string|null>} The IMDb ID if override exists, null otherwise
@@ -31,14 +31,15 @@ export class IdImdbIdManager {
         const raw = await this.#adapter.storageGet(key);
         if (raw === null || raw === undefined) return null;
         try {
-            return JSON.parse(raw);
+            const data = JSON.parse(raw);
+            return data.imdbId || null;
         } catch {
             return null;
         }
     }
 
     /**
-     * Store IMDb ID override for a title.
+     * Store ID override for a title.
      *
      * @param {string} displayTitle - The streaming service display title
      * @param {string} imdbId - The IMDb ID to store (e.g., "tt0133093")
@@ -46,7 +47,7 @@ export class IdImdbIdManager {
      */
     async setImdbId(displayTitle, imdbId) {
         const key = this.#getKey(displayTitle);
-        await this.#adapter.storageSet(key, JSON.stringify(imdbId));
+        await this.#adapter.storageSet(key, JSON.stringify({ imdbId }));
     }
 
     #getKey(displayTitle) {

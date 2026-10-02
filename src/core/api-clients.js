@@ -42,7 +42,7 @@ export class BaseApiClient {
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('./config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('./logger.js').Logger} [logger] - Logger instance when diagnostics are needed.
-     * @param {import('./id-imdbid-manager.js').IdImdbIdManager} overrideManager - Manager for IMDb ID overrides.
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
      */
     constructor(queue, source, disabledManager, adapter, config, logger, overrideManager) {
         this.#queue = queue;
