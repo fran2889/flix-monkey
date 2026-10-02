@@ -204,9 +204,7 @@ export function createOverlayElement(
 ) {
     const container = document.createElement('div');
     container.className = overlayClass;
-    if (corner) {
-        container.classList.add(`fm-${corner}`);
-    }
+    container.classList.add(`fm-${corner}`);
 
     const { imdbId, rtRating, mcRating, apiTitle, year } = title;
 

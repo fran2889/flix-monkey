@@ -16,6 +16,7 @@ const defaultOptions = {
     showFadeToggle: false,
     fadeToggleState: null,
     onFadeToggleClick: null,
+    corner: 'top-left',
 };
 
 function createOverlay(title, options = {}) {
@@ -26,7 +27,7 @@ describe('createOverlayElement', () => {
     it('builds the IMDb rating link', () => {
         const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 7.5 }));
 
-        expect(element.className).toBe('fm-rating-overlay');
+        expect(element.className).toBe('fm-rating-overlay fm-top-left');
         expect(element.querySelector('a').href).toContain('/title/tt1234567/');
         expect(element.textContent).toContain('IMDb 7.5');
     });
