@@ -18,12 +18,21 @@ export class FlixMonkeyError extends Error {
 }
 
 /**
+ * Debounced wrapper that forwards its receiver and arguments to the wrapped function.
+ *
+ * @callback DebouncedFunction
+ * @this {unknown}
+ * @param {...unknown[]} args - Arguments forwarded to the wrapped function.
+ * @returns {unknown} Whatever the wrapped function returns, once the wait elapses.
+ */
+
+/**
  * Creates a debounced function that delays invoking the input function until after
  * the specified wait time has elapsed since the last time the debounced function was invoked.
  *
  * @param {Function} func - Function to debounce
  * @param {number} wait - Time in milliseconds to wait
- * @returns {Function} Debounced function
+ * @returns {DebouncedFunction} Debounced function
  */
 export function debounce(func, wait) {
     let timeout;
@@ -37,7 +46,7 @@ export function debounce(func, wait) {
  * Schedules work with requestIdleCallback and its timeout when available;
  * otherwise schedules it with setTimeout.
  *
- * @param {Function} func - Function to execute when idle
+ * @param {IdleRequestCallback} func - Function to execute when idle
  * @param {number} [timeout=2000] - Timeout in milliseconds for requestIdleCallback
  */
 export function runIdle(func, timeout = 2000) {
