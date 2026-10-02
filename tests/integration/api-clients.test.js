@@ -6,10 +6,10 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api/index.js';
 import { ConfigManager } from '../../src/core/config/index.js';
-import { ApiSource, TitleType } from '../../src/core/constants';
-import { DisabledClientsManager } from '../../src/core/disabled-clients';
-import { IdOverrideManager } from '../../src/core/id-override-manager';
-import { Title } from '../../src/core/title';
+import { ApiSource, TitleType } from '../../src/core/constants.js';
+import { DisabledClientsManager } from '../../src/core/disabled-clients.js';
+import { IdOverrideManager } from '../../src/core/id-override-manager.js';
+import { Title } from '../../src/core/title.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 
 const adapter = {

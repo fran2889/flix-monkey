@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { GROUPS, ROW_LABELS } from '../config/config-fields.js';
+import { GROUPS, ROW_LABELS } from '../config/index.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
@@ -20,7 +20,7 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof import('../config/config-fields.js').CONFIG_FIELDS} fields
+     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields
      * @param {SettingsActions} actions
      */
     constructor(fields, actions) {

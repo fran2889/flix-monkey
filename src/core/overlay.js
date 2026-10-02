@@ -5,8 +5,6 @@
 import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements.js';
 import { buildOverlayStyles } from './ui/overlay-styles.js';
 
-export { FADE_STATE_LABELS } from './ui/overlay-elements.js';
-
 /**
  * @typedef {Object} ServicePresentation
  * @property {readonly string[]} [TOP_10_SELECTORS]

@@ -11,8 +11,9 @@ import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
 import { IdOverrideManager } from './id-override-manager.js';
 import { Logger } from './logger.js';
-import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
+import { OverlayRenderer } from './overlay.js';
 import { ServiceRegistry } from './services/index.js';
+import { FADE_STATE_LABELS } from './ui/overlay-elements.js';
 import { debounce, runIdle, slugify } from './utils/index.js';
 
 export class FlixMonkeyApp {

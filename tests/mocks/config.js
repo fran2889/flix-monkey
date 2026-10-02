@@ -2,8 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CONFIG_DEFAULTS, CONFIG_FIELDS } from '../../src/core/config/config-fields.js';
-import { ConfigManager } from '../../src/core/config/index.js';
+import { CONFIG_DEFAULTS, CONFIG_FIELDS, ConfigManager } from '../../src/core/config/index.js';
 import { createMockAdapter } from './adapter.js';
 
 /**
