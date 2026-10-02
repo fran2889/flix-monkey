@@ -28,13 +28,13 @@ export class BaseApiClient {
     #overrideManager;
 
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
-     * @param {import('../config-manager.js').ConfigManager} config - Application configuration.
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
      * @param {import('../logger.js').Logger} logger - Logger instance when diagnostics are needed.
      * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
      * @param {import('../request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
-     * @param {typeof ApiSource[keyof typeof ApiSource]} source - ApiSource identifier.
+     * @param {import('../title.js').ApiSourceValue} source - ApiSource identifier.
      */
     constructor(adapter, config, disabledManager, logger, overrideManager, queue, source) {
         this.#adapter = adapter;

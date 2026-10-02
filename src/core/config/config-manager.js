@@ -12,8 +12,8 @@ export class ConfigManager {
     #logger;
 
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('./logger.js').Logger} [logger]
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('../logger.js').Logger} [logger]
      */
     constructor(adapter, logger) {
         this.#adapter = adapter;

@@ -47,7 +47,7 @@ export class StreamingService {
 
     /**
      * @abstract
-     * @param {import('../config-manager.js').ConfigManager} configManager - Current application configuration.
+     * @param {import('../config/config-manager.js').ConfigManager} configManager - Current application configuration.
      * @returns {boolean} Whether decoration is enabled for this service.
      */
     isEnabled(_configManager) {

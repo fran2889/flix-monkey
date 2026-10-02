@@ -9,8 +9,8 @@ import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { NetflixService } from '../../../src/core/services/';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/';
+import { NetflixService } from '../../../src/core/services/index.js';
+import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
@@ -704,7 +704,6 @@ describe('App', () => {
                 { discover: () => [] },
                 {}
             );
-            app.init();
 
             // Mock prompt to return null (user cancelled)
             const originalPrompt = window.prompt;
@@ -737,7 +736,6 @@ describe('App', () => {
                 { discover: () => [] },
                 {}
             );
-            app.init();
 
             const originalPrompt = window.prompt;
             const originalAlert = window.alert;
@@ -777,7 +775,6 @@ describe('App', () => {
                 mockSurfaces,
                 { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
-            app.init();
 
             const originalPrompt = window.prompt;
             window.prompt = vi.fn().mockReturnValue('tt0133093');
@@ -812,7 +809,6 @@ describe('App', () => {
                 mockSurfaces,
                 { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
-            app.init();
 
             const originalPrompt = window.prompt;
             window.prompt = vi.fn().mockReturnValue('https://www.imdb.com/title/tt0133093/');
@@ -847,7 +843,6 @@ describe('App', () => {
                 mockSurfaces,
                 { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
-            app.init();
 
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');

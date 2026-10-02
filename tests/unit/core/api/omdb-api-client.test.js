@@ -4,7 +4,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { OmdbApiClient } from '../../../../src/core/api/';
+import { OmdbApiClient } from '../../../../src/core/api/index.js';
 import { Title } from '../../../../src/core/title.js';
 import { createMockAdapter } from '../../../mocks/adapter.js';
 import { createMockLogger } from '../../../mocks/logger.js';

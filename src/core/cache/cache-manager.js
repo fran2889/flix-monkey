@@ -13,8 +13,8 @@ export class CacheManager {
     #logger;
 
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Persistent storage provider.
-     * @param {import('../config-manager.js').ConfigManager} config - TTL configuration provider.
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Persistent storage provider.
+     * @param {import('../config/config-manager.js').ConfigManager} config - TTL configuration provider.
      * @param {import('../logger.js').Logger} logger - Corrupt-entry diagnostics sink.
      */
     constructor(adapter, config, logger) {

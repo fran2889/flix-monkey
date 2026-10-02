@@ -7,7 +7,10 @@ import { RATE_LIMITS } from '../rate-limits.js';
 import { RequestQueue } from '../request-queue.js';
 import { Title } from '../title.js';
 import { BaseApiClient } from './base-api-client.js';
-import { AGREGARR_TITLE_TYPES, mapAgregarrTitleType } from './title-type-mappers.js';
+import { mapAgregarrTitleType } from './title-type-mappers.js';
+
+/** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
+const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
 export class AgregarrApiClient extends BaseApiClient {
     constructor(adapter, config, disabledManager, logger, overrideManager) {

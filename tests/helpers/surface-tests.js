@@ -8,7 +8,7 @@ import { expect } from 'vitest';
  * Tests surface discovery and overlay injection for a set of fixtures.
  * Each fixture must represent exactly one surface.
  *
- * @param {import('../../src/core/surfaces.js').SurfaceManager} surfaceManager
+ * @param {import('../../src/core/surfaces/index.js').SurfaceManager} surfaceManager
  * @param {import('../../src/core/overlay.js').OverlayRenderer} overlayRenderer
  * @param {Array<{name: string, html: string, expected: {title: string, fadeable: boolean, showFadeToggle: boolean}}>} fixtures
  */

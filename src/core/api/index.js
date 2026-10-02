@@ -6,11 +6,5 @@
 export { AgregarrApiClient } from './agregarr-api-client.js';
 export { BaseApiClient } from './base-api-client.js';
 export { OmdbApiClient } from './omdb-api-client.js';
-export {
-    AGREGARR_TITLE_TYPES,
-    mapAgregarrTitleType,
-    mapOmdbTitleType,
-    mapXmdbTitleType,
-    parseRatings,
-} from './title-type-mappers.js';
+export { mapAgregarrTitleType, mapOmdbTitleType, mapXmdbTitleType } from './title-type-mappers.js';
 export { XmdbApiClient } from './xmdb-api-client.js';

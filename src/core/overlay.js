@@ -23,7 +23,7 @@ export class OverlayRenderer {
     #onRefreshClick;
 
     /**
-     * @param {import('./config-manager.js').ConfigManager} config - Application configuration
+     * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
      * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      * @param {((displayTitle: string) => void)|null} [onEditClick] - Edit icon click handler
      * @param {((displayTitle: string) => void)|null} [onRefreshClick] - Refresh icon click handler

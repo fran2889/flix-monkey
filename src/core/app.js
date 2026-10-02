@@ -59,25 +59,9 @@ export class FlixMonkeyApp {
             this.#pendingRoots.clear();
             runIdle(() => roots.forEach(root => this.decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
-    }
 
-    /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('./config-manager.js').ConfigManager} config
-     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./logger.js').Logger} logger
-     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
-     * @returns {import('./api/').BaseApiClient}
-     */
-    static createApiClient(adapter, config, disabledManager, logger, overrideManager) {
-        const provider = config.get('apiClient').trim().toLowerCase();
-        const clientMap = {
-            [ApiSource.AGREGARR]: AgregarrApiClient,
-            [ApiSource.XMDB]: XmdbApiClient,
-            [ApiSource.OMDB]: OmdbApiClient,
-        };
-        const ClientClass = clientMap[provider] ?? AgregarrApiClient;
-        return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
+        this.handleEditClick = this.#handleEditClick.bind(this);
+        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
     }
 
     /**
@@ -120,8 +104,6 @@ export class FlixMonkeyApp {
         this.#initialised = true;
         this.#renderer.injectStyles();
         this.#initNavigationObservers();
-        this.handleEditClick = this.#handleEditClick.bind(this);
-        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
         this.decorateRoot(document);
         this.#boundDisconnect = () => this.disconnect();
         window.addEventListener('beforeunload', this.#boundDisconnect);
@@ -330,6 +312,27 @@ export class FlixMonkeyApp {
 }
 
 /**
+ * Builds the API client for the provider selected in config.
+ *
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+ * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration.
+ * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+ * @param {import('./logger.js').Logger} logger - Logger instance when diagnostics are needed.
+ * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
+ * @returns {import('./api/index.js').BaseApiClient} Client for the configured provider, defaulting to Agregarr.
+ */
+function createApiClient(adapter, config, disabledManager, logger, overrideManager) {
+    const provider = config.get('apiClient').trim().toLowerCase();
+    const clientMap = {
+        [ApiSource.AGREGARR]: AgregarrApiClient,
+        [ApiSource.XMDB]: XmdbApiClient,
+        [ApiSource.OMDB]: OmdbApiClient,
+    };
+    const ClientClass = clientMap[provider] ?? AgregarrApiClient;
+    return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
+}
+
+/**
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter
  * @returns {FlixMonkeyApp|null}
  */
@@ -347,7 +350,7 @@ export function startApp(adapter) {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = FlixMonkeyApp.createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
+    const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);

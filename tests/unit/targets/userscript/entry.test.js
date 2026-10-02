@@ -144,6 +144,9 @@ describe('userscript entry point', () => {
         expect(appModule.startApp).toHaveBeenCalledOnce();
         expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
+        expect(configConstructor).not.toHaveBeenCalled();
+        expect(cacheConstructor).not.toHaveBeenCalled();
+        expect(disabledConstructor).not.toHaveBeenCalled();
 
         const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];
         menuCallback();

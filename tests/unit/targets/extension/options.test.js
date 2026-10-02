@@ -45,7 +45,7 @@ vi.mock('webextension-polyfill', () => ({
 
 // options.js constructs ConfigManager, CacheManager, and DisabledClientsManager
 // with `new`. Use class stubs so they are valid constructors.
-vi.mock('../../../../src/core/config-manager.js', () => ({
+vi.mock('../../../../src/core/config/config-manager.js', () => ({
     ConfigManager: class {
         configGet() {
             return null;
@@ -53,7 +53,7 @@ vi.mock('../../../../src/core/config-manager.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/cache.js', () => ({
+vi.mock('../../../../src/core/cache/cache-manager.js', () => ({
     CacheManager: class {},
 }));
 

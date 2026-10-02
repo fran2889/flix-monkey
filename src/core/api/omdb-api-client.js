@@ -7,7 +7,20 @@ import { RATE_LIMITS } from '../rate-limits.js';
 import { RequestQueue } from '../request-queue.js';
 import { Title } from '../title.js';
 import { BaseApiClient } from './base-api-client.js';
-import { mapOmdbTitleType, parseRatings } from './title-type-mappers.js';
+import { mapOmdbTitleType } from './title-type-mappers.js';
+
+/**
+ * Extracts a rating value from an OMDb `Ratings` array by matching its source label.
+ *
+ * @param {unknown} ratings - The `Ratings` field from an OMDb response.
+ * @param {RegExp} sourcePattern - Pattern matched against the rating source name.
+ * @returns {number|null} Rating value, or null when absent or not an array.
+ */
+function parseRatings(ratings, sourcePattern) {
+    if (!Array.isArray(ratings)) return null;
+    const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
+    return entry?.value ?? entry?.Value ?? null;
+}
 
 export class OmdbApiClient extends BaseApiClient {
     constructor(adapter, config, disabledManager, logger, overrideManager) {

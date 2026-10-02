@@ -6,24 +6,6 @@
 import { TitleType } from '../constants.js';
 
 /**
- * Parses ratings from API response arrays.
- *
- * @param {Array} ratings - Array of rating objects from API response
- * @param {RegExp} sourcePattern - Regular expression to match rating source name
- * @returns {number|null} Rating value or null if not found
- */
-export function parseRatings(ratings, sourcePattern) {
-    if (!Array.isArray(ratings)) return null;
-    const entry = ratings.find(r => r && sourcePattern.test(r.source || r.Source));
-    return entry?.value ?? entry?.Value ?? null;
-}
-
-/**
- * Agregarr supported title types for filtering search results.
- */
-export const AGREGARR_TITLE_TYPES = Object.freeze(new Set(['movie', 'tvSeries', 'tvMiniSeries']));
-
-/**
  * Maps XMDb title type to canonical TitleType.
  *
  * @param {string|null} apiValue - XMDb API title type value
