@@ -25,8 +25,6 @@ export class ApiClientManager {
         this.#logger = logger;
     }
 
-    // Public methods in call order
-
     /**
      * Resolves rating data from cache or the configured client. Failed lookups return a
      * not-found Title; client errors with a 4xx status disable that client.
@@ -38,7 +36,6 @@ export class ApiClientManager {
         const source = this.#client.source;
         const entry = await this.#cache.read(displayTitle);
 
-        // Cache hit: non-expired entry with valid title
         if (entry && !entry.isExpired) {
             const titleObj = entry.getTitle();
             if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
@@ -46,16 +43,12 @@ export class ApiClientManager {
             }
         }
 
-        // Entry with imdbId (expired OR non-expired without valid data): refresh
         if (entry?.imdbId) {
             return await this.#fetch(displayTitle, entry.imdbId);
         }
 
-        // Cache miss or no imdbId: full fetch
         return await this.#fetch(displayTitle);
     }
-
-    // Private methods under their first public caller (getData)
 
     async #fetch(displayTitle, imdbId = null) {
         const status = await this.#client.getStatus();
@@ -95,8 +88,6 @@ export class ApiClientManager {
         }
         return reenabled;
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get disabledManager() {
         return this.#disabledManager;

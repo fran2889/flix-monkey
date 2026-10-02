@@ -365,7 +365,6 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManager
             );
 
-            // Mock getDetails to return a title
             vi.spyOn(client, 'getDetails').mockResolvedValue(
                 new Title({ displayTitle: 'Overridden Movie', imdbId: 'tt9999999', imdbRating: 8.5 })
             );
@@ -396,13 +395,11 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManager
             );
 
-            // Mock getDetails to return null (simulating a failed details fetch)
             vi.spyOn(client, 'getDetails').mockResolvedValue(null);
 
             const result = await client.fetch('Test Movie');
 
             expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            // Should still return a Title with the override ID even if details fetch failed
             expect(result.imdbId).toBe('tt9999999');
             expect(result.displayTitle).toBe('Test Movie');
         });
@@ -425,7 +422,6 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManager
             );
 
-            // Mock getDetails to return a title
             vi.spyOn(client, 'getDetails').mockResolvedValue(
                 new Title({ displayTitle: 'Normal Movie', imdbId: 'tt1234567', imdbRating: 7.5 })
             );
@@ -453,7 +449,6 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManager
             );
 
-            // Mock getDetails to return null
             vi.spyOn(client, 'getDetails').mockResolvedValue(null);
 
             const result = await client.fetch('Test Movie');
@@ -488,7 +483,6 @@ describe('AgregarrApiClient', () => {
 
             expect(result).toBeNull();
             expect(mockOverrideManager.getImdbId).not.toHaveBeenCalled();
-            // Should not attempt any fetch or check override when disabled
         });
 
         it('should pass overrideManager to subclass constructors', () => {
@@ -518,7 +512,6 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManager
             );
 
-            // Clients should be created successfully with overrideManager
             expect(xmdbClient).toBeInstanceOf(XmdbApiClient);
             expect(omdbClient).toBeInstanceOf(OmdbApiClient);
             expect(agregarrClient).toBeInstanceOf(AgregarrApiClient);

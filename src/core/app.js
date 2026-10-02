@@ -61,8 +61,6 @@ export class FlixMonkeyApp {
         }, DECORATION_DEBOUNCE_MS);
     }
 
-    // Static methods
-
     /**
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter
      * @param {import('./config-manager.js').ConfigManager} config
@@ -81,8 +79,6 @@ export class FlixMonkeyApp {
         const ClientClass = clientMap[provider] ?? AgregarrApiClient;
         return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
     }
-
-    // Private methods that need to be defined before lifecycle methods
 
     /**
      * Handler for edit icon click - sets or updates IMDb ID override.
@@ -117,8 +113,6 @@ export class FlixMonkeyApp {
         await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
     }
-
-    // Lifecycle methods
 
     init() {
         // #initialised is never reset: one app instance, one lifetime.
@@ -170,8 +164,6 @@ export class FlixMonkeyApp {
         });
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
-
-    // Public methods in call order
 
     decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
@@ -291,8 +283,6 @@ export class FlixMonkeyApp {
             this.#navigationPatched = false;
         }
     }
-
-    // Private methods under their first public caller
 
     /**
      * Extract IMDb ID from user input (direct ID or URL).

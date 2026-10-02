@@ -91,31 +91,25 @@ describe('SurfaceManager', () => {
     });
 
     it('discovers the title returned by a surface definition', () => {
-        const sm = new SurfaceManager(
-            createMockLogger(),
-            {
-                card: {
-                    titleSelector: '[data-title]',
-                    getTitle: el => el.dataset.title,
-                    getContainer: element => element,
-                },
-            }
-        );
+        const sm = new SurfaceManager(createMockLogger(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: el => el.dataset.title,
+                getContainer: element => element,
+            },
+        });
         document.body.innerHTML = '<div data-title="Callback Title"></div>';
         expect(sm.discover(document.body)[0].title).toBe('Callback Title');
     });
 
     it('defaults optional surface display flags to false', () => {
-        const sm = new SurfaceManager(
-            createMockLogger(),
-            {
-                card: {
-                    titleSelector: '[data-title]',
-                    getTitle: element => element.dataset.title,
-                    getContainer: element => element,
-                },
-            }
-        );
+        const sm = new SurfaceManager(createMockLogger(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: element => element.dataset.title,
+                getContainer: element => element,
+            },
+        });
         document.body.innerHTML = '<div data-title="Default Flags"></div>';
 
         expect(sm.discover(document.body)[0]).toMatchObject({ fadeable: false, showFadeToggle: false });
@@ -128,33 +122,27 @@ describe('SurfaceManager', () => {
         selectorContainer.dataset.selectorContainer = '';
         selectorContainer.appendChild(resolvedContainer);
         document.body.replaceChildren(selectorContainer);
-        const sm = new SurfaceManager(
-            createMockLogger(),
-            {
-                card: {
-                    titleSelector: '[data-title]',
-                    getTitle: element => element.dataset.title,
-                    getContainer: element => element.parentElement,
-                },
-            }
-        );
+        const sm = new SurfaceManager(createMockLogger(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: element => element.dataset.title,
+                getContainer: element => element.parentElement,
+            },
+        });
 
         expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
     });
 
     it('decorates a resolved container through the optional surface hook', () => {
         document.body.innerHTML = '<div data-container><span data-title="Decorated Title"></span></div>';
-        const sm = new SurfaceManager(
-            createMockLogger(),
-            {
-                card: {
-                    titleSelector: '[data-title]',
-                    getTitle: element => element.dataset.title,
-                    getContainer: element => element.parentElement,
-                    decorateContainer: container => container.classList.add('decorated'),
-                },
-            }
-        );
+        const sm = new SurfaceManager(createMockLogger(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: element => element.dataset.title,
+                getContainer: element => element.parentElement,
+                decorateContainer: container => container.classList.add('decorated'),
+            },
+        });
 
         const [surface] = sm.discover(document.body);
         expect(surface.container).toHaveClass('decorated');
@@ -166,16 +154,13 @@ describe('SurfaceManager', () => {
                 <span data-title="Fallback Title"></span>
             </div>
         `;
-        const sm = new SurfaceManager(
-            createMockLogger(),
-            {
-                card: {
-                    titleSelector: '[data-title]',
-                    getTitle: element => element.dataset.title,
-                    getContainer: () => null,
-                },
-            }
-        );
+        const sm = new SurfaceManager(createMockLogger(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: element => element.dataset.title,
+                getContainer: () => null,
+            },
+        });
 
         expect(sm.discover(document.body)[0].container).toBe(document.querySelector('[data-container]'));
     });

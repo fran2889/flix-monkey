@@ -6,13 +6,9 @@ import { NetflixSurfaceManager } from '../surfaces/index.js';
 import { StreamingService } from './base-streaming-service.js';
 
 export class NetflixService extends StreamingService {
-    // Public methods
-
     isEnabled(configManager) {
         return configManager.getBool('enableNetflix');
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get id() {
         return 'netflix';

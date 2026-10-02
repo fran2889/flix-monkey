@@ -38,8 +38,6 @@ export class IdOverrideManager {
         }
     }
 
-    // Private methods under their first public caller (getImdbId)
-
     #getKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }

@@ -75,7 +75,6 @@ function createFadeToggle(state, onClick) {
 function calculateRatingColor(rating, isPercentage = false) {
     if (rating === null || rating === undefined) return null;
 
-    // Apply thresholds based on rating type
     const low = isPercentage ? RATING_COLOR_LOW_THRESHOLD * 10 : RATING_COLOR_LOW_THRESHOLD;
     const high = isPercentage ? RATING_COLOR_HIGH_THRESHOLD * 10 : RATING_COLOR_HIGH_THRESHOLD;
 
@@ -208,15 +207,12 @@ export function createOverlayElement(
 
     const { imdbId, rtRating, mcRating, apiTitle, year } = title;
 
-    // Ratings wrapper: hover target for all badges
     const ratingsWrapper = document.createElement('div');
     ratingsWrapper.className = 'fm-ratings-wrapper';
 
-    // IMDb row: contains IMDb badge + actions
     const imdbRow = document.createElement('div');
     imdbRow.className = 'fm-imdb-row';
 
-    // IMDb (Interactive Link)
     const imdbLink = document.createElement('a');
     imdbLink.target = '_blank';
     imdbLink.rel = 'noopener noreferrer';
@@ -244,11 +240,9 @@ export function createOverlayElement(
     imdbRow.appendChild(imdbLink);
     ratingsWrapper.appendChild(imdbRow);
 
-    // RT
     const rtBadge = createOptionalRatingBadge('RT', rtRating, 'fm-rt', showRtRating);
     if (rtBadge) ratingsWrapper.appendChild(rtBadge);
 
-    // MC
     const mcBadge = createOptionalRatingBadge('MC', mcRating, 'fm-mc', showMcRating);
     if (mcBadge) ratingsWrapper.appendChild(mcBadge);
 

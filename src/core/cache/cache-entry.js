@@ -28,8 +28,6 @@ export class CacheEntry {
         this.#expires = expires;
     }
 
-    // Static methods
-
     /**
      * Deserializes from JSON storage format.
      *
@@ -40,8 +38,6 @@ export class CacheEntry {
         const obj = JSON.parse(raw);
         return new CacheEntry(obj.displayTitle, obj.imdbId, obj.data, obj.expires);
     }
-
-    // Public methods in call order
 
     /**
      * Reconstructs the full Title from cache data.
@@ -66,8 +62,6 @@ export class CacheEntry {
             expires: this.#expires,
         };
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get displayTitle() {
         return this.#displayTitle;

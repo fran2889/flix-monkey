@@ -53,8 +53,6 @@ export class OverlayRenderer {
         }
     }
 
-    // Public methods in call order
-
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }

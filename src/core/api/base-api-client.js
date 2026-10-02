@@ -46,8 +46,6 @@ export class BaseApiClient {
         this.#source = source;
     }
 
-    // Public methods in call order
-
     /**
      * Fetches ratings for a streaming-service title through the search -> details pipeline.
      * Callers must gate through getStatus before invoking.
@@ -130,13 +128,9 @@ export class BaseApiClient {
         );
     }
 
-    // Private methods in call order under their first public caller
-
     async #isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
-
-    // Abstract methods (maintain relative position to parent concept)
 
     /**
      * Searches the API for a title matching the streaming-service display name.
@@ -165,8 +159,6 @@ export class BaseApiClient {
     async getDetails(_searchTitle) {
         throw new Error('Not implemented');
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get source() {
         return this.#source;

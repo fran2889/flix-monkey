@@ -79,12 +79,10 @@ export function interpolateColor(progress, startHex, endHex) {
     const startHsl = rgbToHsl(startRgb.r, startRgb.g, startRgb.b);
     const endHsl = rgbToHsl(endRgb.r, endRgb.g, endRgb.b);
 
-    // Interpolate in HSL space
     const h = startHsl.h + (endHsl.h - startHsl.h) * progress;
     const s = startHsl.s + (endHsl.s - startHsl.s) * progress;
     const l = startHsl.l + (endHsl.l - startHsl.l) * progress;
 
-    // Convert back to RGB
     const rgb = hslToRgb(h, s, l);
 
     // Clamp RGB values to stay within endpoint color bounds

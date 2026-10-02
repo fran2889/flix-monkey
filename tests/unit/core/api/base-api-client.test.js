@@ -92,7 +92,6 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             createMockLogger(),
             mockOverrideManager
         );
-        // Mock getDetails to return null (details fetch failed)
         client.getDetails = vi.fn().mockResolvedValue(null);
 
         const result = await client.fetch('Some Title');

@@ -57,8 +57,6 @@ export class OmdbApiClient extends BaseApiClient {
         return searchTitle;
     }
 
-    // Private methods under their first public caller
-
     /**
      * Parses OMDb JSON response into a Title.
      *

@@ -432,7 +432,6 @@ export const SETTINGS_STYLES = `/* =============================================
         margin-top: 0;
     }
 
-    /* Text input rows: align label with input text baseline */
     .fm-settings-container .field:not(.field--checkbox):not(.field--actions) .field-label {
         margin-top: 0;
     }

@@ -6,13 +6,9 @@ import { HboMaxSurfaceManager } from '../surfaces/index.js';
 import { StreamingService } from './base-streaming-service.js';
 
 export class HboMaxService extends StreamingService {
-    // Public methods
-
     isEnabled(configManager) {
         return configManager.getBool('enableHboMax');
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get id() {
         return 'hbomax';

@@ -70,7 +70,6 @@ export class XmdbApiClient extends BaseApiClient {
             return null;
         }
         const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
-        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: title ?? searchTitle.apiTitle,
@@ -84,10 +83,4 @@ export class XmdbApiClient extends BaseApiClient {
             source: null,
         });
     }
-
-    // Private methods under their first public caller
-
-    // #mapTitleType is used by getDetails() - goes under getDetails()
-    // But we're using the imported function instead of a private method
-    // This eliminates the duplicate logic
 }

@@ -6,13 +6,9 @@ import { DisneyPlusSurfaceManager } from '../surfaces/index.js';
 import { StreamingService } from './base-streaming-service.js';
 
 export class DisneyPlusService extends StreamingService {
-    // Public methods
-
     isEnabled(configManager) {
         return configManager.getBool('enableDisneyPlus');
     }
-
-    // Getters ALWAYS at end, regardless of callers
 
     get id() {
         return 'disneyplus';

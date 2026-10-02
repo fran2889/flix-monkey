@@ -56,13 +56,10 @@ describe('RequestQueue', () => {
             return { url };
         };
 
-        // Enqueue first request (starts immediately)
         const p1 = queue.enqueue('first', 0, fetchFn, 'json');
 
-        // Enqueue low priority
         const p2 = queue.enqueue('low', 0, fetchFn, 'json');
 
-        // Enqueue high priority (should jump over 'low')
         const p3 = queue.enqueue('high', 10, fetchFn, 'json');
 
         await Promise.all([p1, p2, p3]);

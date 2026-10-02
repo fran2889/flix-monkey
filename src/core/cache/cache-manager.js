@@ -23,8 +23,6 @@ export class CacheManager {
         this.#logger = logger;
     }
 
-    // Public methods in call order
-
     /**
      * Reads a cache entry by display title. Returns a CacheEntry for both
      * hits and expired entries (which may be used for short-circuit refresh).
@@ -46,8 +44,6 @@ export class CacheManager {
             return null;
         }
     }
-
-    // Private methods under their first public caller (read)
 
     #getCacheKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
@@ -74,8 +70,6 @@ export class CacheManager {
         );
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
-
-    // Private methods under their first public caller (write)
 
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);

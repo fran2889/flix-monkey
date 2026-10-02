@@ -60,7 +60,6 @@ export class SettingsView {
         const ungroupedFields = [];
 
         for (const field of this.#fields) {
-            // Include action fields in grouping
             if (field.type === 'action' && field.group && GROUPS[field.group]) {
                 const groupId = field.group;
                 if (!fieldsByGroup[groupId]) {
@@ -145,7 +144,6 @@ export class SettingsView {
             const fieldElement = this.#createFieldRow(row, settings);
             container.appendChild(fieldElement);
 
-            // Handle action fields that belong to this group
             const actionFields = this.#fields.filter(
                 f => f.type === 'action' && f.group === group.id && f.row === row.id
             );

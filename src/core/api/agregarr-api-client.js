@@ -61,7 +61,6 @@ export class AgregarrApiClient extends BaseApiClient {
             });
             return null;
         }
-        // Merge: use searchTitle values as fallbacks, override with details when available
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: searchTitle.apiTitle,

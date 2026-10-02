@@ -25,7 +25,6 @@ describe('App', () => {
         vi.useFakeTimers();
         document.body.innerHTML = '';
 
-        // Mock ServiceRegistry.detect to return Netflix service
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
 
@@ -185,7 +184,6 @@ describe('App', () => {
         });
         expect(spy).toHaveBeenCalledTimes(1);
 
-        // Simulate replacement of container
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Original Title"></a>
@@ -851,7 +849,6 @@ describe('App', () => {
             );
             app.init();
 
-            // Set up a container with the data-fm-key attribute
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);
