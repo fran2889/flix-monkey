@@ -62,6 +62,11 @@ describe('CacheManager', () => {
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:key1');
     });
 
+    it('should delete single cache entry', async () => {
+        await cacheManager.delete('Some Title');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:some_title');
+    });
+
     it('should write and read cache entry', async () => {
         const titleData = { displayTitle: 'Test Title', year: 2026, imdbRating: '8.0' };
         const titleObj = new Title(titleData);
