@@ -6,3 +6,4 @@
 export { hslToRgb, hueToRgb, interpolateColor, parseHex, rgbToHsl } from './color-utils.js';
 export { debounce, FlixMonkeyError, runIdle } from './general-utils.js';
 export { slugify } from './string-utils.js';
+export { buildImdbUrl } from './url-utils.js';

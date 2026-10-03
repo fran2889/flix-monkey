@@ -118,7 +118,7 @@ describe('createOverlayElement', () => {
         it('styles the loading badge like a rating badge', () => {
             const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
 
-            expect(element.querySelector('.fm-rating-badge')).not.toBeNull();
+            expect(element.querySelector('a.fm-rating-badge')).not.toBeNull();
         });
 
         it('links the loading badge to an IMDb title search', () => {
@@ -131,24 +131,6 @@ describe('createOverlayElement', () => {
             const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
 
             expect(element.querySelector('a').href).toContain('q=WALL-E%20%26%20co');
-        });
-
-        it('opens the loading badge in a new tab without leaking the referrer', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
-            const link = element.querySelector('a');
-
-            expect(link.target).toBe('_blank');
-            expect(link.rel).toBe('noopener noreferrer');
-        });
-
-        it('stops propagation on the loading badge click', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
-            const event = new MouseEvent('click', { bubbles: true });
-            const spy = vi.spyOn(event, 'stopPropagation');
-
-            element.querySelector('a').dispatchEvent(event);
-
-            expect(spy).toHaveBeenCalled();
         });
     });
 
@@ -220,8 +202,15 @@ describe('createOverlayElement', () => {
         });
     });
 
-    describe('click propagation', () => {
-        it('stops propagation on the IMDb link', () => {
+    describe('IMDb link', () => {
+        it('opens in a new tab without leaking the referrer', () => {
+            const link = createOverlay({ imdbUrl: 'http://imdb.com' }).querySelector('a');
+
+            expect(link.target).toBe('_blank');
+            expect(link.rel).toBe('noopener noreferrer');
+        });
+
+        it('stops propagation so the card does not navigate', () => {
             const element = createOverlay({ imdbUrl: 'http://imdb.com' });
             const event = new MouseEvent('click', { bubbles: true });
             const spy = vi.spyOn(event, 'stopPropagation');
@@ -230,7 +219,9 @@ describe('createOverlayElement', () => {
 
             expect(spy).toHaveBeenCalled();
         });
+    });
 
+    describe('click propagation', () => {
         it('stops propagation on enabled MC and RT rating clicks', () => {
             const element = createOverlay(
                 { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com', imdbId: 'tt1' },

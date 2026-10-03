@@ -8,8 +8,7 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants.js';
-import { buildImdbUrl } from '../title.js';
-import { interpolateColor } from '../utils/color-utils.js';
+import { buildImdbUrl, interpolateColor } from '../utils/index.js';
 
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',
@@ -52,20 +51,12 @@ function createSearchRatingElement(label, className = '') {
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
-/**
- * Creates the IMDb badge anchor: opens in a new tab and never lets the click
- * reach the streaming service's own card navigation.
- *
- * @param {string} href - Destination URL (IMDb title or IMDb search).
- * @param {string} className - Extra CSS class for the badge, usually 'fm-imdb'.
- * @returns {HTMLAnchorElement} IMDb badge anchor.
- */
-function createImdbLink(href, className) {
+function createImdbLink(href) {
     const link = document.createElement('a');
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.href = href;
-    link.classList.add('fm-rating-badge', className);
+    link.classList.add('fm-rating-badge', 'fm-imdb');
     link.addEventListener('click', e => e.stopPropagation());
     return link;
 }
@@ -232,7 +223,7 @@ export function createOverlayElement(
     const imdbRow = document.createElement('div');
     imdbRow.className = 'fm-imdb-row';
 
-    const imdbLink = createImdbLink(title.imdbUrl, 'fm-imdb');
+    const imdbLink = createImdbLink(title.imdbUrl);
 
     const titleParts = appendImdbRating(imdbLink, title);
 
@@ -301,7 +292,7 @@ function createIconButton(emoji, titleText, onClick) {
 export function createLoadingOverlayElement(overlayClass, loadingClass, displayTitle) {
     const container = document.createElement('div');
     container.className = `${overlayClass} ${loadingClass}`;
-    const link = createImdbLink(buildImdbUrl({ displayTitle }), 'fm-imdb');
+    const link = createImdbLink(buildImdbUrl({ displayTitle }));
     link.appendChild(createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
     container.appendChild(link);
     container.title = 'IMDb: Fetching ratings... · Search IMDb';
