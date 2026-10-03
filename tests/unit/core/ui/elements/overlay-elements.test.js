@@ -108,11 +108,47 @@ describe('createOverlayElement', () => {
 
     describe('loading overlay', () => {
         it('creates loading content', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading');
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
 
             expect(element.className).toBe('fm-rating-overlay fm-loading');
             expect(element.textContent).toContain('⏳');
-            expect(element.title).toBe('IMDb: Fetching ratings... * Search IMDb');
+            expect(element.title).toBe('IMDb: Fetching ratings... · Search IMDb');
+        });
+
+        it('styles the loading badge like a rating badge', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+            expect(element.querySelector('.fm-rating-badge')).not.toBeNull();
+        });
+
+        it('links the loading badge to an IMDb title search', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+            expect(element.querySelector('a').href).toBe('https://www.imdb.com/find/?q=The%20Matrix');
+        });
+
+        it('url-encodes the search title', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
+
+            expect(element.querySelector('a').href).toContain('q=WALL-E%20%26%20co');
+        });
+
+        it('opens the loading badge in a new tab without leaking the referrer', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+            const link = element.querySelector('a');
+
+            expect(link.target).toBe('_blank');
+            expect(link.rel).toBe('noopener noreferrer');
+        });
+
+        it('stops propagation on the loading badge click', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+            const event = new MouseEvent('click', { bubbles: true });
+            const spy = vi.spyOn(event, 'stopPropagation');
+
+            element.querySelector('a').dispatchEvent(event);
+
+            expect(spy).toHaveBeenCalled();
         });
     });
 

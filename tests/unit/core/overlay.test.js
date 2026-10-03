@@ -68,7 +68,7 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
 
-            renderer.injectLoadingOverlay(container);
+            renderer.injectLoadingOverlay(container, 'The Matrix');
             renderer.injectOverlay(container, new Title({ imdbId: 'tt1234567', imdbRating: 8.5 }));
 
             expect(container.querySelector('.fm-loading')).toBeNull();
@@ -83,17 +83,26 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
 
-            renderer.injectLoadingOverlay(container);
+            renderer.injectLoadingOverlay(container, 'The Matrix');
 
             expect(container.querySelector('.fm-loading')).not.toBeNull();
             expect(renderer.isLoading(container)).toBe(true);
+        });
+
+        it('links the loading overlay to an IMDb search for the display title', () => {
+            const renderer = new OverlayRenderer(createConfig());
+            const container = document.createElement('div');
+
+            renderer.injectLoadingOverlay(container, 'The Matrix');
+
+            expect(container.querySelector('.fm-loading a').href).toBe('https://www.imdb.com/find/?q=The%20Matrix');
         });
 
         it('removes a loading overlay', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
 
-            renderer.injectLoadingOverlay(container);
+            renderer.injectLoadingOverlay(container, 'The Matrix');
             renderer.removeLoadingOverlay(container);
 
             expect(container.querySelector('.fm-loading')).toBeNull();
