@@ -51,16 +51,6 @@ function createSearchRatingElement(label, className = '') {
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
-function createImdbLink(href) {
-    const link = document.createElement('a');
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.href = href;
-    link.classList.add('fm-rating-badge', 'fm-imdb');
-    link.addEventListener('click', e => e.stopPropagation());
-    return link;
-}
-
 function createFadeToggle(state, onClick) {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
@@ -257,6 +247,16 @@ export function createOverlayElement(
     appendFadeToggle(ratingsWrapper, showFadeToggle, fadeToggleState, onFadeToggleClick);
 
     return container;
+}
+
+function createImdbLink(href) {
+    const link = document.createElement('a');
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.href = href;
+    link.classList.add('fm-rating-badge', 'fm-imdb');
+    link.addEventListener('click', e => e.stopPropagation());
+    return link;
 }
 
 /**
