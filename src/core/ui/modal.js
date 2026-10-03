@@ -8,7 +8,6 @@ export class Modal {
     #escHandler = null;
 
     constructor(title) {
-        this.title = title;
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
 
         this.overlay = document.createElement('div');
@@ -27,12 +26,12 @@ export class Modal {
         const heading = document.createElement('h2');
         heading.className = 'fm-modal-title';
         heading.id = titleId;
-        heading.textContent = this.title;
+        heading.textContent = title;
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'fm-modal-close';
         closeBtn.textContent = '×';
-        closeBtn.onclick = () => this.close();
+        closeBtn.onclick = () => this.#close();
 
         const body = document.createElement('div');
         body.className = 'fm-modal-body';
@@ -49,12 +48,12 @@ export class Modal {
         this.overlay.style.display = 'flex';
         this.overlay.querySelector('.fm-modal-content').focus();
         this.#escHandler = e => {
-            if (e.key === 'Escape') this.close();
+            if (e.key === 'Escape') this.#close();
         };
         document.addEventListener('keydown', this.#escHandler);
     }
 
-    close() {
+    #close() {
         if (this.#escHandler) {
             document.removeEventListener('keydown', this.#escHandler);
             this.#escHandler = null;

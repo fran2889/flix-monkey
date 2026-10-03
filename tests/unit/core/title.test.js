@@ -30,30 +30,30 @@ describe('Title', () => {
         });
     });
 
-    describe('fromJSON creation', () => {
-        it('should create a Title instance with properties from JSON object', () => {
-            const title = Title.fromJSON({ displayTitle: 'JSON Title' });
+    describe('fromCacheJSON creation', () => {
+        it('should create a Title instance with properties from a cache object', () => {
+            const title = Title.fromCacheJSON({ apiTitle: 'Cached Movie' }, 'JSON Title');
             expect(title.displayTitle).toBe('JSON Title');
+            expect(title.apiTitle).toBe('Cached Movie');
         });
 
-        it('should return null when JSON is null', () => {
-            const title = Title.fromJSON(null);
-            expect(title).toBeNull();
+        it('should return null when the cache object is null', () => {
+            expect(Title.fromCacheJSON(null, 'JSON Title')).toBeNull();
         });
 
         it('should return null for non-object input', () => {
-            expect(Title.fromJSON(null)).toBeNull();
-            expect(Title.fromJSON('string')).toBeNull();
-            expect(Title.fromJSON(42)).toBeNull();
+            expect(Title.fromCacheJSON(null, 'x')).toBeNull();
+            expect(Title.fromCacheJSON('string', 'x')).toBeNull();
+            expect(Title.fromCacheJSON(42, 'x')).toBeNull();
         });
 
-        it('should handle imdbVotes field from JSON', () => {
-            const title = Title.fromJSON({ displayTitle: 'Test', imdbVotes: 1000 });
+        it('should handle imdbVotes field from a cache object', () => {
+            const title = Title.fromCacheJSON({ imdbVotes: 1000 }, 'Test');
             expect(title.imdbVotes).toBe(1000);
         });
 
-        it('should handle missing imdbVotes field from JSON', () => {
-            const title = Title.fromJSON({ displayTitle: 'Test' });
+        it('should handle missing imdbVotes field from a cache object', () => {
+            const title = Title.fromCacheJSON({}, 'Test');
             expect(title.imdbVotes).toBeNull();
         });
     });
@@ -161,8 +161,8 @@ describe('Title', () => {
             expect(new Title({ type: undefined }).type).toBeNull();
         });
 
-        it('should round-trip through fromJSON', () => {
-            const title = Title.fromJSON({ displayTitle: 'Test', type: 'series' });
+        it('should round-trip through fromCacheJSON', () => {
+            const title = Title.fromCacheJSON({ type: 'series' }, 'Test');
             expect(title.type).toBe('series');
         });
 

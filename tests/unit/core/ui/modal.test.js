@@ -36,13 +36,7 @@ describe('Modal', () => {
         expect(document.querySelector('.fm-modal-overlay').style.display).toBe('flex');
     });
 
-    it('should remove the modal from DOM when close() is called', () => {
-        const modal = new Modal('Test Modal');
-        modal.close();
-        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
-    });
-
-    it('should close the modal when clicking the close button', () => {
+    it('should remove the modal from DOM when the close button is used', () => {
         const modal = new Modal('Test Modal');
         modal.open();
         document.querySelector('.fm-modal-close').click();
@@ -89,7 +83,7 @@ describe('Modal', () => {
 
         const modal = new Modal('Focus Modal');
         modal.open();
-        modal.close();
+        document.querySelector('.fm-modal-close').click();
 
         expect(document.activeElement).toBe(trigger);
     });

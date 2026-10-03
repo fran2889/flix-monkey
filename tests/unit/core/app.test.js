@@ -42,7 +42,8 @@ describe('App', () => {
     });
 
     afterEach(() => {
-        appRef?.disconnect();
+        // The app tears itself down on unload; that listener is the only path to #disconnect.
+        window.dispatchEvent(new Event('beforeunload'));
         vi.useRealTimers();
         vi.restoreAllMocks();
         document.body.innerHTML = '';
@@ -52,8 +53,8 @@ describe('App', () => {
     it('should initialize and hold state', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);
-        expect(appRef.clearCache).toBeDefined();
-        expect(appRef.resetDisabledClients).toBeDefined();
+        expect(appRef).toBeInstanceOf(FlixMonkeyApp);
+        expect(typeof appRef.redecorate).toBe('function');
     });
 
     it('should discover titles in JSDOM', () => {
@@ -315,7 +316,7 @@ describe('App', () => {
         );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
-        app.disconnect();
+        window.dispatchEvent(new Event('beforeunload'));
     });
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
@@ -341,8 +342,7 @@ describe('App', () => {
         const result = startApp(adapter);
         expect(result).not.toBeNull();
         expect(result).toBeInstanceOf(FlixMonkeyApp);
-        expect(result.clearCache).toBeDefined();
-        expect(result.disconnect).toBeDefined();
+        expect(typeof result.redecorate).toBe('function');
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
@@ -403,12 +403,12 @@ describe('App', () => {
         logSpy.mockRestore();
     });
 
-    it('should disconnect the MutationObserver when disconnect() is called', () => {
+    it('should disconnect the MutationObserver on unload', () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
         appRef = startApp(mockAdapter);
 
         const disconnectSpy = vi.spyOn(mockMutationObserverInstance, 'disconnect');
-        appRef.disconnect();
+        window.dispatchEvent(new Event('beforeunload'));
         expect(disconnectSpy).toHaveBeenCalled();
     });
 
@@ -678,177 +678,138 @@ describe('App', () => {
 
     describe('IMDb ID override handlers', () => {
         let mockOverrideManager;
+        let mockCache;
+        let mockRenderer;
+
+        /**
+         * Decorates `container` and resolves with the click callbacks the app wires into
+         * the overlay. That wiring is the only production path to the private handlers.
+         */
+        const decorateAndCaptureActions = async container => {
+            mockRenderer = {
+                hasOverlay: vi.fn().mockReturnValue(false),
+                isLoading: vi.fn().mockReturnValue(false),
+                ensureRelative: vi.fn(),
+                injectLoadingOverlay: vi.fn(),
+                injectOverlay: vi.fn(),
+                injectStyles: vi.fn(),
+                removeLoadingOverlay: vi.fn(),
+                applyFade: vi.fn(),
+            };
+            const app = new FlixMonkeyApp(
+                {},
+                createMockLogger(),
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                {
+                    discover: vi
+                        .fn()
+                        .mockReturnValue([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }]),
+                },
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
+            );
+            app.init();
+
+            await vi.waitFor(() => {
+                if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
+            });
+            const [, , , , onEditClick, onRefreshClick] = mockRenderer.injectOverlay.mock.calls[0];
+            return { onEditClick, onRefreshClick };
+        };
+
+        const withPromptResult = async (promptResult, fn) => {
+            const originalPrompt = window.prompt;
+            const promptMock = vi.fn().mockReturnValue(promptResult);
+            window.prompt = promptMock;
+            try {
+                await fn();
+            } finally {
+                window.prompt = originalPrompt;
+            }
+            return promptMock;
+        };
 
         beforeEach(() => {
+            mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
             mockOverrideManager = {
                 getImdbId: vi.fn().mockResolvedValue(null),
                 setImdbId: vi.fn().mockResolvedValue(undefined),
             };
         });
 
-        it('handleEditClick should cancel when userInput is null', async () => {
-            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            const mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                removeLoadingOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-            };
-            const app = new FlixMonkeyApp(
-                {},
-                createMockLogger(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
-                { discover: () => [] },
-                {}
-            );
+        it('should cancel the override when the prompt is dismissed', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onEditClick } = await decorateAndCaptureActions(container);
 
-            // Mock prompt to return null (user cancelled)
-            const originalPrompt = window.prompt;
-            window.prompt = vi.fn().mockReturnValue(null);
+            await withPromptResult(null, () => onEditClick('Test Movie', null));
 
-            try {
-                await app.handleEditClick('Test Movie');
-                expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
-                expect(mockCache.delete).not.toHaveBeenCalled();
-            } finally {
-                window.prompt = originalPrompt;
-            }
+            expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+            expect(mockCache.delete).not.toHaveBeenCalled();
         });
 
-        it('handleEditClick should show alert for invalid IMDb ID', async () => {
-            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            const mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                removeLoadingOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-            };
-            const app = new FlixMonkeyApp(
-                {},
-                createMockLogger(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
-                { discover: () => [] },
-                {}
-            );
-
-            const originalPrompt = window.prompt;
+        it('should alert on an invalid IMDb ID', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onEditClick } = await decorateAndCaptureActions(container);
             const originalAlert = window.alert;
-            window.prompt = vi.fn().mockReturnValue('invalid-id');
             window.alert = vi.fn();
 
             try {
-                await app.handleEditClick('Test Movie');
+                await withPromptResult('invalid-id', () => onEditClick('Test Movie', null));
                 expect(window.alert).toHaveBeenCalledWith(
                     'Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)'
                 );
                 expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+                expect(mockCache.delete).not.toHaveBeenCalled();
             } finally {
-                window.prompt = originalPrompt;
                 window.alert = originalAlert;
             }
         });
 
-        it('handleEditClick should set override and clear cache for valid IMDb ID', async () => {
-            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            const mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                removeLoadingOverlay: vi.fn(),
-                injectOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-            };
-            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+        it('should set the override and evict the cache for a valid IMDb ID', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onEditClick } = await decorateAndCaptureActions(container);
 
-            const app = new FlixMonkeyApp(
-                {},
-                createMockLogger(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
-                mockSurfaces,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
-            );
+            await withPromptResult('tt0133093', () => onEditClick('Test Movie', null));
 
-            const originalPrompt = window.prompt;
-            window.prompt = vi.fn().mockReturnValue('tt0133093');
-
-            try {
-                await app.handleEditClick('Test Movie');
-                expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-                expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
-            } finally {
-                window.prompt = originalPrompt;
-            }
+            expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
+            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('handleEditClick should set override and clear cache for IMDb URL input', async () => {
-            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            const mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                removeLoadingOverlay: vi.fn(),
-                injectOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-            };
-            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+        it('should extract the IMDb ID from an IMDb URL', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onEditClick } = await decorateAndCaptureActions(container);
 
-            const app = new FlixMonkeyApp(
-                {},
-                createMockLogger(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
-                mockSurfaces,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
-            );
+            await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick('Test Movie', null));
 
-            const originalPrompt = window.prompt;
-            window.prompt = vi.fn().mockReturnValue('https://www.imdb.com/title/tt0133093/');
-
-            try {
-                await app.handleEditClick('Test Movie');
-                expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-                expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
-            } finally {
-                window.prompt = originalPrompt;
-            }
+            expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
+            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('handleRefreshClick should clear cache and trigger re-decoration', async () => {
-            const mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            const mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                removeLoadingOverlay: vi.fn(),
-                injectOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-            };
-            const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
+        it('should prefill the prompt with the current override before the API IMDb ID', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            mockOverrideManager.getImdbId.mockResolvedValue('tt0000001');
+            const { onEditClick } = await decorateAndCaptureActions(container);
 
-            const app = new FlixMonkeyApp(
-                {},
-                createMockLogger(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
-                mockSurfaces,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
-            );
+            const promptMock = await withPromptResult(null, () => onEditClick('Test Movie', 'tt9999999'));
 
+            expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
+        });
+
+        it('should evict the cache and re-decorate on refresh', async () => {
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);
+            const { onRefreshClick } = await decorateAndCaptureActions(container);
 
-            await app.handleRefreshClick('Test Movie');
+            await onRefreshClick('Test Movie');
+
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
         });

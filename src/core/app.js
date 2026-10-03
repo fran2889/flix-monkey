@@ -58,23 +58,30 @@ export class FlixMonkeyApp {
         this.#debouncedDecorate = debounce(() => {
             const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
             this.#pendingRoots.clear();
-            runIdle(() => roots.forEach(root => this.decorateRoot(root)));
+            runIdle(() => roots.forEach(root => this.#decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
+    }
 
-        this.handleEditClick = this.#handleEditClick.bind(this);
-        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
+    /** Bootstraps styling, navigation observers, initial decoration, and teardown wiring. */
+    init() {
+        // Guards against duplicate observers and unload listeners; never reset.
+        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
+        this.#initialised = true;
+        this.#renderer.injectStyles();
+        this.#initNavigationObservers();
+        this.#decorateRoot(document);
+        this.#boundDisconnect = () => this.#disconnect();
+        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
     /**
-     * Handler for edit icon click - sets or updates IMDb ID override.
+     * Sets or updates the IMDb ID override for a title from user input.
      * @param {string} displayTitle - The title to set override for
-     * @param {string|null} imdbId - Current IMDb ID from API (used as fallback if no override exists)
+     * @param {string|null} [imdbId=null] - Current IMDb ID from API, used as the prompt default when no override exists
      */
     async #handleEditClick(displayTitle, imdbId = null) {
         const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
-        const promptMessage = `IMDb ID for ${displayTitle}:`;
-        const defaultValue = currentOverride || imdbId || '';
-        const userInput = prompt(promptMessage, defaultValue);
+        const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride || imdbId || '');
         if (userInput === null) return;
 
         const extracted = this.#extractImdbId(userInput);
@@ -90,24 +97,13 @@ export class FlixMonkeyApp {
     }
 
     /**
-     * Handler for refresh icon click - clears single cache entry and triggers re-decoration.
+     * Clears the single cache entry for a title and re-decorates it.
      * @param {string} displayTitle - The title to refresh
      */
     async #handleRefreshClick(displayTitle) {
         const dedupKey = slugify(displayTitle);
         await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
-    }
-
-    init() {
-        // #initialised is never reset: one app instance, one lifetime.
-        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
-        this.#initialised = true;
-        this.#renderer.injectStyles();
-        this.#initNavigationObservers();
-        this.decorateRoot(document);
-        this.#boundDisconnect = () => this.disconnect();
-        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
     #initNavigationObservers() {
@@ -148,7 +144,7 @@ export class FlixMonkeyApp {
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    decorateRoot(root) {
+    #decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
             this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
                 this.#logger.error(`Failed to decorate "${title}"`, err)
@@ -172,7 +168,7 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = fadeable || showFadeToggle ? await this.#getFadeOverride(dedupKey) : null;
+        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
         const request = this.#getTitleRequest(dedupKey, displayTitle);
 
         try {
@@ -181,10 +177,6 @@ export class FlixMonkeyApp {
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
-    }
-
-    #getFadeOverride(dedupKey) {
-        return this.#fadeManager.getOverride(dedupKey);
     }
 
     #getTitleRequest(dedupKey, displayTitle) {
@@ -216,8 +208,8 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            (d, id) => this.handleEditClick(d, id),
-            this.handleRefreshClick,
+            (displayTitle, imdbId) => this.#handleEditClick(displayTitle, imdbId),
+            displayTitle => this.#handleRefreshClick(displayTitle),
             displayTitle
         );
     }
@@ -241,18 +233,10 @@ export class FlixMonkeyApp {
     redecorate() {
         this.#renderer.injectStyles();
         this.#renderer.clearAllOverlays();
-        this.decorateRoot(document);
+        this.#decorateRoot(document);
     }
 
-    async clearCache() {
-        await this.#cache.clear();
-    }
-
-    async resetDisabledClients() {
-        return await this.#api.resetDisabledClients();
-    }
-
-    disconnect() {
+    #disconnect() {
         this.#observer?.disconnect();
         this.#observer = null;
         if (this.#boundDisconnect) {

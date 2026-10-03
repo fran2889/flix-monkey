@@ -63,10 +63,6 @@ export class CacheEntry {
         };
     }
 
-    get displayTitle() {
-        return this.#displayTitle;
-    }
-
     get imdbId() {
         return this.#imdbId;
     }

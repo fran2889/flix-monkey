@@ -81,16 +81,6 @@ export class ApiClientManager {
         }
     }
 
-    async resetDisabledClients() {
-        const reenabled = await this.#disabledManager.resetAll();
-        if (reenabled.length > 0) {
-            this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
-        } else {
-            this.#logger.info('No disabled API clients found to re-enable');
-        }
-        return reenabled;
-    }
-
     get disabledManager() {
         return this.#disabledManager;
     }

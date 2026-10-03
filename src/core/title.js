@@ -126,17 +126,6 @@ export class Title {
     }
 
     /**
-     * Reconstitutes a `Title` from a plain object (e.g. a parsed cache entry).
-     *
-     * @param {unknown} obj - Parsed cache data with an optional `TitleOptions` shape.
-     * @returns {Title|null} A new `Title` instance, or `null` if `obj` is falsy or not an object.
-     */
-    static fromJSON(obj) {
-        if (!obj || typeof obj !== 'object') return null;
-        return new Title(obj);
-    }
-
-    /**
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
