@@ -63,9 +63,15 @@ export class OverlayRenderer {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
 
-    injectLoadingOverlay(container) {
+    /**
+     * Injects the loading placeholder, which links to an IMDb search for the title.
+     *
+     * @param {HTMLElement} container - Surface container to inject into.
+     * @param {string} displayTitle - Title as shown by the streaming service, used as the IMDb search term.
+     */
+    injectLoadingOverlay(container, displayTitle) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
-        container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS));
+        container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS, displayTitle));
     }
 
     injectOverlay(

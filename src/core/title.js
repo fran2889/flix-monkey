@@ -2,6 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { buildImdbUrl } from './utils/index.js';
+
 /**
  * @typedef {'xmdb'|'omdb'|'agregarr'} ApiSourceValue
  * @typedef {'movie'|'series'} TitleTypeValue
@@ -112,9 +114,7 @@ export class Title {
      *   URL when `imdbId` is not available.
      */
     get imdbUrl() {
-        return this.imdbId
-            ? `https://www.imdb.com/title/${this.imdbId}/`
-            : `https://www.imdb.com/find/?q=${encodeURIComponent(this.displayTitle ?? '')}`;
+        return buildImdbUrl({ imdbId: this.imdbId, displayTitle: this.displayTitle });
     }
 
     /**

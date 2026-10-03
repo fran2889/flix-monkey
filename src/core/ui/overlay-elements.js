@@ -8,7 +8,7 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants.js';
-import { interpolateColor } from '../utils/color-utils.js';
+import { buildImdbUrl, interpolateColor } from '../utils/index.js';
 
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',
@@ -213,12 +213,7 @@ export function createOverlayElement(
     const imdbRow = document.createElement('div');
     imdbRow.className = 'fm-imdb-row';
 
-    const imdbLink = document.createElement('a');
-    imdbLink.target = '_blank';
-    imdbLink.rel = 'noopener noreferrer';
-    imdbLink.href = title.imdbUrl;
-    imdbLink.addEventListener('click', e => e.stopPropagation());
-    imdbLink.classList.add('fm-rating-badge', 'fm-imdb');
+    const imdbLink = createImdbLink(title.imdbUrl);
 
     const titleParts = appendImdbRating(imdbLink, title);
 
@@ -254,6 +249,16 @@ export function createOverlayElement(
     return container;
 }
 
+function createImdbLink(href) {
+    const link = document.createElement('a');
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.href = href;
+    link.classList.add('fm-rating-badge', 'fm-imdb');
+    link.addEventListener('click', e => e.stopPropagation());
+    return link;
+}
+
 /**
  * Creates an icon button for overlay actions.
  * @param {string} emoji - The emoji character to display
@@ -275,16 +280,21 @@ function createIconButton(emoji, titleText, onClick) {
 }
 
 /**
- * Creates an overlay element displayed while rating data is loading.
+ * Creates an overlay element displayed while rating data is loading. The badge
+ * links to an IMDb search for the title, matching the completed badge of a
+ * title with no rating, so it stays usable during a slow lookup.
  *
  * @param {string} overlayClass - CSS class assigned to all overlays.
  * @param {string} loadingClass - CSS class identifying loading overlays.
+ * @param {string} displayTitle - Title as shown by the streaming service, used as the IMDb search term.
  * @returns {HTMLElement} Loading overlay element.
  */
-export function createLoadingOverlayElement(overlayClass, loadingClass) {
+export function createLoadingOverlayElement(overlayClass, loadingClass, displayTitle) {
     const container = document.createElement('div');
     container.className = `${overlayClass} ${loadingClass}`;
-    container.appendChild(createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
-    container.title = 'IMDb: Fetching ratings... * Search IMDb';
+    const link = createImdbLink(buildImdbUrl({ displayTitle }));
+    link.appendChild(createBadgeElement('IMDb', '⏳', 'fm-imdb', 'fm-search'));
+    container.appendChild(link);
+    container.title = 'IMDb: Fetching ratings... · Search IMDb';
     return container;
 }

@@ -108,11 +108,29 @@ describe('createOverlayElement', () => {
 
     describe('loading overlay', () => {
         it('creates loading content', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading');
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
 
             expect(element.className).toBe('fm-rating-overlay fm-loading');
             expect(element.textContent).toContain('⏳');
-            expect(element.title).toBe('IMDb: Fetching ratings... * Search IMDb');
+            expect(element.title).toBe('IMDb: Fetching ratings... · Search IMDb');
+        });
+
+        it('styles the loading badge like a rating badge', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+            expect(element.querySelector('a.fm-rating-badge')).not.toBeNull();
+        });
+
+        it('links the loading badge to an IMDb title search', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+            expect(element.querySelector('a').href).toBe('https://www.imdb.com/find/?q=The%20Matrix');
+        });
+
+        it('url-encodes the search title', () => {
+            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
+
+            expect(element.querySelector('a').href).toContain('q=WALL-E%20%26%20co');
         });
     });
 
@@ -184,8 +202,15 @@ describe('createOverlayElement', () => {
         });
     });
 
-    describe('click propagation', () => {
-        it('stops propagation on the IMDb link', () => {
+    describe('IMDb link', () => {
+        it('opens in a new tab without leaking the referrer', () => {
+            const link = createOverlay({ imdbUrl: 'http://imdb.com' }).querySelector('a');
+
+            expect(link.target).toBe('_blank');
+            expect(link.rel).toBe('noopener noreferrer');
+        });
+
+        it('stops propagation so the card does not navigate', () => {
             const element = createOverlay({ imdbUrl: 'http://imdb.com' });
             const event = new MouseEvent('click', { bubbles: true });
             const spy = vi.spyOn(event, 'stopPropagation');
@@ -194,7 +219,9 @@ describe('createOverlayElement', () => {
 
             expect(spy).toHaveBeenCalled();
         });
+    });
 
+    describe('click propagation', () => {
         it('stops propagation on enabled MC and RT rating clicks', () => {
             const element = createOverlay(
                 { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com', imdbId: 'tt1' },

@@ -173,26 +173,26 @@ rather than skipping. Do not mock HTTP in integration tests.
 
 Platform-agnostic business logic. All modules are pure ES modules.
 
-| Module                   | Responsibility                                                           |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `app.js`                 | Main `FlixMonkeyApp` class and `startApp` factory function               |
-| `api-manager.js`         | Orchestrates API clients, handles provider selection and fallbacks       |
-| `api/`                   | API clients: `BaseApiClient`, XMDb, OMDb, Agregarr, title-type mappers   |
-| `cache/`                 | Async cache with per-entry TTL logic backed by the platform adapter      |
-| `config/`                | `ConfigManager` reactive config object and `config-fields.js` settings   |
-| `disabled-clients.js`    | Tracks failing API clients to avoid redundant requests (1-hour lockout)  |
-| `id-override-manager.js` | User-supplied IMDb ID overrides for individual titles                    |
-| `request-queue.js`       | Rate limiting and cross-tab synchronization via `fm_last_req` in storage |
-| `overlay.js`             | DOM rendering of rating badges on Netflix thumbnails and banners         |
-| `services/`              | Streaming services: base class, Netflix, Disney+, HBO Max, registry      |
-| `surfaces/`              | DOM discovery: `SurfaceManager` plus per-service surface definitions     |
-| `fade-manager.js`        | Manages fade state overrides for individual titles                       |
-| `logger.js`              | Centralized logging; honours the `debug` config flag                     |
-| `migrations.js`          | Versioned persistent-storage migrations tracked by `fm_data_version`     |
-| `rate-limits.js`         | Per-client rate limit intervals                                          |
-| `utils/`                 | Shared helpers: `general-utils.js`, `color-utils.js`, `string-utils.js`  |
-| `title.js`               | Pure title data class; IMDb scores use the `imdbRating` field            |
-| `constants.js`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum      |
+| Module                   | Responsibility                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| `app.js`                 | Main `FlixMonkeyApp` class and `startApp` factory function                              |
+| `api-manager.js`         | Orchestrates API clients, handles provider selection and fallbacks                      |
+| `api/`                   | API clients: `BaseApiClient`, XMDb, OMDb, Agregarr, title-type mappers                  |
+| `cache/`                 | Async cache with per-entry TTL logic backed by the platform adapter                     |
+| `config/`                | `ConfigManager` reactive config object and `config-fields.js` settings                  |
+| `disabled-clients.js`    | Tracks failing API clients to avoid redundant requests (1-hour lockout)                 |
+| `id-override-manager.js` | User-supplied IMDb ID overrides for individual titles                                   |
+| `request-queue.js`       | Rate limiting and cross-tab synchronization via `fm_last_req` in storage                |
+| `overlay.js`             | DOM rendering of rating badges on Netflix thumbnails and banners                        |
+| `services/`              | Streaming services: base class, Netflix, Disney+, HBO Max, registry                     |
+| `surfaces/`              | DOM discovery: `SurfaceManager` plus per-service surface definitions                    |
+| `fade-manager.js`        | Manages fade state overrides for individual titles                                      |
+| `logger.js`              | Centralized logging; honours the `debug` config flag                                    |
+| `migrations.js`          | Versioned persistent-storage migrations tracked by `fm_data_version`                    |
+| `rate-limits.js`         | Per-client rate limit intervals                                                         |
+| `utils/`                 | Shared helpers: `general-utils.js`, `color-utils.js`, `string-utils.js`, `url-utils.js` |
+| `title.js`               | Pure title data class; IMDb scores use the `imdbRating` field                           |
+| `constants.js`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum                     |
 
 Directory modules are imported through their `index.js` barrel using an explicit
 path (for example `../core/config/index.js`), never as a bare directory.

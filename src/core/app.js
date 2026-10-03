@@ -162,7 +162,7 @@ export class FlixMonkeyApp {
         const dedupKey = slugify(displayTitle);
 
         this.#renderer.ensureRelative(container);
-        this.#renderer.injectLoadingOverlay(container);
+        this.#renderer.injectLoadingOverlay(container, displayTitle);
 
         /*
          * Yield to the event loop so the browser can paint the loading overlay
