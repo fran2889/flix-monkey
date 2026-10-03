@@ -213,6 +213,11 @@ function buildRatingBadgeStyles(overlayClass) {
         `;
 }
 
+/**
+ * @param {string} overlayClass - CSS class assigned to the overlay.
+ * @param {'top-left'|'top-right'|'bottom-left'|'bottom-right'} corner - Badge corner,
+ *   validated against `CONFIG_SELECT_ALLOWED.overlayCorner` by ConfigManager.
+ */
 export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',
@@ -220,12 +225,11 @@ export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], 
         'bottom-left': 'bottom:6px;left:6px;',
         'bottom-right': 'bottom:6px;right:6px;',
     };
-    const resolvedCorner = Object.hasOwn(cornerStyles, corner) ? corner : 'top-left';
-    const positionCss = cornerStyles[resolvedCorner];
-    const flexDirection = resolvedCorner.includes('bottom') ? 'column-reverse' : 'column';
+    const positionCss = cornerStyles[corner];
+    const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
     return [
         buildBaseStyles(overlayClass, positionCss, flexDirection),
-        buildTop10OffsetStyles(overlayClass, resolvedCorner, top10Selectors, top10Offset),
+        buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offset),
         buildFadeStyles(),
         buildFadeToggleStyles(overlayClass),
         buildRatingsWrapperStyles(overlayClass),

@@ -8,7 +8,7 @@ import { CacheManager } from './cache/index.js';
 import { ConfigManager } from './config/index.js';
 import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
 import { DisabledClientsManager } from './disabled-clients.js';
-import { FadeManager } from './fade-manager.js';
+import { FadeManager, nextFadeState } from './fade-manager.js';
 import { IdOverrideManager } from './id-override-manager.js';
 import { Logger } from './logger.js';
 import { OverlayRenderer } from './overlay.js';
@@ -33,11 +33,9 @@ export class FlixMonkeyApp {
     #originalReplaceState = null;
     #popstateHandler = null;
     #fadeManager;
-    #config;
     #overrideManager;
 
     /**
-     * @param {ConfigManager} config
      * @param {Logger} logger
      * @param {CacheManager} cache
      * @param {FadeManager} fadeManager
@@ -46,35 +44,41 @@ export class FlixMonkeyApp {
      * @param {import('./surfaces/index.js').SurfaceManager} surfaces
      * @param {ApiClientManager} api
      */
-    constructor(config, logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
+    constructor(logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
         this.#surfaces = surfaces;
         this.#fadeManager = fadeManager;
-        this.#config = config;
         this.#logger = logger;
         this.#overrideManager = overrideManager;
         this.#debouncedDecorate = debounce(() => {
             const roots = this.#pendingRoots.size > 0 ? [...this.#pendingRoots] : [document];
             this.#pendingRoots.clear();
-            runIdle(() => roots.forEach(root => this.decorateRoot(root)));
+            runIdle(() => roots.forEach(root => this.#decorateRoot(root)));
         }, DECORATION_DEBOUNCE_MS);
+    }
 
-        this.handleEditClick = this.#handleEditClick.bind(this);
-        this.handleRefreshClick = this.#handleRefreshClick.bind(this);
+    /** Bootstraps styling, navigation observers, initial decoration, and teardown wiring. */
+    init() {
+        // Guards against duplicate observers and unload listeners; never reset.
+        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
+        this.#initialised = true;
+        this.#renderer.injectStyles();
+        this.#initNavigationObservers();
+        this.#decorateRoot(document);
+        this.#boundDisconnect = () => this.#disconnect();
+        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
     /**
-     * Handler for edit icon click - sets or updates IMDb ID override.
+     * Sets or updates the IMDb ID override for a title from user input.
      * @param {string} displayTitle - The title to set override for
-     * @param {string|null} imdbId - Current IMDb ID from API (used as fallback if no override exists)
+     * @param {string|null} [imdbId=null] - Current IMDb ID from API, used as the prompt default when no override exists
      */
     async #handleEditClick(displayTitle, imdbId = null) {
         const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
-        const promptMessage = `IMDb ID for ${displayTitle}:`;
-        const defaultValue = currentOverride || imdbId || '';
-        const userInput = prompt(promptMessage, defaultValue);
+        const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride || imdbId || '');
         if (userInput === null) return;
 
         const extracted = this.#extractImdbId(userInput);
@@ -90,24 +94,13 @@ export class FlixMonkeyApp {
     }
 
     /**
-     * Handler for refresh icon click - clears single cache entry and triggers re-decoration.
+     * Clears the single cache entry for a title and re-decorates it.
      * @param {string} displayTitle - The title to refresh
      */
     async #handleRefreshClick(displayTitle) {
         const dedupKey = slugify(displayTitle);
         await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
-    }
-
-    init() {
-        // #initialised is never reset: one app instance, one lifetime.
-        if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
-        this.#initialised = true;
-        this.#renderer.injectStyles();
-        this.#initNavigationObservers();
-        this.decorateRoot(document);
-        this.#boundDisconnect = () => this.disconnect();
-        window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
     #initNavigationObservers() {
@@ -148,7 +141,7 @@ export class FlixMonkeyApp {
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    decorateRoot(root) {
+    #decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
             this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
                 this.#logger.error(`Failed to decorate "${title}"`, err)
@@ -172,7 +165,7 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = fadeable || showFadeToggle ? await this.#getFadeOverride(dedupKey) : null;
+        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
         const request = this.#getTitleRequest(dedupKey, displayTitle);
 
         try {
@@ -181,10 +174,6 @@ export class FlixMonkeyApp {
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
-    }
-
-    #getFadeOverride(dedupKey) {
-        return this.#fadeManager.getOverride(dedupKey);
     }
 
     #getTitleRequest(dedupKey, displayTitle) {
@@ -204,7 +193,7 @@ export class FlixMonkeyApp {
     #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
-        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating, this.#config);
+        const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
         this.#renderer.applyFade(container, shouldFade);
         container.dataset.fmKey = dedupKey;
         const onFadeToggleClick = showFadeToggle
@@ -216,8 +205,8 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            (d, id) => this.handleEditClick(d, id),
-            this.handleRefreshClick,
+            (displayTitle, imdbId) => this.#handleEditClick(displayTitle, imdbId),
+            displayTitle => this.#handleRefreshClick(displayTitle),
             displayTitle
         );
     }
@@ -225,14 +214,14 @@ export class FlixMonkeyApp {
     async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {
         const domState = toggleBadgeEl.dataset.state;
         const currentState = domState === 'auto' ? null : domState;
-        const nextState = this.#fadeManager.nextState(currentState);
+        const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
         toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
         const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
         icon.textContent = nextState === null ? '⭐' : '👁️';
         icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
-        const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating, this.#config);
+        const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c, shouldFade);
         });
@@ -241,18 +230,10 @@ export class FlixMonkeyApp {
     redecorate() {
         this.#renderer.injectStyles();
         this.#renderer.clearAllOverlays();
-        this.decorateRoot(document);
+        this.#decorateRoot(document);
     }
 
-    async clearCache() {
-        await this.#cache.clear();
-    }
-
-    async resetDisabledClients() {
-        return await this.#api.resetDisabledClients();
-    }
-
-    disconnect() {
+    #disconnect() {
         this.#observer?.disconnect();
         this.#observer = null;
         if (this.#boundDisconnect) {
@@ -291,8 +272,8 @@ export class FlixMonkeyApp {
      * @param {string} displayTitle - The original display title (used for consistent API calls)
      */
     #redecorateTitle(dedupKey, displayTitle) {
+        // querySelectorAll only yields nodes inside the document, so no containment check is needed.
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            if (!document.contains(container)) return;
             container.removeAttribute('data-fm-injected');
             this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>
@@ -318,9 +299,9 @@ export class FlixMonkeyApp {
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
  * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration.
  * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
- * @param {import('./logger.js').Logger} logger - Logger instance when diagnostics are needed.
+ * @param {import('./logger.js').Logger} logger - Required; client construction and fallback paths log.
  * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
- * @returns {import('./api/index.js').BaseApiClient} Client for the configured provider, defaulting to Agregarr.
+ * @returns {import('./api/base-api-client.js').BaseApiClient} Client for the configured provider, defaulting to Agregarr.
  */
 function createApiClient(adapter, config, disabledManager, logger, overrideManager) {
     const provider = config.get('apiClient').trim().toLowerCase();
@@ -355,8 +336,8 @@ export function startApp(adapter) {
     const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
-    const fadeManager = new FadeManager(adapter);
-    const app = new FlixMonkeyApp(configManager, logger, cache, fadeManager, overrideManager, renderer, surfaces, api);
+    const fadeManager = new FadeManager(adapter, configManager);
+    const app = new FlixMonkeyApp(logger, cache, fadeManager, overrideManager, renderer, surfaces, api);
     app.init();
     return app;
 }

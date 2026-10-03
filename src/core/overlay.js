@@ -17,20 +17,14 @@ export class OverlayRenderer {
     #LOADING_CLASS = 'fm-loading';
     #config;
     #serviceConstants;
-    #onEditClick;
-    #onRefreshClick;
 
     /**
      * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
      * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
-     * @param {((displayTitle: string) => void)|null} [onEditClick] - Edit icon click handler
-     * @param {((displayTitle: string) => void)|null} [onRefreshClick] - Refresh icon click handler
      */
-    constructor(config, serviceConstants = {}, onEditClick = null, onRefreshClick = null) {
+    constructor(config, serviceConstants = {}) {
         this.#config = config;
         this.#serviceConstants = serviceConstants;
-        this.#onEditClick = onEditClick;
-        this.#onRefreshClick = onRefreshClick;
     }
 
     injectStyles() {
@@ -74,15 +68,18 @@ export class OverlayRenderer {
         container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS, displayTitle));
     }
 
-    injectOverlay(
-        container,
-        titleObj,
-        fadeToggleState = null,
-        onFadeToggleClick = null,
-        onEditClick = null,
-        onRefreshClick = null,
-        displayTitle = null
-    ) {
+    /**
+     * Replaces any existing overlay in `container` with a fully rendered one.
+     *
+     * @param {HTMLElement} container - Surface container to inject into.
+     * @param {import('./title.js').Title} titleObj - Resolved title data to render.
+     * @param {'always'|'never'|null} fadeToggleState - Stored fade override, or null for auto.
+     * @param {((state: string|null) => void)|null} onFadeToggleClick - Fade toggle handler, or null when the toggle is hidden.
+     * @param {((displayTitle: string, imdbId: string|null) => void)|null} onEditClick - Edit icon handler, or null to omit the icon.
+     * @param {((displayTitle: string) => void)|null} onRefreshClick - Refresh icon handler, or null to omit the icon.
+     * @param {string} displayTitle - Title as shown by the streaming service; also the IMDb search term.
+     */
+    injectOverlay(container, titleObj, fadeToggleState, onFadeToggleClick, onEditClick, onRefreshClick, displayTitle) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = createOverlayElement(titleObj, {
             overlayClass: this.#OVERLAY_CLASS,
@@ -91,9 +88,9 @@ export class OverlayRenderer {
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
             fadeToggleState,
             onFadeToggleClick,
-            onEditClick: onEditClick ?? this.#onEditClick,
-            onRefreshClick: onRefreshClick ?? this.#onRefreshClick,
-            displayTitle: displayTitle ?? titleObj.displayTitle ?? '',
+            onEditClick,
+            onRefreshClick,
+            displayTitle,
             corner: this.#config.get('overlayCorner'),
         });
         container.appendChild(overlay);

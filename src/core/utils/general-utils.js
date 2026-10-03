@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants.js';
 
 /**
  * Error used at application boundaries. HTTP request failures may include the
@@ -47,11 +48,10 @@ export function debounce(func, wait) {
  * otherwise schedules it with setTimeout.
  *
  * @param {IdleRequestCallback} func - Function to execute when idle
- * @param {number} [timeout=2000] - Timeout in milliseconds for requestIdleCallback
  */
-export function runIdle(func, timeout = 2000) {
+export function runIdle(func) {
     if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(func, { timeout });
+        window.requestIdleCallback(func, { timeout: IDLE_CALLBACK_TIMEOUT_MS });
     } else {
         setTimeout(func, 1);
     }

@@ -6,7 +6,7 @@ import { DisneyPlusService } from './disney-plus-service.js';
 import { HboMaxService } from './hbo-max-service.js';
 import { NetflixService } from './netflix-service.js';
 
-export const SERVICES = Object.freeze({
+const SERVICES = Object.freeze({
     netflix: new NetflixService(),
     hbomax: new HboMaxService(),
     disneyplus: new DisneyPlusService(),

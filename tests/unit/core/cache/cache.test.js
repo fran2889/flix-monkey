@@ -213,7 +213,7 @@ describe('CacheManager', () => {
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result.isExpired).toBe(true);
         expect(result.imdbId).toBe('tt789');
-        expect(result.displayTitle).toBe('Expired Movie');
+        expect(result.getTitle().displayTitle).toBe('Expired Movie');
     });
 
     it('should return null for cache miss', async () => {

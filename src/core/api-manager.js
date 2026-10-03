@@ -16,7 +16,7 @@ export class ApiClientManager {
      * @param {import('./logger.js').Logger} logger
      * @param {import('./cache/').CacheManager} cache
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./api/').BaseApiClient} client
+     * @param {import('./api/base-api-client.js').BaseApiClient} client
      */
     constructor(logger, cache, disabledManager, client) {
         this.#cache = cache;
@@ -79,16 +79,6 @@ export class ApiClientManager {
             );
             return Title.notFound(displayTitle, this.#client.source);
         }
-    }
-
-    async resetDisabledClients() {
-        const reenabled = await this.#disabledManager.resetAll();
-        if (reenabled.length > 0) {
-            this.#logger.info(`Re-enabled API clients: ${reenabled.join(', ')}`);
-        } else {
-            this.#logger.info('No disabled API clients found to re-enable');
-        }
-        return reenabled;
     }
 
     get disabledManager() {

@@ -23,7 +23,7 @@ async function clearCache(adapter) {
 }
 
 /** @type {ReadonlyArray<StorageMigration>} */
-export const MIGRATIONS = Object.freeze([
+const MIGRATIONS = Object.freeze([
     {
         version: 1,
         description: 'Rename cached Title.rating to Title.imdbRating',

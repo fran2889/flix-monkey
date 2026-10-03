@@ -26,8 +26,8 @@ export class SettingsUI {
         this.#logger = logger;
         this.#view = new SettingsView(fields, {
             onSave: () => this.save(),
-            onClearCache: () => this.clearCache(),
-            onResetClients: () => this.resetClients(),
+            onClearCache: () => this.#clearCache(),
+            onResetClients: () => this.#resetClients(),
         });
     }
 
@@ -51,7 +51,7 @@ export class SettingsUI {
         }
     }
 
-    async clearCache() {
+    async #clearCache() {
         try {
             await this.#cacheManager.clear();
             this.#view.showStatus('Cache cleared.', 'success');
@@ -60,7 +60,7 @@ export class SettingsUI {
         }
     }
 
-    async resetClients() {
+    async #resetClients() {
         try {
             const reenabled = await this.#disabledClientsManager.resetAll();
             const message =

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-export function parseHex(hex) {
+function parseHex(hex) {
     return {
         r: Number.parseInt(hex.slice(1, 3), 16),
         g: Number.parseInt(hex.slice(3, 5), 16),
@@ -11,7 +11,7 @@ export function parseHex(hex) {
     };
 }
 
-export function rgbToHsl(r, g, b) {
+function rgbToHsl(r, g, b) {
     const rf = r / 255;
     const gf = g / 255;
     const bf = b / 255;
@@ -42,7 +42,7 @@ export function rgbToHsl(r, g, b) {
     return { h, s, l };
 }
 
-export function hslToRgb(h, s, l) {
+function hslToRgb(h, s, l) {
     if (s === 0) {
         const val = Math.round(l * 255);
         return { r: val, g: val, b: val };
@@ -63,7 +63,7 @@ export function hslToRgb(h, s, l) {
     };
 }
 
-export function hueToRgb(p, q, t) {
+function hueToRgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
     if (t < 1 / 6) return p + (q - p) * 6 * t;

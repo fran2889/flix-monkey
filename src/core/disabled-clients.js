@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { ApiSource, CLIENT_DISABLE_DURATION } from './constants.js';
+import { ApiSource } from './constants.js';
 
 export class DisabledClientsManager {
     #adapter;
@@ -23,7 +23,13 @@ export class DisabledClientsManager {
         return true;
     }
 
-    async disable(source, durationMs = CLIENT_DISABLE_DURATION) {
+    /**
+     * Locks a client out for `durationMs`.
+     *
+     * @param {string} source - API source to disable.
+     * @param {number} durationMs - Lockout duration in milliseconds.
+     */
+    async disable(source, durationMs) {
         const until = Date.now() + durationMs;
         await this.#adapter.storageSet(`fm_disabled_${source}`, until.toString());
     }

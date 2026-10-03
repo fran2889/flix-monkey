@@ -5,8 +5,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConfigManager } from '../../../src/core/config/index.js';
-import { FadeManager } from '../../../src/core/fade-manager.js';
+import { FadeManager, nextFadeState } from '../../../src/core/fade-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 function makeConfig(enableFadeUnderRating = false, fadeRatingThreshold = 6.0) {
     return new ConfigManager(
@@ -16,7 +17,8 @@ function makeConfig(enableFadeUnderRating = false, fadeRatingThreshold = 6.0) {
                 if (key === 'fadeRatingThreshold') return fadeRatingThreshold;
                 return undefined;
             },
-        })
+        }),
+        createMockLogger()
     );
 }
 
@@ -24,90 +26,92 @@ describe('FadeManager', () => {
     describe('getOverride', () => {
         it('returns null when key is absent', async () => {
             const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(null) });
-            const fm = new FadeManager(adapter);
+            const fm = new FadeManager(adapter, makeConfig());
             expect(await fm.getOverride('tt1234567')).toBeNull();
             expect(adapter.storageGet).toHaveBeenCalledWith('fm-fade:tt1234567');
         });
 
         it('returns "always" when stored value is "always"', async () => {
             const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('always') });
-            expect(await new FadeManager(adapter).getOverride('k')).toBe('always');
+            expect(await new FadeManager(adapter, makeConfig()).getOverride('k')).toBe('always');
         });
 
         it('returns "never" when stored value is "never"', async () => {
             const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('never') });
-            expect(await new FadeManager(adapter).getOverride('k')).toBe('never');
+            expect(await new FadeManager(adapter, makeConfig()).getOverride('k')).toBe('never');
         });
 
         it('returns null for an unknown stored value', async () => {
             const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('bad-value') });
-            expect(await new FadeManager(adapter).getOverride('k')).toBeNull();
+            expect(await new FadeManager(adapter, makeConfig()).getOverride('k')).toBeNull();
         });
     });
 
     describe('setOverride', () => {
         it('writes "always" to storage', async () => {
             const adapter = createMockAdapter();
-            await new FadeManager(adapter).setOverride('tt1', 'always');
+            await new FadeManager(adapter, makeConfig()).setOverride('tt1', 'always');
             expect(adapter.storageSet).toHaveBeenCalledWith('fm-fade:tt1', 'always');
         });
 
         it('writes "never" to storage', async () => {
             const adapter = createMockAdapter();
-            await new FadeManager(adapter).setOverride('tt1', 'never');
+            await new FadeManager(adapter, makeConfig()).setOverride('tt1', 'never');
             expect(adapter.storageSet).toHaveBeenCalledWith('fm-fade:tt1', 'never');
         });
 
         it('deletes key when state is null', async () => {
             const adapter = createMockAdapter();
-            await new FadeManager(adapter).setOverride('tt1', null);
+            await new FadeManager(adapter, makeConfig()).setOverride('tt1', null);
             expect(adapter.storageDelete).toHaveBeenCalledWith('fm-fade:tt1');
             expect(adapter.storageSet).not.toHaveBeenCalled();
         });
     });
 
     describe('shouldFade', () => {
+        const fm = (enable, threshold) => new FadeManager(createMockAdapter(), makeConfig(enable, threshold));
+
         it('returns true for "always" override regardless of rating', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade('always', 9.9, makeConfig(false))).toBe(true);
+            expect(fm(false).shouldFade('always', 9.9)).toBe(true);
         });
 
         it('returns false for "never" override regardless of rating', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade('never', 1.0, makeConfig(true, 6.0))).toBe(false);
+            expect(fm(true).shouldFade('never', 1.0)).toBe(false);
         });
 
         it('returns false for null override when enableFadeUnderRating is false', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, 4.0, makeConfig(false, 6.0))).toBe(false);
+            expect(fm(false).shouldFade(null, 4.0)).toBe(false);
         });
 
         it('returns true for null override when rating is below threshold', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, 5.9, makeConfig(true, 6.0))).toBe(true);
+            expect(fm(true).shouldFade(null, 5.9)).toBe(true);
         });
 
         it('returns false for null override when rating equals threshold', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, 6.0, makeConfig(true, 6.0))).toBe(false);
+            expect(fm(true).shouldFade(null, 6.0)).toBe(false);
         });
 
         it('returns false for null override when rating is above threshold', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, 7.5, makeConfig(true, 6.0))).toBe(false);
+            expect(fm(true).shouldFade(null, 7.5)).toBe(false);
         });
 
         it('returns false for null override when rating is not a number', () => {
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, null, makeConfig(true, 6.0))).toBe(false);
-            expect(new FadeManager(createMockAdapter()).shouldFade(null, undefined, makeConfig(true, 6.0))).toBe(false);
+            expect(fm(true).shouldFade(null, null)).toBe(false);
+            expect(fm(true).shouldFade(null, undefined)).toBe(false);
         });
     });
 
-    describe('nextState', () => {
+    describe('nextFadeState', () => {
         it('cycles null -> "always"', () => {
-            expect(new FadeManager(createMockAdapter()).nextState(null)).toBe('always');
+            expect(nextFadeState(null)).toBe('always');
         });
 
         it('cycles "always" -> "never"', () => {
-            expect(new FadeManager(createMockAdapter()).nextState('always')).toBe('never');
+            expect(nextFadeState('always')).toBe('never');
         });
 
         it('cycles "never" -> null', () => {
-            expect(new FadeManager(createMockAdapter()).nextState('never')).toBeNull();
+            expect(nextFadeState('never')).toBeNull();
         });
     });
 });

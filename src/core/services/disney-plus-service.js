@@ -10,10 +10,6 @@ export class DisneyPlusService extends StreamingService {
         return configManager.getBool('enableDisneyPlus');
     }
 
-    get id() {
-        return 'disneyplus';
-    }
-
     get domains() {
         return Object.freeze(['disneyplus.com']);
     }

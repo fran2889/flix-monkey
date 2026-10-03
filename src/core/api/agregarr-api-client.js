@@ -27,16 +27,16 @@ export class AgregarrApiClient extends BaseApiClient {
 
     async search(displayTitle) {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
-        this.logger?.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
+        this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
         const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
         const results = data?.d;
         if (!results?.length) {
-            this.logger?.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
+            this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
             return null;
         }
         const match = results.find(result => AGREGARR_TITLE_TYPES.has(result.qid));
         if (!match) {
-            this.logger?.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
+            this.logger.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
             return null;
         }
         return new Title({
@@ -55,11 +55,11 @@ export class AgregarrApiClient extends BaseApiClient {
 
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
-        this.logger?.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
+        this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
         const entry = ratings?.[0];
         if (!entry) {
-            this.logger?.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
+            this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: ratings ?? null,
             });
             return null;
@@ -69,10 +69,10 @@ export class AgregarrApiClient extends BaseApiClient {
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: searchTitle.apiTitle,
-            imdbId: id ?? searchTitle.imdbId,
+            imdbId: id,
             year: searchTitle.year,
-            imdbRating: entry?.rating ?? null,
-            imdbVotes: entry?.votes ?? null,
+            imdbRating: entry.rating ?? null,
+            imdbVotes: entry.votes ?? null,
             rtRating: null,
             mcRating: null,
             type: searchTitle.type,

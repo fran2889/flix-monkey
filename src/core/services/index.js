@@ -7,4 +7,4 @@ export { StreamingService } from './base-streaming-service.js';
 export { DisneyPlusService } from './disney-plus-service.js';
 export { HboMaxService } from './hbo-max-service.js';
 export { NetflixService } from './netflix-service.js';
-export { ServiceRegistry, SERVICES } from './service-registry.js';
+export { ServiceRegistry } from './service-registry.js';

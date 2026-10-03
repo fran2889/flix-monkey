@@ -31,15 +31,15 @@ export class XmdbApiClient extends BaseApiClient {
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
-        this.logger?.debug(`Searching XMDb for title: "${displayTitle}"`);
+        this.logger.debug(`Searching XMDb for title: "${displayTitle}"`);
         const { results } = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
         if (!results?.length) {
-            this.logger?.info(`No search results found in XMDb for "${displayTitle}"`);
+            this.logger.info(`No search results found in XMDb for "${displayTitle}"`);
             return null;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.logger?.info(`No title-type results found in XMDb for "${displayTitle}"`);
+            this.logger.info(`No title-type results found in XMDb for "${displayTitle}"`);
             return null;
         }
         const match = titleResults[0];
@@ -59,12 +59,12 @@ export class XmdbApiClient extends BaseApiClient {
 
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
-        this.logger?.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
+        this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
         const detailsJson = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
-            this.logger?.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
+            this.logger.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
                 response: detailsJson ?? null,
             });
             return null;
@@ -73,13 +73,13 @@ export class XmdbApiClient extends BaseApiClient {
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: title ?? searchTitle.apiTitle,
-            imdbId: id ?? searchTitle.imdbId,
+            imdbId: id,
             year: release_year ?? searchTitle.year,
             imdbRating: rating,
             imdbVotes: vote_count ?? null,
             rtRating: null,
             mcRating: metascore ?? null,
-            type: mapXmdbTitleType(title_type) ?? searchTitle.type,
+            type: mapXmdbTitleType(title_type),
             source: null,
         });
     }

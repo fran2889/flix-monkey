@@ -9,6 +9,7 @@ import { ConfigManager } from '../../src/core/config/index.js';
 import { ApiSource, TitleType } from '../../src/core/constants.js';
 import { DisabledClientsManager } from '../../src/core/disabled-clients.js';
 import { IdOverrideManager } from '../../src/core/id-override-manager.js';
+import { Logger } from '../../src/core/logger.js';
 import { Title } from '../../src/core/title.js';
 import { createMockAdapter } from '../mocks/adapter.js';
 
@@ -64,14 +65,16 @@ function _expectImdbVotes(votes, label = 'IMDb votes') {
 describe('api-clients integration', () => {
     let configManager;
     let badKeyConfigManager;
+    let logger;
 
     beforeAll(() => {
+        logger = new Logger(createMockAdapter({ configGet: () => 'false' }));
         const getter = key => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
         };
-        configManager = new ConfigManager(createMockAdapter({ configGet: getter }));
-        badKeyConfigManager = new ConfigManager(createMockAdapter({ configGet: () => 'badkey123' }));
+        configManager = new ConfigManager(createMockAdapter({ configGet: getter }), logger);
+        badKeyConfigManager = new ConfigManager(createMockAdapter({ configGet: () => 'badkey123' }), logger);
     });
 
     describe('movie with all ratings', () => {
@@ -92,7 +95,7 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
             expectPercentageRating(result.mcRating, 'XMDB Metacritic');
@@ -100,7 +103,7 @@ describe('api-clients integration', () => {
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
             expectPercentageRating(result.rtRating, 'OMDB Rotten Tomatoes');
@@ -108,7 +111,7 @@ describe('api-clients integration', () => {
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
             expect(result.rtRating).toBeNull();
@@ -134,19 +137,19 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
@@ -156,18 +159,18 @@ describe('api-clients integration', () => {
         const TITLE = 'xyznonexistenttitle12345';
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             expect(await client.search(TITLE)).toBeNull();
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.search(TITLE);
             expect(result).toBeNull();
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             expect(await client.search(TITLE)).toBeNull();
         });
     });
@@ -176,7 +179,7 @@ describe('api-clients integration', () => {
         const INVALID_ID = 'tt0000000';
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const searchResult = new Title({ imdbId: INVALID_ID, displayTitle: 'nonexistent' });
             const result = await client.getDetails(searchResult);
             expect(result).toBeNull();
@@ -185,12 +188,12 @@ describe('api-clients integration', () => {
 
     describe('invalid API key', () => {
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, badKeyConfigManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, badKeyConfigManager, disabledManager, logger, overrideManager);
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(adapter, badKeyConfigManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, badKeyConfigManager, disabledManager, logger, overrideManager);
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
     });
@@ -209,19 +212,19 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
@@ -244,7 +247,7 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
@@ -253,14 +256,14 @@ describe('api-clients integration', () => {
         // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
         // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
         it('OMDB: does not resolve to expected ID', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expect(result).toBeInstanceOf(Title);
             expect(result.imdbId).not.toBe(EXPECTED_IMDB_ID);
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch(TITLE);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
         });
@@ -268,19 +271,19 @@ describe('api-clients integration', () => {
 
     describe('imdbVotes verification', () => {
         it('XMDB returns imdbVotes', async () => {
-            const client = new XmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new XmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch('The Godfather');
             _expectImdbVotes(result.imdbVotes);
         });
 
         it('OMDB returns imdbVotes', async () => {
-            const client = new OmdbApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new OmdbApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch('The Godfather');
             _expectImdbVotes(result.imdbVotes);
         });
 
         it('Agregarr returns imdbVotes', async () => {
-            const client = new AgregarrApiClient(adapter, configManager, disabledManager, null, overrideManager);
+            const client = new AgregarrApiClient(adapter, configManager, disabledManager, logger, overrideManager);
             const result = await client.fetch('The Godfather');
             _expectImdbVotes(result.imdbVotes);
         });

@@ -31,7 +31,7 @@ export class BaseApiClient {
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
-     * @param {import('../logger.js').Logger} logger - Logger instance when diagnostics are needed.
+     * @param {import('../logger.js').Logger} logger - Required; every lookup and failure path logs.
      * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
      * @param {import('../request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
      * @param {import('../title.js').ApiSourceValue} source - ApiSource identifier.
@@ -61,7 +61,7 @@ export class BaseApiClient {
 
         const overrideId = await this.#overrideManager.getImdbId(displayTitle);
         if (overrideId) {
-            this.#logger?.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
+            this.#logger.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
             const searchTitle = new Title({
                 displayTitle,
                 imdbId: overrideId,
@@ -96,18 +96,18 @@ export class BaseApiClient {
     }
 
     /**
-     * Disables this client, purges its queued requests, and logs a warning.
+     * Disables this client for {@link CLIENT_DISABLE_DURATION}, purges its queued
+     * requests, and logs a warning.
      *
-     * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
      * @returns {Promise<void>}
      * @note Requests still waiting in this client's queue are removed. An HTTP request already
      *   executing at the network level cannot be aborted and may still resolve after disable().
      */
-    async disable(durationMs = CLIENT_DISABLE_DURATION) {
+    async disable() {
         const count = this.#queue.clear();
-        await this.#disabledManager.disable(this.#source, durationMs);
-        this.#logger?.warn(
-            `${this.source} disabled for ${durationMs / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
+        await this.#disabledManager.disable(this.#source, CLIENT_DISABLE_DURATION);
+        this.#logger.warn(
+            `${this.source} disabled for ${CLIENT_DISABLE_DURATION / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
         );
     }
 
@@ -115,17 +115,11 @@ export class BaseApiClient {
      * Enqueues an HTTP request through the rate-limited queue.
      *
      * @param {string} url - Request URL.
-     * @param {number} [priority=0] - Higher values are processed first.
-     * @param {'json'|'text'} [responseType='json'] - Expected response format.
+     * @param {number} priority - Higher values are processed first.
      * @returns {Promise<unknown>} Parsed response body.
      */
-    async queuedFetch(url, priority = 0, responseType = 'json') {
-        return this.#queue.enqueue(
-            url,
-            priority,
-            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
-            responseType
-        );
+    async queuedFetch(url, priority) {
+        return this.#queue.enqueue(url, priority, requestUrl => this.#adapter.httpFetch(requestUrl));
     }
 
     async #isDisabled() {

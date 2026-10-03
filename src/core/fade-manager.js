@@ -2,12 +2,31 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+
+/**
+ * Advances a fade override to its next state in the auto -> always -> never cycle.
+ *
+ * @param {string|null} current - Current override state, or null for auto.
+ * @returns {'always'|'never'|null} Next override state, or null to return to auto.
+ */
+export function nextFadeState(current) {
+    if (current === null) return 'always';
+    if (current === 'always') return 'never';
+    return null;
+}
+
 export class FadeManager {
     #adapter;
+    #config;
     #prefix = 'fm-fade:';
 
-    constructor(adapter) {
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Storage adapter for per-title overrides.
+     * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration, read when no override applies.
+     */
+    constructor(adapter, config) {
         this.#adapter = adapter;
+        this.#config = config;
     }
 
     async getOverride(dedupKey) {
@@ -25,16 +44,17 @@ export class FadeManager {
         }
     }
 
-    shouldFade(override, rating, config) {
+    /**
+     * Decides whether a container should be dimmed.
+     *
+     * @param {string|null} override - Stored per-title override, or null when auto.
+     * @param {number|null} rating - IMDb rating, or null when unknown.
+     * @returns {boolean} True when the container should be faded.
+     */
+    shouldFade(override, rating) {
         if (override === 'always') return true;
         if (override === 'never') return false;
-        if (!config.getBool('enableFadeUnderRating')) return false;
-        return typeof rating === 'number' && rating < config.getFloat('fadeRatingThreshold');
-    }
-
-    nextState(current) {
-        if (current === null) return 'always';
-        if (current === 'always') return 'never';
-        return null;
+        if (!this.#config.getBool('enableFadeUnderRating')) return false;
+        return typeof rating === 'number' && rating < this.#config.getFloat('fadeRatingThreshold');
     }
 }

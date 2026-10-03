@@ -39,7 +39,7 @@ export function extractDisneyPlusTitle(tile) {
     return title ? canonicalizeDisneyPlusTitle(title) : null;
 }
 
-export const DISNEY_PLUS_SURFACES = Object.freeze({
+const DISNEY_PLUS_SURFACES = Object.freeze({
     SHELF_CARD: Object.freeze({
         titleSelector: 'a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]',
         getTitle: extractDisneyPlusTitle,

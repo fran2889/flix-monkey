@@ -171,21 +171,6 @@ describe('ApiClientManager', () => {
         expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
-    it('should reset all disabled clients and return the list of re-enabled ones', async () => {
-        const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue(['xmdb', 'omdb']) };
-        const manager = new ApiClientManager(createMockLogger(), {}, mockDisabledManager, {});
-        const reenabled = await manager.resetDisabledClients();
-        expect(mockDisabledManager.resetAll).toHaveBeenCalled();
-        expect(reenabled).toEqual(['xmdb', 'omdb']);
-    });
-
-    it('should handle resetDisabledClients when no clients are re-enabled', async () => {
-        const mockDisabledManager = { resetAll: vi.fn().mockResolvedValue([]) };
-        const manager = new ApiClientManager(createMockLogger(), {}, mockDisabledManager, {});
-        const reenabled = await manager.resetDisabledClients();
-        expect(reenabled).toEqual([]);
-    });
-
     it('should log on successful data retrieval', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
         const title = new Title({ apiTitle: 'Logged Movie', source: 'agregarr' });

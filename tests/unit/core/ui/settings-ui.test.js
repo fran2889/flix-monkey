@@ -22,7 +22,11 @@ describe('SettingsUI', () => {
 
     beforeEach(() => {
         mockAdapter = createMockAdapter();
-        mockCacheManager = new CacheManager(mockAdapter, new ConfigManager(mockAdapter), new Logger(mockAdapter));
+        mockCacheManager = new CacheManager(
+            mockAdapter,
+            new ConfigManager(mockAdapter, mockLogger),
+            new Logger(mockAdapter)
+        );
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
@@ -169,7 +173,8 @@ describe('SettingsUI', () => {
         it('clears the cache and shows the success message', async () => {
             await settingsUI.render(container);
 
-            await settingsUI.clearCache();
+            container.querySelector('#fm-clearCache').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(mockCacheManager.clear).toHaveBeenCalledOnce();
             expect(container.querySelector('#fm-status').textContent).toBe('Cache cleared.');
@@ -180,7 +185,8 @@ describe('SettingsUI', () => {
             mockCacheManager.clear.mockRejectedValue(new Error('disk full'));
             await settingsUI.render(container);
 
-            await settingsUI.clearCache();
+            container.querySelector('#fm-clearCache').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(container.querySelector('#fm-status').textContent).toBe('Error: disk full');
             expect(container.querySelector('#fm-status').className).toBe('status status--error');
@@ -192,7 +198,8 @@ describe('SettingsUI', () => {
             mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
             await settingsUI.render(container);
 
-            await settingsUI.resetClients();
+            container.querySelector('#fm-resetClients').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
             expect(container.querySelector('#fm-status').textContent).toBe('Re-enabled API clients: omdb, tmdb');
@@ -202,7 +209,8 @@ describe('SettingsUI', () => {
         it('shows the no-clients message when there is nothing to reset', async () => {
             await settingsUI.render(container);
 
-            await settingsUI.resetClients();
+            container.querySelector('#fm-resetClients').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(container.querySelector('#fm-status').textContent).toBe(
                 'No disabled API clients found to re-enable.'
@@ -214,7 +222,8 @@ describe('SettingsUI', () => {
             mockDisabledClientsManager.resetAll.mockRejectedValue(new Error('storage unavailable'));
             await settingsUI.render(container);
 
-            await settingsUI.resetClients();
+            container.querySelector('#fm-resetClients').click();
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(container.querySelector('#fm-status').textContent).toBe('Error: storage unavailable');
             expect(container.querySelector('#fm-status').className).toBe('status status--error');

@@ -4,6 +4,7 @@
  */
 import { CONFIG_DEFAULTS, CONFIG_FIELDS, ConfigManager } from '../../src/core/config/index.js';
 import { createMockAdapter } from './adapter.js';
+import { createMockLogger } from './logger.js';
 
 /**
  * Boolean config keys that control optional features.
@@ -19,7 +20,8 @@ export function createConfigWithAllOptionsEnabled() {
     return new ConfigManager(
         createMockAdapter({
             configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? true : undefined),
-        })
+        }),
+        createMockLogger()
     );
 }
 
@@ -31,7 +33,8 @@ export function createConfigWithAllOptionsDisabled() {
     return new ConfigManager(
         createMockAdapter({
             configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? false : undefined),
-        })
+        }),
+        createMockLogger()
     );
 }
 
@@ -46,7 +49,8 @@ export function createConfig(overrides = {}) {
     return new ConfigManager(
         createMockAdapter({
             configGet: key => (key in overrides ? overrides[key] : CONFIG_DEFAULTS[key]),
-        })
+        }),
+        createMockLogger()
     );
 }
 

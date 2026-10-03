@@ -19,7 +19,7 @@ describe('Disney+ surfaces', () => {
     beforeEach(() => {
         surfaceManager = new DisneyPlusSurfaceManager(createMockLogger());
         overlayRenderer = new OverlayRenderer(
-            new ConfigManager(createMockAdapter()),
+            new ConfigManager(createMockAdapter(), createMockLogger()),
             new DisneyPlusService().constants
         );
         overlayRenderer.injectStyles();

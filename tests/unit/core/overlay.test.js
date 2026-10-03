@@ -14,6 +14,10 @@ describe('OverlayRenderer', () => {
         document.body.innerHTML = '';
     });
 
+    /** Injects an overlay with the action handlers and display title the signature requires. */
+    const injectOverlay = (renderer, container, title) =>
+        renderer.injectOverlay(container, title, null, null, null, null, title.displayTitle ?? 'Test Title');
+
     describe('style injection', () => {
         it('injects styles into document head', () => {
             const renderer = new OverlayRenderer(createConfig());
@@ -55,9 +59,9 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
 
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt1', imdbRating: 7 }));
+            injectOverlay(renderer, container, new Title({ imdbId: 'tt1', imdbRating: 7 }));
             const firstOverlay = container.querySelector('.fm-rating-overlay');
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt2', imdbRating: 8 }));
+            injectOverlay(renderer, container, new Title({ imdbId: 'tt2', imdbRating: 8 }));
 
             expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
             expect(container.querySelector('.fm-rating-overlay')).not.toBe(firstOverlay);
@@ -69,7 +73,7 @@ describe('OverlayRenderer', () => {
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container, 'The Matrix');
-            renderer.injectOverlay(container, new Title({ imdbId: 'tt1234567', imdbRating: 8.5 }));
+            injectOverlay(renderer, container, new Title({ imdbId: 'tt1234567', imdbRating: 8.5 }));
 
             expect(container.querySelector('.fm-loading')).toBeNull();
             expect(renderer.isLoading(container)).toBe(false);
@@ -171,7 +175,7 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(createConfig());
             const container = document.createElement('div');
             document.body.appendChild(container);
-            renderer.injectOverlay(container, new Title({ apiTitle: 'Test', imdbRating: 7.5 }));
+            injectOverlay(renderer, container, new Title({ apiTitle: 'Test', imdbRating: 7.5 }));
 
             renderer.clearAllOverlays();
 

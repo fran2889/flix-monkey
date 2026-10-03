@@ -10,10 +10,6 @@ export class NetflixService extends StreamingService {
         return configManager.getBool('enableNetflix');
     }
 
-    get id() {
-        return 'netflix';
-    }
-
     get domains() {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
     }
