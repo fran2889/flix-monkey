@@ -9,10 +9,10 @@
  *
  * @param {object} params
  * @param {string|null} [params.imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
- * @param {string|null} [params.displayTitle=null] - Search term used when `imdbId` is absent.
+ * @param {string|null} params.displayTitle - Search term used when `imdbId` is absent.
  * @returns {string} IMDb title URL, or an IMDb search URL.
  */
-export function buildImdbUrl({ imdbId = null, displayTitle = null } = {}) {
+export function buildImdbUrl({ imdbId = null, displayTitle }) {
     return imdbId
         ? `https://www.imdb.com/title/${imdbId}/`
         : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle ?? '')}`;

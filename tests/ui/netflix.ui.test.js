@@ -18,7 +18,10 @@ describe('Netflix surfaces', () => {
 
     beforeEach(() => {
         surfaceManager = new NetflixSurfaceManager(createMockLogger());
-        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()), new NetflixService().constants);
+        overlayRenderer = new OverlayRenderer(
+            new ConfigManager(createMockAdapter(), createMockLogger()),
+            new NetflixService().constants
+        );
         overlayRenderer.injectStyles();
     });
 

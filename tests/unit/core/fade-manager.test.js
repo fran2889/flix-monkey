@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConfigManager } from '../../../src/core/config/index.js';
 import { FadeManager, nextFadeState } from '../../../src/core/fade-manager.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
+import { createMockLogger } from '../../mocks/logger.js';
 
 function makeConfig(enableFadeUnderRating = false, fadeRatingThreshold = 6.0) {
     return new ConfigManager(
@@ -16,7 +17,8 @@ function makeConfig(enableFadeUnderRating = false, fadeRatingThreshold = 6.0) {
                 if (key === 'fadeRatingThreshold') return fadeRatingThreshold;
                 return undefined;
             },
-        })
+        }),
+        createMockLogger()
     );
 }
 

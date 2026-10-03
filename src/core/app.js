@@ -272,8 +272,8 @@ export class FlixMonkeyApp {
      * @param {string} displayTitle - The original display title (used for consistent API calls)
      */
     #redecorateTitle(dedupKey, displayTitle) {
+        // querySelectorAll only yields nodes inside the document, so no containment check is needed.
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            if (!document.contains(container)) return;
             container.removeAttribute('data-fm-injected');
             this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>
@@ -299,7 +299,7 @@ export class FlixMonkeyApp {
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
  * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration.
  * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
- * @param {import('./logger.js').Logger} logger - Logger instance when diagnostics are needed.
+ * @param {import('./logger.js').Logger} logger - Required; client construction and fallback paths log.
  * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
  * @returns {import('./api/base-api-client.js').BaseApiClient} Client for the configured provider, defaulting to Agregarr.
  */

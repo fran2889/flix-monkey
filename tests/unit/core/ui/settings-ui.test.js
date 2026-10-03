@@ -22,7 +22,11 @@ describe('SettingsUI', () => {
 
     beforeEach(() => {
         mockAdapter = createMockAdapter();
-        mockCacheManager = new CacheManager(mockAdapter, new ConfigManager(mockAdapter), new Logger(mockAdapter));
+        mockCacheManager = new CacheManager(
+            mockAdapter,
+            new ConfigManager(mockAdapter, mockLogger),
+            new Logger(mockAdapter)
+        );
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();

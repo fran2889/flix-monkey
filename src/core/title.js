@@ -57,7 +57,7 @@ export class Title {
         this.displayTitle = displayTitle;
         this.apiTitle = apiTitle;
         this.imdbId = imdbId;
-        this.year = year !== null && year !== undefined ? Number.parseInt(year, 10) : null;
+        this.year = year !== null ? Number.parseInt(year, 10) : null;
         this.imdbRating = this.#normalizeRating(imdbRating, v => {
             const num = Number.parseFloat(v);
             return Number.isNaN(num) ? null : num;
@@ -74,8 +74,8 @@ export class Title {
             const m = /^(\d+)/.exec(String(v));
             return m ? Number.parseInt(m[1], 10) : null;
         });
-        this.source = source ?? null;
-        this.type = type ?? null;
+        this.source = source;
+        this.type = type;
         Object.freeze(this);
     }
 
@@ -102,7 +102,7 @@ export class Title {
 
     #normalizeRating(val, converter) {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
-        return converter ? converter(val) : val;
+        return converter(val);
     }
 
     get hasRating() {

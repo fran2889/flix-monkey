@@ -14,6 +14,9 @@ const defaultOptions = {
     showFadeToggle: false,
     fadeToggleState: null,
     onFadeToggleClick: null,
+    onEditClick: null,
+    onRefreshClick: null,
+    displayTitle: '',
     corner: 'top-left',
 };
 

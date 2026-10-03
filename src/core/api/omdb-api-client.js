@@ -44,10 +44,10 @@ export class OmdbApiClient extends BaseApiClient {
     async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
-        this.logger?.debug(`Searching OMDb for title: "${displayTitle}"`);
+        this.logger.debug(`Searching OMDb for title: "${displayTitle}"`);
         const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
         if (json.Response === 'False') {
-            this.logger?.info(`No OMDb results found for "${displayTitle}"`);
+            this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return null;
         }
         return this.#parseOmdbResponse(json, displayTitle);
@@ -59,10 +59,10 @@ export class OmdbApiClient extends BaseApiClient {
             const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
-            this.logger?.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
+            this.logger.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
             const json = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
             if (json.Response === 'False') {
-                this.logger?.info(`No OMDb results found for ID: ${id}`);
+                this.logger.info(`No OMDb results found for ID: ${id}`);
                 return null;
             }
             return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);

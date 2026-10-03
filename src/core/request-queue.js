@@ -69,8 +69,8 @@ export class RequestQueue {
         this.#isProcessing = false;
     }
 
+    /** Only reached once {@link #globalSyncKey} and {@link #adapter} are both set. */
     async #getLastGlobalRequestTime() {
-        if (!this.#globalSyncKey || !this.#adapter) return 0;
         const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
         const parsedTime = Number.parseInt(storedTime, 10);
         return Number.isNaN(parsedTime) ? 0 : parsedTime;

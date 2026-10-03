@@ -68,15 +68,18 @@ export class OverlayRenderer {
         container.appendChild(createLoadingOverlayElement(this.#OVERLAY_CLASS, this.#LOADING_CLASS, displayTitle));
     }
 
-    injectOverlay(
-        container,
-        titleObj,
-        fadeToggleState = null,
-        onFadeToggleClick = null,
-        onEditClick = null,
-        onRefreshClick = null,
-        displayTitle = null
-    ) {
+    /**
+     * Replaces any existing overlay in `container` with a fully rendered one.
+     *
+     * @param {HTMLElement} container - Surface container to inject into.
+     * @param {import('./title.js').Title} titleObj - Resolved title data to render.
+     * @param {'always'|'never'|null} fadeToggleState - Stored fade override, or null for auto.
+     * @param {((state: string|null) => void)|null} onFadeToggleClick - Fade toggle handler, or null when the toggle is hidden.
+     * @param {((displayTitle: string, imdbId: string|null) => void)|null} onEditClick - Edit icon handler, or null to omit the icon.
+     * @param {((displayTitle: string) => void)|null} onRefreshClick - Refresh icon handler, or null to omit the icon.
+     * @param {string} displayTitle - Title as shown by the streaming service; also the IMDb search term.
+     */
+    injectOverlay(container, titleObj, fadeToggleState, onFadeToggleClick, onEditClick, onRefreshClick, displayTitle) {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = createOverlayElement(titleObj, {
             overlayClass: this.#OVERLAY_CLASS,
@@ -87,7 +90,7 @@ export class OverlayRenderer {
             onFadeToggleClick,
             onEditClick,
             onRefreshClick,
-            displayTitle: displayTitle ?? titleObj.displayTitle ?? '',
+            displayTitle,
             corner: this.#config.get('overlayCorner'),
         });
         container.appendChild(overlay);

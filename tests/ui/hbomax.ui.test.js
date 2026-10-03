@@ -18,7 +18,10 @@ describe('HBO Max surfaces', () => {
 
     beforeEach(() => {
         surfaceManager = new HboMaxSurfaceManager(createMockLogger());
-        overlayRenderer = new OverlayRenderer(new ConfigManager(createMockAdapter()), new HboMaxService().constants);
+        overlayRenderer = new OverlayRenderer(
+            new ConfigManager(createMockAdapter(), createMockLogger()),
+            new HboMaxService().constants
+        );
         overlayRenderer.injectStyles();
     });
 

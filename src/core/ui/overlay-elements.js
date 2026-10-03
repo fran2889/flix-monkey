@@ -17,10 +17,10 @@ export const FADE_STATE_LABELS = Object.freeze({
     never: 'Never',
 });
 
-function createBadgeElement(label, value, labelClassName = '', valueClassName = '') {
+function createBadgeElement(label, value, labelClassName, valueClassName) {
     const el = document.createElement('div');
     const spanLabel = document.createElement('span');
-    spanLabel.className = labelClassName ? `fm-label ${labelClassName}` : 'fm-label';
+    spanLabel.className = `fm-label ${labelClassName}`;
     spanLabel.textContent = `${label} `;
     const spanValue = document.createElement('span');
     spanValue.className = valueClassName;
@@ -30,25 +30,23 @@ function createBadgeElement(label, value, labelClassName = '', valueClassName = 
     return el;
 }
 
-function createRatingElement(label, value, className = '') {
+function createRatingElement(label, value, className) {
     const el = createBadgeElement(label, value, className, 'fm-value');
 
     // Apply gradient color to rating values
     const numericValue = Number(value.replace('%', ''));
     const isPercentage = value.includes('%');
     const color = calculateRatingColor(numericValue, isPercentage);
-    if (color && el.lastChild) {
-        el.lastChild.style.color = color;
-    }
+    el.lastChild.style.color = color;
 
     return el;
 }
 
-function createMissingRatingElement(label, className = '') {
+function createMissingRatingElement(label, className) {
     return createBadgeElement(label, 'N/A', className, 'fm-na');
 }
 
-function createSearchRatingElement(label, className = '') {
+function createSearchRatingElement(label, className) {
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
@@ -73,9 +71,12 @@ function createFadeToggle(state, onClick) {
     return el;
 }
 
-function calculateRatingColor(rating, isPercentage = false) {
-    if (rating === null || rating === undefined) return null;
-
+/**
+ * @param {number} rating - Rating, already normalised to a number by `Title` or `Number()`.
+ * @param {boolean} isPercentage - True when `rating` is a 0-100 percentage rather than a 0-10 score.
+ * @returns {string} CSS colour for the rating.
+ */
+function calculateRatingColor(rating, isPercentage) {
     const low = isPercentage ? RATING_COLOR_LOW_THRESHOLD * 10 : RATING_COLOR_LOW_THRESHOLD;
     const high = isPercentage ? RATING_COLOR_HIGH_THRESHOLD * 10 : RATING_COLOR_HIGH_THRESHOLD;
 
@@ -184,7 +185,7 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
  * @param {string} options.corner - The overlay corner position (e.g., 'top-left', 'top-right').
  * @param {((displayTitle: string) => void)|null} options.onEditClick - Edit icon click handler.
  * @param {((displayTitle: string) => void)|null} options.onRefreshClick - Refresh icon click handler.
- * @param {string} [options.displayTitle=''] - The display title for this overlay.
+ * @param {string} options.displayTitle - The display title for this overlay.
  * @returns {HTMLElement} Completed overlay element.
  */
 export function createOverlayElement(
@@ -197,9 +198,9 @@ export function createOverlayElement(
         fadeToggleState,
         onFadeToggleClick,
         corner,
-        onEditClick = null,
-        onRefreshClick = null,
-        displayTitle = '',
+        onEditClick,
+        onRefreshClick,
+        displayTitle,
     }
 ) {
     const container = document.createElement('div');

@@ -4,6 +4,8 @@
  */
 import { expect } from 'vitest';
 
+import { Title } from '../../src/core/title.js';
+
 /**
  * Tests surface discovery and overlay injection for a set of fixtures.
  * Each fixture must represent exactly one surface.
@@ -21,11 +23,15 @@ export function testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures) {
         expect(surface.title).toBe(entry.expected.title);
         expect(surface.fadeable).toBe(entry.expected.fadeable);
         expect(surface.showFadeToggle).toBe(entry.expected.showFadeToggle);
-        overlayRenderer.injectOverlay(surface.container, {
-            imdbRating: 8.5,
-            imdbUrl: 'https://www.imdb.com/title/tt1234567/',
-            imdbId: 'tt1234567',
-        });
+        overlayRenderer.injectOverlay(
+            surface.container,
+            new Title({ imdbRating: 8.5, imdbId: 'tt1234567' }),
+            null,
+            null,
+            null,
+            null,
+            surface.title
+        );
         expect(surface.container.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
 }

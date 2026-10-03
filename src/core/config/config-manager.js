@@ -13,7 +13,7 @@ export class ConfigManager {
 
     /**
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../logger.js').Logger} [logger]
+     * @param {import('../logger.js').Logger} logger - Required; configuration reads can fail and are logged.
      */
     constructor(adapter, logger) {
         this.#adapter = adapter;
@@ -41,7 +41,7 @@ export class ConfigManager {
             if (allowed && !allowed.includes(normalizedVal)) return defaultValue;
             return normalizedVal;
         } catch (err) {
-            this.#logger?.warn('ConfigManager.get error, using fallback', { key, err });
+            this.#logger.warn('ConfigManager.get error, using fallback', { key, err });
             return String(CONFIG_DEFAULTS[key]);
         }
     }
