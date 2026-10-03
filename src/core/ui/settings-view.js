@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { GROUPS, ROW_LABELS } from '../config-fields.js';
+import { GROUPS, ROW_LABELS } from '../config/index.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
@@ -20,7 +20,7 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof CONFIG_FIELDS} fields
+     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields
      * @param {SettingsActions} actions
      */
     constructor(fields, actions) {
@@ -60,7 +60,6 @@ export class SettingsView {
         const ungroupedFields = [];
 
         for (const field of this.#fields) {
-            // Include action fields in grouping
             if (field.type === 'action' && field.group && GROUPS[field.group]) {
                 const groupId = field.group;
                 if (!fieldsByGroup[groupId]) {
@@ -145,7 +144,6 @@ export class SettingsView {
             const fieldElement = this.#createFieldRow(row, settings);
             container.appendChild(fieldElement);
 
-            // Handle action fields that belong to this group
             const actionFields = this.#fields.filter(
                 f => f.type === 'action' && f.group === group.id && f.row === row.id
             );

@@ -4,9 +4,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CacheManager } from '../../../../src/core/cache.js';
-import { CONFIG_FIELDS } from '../../../../src/core/config-fields.js';
-import { ConfigManager } from '../../../../src/core/config-manager.js';
+import { CacheManager } from '../../../../src/core/cache/index.js';
+import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index.js';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
 import { Logger } from '../../../../src/core/logger.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
@@ -28,7 +27,7 @@ describe('SettingsUI', () => {
         mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger);
+        settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager);
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -96,7 +95,7 @@ describe('SettingsUI', () => {
                     return value === 'initial' ? null : 'Unexpected value';
                 },
             };
-            settingsUI = new SettingsUI(mockAdapter, mockCacheManager, mockDisabledClientsManager, mockLogger, [field]);
+            settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);
             await settingsUI.render(container);
 
             await settingsUI.save();

@@ -26,7 +26,7 @@ vi.mock('../../../../src/platform/userscript.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/cache.js', () => ({
+vi.mock('../../../../src/core/cache/cache-manager.js', () => ({
     CacheManager: class {
         constructor(...args) {
             return cacheConstructor(...args);
@@ -34,7 +34,7 @@ vi.mock('../../../../src/core/cache.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/config-manager.js', () => ({
+vi.mock('../../../../src/core/config/config-manager.js', () => ({
     ConfigManager: class {
         constructor(...args) {
             return configConstructor(...args);
@@ -160,7 +160,7 @@ describe('userscript entry point', () => {
         expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
         expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger);
         expect(disabledConstructor).toHaveBeenCalledWith(adapter);
-        expect(settingsConstructor).toHaveBeenCalledWith(adapter, cacheManager, disabledManager, logger);
+        expect(settingsConstructor).toHaveBeenCalledWith(adapter, logger, cacheManager, disabledManager);
     });
 
     it('uses the app managers in the settings menu when startApp returns an app handle', async () => {
@@ -175,7 +175,7 @@ describe('userscript entry point', () => {
         menuCallback();
 
         const logger = loggerConstructor.mock.results[0].value;
-        expect(settingsConstructor).toHaveBeenCalledWith(adapter, cacheManager, disabledManager, logger);
+        expect(settingsConstructor).toHaveBeenCalledWith(adapter, logger, cacheManager, disabledManager);
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
     });

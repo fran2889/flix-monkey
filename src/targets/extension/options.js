@@ -4,8 +4,8 @@
  */
 import browser from 'webextension-polyfill';
 
-import { CacheManager } from '../../core/cache.js';
-import { ConfigManager } from '../../core/config-manager.js';
+import { CacheManager } from '../../core/cache/index.js';
+import { ConfigManager } from '../../core/config/index.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 import { Logger } from '../../core/logger.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
@@ -21,6 +21,6 @@ import { WebExtensionAdapter } from '../../platform/webextension.js';
     const cacheManager = new CacheManager(adapter, config, logger);
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
-    const ui = new SettingsUI(adapter, cacheManager, disabledClientsManager, logger);
+    const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
     ui.render(document.body);
 })();

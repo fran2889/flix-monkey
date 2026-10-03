@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { FlixMonkeyError } from '../core/utils.js';
+import { FlixMonkeyError } from '../core/utils/index.js';
 
 /**
  * @typedef {Object} HttpFetchOptions

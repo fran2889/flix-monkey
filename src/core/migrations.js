@@ -91,12 +91,11 @@ export const MIGRATIONS = Object.freeze([
                     deleted += 1;
                     continue;
                 }
-                // Check if entry already has top-level displayTitle (new format)
                 if (Object.hasOwn(entry, 'displayTitle') && Object.hasOwn(entry, 'imdbId')) {
                     skipped += 1;
                     continue;
                 }
-                // Old format: extract from data and remove from data
+                // Old format: identity fields are nested inside `data`.
                 const displayTitle = data.displayTitle;
                 const imdbId = data.imdbId ?? null;
 
@@ -107,10 +106,10 @@ export const MIGRATIONS = Object.freeze([
                     continue;
                 }
 
-                // Remove displayTitle from data (it's now stored at entry level)
                 delete data.displayTitle;
 
-                // Create new entry with top-level fields
+                // New format: identity fields hoisted to the entry level, `data`
+                // keeps only the rating payload. `expires` is preserved.
                 updates[key] = JSON.stringify({
                     displayTitle,
                     imdbId,

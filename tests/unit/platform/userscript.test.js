@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { FlixMonkeyError } from '../../../src/core/utils.js';
+import { FlixMonkeyError } from '../../../src/core/utils/index.js';
 import { UserscriptAdapter } from '../../../src/platform/userscript.js';
 import { setupUserscriptMocks } from '../../mocks/platform.js';
 

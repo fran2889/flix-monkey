@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
-import { FlixMonkeyError } from '../core/utils.js';
+import { FlixMonkeyError } from '../core/utils/index.js';
 import { PlatformAdapter } from './adapter.js';
 
 export class UserscriptAdapter extends PlatformAdapter {

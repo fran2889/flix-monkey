@@ -16,13 +16,11 @@ export const ApiSource = Object.freeze({
     AGREGARR: 'agregarr',
 });
 
-// Rating color thresholds
-export const RATING_COLOR_LOW_THRESHOLD = 5.0; // IMDb: \u22645.0, RT/MC: \u226450%
-export const RATING_COLOR_HIGH_THRESHOLD = 8.5; // IMDb: \u22659.0, RT/MC: \u226590%
+export const RATING_COLOR_LOW_THRESHOLD = 5.0; // IMDb: <=5.0, RT/MC: <=50%
+export const RATING_COLOR_HIGH_THRESHOLD = 8.5; // IMDb: >=8.5, RT/MC: >=85%
 
-// Rating colors
-export const RATING_COLOR_RED = '#ff0000'; // Pure red
-export const RATING_COLOR_GREEN = '#00dd00'; // Dark green
+export const RATING_COLOR_RED = '#ff0000';
+export const RATING_COLOR_GREEN = '#00dd00';
 
 export const TitleType = Object.freeze({
     MOVIE: 'movie',

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { CONFIG_DEFAULTS } from './config-fields.js';
+import { CONFIG_DEFAULTS } from './config/index.js';
 
 export class Logger {
     #prefix = '[FlixMonkey]';

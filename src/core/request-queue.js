@@ -11,11 +11,11 @@ export class RequestQueue {
     #adapter;
 
     /**
+     * @param {import('../platform/adapter.js').PlatformAdapter|null} [adapter=null] - When supplied with globalSyncKey, enables cross-tab coordination.
      * @param {number} [minInterval=1000] - Minimum delay between dispatched requests.
      * @param {string|null} [globalSyncKey=null] - Storage key used to coordinate the delay across tabs.
-     * @param {import('../platform/adapter.js').PlatformAdapter|null} [adapter=null] - When supplied with globalSyncKey, enables cross-tab coordination.
      */
-    constructor(minInterval = 1000, globalSyncKey = null, adapter = null) {
+    constructor(adapter = null, minInterval = 1000, globalSyncKey = null) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
@@ -52,7 +52,8 @@ export class RequestQueue {
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
                 await new Promise(r => setTimeout(r, wait));
-                // Re-read storage after waiting, then restart loop
+                // Re-read storage after waiting, then restart the loop: another tab may
+                // have claimed the slot while this one slept.
                 continue;
             }
 

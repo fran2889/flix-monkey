@@ -15,3 +15,5 @@ web-ext-artifacts/
 
 .chromium-debug-profile/
 .worktrees/
+.agents/
+skills-lock.json

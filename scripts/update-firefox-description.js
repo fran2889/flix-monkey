@@ -110,7 +110,6 @@ function validateDescription(content) {
 }
 
 try {
-    // Read description file
     logInfo(`Reading description from ${DESCRIPTION_FILE}`);
     let content;
     try {
@@ -128,7 +127,6 @@ try {
         process.exit(1);
     }
 
-    // Generate JWT
     const issuer = getEnv('AMO_JWT_ISSUER');
     const secret = getEnv('AMO_JWT_SECRET');
     const addonId = getEnv('AMO_ADDON_ID');
@@ -139,7 +137,6 @@ try {
     const jwt = generateJWT(issuer, secret);
     logInfo('JWT generated successfully');
 
-    // Update description
     logInfo(`Updating Firefox AMO description for add-on ${addonId}`);
     const payload = JSON.stringify({
         description: { 'en-US': description },

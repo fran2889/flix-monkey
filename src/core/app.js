@@ -2,18 +2,19 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api-clients.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index.js';
 import { ApiClientManager } from './api-manager.js';
-import { CacheManager } from './cache.js';
-import { ConfigManager } from './config-manager.js';
+import { CacheManager } from './cache/index.js';
+import { ConfigManager } from './config/index.js';
 import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants.js';
 import { DisabledClientsManager } from './disabled-clients.js';
 import { FadeManager } from './fade-manager.js';
 import { IdOverrideManager } from './id-override-manager.js';
 import { Logger } from './logger.js';
-import { FADE_STATE_LABELS, OverlayRenderer } from './overlay.js';
-import { ServiceRegistry } from './services.js';
-import { debounce, runIdle, slugify } from './utils.js';
+import { OverlayRenderer } from './overlay.js';
+import { ServiceRegistry } from './services/index.js';
+import { FADE_STATE_LABELS } from './ui/overlay-elements.js';
+import { debounce, runIdle, slugify } from './utils/index.js';
 
 export class FlixMonkeyApp {
     #api;
@@ -36,16 +37,16 @@ export class FlixMonkeyApp {
     #overrideManager;
 
     /**
-     * @param {CacheManager} cache
-     * @param {ApiClientManager} api
-     * @param {OverlayRenderer} renderer
-     * @param {SurfaceManager} surfaces
-     * @param {FadeManager} fadeManager
      * @param {ConfigManager} config
      * @param {Logger} logger
+     * @param {CacheManager} cache
+     * @param {FadeManager} fadeManager
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
+     * @param {OverlayRenderer} renderer
+     * @param {import('./surfaces/index.js').SurfaceManager} surfaces
+     * @param {ApiClientManager} api
      */
-    constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager) {
+    constructor(config, logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
         this.#api = api;
         this.#renderer = renderer;
@@ -96,40 +97,6 @@ export class FlixMonkeyApp {
         const dedupKey = slugify(displayTitle);
         await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
-    }
-
-    /**
-     * Extract IMDb ID from user input (direct ID or URL).
-     * @param {string} input - User input
-     * @returns {string|null} Extracted IMDb ID or null if invalid
-     */
-    #extractImdbId(input) {
-        if (!input) return null;
-        const trimmed = input.trim();
-        if (/^tt\d+$/.test(trimmed)) {
-            return trimmed;
-        }
-        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
-        if (match) {
-            return `tt${match[1]}`;
-        }
-        return null;
-    }
-
-    /**
-     * Re-decorate all containers for a specific title.
-     * @param {string} dedupKey - The slugified title key
-     * @param {string} displayTitle - The original display title (used for consistent API calls)
-     */
-    #redecorateTitle(dedupKey, displayTitle) {
-        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            if (!document.contains(container)) return;
-            container.removeAttribute('data-fm-injected');
-            this.#renderer.removeLoadingOverlay(container);
-            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
-                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
-            );
-        });
     }
 
     init() {
@@ -300,6 +267,40 @@ export class FlixMonkeyApp {
         }
     }
 
+    /**
+     * Extract IMDb ID from user input (direct ID or URL).
+     * @param {string} input - User input
+     * @returns {string|null} Extracted IMDb ID or null if invalid
+     */
+    #extractImdbId(input) {
+        if (!input) return null;
+        const trimmed = input.trim();
+        if (/^tt\d+$/.test(trimmed)) {
+            return trimmed;
+        }
+        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
+        if (match) {
+            return `tt${match[1]}`;
+        }
+        return null;
+    }
+
+    /**
+     * Re-decorate all containers for a specific title.
+     * @param {string} dedupKey - The slugified title key
+     * @param {string} displayTitle - The original display title (used for consistent API calls)
+     */
+    #redecorateTitle(dedupKey, displayTitle) {
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+            if (!document.contains(container)) return;
+            container.removeAttribute('data-fm-injected');
+            this.#renderer.removeLoadingOverlay(container);
+            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
+                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
+            );
+        });
+    }
+
     /** @returns {CacheManager} */
     get cacheManager() {
         return this.#cache;
@@ -311,7 +312,17 @@ export class FlixMonkeyApp {
     }
 }
 
-function createApiClient(config, disabledManager, adapter, logger, overrideManager) {
+/**
+ * Builds the API client for the provider selected in config.
+ *
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+ * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration.
+ * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+ * @param {import('./logger.js').Logger} logger - Logger instance when diagnostics are needed.
+ * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
+ * @returns {import('./api/index.js').BaseApiClient} Client for the configured provider, defaulting to Agregarr.
+ */
+function createApiClient(adapter, config, disabledManager, logger, overrideManager) {
     const provider = config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
@@ -319,7 +330,7 @@ function createApiClient(config, disabledManager, adapter, logger, overrideManag
         [ApiSource.OMDB]: OmdbApiClient,
     };
     const ClientClass = clientMap[provider] ?? AgregarrApiClient;
-    return new ClientClass(disabledManager, adapter, config, logger, overrideManager);
+    return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
 }
 
 /**
@@ -340,12 +351,12 @@ export function startApp(adapter) {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = createApiClient(configManager, disabledManager, adapter, logger, overrideManager);
-    const api = new ApiClientManager(cache, disabledManager, client, logger);
+    const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
+    const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter);
-    const app = new FlixMonkeyApp(cache, api, renderer, surfaces, fadeManager, configManager, logger, overrideManager);
+    const app = new FlixMonkeyApp(configManager, logger, cache, fadeManager, overrideManager, renderer, surfaces, api);
     app.init();
     return app;
 }

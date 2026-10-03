@@ -4,7 +4,7 @@
  */
 import { Title } from './title.js';
 
-/** @typedef {import('./cache.js').CacheEntry} CacheEntry */
+/** @typedef {import('./cache/').CacheEntry} CacheEntry */
 
 export class ApiClientManager {
     #cache;
@@ -13,12 +13,12 @@ export class ApiClientManager {
     #logger;
 
     /**
-     * @param {import('./cache.js').CacheManager} cache
-     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./api-clients.js').BaseApiClient} client
      * @param {import('./logger.js').Logger} logger
+     * @param {import('./cache/').CacheManager} cache
+     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('./api/').BaseApiClient} client
      */
-    constructor(cache, disabledManager, client, logger) {
+    constructor(logger, cache, disabledManager, client) {
         this.#cache = cache;
         this.#disabledManager = disabledManager;
         this.#client = client;
@@ -36,7 +36,6 @@ export class ApiClientManager {
         const source = this.#client.source;
         const entry = await this.#cache.read(displayTitle);
 
-        // Cache hit: non-expired entry with valid title
         if (entry && !entry.isExpired) {
             const titleObj = entry.getTitle();
             if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
@@ -44,12 +43,10 @@ export class ApiClientManager {
             }
         }
 
-        // Entry with imdbId (expired OR non-expired without valid data): refresh
         if (entry?.imdbId) {
             return await this.#fetch(displayTitle, entry.imdbId);
         }
 
-        // Cache miss or no imdbId: full fetch
         return await this.#fetch(displayTitle);
     }
 

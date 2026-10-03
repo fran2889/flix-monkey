@@ -4,10 +4,10 @@
  */
 import { beforeEach, describe, it } from 'vitest';
 
-import { ConfigManager } from '../../src/core/config-manager.js';
+import { ConfigManager } from '../../src/core/config/index.js';
 import { OverlayRenderer } from '../../src/core/overlay.js';
-import { DisneyPlusService } from '../../src/core/services.js';
-import { DisneyPlusSurfaceManager } from '../../src/core/surfaces.js';
+import { DisneyPlusService } from '../../src/core/services/index.js';
+import { DisneyPlusSurfaceManager } from '../../src/core/surfaces/index.js';
 import fixtures from '../fixtures/disneyplus-surfaces.js';
 import { testSurfaceFixtures } from '../helpers/surface-tests.js';
 import { createMockAdapter } from '../mocks/adapter.js';

@@ -5,11 +5,9 @@
 import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements.js';
 import { buildOverlayStyles } from './ui/overlay-styles.js';
 
-export { FADE_STATE_LABELS } from './ui/overlay-elements.js';
-
 /**
  * @typedef {Object} ServicePresentation
- * @property {string[]} [TOP_10_SELECTORS]
+ * @property {readonly string[]} [TOP_10_SELECTORS]
  * @property {string} [TOP_10_OFFSET]
  */
 
@@ -23,7 +21,7 @@ export class OverlayRenderer {
     #onRefreshClick;
 
     /**
-     * @param {import('./config-manager.js').ConfigManager} config - Application configuration
+     * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
      * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      * @param {((displayTitle: string) => void)|null} [onEditClick] - Edit icon click handler
      * @param {((displayTitle: string) => void)|null} [onRefreshClick] - Refresh icon click handler

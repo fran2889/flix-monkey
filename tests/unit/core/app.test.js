@@ -9,8 +9,8 @@ import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
 import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { NetflixService } from '../../../src/core/services.js';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces.js';
+import { NetflixService } from '../../../src/core/services/index.js';
+import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
 import { Title } from '../../../src/core/title.js';
 import { createMockAdapter } from '../../mocks/adapter.js';
 import { createMockLogger } from '../../mocks/logger.js';
@@ -25,8 +25,7 @@ describe('App', () => {
         vi.useFakeTimers();
         document.body.innerHTML = '';
 
-        // Mock ServiceRegistry.detect to return Netflix service
-        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
 
         // Patch MutationObserver to allow manual triggering of callbacks in tests
@@ -185,7 +184,6 @@ describe('App', () => {
         });
         expect(spy).toHaveBeenCalledTimes(1);
 
-        // Simulate replacement of container
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Original Title"></a>
@@ -306,13 +304,14 @@ describe('App', () => {
         };
         const mockConfig = { getBool: vi.fn().mockReturnValue(false), getFloat: vi.fn().mockReturnValue(6.0) };
         const app = new FlixMonkeyApp(
+            mockConfig,
+            createMockLogger(),
             {},
+            mockFadeManager,
             {},
             mockRenderer,
             mockSurfaces,
-            mockFadeManager,
-            mockConfig,
-            createMockLogger()
+            {}
         );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
@@ -328,7 +327,7 @@ describe('App', () => {
     });
 
     it('should return null when Netflix is disabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? false : undefined) });
         const result = startApp(adapter);
@@ -336,7 +335,7 @@ describe('App', () => {
     });
 
     it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? true : undefined) });
         const result = startApp(adapter);
@@ -664,14 +663,14 @@ describe('App', () => {
     });
 
     it('should return null when ServiceRegistry.detect returns null', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
         const result = startApp(createMockAdapter());
         expect(result).toBeNull();
     });
 
     it('should return null when ServiceRegistry.detect returns undefined', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services.js');
+        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
         const result = startApp(createMockAdapter());
         expect(result).toBeNull();
@@ -693,16 +692,17 @@ describe('App', () => {
                 hasOverlay: vi.fn().mockReturnValue(false),
                 isLoading: vi.fn().mockReturnValue(false),
                 removeLoadingOverlay: vi.fn(),
+                injectStyles: vi.fn(),
             };
             const app = new FlixMonkeyApp(
-                mockCache,
-                {},
-                mockRenderer,
-                { discover: () => [] },
-                {},
                 {},
                 createMockLogger(),
-                mockOverrideManager
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                { discover: () => [] },
+                {}
             );
 
             // Mock prompt to return null (user cancelled)
@@ -724,16 +724,17 @@ describe('App', () => {
                 hasOverlay: vi.fn().mockReturnValue(false),
                 isLoading: vi.fn().mockReturnValue(false),
                 removeLoadingOverlay: vi.fn(),
+                injectStyles: vi.fn(),
             };
             const app = new FlixMonkeyApp(
-                mockCache,
-                {},
-                mockRenderer,
-                { discover: () => [] },
-                {},
                 {},
                 createMockLogger(),
-                mockOverrideManager
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                { discover: () => [] },
+                {}
             );
 
             const originalPrompt = window.prompt;
@@ -760,18 +761,19 @@ describe('App', () => {
                 isLoading: vi.fn().mockReturnValue(false),
                 removeLoadingOverlay: vi.fn(),
                 injectOverlay: vi.fn(),
+                injectStyles: vi.fn(),
             };
             const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
 
             const app = new FlixMonkeyApp(
-                mockCache,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
-                mockRenderer,
-                mockSurfaces,
-                {},
                 {},
                 createMockLogger(),
-                mockOverrideManager
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                mockSurfaces,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
 
             const originalPrompt = window.prompt;
@@ -793,18 +795,19 @@ describe('App', () => {
                 isLoading: vi.fn().mockReturnValue(false),
                 removeLoadingOverlay: vi.fn(),
                 injectOverlay: vi.fn(),
+                injectStyles: vi.fn(),
             };
             const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
 
             const app = new FlixMonkeyApp(
-                mockCache,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
-                mockRenderer,
-                mockSurfaces,
-                {},
                 {},
                 createMockLogger(),
-                mockOverrideManager
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                mockSurfaces,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
 
             const originalPrompt = window.prompt;
@@ -826,21 +829,21 @@ describe('App', () => {
                 isLoading: vi.fn().mockReturnValue(false),
                 removeLoadingOverlay: vi.fn(),
                 injectOverlay: vi.fn(),
+                injectStyles: vi.fn(),
             };
             const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
 
             const app = new FlixMonkeyApp(
-                mockCache,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) },
-                mockRenderer,
-                mockSurfaces,
-                {},
                 {},
                 createMockLogger(),
-                mockOverrideManager
+                mockCache,
+                {},
+                mockOverrideManager,
+                mockRenderer,
+                mockSurfaces,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
 
-            // Set up a container with the data-fm-key attribute
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);

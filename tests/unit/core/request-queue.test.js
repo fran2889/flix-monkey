@@ -14,7 +14,7 @@ describe('RequestQueue', () => {
         // remains queued because the large interval (999999ms) causes #process to wait.
         // clear() therefore finds exactly 1 item to abort.
         // If #process() ever defers its first dequeue past an await, this count changes.
-        const queue = new RequestQueue(999999);
+        const queue = new RequestQueue(null, 999999);
         const _p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
         const _p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
 
@@ -32,8 +32,8 @@ describe('RequestQueue', () => {
         });
 
         const interval = 100;
-        const queue1 = new RequestQueue(interval, 'sync-key', mockAdapter);
-        const queue2 = new RequestQueue(interval, 'sync-key', mockAdapter);
+        const queue1 = new RequestQueue(mockAdapter, interval, 'sync-key');
+        const queue2 = new RequestQueue(mockAdapter, interval, 'sync-key');
 
         const start = Date.now();
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
@@ -49,20 +49,17 @@ describe('RequestQueue', () => {
 
     it('should respect priority and jump the queue', async () => {
         const interval = 50;
-        const queue = new RequestQueue(interval);
+        const queue = new RequestQueue(null, interval);
         const results = [];
         const fetchFn = async url => {
             results.push(url);
             return { url };
         };
 
-        // Enqueue first request (starts immediately)
         const p1 = queue.enqueue('first', 0, fetchFn, 'json');
 
-        // Enqueue low priority
         const p2 = queue.enqueue('low', 0, fetchFn, 'json');
 
-        // Enqueue high priority (should jump over 'low')
         const p3 = queue.enqueue('high', 10, fetchFn, 'json');
 
         await Promise.all([p1, p2, p3]);
@@ -72,7 +69,7 @@ describe('RequestQueue', () => {
 
     it('should fall back to 0 when stored timestamp is not a valid number', async () => {
         const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('corrupted') });
-        const queue = new RequestQueue(100, 'sync-key', mockAdapter);
+        const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
         expect(fetchFn).toHaveBeenCalledOnce();
@@ -83,7 +80,7 @@ describe('RequestQueue', () => {
             storageGet: vi.fn().mockResolvedValue('0'),
             storageSet: vi.fn().mockResolvedValue(undefined),
         });
-        const queue = new RequestQueue(0, 'sync-key', mockAdapter);
+        const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
 
         await queue.enqueue('url1', 0, fetchFn, 'json');
@@ -95,7 +92,7 @@ describe('RequestQueue', () => {
 
     it('should resolve multiple concurrently enqueued requests', async () => {
         const mockAdapter = createMockAdapter({ storageGet: async () => '0', storageSet: async () => {} });
-        const queue = new RequestQueue(100, null, mockAdapter);
+        const queue = new RequestQueue(mockAdapter, 100, null);
         const mockFetch = async () => ({ status: 200 });
 
         const results = await Promise.all([
@@ -113,7 +110,7 @@ describe('RequestQueue', () => {
             storageGet: vi.fn().mockResolvedValue('0'),
             storageSet: vi.fn().mockResolvedValue(undefined),
         });
-        const queue = new RequestQueue(0, 'sync-key', mockAdapter);
+        const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
         // Two reads per request: one at loop start, one pre-claim
@@ -133,7 +130,7 @@ describe('RequestQueue', () => {
             }),
             storageSet: vi.fn().mockResolvedValue(undefined),
         });
-        const queue = new RequestQueue(100, 'sync-key', mockAdapter);
+        const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
         // loop1-start -> stale (wait=0), pre-claim -> recent (re-loop),

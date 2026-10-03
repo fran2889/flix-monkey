@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { slugify } from './utils.js';
+import { slugify } from './utils/index.js';
 
 /**
  * Manages per-title ID overrides stored persistently.
@@ -38,6 +38,10 @@ export class IdOverrideManager {
         }
     }
 
+    #getKey(displayTitle) {
+        return `${this.#prefix}${slugify(displayTitle)}`;
+    }
+
     /**
      * Store ID override for a title.
      *
@@ -48,9 +52,5 @@ export class IdOverrideManager {
     async setImdbId(displayTitle, imdbId) {
         const key = this.#getKey(displayTitle);
         await this.#adapter.storageSet(key, JSON.stringify({ imdbId }));
-    }
-
-    #getKey(displayTitle) {
-        return `${this.#prefix}${slugify(displayTitle)}`;
     }
 }

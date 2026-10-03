@@ -48,10 +48,8 @@ describe('content.js entry point', () => {
             resolveMigrations = resolve;
         });
 
-        // Reset the stored object for each test
         storedObject = { overlayCorner: 'top-right' };
 
-        // Reset the captured listener and app handle for each test run.
         onChangedListener = undefined;
         mockAppHandle = {
             redecorate: vi.fn(),
