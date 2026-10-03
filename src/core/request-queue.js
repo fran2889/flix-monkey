@@ -11,11 +11,11 @@ export class RequestQueue {
     #adapter;
 
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter|null} [adapter=null] - When supplied with globalSyncKey, enables cross-tab coordination.
-     * @param {number} [minInterval=1000] - Minimum delay between dispatched requests.
-     * @param {string|null} [globalSyncKey=null] - Storage key used to coordinate the delay across tabs.
+     * @param {import('../platform/adapter.js').PlatformAdapter|null} adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
+     * @param {number} minInterval - Minimum delay between dispatched requests.
+     * @param {string|null} globalSyncKey - Storage key used to coordinate the delay across tabs, or null to rate-limit within this context only.
      */
-    constructor(adapter = null, minInterval = 1000, globalSyncKey = null) {
+    constructor(adapter, minInterval, globalSyncKey) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
@@ -27,13 +27,12 @@ export class RequestQueue {
      *
      * @param {string} url - Request URL supplied to fetchFn.
      * @param {number} priority - Higher values run first.
-     * @param {(url: string, responseType: 'json'|'text') => Promise<unknown>} fetchFn - Request operation.
-     * @param {'json'|'text'} responseType - Response format supplied to fetchFn.
+     * @param {(url: string) => Promise<unknown>} fetchFn - Request operation.
      * @returns {Promise<unknown>} Result returned by fetchFn.
      */
-    enqueue(url, priority, fetchFn, responseType) {
+    enqueue(url, priority, fetchFn) {
         return new Promise((resolve, reject) => {
-            this.#queue.push({ url, priority, resolve, reject, fetchFn, responseType });
+            this.#queue.push({ url, priority, resolve, reject, fetchFn });
             if (this.#queue.length > 1) {
                 this.#queue.sort((a, b) => b.priority - a.priority);
             }
@@ -87,9 +86,9 @@ export class RequestQueue {
     }
 
     async #dispatchNextRequest() {
-        const { url, resolve, reject, fetchFn, responseType } = this.#queue.shift();
+        const { url, resolve, reject, fetchFn } = this.#queue.shift();
         try {
-            resolve(await fetchFn(url, responseType));
+            resolve(await fetchFn(url));
         } catch (error) {
             reject(error);
         }

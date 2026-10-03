@@ -47,7 +47,7 @@ function isHboMaxTop10Tile(tile) {
     return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
 
-export const HBO_MAX_SURFACES = Object.freeze({
+const HBO_MAX_SURFACES = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,

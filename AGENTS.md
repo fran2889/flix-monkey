@@ -304,16 +304,19 @@ reuse a released migration version.
 
 ## Constants (`constants.js`)
 
-| Export                    | Value / Type  | Notes                                              |
-| ------------------------- | ------------- | -------------------------------------------------- |
-| `DAYS_TO_MS`              | `86400000`    | Milliseconds per day                               |
-| `CACHE_TTL_INFINITE`      | `-1`          | Constant for infinite cache TTL                    |
-| `DECORATION_DEBOUNCE_MS`  | `250`         | DOM observer debounce                              |
-| `INFLIGHT_TIMEOUT_MS`     | `30000`       | Max time to wait for in-flight request             |
-| `CLIENT_DISABLE_DURATION` | `3600000`     | How long a failing client is disabled (1 hr)       |
-| `DEFAULT_FETCH_TIMEOUT`   | `8000`        | HTTP request timeout                               |
-| `ApiSource`               | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
-| `TitleType`               | frozen object | `{ MOVIE, SERIES }`: title type enum               |
+| Export                     | Value / Type  | Notes                                              |
+| -------------------------- | ------------- | -------------------------------------------------- |
+| `DAYS_TO_MS`               | `86400000`    | Milliseconds per day                               |
+| `CACHE_TTL_INFINITE`       | `-1`          | Constant for infinite cache TTL                    |
+| `DECORATION_DEBOUNCE_MS`   | `250`         | DOM observer debounce                              |
+| `AUTOSAVE_DEBOUNCE_MS`     | `1000`        | Settings autosave debounce                         |
+| `HOVER_ACTION_DELAY_MS`    | `1000`        | Hover delay before overlay actions appear          |
+| `IDLE_CALLBACK_TIMEOUT_MS` | `2000`        | `requestIdleCallback` timeout for decoration       |
+| `INFLIGHT_TIMEOUT_MS`      | `30000`       | Max time to wait for in-flight request             |
+| `CLIENT_DISABLE_DURATION`  | `3600000`     | How long a failing client is disabled (1 hr)       |
+| `DEFAULT_FETCH_TIMEOUT`    | `8000`        | HTTP request timeout                               |
+| `ApiSource`                | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
+| `TitleType`                | frozen object | `{ MOVIE, SERIES }`: title type enum               |
 
 ## Rate Limits (`rate-limits.js`)
 

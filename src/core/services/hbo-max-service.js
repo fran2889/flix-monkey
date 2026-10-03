@@ -10,10 +10,6 @@ export class HboMaxService extends StreamingService {
         return configManager.getBool('enableHboMax');
     }
 
-    get id() {
-        return 'hbomax';
-    }
-
     get domains() {
         return Object.freeze(['play.hbomax.com']);
     }

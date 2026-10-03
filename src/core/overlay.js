@@ -17,20 +17,14 @@ export class OverlayRenderer {
     #LOADING_CLASS = 'fm-loading';
     #config;
     #serviceConstants;
-    #onEditClick;
-    #onRefreshClick;
 
     /**
      * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
      * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
-     * @param {((displayTitle: string) => void)|null} [onEditClick] - Edit icon click handler
-     * @param {((displayTitle: string) => void)|null} [onRefreshClick] - Refresh icon click handler
      */
-    constructor(config, serviceConstants = {}, onEditClick = null, onRefreshClick = null) {
+    constructor(config, serviceConstants = {}) {
         this.#config = config;
         this.#serviceConstants = serviceConstants;
-        this.#onEditClick = onEditClick;
-        this.#onRefreshClick = onRefreshClick;
     }
 
     injectStyles() {
@@ -91,8 +85,8 @@ export class OverlayRenderer {
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
             fadeToggleState,
             onFadeToggleClick,
-            onEditClick: onEditClick ?? this.#onEditClick,
-            onRefreshClick: onRefreshClick ?? this.#onRefreshClick,
+            onEditClick,
+            onRefreshClick,
             displayTitle: displayTitle ?? titleObj.displayTitle ?? '',
             corner: this.#config.get('overlayCorner'),
         });

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-export { hslToRgb, hueToRgb, interpolateColor, parseHex, rgbToHsl } from './color-utils.js';
+export { interpolateColor } from './color-utils.js';
 export { debounce, FlixMonkeyError, runIdle } from './general-utils.js';
 export { slugify } from './string-utils.js';
 export { buildImdbUrl } from './url-utils.js';

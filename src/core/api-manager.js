@@ -16,7 +16,7 @@ export class ApiClientManager {
      * @param {import('./logger.js').Logger} logger
      * @param {import('./cache/').CacheManager} cache
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./api/').BaseApiClient} client
+     * @param {import('./api/base-api-client.js').BaseApiClient} client
      */
     constructor(logger, cache, disabledManager, client) {
         this.#cache = cache;

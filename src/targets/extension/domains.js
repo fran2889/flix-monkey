@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 /** External API hosts that extension background contexts may fetch. */
-export const ALLOWED_DOMAINS = ['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com'];
+const ALLOWED_DOMAINS = ['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com'];
 
 /**
  * @typedef {{valid: true}|{valid: false, error: string}} DomainValidationResult

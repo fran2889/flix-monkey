@@ -20,7 +20,6 @@ import {
 
 describe('StreamingService', () => {
     it.each([
-        ['id', service => service.id],
         ['domains', service => service.domains],
         ['SurfaceManager', service => service.SurfaceManager],
         ['isEnabled', service => service.isEnabled({ getBool: () => true })],

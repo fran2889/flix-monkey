@@ -301,19 +301,8 @@ describe('App', () => {
         const mockFadeManager = {
             getOverride: vi.fn().mockResolvedValue(null),
             shouldFade: vi.fn().mockReturnValue(false),
-            nextState: vi.fn(),
         };
-        const mockConfig = { getBool: vi.fn().mockReturnValue(false), getFloat: vi.fn().mockReturnValue(6.0) };
-        const app = new FlixMonkeyApp(
-            mockConfig,
-            createMockLogger(),
-            {},
-            mockFadeManager,
-            {},
-            mockRenderer,
-            mockSurfaces,
-            {}
-        );
+        const app = new FlixMonkeyApp(createMockLogger(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         window.dispatchEvent(new Event('beforeunload'));
@@ -697,7 +686,6 @@ describe('App', () => {
                 applyFade: vi.fn(),
             };
             const app = new FlixMonkeyApp(
-                {},
                 createMockLogger(),
                 mockCache,
                 {},

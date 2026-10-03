@@ -7,21 +7,13 @@
 
 /**
  * Abstract contract for a supported streaming service. Implementations provide
- * a stable, unique, lowercase service ID; hostname suffixes used by
- * ServiceRegistry; a surface-manager constructor; presentation constants; and
- * an enablement predicate backed by ConfigManager.
+ * hostname suffixes used by ServiceRegistry; a surface-manager constructor;
+ * presentation constants; and an enablement predicate backed by
+ * ConfigManager.
  *
  * @abstract
  */
 export class StreamingService {
-    /**
-     * @abstract
-     * @returns {string} Stable, unique, lowercase service identifier used for service-specific configuration.
-     */
-    get id() {
-        throw new Error('Not implemented');
-    }
-
     /**
      * @abstract
      * @returns {ReadonlyArray<string>} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.

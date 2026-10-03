@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import {
+    HOVER_ACTION_DELAY_MS,
     RATING_COLOR_GREEN,
     RATING_COLOR_HIGH_THRESHOLD,
     RATING_COLOR_LOW_THRESHOLD,
@@ -145,7 +146,7 @@ function createOptionalRatingBadge(label, rating, className, showRating) {
     return badge;
 }
 
-function setupHoverActions(ratingsWrapper, actionsContainer, delayMs = 1000) {
+function setupHoverActions(ratingsWrapper, actionsContainer) {
     let hoverTimeout = null;
     const clearHover = () => {
         if (hoverTimeout) {
@@ -158,7 +159,7 @@ function setupHoverActions(ratingsWrapper, actionsContainer, delayMs = 1000) {
         clearHover();
         hoverTimeout = setTimeout(() => {
             actionsContainer.classList.add('fm-actions-visible');
-        }, delayMs);
+        }, HOVER_ACTION_DELAY_MS);
     });
     ratingsWrapper.addEventListener('mouseleave', clearHover);
 }
@@ -229,7 +230,7 @@ export function createOverlayElement(
         actionsContainer.appendChild(editIcon);
         actionsContainer.appendChild(refreshIcon);
         imdbRow.appendChild(actionsContainer);
-        setupHoverActions(ratingsWrapper, actionsContainer, 1000);
+        setupHoverActions(ratingsWrapper, actionsContainer);
     }
 
     imdbRow.appendChild(imdbLink);

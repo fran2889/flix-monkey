@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-export { CONFIG_DEFAULTS, CONFIG_FIELDS, CONFIG_SELECT_ALLOWED, GROUPS, ROW_LABELS } from './config-fields.js';
+export { CONFIG_DEFAULTS, CONFIG_FIELDS, GROUPS, ROW_LABELS } from './config-fields.js';
 export { ConfigManager } from './config-manager.js';

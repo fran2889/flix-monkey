@@ -96,18 +96,18 @@ export class BaseApiClient {
     }
 
     /**
-     * Disables this client, purges its queued requests, and logs a warning.
+     * Disables this client for {@link CLIENT_DISABLE_DURATION}, purges its queued
+     * requests, and logs a warning.
      *
-     * @param {number} [durationMs=CLIENT_DISABLE_DURATION] - Lockout duration in milliseconds.
      * @returns {Promise<void>}
      * @note Requests still waiting in this client's queue are removed. An HTTP request already
      *   executing at the network level cannot be aborted and may still resolve after disable().
      */
-    async disable(durationMs = CLIENT_DISABLE_DURATION) {
+    async disable() {
         const count = this.#queue.clear();
-        await this.#disabledManager.disable(this.#source, durationMs);
+        await this.#disabledManager.disable(this.#source, CLIENT_DISABLE_DURATION);
         this.#logger?.warn(
-            `${this.source} disabled for ${durationMs / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
+            `${this.source} disabled for ${CLIENT_DISABLE_DURATION / 60000} min, purging ${count} queued request${count !== 1 ? 's' : ''}`
         );
     }
 
@@ -116,16 +116,10 @@ export class BaseApiClient {
      *
      * @param {string} url - Request URL.
      * @param {number} [priority=0] - Higher values are processed first.
-     * @param {'json'|'text'} [responseType='json'] - Expected response format.
      * @returns {Promise<unknown>} Parsed response body.
      */
-    async queuedFetch(url, priority = 0, responseType = 'json') {
-        return this.#queue.enqueue(
-            url,
-            priority,
-            (u, rt) => this.#adapter.httpFetch(u, { responseType: rt }),
-            responseType
-        );
+    async queuedFetch(url, priority = 0) {
+        return this.#queue.enqueue(url, priority, requestUrl => this.#adapter.httpFetch(requestUrl));
     }
 
     async #isDisabled() {
