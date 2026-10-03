@@ -53,9 +53,10 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Developer Scripts
 
-| Script                                | Description                                                                                                                                                                                                                                                                                                 |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/capture-surface-fixtures.py` | Captures and anonymises targeted Netflix surface DOM extracts from a live Chromium debug session. Requires Chromium running with `--remote-debugging-port=9222` and `www.netflix.com/browse` open. Writes `tests/fixtures/*.html`. Run: `python3 scripts/capture-surface-fixtures.py`. No pip dependencies. |
+| Script                                  | Description                                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/package.js`                    | Builds ZIP/XPI archives of the extension output; run by `npm run build`                                                     |
+| `scripts/update-firefox-description.js` | Pushes `docs/store-description.txt` to the Firefox AMO listing. Requires `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`, `AMO_ADDON_ID` |
 
 ### Chromium Debugging
 
@@ -100,13 +101,12 @@ Reuse this persistent profile. Do not use temporary or fresh user-data directori
 ```
 tests/
   setup.js              # Global: MSW server lifecycle + jest-dom matchers
-  fixtures/             # Targeted Netflix surface fixtures for UI tests
-    preview-detail.html
-    preview-mini.html
-    progress-card.html
-    ranked-card.html
-    standard-card.html
-    title-card.html
+  fixtures/             # Netflix surface snippets for UI tests, one file per service
+    netflix-surfaces.js     # Array of {name, html, expected} objects
+    hbomax-surfaces.js
+    disneyplus-surfaces.js
+  helpers/
+    surface-tests.js    # Shared testSurfaceFixtures() driver for UI tests
   scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
     adapter.js          # Mock PlatformAdapter
@@ -117,19 +117,29 @@ tests/
     userscript.js       # GM_* API stubs
     webextension.js     # browser.* API stubs
   unit/                 # Unit tests mirroring src/ structure
-  ui/                   # DOM-level tests using fixture HTML files
+    core/               # Mirrors src/core/
+    platform/
+    targets/
+  ui/                   # Per-service surface discovery and injection tests
+    netflix.ui.test.js
+    hbomax.ui.test.js
+    disneyplus.ui.test.js
   integration/
     setup.js              # Loads .env + fails if required API keys are missing
     api-clients.test.js
 ```
 
+Fixtures are JavaScript modules exporting an array of `{name, html, expected}` objects, not HTML
+files. Each entry must represent exactly one surface so `testSurfaceFixtures()` can assert on
+`surfaces[0]` unambiguously. `tests/helpers/surface-tests.js` owns the shared assertions.
+
 ### Test Taxonomy
 
 These rules determine where a test lives and what it asserts. Apply them to all new tests.
 
-**Location rule (sole determinant):** A test lives in `tests/ui/` if it loads a Netflix HTML fixture from `tests/fixtures/`. It lives in `tests/unit/` if it does not.
+**Location rule (sole determinant):** A test lives in `tests/ui/` if it loads a Netflix surface snippet from `tests/fixtures/`. It lives in `tests/unit/` if it does not.
 
-**UI tests** (`tests/ui/`) assert two things against real Netflix fixture HTML:
+**UI tests** (`tests/ui/`) assert two things against real Netflix surface markup:
 
 - _Surface discovery_: `SurfaceManager.discover()` returns the expected surfaces (count, title, container, fadeable).
 - _Injection_: overlay or style elements are created and attached to the surface container. Minimal content checks (e.g., the rating value appears in the overlay) are acceptable as injection sanity checks, not for testing rendering logic.
@@ -138,13 +148,13 @@ These rules determine where a test lives and what it asserts. Apply them to all 
 
 - _OverlayRenderer rendering logic_: tooltip text, CSS string content, conditional sub-elements (🔍, N/A, RT/MC badges), pointer events, click propagation, config-driven output.
 - _SurfaceManager edge cases_ that no fixture represents: empty or null titles, deduplication, `parentElement` fallback, `querySelectorAll` throwing.
-- _UI component logic_ (`Modal`, `SettingsUI`, etc.) that does not depend on Netflix fixture HTML.
+- _UI component logic_ (`Modal`, `SettingsUI`, etc.) that does not depend on Netflix surface markup.
 
-**No duplication across layers:** if a surface type's basic discovery is covered by a fixture test, unit tests do not repeat that case with synthetic HTML. If rendering logic is covered in unit, UI tests do not re-assert it.
+**No duplication across layers:** if a surface type's basic discovery is covered by a fixture test, unit tests do not repeat that case with synthetic markup. If rendering logic is covered in unit, UI tests do not re-assert it.
 
 **Fixture preference:** when adding a new surfaces or overlay test, check existing fixtures first. Use synthetic DOM only if no fixture represents the case.
 
-**The deciding question for any new test:** does this assertion require Netflix HTML to be meaningful? If yes, it is a UI test. If it would pass equally against a synthetic `<div>`, it is a unit test.
+**The deciding question for any new test:** does this assertion require Netflix markup to be meaningful? If yes, it is a UI test. If it would pass equally against a synthetic `<div>`, it is a unit test.
 
 ### Integration Tests
 
@@ -189,11 +199,14 @@ path (for example `../core/config/index.js`), never as a bare directory.
 
 **`src/core/ui/`**: Shared UI components
 
-| Module           | Responsibility                                        |
-| ---------------- | ----------------------------------------------------- |
-| `modal.js`       | Accessible modal dialog component                     |
-| `settings-ui.js` | Settings panel built dynamically from `config-fields` |
-| `styles.js`      | Shared CSS injected into the Netflix page             |
+| Module                | Responsibility                                                   |
+| --------------------- | ---------------------------------------------------------------- |
+| `modal.js`            | Accessible modal dialog component                                |
+| `settings-ui.js`      | Wires `SettingsView` to the adapter, cache, and disabled clients |
+| `settings-view.js`    | Settings panel built dynamically from `config-fields`            |
+| `overlay-elements.js` | Rating badge, fade toggle, and action element factories          |
+| `overlay-styles.js`   | CSS string builder for the rating overlay                        |
+| `styles.js`           | Shared CSS injected into the streaming-service page              |
 
 ### 2. Platform (`src/platform/`)
 
@@ -269,7 +282,7 @@ When changing a persisted shape, append a new migration version and add unit
 tests for transformed, already-current, and malformed data. Do not edit or
 reuse a released migration version.
 
-## Settings (`config-fields.js`)
+## Settings (`config/config-fields.js`)
 
 `CONFIG_FIELDS` is the single source of truth for all user-configurable settings. Each entry defines `key`, `label`, `type` (`text`, `checkbox`, `select`), `default`, `title`, and optionally a `validate` function. `CONFIG_DEFAULTS` is a derived object of `{ key: default }` pairs.
 
@@ -314,6 +327,9 @@ reuse a released migration version.
 - **Async/Await**: Mandatory for storage and network operations.
 - **Private fields**: Use `#field` syntax for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
+- **Explicit file paths**: every relative import names a file. Directory modules go through their
+  `index.js` barrel with an explicit path (for example `../core/config/index.js`), never as a bare
+  directory (`../core/config`).
 
 ### JSDoc
 
