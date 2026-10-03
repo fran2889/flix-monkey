@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/fran2889/flix-monkey/compare/v1.6.1...v1.7.0) (2026-10-03)
+
+
+### Features
+
+* add IMDb ID override feature ([#195](https://github.com/fran2889/flix-monkey/issues/195)) ([ca80538](https://github.com/fran2889/flix-monkey/commit/ca8053802029b02cf45ca433e67064c47c68f17c))
+* **cache:** reuse imdbId when refreshing cache ([#190](https://github.com/fran2889/flix-monkey/issues/190)) ([769c9c2](https://github.com/fran2889/flix-monkey/commit/769c9c2b81a02329a087f175deecfac2318667eb))
+
+
+### Bug Fixes
+
+* **ui:** style loading badge and link it to IMDb search ([#203](https://github.com/fran2889/flix-monkey/issues/203)) ([bfb1eee](https://github.com/fran2889/flix-monkey/commit/bfb1eeebd8df3481a2ac5f17a7600b2a81c37e1b))
+
 ## [1.6.1](https://github.com/fran2889/flix-monkey/compare/v1.6.0...v1.6.1) (2026-09-17)
 
 
