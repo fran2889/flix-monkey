@@ -39,11 +39,13 @@ export class ApiClientManager {
         if (entry && !entry.isExpired) {
             const titleObj = entry.getTitle();
             if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
+                this.#logger.debug(`Cache hit for "${displayTitle}" from ${titleObj.source}`);
                 return titleObj;
             }
         }
 
         if (entry?.imdbId) {
+            this.#logger.debug(`Using cached IMDb ID ${entry.imdbId} for "${displayTitle}"`);
             return await this.#fetch(displayTitle, entry.imdbId);
         }
 

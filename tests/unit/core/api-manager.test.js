@@ -202,6 +202,32 @@ describe('ApiClientManager', () => {
         );
     });
 
+    it('should log when ratings are served from cache', async () => {
+        const titleObj = new Title({ apiTitle: 'Cached Movie', imdbRating: 8, source: 'agregarr' });
+        const entry = new CacheEntry('Cached Movie', 'tt1', titleObj.toCacheJSON(), Date.now() + 100000);
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockLogger, mockCache, {}, { source: 'agregarr' });
+        await manager.getData('Cached Movie');
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+            expect.stringContaining('Cache hit for "Cached Movie" from agregarr')
+        );
+    });
+
+    it('should log when a cached IMDb ID is used to fetch ratings', async () => {
+        const entry = new CacheEntry('Cached Movie', 'tt123', null, Date.now() - 1000);
+        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockResolvedValue(new Title({ apiTitle: 'Cached Movie', imdbId: 'tt123' })),
+        };
+        const mockLogger = createMockLogger();
+        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        await manager.getData('Cached Movie');
+        expect(mockLogger.debug).toHaveBeenCalledWith('Using cached IMDb ID tt123 for "Cached Movie"');
+    });
+
     it('should use short-circuit fetch when cache entry is expired with imdbId', async () => {
         const expiredEntry = {
             displayTitle: 'Cached Movie',
