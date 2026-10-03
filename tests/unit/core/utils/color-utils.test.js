@@ -5,67 +5,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { hslToRgb, hueToRgb, interpolateColor, parseHex, rgbToHsl } from '../../../../src/core/utils/color-utils.js';
+import { interpolateColor } from '../../../../src/core/utils/color-utils.js';
 
 describe('Color Utilities', () => {
-    describe('parseHex', () => {
-        it.each([
-            ['red', '#ff0000', { r: 255, g: 0, b: 0 }],
-            ['green', '#00ff00', { r: 0, g: 255, b: 0 }],
-            ['blue', '#0000ff', { r: 0, g: 0, b: 255 }],
-            ['white', '#ffffff', { r: 255, g: 255, b: 255 }],
-            ['black', '#000000', { r: 0, g: 0, b: 0 }],
-            ['mixed', '#123456', { r: 0x12, g: 0x34, b: 0x56 }],
-        ])('should parse %s', (_color, hex, expected) => {
-            expect(parseHex(hex)).toEqual(expected);
-        });
-    });
-
-    describe('rgbToHsl', () => {
-        it.each([
-            ['red', 255, 0, 0, 0, 1, 0.5],
-            ['green', 0, 255, 0, 120, 1, 0.5],
-            ['blue', 0, 0, 255, 240, 1, 0.5],
-            ['yellow', 255, 255, 0, 60, 1, 0.5],
-            ['white', 255, 255, 255, 0, 0, 1],
-            ['black', 0, 0, 0, 0, 0, 0],
-        ])('should convert %s to HSL', (_color, r, g, b, expectedH, expectedS, expectedL) => {
-            const result = rgbToHsl(r, g, b);
-            expect(result.h).toBeCloseTo(expectedH, 0.1);
-            expect(result.s).toBeCloseTo(expectedS, 0.01);
-            expect(result.l).toBeCloseTo(expectedL, 0.01);
-        });
-    });
-
-    describe('hslToRgb', () => {
-        it.each([
-            ['red', 0, 1, 0.5, 255, 0, 0],
-            ['green', 120, 1, 0.5, 0, 255, 0],
-            ['blue', 240, 1, 0.5, 0, 0, 255],
-            ['yellow', 60, 1, 0.5, 255, 255, 0],
-            ['white', 0, 0, 1, 255, 255, 255],
-            ['black', 0, 0, 0, 0, 0, 0],
-            ['gray', 100, 0, 0.5, 128, 128, 128],
-        ])('should convert %s HSL to RGB', (_color, h, s, l, er, eg, eb) => {
-            const result = hslToRgb(h, s, l);
-            expect(result.r).toBeCloseTo(er, 1);
-            expect(result.g).toBeCloseTo(eg, 1);
-            expect(result.b).toBeCloseTo(eb, 1);
-        });
-    });
-
-    describe('hueToRgb', () => {
-        it.each([
-            ['t < 0 returns p', 0.5, 1.0, -0.1, 0.5, 0.001],
-            ['t > 1 returns p', 0.5, 1.0, 1.1, 0.5, 0.001],
-            ['t in first sector', 0, 1, 0.1, 0.6, 0.01],
-            ['t in second sector returns q', 0, 1, 0.4, 1, 0.001],
-            ['t in third sector', 0, 1, 0.7, 0.4, 0.01],
-        ])('should %s', (_desc, p, q, t, expected, precision) => {
-            expect(hueToRgb(p, q, t)).toBeCloseTo(expected, precision);
-        });
-    });
-
     describe('interpolateColor', () => {
         it.each([
             [0, '#ff0000', '#00dd00', 'rgb(255, 0, 0)'],
@@ -111,21 +53,25 @@ describe('Color Utilities', () => {
             expect(result1).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
             expect(result2).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
         });
-    });
 
-    describe('round-trip conversion', () => {
+        // Magenta sits at hue 300, so starting there exercises both hue wraparound
+        // branches that red-to-green interpolation never reaches.
+        it('should resolve a start hue above 240 without wrapping to the wrong color', () => {
+            expect(interpolateColor(0, '#ff00ff', '#00dd00')).toBe('rgb(255, 0, 255)');
+            expect(interpolateColor(1, '#ff00ff', '#00dd00')).toBe('rgb(0, 221, 0)');
+        });
+
         it.each([
-            ['gray', 128, 128, 128],
-            ['pastel orange', 255, 165, 100],
-            ['pastel green', 150, 255, 150],
-            ['dark blue', 50, 50, 150],
-            ['light pink', 255, 200, 220],
-        ])('should convert RGB to HSL and back for %s', (_color, r, g, b) => {
-            const hsl = rgbToHsl(r, g, b);
-            const result = hslToRgb(hsl.h, hsl.s, hsl.l);
-            expect(result.r).toBe(r);
-            expect(result.g).toBe(g);
-            expect(result.b).toBe(b);
+            ['identical greys', '#808080', '#808080'],
+            ['black to white', '#000000', '#ffffff'],
+            ['black to grey', '#000000', '#808080'],
+        ])('should handle achromatic endpoints for %s', (_desc, start, end) => {
+            const result = interpolateColor(0.5, start, end);
+            const [r, g, b] = result.match(/\d+/g).map(Number);
+
+            // Achromatic interpolation must stay grey rather than picking up a hue.
+            expect(r).toBe(g);
+            expect(g).toBe(b);
         });
     });
 });

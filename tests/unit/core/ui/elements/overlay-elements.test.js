@@ -4,10 +4,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { RATING_COLOR_GREEN, RATING_COLOR_RED } from '../../../../../src/core/constants.js';
 import { Title } from '../../../../../src/core/title.js';
 import { createLoadingOverlayElement, createOverlayElement } from '../../../../../src/core/ui/overlay-elements.js';
-import { parseHex } from '../../../../../src/core/utils/color-utils.js';
 
 const defaultOptions = {
     overlayClass: 'fm-rating-overlay',
@@ -285,12 +283,14 @@ describe('createOverlayElement', () => {
     });
 
     describe('rating colors', () => {
+        // Expected colors are written out rather than derived from RATING_COLOR_* so the
+        // assertion stays independent of the colour parsing it exercises.
         it.each([
-            ['IMDb low rating', 5, false, RATING_COLOR_RED],
-            ['IMDb high rating', 9, false, RATING_COLOR_GREEN],
-            ['percentage low rating', 50, true, RATING_COLOR_RED],
-            ['percentage high rating', 90, true, RATING_COLOR_GREEN],
-        ])('uses the threshold color for %s', (_, rating, isPercentage, expectedHex) => {
+            ['IMDb low rating', 5, false, 'rgb(255, 0, 0)'],
+            ['IMDb high rating', 9, false, 'rgb(0, 221, 0)'],
+            ['percentage low rating', 50, true, 'rgb(255, 0, 0)'],
+            ['percentage high rating', 90, true, 'rgb(0, 221, 0)'],
+        ])('uses the threshold color for %s', (_, rating, isPercentage, expectedColor) => {
             const element = isPercentage
                 ? createOverlay(
                       { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
@@ -299,9 +299,8 @@ describe('createOverlayElement', () => {
                 : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
-            const expectedRgb = parseHex(expectedHex);
 
-            expect(value.style.color).toBe(`rgb(${expectedRgb.r}, ${expectedRgb.g}, ${expectedRgb.b})`);
+            expect(value.style.color).toBe(expectedColor);
         });
 
         it.each([
