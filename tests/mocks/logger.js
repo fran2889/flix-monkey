@@ -4,55 +4,43 @@
  */
 import { vi } from 'vitest';
 
+import { CONFIG_DEFAULTS } from '../../src/core/config/index.js';
 import { Logger } from '../../src/core/logger.js';
 import { buildMockAdapter } from './adapter.js';
 
 function buildLogger() {
-    const logger = new Logger(buildMockAdapter().build());
+    let debugValue = CONFIG_DEFAULTS.debug;
+
     const builder = {
-        withDebugEnabled() {
-            vi.spyOn(logger, 'debug').mockImplementation(() => {});
-            vi.spyOn(logger, 'info').mockImplementation(() => {});
-            vi.spyOn(logger, 'warn').mockImplementation(() => {});
-            vi.spyOn(logger, 'error').mockImplementation(() => {});
+        withDebug(enabled) {
+            debugValue = enabled ? 'true' : 'false';
             return this;
         },
-        withDebugDisabled() {
-            vi.spyOn(logger, 'debug').mockImplementation(() => {});
-            vi.spyOn(logger, 'info').mockImplementation(() => {});
-            vi.spyOn(logger, 'warn').mockImplementation(() => {});
-            vi.spyOn(logger, 'error').mockImplementation(() => {});
-            return this;
-        },
+
         build() {
+            // Create adapter with configured debug value
+            const adapter = buildMockAdapter()
+                .withConfigGetReturning(key => (key === 'debug' ? debugValue : CONFIG_DEFAULTS[key]))
+                .build();
+
+            const logger = new Logger(adapter);
+
+            // Spy on all methods to track calls in tests
+            vi.spyOn(logger, 'debug');
+            vi.spyOn(logger, 'info');
+            vi.spyOn(logger, 'warn');
+            vi.spyOn(logger, 'error');
+
             return logger;
         },
     };
-    // Default: all methods spy on no-op
-    vi.spyOn(logger, 'debug').mockImplementation(() => {});
-    vi.spyOn(logger, 'info').mockImplementation(() => {});
-    vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    vi.spyOn(logger, 'error').mockImplementation(() => {});
+
     return builder;
 }
 
 // Static presets
-buildLogger.silent = () => {
-    const logger = new Logger(buildMockAdapter().build());
-    vi.spyOn(logger, 'debug').mockImplementation(() => {});
-    vi.spyOn(logger, 'info').mockImplementation(() => {});
-    vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    vi.spyOn(logger, 'error').mockImplementation(() => {});
-    return logger;
-};
+buildLogger.debugEnabled = () => buildLogger().withDebug(true).build();
 
-buildLogger.verbose = () => {
-    const logger = new Logger(buildMockAdapter().build());
-    vi.spyOn(logger, 'debug').mockImplementation(() => {});
-    vi.spyOn(logger, 'info').mockImplementation(() => {});
-    vi.spyOn(logger, 'warn').mockImplementation(() => {});
-    vi.spyOn(logger, 'error').mockImplementation(() => {});
-    return logger;
-};
+buildLogger.debugDisabled = () => buildLogger().withDebug(false).build();
 
 export { buildLogger };

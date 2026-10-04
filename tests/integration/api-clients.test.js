@@ -30,6 +30,7 @@ const adapter = {
     },
     storageGet: async () => '0',
     storageSet: async () => {},
+    configGet: key => (key === 'debug' ? 'false' : undefined),
 };
 const disabledManager = new DisabledClientsManager(adapter);
 const overrideManager = new IdOverrideManager(adapter);
@@ -68,11 +69,7 @@ describe('api-clients integration', () => {
     let logger;
 
     beforeAll(() => {
-        logger = new Logger(
-            buildMockAdapter()
-                .withConfigGetReturning(() => 'false')
-                .build()
-        );
+        logger = new Logger(adapter);
         const getter = key => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
