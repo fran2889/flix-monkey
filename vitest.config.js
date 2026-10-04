@@ -8,6 +8,7 @@ export default defineConfig({
         setupFiles: ['./tests/setup.js'],
         coverage: {
             thresholds: { branches: 90, statements: 90, functions: 90 },
+            include: ['src/**'],
         },
     },
 });
