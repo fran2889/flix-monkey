@@ -173,34 +173,4 @@ buildMockAdapter.withStorageError = () => {
         .build();
 };
 
-// Backward compatibility
-export function createMockAdapter(overrides = {}) {
-    const adapter = buildMockAdapter();
-    if (overrides.configGet) {
-        adapter.withConfigGetReturning(overrides.configGet);
-    }
-    if (overrides.httpFetch) {
-        adapter.withHttpFetchResolvingTo(overrides.httpFetch);
-    }
-    if (overrides.storageGet) {
-        adapter.withStorageGetResolvingTo(overrides.storageGet);
-    }
-    if (overrides.storageSet) {
-        adapter.withStorageSetResolvingTo(overrides.storageSet);
-    }
-    if (overrides.storageDelete) {
-        adapter.withStorageDeleteResolvingTo(overrides.storageDelete);
-    }
-    if (overrides.storageGetKeys) {
-        adapter.withStorageGetKeysResolvingTo(overrides.storageGetKeys);
-    }
-    if (overrides.storageGetAll) {
-        adapter.withStorageGetAllResolvingTo(overrides.storageGetAll);
-    }
-    if (overrides.storageSetMany) {
-        adapter.withStorageSetManyResolvingTo(overrides.storageSetMany);
-    }
-    return adapter.build();
-}
-
 export { buildMockAdapter };

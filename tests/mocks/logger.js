@@ -55,9 +55,4 @@ buildLogger.verbose = () => {
     return logger;
 };
 
-// Backward compatibility
-export function createMockLogger() {
-    return buildLogger().build();
-}
-
 export { buildLogger };

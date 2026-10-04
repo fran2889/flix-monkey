@@ -150,49 +150,4 @@ buildConfig.withFadeThreshold = threshold => {
         .build();
 };
 
-// Backward compatibility
-export function createConfig(overrides = {}) {
-    const config = buildConfig();
-    if (overrides.apiClient) {
-        config.withApiClient(overrides.apiClient);
-    }
-    if (overrides.xmdbApiKey) {
-        config.withXmdbApiKey(overrides.xmdbApiKey);
-    }
-    if (overrides.omdbApiKey) {
-        config.withOmdbApiKey(overrides.omdbApiKey);
-    }
-    if (overrides.overlayCorner) {
-        config.withOverlayCorner(overrides.overlayCorner);
-    }
-    if (overrides.showRtRating) {
-        config.withShowRtRating(overrides.showRtRating);
-    }
-    if (overrides.showMcRating) {
-        config.withShowMcRating(overrides.showMcRating);
-    }
-    if (overrides.cacheTtlRatedOldYear) {
-        config.withCacheTtlRatedOldYear(overrides.cacheTtlRatedOldYear);
-    }
-    if (overrides.cacheTtlRatedNewYear) {
-        config.withCacheTtlRatedNewYear(overrides.cacheTtlRatedNewYear);
-    }
-    if (overrides.cacheTtlNoRating) {
-        config.withCacheTtlNoRating(overrides.cacheTtlNoRating);
-    }
-    if (overrides.enableFadeUnderRating) {
-        config.withEnableFadeUnderRating(overrides.enableFadeUnderRating);
-    }
-    if (overrides.fadeRatingThreshold) {
-        config.withFadeRatingThreshold(overrides.fadeRatingThreshold);
-    }
-    if (overrides.enableFadeToggle) {
-        config.withEnableFadeToggle(overrides.enableFadeToggle);
-    }
-    if (overrides.debug) {
-        config.withDebug(overrides.debug);
-    }
-    return config.build();
-}
-
 export { buildConfig, CONFIG_DEFAULTS, CONFIG_FIELDS };
