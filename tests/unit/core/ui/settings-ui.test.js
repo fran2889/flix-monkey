@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index.js';
-import { CONFIG_FIELDS,ConfigManager } from '../../../../src/core/config/index.js';
+import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index.js';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
