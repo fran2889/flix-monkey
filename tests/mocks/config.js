@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CONFIG_DEFAULTS, CONFIG_FIELDS, ConfigManager } from '../../src/core/config/index.js';
+import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index.js';
 import { buildMockAdapter } from './adapter.js';
 import { buildLogger } from './logger.js';
 
@@ -150,4 +150,4 @@ buildConfig.withFadeThreshold = threshold => {
         .build();
 };
 
-export { buildConfig, CONFIG_DEFAULTS, CONFIG_FIELDS };
+export { buildConfig };

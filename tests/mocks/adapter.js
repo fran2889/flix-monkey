@@ -7,9 +7,8 @@ import { vi } from 'vitest';
 import { PlatformAdapter } from '../../src/platform/adapter.js';
 
 class MockPlatformAdapter extends PlatformAdapter {
-    constructor({ configGet, ...rest } = {}) {
+    constructor({ ...rest } = {}) {
         super();
-        this.configGet = vi.fn(configGet ?? (() => undefined));
         Object.assign(this, rest);
     }
 }
