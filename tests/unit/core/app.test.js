@@ -602,6 +602,7 @@ describe('App', () => {
             buildTitle().withImdbRating(7.0).withImdbId('tt5').build()
         );
         appRef = startApp(adapter);
+        vi.advanceTimersToNextTimer();
         const card = document.querySelector('.title-card');
         await vi.waitFor(() => {
             if (!card.querySelector('.fm-rating-overlay:not(.fm-loading)'))
@@ -634,6 +635,7 @@ describe('App', () => {
             buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
         );
         appRef = startApp(adapter);
+        vi.advanceTimersToNextTimer();
         const modal = document.querySelector('.previewModal--player_container');
         await vi.waitFor(() => {
             if (!modal.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');

@@ -5,11 +5,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index.js';
-import { CONFIG_FIELDS } from '../../../../src/core/config/index.js';
+import { CONFIG_FIELDS,ConfigManager } from '../../../../src/core/config/index.js';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
-import { buildConfig } from '../../../mocks/config.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
 
@@ -24,7 +23,7 @@ describe('SettingsUI', () => {
     beforeEach(() => {
         mockAdapter = buildMockAdapter().build();
         mockLogger = buildLogger().build();
-        const config = buildConfig().build();
+        const config = new ConfigManager(mockAdapter, mockLogger);
         mockCacheManager = new CacheManager(mockAdapter, config, mockLogger);
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();

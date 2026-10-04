@@ -25,7 +25,7 @@ function buildMockAdapter() {
     adapter.storageSetMany = vi.fn().mockResolvedValue(undefined);
 
     adapter.withStorageGetResolvingTo = value => {
-        adapter.storageGet = vi.fn().mockResolvedValue(value);
+        adapter.storageGet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -35,7 +35,7 @@ function buildMockAdapter() {
     };
 
     adapter.withStorageSetResolvingTo = value => {
-        adapter.storageSet = vi.fn().mockResolvedValue(value);
+        adapter.storageSet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -45,7 +45,7 @@ function buildMockAdapter() {
     };
 
     adapter.withStorageDeleteResolvingTo = value => {
-        adapter.storageDelete = vi.fn().mockResolvedValue(value);
+        adapter.storageDelete = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -55,7 +55,7 @@ function buildMockAdapter() {
     };
 
     adapter.withStorageGetKeysResolvingTo = value => {
-        adapter.storageGetKeys = vi.fn().mockResolvedValue(value);
+        adapter.storageGetKeys = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -65,7 +65,7 @@ function buildMockAdapter() {
     };
 
     adapter.withStorageGetAllResolvingTo = value => {
-        adapter.storageGetAll = vi.fn().mockResolvedValue(value);
+        adapter.storageGetAll = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -75,7 +75,7 @@ function buildMockAdapter() {
     };
 
     adapter.withStorageSetManyResolvingTo = value => {
-        adapter.storageSetMany = vi.fn().mockResolvedValue(value);
+        adapter.storageSetMany = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
@@ -85,7 +85,7 @@ function buildMockAdapter() {
     };
 
     adapter.withHttpFetchResolvingTo = value => {
-        adapter.httpFetch = vi.fn().mockResolvedValue(value);
+        adapter.httpFetch = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
         return adapter;
     };
 
