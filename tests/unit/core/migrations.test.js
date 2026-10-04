@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DATA_VERSION_KEY, getMigrationByVersion, runMigrations } from '../../../src/core/migrations.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
 
 const migration1 = getMigrationByVersion(1);
 
@@ -13,7 +13,7 @@ describe('runMigrations', () => {
     const logger = { info: vi.fn(), error: vi.fn() };
 
     it.each([null, 'bad', '-1', -1])('treats %j as version zero', async stored => {
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(stored) });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(stored).build();
         const upgrade = vi.fn().mockResolvedValue({ migrated: 2, skipped: 0, deleted: 1 });
 
         await runMigrations(adapter, logger, [{ version: 1, description: 'Test migration', upgrade }]);
@@ -34,7 +34,7 @@ describe('runMigrations', () => {
             { version: 2, description: 'Second', upgrade: vi.fn(async () => calls.push(2)) },
             { version: 3, description: 'Third', upgrade: vi.fn(async () => calls.push(3)) },
         ];
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('1') });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('1').build();
 
         await runMigrations(adapter, logger, migrations);
 
@@ -47,7 +47,7 @@ describe('runMigrations', () => {
     it('runs recovery, logs it, and advances after upgrade failure', async () => {
         const error = new Error('bad cache entry');
         const onFailure = vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 4 });
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('0') });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('0').build();
 
         await runMigrations(adapter, logger, [
             { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(error), onFailure },
@@ -70,7 +70,7 @@ describe('runMigrations', () => {
     });
 
     it('does not write when all migrations are current', async () => {
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('2') });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('2').build();
         await runMigrations(adapter, logger, [
             { version: 1, description: 'First', upgrade: vi.fn() },
             { version: 2, description: 'Second', upgrade: vi.fn() },
@@ -79,7 +79,7 @@ describe('runMigrations', () => {
     });
 
     it('advances without recovery when onFailure is absent', async () => {
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(0) });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
         await runMigrations(adapter, logger, [
             { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(new Error('bad')) },
         ]);
@@ -89,7 +89,7 @@ describe('runMigrations', () => {
     it('logs recovery failure and continues to later migrations', async () => {
         const recoveryError = new Error('recovery bad');
         const calls = [];
-        const adapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue(0) });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
         await runMigrations(adapter, logger, [
             {
                 version: 1,
@@ -129,7 +129,7 @@ describe('runMigrations', () => {
         ['missing description', [{ version: 1, upgrade: vi.fn() }]],
         ['empty description', [{ version: 1, description: '', upgrade: vi.fn() }]],
     ])('rejects %s registries', async (_name, migrations) => {
-        await expect(runMigrations(createMockAdapter(), logger, migrations)).rejects.toThrow();
+        await expect(runMigrations(buildMockAdapter().build(), logger, migrations)).rejects.toThrow();
     });
 });
 
@@ -176,10 +176,11 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
         const expected = { [key]: JSON.stringify({ data: expectedData, expires }) };
         const result = { migrated: 1, skipped: 0, deleted: 0 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration1]);
 
@@ -201,11 +202,12 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
         const entries = { [key]: JSON.stringify({ data, expires }) };
         const result = { migrated: 0, skipped: 1, deleted: 0 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            storageDelete: vi.fn().mockResolvedValue(undefined),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration1]);
 
@@ -228,11 +230,12 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
         const deletedKeys = [key];
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            storageDelete: vi.fn().mockResolvedValue(undefined),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration1]);
 
@@ -252,11 +255,12 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
             'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
             'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
         };
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            storageDelete: vi.fn().mockResolvedValue(undefined),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async key => (key === DATA_VERSION_KEY ? null : entries[key]));
 
         const failingMigration1 = {
             ...migration1,
@@ -333,10 +337,11 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
             const expected = { [key]: JSON.stringify(expectedEntry) };
             const result = { migrated: 1, skipped: 0, deleted: 0 };
 
-            const adapter = createMockAdapter({
-                storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-                storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            });
+            const adapter = buildMockAdapter()
+                .withStorageGetResolvingTo(null)
+                .withStorageGetKeysResolvingTo(Object.keys(entries))
+                .build();
+            adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
             await runMigrations(adapter, logger, [migration2]);
 
@@ -357,10 +362,11 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
         const entries = { [key]: JSON.stringify(newEntry) };
         const result = { migrated: 0, skipped: 1, deleted: 0 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration2]);
 
@@ -381,11 +387,12 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
         const entries = { [key]: JSON.stringify(entry) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            storageDelete: vi.fn().mockResolvedValue(undefined),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration2]);
 
@@ -407,11 +414,12 @@ describe(`migration ${migration2.version}: ${migration2.description}`, () => {
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = createMockAdapter({
-            storageGet: vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k])),
-            storageGetKeys: vi.fn().mockResolvedValue(Object.keys(entries)),
-            storageDelete: vi.fn().mockResolvedValue(undefined),
-        });
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async k => (k === DATA_VERSION_KEY ? null : entries[k]));
 
         await runMigrations(adapter, logger, [migration2]);
 

@@ -7,29 +7,178 @@ import { vi } from 'vitest';
 import { PlatformAdapter } from '../../src/platform/adapter.js';
 
 class MockPlatformAdapter extends PlatformAdapter {
-    #configGetFn;
-
-    constructor({ configGet = () => undefined, ...rest } = {}) {
+    constructor({ ...rest } = {}) {
         super();
-        this.#configGetFn = configGet;
         Object.assign(this, rest);
     }
-
-    configGet(key) {
-        return this.#configGetFn(key);
-    }
 }
 
-export function createMockAdapter(overrides = {}) {
-    const { configGet, ...rest } = overrides;
-    const adapter = new MockPlatformAdapter({ configGet });
-    adapter.httpFetch = vi.fn().mockResolvedValue({});
-    adapter.storageGet = vi.fn().mockResolvedValue(null);
-    adapter.storageSet = vi.fn().mockResolvedValue(undefined);
-    adapter.storageDelete = vi.fn().mockResolvedValue(undefined);
-    adapter.storageGetKeys = vi.fn().mockResolvedValue([]);
-    adapter.storageGetAll = vi.fn().mockResolvedValue({});
-    adapter.storageSetMany = vi.fn().mockResolvedValue(undefined);
-    Object.assign(adapter, rest);
-    return adapter;
+function buildMockAdapter() {
+    // Store configuration instead of applying directly to adapter
+    const overrides = {};
+
+    const builder = {
+        withStorageGetResolvingTo(value) {
+            overrides.storageGet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageGetRejectingWith(error) {
+            overrides.storageGet = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withStorageSetResolvingTo(value) {
+            overrides.storageSet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageSetRejectingWith(error) {
+            overrides.storageSet = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withStorageDeleteResolvingTo(value) {
+            overrides.storageDelete = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageDeleteRejectingWith(error) {
+            overrides.storageDelete = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withStorageGetKeysResolvingTo(value) {
+            overrides.storageGetKeys = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageGetKeysRejectingWith(error) {
+            overrides.storageGetKeys = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withStorageGetAllResolvingTo(value) {
+            overrides.storageGetAll = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageGetAllRejectingWith(error) {
+            overrides.storageGetAll = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withStorageSetManyResolvingTo(value) {
+            overrides.storageSetMany = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withStorageSetManyRejectingWith(error) {
+            overrides.storageSetMany = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withHttpFetchResolvingTo(value) {
+            overrides.httpFetch = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
+            return this;
+        },
+
+        withHttpFetchResolvingToOnce(value) {
+            overrides.httpFetch = overrides.httpFetch || vi.fn();
+            overrides.httpFetch.mockResolvedValueOnce(value);
+            return this;
+        },
+
+        withHttpFetchRejectingWith(error) {
+            overrides.httpFetch = vi.fn().mockRejectedValue(error);
+            return this;
+        },
+
+        withHttpFetchRejectingWithOnce(error) {
+            overrides.httpFetch = overrides.httpFetch || vi.fn();
+            overrides.httpFetch.mockRejectedValueOnce(error);
+            return this;
+        },
+
+        withConfigGetReturning(valueOrFn) {
+            if (typeof valueOrFn === 'function') {
+                overrides.configGet = vi.fn().mockImplementation(valueOrFn);
+            } else {
+                overrides.configGet = vi.fn().mockReturnValue(valueOrFn);
+            }
+            return this;
+        },
+
+        build() {
+            const adapter = new MockPlatformAdapter();
+
+            // Apply all stored overrides to the adapter
+            Object.assign(adapter, {
+                httpFetch: vi.fn().mockResolvedValue({}),
+                storageGet: vi.fn().mockResolvedValue(null),
+                storageSet: vi.fn().mockResolvedValue(undefined),
+                storageDelete: vi.fn().mockResolvedValue(undefined),
+                storageGetKeys: vi.fn().mockResolvedValue([]),
+                storageGetAll: vi.fn().mockResolvedValue({}),
+                storageSetMany: vi.fn().mockResolvedValue(undefined),
+                configGet: vi.fn(() => undefined),
+                ...overrides,
+            });
+
+            return adapter;
+        },
+    };
+
+    return builder;
 }
+
+// Static presets
+buildMockAdapter.cacheMiss = () => {
+    return buildMockAdapter()
+        .withStorageGetResolvingTo(null)
+        .withStorageGetAllResolvingTo({})
+        .withStorageGetKeysResolvingTo([])
+        .build();
+};
+
+buildMockAdapter.storageSuccess = () => {
+    return buildMockAdapter()
+        .withStorageGetResolvingTo(null)
+        .withStorageSetResolvingTo(undefined)
+        .withStorageDeleteResolvingTo(undefined)
+        .withStorageGetKeysResolvingTo([])
+        .withStorageGetAllResolvingTo({})
+        .withStorageSetManyResolvingTo(undefined)
+        .build();
+};
+
+buildMockAdapter.httpSuccess = response => {
+    return buildMockAdapter().withHttpFetchResolvingTo(response).build();
+};
+
+buildMockAdapter.httpRateLimited = () => {
+    const error = new Error('Rate limited');
+    error.status = 429;
+    return buildMockAdapter().withHttpFetchRejectingWith(error).build();
+};
+
+buildMockAdapter.httpNetworkError = () => {
+    return buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
+};
+
+// Parametrized presets
+buildMockAdapter.withHttpError = (status, message) => {
+    const error = new Error(message);
+    error.status = status;
+    return buildMockAdapter().withHttpFetchRejectingWith(error).build();
+};
+
+buildMockAdapter.withStorageError = () => {
+    return buildMockAdapter()
+        .withStorageGetRejectingWith(new Error('Storage error'))
+        .withStorageSetRejectingWith(new Error('Storage error'))
+        .withStorageDeleteRejectingWith(new Error('Storage error'))
+        .build();
+};
+
+export { buildMockAdapter };

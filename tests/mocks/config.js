@@ -2,56 +2,152 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CONFIG_DEFAULTS, CONFIG_FIELDS, ConfigManager } from '../../src/core/config/index.js';
-import { createMockAdapter } from './adapter.js';
-import { createMockLogger } from './logger.js';
+import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index.js';
+import { buildMockAdapter } from './adapter.js';
+import { buildLogger } from './logger.js';
 
-/**
- * Boolean config keys that control optional features.
- * Used to create configs with all options enabled/disabled.
- */
-const BOOLEAN_CONFIG_KEYS = new Set(CONFIG_FIELDS.filter(f => f.type === 'checkbox').map(f => f.key));
-
-/**
- * Creates a ConfigManager with all boolean options set to true.
- * Useful for tests that need all optional features enabled.
- */
-export function createConfigWithAllOptionsEnabled() {
-    return new ConfigManager(
-        createMockAdapter({
-            configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? true : undefined),
-        }),
-        createMockLogger()
-    );
+function buildConfig() {
+    // Default all config fields to null for consistency
+    const overrides = {
+        apiClient: null,
+        xmdbApiKey: null,
+        omdbApiKey: null,
+        overlayCorner: null,
+        showRtRating: null,
+        showMcRating: null,
+        cacheTtlRatedOldYear: null,
+        cacheTtlRatedNewYear: null,
+        cacheTtlNoRating: null,
+        enableFadeUnderRating: null,
+        fadeRatingThreshold: null,
+        enableFadeToggle: null,
+        debug: null,
+    };
+    const builder = {
+        withApiClient(value) {
+            overrides.apiClient = value;
+            return this;
+        },
+        withXmdbApiKey(value) {
+            overrides.xmdbApiKey = value;
+            return this;
+        },
+        withOmdbApiKey(value) {
+            overrides.omdbApiKey = value;
+            return this;
+        },
+        withOverlayCorner(value) {
+            overrides.overlayCorner = value;
+            return this;
+        },
+        withShowRtRating(value) {
+            overrides.showRtRating = value;
+            return this;
+        },
+        withShowMcRating(value) {
+            overrides.showMcRating = value;
+            return this;
+        },
+        withCacheTtlRatedOldYear(value) {
+            overrides.cacheTtlRatedOldYear = value;
+            return this;
+        },
+        withCacheTtlRatedNewYear(value) {
+            overrides.cacheTtlRatedNewYear = value;
+            return this;
+        },
+        withCacheTtlNoRating(value) {
+            overrides.cacheTtlNoRating = value;
+            return this;
+        },
+        withEnableFadeUnderRating(value) {
+            overrides.enableFadeUnderRating = value;
+            return this;
+        },
+        withFadeRatingThreshold(value) {
+            overrides.fadeRatingThreshold = value;
+            return this;
+        },
+        withEnableFadeToggle(value) {
+            overrides.enableFadeToggle = value;
+            return this;
+        },
+        withDebug(value) {
+            overrides.debug = value;
+            return this;
+        },
+        build() {
+            return new ConfigManager(
+                buildMockAdapter()
+                    .withConfigGetReturning(key => (key in overrides ? overrides[key] : CONFIG_DEFAULTS[key]))
+                    .build(),
+                buildLogger().build()
+            );
+        },
+    };
+    return builder;
 }
 
-/**
- * Creates a ConfigManager with all boolean options set to false.
- * Useful for tests that need all optional features disabled.
- */
-export function createConfigWithAllOptionsDisabled() {
-    return new ConfigManager(
-        createMockAdapter({
-            configGet: key => (BOOLEAN_CONFIG_KEYS.has(key) ? false : undefined),
-        }),
-        createMockLogger()
-    );
-}
+// Static presets
+buildConfig.allOptionsEnabled = () => {
+    return buildConfig()
+        .withApiClient(CONFIG_DEFAULTS.apiClient)
+        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey)
+        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey)
+        .withShowRtRating(true)
+        .withShowMcRating(true)
+        .withEnableFadeUnderRating(true)
+        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold)
+        .withEnableFadeToggle(true)
+        .withDebug(true)
+        .build();
+};
 
-/**
- * Creates a ConfigManager with default values and optional overrides.
- * For keys not in overrides, returns CONFIG_DEFAULTS value.
- *
- * @param {Object} overrides - Object with key-value pairs to override defaults
- * @returns {ConfigManager} ConfigManager instance with specified overrides
- */
-export function createConfig(overrides = {}) {
-    return new ConfigManager(
-        createMockAdapter({
-            configGet: key => (key in overrides ? overrides[key] : CONFIG_DEFAULTS[key]),
-        }),
-        createMockLogger()
-    );
-}
+buildConfig.allOptionsDisabled = () => {
+    return buildConfig()
+        .withApiClient(CONFIG_DEFAULTS.apiClient)
+        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey)
+        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey)
+        .withShowRtRating(false)
+        .withShowMcRating(false)
+        .withEnableFadeUnderRating(false)
+        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold)
+        .withEnableFadeToggle(false)
+        .withDebug(false)
+        .build();
+};
 
-export { CONFIG_DEFAULTS, CONFIG_FIELDS };
+buildConfig.ratingsEnabled = () => {
+    return buildConfig().withShowRtRating(true).withShowMcRating(true).build();
+};
+
+buildConfig.fadeEnabled = (threshold = 6.0) => {
+    return buildConfig()
+        .withEnableFadeUnderRating(true)
+        .withFadeRatingThreshold(threshold)
+        .withEnableFadeToggle(true)
+        .build();
+};
+
+buildConfig.defaultCacheTtl = () => {
+    return buildConfig()
+        .withCacheTtlRatedOldYear(CONFIG_DEFAULTS.cacheTtlRatedOldYear)
+        .withCacheTtlRatedNewYear(CONFIG_DEFAULTS.cacheTtlRatedNewYear)
+        .withCacheTtlNoRating(CONFIG_DEFAULTS.cacheTtlNoRating)
+        .build();
+};
+
+// Parametrized presets
+buildConfig.withCacheTtl = ttl => {
+    return buildConfig().withCacheTtlRatedOldYear(ttl).withCacheTtlRatedNewYear(ttl).withCacheTtlNoRating(ttl).build();
+};
+
+buildConfig.withFadeThreshold = threshold => {
+    return buildConfig()
+        .withFadeRatingThreshold(threshold)
+        .withEnableFadeUnderRating(true)
+        .withEnableFadeToggle(true)
+        .build();
+};
+
+export { buildConfig };

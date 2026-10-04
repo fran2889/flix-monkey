@@ -5,9 +5,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { OmdbApiClient } from '../../../../src/core/api/index.js';
-import { Title } from '../../../../src/core/title.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildLogger } from '../../../mocks/logger.js';
+import { buildTitle } from '../../../mocks/title.js';
 
 const mockOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
@@ -15,22 +15,22 @@ const mockOverrideManager = {
 
 describe('OmdbApiClient', () => {
     it('should fetch details correctly', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.0',
                 imdbID: 'tt1',
                 Year: '2020',
                 Title: 'Movie 1',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
@@ -41,10 +41,10 @@ describe('OmdbApiClient', () => {
 
     it('should return unhealthy status when API key is missing', async () => {
         const client = new OmdbApiClient(
-            createMockAdapter(),
+            buildMockAdapter().build(),
             { get: () => '' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             undefined
         );
         const status = await client.getStatus();
@@ -52,20 +52,20 @@ describe('OmdbApiClient', () => {
     });
 
     it('should handle missing or invalid Year', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 Year: 'invalid',
                 Title: 'Movie 1',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
@@ -73,8 +73,8 @@ describe('OmdbApiClient', () => {
     });
 
     it('should parse ratings from OMDB correctly', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.0',
                 Ratings: [
@@ -83,15 +83,15 @@ describe('OmdbApiClient', () => {
                 ],
                 imdbID: 'tt1',
                 Title: 'Movie 1',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
@@ -101,21 +101,21 @@ describe('OmdbApiClient', () => {
     });
 
     it('should map Type to TitleType in getDetails', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.0',
                 imdbID: 'tt1',
                 Year: '2020',
                 Title: 'Movie 1',
                 Type: 'movie',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
@@ -123,21 +123,21 @@ describe('OmdbApiClient', () => {
     });
 
     it('should map series Type to series', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.0',
                 imdbID: 'tt2',
                 Year: '2020',
                 Title: 'Show 1',
                 Type: 'series',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Show 1');
@@ -145,10 +145,10 @@ describe('OmdbApiClient', () => {
     });
 
     it('should log warn with error message on OMDB False response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ Response: 'False', Error: 'Movie not found!' }),
-        });
-        const mockLogger = createMockLogger();
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
+            .build();
+        const mockLogger = buildLogger().build();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
@@ -161,16 +161,14 @@ describe('OmdbApiClient', () => {
     });
 
     it('should return null on OMDB False response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ Response: 'False' }),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const client = new OmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Unknown');
@@ -178,19 +176,19 @@ describe('OmdbApiClient', () => {
     });
 
     it('should extract imdbVotes from OMDB response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbVotes: '2,500,000',
                 imdbRating: '8.8',
                 Title: 'Test',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Test');
@@ -198,18 +196,18 @@ describe('OmdbApiClient', () => {
     });
 
     it('should handle missing imdbVotes from OMDB response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.8',
                 Title: 'Test',
-            }),
-        });
+            })
+            .build();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Test');
@@ -217,8 +215,8 @@ describe('OmdbApiClient', () => {
     });
 
     it('should not throw when the Ratings array contains a null element', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 Response: 'True',
                 Title: 'Some Title',
                 imdbID: 'tt1234567',
@@ -226,8 +224,8 @@ describe('OmdbApiClient', () => {
                 Year: '2020',
                 Type: 'movie',
                 Ratings: [null, { Source: 'Metacritic', Value: '80/100' }],
-            }),
-        });
+            })
+            .build();
         const mockDisabledManager = {
             isDisabled: vi.fn().mockResolvedValue(false),
             disable: vi.fn().mockResolvedValue(undefined),
@@ -236,7 +234,7 @@ describe('OmdbApiClient', () => {
             mockAdapter,
             { get: () => 'apikey' },
             mockDisabledManager,
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.fetch('Some Title');
@@ -256,14 +254,14 @@ describe('OmdbApiClient', () => {
             Type: 'movie',
         };
         const client = new OmdbApiClient(
-            createMockAdapter({}),
+            buildMockAdapter().build(),
             { get: _k => 'test-api-key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             undefined
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
-        const minimalTitle = new Title({ displayTitle: 'Test', imdbId: 'tt1234567' });
+        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
         const result = await client.getDetails(minimalTitle);
 
         expect(result).not.toBeNull();
@@ -274,20 +272,21 @@ describe('OmdbApiClient', () => {
     });
 
     it('should return searchTitle directly when it has apiTitle', async () => {
-        const mockAdapter = createMockAdapter({ httpFetch: vi.fn() });
+        const mockAdapter = buildMockAdapter().build();
+        mockAdapter.httpFetch = vi.fn();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
-        const searchTitle = new Title({
-            displayTitle: 'Test Movie',
-            apiTitle: 'Test Movie',
-            imdbId: 'tt123',
-            year: 2020,
-        });
+        const searchTitle = buildTitle()
+            .withDisplayTitle('Test Movie')
+            .withApiTitle('Test Movie')
+            .withImdbId('tt123')
+            .withYear(2020)
+            .build();
         const result = await client.getDetails(searchTitle);
         expect(result).toBe(searchTitle);
         expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
@@ -301,18 +300,14 @@ describe('OmdbApiClient', () => {
             Type: 'movie',
         };
         const client = new OmdbApiClient(
-            createMockAdapter({}),
+            buildMockAdapter().build(),
             { get: _k => 'test-api-key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             undefined
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
-        const minimalTitle = new Title({
-            displayTitle: 'Test',
-            imdbId: 'tt123',
-            apiTitle: null,
-        });
+        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(null).build();
         const result = await client.getDetails(minimalTitle);
         expect(result.apiTitle).toBe('Updated Title');
         expect(result.imdbId).toBe('tt123');

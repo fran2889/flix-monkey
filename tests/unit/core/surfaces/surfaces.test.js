@@ -12,11 +12,11 @@ import {
     NETFLIX_SURFACES,
     SurfaceManager,
 } from '../../../../src/core/surfaces/index.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildLogger } from '../../../mocks/logger.js';
 
 describe('SurfaceManager', () => {
     function discover(html) {
-        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
+        const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         document.body.innerHTML = html;
         return sm.discover(document.body);
     }
@@ -45,7 +45,7 @@ describe('SurfaceManager', () => {
             parentElement: document.body,
             getAttribute: () => null,
         };
-        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
+        const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         expect(sm.discover({ querySelectorAll: () => [mockEl] })).toHaveLength(0);
     });
 
@@ -61,7 +61,7 @@ describe('SurfaceManager', () => {
     });
 
     it('should fall back to parentElement when the container resolver returns null', () => {
-        const logger = createMockLogger();
+        const logger = buildLogger().build();
         const sm = new SurfaceManager(logger, NETFLIX_SURFACES);
         const fakeParent = document.createElement('div');
         fakeParent.className = 'orphan-parent';
@@ -80,7 +80,7 @@ describe('SurfaceManager', () => {
     });
 
     it('should return empty array when querySelectorAll throws', () => {
-        const sm = new SurfaceManager(createMockLogger(), NETFLIX_SURFACES);
+        const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         expect(
             sm.discover({
                 querySelectorAll: () => {
@@ -91,7 +91,7 @@ describe('SurfaceManager', () => {
     });
 
     it('discovers the title returned by a surface definition', () => {
-        const sm = new SurfaceManager(createMockLogger(), {
+        const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: el => el.dataset.title,
@@ -103,7 +103,7 @@ describe('SurfaceManager', () => {
     });
 
     it('defaults optional surface display flags to false', () => {
-        const sm = new SurfaceManager(createMockLogger(), {
+        const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: element => element.dataset.title,
@@ -122,7 +122,7 @@ describe('SurfaceManager', () => {
         selectorContainer.dataset.selectorContainer = '';
         selectorContainer.appendChild(resolvedContainer);
         document.body.replaceChildren(selectorContainer);
-        const sm = new SurfaceManager(createMockLogger(), {
+        const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: element => element.dataset.title,
@@ -135,7 +135,7 @@ describe('SurfaceManager', () => {
 
     it('decorates a resolved container through the optional surface hook', () => {
         document.body.innerHTML = '<div data-container><span data-title="Decorated Title"></span></div>';
-        const sm = new SurfaceManager(createMockLogger(), {
+        const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: element => element.dataset.title,
@@ -154,7 +154,7 @@ describe('SurfaceManager', () => {
                 <span data-title="Fallback Title"></span>
             </div>
         `;
-        const sm = new SurfaceManager(createMockLogger(), {
+        const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: element => element.dataset.title,
@@ -210,7 +210,7 @@ describe('HBO Max surfaces', () => {
             </div>
         `;
 
-        const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
+        const [surface] = new HboMaxSurfaceManager(buildLogger().build()).discover(document.body);
         expect(surface).toMatchObject({ title: 'Movie', fadeable: true, showFadeToggle: true });
     });
 
@@ -236,14 +236,14 @@ describe('HBO Max surfaces', () => {
             </div>
         `;
 
-        const [surface] = new HboMaxSurfaceManager(createMockLogger()).discover(document.body);
+        const [surface] = new HboMaxSurfaceManager(buildLogger().build()).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
         expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', type => {
         document.body.innerHTML = `<a data-testid="id_tile" data-sonic-type="${type}" aria-label="Title. 1 of 20."></a>`;
-        expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
+        expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
     });
 
     it.each([
@@ -262,7 +262,7 @@ describe('HBO Max surfaces', () => {
         document.body.replaceChildren(tile);
 
         expect(extractHboMaxTitle(tile)).toBeNull();
-        expect(new HboMaxSurfaceManager(createMockLogger()).discover(document.body)).toEqual([]);
+        expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
     });
 });
 
@@ -363,7 +363,7 @@ describe('Disney+ surfaces', () => {
             </div>
         `;
 
-        const [surface] = new DisneyPlusSurfaceManager(createMockLogger()).discover(document.body);
+        const [surface] = new DisneyPlusSurfaceManager(buildLogger().build()).discover(document.body);
         expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
@@ -382,7 +382,7 @@ describe('Disney+ surfaces', () => {
             </section>
         `;
 
-        const logger = createMockLogger();
+        const logger = buildLogger().build();
         const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
@@ -403,7 +403,7 @@ describe('Disney+ surfaces', () => {
             </section>
         `;
 
-        const logger = createMockLogger();
+        const logger = buildLogger().build();
         const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
 
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });

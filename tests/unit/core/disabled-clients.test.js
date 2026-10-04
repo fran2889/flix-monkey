@@ -5,13 +5,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DisabledClientsManager } from '../../../src/core/disabled-clients.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
 
 describe('core/disabled-clients', () => {
     let mockAdapter, manager;
 
     beforeEach(() => {
-        mockAdapter = createMockAdapter();
+        mockAdapter = buildMockAdapter().build();
         manager = new DisabledClientsManager(mockAdapter);
     });
 

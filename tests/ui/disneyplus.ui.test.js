@@ -10,16 +10,17 @@ import { DisneyPlusService } from '../../src/core/services/index.js';
 import { DisneyPlusSurfaceManager } from '../../src/core/surfaces/index.js';
 import fixtures from '../fixtures/disneyplus-surfaces.js';
 import { testSurfaceFixtures } from '../helpers/surface-tests.js';
-import { createMockAdapter } from '../mocks/adapter.js';
-import { createMockLogger } from '../mocks/logger.js';
+import { buildMockAdapter } from '../mocks/adapter.js';
+import { buildConfig } from '../mocks/config.js';
+import { buildLogger } from '../mocks/logger.js';
 
 describe('Disney+ surfaces', () => {
     let surfaceManager, overlayRenderer;
 
     beforeEach(() => {
-        surfaceManager = new DisneyPlusSurfaceManager(createMockLogger());
+        surfaceManager = new DisneyPlusSurfaceManager(buildLogger().build());
         overlayRenderer = new OverlayRenderer(
-            new ConfigManager(createMockAdapter(), createMockLogger()),
+            new ConfigManager(buildMockAdapter().build(), buildConfig().build(), buildLogger().build()),
             new DisneyPlusService().constants
         );
         overlayRenderer.injectStyles();

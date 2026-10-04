@@ -5,8 +5,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildLogger } from '../../../mocks/logger.js';
 
 const mockOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
@@ -21,7 +21,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {},
             { get: _k => 'key' },
             mockDisabledManager,
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const status = await client.getStatus();
@@ -36,7 +36,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {},
             { get: _k => 'key' },
             mockDisabledManager,
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const status = await client.getStatus();
@@ -45,16 +45,14 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should throw when fetch encounters an error', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
         const client = new XmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
 
@@ -62,16 +60,14 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should return null if search returns no match', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ results: [] }),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapter,
             {
                 get: _k => 'key',
             },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.fetch('Unknown');
@@ -79,9 +75,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should return Title with override ID when override exists but getDetails returns null', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue(null),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(null).build();
         const mockOverrideManager = {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
         };
@@ -89,7 +83,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             mockAdapter,
             { get: _k => 'key' },
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         client.getDetails = vi.fn().mockResolvedValue(null);

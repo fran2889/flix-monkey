@@ -7,10 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CacheManager } from '../../../../src/core/cache/index.js';
 import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index.js';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
-import { Logger } from '../../../../src/core/logger.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildLogger } from '../../../mocks/logger.js';
+import { buildTitle } from '../../../mocks/title.js';
 
 describe('SettingsUI', () => {
     let mockAdapter;
@@ -21,14 +21,11 @@ describe('SettingsUI', () => {
     let mockLogger;
 
     beforeEach(() => {
-        mockAdapter = createMockAdapter();
-        mockCacheManager = new CacheManager(
-            mockAdapter,
-            new ConfigManager(mockAdapter, mockLogger),
-            new Logger(mockAdapter)
-        );
+        mockAdapter = buildMockAdapter().build();
+        mockLogger = buildLogger().build();
+        const config = new ConfigManager(mockAdapter, mockLogger);
+        mockCacheManager = new CacheManager(mockAdapter, config, mockLogger);
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
-        mockLogger = createMockLogger();
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
         settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager);
@@ -190,6 +187,21 @@ describe('SettingsUI', () => {
 
             expect(container.querySelector('#fm-status').textContent).toBe('Error: disk full');
             expect(container.querySelector('#fm-status').className).toBe('status status--error');
+        });
+    });
+
+    describe('Collaborator wiring', () => {
+        it('gives the cache manager a working config logger', async () => {
+            mockAdapter.configGet.mockImplementation(() => {
+                throw new Error('config read failed');
+            });
+
+            await mockCacheManager.write('Some Title', buildTitle().withApiTitle('Some Title').build());
+
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                'ConfigManager.get error, using fallback',
+                expect.objectContaining({ key: 'cacheTtlNoRating' })
+            );
         });
     });
 

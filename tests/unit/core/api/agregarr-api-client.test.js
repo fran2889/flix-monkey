@@ -6,9 +6,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../../src/core/api/index.js';
 import { Title } from '../../../../src/core/title.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createConfig } from '../../../mocks/config.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildConfig } from '../../../mocks/config.js';
+import { buildLogger } from '../../../mocks/logger.js';
+import { buildTitle } from '../../../mocks/title.js';
 
 const mockOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
@@ -16,20 +17,20 @@ const mockOverrideManager = {
 
 describe('AgregarrApiClient', () => {
     it('should return the first supported IMDb Suggestions result', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 d: [
                     { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
                     { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
                     { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
                 ],
-            }),
-        });
+            })
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
@@ -42,16 +43,16 @@ describe('AgregarrApiClient', () => {
         ['tvSeries', 'series'],
         ['tvMiniSeries', 'series'],
     ])('should map IMDb Suggestions %s results to %s', async (qid, type) => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
                 d: [{ id: 'tt1', l: 'Show 1', qid, y: 2020 }],
-            }),
-        });
+            })
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
 
@@ -61,24 +62,20 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should return null if no results found', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
     });
 
     it('should log info when no results found', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ d: [] }),
-        });
-        const mockLogger = createMockLogger();
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
+        const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
@@ -91,24 +88,20 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should return null if IMDb Suggestions response has no d array', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({}),
-        });
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
     });
 
     it('should log info when IMDb Suggestions response has no d array', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({}),
-        });
-        const mockLogger = createMockLogger();
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
+        const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
@@ -121,10 +114,10 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should return null when IMDb Suggestions has no supported title types', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] }),
-        });
-        const mockLogger = createMockLogger();
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
+            .build();
+        const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
@@ -140,12 +133,13 @@ describe('AgregarrApiClient', () => {
 
     it('should build the correct IMDb Suggestions URL', async () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
-        const mockAdapter = createMockAdapter({ httpFetch });
+        const mockAdapter = buildMockAdapter().build();
+        mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         await client.search('Movie 1');
@@ -154,23 +148,23 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should fetch rating from Agregarr and retain IMDb Suggestions metadata', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
-        const searchResult = new Title({
-            imdbId: 'tt1',
-            apiTitle: 'Movie 1',
-            year: 2020,
-            displayTitle: 'Movie 1',
-            type: 'movie',
-        });
+        const searchResult = buildTitle()
+            .withImdbId('tt1')
+            .withApiTitle('Movie 1')
+            .withYear(2020)
+            .withDisplayTitle('Movie 1')
+            .withType('movie')
+            .build();
         const result = await client.getDetails(searchResult);
         expect(result.apiTitle).toBe('Movie 1');
         expect(result.imdbId).toBe('tt1');
@@ -182,42 +176,40 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt4', rating: null, votes: null }]),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt4', rating: null, votes: null }])
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
-        const searchResult = new Title({
-            imdbId: 'tt4',
-            apiTitle: 'Movie 1',
-            year: 2020,
-            displayTitle: 'Movie 1',
-            type: 'series',
-        });
+        const searchResult = buildTitle()
+            .withImdbId('tt4')
+            .withApiTitle('Movie 1')
+            .withYear(2020)
+            .withDisplayTitle('Movie 1')
+            .withType('series')
+            .build();
         const result = await client.getDetails(searchResult);
         expect(result.imdbRating).toBeNull();
         expect(result.type).toBe('series');
     });
 
     it('should handle the full IMDb Suggestions and Agregarr fetch flow', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi
-                .fn()
-                .mockResolvedValueOnce({
-                    d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
-                })
-                .mockResolvedValueOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingToOnce({
+                d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
+            })
+            .withHttpFetchResolvingToOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
@@ -231,12 +223,13 @@ describe('AgregarrApiClient', () => {
 
     it('should lowercase and encode non-ASCII titles in IMDb Suggestions URLs', async () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
-        const mockAdapter = createMockAdapter({ httpFetch });
+        const mockAdapter = buildMockAdapter().build();
+        mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
         await client.search('Élite');
@@ -245,33 +238,43 @@ describe('AgregarrApiClient', () => {
     });
 
     it('should extract votes from Agregarr response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }]),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
-        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
+        const searchResult = buildTitle()
+            .withImdbId('tt1')
+            .withApiTitle('Test')
+            .withYear(2020)
+            .withDisplayTitle('Test')
+            .build();
         const result = await client.getDetails(searchResult);
         expect(result.imdbVotes).toBe(2500000);
     });
 
     it('should handle null votes from Agregarr response', async () => {
-        const mockAdapter = createMockAdapter({
-            httpFetch: vi.fn().mockResolvedValue([{ imdbId: 'tt1', rating: 8.8, votes: null }]),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: null }])
+            .build();
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
             { isDisabled: vi.fn().mockResolvedValue(false) },
-            createMockLogger(),
+            buildLogger().build(),
             mockOverrideManager
         );
-        const searchResult = new Title({ imdbId: 'tt1', apiTitle: 'Test', year: 2020, displayTitle: 'Test' });
+        const searchResult = buildTitle()
+            .withImdbId('tt1')
+            .withApiTitle('Test')
+            .withYear(2020)
+            .withDisplayTitle('Test')
+            .build();
         const result = await client.getDetails(searchResult);
         expect(result.imdbVotes).toBeNull();
     });
@@ -282,20 +285,24 @@ describe('AgregarrApiClient', () => {
             getDetailsCalled = false;
             constructor() {
                 super(
-                    createMockAdapter({ httpFetch: vi.fn() }),
+                    buildMockAdapter().build(),
                     { get: _k => 'key' },
                     { isDisabled: vi.fn().mockResolvedValue(false) },
-                    createMockLogger(),
+                    buildLogger().build(),
                     mockOverrideManager
                 );
             }
             async search() {
                 this.searchCalled = true;
-                return new Title({ displayTitle: 'Test', imdbId: 'tt123' });
+                return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
             }
             async getDetails(searchTitle) {
                 this.getDetailsCalled = true;
-                return new Title({ ...searchTitle, imdbRating: '8.0' });
+                return buildTitle()
+                    .withDisplayTitle(searchTitle.displayTitle)
+                    .withImdbId(searchTitle.imdbId)
+                    .withImdbRating('8.0')
+                    .build();
             }
         }
         const client = new TestClient();
@@ -311,20 +318,24 @@ describe('AgregarrApiClient', () => {
             getDetailsCalled = false;
             constructor() {
                 super(
-                    createMockAdapter({ httpFetch: vi.fn() }),
+                    buildMockAdapter().build(),
                     { get: _k => 'key' },
                     { isDisabled: vi.fn().mockResolvedValue(false) },
-                    createMockLogger(),
+                    buildLogger().build(),
                     mockOverrideManager
                 );
             }
             async search(displayTitle) {
                 this.searchCalled = true;
-                return new Title({ displayTitle, imdbId: 'tt123' });
+                return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
             }
             async getDetails(searchTitle) {
                 this.getDetailsCalled = true;
-                return new Title({ ...searchTitle, imdbRating: '8.0' });
+                return buildTitle()
+                    .withDisplayTitle(searchTitle.displayTitle)
+                    .withImdbId(searchTitle.imdbId)
+                    .withImdbRating('8.0')
+                    .build();
             }
         }
         const client = new TestClient();
@@ -342,31 +353,31 @@ describe('AgregarrApiClient', () => {
             mockOverrideManager = {
                 getImdbId: vi.fn().mockResolvedValue(null),
             };
-            mockLogger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+            mockLogger = buildLogger().build();
         });
 
         it('should use override IMDb ID when available', async () => {
-            const mockAdapter = createMockAdapter({
-                httpFetch: vi.fn().mockResolvedValue({
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
                     ok: true,
                     json: () =>
                         Promise.resolve({ name: 'Overridden Movie', ratings: [{ source: 'imdb', value: '8.5' }] }),
-                }),
-            });
+                })
+                .build();
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                createConfig({}),
+                buildConfig().build(),
                 mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(
-                new Title({ displayTitle: 'Overridden Movie', imdbId: 'tt9999999', imdbRating: 8.5 })
+                buildTitle().withDisplayTitle('Overridden Movie').withImdbId('tt9999999').withImdbRating(8.5).build()
             );
 
             const result = await client.fetch('Test Movie');
@@ -377,19 +388,19 @@ describe('AgregarrApiClient', () => {
         });
 
         it('should use displayTitle from override fetch when details fetch fails', async () => {
-            const mockAdapter = createMockAdapter({
-                httpFetch: vi.fn().mockResolvedValue({
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
                     ok: true,
                     json: () => Promise.resolve({ name: 'Overridden Movie', ratings: [] }),
-                }),
-            });
+                })
+                .build();
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                createConfig({}),
+                buildConfig().build(),
                 mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
@@ -405,25 +416,25 @@ describe('AgregarrApiClient', () => {
         });
 
         it('should fall back to normal search when no override exists', async () => {
-            const mockAdapter = createMockAdapter({
-                httpFetch: vi.fn().mockResolvedValue({
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
                     d: [{ id: 'tt1234567', l: 'Normal Movie', qid: 'movie', y: 2020 }],
-                }),
-            });
+                })
+                .build();
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
 
             mockOverrideManager.getImdbId.mockResolvedValue(null);
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                createConfig({}),
+                buildConfig().build(),
                 mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(
-                new Title({ displayTitle: 'Normal Movie', imdbId: 'tt1234567', imdbRating: 7.5 })
+                buildTitle().withDisplayTitle('Normal Movie').withImdbId('tt1234567').withImdbRating(7.5).build()
             );
 
             const result = await client.fetch('Test Movie');
@@ -435,15 +446,13 @@ describe('AgregarrApiClient', () => {
 
         it('should disable client when override fetch fails', async () => {
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
-            const mockAdapter = createMockAdapter({
-                httpFetch: vi.fn().mockRejectedValue(new Error('Network error')),
-            });
+            const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                createConfig({}),
+                buildConfig().build(),
                 mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
@@ -464,16 +473,16 @@ describe('AgregarrApiClient', () => {
 
         it('should not attempt override or normal fetch when client is disabled', async () => {
             const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(true), markDisabled: vi.fn() };
-            const mockAdapter = createMockAdapter({
-                httpFetch: vi.fn().mockResolvedValue({
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
                     ok: true,
                     json: () => Promise.resolve({ name: 'Movie', ratings: [] }),
-                }),
-            });
+                })
+                .build();
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                createConfig({}),
+                buildConfig().build(),
                 mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
@@ -487,8 +496,8 @@ describe('AgregarrApiClient', () => {
 
         it('should pass overrideManager to subclass constructors', () => {
             const mockDisabledManager = { isDisabled: vi.fn(), markDisabled: vi.fn() };
-            const mockAdapter = createMockAdapter();
-            const mockConfig = createConfig({});
+            const mockAdapter = buildMockAdapter().build();
+            const mockConfig = buildConfig().build();
 
             const xmdbClient = new XmdbApiClient(
                 mockDisabledManager,

@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RequestQueue } from '../../../src/core/request-queue.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
 
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
@@ -24,11 +24,10 @@ describe('RequestQueue', () => {
 
     it('should synchronize across instances using storage', async () => {
         let sharedTime = Date.now().toString();
-        const mockAdapter = createMockAdapter({
-            storageGet: vi.fn(async () => sharedTime),
-            storageSet: vi.fn(async (k, v) => {
-                sharedTime = v;
-            }),
+        const mockAdapter = buildMockAdapter().build();
+        mockAdapter.storageGet = vi.fn(async () => sharedTime);
+        mockAdapter.storageSet = vi.fn(async (k, v) => {
+            sharedTime = v;
         });
 
         const interval = 100;
@@ -68,7 +67,7 @@ describe('RequestQueue', () => {
     });
 
     it('should fall back to 0 when stored timestamp is not a valid number', async () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue('corrupted') });
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo('corrupted').build();
         const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
@@ -76,10 +75,10 @@ describe('RequestQueue', () => {
     });
 
     it('should read global storage twice per request when no wait is needed', async () => {
-        const mockAdapter = createMockAdapter({
-            storageGet: vi.fn().mockResolvedValue('0'),
-            storageSet: vi.fn().mockResolvedValue(undefined),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withStorageGetResolvingTo('0')
+            .withStorageSetResolvingTo(undefined)
+            .build();
         const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
 
@@ -91,7 +90,10 @@ describe('RequestQueue', () => {
     });
 
     it('should resolve multiple concurrently enqueued requests', async () => {
-        const mockAdapter = createMockAdapter({ storageGet: async () => '0', storageSet: async () => {} });
+        const mockAdapter = buildMockAdapter()
+            .withStorageGetResolvingTo('0')
+            .withStorageSetResolvingTo(undefined)
+            .build();
         const queue = new RequestQueue(mockAdapter, 100, null);
         const mockFetch = async () => ({ status: 200 });
 
@@ -106,10 +108,10 @@ describe('RequestQueue', () => {
     });
 
     it('should re-read global storage before claiming timeslot on no-wait path', async () => {
-        const mockAdapter = createMockAdapter({
-            storageGet: vi.fn().mockResolvedValue('0'),
-            storageSet: vi.fn().mockResolvedValue(undefined),
-        });
+        const mockAdapter = buildMockAdapter()
+            .withStorageGetResolvingTo('0')
+            .withStorageSetResolvingTo(undefined)
+            .build();
         const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn, 'json');
@@ -122,13 +124,11 @@ describe('RequestQueue', () => {
         let callCount = 0;
         const recentTime = Date.now();
         const staleTime = (recentTime - 2000).toString();
-        const mockAdapter = createMockAdapter({
-            storageGet: vi.fn(async () => {
-                callCount++;
-                // 2nd call is the pre-claim re-read - simulate another tab just fired
-                return callCount === 2 ? recentTime.toString() : staleTime;
-            }),
-            storageSet: vi.fn().mockResolvedValue(undefined),
+        const mockAdapter = buildMockAdapter().withStorageSetResolvingTo(undefined).build();
+        mockAdapter.storageGet = vi.fn(async () => {
+            callCount++;
+            // 2nd call is the pre-claim re-read - simulate another tab just fired
+            return callCount === 2 ? recentTime.toString() : staleTime;
         });
         const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
