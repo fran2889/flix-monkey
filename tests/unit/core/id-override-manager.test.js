@@ -2,20 +2,17 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { IdOverrideManager } from '../../../src/core/id-override-manager.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
 
 describe('IdOverrideManager', () => {
     let manager;
     let mockAdapter;
 
     beforeEach(() => {
-        mockAdapter = createMockAdapter({
-            storageGet: vi.fn().mockResolvedValue(null),
-            storageSet: vi.fn().mockResolvedValue(undefined),
-        });
+        mockAdapter = buildMockAdapter().withStorageGetResolvingTo(null).withStorageSetResolvingTo(undefined).build();
         manager = new IdOverrideManager(mockAdapter);
     });
 

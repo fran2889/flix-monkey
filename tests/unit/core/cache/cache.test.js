@@ -6,9 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheEntry, CacheManager } from '../../../../src/core/cache/index.js';
 import { Title } from '../../../../src/core/title.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createConfig } from '../../../mocks/config.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildCacheEntry } from '../../../mocks/cache.js';
+import { buildConfig } from '../../../mocks/config.js';
+import { buildLogger } from '../../../mocks/logger.js';
+import { buildTitle } from '../../../mocks/title.js';
 
 describe('CacheManager', () => {
     let adapter;
@@ -17,18 +19,18 @@ describe('CacheManager', () => {
     let mockLogger;
 
     beforeEach(() => {
-        adapter = createMockAdapter({
-            storageGet: vi.fn(),
-            storageSet: vi.fn(),
-            storageDelete: vi.fn(),
-            storageGetKeys: vi.fn(),
-        });
-        mockLogger = createMockLogger();
-        config = createConfig({
-            cacheTtlNoRating: '1',
-            cacheTtlRatedNewYear: '30',
-            cacheTtlRatedOldYear: '-1',
-        });
+        adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageSetResolvingTo(undefined)
+            .withStorageDeleteResolvingTo(undefined)
+            .withStorageGetKeysResolvingTo([])
+            .build();
+        mockLogger = buildLogger().build();
+        config = buildConfig()
+            .withCacheTtlNoRating('1')
+            .withCacheTtlRatedNewYear('30')
+            .withCacheTtlRatedOldYear('-1')
+            .build();
         cacheManager = new CacheManager(adapter, config, mockLogger);
     });
 
@@ -39,7 +41,12 @@ describe('CacheManager', () => {
     });
 
     it('should return cache entry even without title data', async () => {
-        const entry = new CacheEntry('Missing Data', null, null, Date.now() + 10000);
+        const entry = buildCacheEntry()
+            .withDisplayTitle('Missing Data')
+            .withImdbId(null)
+            .withData(null)
+            .withExpiry(Date.now() + 10000)
+            .build();
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
 
         const result = await cacheManager.read('Missing Data');
@@ -51,7 +58,7 @@ describe('CacheManager', () => {
 
     it('should write data to storage', async () => {
         adapter.storageGet.mockResolvedValue(null);
-        const title = new Title({ apiTitle: 'Test Title' });
+        const title = buildTitle().withApiTitle('Test Title').build();
         await cacheManager.write('Test Title', title);
         expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.stringContaining('Test Title'));
     });
@@ -68,8 +75,12 @@ describe('CacheManager', () => {
     });
 
     it('should write and read cache entry', async () => {
-        const titleData = { displayTitle: 'Test Title', year: 2026, imdbRating: '8.0' };
-        const titleObj = new Title(titleData);
+        const titleObj = buildTitle()
+            .withDisplayTitle('Test Title')
+            .withApiTitle('Test Title')
+            .withYear(2026)
+            .withImdbRating('8.0')
+            .build();
         adapter.storageSet.mockImplementation((key, value) => {
             // Store the written value so we can return it on read
             adapter.storageGet.mockImplementation(k => (k === key ? Promise.resolve(value) : Promise.resolve(null)));
@@ -88,9 +99,13 @@ describe('CacheManager', () => {
         vi.useFakeTimers();
         const now = Date.now();
         vi.setSystemTime(now);
-        const titleData = { displayTitle: 'Old Title', year: 2020 };
-        const titleObj = new Title(titleData);
-        const entry = new CacheEntry('Old Title', null, titleObj.toCacheJSON(), now - 1000);
+        const titleObj = buildTitle().withDisplayTitle('Old Title').withApiTitle('Old Title').withYear(2020).build();
+        const entry = buildCacheEntry()
+            .withDisplayTitle('Old Title')
+            .withImdbId(null)
+            .withData(titleObj.toCacheJSON())
+            .withExpiry(now - 1000)
+            .build();
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Old Title');
         expect(result).not.toBeNull();
@@ -99,8 +114,12 @@ describe('CacheManager', () => {
     });
 
     it('should store indefinite TTL as null in storage', async () => {
-        const titleData = { displayTitle: 'Indefinite Title', hasRating: true, year: 1900 };
-        const titleObj = new Title(titleData);
+        const titleObj = buildTitle()
+            .withDisplayTitle('Indefinite Title')
+            .withApiTitle('Indefinite Title')
+            .withYear(1900)
+            .withImdbRating(null)
+            .build();
         config.getInt = vi.fn().mockReturnValue(-1);
         await cacheManager.write('Indefinite Title', titleObj);
         const setCall = adapter.storageSet.mock.calls.find(call => call[0] === 'fmc:indefinite_title');
@@ -109,8 +128,17 @@ describe('CacheManager', () => {
     });
 
     it('should return valid entry for indefinite cache expiration (null)', async () => {
-        const titleObj = new Title({ displayTitle: 'Indefinite Title', imdbRating: '8.0' });
-        const entry = new CacheEntry('Indefinite Title', null, titleObj.toCacheJSON(), null);
+        const titleObj = buildTitle()
+            .withDisplayTitle('Indefinite Title')
+            .withApiTitle('Indefinite Title')
+            .withImdbRating('8.0')
+            .build();
+        const entry = buildCacheEntry()
+            .withDisplayTitle('Indefinite Title')
+            .withImdbId(null)
+            .withData(titleObj.toCacheJSON())
+            .withExpiry(null)
+            .build();
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Indefinite Title');
         expect(result).not.toBeNull();
@@ -128,8 +156,18 @@ describe('CacheManager', () => {
     });
 
     it('should return cache entry for cache hit', async () => {
-        const titleObj = new Title({ displayTitle: 'Cached Movie', imdbRating: '8.0', source: 'omdb' });
-        const entry = new CacheEntry('Cached Movie', 'tt123', titleObj.toCacheJSON(), Date.now() + 100000);
+        const titleObj = buildTitle()
+            .withDisplayTitle('Cached Movie')
+            .withApiTitle('Cached Movie')
+            .withImdbRating('8.0')
+            .withSource('omdb')
+            .build();
+        const entry = buildCacheEntry()
+            .withDisplayTitle('Cached Movie')
+            .withImdbId('tt123')
+            .withData(titleObj.toCacheJSON())
+            .withExpiry(Date.now() + 100000)
+            .build();
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Cached Movie');
         expect(result).not.toBeNull();
@@ -139,7 +177,7 @@ describe('CacheManager', () => {
     });
 
     it('should produce the same cache key for titles that differ only by punctuation', async () => {
-        const title = new Title({ apiTitle: 'Test Title' });
+        const title = buildTitle().withApiTitle('Test Title').build();
         await cacheManager.write('Test: Title', title);
         const key1 = adapter.storageSet.mock.calls[0][0];
         adapter.storageSet.mockClear();
@@ -150,7 +188,12 @@ describe('CacheManager', () => {
     });
 
     it('should store displayTitle and imdbId at top level', async () => {
-        const title = new Title({ displayTitle: 'Test', apiTitle: 'Test', imdbId: 'tt123', year: 2024 });
+        const title = buildTitle()
+            .withDisplayTitle('Test')
+            .withApiTitle('Test')
+            .withImdbId('tt123')
+            .withYear(2024)
+            .build();
         adapter.storageSet.mockResolvedValue(null);
         await cacheManager.write('Test', title);
         const call = adapter.storageSet.mock.calls[0];

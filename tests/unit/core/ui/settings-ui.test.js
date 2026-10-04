@@ -5,12 +5,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index.js';
-import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index.js';
+import { CONFIG_FIELDS } from '../../../../src/core/config/index.js';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
-import { Title } from '../../../../src/core/title.js';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
-import { createMockAdapter } from '../../../mocks/adapter.js';
-import { createMockLogger } from '../../../mocks/logger.js';
+import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildConfig } from '../../../mocks/config.js';
+import { buildLogger } from '../../../mocks/logger.js';
+import { buildTitle } from '../../../mocks/title.js';
 
 describe('SettingsUI', () => {
     let mockAdapter;
@@ -21,9 +22,10 @@ describe('SettingsUI', () => {
     let mockLogger;
 
     beforeEach(() => {
-        mockAdapter = createMockAdapter();
-        mockLogger = createMockLogger();
-        mockCacheManager = new CacheManager(mockAdapter, new ConfigManager(mockAdapter, mockLogger), mockLogger);
+        mockAdapter = buildMockAdapter().build();
+        mockLogger = buildLogger().build();
+        const config = buildConfig().build();
+        mockCacheManager = new CacheManager(mockAdapter, config, mockLogger);
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
@@ -195,7 +197,7 @@ describe('SettingsUI', () => {
                 throw new Error('config read failed');
             });
 
-            await mockCacheManager.write('Some Title', new Title({ apiTitle: 'Some Title' }));
+            await mockCacheManager.write('Some Title', buildTitle().withApiTitle('Some Title').build());
 
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 'ConfigManager.get error, using fallback',

@@ -11,7 +11,7 @@ import { DisabledClientsManager } from '../../src/core/disabled-clients.js';
 import { IdOverrideManager } from '../../src/core/id-override-manager.js';
 import { Logger } from '../../src/core/logger.js';
 import { Title } from '../../src/core/title.js';
-import { createMockAdapter } from '../mocks/adapter.js';
+import { buildMockAdapter } from '../mocks/adapter.js';
 
 const adapter = {
     httpFetch: async (url, options) => {
@@ -68,13 +68,22 @@ describe('api-clients integration', () => {
     let logger;
 
     beforeAll(() => {
-        logger = new Logger(createMockAdapter({ configGet: () => 'false' }));
+        logger = new Logger(
+            buildMockAdapter()
+                .withConfigGetReturning(() => 'false')
+                .build()
+        );
         const getter = key => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
             return process.env[envKey] ?? null;
         };
-        configManager = new ConfigManager(createMockAdapter({ configGet: getter }), logger);
-        badKeyConfigManager = new ConfigManager(createMockAdapter({ configGet: () => 'badkey123' }), logger);
+        configManager = new ConfigManager(buildMockAdapter().withConfigGetReturning(getter).build(), logger);
+        badKeyConfigManager = new ConfigManager(
+            buildMockAdapter()
+                .withConfigGetReturning(() => 'badkey123')
+                .build(),
+            logger
+        );
     });
 
     describe('movie with all ratings', () => {

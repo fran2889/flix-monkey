@@ -5,8 +5,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { Title } from '../../../src/core/title.js';
-import { createConfig } from '../../mocks/config.js';
+import { buildConfig } from '../../mocks/config.js';
+import { buildTitle } from '../../mocks/title.js';
 
 describe('OverlayRenderer', () => {
     beforeEach(() => {
@@ -20,7 +20,7 @@ describe('OverlayRenderer', () => {
 
     describe('style injection', () => {
         it('injects styles into document head', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
 
             renderer.injectStyles();
 
@@ -30,7 +30,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('injects styles only once per instance', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
 
             renderer.injectStyles();
             renderer.injectStyles();
@@ -40,8 +40,8 @@ describe('OverlayRenderer', () => {
         });
 
         it('updates the existing style tag when injectStyles is called again', () => {
-            const rendererA = new OverlayRenderer(createConfig({ overlayCorner: 'top-left' }));
-            const rendererB = new OverlayRenderer(createConfig({ overlayCorner: 'top-right' }));
+            const rendererA = new OverlayRenderer(buildConfig().withOverlayCorner('top-left').build());
+            const rendererB = new OverlayRenderer(buildConfig().withOverlayCorner('top-right').build());
 
             rendererA.injectStyles();
             const existingStyle = document.head.querySelector('#fm-overlay-styles');
@@ -56,12 +56,12 @@ describe('OverlayRenderer', () => {
 
     describe('overlay lifecycle', () => {
         it('replaces an existing overlay and marks the container as injected', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
-            injectOverlay(renderer, container, new Title({ imdbId: 'tt1', imdbRating: 7 }));
+            injectOverlay(renderer, container, buildTitle().withImdbId('tt1').withImdbRating(7).build());
             const firstOverlay = container.querySelector('.fm-rating-overlay');
-            injectOverlay(renderer, container, new Title({ imdbId: 'tt2', imdbRating: 8 }));
+            injectOverlay(renderer, container, buildTitle().withImdbId('tt2').withImdbRating(8).build());
 
             expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
             expect(container.querySelector('.fm-rating-overlay')).not.toBe(firstOverlay);
@@ -69,11 +69,11 @@ describe('OverlayRenderer', () => {
         });
 
         it('replaces a loading overlay with a completed overlay', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container, 'The Matrix');
-            injectOverlay(renderer, container, new Title({ imdbId: 'tt1234567', imdbRating: 8.5 }));
+            injectOverlay(renderer, container, buildTitle().withImdbId('tt1234567').withImdbRating(8.5).build());
 
             expect(container.querySelector('.fm-loading')).toBeNull();
             expect(renderer.isLoading(container)).toBe(false);
@@ -84,7 +84,7 @@ describe('OverlayRenderer', () => {
 
     describe('loading lifecycle', () => {
         it('tracks a loading overlay after injection', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container, 'The Matrix');
@@ -94,7 +94,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('links the loading overlay to an IMDb search for the display title', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container, 'The Matrix');
@@ -103,7 +103,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('removes a loading overlay', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
             renderer.injectLoadingOverlay(container, 'The Matrix');
@@ -116,7 +116,7 @@ describe('OverlayRenderer', () => {
 
     describe('fade', () => {
         it('adds fm-faded class when shouldFade is true', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
 
             renderer.applyFade(container, true);
@@ -125,7 +125,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('removes fm-faded class when shouldFade is false', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
             container.classList.add('fm-faded');
 
@@ -137,7 +137,7 @@ describe('OverlayRenderer', () => {
 
     describe('container positioning', () => {
         it('ensures container has non-static position', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
             container.style.position = 'static';
 
@@ -147,7 +147,7 @@ describe('OverlayRenderer', () => {
         });
 
         it('does not change position if already non-static', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
             container.style.position = 'absolute';
 
@@ -159,7 +159,7 @@ describe('OverlayRenderer', () => {
 
     describe('clear overlays', () => {
         it('removes all overlay elements from the document', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             document.body.innerHTML =
                 '<div class="fm-rating-overlay"></div>' +
                 '<div class="fm-rating-overlay"></div>' +
@@ -172,10 +172,10 @@ describe('OverlayRenderer', () => {
         });
 
         it('removes the injected marker from overlay parents', () => {
-            const renderer = new OverlayRenderer(createConfig());
+            const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
             document.body.appendChild(container);
-            injectOverlay(renderer, container, new Title({ apiTitle: 'Test', imdbRating: 7.5 }));
+            injectOverlay(renderer, container, buildTitle().withApiTitle('Test').withImdbRating(7.5).build());
 
             renderer.clearAllOverlays();
 

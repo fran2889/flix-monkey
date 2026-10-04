@@ -11,9 +11,9 @@ import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { NetflixService } from '../../../src/core/services/index.js';
 import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
-import { Title } from '../../../src/core/title.js';
-import { createMockAdapter } from '../../mocks/adapter.js';
-import { createMockLogger } from '../../mocks/logger.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
+import { buildLogger } from '../../mocks/logger.js';
+import { buildTitle } from '../../mocks/title.js';
 
 describe('App', () => {
     let mockMutationObserverInstance;
@@ -51,7 +51,7 @@ describe('App', () => {
     });
 
     it('should initialize and hold state', () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
         expect(appRef).toBeInstanceOf(FlixMonkeyApp);
         expect(typeof appRef.redecorate).toBe('function');
@@ -63,14 +63,14 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new NetflixSurfaceManager(createMockLogger());
+        const surfaces = new NetflixSurfaceManager(buildLogger().build());
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Movie Title');
     });
 
     it('should deduplicate in-flight requests for the same title', async () => {
-        const mockAdapter = createMockAdapter();
+        const mockAdapter = buildMockAdapter().build();
 
         // Initialize DOM with multiple containers sharing the same title
         document.body.innerHTML = `
@@ -82,7 +82,7 @@ describe('App', () => {
 
         const getDataSpy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ apiTitle: 'Resolved' }));
+            .mockResolvedValue(buildTitle().withApiTitle('Resolved').build());
 
         appRef = startApp(mockAdapter);
 
@@ -103,14 +103,16 @@ describe('App', () => {
     });
 
     it('should debounce navigation events', async () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
 
         document.body.innerHTML = `
         <div class="title-card">
             <a aria-label="Test"></a>
         </div>
     `;
-        const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(new Title({ apiTitle: 'Test' }));
+        const spy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
         appRef = startApp(mockAdapter);
         await Promise.resolve();
@@ -141,8 +143,10 @@ describe('App', () => {
     });
 
     it('should respond to DOM mutations', async () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
-        const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(new Title({ apiTitle: 'Test' }));
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+        const spy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
         appRef = startApp(mockAdapter);
         await Promise.resolve();
@@ -170,8 +174,10 @@ describe('App', () => {
     });
 
     it('should trigger new decoration when a container is replaced', async () => {
-        const mockAdapter = createMockAdapter();
-        const spy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(new Title({ apiTitle: 'Test' }));
+        const mockAdapter = buildMockAdapter().build();
+        const spy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
         document.body.innerHTML = `
             <div class="title-card">
@@ -206,7 +212,7 @@ describe('App', () => {
     });
 
     it('should inject loading overlay while fetching', async () => {
-        const mockAdapter = createMockAdapter({ configGet: vi.fn().mockReturnValue(null) });
+        const mockAdapter = buildMockAdapter().withConfigGetReturning(null).build();
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -242,7 +248,7 @@ describe('App', () => {
     });
 
     it('should remove the loading overlay when getData rejects', async () => {
-        const mockAdapter = createMockAdapter({ configGet: vi.fn().mockReturnValue(null) });
+        const mockAdapter = buildMockAdapter().withConfigGetReturning(null).build();
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -264,10 +270,10 @@ describe('App', () => {
     });
 
     it('should trigger decoration on replaceState', async () => {
-        const mockAdapter = createMockAdapter();
+        const mockAdapter = buildMockAdapter().build();
         const getDataSpy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ apiTitle: 'Test' }));
+            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
         appRef = startApp(mockAdapter);
 
@@ -302,14 +308,14 @@ describe('App', () => {
             getOverride: vi.fn().mockResolvedValue(null),
             shouldFade: vi.fn().mockReturnValue(false),
         };
-        const app = new FlixMonkeyApp(createMockLogger(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
+        const app = new FlixMonkeyApp(buildLogger().build(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         window.dispatchEvent(new Event('beforeunload'));
     });
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
         expect(appRef.cacheManager).toBeDefined();
         expect(typeof appRef.cacheManager.clear).toBe('function');
         expect(appRef.disabledManager).toBeDefined();
@@ -319,7 +325,9 @@ describe('App', () => {
     it('should return null when Netflix is disabled via enableNetflix config', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? false : undefined) });
+        const adapter = buildMockAdapter()
+            .withConfigGetReturning(key => (key === 'enableNetflix' ? false : undefined))
+            .build();
         const result = startApp(adapter);
         expect(result).toBeNull();
     });
@@ -327,7 +335,9 @@ describe('App', () => {
     it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = createMockAdapter({ configGet: key => (key === 'enableNetflix' ? true : undefined) });
+        const adapter = buildMockAdapter()
+            .withConfigGetReturning(key => (key === 'enableNetflix' ? true : undefined))
+            .build();
         const result = startApp(adapter);
         expect(result).not.toBeNull();
         expect(result).toBeInstanceOf(FlixMonkeyApp);
@@ -335,7 +345,7 @@ describe('App', () => {
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
         appRef = startApp(mockAdapter);
@@ -357,7 +367,7 @@ describe('App', () => {
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
         vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('boom'));
 
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
 
         await Promise.resolve();
         vi.runAllTimers();
@@ -381,7 +391,7 @@ describe('App', () => {
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
         vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(new Promise(() => {})); // never resolves
 
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
         await Promise.resolve();
         vi.runAllTimers();
 
@@ -393,7 +403,7 @@ describe('App', () => {
     });
 
     it('should disconnect the MutationObserver on unload', () => {
-        const mockAdapter = createMockAdapter({ storageGet: vi.fn().mockResolvedValue({}) });
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
 
         const disconnectSpy = vi.spyOn(mockMutationObserverInstance, 'disconnect');
@@ -405,7 +415,7 @@ describe('App', () => {
         const parent = document.createElement('div');
         document.body.appendChild(parent);
 
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
         await Promise.resolve();
 
         const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
@@ -424,19 +434,16 @@ describe('App', () => {
     });
 
     it('should deduplicate in-flight requests for titles that differ only by punctuation', async () => {
-        const mockAdapter = createMockAdapter();
+        const mockAdapter = buildMockAdapter().build();
         document.body.innerHTML = `
             <div id="container">
                 <div class="title-card" id="card1"><a aria-label="Test: Movie"></a></div>
                 <div class="title-card" id="card2"><a aria-label="Test Movie"></a></div>
             </div>
         `;
-        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            new Title({
-                apiTitle: 'Test Movie',
-                imdbRating: 7.0,
-            })
-        );
+        const getDataSpy = vi
+            .spyOn(ApiClientManager.prototype, 'getData')
+            .mockResolvedValue(buildTitle().withApiTitle('Test Movie').withImdbRating(7.0).build());
         appRef = startApp(mockAdapter);
         await vi.waitFor(() => {
             if (getDataSpy.mock.calls.length === 0) throw new Error('Not called yet');
@@ -449,7 +456,7 @@ describe('App', () => {
         // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
         const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
 
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
 
         // Manually set up a container in the "decorated" state
         const container = document.createElement('div');
@@ -486,7 +493,7 @@ describe('App', () => {
         );
         const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay');
 
-        appRef = startApp(createMockAdapter());
+        appRef = startApp(buildMockAdapter().build());
 
         // Advance fake timers so the setTimeout(resolve, 0) yield in #decorateContainer fires,
         // moving execution past the yield and into the getData await
@@ -498,7 +505,7 @@ describe('App', () => {
         document.body.removeChild(container);
 
         // Now resolve the data - document.contains(container) is now false
-        resolveData(new Title({ apiTitle: 'Detach Test', imdbRating: 7.0 }));
+        resolveData(buildTitle().withApiTitle('Detach Test').withImdbRating(7.0).build());
         await Promise.resolve();
         await Promise.resolve();
 
@@ -514,8 +521,8 @@ describe('App', () => {
         `;
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ imdbRating: 7.0, imdbId: 'tt1' }));
-        appRef = startApp(createMockAdapter());
+            .mockResolvedValue(buildTitle().withImdbRating(7.0).withImdbId('tt1').build());
+        appRef = startApp(buildMockAdapter().build());
         await vi.waitFor(() => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
         });
@@ -538,8 +545,8 @@ describe('App', () => {
         `;
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(new Title({ imdbRating: 5.0, imdbId: 'tt2' }));
-        appRef = startApp(createMockAdapter());
+            .mockResolvedValue(buildTitle().withImdbRating(5.0).withImdbId('tt2').build());
+        appRef = startApp(buildMockAdapter().build());
         await vi.waitFor(() => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
         });
@@ -560,15 +567,12 @@ describe('App', () => {
                 </div>
             </div>
         `;
-        const adapter = createMockAdapter({
-            configGet: key => (key === 'enableFadeToggle' ? true : undefined),
-            storageGet: vi.fn().mockResolvedValue(null),
-        });
+        const adapter = buildMockAdapter()
+            .withConfigGetReturning(key => (key === 'enableFadeToggle' ? true : undefined))
+            .withStorageGetResolvingTo(null)
+            .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            new Title({
-                imdbRating: 7.0,
-                imdbId: 'tt3',
-            })
+            buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
         );
         appRef = startApp(adapter);
         const container = document.querySelector('.previewModal--player_container');
@@ -590,15 +594,12 @@ describe('App', () => {
             .mockImplementation(key =>
                 key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
             );
-        const adapter = createMockAdapter({
-            configGet: key => (key === 'enableFadeUnderRating' ? false : undefined),
-            storageGet,
-        });
+        const adapter = buildMockAdapter()
+            .withConfigGetReturning(key => (key === 'enableFadeUnderRating' ? false : undefined))
+            .withStorageGetResolvingTo(storageGet)
+            .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            new Title({
-                imdbRating: 7.0,
-                imdbId: 'tt5',
-            })
+            buildTitle().withImdbRating(7.0).withImdbId('tt5').build()
         );
         appRef = startApp(adapter);
         const card = document.querySelector('.title-card');
@@ -620,20 +621,17 @@ describe('App', () => {
         `;
         const storageGet = vi.fn().mockResolvedValue(null);
         const storageSet = vi.fn().mockResolvedValue(undefined);
-        const adapter = createMockAdapter({
-            configGet: key => {
+        const adapter = buildMockAdapter()
+            .withConfigGetReturning(key => {
                 if (key === 'enableFadeToggle') return true;
                 if (key === 'enableFadeUnderRating') return false;
                 return undefined;
-            },
-            storageGet,
-            storageSet,
-        });
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            new Title({
-                imdbRating: 5.0,
-                imdbId: 'tt4',
             })
+            .withStorageGetResolvingTo(storageGet)
+            .withStorageSetResolvingTo(storageSet)
+            .build();
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+            buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
         );
         appRef = startApp(adapter);
         const modal = document.querySelector('.previewModal--player_container');
@@ -654,14 +652,14 @@ describe('App', () => {
     it('should return null when ServiceRegistry.detect returns null', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
-        const result = startApp(createMockAdapter());
+        const result = startApp(buildMockAdapter().build());
         expect(result).toBeNull();
     });
 
     it('should return null when ServiceRegistry.detect returns undefined', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
-        const result = startApp(createMockAdapter());
+        const result = startApp(buildMockAdapter().build());
         expect(result).toBeNull();
     });
 
@@ -686,7 +684,7 @@ describe('App', () => {
                 applyFade: vi.fn(),
             };
             const app = new FlixMonkeyApp(
-                createMockLogger(),
+                buildLogger().build(),
                 mockCache,
                 {},
                 mockOverrideManager,
