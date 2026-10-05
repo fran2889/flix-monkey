@@ -103,10 +103,16 @@ at build time. `package.json` is the single source of version truth.
 
 ```js
 export class PlatformAdapter {
-  async storageGet(key)         { throw new Error('Not implemented'); }
-  async storageSet(key, value)  { throw new Error('Not implemented'); }
-  async httpFetch(url, options)  { throw new Error('Not implemented'); }
-  registerMenuCommand(label, fn) {}  // noop default
+    async storageGet(key) {
+        throw new Error('Not implemented');
+    }
+    async storageSet(key, value) {
+        throw new Error('Not implemented');
+    }
+    async httpFetch(url, options) {
+        throw new Error('Not implemented');
+    }
+    registerMenuCommand(label, fn) {} // noop default
 }
 ```
 
@@ -207,12 +213,14 @@ injected at startup via `initConfig(getterFn)` before `startApp()` runs:
 let _configGet = (key, fallback) => fallback;
 
 export function initConfig(getterFn) {
-  _configGet = getterFn;
+    _configGet = getterFn;
 }
 
 export const CONFIG = {
-  get omdbApiKey() { return _configGet('omdbApiKey', 'YOUR_OMDB_API_KEY'); },
-  // ... all existing getters unchanged
+    get omdbApiKey() {
+        return _configGet('omdbApiKey', 'YOUR_OMDB_API_KEY');
+    },
+    // ... all existing getters unchanged
 };
 ```
 
@@ -221,13 +229,19 @@ export const CONFIG = {
 ```js
 // GM_config.init fires its `init` event once values are loaded from GM storage.
 GM_config.init({
-  fields: buildGmConfigFields(CONFIG_FIELDS),  // generated from config-fields.js
-  events: {
-    init: () => {
-      initConfig((key, fallback) => { try { return GM_config.get(key); } catch { return fallback; } });
-      startApp(adapter);
+    fields: buildGmConfigFields(CONFIG_FIELDS), // generated from config-fields.js
+    events: {
+        init: () => {
+            initConfig((key, fallback) => {
+                try {
+                    return GM_config.get(key);
+                } catch {
+                    return fallback;
+                }
+            });
+            startApp(adapter);
+        },
     },
-  },
 });
 ```
 
@@ -237,7 +251,9 @@ GM_config.init({
 const stored = await browser.storage.local.get(null);
 initConfig((key, fallback) => stored[key] ?? fallback);
 browser.storage.onChanged.addListener(changes => {
-  Object.entries(changes).forEach(([k, v]) => { stored[k] = v.newValue; });
+    Object.entries(changes).forEach(([k, v]) => {
+        stored[k] = v.newValue;
+    });
 });
 startApp(adapter);
 ```
@@ -260,10 +276,10 @@ Config changes from the options page propagate to open tabs immediately via
 
 ### Manifest differences
 
-| Key | Firefox | Chrome |
-|---|---|---|
-| `background` | `{ "scripts": ["background.js"] }` | `{ "service_worker": "service-worker.js" }` |
-| `browser_specific_settings` | `{ "gecko": { "id": "flixmonkey@fran" } }` | omitted |
+| Key                         | Firefox                                    | Chrome                                      |
+| --------------------------- | ------------------------------------------ | ------------------------------------------- |
+| `background`                | `{ "scripts": ["background.js"] }`         | `{ "service_worker": "service-worker.js" }` |
+| `browser_specific_settings` | `{ "gecko": { "id": "flixmonkey@fran" } }` | omitted                                     |
 
 All other keys are identical: `manifest_version: 3`, `permissions: ["storage"]`,
 `host_permissions` covering the three API domains + Netflix,
@@ -273,12 +289,7 @@ All other keys are identical: `manifest_version: 3`, `permissions: ["storage"]`,
 ### `host_permissions`
 
 ```json
-[
-  "https://www.netflix.com/*",
-  "https://xmdbapi.com/*",
-  "https://www.omdbapi.com/*",
-  "https://api.imdbapi.dev/*"
-]
+["https://www.netflix.com/*", "https://xmdbapi.com/*", "https://www.omdbapi.com/*", "https://api.imdbapi.dev/*"]
 ```
 
 ### Linting
