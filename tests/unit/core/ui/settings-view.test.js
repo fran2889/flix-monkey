@@ -4,7 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS } from '../../../../src/core/config/config-fields.js';
+import { CONFIG_FIELDS } from '../../../../src/core/config/index.js';
 import { SettingsView } from '../../../../src/core/ui/settings-view.js';
 
 describe('SettingsView', () => {
