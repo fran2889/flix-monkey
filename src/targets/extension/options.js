@@ -22,5 +22,5 @@ import { WebExtensionAdapter } from '../../platform/webextension.js';
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
     const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
-    ui.render(document.body);
+    await ui.render(document.body);
 })();
