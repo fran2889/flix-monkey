@@ -50,7 +50,7 @@ function zipDirectory(sourceDir, outPath) {
 
         archive.pipe(output);
         archive.directory(sourceDir, false, entry => (entry.name.endsWith('.map') ? false : entry));
-        archive.finalize();
+        void archive.finalize();
     });
 }
 
