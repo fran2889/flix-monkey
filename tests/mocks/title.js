@@ -18,7 +18,7 @@ function buildTitle() {
         source: null,
         type: null,
     };
-    const builder = {
+    return {
         withDisplayTitle(value) {
             props.displayTitle = value;
             return this;
@@ -63,7 +63,6 @@ function buildTitle() {
             return new Title(props);
         },
     };
-    return builder;
 }
 
 // Static presets

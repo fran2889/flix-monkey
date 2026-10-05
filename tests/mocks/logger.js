@@ -11,7 +11,7 @@ import { buildMockAdapter } from './adapter.js';
 function buildLogger() {
     let debugValue = CONFIG_DEFAULTS.debug;
 
-    const builder = {
+    return {
         withDebug(enabled) {
             debugValue = enabled ? 'true' : 'false';
             return this;
@@ -34,8 +34,6 @@ function buildLogger() {
             return logger;
         },
     };
-
-    return builder;
 }
 
 // Static presets

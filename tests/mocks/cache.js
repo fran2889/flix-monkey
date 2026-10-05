@@ -12,7 +12,7 @@ function buildCacheEntry() {
         data: null,
         expires: null,
     };
-    const builder = {
+    return {
         withDisplayTitle(value) {
             props.displayTitle = value;
             return this;
@@ -33,7 +33,6 @@ function buildCacheEntry() {
             return new CacheEntry(props.displayTitle, props.imdbId, props.data, props.expires);
         },
     };
-    return builder;
 }
 
 // Static presets

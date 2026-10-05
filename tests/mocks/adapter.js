@@ -17,7 +17,7 @@ function buildMockAdapter() {
     // Store configuration instead of applying directly to adapter
     const overrides = {};
 
-    const builder = {
+    return {
         withStorageGetResolvingTo(value) {
             overrides.storageGet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
             return this;
@@ -128,8 +128,6 @@ function buildMockAdapter() {
             return adapter;
         },
     };
-
-    return builder;
 }
 
 // Static presets
