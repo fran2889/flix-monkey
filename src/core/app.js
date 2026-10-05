@@ -199,7 +199,7 @@ export class FlixMonkeyApp {
         const onFadeToggleClick = showFadeToggle
             ? el => this.#handleFadeToggleClick(dedupKey, data.imdbRating, el)
             : null;
-        const displayTitle = data.displayTitle || '';
+        const displayTitle = data.displayTitle;
         this.#renderer.injectOverlay(
             container,
             data,

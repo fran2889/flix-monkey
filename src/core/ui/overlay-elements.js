@@ -223,7 +223,7 @@ export function createOverlayElement(
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'fm-actions';
 
-    if (onEditClick && displayTitle) {
+    if (onEditClick) {
         const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
         const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
             onRefreshClick(displayTitle)
