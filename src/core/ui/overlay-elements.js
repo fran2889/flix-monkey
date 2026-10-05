@@ -36,8 +36,7 @@ function createRatingElement(label, value, className) {
     // Apply gradient color to rating values
     const numericValue = Number(value.replace('%', ''));
     const isPercentage = value.includes('%');
-    const color = calculateRatingColor(numericValue, isPercentage);
-    el.lastChild.style.color = color;
+    el.lastChild.style.color = calculateRatingColor(numericValue, isPercentage);
 
     return el;
 }
