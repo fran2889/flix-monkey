@@ -4,6 +4,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { chrome } from '../../../mocks/chrome.js';
+
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),
 }));
@@ -23,29 +25,23 @@ describe('Chrome Service Worker', () => {
         executeMigrations.mockReset();
         executeMigrations.mockResolvedValue();
 
-        global.chrome = {
-            runtime: {
-                id: 'test-ext',
-                onMessage: {
-                    addListener: vi.fn(fn => {
-                        messageListener = fn;
-                    }),
-                },
-                onInstalled: {
-                    addListener: vi.fn(fn => {
-                        installedListener = fn;
-                    }),
-                },
-                openOptionsPage: vi.fn(),
-            },
-            action: {
-                onClicked: {
-                    addListener: vi.fn(fn => {
-                        actionListener = fn;
-                    }),
-                },
-            },
-        };
+        chrome.runtime.id = 'test-ext';
+        chrome.runtime.onMessage.addListener = vi.fn(fn => {
+            messageListener = fn;
+        });
+        chrome.runtime.onInstalled.addListener = vi.fn(fn => {
+            installedListener = fn;
+        });
+        chrome.runtime.openOptionsPage = vi.fn();
+        chrome.action.onClicked.addListener = vi.fn(fn => {
+            actionListener = fn;
+        });
+
+        Object.defineProperty(global, 'chrome', {
+            value: chrome,
+            writable: true,
+            configurable: true,
+        });
 
         global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
         global.AbortController = class {

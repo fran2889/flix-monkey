@@ -6,6 +6,13 @@ import { vi } from 'vitest';
 
 export const browser = {
     runtime: {
+        id: undefined,
         getManifest: vi.fn(),
+        onMessage: { addListener: vi.fn() },
+        onInstalled: { addListener: vi.fn() },
+        openOptionsPage: vi.fn(),
+    },
+    action: {
+        onClicked: { addListener: vi.fn() },
     },
 };
