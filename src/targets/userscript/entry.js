@@ -40,6 +40,8 @@ function openSettings() {
     });
 }
 
-await runMigrations(adapter, logger);
-app = startApp(adapter);
-adapter.registerMenuCommand('FlixMonkey Settings', openSettings);
+void (async () => {
+    await runMigrations(adapter, logger);
+    app = startApp(adapter);
+    adapter.registerMenuCommand('FlixMonkey Settings', openSettings);
+})();
