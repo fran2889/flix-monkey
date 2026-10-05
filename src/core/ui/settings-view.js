@@ -63,9 +63,7 @@ export class SettingsView {
             const hasValidGroup = field.group && GROUPS[field.group];
             if (hasValidGroup) {
                 this.#addFieldToGroup(field, fieldsByGroup);
-            } else if (field.type === 'action') {
-                continue;
-            } else {
+            } else if (field.type !== 'action') {
                 ungroupedFields.push(field);
             }
         }
