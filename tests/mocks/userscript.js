@@ -4,7 +4,6 @@
  */
 import { vi } from 'vitest';
 
-export const GM_info = {};
 export const GM_xmlhttpRequest = vi.fn();
 export const GM_config = {
     init: vi.fn(),
