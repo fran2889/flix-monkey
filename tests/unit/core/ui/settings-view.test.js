@@ -8,20 +8,6 @@ import { CONFIG_FIELDS } from '../../../../src/core/config/config-fields.js';
 import { SettingsView } from '../../../../src/core/ui/settings-view.js';
 
 describe('SettingsView', () => {
-    it('reads one value snapshot from its rendered fields', () => {
-        const fields = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
-        const view = new SettingsView(fields, {
-            onSave: vi.fn(),
-            onClearCache: vi.fn(),
-            onResetClients: vi.fn(),
-        });
-        const container = document.createElement('div');
-        view.render(container, {});
-        container.querySelector('#fm-debug').checked = true;
-
-        expect(view.readValues()).toEqual({ debug: true });
-    });
-
     let actions;
     let container;
     let view;
@@ -37,6 +23,20 @@ describe('SettingsView', () => {
         document.head.innerHTML = '';
         document.body.innerHTML = '';
         document.body.appendChild(container);
+    });
+
+    it('reads one value snapshot from its rendered fields', () => {
+        const fields = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
+        const view = new SettingsView(fields, {
+            onSave: vi.fn(),
+            onClearCache: vi.fn(),
+            onResetClients: vi.fn(),
+        });
+        const container = document.createElement('div');
+        view.render(container, {});
+        container.querySelector('#fm-debug').checked = true;
+
+        expect(view.readValues()).toEqual({ debug: true });
     });
 
     describe('Rendering', () => {
