@@ -29,7 +29,7 @@ export class CacheEntry {
     }
 
     /**
-     * Deserializes from JSON storage format.
+     * Parses a JSON string from storage and returns a CacheEntry instance.
      *
      * @param {string} raw - Raw JSON string from storage
      * @returns {CacheEntry} New CacheEntry instance
@@ -40,7 +40,7 @@ export class CacheEntry {
     }
 
     /**
-     * Reconstructs the full Title from cache data.
+     * Combines cached data with entry metadata to create a complete Title object.
      *
      * @returns {import('../title.js').Title|null} Hydrated Title, or null if data is missing
      */
@@ -50,7 +50,7 @@ export class CacheEntry {
     }
 
     /**
-     * Serializes to JSON storage format.
+     * Converts the cache entry to a plain object suitable for JSON storage.
      *
      * @returns {object} Plain object for JSON serialization
      */

@@ -5,9 +5,8 @@
 import { CACHE_TTL_INFINITE } from '../constants.js';
 
 /**
- * Validates cache TTL values.
- * @param {string} val - Value to validate
- * @returns {string|null} Error message or null if valid
+ * @param {string} val
+ * @returns {string|null}
  */
 function validateCacheTtl(val) {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';

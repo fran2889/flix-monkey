@@ -92,7 +92,7 @@ export class CacheManager {
     }
 
     /**
-     * Clears all cache entries.
+     * Removes all cached title entries from storage.
      *
      * @returns {Promise<void>}
      */
@@ -104,7 +104,7 @@ export class CacheManager {
     }
 
     /**
-     * Deletes a single cache entry by display title.
+     * Removes a cached title entry by its display title.
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
      * @returns {Promise<void>}

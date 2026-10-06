@@ -210,7 +210,7 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
 }
 
 /**
- * Creates a completed rating overlay element.
+ * Builds the full rating overlay DOM element with ratings, fade controls, and action buttons.
  *
  * @param {import('../title.js').Title} title - Title and rating data to display.
  * @param {object} options - Overlay presentation options.
@@ -303,11 +303,10 @@ function createImdbLink(href) {
 }
 
 /**
- * Creates an icon button for overlay actions.
- * @param {string} emoji - The emoji character to display
- * @param {string} titleText - Tooltip text for the button
- * @param {() => void} onClick - Click handler
- * @returns {HTMLElement} Icon button element
+ * @param {string} emoji
+ * @param {string} titleText
+ * @param {() => void} onClick
+ * @returns {HTMLElement}
  */
 function createIconButton(emoji, titleText, onClick) {
     const btn = document.createElement('span');

@@ -45,7 +45,7 @@ export class DisabledClientsManager {
     }
 
     /**
-     * Resets all disabled clients.
+     * Clears all client lockouts and returns list of sources that were previously disabled.
      *
      * @returns {Promise<import('./constants.js').ApiSourceValue[]>} List of sources that were disabled.
      */
