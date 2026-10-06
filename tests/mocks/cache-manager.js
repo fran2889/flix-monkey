@@ -13,6 +13,8 @@ function buildMockCacheManager() {
     const mock = {
         read: vi.fn(),
         write: vi.fn(),
+        delete: vi.fn(),
+        clear: vi.fn(),
     };
 
     return {
@@ -33,6 +35,46 @@ function buildMockCacheManager() {
          */
         withWriteMock(impl) {
             mock.write.mockImplementation(impl);
+            return this;
+        },
+
+        /**
+         * Set the delete mock to resolve with a specific value.
+         * @param {*} value
+         * @returns {Object} Builder for chaining
+         */
+        withDeleteResolving(value) {
+            mock.delete.mockResolvedValue(value);
+            return this;
+        },
+
+        /**
+         * Set the delete mock implementation.
+         * @param {Function} impl
+         * @returns {Object} Builder for chaining
+         */
+        withDeleteMock(impl) {
+            mock.delete.mockImplementation(impl);
+            return this;
+        },
+
+        /**
+         * Set the clear mock to resolve with a specific value.
+         * @param {*} value
+         * @returns {Object} Builder for chaining
+         */
+        withClearResolving(value) {
+            mock.clear.mockResolvedValue(value);
+            return this;
+        },
+
+        /**
+         * Set the clear mock implementation.
+         * @param {Function} impl
+         * @returns {Object} Builder for chaining
+         */
+        withClearMock(impl) {
+            mock.clear.mockImplementation(impl);
             return this;
         },
 

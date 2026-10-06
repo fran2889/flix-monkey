@@ -6,17 +6,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
+import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
 
-const mockOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
-};
+const mockOverrideManager = buildMockIdOverrideManager().build();
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return healthy status when not disabled', async () => {
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-        };
+        const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
         const client = new XmdbApiClient(
             {},
             { get: _k => 'key' },
@@ -29,9 +27,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should return unhealthy status when disabled', async () => {
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(true),
-        };
+        const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
         const client = new XmdbApiClient(
             {},
             { get: _k => 'key' },
@@ -76,13 +72,12 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
 
     it('should return Title with override ID when override exists but getDetails returns null', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(null).build();
-        const mockOverrideManager = {
-            getImdbId: vi.fn().mockResolvedValue('tt1234567'),
-        };
+        const mockOverrideManager = buildMockIdOverrideManager().withGetImdbIdResolving('tt1234567').build();
+        const mockDisabledManager2 = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockDisabledManager2,
             buildLogger().build(),
             mockOverrideManager
         );

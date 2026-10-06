@@ -12,7 +12,12 @@ import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { NetflixService } from '../../../src/core/services/index.js';
 import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
 import { buildMockAdapter } from '../../mocks/adapter.js';
+import { buildMockCacheManager } from '../../mocks/cache-manager.js';
+import { buildMockFadeManager } from '../../mocks/fade-manager.js';
+import { buildMockIdOverrideManager } from '../../mocks/id-override-manager.js';
 import { buildLogger } from '../../mocks/logger.js';
+import { buildMockOverlayRenderer } from '../../mocks/overlay-renderer.js';
+import { buildMockSurfaceManager } from '../../mocks/surface-manager.js';
 import { buildTitle } from '../../mocks/title.js';
 
 describe('App', () => {
@@ -298,16 +303,12 @@ describe('App', () => {
     });
 
     it('should throw if init() is called twice on the same instance', () => {
-        const mockRenderer = {
-            injectStyles: vi.fn(),
-            hasOverlay: vi.fn().mockReturnValue(false),
-            isLoading: vi.fn().mockReturnValue(false),
-        };
-        const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
-        const mockFadeManager = {
-            getOverride: vi.fn().mockResolvedValue(null),
-            shouldFade: vi.fn().mockReturnValue(false),
-        };
+        const mockRenderer = buildMockOverlayRenderer()
+            .withHasOverlayReturning(false)
+            .withIsLoadingReturning(false)
+            .build();
+        const mockSurfaces = buildMockSurfaceManager().withDiscoverReturningEmpty().build();
+        const mockFadeManager = buildMockFadeManager().withShouldFadeReturning(false).build();
         const app = new FlixMonkeyApp(buildLogger().build(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
@@ -675,27 +676,19 @@ describe('App', () => {
          * the overlay. That wiring is the only production path to the private handlers.
          */
         const decorateAndCaptureActions = async container => {
-            mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                ensureRelative: vi.fn(),
-                injectLoadingOverlay: vi.fn(),
-                injectOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-                removeLoadingOverlay: vi.fn(),
-                applyFade: vi.fn(),
-            };
+            mockRenderer = buildMockOverlayRenderer()
+                .withHasOverlayReturning(false)
+                .withIsLoadingReturning(false)
+                .build();
             const app = new FlixMonkeyApp(
                 buildLogger().build(),
                 mockCache,
                 {},
                 mockOverrideManager,
                 mockRenderer,
-                {
-                    discover: vi
-                        .fn()
-                        .mockReturnValue([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }]),
-                },
+                buildMockSurfaceManager()
+                    .withDiscoverReturning([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }])
+                    .build(),
                 { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
             );
             app.init();
@@ -720,11 +713,8 @@ describe('App', () => {
         };
 
         beforeEach(() => {
-            mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
-            mockOverrideManager = {
-                getImdbId: vi.fn().mockResolvedValue(null),
-                setImdbId: vi.fn().mockResolvedValue(undefined),
-            };
+            mockCache = buildMockCacheManager().withDeleteResolving(undefined).build();
+            mockOverrideManager = buildMockIdOverrideManager().build();
         });
 
         it('should cancel the override when the prompt is dismissed', async () => {

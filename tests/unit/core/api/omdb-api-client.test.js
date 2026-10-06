@@ -6,12 +6,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { OmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
 
-const mockOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
-};
+const mockOverrideManager = buildMockIdOverrideManager().build();
 
 describe('OmdbApiClient', () => {
     it('should fetch details correctly', async () => {

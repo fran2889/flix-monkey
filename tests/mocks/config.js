@@ -22,6 +22,9 @@ function buildConfig() {
         fadeRatingThreshold: null,
         enableFadeToggle: null,
         debug: null,
+        enableNetflix: null,
+        enableHboMax: null,
+        enableDisneyPlus: null,
     };
     return {
         withApiClient(value) {
@@ -74,6 +77,18 @@ function buildConfig() {
         },
         withDebug(value) {
             overrides.debug = value;
+            return this;
+        },
+        withEnableNetflix(value) {
+            overrides.enableNetflix = value;
+            return this;
+        },
+        withEnableHboMax(value) {
+            overrides.enableHboMax = value;
+            return this;
+        },
+        withEnableDisneyPlus(value) {
+            overrides.enableDisneyPlus = value;
             return this;
         },
         build() {

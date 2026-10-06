@@ -6,11 +6,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DATA_VERSION_KEY, getMigrationByVersion, runMigrations } from '../../../src/core/migrations.js';
 import { buildMockAdapter } from '../../mocks/adapter.js';
+import { buildLogger } from '../../mocks/logger.js';
 
 const migration1 = getMigrationByVersion(1);
 
 describe('runMigrations', () => {
-    const logger = { info: vi.fn(), error: vi.fn() };
+    const logger = buildLogger().build();
 
     it.each([null, 'bad', '-1', -1])('treats %j as version zero', async stored => {
         const adapter = buildMockAdapter().withStorageGetResolvingTo(stored).build();
@@ -134,7 +135,7 @@ describe('runMigrations', () => {
 });
 
 describe(`migration ${migration1.version}: ${migration1.description}`, () => {
-    const logger = { info: vi.fn(), error: vi.fn() };
+    const logger = buildLogger().build();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -287,7 +288,7 @@ describe(`migration ${migration1.version}: ${migration1.description}`, () => {
 const migration2 = getMigrationByVersion(2);
 
 describe(`migration ${migration2.version}: ${migration2.description}`, () => {
-    const logger = { info: vi.fn(), error: vi.fn() };
+    const logger = buildLogger().build();
 
     beforeEach(() => {
         vi.clearAllMocks();

@@ -8,12 +8,12 @@ import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../../src
 import { Title } from '../../../../src/core/title.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildConfig } from '../../../mocks/config.js';
+import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
+import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
 
-const mockOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
-};
+const mockOverrideManager = buildMockIdOverrideManager().build();
 
 describe('AgregarrApiClient', () => {
     it('should return the first supported IMDb Suggestions result', async () => {
@@ -350,9 +350,7 @@ describe('AgregarrApiClient', () => {
         let mockLogger;
 
         beforeEach(() => {
-            mockOverrideManager = {
-                getImdbId: vi.fn().mockResolvedValue(null),
-            };
+            mockOverrideManager = buildMockIdOverrideManager().build();
             mockLogger = buildLogger().build();
         });
 
@@ -364,7 +362,7 @@ describe('AgregarrApiClient', () => {
                         Promise.resolve({ name: 'Overridden Movie', ratings: [{ source: 'imdb', value: '8.5' }] }),
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
@@ -394,7 +392,7 @@ describe('AgregarrApiClient', () => {
                     json: () => Promise.resolve({ name: 'Overridden Movie', ratings: [] }),
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
 
@@ -421,7 +419,7 @@ describe('AgregarrApiClient', () => {
                     d: [{ id: 'tt1234567', l: 'Normal Movie', qid: 'movie', y: 2020 }],
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
 
             mockOverrideManager.getImdbId.mockResolvedValue(null);
 
@@ -445,7 +443,7 @@ describe('AgregarrApiClient', () => {
         });
 
         it('should disable client when override fetch fails', async () => {
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
             const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
 
             mockOverrideManager.getImdbId.mockResolvedValue('tt9999999');
@@ -472,7 +470,7 @@ describe('AgregarrApiClient', () => {
         });
 
         it('should not attempt override or normal fetch when client is disabled', async () => {
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(true), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     ok: true,
@@ -495,7 +493,7 @@ describe('AgregarrApiClient', () => {
         });
 
         it('should pass overrideManager to subclass constructors', () => {
-            const mockDisabledManager = { isDisabled: vi.fn(), markDisabled: vi.fn() };
+            const mockDisabledManager = buildMockDisabledClientsManager().build();
             const mockAdapter = buildMockAdapter().build();
             const mockConfig = buildConfig().build();
 
