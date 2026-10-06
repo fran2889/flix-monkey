@@ -7,7 +7,7 @@ import { slugify } from '../utils/index.js';
 import { CacheEntry } from './cache-entry.js';
 
 /**
- *
+ * Manages cached title data with configurable TTL based on rating and release year.
  */
 export class CacheManager {
     #prefix = 'fmc:';
@@ -47,9 +47,6 @@ export class CacheManager {
         }
     }
 
-    /**
-     *
-     */
     #getCacheKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
@@ -76,9 +73,6 @@ export class CacheManager {
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
 
-    /**
-     *
-     */
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));

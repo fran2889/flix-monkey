@@ -16,7 +16,7 @@ export function nextFadeState(current) {
 }
 
 /**
- *
+ * Manages fade state overrides for individual titles based on user preferences and ratings.
  */
 export class FadeManager {
     #adapter;

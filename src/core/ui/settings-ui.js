@@ -6,7 +6,7 @@ import { CONFIG_FIELDS } from '../config/index.js';
 import { SettingsView } from './settings-view.js';
 
 /**
- *
+ * Manages the settings UI, handling rendering, saving, and interactions.
  */
 export class SettingsUI {
     #adapter;
@@ -16,11 +16,13 @@ export class SettingsUI {
     #logger;
 
     /**
-     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../logger.js').Logger} logger
-     * @param {import('../cache/').CacheManager} cacheManager
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager
-     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS]
+     * Creates a new SettingsUI instance.
+     *
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter.
+     * @param {import('../logger.js').Logger} logger - Logger for error reporting.
+     * @param {import('../cache/').CacheManager} cacheManager - Cache manager for clearing data.
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager - Manager for disabled API clients.
+     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS] - Configuration field definitions.
      */
     constructor(adapter, logger, cacheManager, disabledClientsManager, fields = CONFIG_FIELDS) {
         this.#adapter = adapter;
@@ -35,7 +37,9 @@ export class SettingsUI {
     }
 
     /**
+     * Renders the settings view into the provided container with current settings.
      *
+     * @param {HTMLElement} container - DOM element to render settings into.
      */
     async render(container) {
         const settings = (await this.#adapter.storageGetAll()) || {};
@@ -43,7 +47,7 @@ export class SettingsUI {
     }
 
     /**
-     *
+     * Saves the current settings values to storage after validation.
      */
     async save() {
         try {
@@ -60,9 +64,6 @@ export class SettingsUI {
         }
     }
 
-    /**
-     *
-     */
     async #clearCache() {
         try {
             await this.#cacheManager.clear();
@@ -72,9 +73,6 @@ export class SettingsUI {
         }
     }
 
-    /**
-     *
-     */
     async #resetClients() {
         try {
             const reenabled = await this.#disabledClientsManager.resetAll();

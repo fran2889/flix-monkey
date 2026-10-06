@@ -6,7 +6,7 @@ import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-
 import { buildOverlayStyles } from './ui/overlay-styles.js';
 
 /**
- *
+ * Handles creation and management of rating overlay DOM elements.
  */
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
@@ -25,7 +25,7 @@ export class OverlayRenderer {
     }
 
     /**
-     *
+     * Injects CSS styles for rating overlays into the document head.
      */
     injectStyles() {
         const existing = document.getElementById('fm-overlay-styles');
@@ -46,21 +46,29 @@ export class OverlayRenderer {
     }
 
     /**
+     * Checks if a container already has a rating overlay.
      *
+     * @param {HTMLElement} container - DOM element to check.
+     * @returns {boolean}
      */
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
     /**
+     * Checks if a container currently shows a loading indicator.
      *
+     * @param {HTMLElement} container - DOM element to check.
+     * @returns {boolean}
      */
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
     /**
+     * Ensures container has relative positioning for absolute-positioned overlays.
      *
+     * @param {HTMLElement} container - DOM element to check and potentially modify.
      */
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
@@ -107,21 +115,26 @@ export class OverlayRenderer {
     }
 
     /**
+     * Removes loading indicator from a container.
      *
+     * @param {HTMLElement} container - DOM element to clean up.
      */
     removeLoadingOverlay(container) {
         container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
     }
 
     /**
+     * Applies or removes fade styling based on the fade state.
      *
+     * @param {HTMLElement} container - DOM element to apply fade to.
+     * @param {boolean} shouldFade - Whether the container should be faded.
      */
     applyFade(container, shouldFade) {
         container.classList.toggle('fm-faded', shouldFade);
     }
 
     /**
-     *
+     * Removes all rating overlays from the document.
      */
     clearAllOverlays() {
         document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {

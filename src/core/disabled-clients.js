@@ -5,7 +5,7 @@
 import { ApiSource } from './constants.js';
 
 /**
- *
+ * Tracks temporarily disabled API clients to prevent redundant requests after failures.
  */
 export class DisabledClientsManager {
     #adapter;

@@ -7,7 +7,7 @@ import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 /**
- *
+ * UI component that renders and manages the settings panel with grouped configuration fields.
  */
 export class SettingsView {
     #fields;
@@ -16,8 +16,10 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields
-     * @param {import('../../types/extension.js').SettingsActions} actions
+     * Creates a SettingsView instance.
+     *
+     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields - Configuration field definitions.
+     * @param {import('../../types/extension.js').SettingsActions} actions - Action handlers for settings events.
      */
     constructor(fields, actions) {
         this.#fields = fields;
@@ -25,7 +27,10 @@ export class SettingsView {
     }
 
     /**
+     * Renders the complete settings UI into the specified container with current values.
      *
+     * @param {HTMLElement} container - DOM element to render into.
+     * @param {object} settings - Current settings values.
      */
     render(container, settings) {
         this.#container = container;
@@ -44,9 +49,6 @@ export class SettingsView {
         this.#setupAutoSave();
     }
 
-    /**
-     *
-     */
     #injectStyles() {
         if (!document.getElementById('flixmonkey-settings-styles')) {
             const style = document.createElement('style');
@@ -56,9 +58,6 @@ export class SettingsView {
         }
     }
 
-    /**
-     *
-     */
     #groupFieldsByGroup() {
         const groups = [];
         const fieldsByGroup = {};
@@ -80,7 +79,10 @@ export class SettingsView {
     }
 
     /**
+     * Adds a field to its corresponding group in the grouped fields map.
      *
+     * @param {object} field - Field configuration to add.
+     * @param {object} fieldsByGroup - Map of group IDs to field arrays.
      */
     #addFieldToGroup(field, fieldsByGroup) {
         const groupId = field.group;
@@ -91,7 +93,10 @@ export class SettingsView {
     }
 
     /**
+     * Builds group elements from grouped fields.
      *
+     * @param {Array} groups - Array to populate with group elements.
+     * @param {object} fieldsByGroup - Map of group IDs to field arrays.
      */
     #buildGroupElements(groups, fieldsByGroup) {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
@@ -106,7 +111,10 @@ export class SettingsView {
     }
 
     /**
+     * Adds ungrouped fields to the groups array.
      *
+     * @param {Array} groups - Array to populate with ungrouped fields.
+     * @param {Array} ungroupedFields - Fields without valid group assignments.
      */
     #addUngroupedFields(groups, ungroupedFields) {
         if (ungroupedFields.length > 0) {
@@ -121,7 +129,10 @@ export class SettingsView {
     }
 
     /**
+     * Groups fields by row for layout purposes.
      *
+     * @param {Array} fields - Array of field configurations to group.
+     * @returns {Array} Array of row objects containing fields.
      */
     #groupFieldsByRow(fields) {
         const rows = {};
@@ -136,7 +147,11 @@ export class SettingsView {
     }
 
     /**
+     * Creates a DOM element for a settings group with its fields.
      *
+     * @param {object} group - Group configuration.
+     * @param {object} settings - Current settings values.
+     * @returns {HTMLElement} Group container element.
      */
     #createGroupElement(group, settings) {
         const container = document.createElement('div');
@@ -178,7 +193,10 @@ export class SettingsView {
     }
 
     /**
+     * Determines the CSS class name for a field row based on its contents.
      *
+     * @param {object} row - Row configuration.
+     * @returns {string} CSS class name for the field.
      */
     #getFieldClassName(row) {
         const hasActions = row.fields.every(f => f.type === 'action');
@@ -190,7 +208,10 @@ export class SettingsView {
     }
 
     /**
+     * Creates a label element for a field row.
      *
+     * @param {object} row - Row configuration.
+     * @returns {HTMLElement} Label element.
      */
     #createFieldLabel(row) {
         const label = document.createElement('label');
@@ -228,7 +249,11 @@ export class SettingsView {
     }
 
     /**
+     * Creates a value container element for a field row.
      *
+     * @param {object} row - Row configuration.
+     * @param {object} settings - Current settings values.
+     * @returns {HTMLElement} Value container element.
      */
     #createFieldValueContainer(row, settings) {
         const valueContainer = document.createElement('div');
@@ -276,7 +301,11 @@ export class SettingsView {
     }
 
     /**
+     * Creates a complete field row element with label and value container.
      *
+     * @param {object} row - Row configuration.
+     * @param {object} settings - Current settings values.
+     * @returns {HTMLElement} Field row element.
      */
     #createFieldRow(row, settings) {
         const fieldElement = document.createElement('div');
@@ -292,7 +321,10 @@ export class SettingsView {
     }
 
     /**
+     * Creates an action button element for action-type fields.
      *
+     * @param {object} field - Action field configuration.
+     * @returns {HTMLButtonElement} Action button element.
      */
     #createActionField(field) {
         const btn = document.createElement('button');
@@ -310,7 +342,11 @@ export class SettingsView {
     }
 
     /**
+     * Creates an input element with a suffix label.
      *
+     * @param {object} field - Field configuration with suffix.
+     * @param {object} settings - Current settings values.
+     * @returns {HTMLElement} Input container element with suffix.
      */
     #createInputWithSuffix(field, settings) {
         const container = document.createElement('div');
@@ -330,7 +366,11 @@ export class SettingsView {
     }
 
     /**
+     * Creates an input element based on field type.
      *
+     * @param {object} field - Field configuration.
+     * @param {object} settings - Current settings values.
+     * @returns {HTMLElement} Input element (select, checkbox, or text).
      */
     #createInput(field, settings) {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
@@ -361,7 +401,10 @@ export class SettingsView {
     }
 
     /**
+     * Adds option elements to a select input.
      *
+     * @param {HTMLSelectElement} select - Select element to populate.
+     * @param {Array} options - Array of option values or [value, text] pairs.
      */
     #addOptions(select, options) {
         for (const configuredOption of options) {
@@ -376,14 +419,21 @@ export class SettingsView {
     }
 
     /**
+     * Gets the setting value from settings object, falling back to default.
      *
+     * @param {string} key - Setting key.
+     * @param {object} settings - Current settings values.
+     * @param {*} defaultValue - Default value if setting not present.
+     * @returns {*} Setting value or default.
      */
     #settingValue(key, settings, defaultValue) {
         return settings[key] !== undefined ? settings[key] : defaultValue;
     }
 
     /**
+     * Creates the status message container element.
      *
+     * @returns {HTMLElement} Status container element.
      */
     #createStatus() {
         const status = document.createElement('div');
@@ -393,7 +443,7 @@ export class SettingsView {
     }
 
     /**
-     *
+     * Sets up automatic saving when input values change.
      */
     #setupAutoSave() {
         const inputs = this.#container.querySelectorAll('.field-input');
@@ -409,7 +459,9 @@ export class SettingsView {
     }
 
     /**
+     * Reads current values from all form inputs in the settings UI.
      *
+     * @returns {object} Settings values keyed by field keys.
      */
     readValues() {
         const values = {};
@@ -429,7 +481,10 @@ export class SettingsView {
     }
 
     /**
+     * Validates settings values using field-specific validators.
      *
+     * @param {object} values - Settings values to validate.
+     * @returns {string[]} Array of validation error messages, empty if valid.
      */
     validate(values) {
         const errors = [];
@@ -446,7 +501,10 @@ export class SettingsView {
     }
 
     /**
+     * Displays a status message in the settings UI.
      *
+     * @param {string} message - Status message to display.
+     * @param {string} type - Status type for styling ('success', 'error', etc.).
      */
     showStatus(message, type) {
         const status = this.#container.querySelector('[id="fm-status"]');

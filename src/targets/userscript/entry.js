@@ -17,7 +17,9 @@ const logger = new Logger(adapter);
 let app = null;
 
 /**
+ * Gets the cache and disabled clients managers, either from the existing app or by creating new instances.
  *
+ * @returns {{cacheManager: import('../../core/cache/').CacheManager, disabledClientsManager: import('../../core/disabled-clients.js').DisabledClientsManager}}
  */
 function getSettingsDependencies() {
     if (app) {
@@ -34,7 +36,7 @@ function getSettingsDependencies() {
 }
 
 /**
- *
+ * Opens the FlixMonkey settings modal with all configuration options.
  */
 function openSettings() {
     const { cacheManager, disabledClientsManager } = getSettingsDependencies();

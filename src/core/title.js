@@ -83,16 +83,15 @@ export class Title {
         return new Title({ ...obj, displayTitle });
     }
 
-    /**
-     *
-     */
     #normalizeRating(val, converter) {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter(val);
     }
 
     /**
+     * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
      *
+     * @returns {boolean}
      */
     get hasRating() {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;

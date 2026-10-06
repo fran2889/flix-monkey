@@ -104,9 +104,6 @@ export class FlixMonkeyApp {
         this.#redecorateTitle(dedupKey, displayTitle);
     }
 
-    /**
-     *
-     */
     #initNavigationObservers() {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
@@ -145,9 +142,6 @@ export class FlixMonkeyApp {
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    /**
-     *
-     */
     #decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
             this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
@@ -156,9 +150,6 @@ export class FlixMonkeyApp {
         });
     }
 
-    /**
-     *
-     */
     async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
@@ -186,9 +177,6 @@ export class FlixMonkeyApp {
         }
     }
 
-    /**
-     *
-     */
     #getTitleRequest(dedupKey, displayTitle) {
         const existing = this.#inFlight.get(dedupKey);
         if (existing) return existing;
@@ -203,9 +191,6 @@ export class FlixMonkeyApp {
         return request;
     }
 
-    /**
-     *
-     */
     #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
@@ -227,9 +212,6 @@ export class FlixMonkeyApp {
         );
     }
 
-    /**
-     *
-     */
     async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {
         const domState = toggleBadgeEl.dataset.state;
         const currentState = domState === 'auto' ? null : domState;
@@ -247,7 +229,7 @@ export class FlixMonkeyApp {
     }
 
     /**
-     *
+     * Forces re-decoration of all titles on the current page.
      */
     redecorate() {
         this.#renderer.injectStyles();
@@ -255,9 +237,6 @@ export class FlixMonkeyApp {
         this.#decorateRoot(document);
     }
 
-    /**
-     *
-     */
     #disconnect() {
         this.#observer?.disconnect();
         this.#observer = null;

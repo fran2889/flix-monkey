@@ -64,14 +64,14 @@ export class CacheEntry {
     }
 
     /**
-     *
+     * @returns {string|null}
      */
     get imdbId() {
         return this.#imdbId;
     }
 
     /**
-     *
+     * @returns {boolean}
      */
     get isExpired() {
         return this.#expires !== null && Date.now() > this.#expires;

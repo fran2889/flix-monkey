@@ -23,11 +23,15 @@ function parseRatings(ratings, sourcePattern) {
 }
 
 /**
- *
+ * API client for OMDb service that provides movie and series information with ratings.
  */
 export class OmdbApiClient extends BaseApiClient {
     /**
-     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('../config/config-manager.js').ConfigManager} config
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('../logger.js').Logger} logger
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
      */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
@@ -42,7 +46,9 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     /**
+     * Checks if API key is configured and client is healthy.
      *
+     * @returns {Promise<import('../types/api.js').ClientStatus>}
      */
     async getStatus() {
         const apiKey = this.config.get('omdbApiKey');
@@ -51,7 +57,10 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     /**
+     * Searches for a title using OMDb API.
      *
+     * @param {string} displayTitle - The title to search for.
+     * @returns {Promise<import('../title.js').Title|null>} Title object or null if not found.
      */
     async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
@@ -66,7 +75,10 @@ export class OmdbApiClient extends BaseApiClient {
     }
 
     /**
+     * Fetches full details for a title when search returned minimal data.
      *
+     * @param {import('../title.js').Title} searchTitle - Title from search results.
+     * @returns {Promise<import('../title.js').Title>} Title with full details.
      */
     async getDetails(searchTitle) {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)

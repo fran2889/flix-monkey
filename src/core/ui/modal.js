@@ -4,14 +4,16 @@
  */
 
 /**
- *
+ * Accessible modal dialog component for settings and other UI overlays.
  */
 export class Modal {
     #returnFocus = null;
     #escHandler = null;
 
     /**
+     * Creates a modal dialog with the specified title.
      *
+     * @param {string} title - Modal title displayed in the header.
      */
     constructor(title) {
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
@@ -48,7 +50,7 @@ export class Modal {
     }
 
     /**
-     *
+     * Displays the modal and sets up keyboard navigation.
      */
     open() {
         if (this.#escHandler) return;
@@ -62,9 +64,6 @@ export class Modal {
         document.addEventListener('keydown', this.#escHandler);
     }
 
-    /**
-     *
-     */
     #close() {
         if (this.#escHandler) {
             document.removeEventListener('keydown', this.#escHandler);
@@ -75,7 +74,9 @@ export class Modal {
     }
 
     /**
+     * Returns the modal body container for adding custom content.
      *
+     * @returns {HTMLElement} The modal body container.
      */
     getContentContainer() {
         return this.overlay.querySelector('.fm-modal-body');

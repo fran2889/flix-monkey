@@ -4,7 +4,10 @@
  */
 
 /**
+ * Parses a hex color string into RGB components.
  *
+ * @param {string} hex - Hex color string (e.g., '#ff0000').
+ * @returns {{r: number, g: number, b: number}} RGB color components.
  */
 function parseHex(hex) {
     return {
@@ -15,7 +18,12 @@ function parseHex(hex) {
 }
 
 /**
+ * Converts RGB color components to HSL color space.
  *
+ * @param {number} r - Red component (0-255).
+ * @param {number} g - Green component (0-255).
+ * @param {number} b - Blue component (0-255).
+ * @returns {{h: number, s: number, l: number}} HSL color components.
  */
 function rgbToHsl(r, g, b) {
     const rf = r / 255;
@@ -49,7 +57,12 @@ function rgbToHsl(r, g, b) {
 }
 
 /**
+ * Converts HSL color components to RGB color space.
  *
+ * @param {number} h - Hue component (0-360).
+ * @param {number} s - Saturation component (0-1).
+ * @param {number} l - Lightness component (0-1).
+ * @returns {{r: number, g: number, b: number}} RGB color components.
  */
 function hslToRgb(h, s, l) {
     if (s === 0) {
@@ -73,7 +86,12 @@ function hslToRgb(h, s, l) {
 }
 
 /**
+ * Converts HSL hue component to RGB value.
  *
+ * @param {number} p - RGB component value.
+ * @param {number} q - RGB component value.
+ * @param {number} t - Hue component normalized to 0-1.
+ * @returns {number} RGB component value.
  */
 function hueToRgb(p, q, t) {
     if (t < 0) t += 1;
@@ -85,7 +103,12 @@ function hueToRgb(p, q, t) {
 }
 
 /**
+ * Interpolates between two colors by progress amount, converting through HSL space.
  *
+ * @param {number} progress - Interpolation factor (0-1).
+ * @param {string} startHex - Starting hex color.
+ * @param {string} endHex - Ending hex color.
+ * @returns {string} Interpolated RGB color string.
  */
 export function interpolateColor(progress, startHex, endHex) {
     const startRgb = parseHex(startHex);

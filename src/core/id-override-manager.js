@@ -38,9 +38,6 @@ export class IdOverrideManager {
         }
     }
 
-    /**
-     *
-     */
     #getKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }

@@ -8,7 +8,7 @@ const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
 
 /**
- *
+ * Manages discovery and identification of streaming service surfaces for rating overlay injection.
  */
 export class SurfaceManager {
     #SURFACES;

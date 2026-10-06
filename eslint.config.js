@@ -95,6 +95,7 @@ export default [
                         ClassDeclaration: true,
                     },
                     contexts: ['export'],
+                    publicOnly: true,
                 },
             ],
             'jsdoc/require-description': ['error', { contexts: ['export'] }],

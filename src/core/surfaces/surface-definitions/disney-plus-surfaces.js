@@ -10,7 +10,10 @@ const DISNEY_PLUS_TITLE_END =
     /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
 
 /**
+ * Normalizes Disney+ title text by removing special prefixes and reformatting Star Wars episodes.
  *
+ * @param {string} title - Original Disney+ title text.
+ * @returns {string} Canonicalized title.
  */
 function canonicalizeDisneyPlusTitle(title) {
     const canonicalTitle = title
@@ -21,7 +24,10 @@ function canonicalizeDisneyPlusTitle(title) {
 }
 
 /**
+ * Extracts the canonical title from a Disney+ tile element using various selectors.
  *
+ * @param {HTMLElement} tile - DOM element representing a Disney+ content tile.
+ * @returns {string|null} Extracted title or null if not found.
  */
 export function extractDisneyPlusTitle(tile) {
     const imageTitle = [...tile.querySelectorAll('img[alt]:not([data-testid="set-item-rating"] img)')]
@@ -66,11 +72,13 @@ const DISNEY_PLUS_SURFACES = Object.freeze({
 });
 
 /**
- *
+ * Disney+ specific surface manager for discovering Disney+ streaming service surfaces.
  */
 export class DisneyPlusSurfaceManager extends SurfaceManager {
     /**
+     * Creates Disney+ surface manager with Disney+-specific surfaces.
      *
+     * @param {import('../../logger.js').Logger} logger - For logging surface discovery issues.
      */
     constructor(logger) {
         super(logger, DISNEY_PLUS_SURFACES);

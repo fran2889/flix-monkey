@@ -7,7 +7,7 @@ import { Title } from './title.js';
 /** @typedef {import('./cache/').CacheEntry} CacheEntry */
 
 /**
- *
+ * Manages API clients, caching, and coordinates fetching rating data.
  */
 export class ApiClientManager {
     #cache;
@@ -55,9 +55,6 @@ export class ApiClientManager {
         return await this.#fetch(displayTitle);
     }
 
-    /**
-     *
-     */
     async #fetch(displayTitle, imdbId = null) {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
@@ -88,7 +85,7 @@ export class ApiClientManager {
     }
 
     /**
-     *
+     * @returns {import('./disabled-clients.js').DisabledClientsManager}
      */
     get disabledManager() {
         return this.#disabledManager;

@@ -18,6 +18,8 @@ export class Logger {
     }
 
     /**
+     * Logs debug message when debug mode is enabled in configuration.
+     *
      * @param {unknown} message
      * @param {...unknown} args
      */
@@ -28,6 +30,8 @@ export class Logger {
     }
 
     /**
+     * Logs informational message to console.
+     *
      * @param {unknown} message
      * @param {...unknown} args
      */
@@ -36,6 +40,8 @@ export class Logger {
     }
 
     /**
+     * Logs warning message to console.
+     *
      * @param {unknown} message
      * @param {...unknown} args
      */
@@ -44,6 +50,8 @@ export class Logger {
     }
 
     /**
+     * Logs error message to console.
+     *
      * @param {unknown} message
      * @param {...unknown} args
      */

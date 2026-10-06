@@ -40,9 +40,6 @@ export class RequestQueue {
         });
     }
 
-    /**
-     *
-     */
     async #process() {
         if (this.#isProcessing) return;
         this.#isProcessing = true;
@@ -79,24 +76,15 @@ export class RequestQueue {
         return Number.isNaN(parsedTime) ? 0 : parsedTime;
     }
 
-    /**
-     *
-     */
     #claimNextRequestSlot() {
         this.#lastLocalReqTime = Date.now();
         return Boolean(this.#globalSyncKey && this.#adapter);
     }
 
-    /**
-     *
-     */
     async #syncClaimedRequestSlot() {
         await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
-    /**
-     *
-     */
     async #dispatchNextRequest() {
         const { url, resolve, reject, fetchFn } = this.#queue.shift();
         try {

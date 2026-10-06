@@ -10,7 +10,12 @@ import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants.js';
  */
 export class FlixMonkeyError extends Error {
     /**
+     * Creates a FlixMonkeyError with optional request details.
      *
+     * @param {string} message - Error message.
+     * @param {string|null} [url=null] - Request URL if applicable.
+     * @param {number|null} [status=null] - HTTP status code if applicable.
+     * @param {string|null} [body=null] - Response body if applicable.
      */
     constructor(message, url = null, status = null, body = null) {
         super(message);

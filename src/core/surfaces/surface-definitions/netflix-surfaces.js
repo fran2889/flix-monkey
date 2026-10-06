@@ -56,11 +56,11 @@ export const NETFLIX_SURFACES = Object.freeze({
 });
 
 /**
- *
+ * Netflix-specific surface manager for discovering and managing Netflix UI surfaces.
  */
 export class NetflixSurfaceManager extends SurfaceManager {
     /**
-     *
+     * @param {import('../../logger.js').Logger} logger - For logging surface discovery issues.
      */
     constructor(logger) {
         super(logger, NETFLIX_SURFACES);

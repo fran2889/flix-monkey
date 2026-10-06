@@ -8,7 +8,7 @@ import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 /** @typedef {keyof typeof CONFIG_DEFAULTS} ConfigKey */
 
 /**
- *
+ * Manages application configuration with fallback to defaults and type conversion utilities.
  */
 export class ConfigManager {
     #adapter;
@@ -50,7 +50,10 @@ export class ConfigManager {
     }
 
     /**
+     * Returns the configured value as an integer.
      *
+     * @param {ConfigKey} key
+     * @returns {number}
      */
     getInt(key) {
         const val = this.get(key);
@@ -59,7 +62,10 @@ export class ConfigManager {
     }
 
     /**
+     * Returns the configured value as a float.
      *
+     * @param {ConfigKey} key
+     * @returns {number}
      */
     getFloat(key) {
         const val = this.get(key);
@@ -68,7 +74,10 @@ export class ConfigManager {
     }
 
     /**
+     * Returns the configured value as a boolean.
      *
+     * @param {ConfigKey} key
+     * @returns {boolean}
      */
     getBool(key) {
         return this.get(key) === 'true';

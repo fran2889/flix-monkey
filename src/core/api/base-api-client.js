@@ -118,9 +118,6 @@ export class BaseApiClient {
         return this.#queue.enqueue(url, priority, requestUrl => this.#adapter.httpFetch(requestUrl));
     }
 
-    /**
-     *
-     */
     async #isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
@@ -154,21 +151,21 @@ export class BaseApiClient {
     }
 
     /**
-     *
+     * @returns {import('../constants.js').ApiSourceValue}
      */
     get source() {
         return this.#source;
     }
 
     /**
-     *
+     * @returns {import('../config/config-manager.js').ConfigManager}
      */
     get config() {
         return this.#config;
     }
 
     /**
-     *
+     * @returns {import('../logger.js').Logger}
      */
     get logger() {
         return this.#logger;
