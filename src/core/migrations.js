@@ -6,12 +6,6 @@
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
-/**
- * Clears all cache entries for a given prefix.
- *
- * @param {import('../platform/adapter.js').PlatformAdapter} adapter
- * @returns {Promise<object>} Summary with migration counts.
- */
 async function clearCache(adapter) {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
     await Promise.all(keys.map(key => adapter.storageDelete(key)));
@@ -176,12 +170,6 @@ export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
     }
 }
 
-/**
- * Parses the stored data version string into a safe integer.
- *
- * @param {unknown} value - Stored version value from storage.
- * @returns {number} Parsed version number or 0 if invalid.
- */
 function parseStoredVersion(value) {
     if (typeof value === 'number') {
         return Number.isSafeInteger(value) && value >= 0 ? value : 0;
@@ -193,12 +181,6 @@ function parseStoredVersion(value) {
     return 0;
 }
 
-/**
- * Validates migration array structure and version ordering.
- *
- * @param {unknown} migrations - Migration array to validate.
- * @throws {TypeError} If migrations are invalid.
- */
 function validateMigrations(migrations) {
     if (!Array.isArray(migrations)) {
         throw new TypeError('Migrations must be an array');

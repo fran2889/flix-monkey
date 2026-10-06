@@ -78,12 +78,6 @@ export class SettingsView {
         return groups;
     }
 
-    /**
-     * Adds a field to its corresponding group in the grouped fields map.
-     *
-     * @param {object} field - Field configuration to add.
-     * @param {object} fieldsByGroup - Map of group IDs to field arrays.
-     */
     #addFieldToGroup(field, fieldsByGroup) {
         const groupId = field.group;
         if (!fieldsByGroup[groupId]) {
@@ -92,12 +86,6 @@ export class SettingsView {
         fieldsByGroup[groupId].push(field);
     }
 
-    /**
-     * Builds group elements from grouped fields.
-     *
-     * @param {Array} groups - Array to populate with group elements.
-     * @param {object} fieldsByGroup - Map of group IDs to field arrays.
-     */
     #buildGroupElements(groups, fieldsByGroup) {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
             const groupInfo = GROUPS[groupId];
@@ -110,12 +98,6 @@ export class SettingsView {
         }
     }
 
-    /**
-     * Adds ungrouped fields to the groups array.
-     *
-     * @param {Array} groups - Array to populate with ungrouped fields.
-     * @param {Array} ungroupedFields - Fields without valid group assignments.
-     */
     #addUngroupedFields(groups, ungroupedFields) {
         if (ungroupedFields.length > 0) {
             groups.push({
@@ -128,12 +110,6 @@ export class SettingsView {
         }
     }
 
-    /**
-     * Groups fields by row for layout purposes.
-     *
-     * @param {Array} fields - Array of field configurations to group.
-     * @returns {Array} Array of row objects containing fields.
-     */
     #groupFieldsByRow(fields) {
         const rows = {};
         for (const field of fields) {
@@ -146,13 +122,6 @@ export class SettingsView {
         return Object.values(rows);
     }
 
-    /**
-     * Creates a DOM element for a settings group with its fields.
-     *
-     * @param {object} group - Group configuration.
-     * @param {object} settings - Current settings values.
-     * @returns {HTMLElement} Group container element.
-     */
     #createGroupElement(group, settings) {
         const container = document.createElement('div');
 
@@ -192,12 +161,6 @@ export class SettingsView {
         return container;
     }
 
-    /**
-     * Determines the CSS class name for a field row based on its contents.
-     *
-     * @param {object} row - Row configuration.
-     * @returns {string} CSS class name for the field.
-     */
     #getFieldClassName(row) {
         const hasActions = row.fields.every(f => f.type === 'action');
         const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
@@ -207,12 +170,6 @@ export class SettingsView {
         return 'field';
     }
 
-    /**
-     * Creates a label element for a field row.
-     *
-     * @param {object} row - Row configuration.
-     * @returns {HTMLElement} Label element.
-     */
     #createFieldLabel(row) {
         const label = document.createElement('label');
         label.className = 'field-label';
@@ -248,13 +205,6 @@ export class SettingsView {
         return label;
     }
 
-    /**
-     * Creates a value container element for a field row.
-     *
-     * @param {object} row - Row configuration.
-     * @param {object} settings - Current settings values.
-     * @returns {HTMLElement} Value container element.
-     */
     #createFieldValueContainer(row, settings) {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
@@ -300,13 +250,6 @@ export class SettingsView {
         return valueContainer;
     }
 
-    /**
-     * Creates a complete field row element with label and value container.
-     *
-     * @param {object} row - Row configuration.
-     * @param {object} settings - Current settings values.
-     * @returns {HTMLElement} Field row element.
-     */
     #createFieldRow(row, settings) {
         const fieldElement = document.createElement('div');
         fieldElement.className = this.#getFieldClassName(row);
@@ -320,12 +263,6 @@ export class SettingsView {
         return fieldElement;
     }
 
-    /**
-     * Creates an action button element for action-type fields.
-     *
-     * @param {object} field - Action field configuration.
-     * @returns {HTMLButtonElement} Action button element.
-     */
     #createActionField(field) {
         const btn = document.createElement('button');
         btn.className = 'action-btn';
@@ -341,13 +278,6 @@ export class SettingsView {
         return btn;
     }
 
-    /**
-     * Creates an input element with a suffix label.
-     *
-     * @param {object} field - Field configuration with suffix.
-     * @param {object} settings - Current settings values.
-     * @returns {HTMLElement} Input container element with suffix.
-     */
     #createInputWithSuffix(field, settings) {
         const container = document.createElement('div');
         container.className = 'input-with-suffix';
@@ -365,13 +295,6 @@ export class SettingsView {
         return container;
     }
 
-    /**
-     * Creates an input element based on field type.
-     *
-     * @param {object} field - Field configuration.
-     * @param {object} settings - Current settings values.
-     * @returns {HTMLElement} Input element (select, checkbox, or text).
-     */
     #createInput(field, settings) {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
         input.className = 'field-input';
@@ -400,12 +323,6 @@ export class SettingsView {
         return input;
     }
 
-    /**
-     * Adds option elements to a select input.
-     *
-     * @param {HTMLSelectElement} select - Select element to populate.
-     * @param {Array} options - Array of option values or [value, text] pairs.
-     */
     #addOptions(select, options) {
         for (const configuredOption of options) {
             const option = document.createElement('option');
@@ -418,23 +335,10 @@ export class SettingsView {
         }
     }
 
-    /**
-     * Gets the setting value from settings object, falling back to default.
-     *
-     * @param {string} key - Setting key.
-     * @param {object} settings - Current settings values.
-     * @param {*} defaultValue - Default value if setting not present.
-     * @returns {*} Setting value or default.
-     */
     #settingValue(key, settings, defaultValue) {
         return settings[key] !== undefined ? settings[key] : defaultValue;
     }
 
-    /**
-     * Creates the status message container element.
-     *
-     * @returns {HTMLElement} Status container element.
-     */
     #createStatus() {
         const status = document.createElement('div');
         status.id = 'fm-status';
@@ -442,9 +346,6 @@ export class SettingsView {
         return status;
     }
 
-    /**
-     * Sets up automatic saving when input values change.
-     */
     #setupAutoSave() {
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
