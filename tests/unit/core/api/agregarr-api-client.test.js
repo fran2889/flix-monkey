@@ -28,7 +28,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -50,7 +50,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -65,7 +65,7 @@ describe('AgregarrApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -78,10 +78,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -91,7 +91,7 @@ describe('AgregarrApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -104,10 +104,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -120,10 +120,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -137,7 +137,7 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -153,7 +153,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -181,7 +181,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -207,7 +207,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -227,7 +227,7 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -243,7 +243,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -264,7 +264,7 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            undefined,
+            buildConfig().build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -286,7 +286,7 @@ describe('AgregarrApiClient', () => {
             constructor() {
                 super(
                     buildMockAdapter().build(),
-                    { get: _k => 'key' },
+                    buildConfig().build(),
                     buildMockDisabledClientsManager.notDisabled(),
                     buildLogger().build(),
                     mockOverrideManager
@@ -319,7 +319,7 @@ describe('AgregarrApiClient', () => {
             constructor() {
                 super(
                     buildMockAdapter().build(),
-                    { get: _k => 'key' },
+                    buildConfig().build(),
                     buildMockDisabledClientsManager.notDisabled(),
                     buildLogger().build(),
                     mockOverrideManager

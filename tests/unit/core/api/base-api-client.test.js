@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildConfig } from '../../../mocks/config.js';
 import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
 import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
@@ -17,7 +18,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
         const client = new XmdbApiClient(
             {},
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
@@ -30,7 +31,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
         const client = new XmdbApiClient(
             {},
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
@@ -76,7 +77,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockDisabledManager2 = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             mockDisabledManager2,
             buildLogger().build(),
             mockOverrideManager

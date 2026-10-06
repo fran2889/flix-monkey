@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { OmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildConfig } from '../../../mocks/config.js';
 import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
 import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
@@ -26,9 +27,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -42,10 +41,10 @@ describe('OmdbApiClient', () => {
     it('should return unhealthy status when API key is missing', async () => {
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
-            { get: () => '' },
+            buildConfig().withOmdbApiKey('').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
-            undefined
+            mockOverrideManager
         );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
@@ -61,9 +60,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -87,9 +84,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -113,7 +108,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -135,7 +130,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -151,10 +146,10 @@ describe('OmdbApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -164,9 +159,7 @@ describe('OmdbApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const client = new OmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -186,7 +179,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -205,7 +198,7 @@ describe('OmdbApiClient', () => {
             .build();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -229,7 +222,7 @@ describe('OmdbApiClient', () => {
         const mockDisabledManager = buildMockDisabledClientsManager.notDisabled();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: () => 'apikey' },
+            buildConfig().withOmdbApiKey('apikey').build(),
             mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
@@ -252,10 +245,10 @@ describe('OmdbApiClient', () => {
         };
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
-            { get: _k => 'test-api-key' },
+            buildConfig().withOmdbApiKey('test-api-key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
-            undefined
+            mockOverrideManager
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
@@ -273,7 +266,7 @@ describe('OmdbApiClient', () => {
         mockAdapter.httpFetch = vi.fn();
         const client = new OmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withOmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -298,10 +291,10 @@ describe('OmdbApiClient', () => {
         };
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
-            { get: _k => 'test-api-key' },
+            buildConfig().withOmdbApiKey('test-api-key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
-            undefined
+            mockOverrideManager
         );
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(null).build();

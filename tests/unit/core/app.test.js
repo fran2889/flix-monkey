@@ -309,7 +309,15 @@ describe('App', () => {
             .build();
         const mockSurfaces = buildMockSurfaceManager().withDiscoverReturningEmpty().build();
         const mockFadeManager = buildMockFadeManager().withShouldFadeReturning(false).build();
-        const app = new FlixMonkeyApp(buildLogger().build(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
+        const app = new FlixMonkeyApp(
+            buildLogger().build(),
+            buildMockCacheManager().build(),
+            mockFadeManager,
+            buildMockIdOverrideManager().build(),
+            mockRenderer,
+            mockSurfaces,
+            {}
+        );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         window.dispatchEvent(new Event('beforeunload'));

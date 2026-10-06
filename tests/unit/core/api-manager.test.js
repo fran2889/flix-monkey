@@ -9,6 +9,7 @@ import { FlixMonkeyError } from '../../../src/core/utils/index.js';
 import { buildMockApiClient } from '../../mocks/api-client.js';
 import { buildCacheEntry } from '../../mocks/cache.js';
 import { buildMockCacheManager } from '../../mocks/cache-manager.js';
+import { buildMockDisabledClientsManager } from '../../mocks/disabled-clients.js';
 import { buildLogger } from '../../mocks/logger.js';
 import { buildTitle } from '../../mocks/title.js';
 
@@ -23,7 +24,12 @@ describe('ApiClientManager', () => {
             .build();
         const mockCache = buildMockCacheManager().withReadResolving(entry).build();
         const mockClient = buildMockApiClient().withSource('agregarr').build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Cached Movie');
         expect(mockCache.read).toHaveBeenCalledWith('Some Title');
@@ -36,7 +42,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(buildTitle().withApiTitle('Fetched Movie').build())
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
@@ -48,7 +59,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(null)
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, client);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            client
+        );
         const result = await manager.getData('Some Title');
         expect(result).not.toBeNull();
         expect(result.hasRating).toBe(false);
@@ -63,7 +79,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(null)
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, client);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            client
+        );
         const result = await manager.getData('Unknown Movie');
         expect(result.hasRating).toBe(false);
         expect(result.source).toBe('omdb');
@@ -79,7 +100,12 @@ describe('ApiClientManager', () => {
             .withSource('agregarr')
             .withStatusResolving({ healthy: false })
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, unhealthyClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            unhealthyClient
+        );
         const result = await manager.getData('Test Movie');
         expect(result.hasRating).toBe(false);
         expect(result.source).toBe('agregarr');
@@ -95,7 +121,12 @@ describe('ApiClientManager', () => {
             .withFetchRejecting(new Error('API error'))
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Error Movie');
         expect(result.hasRating).toBe(false);
         expect(result.displayTitle).toBe('Error Movie');
@@ -118,7 +149,12 @@ describe('ApiClientManager', () => {
             .withDisableResolving()
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Test Movie');
         expect(mockClient.disable).toHaveBeenCalled();
         expect(result.hasRating).toBe(false);
@@ -134,7 +170,12 @@ describe('ApiClientManager', () => {
             .withDisableResolving()
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Test Movie');
         expect(mockClient.disable).not.toHaveBeenCalled();
     });
@@ -149,7 +190,12 @@ describe('ApiClientManager', () => {
             .withDisableResolving()
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Test Movie');
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Test Movie'), {
             url: 'https://api.example.com/search',
@@ -167,7 +213,12 @@ describe('ApiClientManager', () => {
             .withFetchRejecting(error)
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Test Movie');
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Test Movie'), {
             url: null,
@@ -186,7 +237,12 @@ describe('ApiClientManager', () => {
             .withFetchResolving(title)
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Logged Movie');
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Successfully retrieved ratings for "Logged Movie" from agregarr')
@@ -206,7 +262,7 @@ describe('ApiClientManager', () => {
         const manager = new ApiClientManager(
             mockLogger,
             mockCache,
-            {},
+            buildMockDisabledClientsManager.notDisabled(),
             buildMockApiClient().withSource('agregarr').build()
         );
         await manager.getData('Cached Movie');
@@ -229,7 +285,12 @@ describe('ApiClientManager', () => {
             .withFetchResolving(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build())
             .build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Cached Movie');
         expect(mockLogger.debug).toHaveBeenCalledWith('Using cached IMDb ID tt123 for "Cached Movie"');
     });
@@ -253,7 +314,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build())
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Cached Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', 'tt123');
     });
@@ -277,7 +343,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(buildTitle().withApiTitle('No ID Movie').build())
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('No ID Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('No ID Movie', null);
     });
@@ -297,7 +368,12 @@ describe('ApiClientManager', () => {
             .build();
         const mockCache = buildMockCacheManager().withReadResolving(entry).build();
         const mockClient = buildMockApiClient().withSource('agregarr').build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Fresh Movie');
         expect(result).toEqual(titleObj);
         expect(mockClient.fetch).not.toHaveBeenCalled();
@@ -322,7 +398,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(buildTitle().withApiTitle('Stale Movie').withImdbId('tt789').build())
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Stale Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
     });
@@ -341,7 +422,12 @@ describe('ApiClientManager', () => {
             .withStatusResolving({ healthy: true })
             .withFetchResolving(buildTitle().withApiTitle('Cached Movie').build())
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         await manager.getData('Cached Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', null);
     });
@@ -372,7 +458,12 @@ describe('ApiClientManager', () => {
                     .build()
             )
             .build();
-        const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
+        const manager = new ApiClientManager(
+            buildLogger().build(),
+            mockCache,
+            buildMockDisabledClientsManager.notDisabled(),
+            mockClient
+        );
         const result = await manager.getData('Provider Switch Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Provider Switch Movie', 'tt1234567');
         expect(result.imdbRating).toBe(7.5);

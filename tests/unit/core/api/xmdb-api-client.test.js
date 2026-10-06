@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildConfig } from '../../../mocks/config.js';
 import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
 import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
@@ -22,9 +23,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -40,9 +39,7 @@ describe('XmdbApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -55,10 +52,10 @@ describe('XmdbApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.search('Movie 1');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
@@ -70,9 +67,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -87,10 +82,10 @@ describe('XmdbApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.search('Movie 1');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
@@ -107,9 +102,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -123,7 +116,7 @@ describe('XmdbApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 'not found' }).build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -145,7 +138,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -167,7 +160,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -188,7 +181,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -202,10 +195,10 @@ describe('XmdbApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
-            undefined
+            mockOverrideManager
         );
         await client.getDetails(buildTitle().withImdbId('m1').withDisplayTitle('Movie 1').build());
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -226,7 +219,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -240,10 +233,10 @@ describe('XmdbApiClient', () => {
     it('should return unhealthy status when API key is missing', async () => {
         const client = new XmdbApiClient(
             buildMockAdapter().build(),
-            { get: () => '' },
+            buildConfig().withXmdbApiKey('').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
-            undefined
+            mockOverrideManager
         );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
@@ -260,7 +253,7 @@ describe('XmdbApiClient', () => {
             .build();
         const client = new XmdbApiClient(
             mockAdapter,
-            { get: _k => 'key' },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
