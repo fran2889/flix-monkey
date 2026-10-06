@@ -316,7 +316,7 @@ describe('App', () => {
             buildMockIdOverrideManager().build(),
             mockRenderer,
             mockSurfaces,
-            {}
+            { getData: vi.fn() }
         );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
@@ -688,16 +688,18 @@ describe('App', () => {
                 .withHasOverlayReturning(false)
                 .withIsLoadingReturning(false)
                 .build();
+            const fadeManager = buildMockFadeManager().build();
+            const apiManager = { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) };
             const app = new FlixMonkeyApp(
                 buildLogger().build(),
                 mockCache,
-                {},
+                fadeManager,
                 mockOverrideManager,
                 mockRenderer,
                 buildMockSurfaceManager()
                     .withDiscoverReturning([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }])
                     .build(),
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
+                apiManager
             );
             app.init();
 

@@ -17,7 +17,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return healthy status when not disabled', async () => {
         const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
         const client = new XmdbApiClient(
-            {},
+            buildMockAdapter().build(),
             buildConfig().withXmdbApiKey('key').build(),
             mockDisabledManager,
             buildLogger().build(),
@@ -30,7 +30,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return unhealthy status when disabled', async () => {
         const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
         const client = new XmdbApiClient(
-            {},
+            buildMockAdapter().build(),
             buildConfig().withXmdbApiKey('key').build(),
             mockDisabledManager,
             buildLogger().build(),
@@ -45,9 +45,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
@@ -60,9 +58,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapter,
-            {
-                get: _k => 'key',
-            },
+            buildConfig().withXmdbApiKey('key').build(),
             buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
