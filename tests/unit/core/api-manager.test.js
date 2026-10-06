@@ -2,11 +2,13 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { ApiClientManager } from '../../../src/core/api-manager.js';
 import { FlixMonkeyError } from '../../../src/core/utils/index.js';
+import { buildMockApiClient } from '../../mocks/api-client.js';
 import { buildCacheEntry } from '../../mocks/cache.js';
+import { buildMockCacheManager } from '../../mocks/cache-manager.js';
 import { buildLogger } from '../../mocks/logger.js';
 import { buildTitle } from '../../mocks/title.js';
 
@@ -19,8 +21,8 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
-        const mockClient = { source: 'agregarr' };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient().withSource('agregarr').build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Cached Movie');
@@ -28,24 +30,24 @@ describe('ApiClientManager', () => {
     });
 
     it('should fetch and return result from client', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('Fetched Movie').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('Fetched Movie').build())
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         const result = await manager.getData('Some Title');
         expect(result.apiTitle).toBe('Fetched Movie');
     });
 
     it('should handle fail if client returns null', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(null),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
+        const client = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(null)
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, client);
         const result = await manager.getData('Some Title');
         expect(result).not.toBeNull();
@@ -55,12 +57,12 @@ describe('ApiClientManager', () => {
     });
 
     it('should cache genuine not-found result with source', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const client = {
-            source: 'omdb',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(null),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
+        const client = buildMockApiClient()
+            .withSource('omdb')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(null)
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, client);
         const result = await manager.getData('Unknown Movie');
         expect(result.hasRating).toBe(false);
@@ -72,12 +74,11 @@ describe('ApiClientManager', () => {
     });
 
     it('should skip unhealthy client and not cache the result', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const unhealthyClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: false }),
-            fetch: vi.fn(),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
+        const unhealthyClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: false })
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, unhealthyClient);
         const result = await manager.getData('Test Movie');
         expect(result.hasRating).toBe(false);
@@ -87,12 +88,12 @@ describe('ApiClientManager', () => {
     });
 
     it('should not cache result when fetch throws an error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockRejectedValue(new Error('API error')),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchRejecting(new Error('API error'))
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         const result = await manager.getData('Error Movie');
@@ -108,14 +109,14 @@ describe('ApiClientManager', () => {
     });
 
     it('should disable client on 4xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
         const error = new FlixMonkeyError('HTTP 401', 'https://api.example.com', 401, 'Unauthorized');
-        const mockClient = {
-            source: 'xmdb',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockRejectedValue(error),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
+        const mockClient = buildMockApiClient()
+            .withSource('xmdb')
+            .withStatusResolving({ healthy: true })
+            .withFetchRejecting(error)
+            .withDisableResolving()
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         const result = await manager.getData('Test Movie');
@@ -124,14 +125,14 @@ describe('ApiClientManager', () => {
     });
 
     it('should NOT disable client on 5xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
         const error = new FlixMonkeyError('HTTP 500', 'https://api.example.com', 500, 'Internal Server Error');
-        const mockClient = {
-            source: 'xmdb',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockRejectedValue(error),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
+        const mockClient = buildMockApiClient()
+            .withSource('xmdb')
+            .withStatusResolving({ healthy: true })
+            .withFetchRejecting(error)
+            .withDisableResolving()
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         await manager.getData('Test Movie');
@@ -139,14 +140,14 @@ describe('ApiClientManager', () => {
     });
 
     it('should log at error level for HTTP errors with status, url, and body', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
         const error = new FlixMonkeyError('HTTP 403', 'https://api.example.com/search', 403, 'Forbidden');
-        const mockClient = {
-            source: 'xmdb',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockRejectedValue(error),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
+        const mockClient = buildMockApiClient()
+            .withSource('xmdb')
+            .withStatusResolving({ healthy: true })
+            .withFetchRejecting(error)
+            .withDisableResolving()
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         await manager.getData('Test Movie');
@@ -158,13 +159,13 @@ describe('ApiClientManager', () => {
     });
 
     it('should log at warn level for non-HTTP errors', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
         const error = new Error('network error');
-        const mockClient = {
-            source: 'xmdb',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockRejectedValue(error),
-        };
+        const mockClient = buildMockApiClient()
+            .withSource('xmdb')
+            .withStatusResolving({ healthy: true })
+            .withFetchRejecting(error)
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         await manager.getData('Test Movie');
@@ -177,13 +178,13 @@ describe('ApiClientManager', () => {
     });
 
     it('should log on successful data retrieval', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = buildMockCacheManager().withReadResolving(null).build();
         const title = buildTitle().withApiTitle('Logged Movie').withSource('agregarr').build();
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(title),
-        };
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(title)
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         await manager.getData('Logged Movie');
@@ -200,9 +201,14 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
         const mockLogger = buildLogger().build();
-        const manager = new ApiClientManager(mockLogger, mockCache, {}, { source: 'agregarr' });
+        const manager = new ApiClientManager(
+            mockLogger,
+            mockCache,
+            {},
+            buildMockApiClient().withSource('agregarr').build()
+        );
         await manager.getData('Cached Movie');
         expect(mockLogger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Cache hit for "Cached Movie" from agregarr')
@@ -216,12 +222,12 @@ describe('ApiClientManager', () => {
             .withData(null)
             .withExpiry(Date.now() - 1000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build())
+            .build();
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, {}, mockClient);
         await manager.getData('Cached Movie');
@@ -241,12 +247,12 @@ describe('ApiClientManager', () => {
             .withData(expiredEntry.data)
             .withExpiry(expiredEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('Cached Movie').withImdbId('tt123').build())
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         await manager.getData('Cached Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', 'tt123');
@@ -265,12 +271,12 @@ describe('ApiClientManager', () => {
             .withData(expiredEntry.data)
             .withExpiry(expiredEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('No ID Movie').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('No ID Movie').build())
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         await manager.getData('No ID Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('No ID Movie', null);
@@ -289,12 +295,8 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn(),
-            fetch: vi.fn(),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient().withSource('agregarr').build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         const result = await manager.getData('Fresh Movie');
         expect(result).toEqual(titleObj);
@@ -314,12 +316,12 @@ describe('ApiClientManager', () => {
             .withData(invalidEntry.data)
             .withExpiry(invalidEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('Stale Movie').withImdbId('tt789').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('Stale Movie').withImdbId('tt789').build())
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         await manager.getData('Stale Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Stale Movie', 'tt789');
@@ -333,12 +335,12 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() - 1000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry) };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi.fn().mockResolvedValue(buildTitle().withApiTitle('Cached Movie').build()),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(buildTitle().withApiTitle('Cached Movie').build())
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         await manager.getData('Cached Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Cached Movie', null);
@@ -357,21 +359,19 @@ describe('ApiClientManager', () => {
             .withData(cachedTitle.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
-        const mockClient = {
-            source: 'agregarr',
-            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-            fetch: vi
-                .fn()
-                .mockResolvedValue(
-                    buildTitle()
-                        .withApiTitle('Provider Switch Movie')
-                        .withImdbId('tt1234567')
-                        .withImdbRating('7.5')
-                        .withSource('agregarr')
-                        .build()
-                ),
-        };
+        const mockCache = buildMockCacheManager().withReadResolving(entry).build();
+        const mockClient = buildMockApiClient()
+            .withSource('agregarr')
+            .withStatusResolving({ healthy: true })
+            .withFetchResolving(
+                buildTitle()
+                    .withApiTitle('Provider Switch Movie')
+                    .withImdbId('tt1234567')
+                    .withImdbRating('7.5')
+                    .withSource('agregarr')
+                    .build()
+            )
+            .build();
         const manager = new ApiClientManager(buildLogger().build(), mockCache, {}, mockClient);
         const result = await manager.getData('Provider Switch Movie');
         expect(mockClient.fetch).toHaveBeenCalledWith('Provider Switch Movie', 'tt1234567');
