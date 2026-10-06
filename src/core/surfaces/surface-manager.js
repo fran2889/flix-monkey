@@ -3,24 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/**
- * @typedef {Object} SurfaceDefinition
- * @property {string} titleSelector - CSS selector for title elements
- * @property {(element: Element) => string|null|undefined} getTitle - Callback that returns the title text
- * @property {(element: Element) => Element|null|undefined} getContainer - Callback that returns the container
- * @property {(container: Element, element: Element) => void} [decorateContainer] - Callback that decorates the resolved container
- * @property {boolean} [fadeable=false] - Whether this surface supports fading
- * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button
- */
-
-/**
- * @typedef {Object} DiscoveredSurface
- * @property {Element} container
- * @property {string} title
- * @property {boolean} fadeable
- * @property {boolean} showFadeToggle
- */
-
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
 const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
@@ -31,7 +13,7 @@ export class SurfaceManager {
 
     /**
      * @param {import('../logger.js').Logger} logger - Receives selector and container-resolution failures.
-     * @param {Object<string, SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
+     * @param {Object<string, import('../types/surfaces.js').SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
      */
     constructor(logger, surfaceDefs) {
         this.#SURFACES = Object.values(surfaceDefs);
@@ -43,7 +25,7 @@ export class SurfaceManager {
      * missing containers fall back to the title element's parent.
      *
      * @param {Element|Document} root
-     * @returns {DiscoveredSurface[]}
+     * @returns {import('../types/surfaces.js').DiscoveredSurface[]}
      */
     discover(root) {
         const seen = new Set();

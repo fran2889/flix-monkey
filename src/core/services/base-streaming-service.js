@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {new (logger: import('../logger.js').Logger) => import('../surfaces/').SurfaceManager} ServiceSurfaceManager */
-
 /**
  * Abstract contract for a supported streaming service. Implementations provide
  * hostname suffixes used by ServiceRegistry; a surface-manager constructor;
@@ -24,7 +22,7 @@ export class StreamingService {
 
     /**
      * @abstract
-     * @returns {ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
+     * @returns {import('../types/services.js').ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
      */
     get SurfaceManager() {
         throw new Error('Not implemented');

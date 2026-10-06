@@ -3,16 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {{ migrated?: number, skipped?: number, deleted?: number }} MigrationSummary */
-
-/**
- * @typedef {object} StorageMigration
- * @property {number} version
- * @property {string} description
- * @property {(adapter: import('../platform/adapter.js').PlatformAdapter) => Promise<MigrationSummary>} upgrade
- * @property {(adapter: import('../platform/adapter.js').PlatformAdapter, error: unknown) => Promise<MigrationSummary>} [onFailure]
- */
-
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
@@ -22,7 +12,7 @@ async function clearCache(adapter) {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {ReadonlyArray<StorageMigration>} */
+/** @type {ReadonlyArray<import('./types/migrations.js').StorageMigration>} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
@@ -130,7 +120,7 @@ const MIGRATIONS = Object.freeze([
  * Get a migration by its version number.
  *
  * @param {number} version
- * @returns {StorageMigration | undefined}
+ * @returns {import('./types/migrations.js').StorageMigration | undefined}
  */
 export function getMigrationByVersion(version) {
     return MIGRATIONS.find(m => m.version === version);
@@ -145,7 +135,7 @@ export function getMigrationByVersion(version) {
  *
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter
  * @param {{ info: Function, error: Function }} logger
- * @param {ReadonlyArray<StorageMigration>} [migrations=MIGRATIONS]
+ * @param {ReadonlyArray<import('./types/migrations.js').StorageMigration>} [migrations=MIGRATIONS]
  * @returns {Promise<void>}
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {

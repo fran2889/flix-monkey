@@ -6,13 +6,6 @@ import { GROUPS, ROW_LABELS } from '../config/index.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
-/**
- * @typedef {Object} SettingsActions
- * @property {() => void | Promise<void>} onSave
- * @property {() => void | Promise<void>} onClearCache
- * @property {() => void | Promise<void>} onResetClients
- */
-
 export class SettingsView {
     #fields;
     #actions;
@@ -21,7 +14,7 @@ export class SettingsView {
 
     /**
      * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields
-     * @param {SettingsActions} actions
+     * @param {import('../../types/extension.js').SettingsActions} actions
      */
     constructor(fields, actions) {
         this.#fields = fields;

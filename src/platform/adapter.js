@@ -5,14 +5,6 @@
 import { FlixMonkeyError } from '../core/utils/index.js';
 
 /**
- * @typedef {Object} HttpFetchOptions
- * @property {'json'|'text'} [responseType='json'] - Expected response format.
- * @property {number} [timeout] - Request timeout in milliseconds.
- */
-
-/** @typedef {string|boolean} StorageValue - Values persisted by FlixMonkey. */
-
-/**
  * Abstract base class for platform adapters.
  *
  * Subclasses must implement all abstract methods. Optional methods default to
@@ -94,7 +86,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _url - Request URL.
-     * @param {HttpFetchOptions} [_options] - Fetch options.
+     * @param {import('../types/platform.js').HttpFetchOptions} [_options] - Fetch options.
      * @returns {Promise<unknown>} Parsed response body (JSON object or string, depending on `responseType`).
      */
     async httpFetch(_url, _options) {
@@ -131,7 +123,7 @@ export class PlatformAdapter {
      * Seeds data for snapshot-based adapters before application startup. Live-read
      * adapters leave this as a no-op.
      *
-     * @param {Record<string, StorageValue>} _data - Config key/value pairs.
+     * @param {Record<string, import('../types/platform.js').StorageValue>} _data - Config key/value pairs.
      */
     setConfigData(_data) {
         // overridden in webextension.js

@@ -5,12 +5,6 @@
 import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements.js';
 import { buildOverlayStyles } from './ui/overlay-styles.js';
 
-/**
- * @typedef {Object} ServicePresentation
- * @property {readonly string[]} [TOP_10_SELECTORS]
- * @property {string} [TOP_10_OFFSET]
- */
-
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
@@ -20,7 +14,7 @@ export class OverlayRenderer {
 
     /**
      * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
-     * @param {ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
+     * @param {import('../types/overlay.js').ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      */
     constructor(config, serviceConstants = {}) {
         this.#config = config;

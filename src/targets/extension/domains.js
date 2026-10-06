@@ -6,15 +6,11 @@
 const ALLOWED_DOMAINS = new Set(['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com']);
 
 /**
- * @typedef {{valid: true}|{valid: false, error: string}} DomainValidationResult
- */
-
-/**
  * Validates an untrusted URL without throwing. Only an exact hostname in
  * ALLOWED_DOMAINS is accepted.
  *
  * @param {string} url - Candidate external request URL.
- * @returns {DomainValidationResult}
+ * @returns {import('../../types/extension.js').DomainValidationResult}
  */
 export function validateDomain(url) {
     try {
