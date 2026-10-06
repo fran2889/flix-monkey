@@ -18,9 +18,9 @@
 /**
  * Actions available in the settings UI.
  * @typedef {object} SettingsActions
- * @property {readonly () => void | Promise<void>} onSave
- * @property {readonly () => void | Promise<void>} onClearCache
- * @property {readonly () => void | Promise<void>} onResetClients
+ * @property {() => void | Promise<void>} onSave
+ * @property {() => void | Promise<void>} onClearCache
+ * @property {() => void | Promise<void>} onResetClients
  */
 
 export {};

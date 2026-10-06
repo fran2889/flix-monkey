@@ -16,7 +16,7 @@ export class HboMaxService extends StreamingService {
     }
 
     /**
-     * @returns {readonly string[]}
+     * @returns {string[]}
      */
     get domains() {
         return Object.freeze(['play.hbomax.com']);

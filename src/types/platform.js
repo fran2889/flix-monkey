@@ -6,8 +6,8 @@
 /**
  * Options for HTTP fetch requests.
  * @typedef {object} HttpFetchOptions
- * @property {readonly 'json'|'text'} [responseType='json'] - Expected response format.
- * @property {readonly number} [timeout] - Request timeout in milliseconds.
+ * @property {'json'|'text'} [responseType='json'] - Expected response format.
+ * @property {number} [timeout] - Request timeout in milliseconds.
  */
 
 /** Values persisted by FlixMonkey. */

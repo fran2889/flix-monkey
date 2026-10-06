@@ -6,8 +6,8 @@
 /**
  * Service-specific presentation constants for overlay rendering.
  * @typedef {object} ServicePresentation
- * @property {readonly string[]} [TOP_10_SELECTORS]
- * @property {readonly string} [TOP_10_OFFSET]
+ * @property {string[]} [TOP_10_SELECTORS]
+ * @property {string} [TOP_10_OFFSET]
  */
 
 export {};

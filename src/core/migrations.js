@@ -12,7 +12,7 @@ async function clearCache(adapter) {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {readonly import('./types/migrations.js').StorageMigration[]} */
+/** @type {import('./types/migrations.js').StorageMigration[]} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
@@ -135,7 +135,7 @@ export function getMigrationByVersion(version) {
  *
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter for version persistence.
  * @param {{ info: Function, error: Function }} logger - Logger for migration progress and error reporting.
- * @param {readonly import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
+ * @param {import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
  * @returns {Promise<void>} Resolves when all applicable migrations have been executed.
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {

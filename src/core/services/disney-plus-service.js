@@ -16,7 +16,7 @@ export class DisneyPlusService extends StreamingService {
     }
 
     /**
-     * @returns {readonly string[]}
+     * @returns {string[]}
      */
     get domains() {
         return Object.freeze(['disneyplus.com']);

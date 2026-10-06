@@ -16,7 +16,7 @@ export class NetflixService extends StreamingService {
     }
 
     /**
-     * @returns {readonly string[]}
+     * @returns {string[]}
      */
     get domains() {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
