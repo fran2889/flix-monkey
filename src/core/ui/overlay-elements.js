@@ -36,8 +36,7 @@ function createRatingElement(label, value, className) {
     // Apply gradient color to rating values
     const numericValue = Number(value.replace('%', ''));
     const isPercentage = value.includes('%');
-    const color = calculateRatingColor(numericValue, isPercentage);
-    el.lastChild.style.color = color;
+    el.lastChild.style.color = calculateRatingColor(numericValue, isPercentage);
 
     return el;
 }
@@ -223,7 +222,7 @@ export function createOverlayElement(
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'fm-actions';
 
-    if (onEditClick && displayTitle) {
+    if (onEditClick) {
         const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
         const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
             onRefreshClick(displayTitle)

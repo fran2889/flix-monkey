@@ -15,8 +15,8 @@ describe('RequestQueue', () => {
         // clear() therefore finds exactly 1 item to abort.
         // If #process() ever defers its first dequeue past an await, this count changes.
         const queue = new RequestQueue(null, 999999);
-        const _p1 = queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
-        const _p2 = queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
+        void queue.enqueue('url1', 1, () => new Promise(() => {}), 'json').catch(() => {});
+        void queue.enqueue('url2', 1, () => new Promise(() => {}), 'json').catch(() => {});
 
         const count = queue.clear();
         expect(count).toBe(1);

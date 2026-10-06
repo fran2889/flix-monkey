@@ -60,27 +60,29 @@ export class SettingsView {
         const ungroupedFields = [];
 
         for (const field of this.#fields) {
-            if (field.type === 'action' && field.group && GROUPS[field.group]) {
-                const groupId = field.group;
-                if (!fieldsByGroup[groupId]) {
-                    fieldsByGroup[groupId] = [];
-                }
-                fieldsByGroup[groupId].push(field);
-                continue;
-            }
-
-            if (field.type === 'action') continue;
-            if (field.group && GROUPS[field.group]) {
-                const groupId = field.group;
-                if (!fieldsByGroup[groupId]) {
-                    fieldsByGroup[groupId] = [];
-                }
-                fieldsByGroup[groupId].push(field);
-            } else {
+            const hasValidGroup = field.group && GROUPS[field.group];
+            if (hasValidGroup) {
+                this.#addFieldToGroup(field, fieldsByGroup);
+            } else if (field.type !== 'action') {
                 ungroupedFields.push(field);
             }
         }
 
+        this.#buildGroupElements(groups, fieldsByGroup);
+        this.#addUngroupedFields(groups, ungroupedFields);
+
+        return groups;
+    }
+
+    #addFieldToGroup(field, fieldsByGroup) {
+        const groupId = field.group;
+        if (!fieldsByGroup[groupId]) {
+            fieldsByGroup[groupId] = [];
+        }
+        fieldsByGroup[groupId].push(field);
+    }
+
+    #buildGroupElements(groups, fieldsByGroup) {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
             const groupInfo = GROUPS[groupId];
             groups.push({
@@ -90,8 +92,9 @@ export class SettingsView {
                 fields: this.#groupFieldsByRow(fields),
             });
         }
+    }
 
-        // Handle ungrouped fields (for backward compatibility with tests)
+    #addUngroupedFields(groups, ungroupedFields) {
         if (ungroupedFields.length > 0) {
             groups.push({
                 id: 'ungrouped',
@@ -101,8 +104,6 @@ export class SettingsView {
                 isUngrouped: true,
             });
         }
-
-        return groups;
     }
 
     #groupFieldsByRow(fields) {

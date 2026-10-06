@@ -4,6 +4,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { browser } from '../../../mocks/webextension.js';
+
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),
 }));
@@ -23,28 +25,23 @@ describe('Firefox Background Script', () => {
         executeMigrations.mockReset();
         executeMigrations.mockResolvedValue();
 
-        global.browser = {
-            runtime: {
-                onMessage: {
-                    addListener: vi.fn(fn => {
-                        messageListener = fn;
-                    }),
-                },
-                onInstalled: {
-                    addListener: vi.fn(fn => {
-                        installedListener = fn;
-                    }),
-                },
-                openOptionsPage: vi.fn(),
-            },
-            action: {
-                onClicked: {
-                    addListener: vi.fn(fn => {
-                        actionListener = fn;
-                    }),
-                },
-            },
-        };
+        browser.runtime.id = undefined;
+        browser.runtime.onMessage.addListener = vi.fn(fn => {
+            messageListener = fn;
+        });
+        browser.runtime.onInstalled.addListener = vi.fn(fn => {
+            installedListener = fn;
+        });
+        browser.runtime.openOptionsPage = vi.fn();
+        browser.action.onClicked.addListener = vi.fn(fn => {
+            actionListener = fn;
+        });
+
+        Object.defineProperty(global, 'browser', {
+            value: browser,
+            writable: true,
+            configurable: true,
+        });
 
         global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
         global.AbortController = class {

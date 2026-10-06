@@ -36,7 +36,7 @@ export class RequestQueue {
             if (this.#queue.length > 1) {
                 this.#queue.sort((a, b) => b.priority - a.priority);
             }
-            this.#process();
+            void this.#process();
         });
     }
 

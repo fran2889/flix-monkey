@@ -4,8 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { CONFIG_DEFAULTS } from '../../../../src/core/config/config-fields.js';
-import { ConfigManager } from '../../../../src/core/config/index.js';
+import { CONFIG_DEFAULTS, ConfigManager } from '../../../../src/core/config/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildLogger } from '../../../mocks/logger.js';
 

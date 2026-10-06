@@ -36,9 +36,8 @@ export class CacheManager {
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;
         try {
-            const entry = CacheEntry.fromJSON(raw);
             // Always return entry; ApiClientManager handles validation and short-circuit logic
-            return entry;
+            return CacheEntry.fromJSON(raw);
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
             return null;

@@ -23,7 +23,7 @@ function buildConfig() {
         enableFadeToggle: null,
         debug: null,
     };
-    const builder = {
+    return {
         withApiClient(value) {
             overrides.apiClient = value;
             return this;
@@ -85,7 +85,6 @@ function buildConfig() {
             );
         },
     };
-    return builder;
 }
 
 // Static presets

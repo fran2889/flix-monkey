@@ -3,7 +3,7 @@
 **Date:** 2026-10-02  
 **Author:** FlixMonkey Refactoring  
 **Status:** Draft  
-**Type:** Architectural  
+**Type:** Architectural
 
 ---
 
@@ -50,10 +50,16 @@ When a private method is called by multiple public methods, it is placed under i
 ```javascript
 class Example {
     constructor() {}
-    
-    publicMethodA() { this.#shared(); }  // First to call #shared()
-    #shared() { /* used by A and D */ }
-    publicMethodD() { this.#shared(); }  // References #shared() above
+
+    publicMethodA() {
+        this.#shared();
+    } // First to call #shared()
+    #shared() {
+        /* used by A and D */
+    }
+    publicMethodD() {
+        this.#shared();
+    } // References #shared() above
 }
 ```
 
@@ -61,33 +67,49 @@ class Example {
 
 ```javascript
 class Example {
-    constructor() { /* ... */ }
-    
+    constructor() {
+        /* ... */
+    }
+
     // Static methods (no instance dependencies)
-    static utilityMethod() { /* ... */ }
-    
+    static utilityMethod() {
+        /* ... */
+    }
+
     // Lifecycle methods
-    init() { /* ... */ }
-    destroy() { /* ... */ }
-    
+    init() {
+        /* ... */
+    }
+    destroy() {
+        /* ... */
+    }
+
     // Public method A calls private method b
-    publicMethodA() { 
-        this.#b(); 
+    publicMethodA() {
+        this.#b();
     }
-    
-    // Private method b calls private method c  
-    #b() { 
-        this.#c(); 
+
+    // Private method b calls private method c
+    #b() {
+        this.#c();
     }
-    
-    #c() { /* ... */ }
-    
+
+    #c() {
+        /* ... */
+    }
+
     // Public method D (doesn't depend on A/b/c hierarchy)
-    publicMethodD() { /* ... */ }
-    
+    publicMethodD() {
+        /* ... */
+    }
+
     // Getters/setters ALWAYS at end, regardless of callers
-    get someProperty() { /* ... */ }
-    set anotherProperty(value) { /* ... */ }
+    get someProperty() {
+        /* ... */
+    }
+    set anotherProperty(value) {
+        /* ... */
+    }
 }
 ```
 
@@ -137,66 +159,66 @@ Parameters are organized into **logical categories**, with **alphabetical orderi
 ### Parameter Categories (in order)
 
 1. **Core Infrastructure** (platform abstraction, fundamental services)
-   - `adapter` - Platform adapter for storage/HTTP
-   - `config` - Configuration manager  
-   - `logger` - Logging service
+    - `adapter` - Platform adapter for storage/HTTP
+    - `config` - Configuration manager
+    - `logger` - Logging service
 
 2. **Domain-Specific Dependencies** (business logic components)
-   - `cache` - Cache management
-   - `disabledManager` - Client disable tracking
-   - `overrideManager` - ID override management
-   - `surfaces` - Surface discovery
-   - `renderer` - UI rendering
-   - `fadeManager` - Fade state management
+    - `cache` - Cache management
+    - `disabledManager` - Client disable tracking
+    - `overrideManager` - ID override management
+    - `surfaces` - Surface discovery
+    - `renderer` - UI rendering
+    - `fadeManager` - Fade state management
 
 3. **Client/Service Dependencies** (API clients, external services)
-   - `api` - API client manager
-   - `client` - Specific API client
-   - `queue` - Request queue
+    - `api` - API client manager
+    - `client` - Specific API client
+    - `queue` - Request queue
 
 4. **Optional Parameters**
-   - `options` - Configuration object
-   - `...rest` - Additional parameters
+    - `options` - Configuration object
+    - `...rest` - Additional parameters
 
 ### Examples
 
 ```javascript
 // Current (inconsistent)
-constructor(disabledManager, adapter, config, logger, overrideManager)
+constructor(disabledManager, adapter, config, logger, overrideManager);
 
 // Refactored (logical + alphabetical within categories)
 constructor(
     // Core Infrastructure (alphabetical: adapter, config, logger)
     adapter,
-    config, 
+    config,
     logger,
-    
+
     // Domain Dependencies (alphabetical: disabledManager, overrideManager)
     disabledManager,
     overrideManager
-)
+);
 ```
 
 ```javascript
 // Current FlixMonkeyApp constructor
-constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager)
+constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager);
 
 // Refactored
 constructor(
     // Core Infrastructure
     config,
     logger,
-    
+
     // Domain Dependencies (alphabetical)
     cache,
     fadeManager,
     overrideManager,
     renderer,
     surfaces,
-    
+
     // Client/Service Dependencies
     api
-)
+);
 ```
 
 ---
@@ -206,11 +228,12 @@ constructor(
 ### Directory Structure Changes
 
 #### Current Structure
+
 ```
 src/core/
   api-clients.js          (427 lines - TOO LARGE)
   api-manager.js          (98 lines)
-  app.js                  (351 lines - TOO LARGE)  
+  app.js                  (351 lines - TOO LARGE)
   cache.js                (175 lines)
   config-manager.js       (64 lines)
   surfaces.js             (259 lines - TOO LARGE)
@@ -230,26 +253,27 @@ src/core/
 ```
 
 #### Target Structure
+
 ```
 src/core/
   api/
     base-api-client.js     (~180 lines)
     xmdb-api-client.js     (~80 lines)
-    omdb-api-client.js     (~80 lines)  
+    omdb-api-client.js     (~80 lines)
     agregarr-api-client.js  (~80 lines)
     title-type-mappers.js   (~30 lines)
     index.js               (exports)
-  
+
   cache/
     cache-entry.js         (~75 lines)
     cache-manager.js       (~100 lines)
     index.js
-    
+
   config/
     config-fields.js       (unchanged)
     config-manager.js      (unchanged)
     index.js
-    
+
   services/
     service-registry.js    (~60 lines)
     base-streaming-service.js (~40 lines)
@@ -257,7 +281,7 @@ src/core/
     hbo-max-service.js      (~30 lines)
     disney-plus-service.js  (~30 lines)
     index.js
-    
+
   surfaces/
     surface-manager.js     (~50 lines)
     surface-definitions/
@@ -265,7 +289,7 @@ src/core/
       hbo-max-surfaces.js   (~80 lines)
       disney-plus-surfaces.js (~80 lines)
     index.js
-    
+
   ui/
     overlay/
       overlay-renderer.js  (~80 lines)
@@ -275,14 +299,14 @@ src/core/
       styles/
         overlay-styles.js   (~60 lines)
       index.js
-    
+
   utils/
     color-utils.js         (unchanged)
     dom-utils.js           (new - ~40 lines)
-    string-utils.js        (new - ~30 lines)  
+    string-utils.js        (new - ~30 lines)
     general-utils.js       (~40 lines)
     index.js
-    
+
   constants.js            (unchanged)
   disabled-clients.js     (unchanged)
   fade-manager.js         (unchanged)
@@ -301,13 +325,15 @@ src/core/
 **Rationale:** 427 lines with base class + 3 implementations + shared utilities
 
 **Splitting:**
+
 - `base-api-client.js`: `BaseApiClient` class only
-- `xmdb-api-client.js`: `XmdbApiClient` class only  
+- `xmdb-api-client.js`: `XmdbApiClient` class only
 - `omdb-api-client.js`: `OmdbApiClient` class only
 - `agregarr-api-client.js`: `AgregarrApiClient` class only
 - `title-type-mappers.js`: Shared `#mapTitleType` logic
 
 **Shared utilities extraction:**
+
 ```javascript
 // Current: parseRatings function at top of api-clients.js
 // Refactored: Move to title-type-mappers.js or create utilities file
@@ -318,6 +344,7 @@ src/core/
 **Rationale:** 351 lines with multiple responsibilities
 
 **Extract:**
+
 - Keep `FlixMonkeyApp` in `app.js` (reduced)
 - Move `createApiClient` to `api/factory.js`
 - Keep `startApp` factory function
@@ -327,6 +354,7 @@ src/core/
 **Rationale:** 259 lines with surface definitions for 3 services
 
 **Splitting:**
+
 - `surface-manager.js`: `SurfaceManager` base class
 - `surface-definitions/`: Each service's surface definitions
 - Extract helper functions to utility files
@@ -336,6 +364,7 @@ src/core/
 **Rationale:** 296 lines with many helper functions
 
 **Splitting:**
+
 - Group related element creators
 - Extract color calculation logic
 - Separate loading vs. complete overlay elements
@@ -349,10 +378,11 @@ src/core/
 **Current:** Lines 1-188 in `api-clients.js`
 
 **Method Order Analysis:**
+
 ```
 Current order:
 - constructor
-- fetch() [public] 
+- fetch() [public]
 - getStatus() [public]
 - isDisabled() [public]
 - search() [public, abstract]
@@ -360,7 +390,7 @@ Current order:
 - queuedFetch() [public]
 - disable() [public]
 - source [getter]
-- config [getter] 
+- config [getter]
 - logger [getter]
 
 Call hierarchy:
@@ -371,28 +401,29 @@ Call hierarchy:
 ```
 
 **Refactored Order:**
+
 ```javascript
 class BaseApiClient {
     // 1. Constructor
     constructor(adapter, config, disabledManager, logger, overrideManager, queue, source) {}
-    
+
     // 2. Static methods (none in this class)
-    
+
     // 3. Lifecycle methods (none in this class)
-    
+
     // 4. Public methods in call order
     async fetch(displayTitle, imdbId = null) {}
     async getStatus() {}
     async disable(durationMs = CLIENT_DISABLE_DURATION) {}
     async queuedFetch(url, priority = 0, responseType = 'json') {}
-    
+
     // 5. Abstract methods (maintain order from parent concept)
     async search(_displayTitle) {}
     async getDetails(_searchTitle) {}
-    
+
     // 6. Private methods in call order under their first public caller
-    async isDisabled() {}  // Used by fetch() and getStatus() - goes under fetch()
-    
+    async isDisabled() {} // Used by fetch() and getStatus() - goes under fetch()
+
     // 7. Getters ALWAYS at end, regardless of callers
     get source() {}
     get config() {}
@@ -401,9 +432,10 @@ class BaseApiClient {
 ```
 
 **Parameter Reordering:**
+
 ```javascript
 // Current
-constructor(queue, source, disabledManager, adapter, config, logger, overrideManager)
+constructor(queue, source, disabledManager, adapter, config, logger, overrideManager);
 
 // Refactored (logical + alphabetical within categories)
 constructor(
@@ -411,15 +443,15 @@ constructor(
     adapter,
     config,
     logger,
-    
-    // Domain Dependencies  
+
+    // Domain Dependencies
     disabledManager,
     overrideManager,
-    
+
     // Client/Service Dependencies
     queue,
     source
-)
+);
 ```
 
 ### 2. `api/xmdb-api-client.js`
@@ -427,6 +459,7 @@ constructor(
 **Current:** Lines 190-271 in `api-clients.js`
 
 **Method Order Analysis:**
+
 - constructor calls super()
 - getStatus() calls super.getStatus() and config.get()
 - search() calls queuedFetch(), logger.debug/info()
@@ -434,82 +467,80 @@ constructor(
 - #mapTitleType() called by getDetails()
 
 **Refactored Order:**
+
 ```javascript
 class XmdbApiClient extends BaseApiClient {
     constructor(adapter, config, disabledManager, logger, overrideManager) {}
-    
+
     async getStatus() {}
     async search(displayTitle) {}
-    
+
     // Private method used by search/getDetails
     #mapTitleType(apiValue) {}
-    
+
     async getDetails(searchTitle) {}
 }
 ```
 
 **Parameter Reordering:**
+
 ```javascript
 // Current
-constructor(disabledManager, adapter, config, logger, overrideManager)
+constructor(disabledManager, adapter, config, logger, overrideManager);
 
 // Refactored
-constructor(
-    adapter,
-    config, 
-    disabledManager,
-    logger,
-    overrideManager
-)
+constructor(adapter, config, disabledManager, logger, overrideManager);
 ```
 
 ### 3. `app.js` Refactoring
 
 **Current Method Order Issues:**
+
 - `#handleFadeToggleClick` (line 258) used by `#renderTitle` (line 237)
 - `#getTitleRequest` (line 223) used by `#decorateContainer` (line 192)
 - `#getFadeOverride` (line 219) used by `#decorateContainer`
 - Many private methods scattered
 
 **Refactored Method Order:**
+
 ```javascript
 class FlixMonkeyApp {
     constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager) {}
-    
+
     // Static methods
     static createApiClient(config, disabledManager, adapter, logger, overrideManager) {}
-    
+
     // Lifecycle methods
     init() {}
     disconnect() {}
-    
+
     // Public methods in call order
     decorateRoot(root) {}
     redecorate() {}
     async clearCache() {}
     async resetDisabledClients() {}
-    
+
     // Private methods in call order under their first public caller
-    
+
     // Under init() - lifecycle setup
     #initNavigationObservers() {}
-    
+
     // Under decorateRoot() - decoration flow
     async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {}
     #getFadeOverride(dedupKey) {}
     #getTitleRequest(dedupKey, displayTitle) {}
     #renderTitle(container, data, options) {}
-    
+
     // Under #renderTitle() - rendering flow
     async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {}
-    
+
     // Under handleEditClick (public method)
     handleEditClick(displayTitle, imdbId) {}
     #extractImdbId(input) {}
     #redecorateTitle(dedupKey, displayTitle) {}
-    
+
     handleRefreshClick(displayTitle) {}
-    
+
     // Getters ALWAYS at end, regardless of callers
     get cacheManager() {}
     get disabledManager() {}
@@ -520,26 +551,27 @@ function startApp(adapter) {}
 ```
 
 **Parameter Reordering for FlixMonkeyApp:**
+
 ```javascript
 // Current
-constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager)
+constructor(cache, api, renderer, surfaces, fadeManager, config, logger, overrideManager);
 
 // Refactored (logical + alphabetical within categories)
 constructor(
     // Core Infrastructure
     config,
     logger,
-    
+
     // Domain Dependencies
     cache,
     fadeManager,
     overrideManager,
     renderer,
     surfaces,
-    
+
     // Client/Service Dependencies
     api
-)
+);
 ```
 
 ### 4. Method Ordering for All Classes
@@ -551,30 +583,32 @@ The following tables show the **current order** vs **refactored order** for each
 **Current:** constructor, read(), #getCacheKey(), write(), #calculateTtl(), clear(), delete()
 
 **Call hierarchy:**
+
 - read() calls #getCacheKey()
 - write() calls #getCacheKey(), #calculateTtl()
 - clear() calls adapter methods
 - delete() calls #getCacheKey()
 
 **Refactored:**
+
 ```javascript
 class CacheManager {
     constructor(adapter, config, logger) {}
-    
+
     // Static methods (none)
-    
+
     // Lifecycle methods (none)
-    
+
     // Public methods in call order
     async read(displayTitle) {}
     #getCacheKey(displayTitle) {}
-    
+
     async write(displayTitle, titleObj) {}
     #calculateTtl(titleObj) {}
-    
+
     async clear() {}
     async delete(displayTitle) {}
-    
+
     // Getters ALWAYS at end, regardless of callers
     // (none in this class)
 }
@@ -585,30 +619,32 @@ class CacheManager {
 **Current:** constructor, enqueue(), #process(), #getLastGlobalRequestTime(), #claimNextRequestSlot(), #syncClaimedRequestSlot(), #dispatchNextRequest(), clear()
 
 **Call hierarchy:**
+
 - enqueue() calls #process()
 - #process() calls #getLastGlobalRequestTime(), #claimNextRequestSlot(), #syncClaimedRequestSlot(), #dispatchNextRequest()
 
 **Refactored:**
+
 ```javascript
 class RequestQueue {
     constructor(minInterval, globalSyncKey, adapter) {}
-    
+
     // Static methods (none)
-    
+
     // Lifecycle methods (none)
-    
+
     // Public methods in call order
     enqueue(url, priority, fetchFn, responseType) {}
-    
+
     // Private methods in call order under their first public caller
     async #process() {}
     async #getLastGlobalRequestTime() {}
     #claimNextRequestSlot() {}
     async #syncClaimedRequestSlot() {}
     async #dispatchNextRequest() {}
-    
+
     clear() {}
-    
+
     // Getters ALWAYS at end, regardless of callers
     // (none in this class)
 }
@@ -621,34 +657,36 @@ class RequestQueue {
 **Analysis:** Methods are generally well-grouped by functionality. No major reordering needed, but apply call order.
 
 **Call hierarchy:**
+
 - injectOverlay() uses overlayClass, corner, config
 - injectStyles() called by app.init()
 - ensureRelative() called by #decorateContainer in app.js
 
 **Refactored:**
+
 ```javascript
 class OverlayRenderer {
     constructor(config, serviceConstants, onEditClick, onRefreshClick) {}
-    
+
     // Static methods (none)
-    
+
     // Lifecycle methods (none)
-    
+
     // Public methods in call order
     injectStyles() {}
-    
+
     hasOverlay(container) {}
     isLoading(container) {}
     ensureRelative(container) {}
-    
+
     injectLoadingOverlay(container) {}
     removeLoadingOverlay(container) {}
-    
+
     injectOverlay(container, titleObj, fadeToggleState, onFadeToggleClick, onEditClick, onRefreshClick, displayTitle) {}
-    
+
     applyFade(container, shouldFade) {}
     clearAllOverlays() {}
-    
+
     // Getters ALWAYS at end, regardless of callers
     // (none in this class)
 }
@@ -705,6 +743,7 @@ function createLoadingOverlayElement(overlayClass, loadingClass) {}
 Every production file must have a corresponding test file with the same relative path structure.
 
 ### Current Test Structure
+
 ```
 tests/
   unit/
@@ -727,6 +766,7 @@ tests/
 ```
 
 ### Target Test Structure
+
 ```
 tests/
   unit/
@@ -737,28 +777,28 @@ tests/
       agregarr-api-client.test.js
       title-type-mappers.test.js
       factory.test.js
-    
+
     cache/
       cache-entry.test.js
       cache-manager.test.js
-    
+
     config/
       config-fields.test.js
       config-manager.test.js
-    
+
     services/
       service-registry.test.js
       netflix-service.test.js
       hbo-max-service.test.js
       disney-plus-service.test.js
-    
+
     surfaces/
       surface-manager.test.js
       surface-definitions/
         netflix-surfaces.test.js
         hbo-max-surfaces.test.js
         disney-plus-surfaces.test.js
-    
+
     ui/
       overlay/
         overlay-renderer.test.js
@@ -767,13 +807,13 @@ tests/
           loading-elements.test.js
         styles/
           overlay-styles.test.js
-    
+
     utils/
       color-utils.test.js
       dom-utils.test.js
       string-utils.test.js
       general-utils.test.js
-    
+
     // Standalone files
     app.test.js
     constants.test.js
@@ -799,22 +839,26 @@ tests/
 ## Implementation Strategy
 
 ### Phase 1: File Organization (Non-Breaking)
+
 1. Create new directory structure
 2. Split files into smaller modules
 3. Update imports in all files to use new paths
 4. Ensure all exports are properly re-exported from index files
 
 ### Phase 2: Method Reordering
+
 1. Reorder methods within each class according to call hierarchy
 2. Update any internal references (should be minimal)
 3. Verify no functionality is changed
 
 ### Phase 3: Parameter Reordering
+
 1. Update constructor parameter order in all classes
 2. Update all call sites to match new parameter order
 3. This is the **highest risk phase** - requires careful testing
 
 ### Phase 4: Test File Restructuring
+
 1. Create new test file structure
 2. Move and split test files
 3. Update all imports in test files
@@ -824,24 +868,26 @@ tests/
 
 ## Risk Assessment
 
-| Phase | Risk Level | Mitigation Strategy |
-|-------|------------|---------------------|
-| File Organization | Low | Use index.js re-exports for backward compatibility |
-| Method Reordering | Low | Internal class methods, no external API changes |
-| Parameter Reordering | **High** | Update all call sites carefully, comprehensive testing |
-| Test Restructuring | Medium | Verify test coverage remains at 90%+ |
+| Phase                | Risk Level | Mitigation Strategy                                    |
+| -------------------- | ---------- | ------------------------------------------------------ |
+| File Organization    | Low        | Use index.js re-exports for backward compatibility     |
+| Method Reordering    | Low        | Internal class methods, no external API changes        |
+| Parameter Reordering | **High**   | Update all call sites carefully, comprehensive testing |
+| Test Restructuring   | Medium     | Verify test coverage remains at 90%+                   |
 
 ---
 
 ## Verification Criteria
 
 ### Functional Verification
+
 - [ ] All existing tests pass (90%+ coverage maintained)
 - [ ] Build process completes successfully
 - [ ] Linting passes
 - [ ] All imports resolve correctly
 
 ### Structural Verification
+
 - [ ] No file exceeds 200 lines (except index.js files)
 - [ ] All classes follow top-to-bottom call order
 - [ ] All constructors use logical + alphabetical parameter ordering
@@ -849,6 +895,7 @@ tests/
 - [ ] All exports are properly indexed
 
 ### Quality Verification
+
 - [ ] Code remains readable and maintainable
 - [ ] No functional behavior changes
 - [ ] TypeScript migration would be straightforward
@@ -857,14 +904,14 @@ tests/
 
 ## Success Metrics
 
-| Metric | Before | Target | Measurement |
-|--------|--------|--------|-------------|
-| Max file size | 427 lines | <200 lines | Line count |
-| Method ordering | Scattered | Top-to-bottom | Manual review |
-| Parameter consistency | Varies | Standardized | Code analysis |
-| Test coverage | Current % | Same % | Vitest report |
-| Build time | Current | ≤ Current + 10% | Timing measurement |
-| Bundle size | Current | Same ±5% | Build output |
+| Metric                | Before    | Target          | Measurement        |
+| --------------------- | --------- | --------------- | ------------------ |
+| Max file size         | 427 lines | <200 lines      | Line count         |
+| Method ordering       | Scattered | Top-to-bottom   | Manual review      |
+| Parameter consistency | Varies    | Standardized    | Code analysis      |
+| Test coverage         | Current % | Same %          | Vitest report      |
+| Build time            | Current   | ≤ Current + 10% | Timing measurement |
+| Bundle size           | Current   | Same ±5%        | Build output       |
 
 ---
 
@@ -883,6 +930,7 @@ tests/
 ## Appendix A: Complete Method Call Hierarchy
 
 ### BaseApiClient
+
 ```
 fetch() → isDisabled(), overrideManager.getImdbId(), search(), getDetails(), queuedFetch()
 getStatus() → isDisabled()
@@ -891,12 +939,14 @@ queuedFetch() → queue.enqueue(), adapter.httpFetch()
 ```
 
 ### ApiClientManager
+
 ```
 getData() → cache.read(), api.getData(), cache.write()
 #fetch() → client.getStatus(), client.fetch(), cache.write()
 ```
 
 ### FlixMonkeyApp
+
 ```
 init() → #initNavigationObservers(), renderer.injectStyles(), decorateRoot()
 #initNavigationObservers() → MutationObserver, history API
@@ -910,6 +960,7 @@ handleEditClick() → #extractImdbId(), overrideManager.setImdbId(), cache.delet
 ```
 
 ### OverlayRenderer
+
 ```
 injectOverlay() → createOverlayElement(), createLoadingOverlayElement()
 createOverlayElement() → all helper functions
@@ -919,27 +970,29 @@ createOverlayElement() → all helper functions
 
 ## Appendix B: File Size Analysis
 
-| File | Current Lines | Target Lines | Reduction |
-|------|---------------|--------------|-----------|
-| api-clients.js | 427 | ~80 (each) | -347 |
-| app.js | 351 | ~250 | -101 |
-| surfaces.js | 259 | ~80 (each) | -179 |
-| overlay-elements.js | 296 | ~200 | -96 |
-| **Total** | **1333** | **~810** | **-523** |
+| File                | Current Lines | Target Lines | Reduction |
+| ------------------- | ------------- | ------------ | --------- |
+| api-clients.js      | 427           | ~80 (each)   | -347      |
+| app.js              | 351           | ~250         | -101      |
+| surfaces.js         | 259           | ~80 (each)   | -179      |
+| overlay-elements.js | 296           | ~200         | -96       |
+| **Total**           | **1333**      | **~810**     | **-523**  |
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-10-02 | Brainstorming | Initial specification |
+| Version | Date       | Author        | Changes               |
+| ------- | ---------- | ------------- | --------------------- |
+| 1.0     | 2026-10-02 | Brainstorming | Initial specification |
 
 **Approvers:**
+
 - [ ] User review required
 - [ ] Specification approved
 
 **Next Steps:**
+
 1. User reviews and approves this specification
 2. Create implementation plan using writing-plans skill
 3. Implement refactoring in phases

@@ -141,7 +141,7 @@
 
 ### Bug Fixes
 
-* **firefox:** add required data_collection_permissions to gecko manifest ([ca22789](../../commit/ca22789))
+* **firefox:** add required data_collection_permissions to gecko manifest ([ca22789](https://github.com/fran2889/flix-monkey/commit/ca22789))
 
 ## [1.0.0](https://github.com/fran2889/flix-monkey/releases/tag/flixmonkey-v1.0.0) (2026-06-14)
 

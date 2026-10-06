@@ -199,7 +199,7 @@ export class FlixMonkeyApp {
         const onFadeToggleClick = showFadeToggle
             ? el => this.#handleFadeToggleClick(dedupKey, data.imdbRating, el)
             : null;
-        const displayTitle = data.displayTitle || '';
+        const displayTitle = data.displayTitle;
         this.#renderer.injectOverlay(
             container,
             data,
@@ -259,7 +259,8 @@ export class FlixMonkeyApp {
         if (/^tt\d+$/.test(trimmed)) {
             return trimmed;
         }
-        const match = trimmed.match(/(?:www\.)?imdb\.com\/title\/tt(\d+)/);
+        const imdbUrlRegex = /(?:www\.)?imdb\.com\/title\/tt(\d+)/;
+        const match = imdbUrlRegex.exec(trimmed);
         if (match) {
             return `tt${match[1]}`;
         }
@@ -274,7 +275,7 @@ export class FlixMonkeyApp {
     #redecorateTitle(dedupKey, displayTitle) {
         // querySelectorAll only yields nodes inside the document, so no containment check is needed.
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            container.removeAttribute('data-fm-injected');
+            delete container.dataset.fmInjected;
             this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>
                 this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)

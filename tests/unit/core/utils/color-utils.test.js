@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { interpolateColor } from '../../../../src/core/utils/color-utils.js';
+import { interpolateColor } from '../../../../src/core/utils/index.js';
 
 describe('Color Utilities', () => {
     describe('interpolateColor', () => {

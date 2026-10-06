@@ -17,7 +17,7 @@ function buildMockAdapter() {
     // Store configuration instead of applying directly to adapter
     const overrides = {};
 
-    const builder = {
+    return {
         withStorageGetResolvingTo(value) {
             overrides.storageGet = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
             return this;
@@ -53,28 +53,13 @@ function buildMockAdapter() {
             return this;
         },
 
-        withStorageGetKeysRejectingWith(error) {
-            overrides.storageGetKeys = vi.fn().mockRejectedValue(error);
-            return this;
-        },
-
         withStorageGetAllResolvingTo(value) {
             overrides.storageGetAll = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
             return this;
         },
 
-        withStorageGetAllRejectingWith(error) {
-            overrides.storageGetAll = vi.fn().mockRejectedValue(error);
-            return this;
-        },
-
         withStorageSetManyResolvingTo(value) {
             overrides.storageSetMany = typeof value === 'function' ? value : vi.fn().mockResolvedValue(value);
-            return this;
-        },
-
-        withStorageSetManyRejectingWith(error) {
-            overrides.storageSetMany = vi.fn().mockRejectedValue(error);
             return this;
         },
 
@@ -91,12 +76,6 @@ function buildMockAdapter() {
 
         withHttpFetchRejectingWith(error) {
             overrides.httpFetch = vi.fn().mockRejectedValue(error);
-            return this;
-        },
-
-        withHttpFetchRejectingWithOnce(error) {
-            overrides.httpFetch = overrides.httpFetch || vi.fn();
-            overrides.httpFetch.mockRejectedValueOnce(error);
             return this;
         },
 
@@ -128,8 +107,6 @@ function buildMockAdapter() {
             return adapter;
         },
     };
-
-    return builder;
 }
 
 // Static presets
