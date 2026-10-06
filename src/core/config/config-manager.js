@@ -7,6 +7,9 @@ import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 
 /** @typedef {keyof typeof CONFIG_DEFAULTS} ConfigKey */
 
+/**
+ * Manages application configuration with fallback to defaults and type conversion utilities.
+ */
 export class ConfigManager {
     #adapter;
     #logger;
@@ -27,8 +30,9 @@ export class ConfigManager {
      * values, and adapter read failures fall back to CONFIG_DEFAULTS. Returned
      * values are normalized to strings; use the typed accessors for conversion.
      *
-     * @param {ConfigKey} key
-     * @returns {string}
+     * @param {ConfigKey} key - The configuration key to retrieve.
+     * @returns {string} The configured value as a string, or the default if not set or invalid.
+     * @throws {import('../utils/index.js').FlixMonkeyError} If the key is not defined in CONFIG_DEFAULTS.
      */
     get(key) {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
@@ -46,18 +50,36 @@ export class ConfigManager {
         }
     }
 
+    /**
+     * Returns the configured value as an integer.
+     *
+     * @param {ConfigKey} key
+     * @returns {number}
+     */
     getInt(key) {
         const val = this.get(key);
         const num = Number.parseInt(val, 10);
         return Number.isNaN(num) ? Number.parseInt(CONFIG_DEFAULTS[key], 10) : num;
     }
 
+    /**
+     * Returns the configured value as a float.
+     *
+     * @param {ConfigKey} key
+     * @returns {number}
+     */
     getFloat(key) {
         const val = this.get(key);
         const num = Number.parseFloat(val);
         return Number.isNaN(num) ? Number.parseFloat(CONFIG_DEFAULTS[key]) : num;
     }
 
+    /**
+     * Returns the configured value as a boolean.
+     *
+     * @param {ConfigKey} key
+     * @returns {boolean}
+     */
     getBool(key) {
         return this.get(key) === 'true';
     }

@@ -6,6 +6,9 @@ import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
 import { slugify } from '../utils/index.js';
 import { CacheEntry } from './cache-entry.js';
 
+/**
+ * Manages cached title data with configurable TTL based on rating and release year.
+ */
 export class CacheManager {
     #prefix = 'fmc:';
     #adapter;
@@ -82,6 +85,11 @@ export class CacheManager {
         return getTtlMs(ttlDays);
     }
 
+    /**
+     * Removes all cached title entries from storage.
+     *
+     * @returns {Promise<void>}
+     */
     async clear() {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
@@ -90,7 +98,7 @@ export class CacheManager {
     }
 
     /**
-     * Deletes a single cache entry by display title.
+     * Removes a cached title entry by its display title.
      *
      * @param {string} displayTitle - Streaming-service title used to derive the cache key.
      * @returns {Promise<void>}

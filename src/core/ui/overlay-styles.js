@@ -20,6 +20,15 @@ const CSS_VARS = `
     }
 `;
 
+/**
+ * @typedef {object} BuildOverlayStylesOptions
+ * @property {string} overlayClass - CSS class assigned to the overlay.
+ * @property {'top-left'|'top-right'|'bottom-left'|'bottom-right'} corner - Badge corner position,
+ *   validated against `CONFIG_SELECT_ALLOWED.overlayCorner` by ConfigManager.
+ * @property {string[]} [top10Selectors=[]] - Selectors for Top 10 elements that need offset adjustments.
+ * @property {string} [top10Offset='50%'] - Offset value for Top 10 badges.
+ */
+
 function buildBaseStyles(overlayClass, positionCss, flexDirection) {
     return `
             ${CSS_VARS}
@@ -214,9 +223,10 @@ function buildRatingBadgeStyles(overlayClass) {
 }
 
 /**
- * @param {string} overlayClass - CSS class assigned to the overlay.
- * @param {'top-left'|'top-right'|'bottom-left'|'bottom-right'} corner - Badge corner,
- *   validated against `CONFIG_SELECT_ALLOWED.overlayCorner` by ConfigManager.
+ * Builds all CSS styles for the rating overlay, including base positioning, fade effects, and rating badges.
+ *
+ * @param {BuildOverlayStylesOptions} options - Overlay styling configuration.
+ * @returns {string} Complete CSS string for the overlay.
  */
 export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
     const cornerStyles = {

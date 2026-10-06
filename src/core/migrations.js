@@ -3,16 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {{ migrated?: number, skipped?: number, deleted?: number }} MigrationSummary */
-
-/**
- * @typedef {object} StorageMigration
- * @property {number} version
- * @property {string} description
- * @property {(adapter: import('../platform/adapter.js').PlatformAdapter) => Promise<MigrationSummary>} upgrade
- * @property {(adapter: import('../platform/adapter.js').PlatformAdapter, error: unknown) => Promise<MigrationSummary>} [onFailure]
- */
-
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
@@ -22,7 +12,7 @@ async function clearCache(adapter) {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {ReadonlyArray<StorageMigration>} */
+/** @type {import('./types/migrations.js').StorageMigration[]} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
@@ -127,26 +117,26 @@ const MIGRATIONS = Object.freeze([
 ]);
 
 /**
- * Get a migration by its version number.
+ * Retrieves a migration definition by its version number for targeted migration execution.
  *
- * @param {number} version
- * @returns {StorageMigration | undefined}
+ * @param {number} version - The migration version to find (must be positive integer).
+ * @returns {import('./types/migrations.js').StorageMigration|undefined} The migration object or undefined if not found.
  */
 export function getMigrationByVersion(version) {
     return MIGRATIONS.find(m => m.version === version);
 }
 
 /**
- * Run each migration newer than the stored data version.
+ * Runs each migration newer than the stored data version, applying upgrades sequentially.
  *
  * A failed upgrade, including a failed recovery handler, deliberately advances
  * the data version. This prevents a broken migration from trapping startup in
  * an infinite retry loop.
  *
- * @param {import('../platform/adapter.js').PlatformAdapter} adapter
- * @param {{ info: Function, error: Function }} logger
- * @param {ReadonlyArray<StorageMigration>} [migrations=MIGRATIONS]
- * @returns {Promise<void>}
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter for version persistence.
+ * @param {{ info: Function, error: Function }} logger - Logger for migration progress and error reporting.
+ * @param {import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
+ * @returns {Promise<void>} Resolves when all applicable migrations have been executed.
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
     validateMigrations(migrations);

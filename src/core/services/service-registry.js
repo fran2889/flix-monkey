@@ -12,7 +12,13 @@ const SERVICES = Object.freeze({
     disneyplus: new DisneyPlusService(),
 });
 
+/** Registry for detecting and accessing streaming service implementations. */
 export class ServiceRegistry {
+    /**
+     * Detects the current streaming service from the hostname.
+     *
+     * @returns {import('./base-streaming-service.js').StreamingService|null}
+     */
     static detect() {
         const currentHost = window.location.hostname;
         for (const service of Object.values(SERVICES)) {

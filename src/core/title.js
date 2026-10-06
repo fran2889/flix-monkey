@@ -5,24 +5,6 @@
 import { buildImdbUrl } from './utils/index.js';
 
 /**
- * @typedef {'xmdb'|'omdb'|'agregarr'} ApiSourceValue
- * @typedef {'movie'|'series'} TitleTypeValue
- */
-/**
- * @typedef {Object} TitleOptions
- * @property {string|null} [displayTitle=null] - Title as shown by the streaming service.
- * @property {string|null} [apiTitle=null] - Canonical title returned by the API.
- * @property {string|null} [imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
- * @property {number|string|null} [year=null] - Release year; coerced to integer.
- * @property {number|string|null} [imdbRating=null] - IMDb rating (0-10); coerced to float.
- * @property {number|string|null} [imdbVotes=null] - IMDb vote count; coerced to integer.
- * @property {number|string|null} [rtRating=null] - Rotten Tomatoes score (0-100); coerced to integer.
- * @property {number|string|null} [mcRating=null] - Metacritic score (0-100); leading digits extracted, coerced to integer.
- * @property {ApiSourceValue|null} [source=null] - API source that produced this title.
- * @property {TitleTypeValue|null} [type=null] - Movie or series title type.
- */
-
-/**
  * Immutable data class representing a movie or show with its ratings.
  *
  * Rating values are normalised during construction: `null`, `undefined`, empty
@@ -41,7 +23,7 @@ export class Title {
     source;
     type;
 
-    /** @param {TitleOptions} [options] */
+    /** @param {import('../types/title.js').TitleOptions} [options] */
     constructor({
         displayTitle = null,
         apiTitle = null,
@@ -82,7 +64,7 @@ export class Title {
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {Object} Title fields without displayTitle
+     * @returns {object} Title fields without displayTitle
      */
     toCacheJSON() {
         const rest = { ...this };
@@ -92,7 +74,7 @@ export class Title {
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
-     * @param {Object} obj - Cache data object without displayTitle
+     * @param {object} obj - Cache data object without displayTitle
      * @param {string|null} displayTitle - Display title from cache entry
      * @returns {Title} New Title instance
      */
@@ -106,6 +88,11 @@ export class Title {
         return converter(val);
     }
 
+    /**
+     * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
+     *
+     * @returns {boolean}
+     */
     get hasRating() {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
     }
@@ -119,7 +106,7 @@ export class Title {
     }
 
     /**
-     * @param {ApiSourceValue} source - API source that produced this title.
+     * @param {import('../types/title.js').ApiSourceValue} source - API source that produced this title.
      * @returns {Title} A new immutable Title with this source.
      */
     withSource(source) {
@@ -130,7 +117,7 @@ export class Title {
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
-     * @param {ApiSourceValue|null} [source=null] - API source that produced the miss.
+     * @param {import('../types/title.js').ApiSourceValue|null} [source=null] - API source that produced the miss.
      * @returns {Title}
      */
     static notFound(displayTitle, source = null) {

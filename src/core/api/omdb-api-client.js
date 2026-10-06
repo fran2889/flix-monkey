@@ -22,7 +22,17 @@ function parseRatings(ratings, sourcePattern) {
     return entry?.value ?? entry?.Value ?? null;
 }
 
+/**
+ * API client for OMDb service that provides movie and series information with ratings.
+ */
 export class OmdbApiClient extends BaseApiClient {
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('../config/config-manager.js').ConfigManager} config
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('../logger.js').Logger} logger
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -35,12 +45,23 @@ export class OmdbApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     * Checks if API key is configured and client is healthy.
+     *
+     * @returns {Promise<import('../types/api.js').ClientStatus>}
+     */
     async getStatus() {
         const apiKey = this.config.get('omdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
     }
 
+    /**
+     * Searches for a title using OMDb API.
+     *
+     * @param {string} displayTitle - The title to search for.
+     * @returns {Promise<import('../title.js').Title|null>} Title object or null if not found.
+     */
     async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
@@ -53,6 +74,12 @@ export class OmdbApiClient extends BaseApiClient {
         return this.#parseOmdbResponse(json, displayTitle);
     }
 
+    /**
+     * Fetches full details for a title when search returned minimal data.
+     *
+     * @param {import('../title.js').Title} searchTitle - Title from search results.
+     * @returns {Promise<import('../title.js').Title>} Title with full details.
+     */
     async getDetails(searchTitle) {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
         if (searchTitle.imdbId && searchTitle.apiTitle === null) {
@@ -73,7 +100,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Parses OMDb JSON response into a Title.
      *
-     * @param {Object} json - OMDb API response
+     * @param {object} json - OMDb API response
      * @param {string} displayTitle - Display title from streaming service
      * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
      * @returns {import('../title.js').Title}

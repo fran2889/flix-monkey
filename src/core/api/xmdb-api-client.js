@@ -9,7 +9,17 @@ import { Title } from '../title.js';
 import { BaseApiClient } from './base-api-client.js';
 import { mapXmdbTitleType } from './title-type-mappers.js';
 
+/**
+ * API client for XMDb service that provides comprehensive movie and series data with ratings.
+ */
 export class XmdbApiClient extends BaseApiClient {
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('../config/config-manager.js').ConfigManager} config
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('../logger.js').Logger} logger
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -22,12 +32,23 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     * Checks if API key is configured and client is healthy.
+     *
+     * @returns {Promise<import('../types/api.js').ClientStatus>}
+     */
     async getStatus() {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
     }
 
+    /**
+     * Searches for a title using XMDb API.
+     *
+     * @param {string} displayTitle - The title to search for.
+     * @returns {Promise<import('../title.js').Title|null>} Title object or null if not found.
+     */
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
@@ -57,6 +78,12 @@ export class XmdbApiClient extends BaseApiClient {
         });
     }
 
+    /**
+     * Fetches detailed ratings and metadata from XMDb API.
+     *
+     * @param {import('../title.js').Title} searchTitle - Title from search results with IMDb ID.
+     * @returns {Promise<import('../title.js').Title|null>} Title with ratings and metadata or null on failure.
+     */
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);

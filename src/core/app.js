@@ -16,6 +16,7 @@ import { ServiceRegistry } from './services/index.js';
 import { FADE_STATE_LABELS } from './ui/overlay-elements.js';
 import { debounce, runIdle, slugify } from './utils/index.js';
 
+/** Main application class coordinating rating overlay functionality. */
 export class FlixMonkeyApp {
     #api;
     #cache;
@@ -36,13 +37,13 @@ export class FlixMonkeyApp {
     #overrideManager;
 
     /**
-     * @param {Logger} logger
-     * @param {CacheManager} cache
-     * @param {FadeManager} fadeManager
+     * @param {import('./logger.js').Logger} logger
+     * @param {import('./cache/index.js').CacheManager} cache
+     * @param {import('./fade-manager.js').FadeManager} fadeManager
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
-     * @param {OverlayRenderer} renderer
+     * @param {import('./overlay.js').OverlayRenderer} renderer
      * @param {import('./surfaces/index.js').SurfaceManager} surfaces
-     * @param {ApiClientManager} api
+     * @param {import('./api-manager.js').ApiClientManager} api
      */
     constructor(logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
@@ -227,6 +228,9 @@ export class FlixMonkeyApp {
         });
     }
 
+    /**
+     * Forces re-decoration of all titles on the current page.
+     */
     redecorate() {
         this.#renderer.injectStyles();
         this.#renderer.clearAllOverlays();

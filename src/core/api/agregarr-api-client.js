@@ -12,7 +12,17 @@ import { mapAgregarrTitleType } from './title-type-mappers.js';
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
+/**
+ * API client for Agregarr service that fetches ratings from IMDb Suggestions and Agregarr API.
+ */
 export class AgregarrApiClient extends BaseApiClient {
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param {import('../config/config-manager.js').ConfigManager} config
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
+     * @param {import('../logger.js').Logger} logger
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -25,6 +35,12 @@ export class AgregarrApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     * Searches for a title using IMDb Suggestions API.
+     *
+     * @param {string} displayTitle - The title to search for.
+     * @returns {Promise<import('../title.js').Title|null>} Title object or null if not found.
+     */
     async search(displayTitle) {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
@@ -53,6 +69,12 @@ export class AgregarrApiClient extends BaseApiClient {
         });
     }
 
+    /**
+     * Fetches detailed ratings from Agregarr API using the cached IMDb ID.
+     *
+     * @param {import('../title.js').Title} searchTitle - Title from search results with IMDb ID.
+     * @returns {Promise<import('../title.js').Title|null>} Title with ratings or null on failure.
+     */
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);

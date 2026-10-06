@@ -18,7 +18,7 @@ export class CacheEntry {
     /**
      * @param {string} displayTitle - Netflix display title (search key)
      * @param {string|null} imdbId - IMDb ID for short-circuit optimization
-     * @param {Object} data - Title data without displayTitle
+     * @param {object} data - Title data without displayTitle
      * @param {number|null} expires - Expiry timestamp or null for never expires
      */
     constructor(displayTitle, imdbId, data, expires) {
@@ -29,7 +29,7 @@ export class CacheEntry {
     }
 
     /**
-     * Deserializes from JSON storage format.
+     * Parses a JSON string from storage and returns a CacheEntry instance.
      *
      * @param {string} raw - Raw JSON string from storage
      * @returns {CacheEntry} New CacheEntry instance
@@ -40,7 +40,7 @@ export class CacheEntry {
     }
 
     /**
-     * Reconstructs the full Title from cache data.
+     * Combines cached data with entry metadata to create a complete Title object.
      *
      * @returns {import('../title.js').Title|null} Hydrated Title, or null if data is missing
      */
@@ -50,9 +50,9 @@ export class CacheEntry {
     }
 
     /**
-     * Serializes to JSON storage format.
+     * Converts the cache entry to a plain object suitable for JSON storage.
      *
-     * @returns {Object} Plain object for JSON serialization
+     * @returns {object} Plain object for JSON serialization
      */
     toJSON() {
         return {
@@ -63,10 +63,16 @@ export class CacheEntry {
         };
     }
 
+    /**
+     * @returns {string|null}
+     */
     get imdbId() {
         return this.#imdbId;
     }
 
+    /**
+     * @returns {boolean}
+     */
     get isExpired() {
         return this.#expires !== null && Date.now() > this.#expires;
     }

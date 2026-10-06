@@ -14,6 +14,12 @@ const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
 ]);
 
+/**
+ * Extracts and normalizes aria-label from HBO Max tile.
+ *
+ * @param {HTMLElement} tile - HBO Max content tile element.
+ * @returns {string|null} Normalized aria-label text or null.
+ */
 function getNormalizedHboMaxAriaLabel(tile) {
     return tile
         .getAttribute('aria-label')
@@ -21,6 +27,12 @@ function getNormalizedHboMaxAriaLabel(tile) {
         .trim();
 }
 
+/**
+ * Extracts title from HBO Max tile element using pattern matching on aria-label.
+ *
+ * @param {HTMLElement} tile - DOM element representing an HBO Max content tile.
+ * @returns {string|null} Extracted title or null if not found.
+ */
 export function extractHboMaxTitle(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     if (!label) return null;
@@ -42,6 +54,12 @@ export function extractHboMaxTitle(tile) {
     return null;
 }
 
+/**
+ * Checks if an HBO Max tile represents a Top 10 item.
+ *
+ * @param {HTMLElement} tile - HBO Max content tile element.
+ * @returns {boolean} True if the tile is a Top 10 item.
+ */
 function isHboMaxTop10Tile(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     return /^Number\s+\d+:\s+/u.test(label ?? '');
@@ -60,7 +78,15 @@ const HBO_MAX_SURFACES = Object.freeze({
     }),
 });
 
+/**
+ * HBO Max specific surface manager for discovering HBO Max streaming service surfaces.
+ */
 export class HboMaxSurfaceManager extends SurfaceManager {
+    /**
+     * Creates HBO Max surface manager with HBO Max-specific surfaces.
+     *
+     * @param {import('../../logger.js').Logger} logger - For logging surface discovery issues.
+     */
     constructor(logger) {
         super(logger, HBO_MAX_SURFACES);
     }

@@ -7,12 +7,8 @@ import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
 /**
- * @typedef {Object} SettingsActions
- * @property {() => void | Promise<void>} onSave
- * @property {() => void | Promise<void>} onClearCache
- * @property {() => void | Promise<void>} onResetClients
+ * UI component that renders and manages the settings panel with grouped configuration fields.
  */
-
 export class SettingsView {
     #fields;
     #actions;
@@ -20,14 +16,22 @@ export class SettingsView {
     #debounceTimer = null;
 
     /**
-     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields
-     * @param {SettingsActions} actions
+     * Creates a SettingsView instance.
+     *
+     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields - Configuration field definitions.
+     * @param {import('../../types/extension.js').SettingsActions} actions - Action handlers for settings events.
      */
     constructor(fields, actions) {
         this.#fields = fields;
         this.#actions = actions;
     }
 
+    /**
+     * Renders the complete settings UI into the specified container with current values.
+     *
+     * @param {HTMLElement} container - DOM element to render into.
+     * @param {object} settings - Current settings values.
+     */
     render(container, settings) {
         this.#container = container;
         this.#injectStyles();
@@ -355,6 +359,11 @@ export class SettingsView {
         }
     }
 
+    /**
+     * Reads current values from all form inputs in the settings UI.
+     *
+     * @returns {object} Settings values keyed by field keys.
+     */
     readValues() {
         const values = {};
         for (const field of this.#fields) {
@@ -372,6 +381,12 @@ export class SettingsView {
         return values;
     }
 
+    /**
+     * Validates settings values using field-specific validators.
+     *
+     * @param {object} values - Settings values to validate.
+     * @returns {string[]} Array of validation error messages, empty if valid.
+     */
     validate(values) {
         const errors = [];
         for (const field of this.#fields) {
@@ -386,6 +401,12 @@ export class SettingsView {
         return errors;
     }
 
+    /**
+     * Displays a status message in the settings UI.
+     *
+     * @param {string} message - Status message to display.
+     * @param {string} type - Status type for styling ('success', 'error', etc.).
+     */
     showStatus(message, type) {
         const status = this.#container.querySelector('[id="fm-status"]');
         if (status) {

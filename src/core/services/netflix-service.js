@@ -5,21 +5,32 @@
 import { NetflixSurfaceManager } from '../surfaces/index.js';
 import { StreamingService } from './base-streaming-service.js';
 
+/** Netflix streaming service implementation. */
 export class NetflixService extends StreamingService {
-    isEnabled(configManager) {
-        return configManager.getBool('enableNetflix');
+    /**
+     * @param {import('../config/config-manager.js').ConfigManager} _configManager
+     * @returns {boolean}
+     */
+    isEnabled(_configManager) {
+        return _configManager.getBool('enableNetflix');
     }
 
+    /**
+     * @returns {string[]}
+     */
     get domains() {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
     }
 
+    /**
+     * @returns {import('../types/services.js').ServiceSurfaceManager}
+     */
     get SurfaceManager() {
         return NetflixSurfaceManager;
     }
 
     /**
-     * @returns {import('../overlay.js').ServicePresentation}
+     * @returns {import('../types/overlay.js').ServicePresentation}
      */
     get constants() {
         return Object.freeze({

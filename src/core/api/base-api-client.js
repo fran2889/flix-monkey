@@ -6,10 +6,6 @@ import { CLIENT_DISABLE_DURATION } from '../constants.js';
 import { Title } from '../title.js';
 
 /**
- * @typedef {{healthy: true}|{healthy: false, reason: string}} ClientStatus
- */
-
-/**
  * Abstract base class for API clients.
  *
  * Implements the template-method pattern: fetch orchestrates the
@@ -87,7 +83,7 @@ export class BaseApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /** @returns {Promise<ClientStatus>} A health result suitable for provider selection. */
+    /** @returns {Promise<import('../types/api.js').ClientStatus>} A health result suitable for provider selection. */
     async getStatus() {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -154,14 +150,23 @@ export class BaseApiClient {
         throw new Error('Not implemented');
     }
 
+    /**
+     * @returns {import('../constants.js').ApiSourceValue}
+     */
     get source() {
         return this.#source;
     }
 
+    /**
+     * @returns {import('../config/config-manager.js').ConfigManager}
+     */
     get config() {
         return this.#config;
     }
 
+    /**
+     * @returns {import('../logger.js').Logger}
+     */
     get logger() {
         return this.#logger;
     }

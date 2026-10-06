@@ -3,10 +3,18 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+/**
+ * Accessible modal dialog component for settings and other UI overlays.
+ */
 export class Modal {
     #returnFocus = null;
     #escHandler = null;
 
+    /**
+     * Creates a modal dialog with the specified title.
+     *
+     * @param {string} title - Modal title displayed in the header.
+     */
     constructor(title) {
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
 
@@ -41,6 +49,9 @@ export class Modal {
         this.overlay.appendChild(content);
     }
 
+    /**
+     * Displays the modal and sets up keyboard navigation.
+     */
     open() {
         if (this.#escHandler) return;
         document.body.appendChild(this.overlay);
@@ -62,6 +73,11 @@ export class Modal {
         this.#returnFocus?.focus();
     }
 
+    /**
+     * Returns the modal body container for adding custom content.
+     *
+     * @returns {HTMLElement} The modal body container.
+     */
     getContentContainer() {
         return this.overlay.querySelector('.fm-modal-body');
     }

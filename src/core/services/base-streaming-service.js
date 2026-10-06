@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-/** @typedef {new (logger: import('../logger.js').Logger) => import('../surfaces/').SurfaceManager} ServiceSurfaceManager */
-
 /**
  * Abstract contract for a supported streaming service. Implementations provide
  * hostname suffixes used by ServiceRegistry; a surface-manager constructor;
@@ -16,7 +14,7 @@
 export class StreamingService {
     /**
      * @abstract
-     * @returns {ReadonlyArray<string>} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
+     * @returns {string[]} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
      */
     get domains() {
         throw new Error('Not implemented');
@@ -24,14 +22,14 @@ export class StreamingService {
 
     /**
      * @abstract
-     * @returns {ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
+     * @returns {import('../types/services.js').ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
      */
     get SurfaceManager() {
         throw new Error('Not implemented');
     }
 
     /**
-     * @returns {import('../overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
+     * @returns {import('../types/overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
      */
     get constants() {
         return Object.freeze({});

@@ -2,6 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+/**
+ * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.
+ */
 export class RequestQueue {
     #queue = [];
     #isProcessing = false;
@@ -94,7 +97,11 @@ export class RequestQueue {
         }
     }
 
-    /** Rejects pending requests without interrupting an active request. @returns {number} Rejected count. */
+    /**
+     * Rejects pending requests without interrupting an active request.
+     *
+     * @returns {number} Rejected count.
+     */
     clear() {
         const count = this.#queue.length;
         while (this.#queue.length > 0) {
