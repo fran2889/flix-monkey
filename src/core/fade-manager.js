@@ -29,12 +29,21 @@ export class FadeManager {
         this.#config = config;
     }
 
+    /**
+     * @param {string} dedupKey - Slugified display title.
+     * @returns {Promise<'always'|'never'|null>}
+     */
     async getOverride(dedupKey) {
         const val = await this.#adapter.storageGet(`${this.#prefix}${dedupKey}`);
         if (val === 'always' || val === 'never') return val;
         return null;
     }
 
+    /**
+     * @param {string} dedupKey - Slugified display title.
+     * @param {'always'|'never'|null} state - Override state, or null to clear.
+     * @returns {Promise<void>}
+     */
     async setOverride(dedupKey, state) {
         const key = `${this.#prefix}${dedupKey}`;
         if (state === null) {

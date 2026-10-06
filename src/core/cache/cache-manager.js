@@ -82,6 +82,11 @@ export class CacheManager {
         return getTtlMs(ttlDays);
     }
 
+    /**
+     * Clears all cache entries.
+     *
+     * @returns {Promise<void>}
+     */
     async clear() {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;

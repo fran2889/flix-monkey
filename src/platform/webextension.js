@@ -8,6 +8,7 @@ import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
 import { FlixMonkeyError } from '../core/utils/index.js';
 import { PlatformAdapter } from './adapter.js';
 
+/** WebExtension platform adapter using browser.* APIs via polyfill. */
 export class WebExtensionAdapter extends PlatformAdapter {
     #configData = {};
     #configLoaded = false;

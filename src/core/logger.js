@@ -9,6 +9,9 @@ export class Logger {
     #prefix = '[FlixMonkey]';
     #adapter;
 
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     */
     constructor(adapter) {
         this.#adapter = adapter;
     }

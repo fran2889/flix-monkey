@@ -6,6 +6,7 @@ import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
 import { FlixMonkeyError } from '../core/utils/index.js';
 import { PlatformAdapter } from './adapter.js';
 
+/** Userscript platform adapter using GM_* APIs. */
 export class UserscriptAdapter extends PlatformAdapter {
     async storageGet(key) {
         return GM_getValue(key) ?? null;

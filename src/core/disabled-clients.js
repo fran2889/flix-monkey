@@ -7,10 +7,17 @@ import { ApiSource } from './constants.js';
 export class DisabledClientsManager {
     #adapter;
 
+    /**
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     */
     constructor(adapter) {
         this.#adapter = adapter;
     }
 
+    /**
+     * @param {import('./constants.js').ApiSourceValue} source - API source to check.
+     * @returns {Promise<boolean>}
+     */
     async isDisabled(source) {
         const key = `fm_disabled_${source}`;
         const val = await this.#adapter.storageGet(key);
@@ -34,6 +41,11 @@ export class DisabledClientsManager {
         await this.#adapter.storageSet(`fm_disabled_${source}`, until.toString());
     }
 
+    /**
+     * Resets all disabled clients.
+     *
+     * @returns {Promise<import('./constants.js').ApiSourceValue[]>} List of sources that were disabled.
+     */
     async resetAll() {
         const sources = Object.values(ApiSource);
         const disabled = [];
