@@ -16,6 +16,9 @@ const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);
 let app = null;
 
+/**
+ *
+ */
 function getSettingsDependencies() {
     if (app) {
         return {
@@ -30,6 +33,9 @@ function getSettingsDependencies() {
     };
 }
 
+/**
+ *
+ */
 function openSettings() {
     const { cacheManager, disabledClientsManager } = getSettingsDependencies();
     const modal = new Modal('FlixMonkey Settings');

@@ -8,10 +8,16 @@ import { PlatformAdapter } from './adapter.js';
 
 /** Userscript platform adapter using GM_* APIs. */
 export class UserscriptAdapter extends PlatformAdapter {
+    /**
+     *
+     */
     async storageGet(key) {
         return GM_getValue(key) ?? null;
     }
 
+    /**
+     *
+     */
     async storageGetAll() {
         const keys = GM_listValues();
         const all = {};
@@ -21,25 +27,40 @@ export class UserscriptAdapter extends PlatformAdapter {
         return all;
     }
 
+    /**
+     *
+     */
     async storageSet(key, value) {
         GM_setValue(key, value);
     }
 
+    /**
+     *
+     */
     async storageSetMany(values) {
         for (const [key, value] of Object.entries(values)) {
             GM_setValue(key, value);
         }
     }
 
+    /**
+     *
+     */
     async storageDelete(key) {
         GM_deleteValue(key);
     }
 
+    /**
+     *
+     */
     async storageGetKeys(prefix) {
         const keys = GM_listValues();
         return keys.filter(key => key.startsWith(prefix));
     }
 
+    /**
+     *
+     */
     async httpFetch(url, { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = {}) {
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
@@ -74,10 +95,16 @@ export class UserscriptAdapter extends PlatformAdapter {
      * or setConfigData() call is needed. Config changes take effect on the next page reload
      * (see entry.js) because stateful app objects don't auto-reinitialize mid-session.
      */
+    /**
+     *
+     */
     configGet(key) {
         return GM_getValue(key);
     }
 
+    /**
+     *
+     */
     registerMenuCommand(label, fn) {
         GM_registerMenuCommand(label, fn);
     }

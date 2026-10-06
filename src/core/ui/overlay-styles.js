@@ -20,6 +20,9 @@ const CSS_VARS = `
     }
 `;
 
+/**
+ *
+ */
 function buildBaseStyles(overlayClass, positionCss, flexDirection) {
     return `
             ${CSS_VARS}
@@ -48,6 +51,9 @@ function buildBaseStyles(overlayClass, positionCss, flexDirection) {
         `;
 }
 
+/**
+ *
+ */
 function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offset) {
     if (!corner.includes('left') || !top10Selectors?.length) return '';
 
@@ -56,6 +62,9 @@ function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offse
     return `\n            ${selectors.join(',\n            ')} { left: calc(${offset} + 6px); }`;
 }
 
+/**
+ *
+ */
 function buildFadeStyles() {
     return `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
@@ -63,6 +72,9 @@ function buildFadeStyles() {
         `;
 }
 
+/**
+ *
+ */
 function buildFadeToggleStyles(overlayClass) {
     return `
             .${overlayClass} .fm-fade-toggle {
@@ -90,6 +102,9 @@ function buildFadeToggleStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildRatingsWrapperStyles(overlayClass) {
     return `
             .${overlayClass} .fm-ratings-wrapper {
@@ -101,6 +116,9 @@ function buildRatingsWrapperStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildImdbRowStyles(overlayClass) {
     return `
             .${overlayClass} .fm-imdb-row {
@@ -125,6 +143,9 @@ function buildImdbRowStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildActionsStyles(overlayClass) {
     return `
             .${overlayClass} .fm-actions {
@@ -139,6 +160,9 @@ function buildActionsStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildIconButtonStyles(overlayClass) {
     return `
             .${overlayClass} .fm-icon-btn {
@@ -165,6 +189,9 @@ function buildIconButtonStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildIconBadgeStyles(overlayClass) {
     return `
             .${overlayClass} .fm-icon-badge {
@@ -188,6 +215,9 @@ function buildIconBadgeStyles(overlayClass) {
         `;
 }
 
+/**
+ *
+ */
 function buildRatingBadgeStyles(overlayClass) {
     return `
             .${overlayClass} .fm-rating-badge {

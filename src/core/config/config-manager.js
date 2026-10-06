@@ -7,6 +7,9 @@ import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 
 /** @typedef {keyof typeof CONFIG_DEFAULTS} ConfigKey */
 
+/**
+ *
+ */
 export class ConfigManager {
     #adapter;
     #logger;
@@ -46,18 +49,27 @@ export class ConfigManager {
         }
     }
 
+    /**
+     *
+     */
     getInt(key) {
         const val = this.get(key);
         const num = Number.parseInt(val, 10);
         return Number.isNaN(num) ? Number.parseInt(CONFIG_DEFAULTS[key], 10) : num;
     }
 
+    /**
+     *
+     */
     getFloat(key) {
         const val = this.get(key);
         const num = Number.parseFloat(val);
         return Number.isNaN(num) ? Number.parseFloat(CONFIG_DEFAULTS[key]) : num;
     }
 
+    /**
+     *
+     */
     getBool(key) {
         return this.get(key) === 'true';
     }

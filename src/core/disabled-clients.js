@@ -4,6 +4,9 @@
  */
 import { ApiSource } from './constants.js';
 
+/**
+ *
+ */
 export class DisabledClientsManager {
     #adapter;
 

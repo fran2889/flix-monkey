@@ -6,13 +6,16 @@
 export const DATA_VERSION_KEY = 'fm_data_version';
 const CACHE_PREFIX = 'fmc:';
 
+/**
+ *
+ */
 async function clearCache(adapter) {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
     await Promise.all(keys.map(key => adapter.storageDelete(key)));
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {ReadonlyArray<import('./types/migrations.js').StorageMigration>} */
+/** @type {readonly import('./types/migrations.js').StorageMigration[]} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
@@ -120,7 +123,7 @@ const MIGRATIONS = Object.freeze([
  * Get a migration by its version number.
  *
  * @param {number} version
- * @returns {import('./types/migrations.js').StorageMigration | undefined}
+ * @returns {import('./types/migrations.js').StorageMigration|undefined}
  */
 export function getMigrationByVersion(version) {
     return MIGRATIONS.find(m => m.version === version);
@@ -135,7 +138,7 @@ export function getMigrationByVersion(version) {
  *
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter
  * @param {{ info: Function, error: Function }} logger
- * @param {ReadonlyArray<import('./types/migrations.js').StorageMigration>} [migrations=MIGRATIONS]
+ * @param {readonly import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS]
  * @returns {Promise<void>}
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
@@ -170,6 +173,9 @@ export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
     }
 }
 
+/**
+ *
+ */
 function parseStoredVersion(value) {
     if (typeof value === 'number') {
         return Number.isSafeInteger(value) && value >= 0 ? value : 0;
@@ -181,6 +187,9 @@ function parseStoredVersion(value) {
     return 0;
 }
 
+/**
+ *
+ */
 function validateMigrations(migrations) {
     if (!Array.isArray(migrations)) {
         throw new TypeError('Migrations must be an array');

@@ -5,6 +5,9 @@
 import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements.js';
 import { buildOverlayStyles } from './ui/overlay-styles.js';
 
+/**
+ *
+ */
 export class OverlayRenderer {
     #OVERLAY_CLASS = 'fm-rating-overlay';
     #OVERLAY_ATTR = 'data-fm-injected';
@@ -21,6 +24,9 @@ export class OverlayRenderer {
         this.#serviceConstants = serviceConstants;
     }
 
+    /**
+     *
+     */
     injectStyles() {
         const existing = document.getElementById('fm-overlay-styles');
         const cssText = buildOverlayStyles({
@@ -39,14 +45,23 @@ export class OverlayRenderer {
         }
     }
 
+    /**
+     *
+     */
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
     }
 
+    /**
+     *
+     */
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;
     }
 
+    /**
+     *
+     */
     ensureRelative(container) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     }
@@ -91,14 +106,23 @@ export class OverlayRenderer {
         container.setAttribute(this.#OVERLAY_ATTR, '1');
     }
 
+    /**
+     *
+     */
     removeLoadingOverlay(container) {
         container.querySelector(`.${this.#LOADING_CLASS}`)?.remove();
     }
 
+    /**
+     *
+     */
     applyFade(container, shouldFade) {
         container.classList.toggle('fm-faded', shouldFade);
     }
 
+    /**
+     *
+     */
     clearAllOverlays() {
         document.querySelectorAll(`.${this.#OVERLAY_CLASS}`).forEach(el => {
             el.parentElement?.removeAttribute(this.#OVERLAY_ATTR);

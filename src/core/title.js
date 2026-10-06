@@ -64,7 +64,7 @@ export class Title {
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {Object} Title fields without displayTitle
+     * @returns {object} Title fields without displayTitle
      */
     toCacheJSON() {
         const rest = { ...this };
@@ -74,7 +74,7 @@ export class Title {
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
-     * @param {Object} obj - Cache data object without displayTitle
+     * @param {object} obj - Cache data object without displayTitle
      * @param {string|null} displayTitle - Display title from cache entry
      * @returns {Title} New Title instance
      */
@@ -83,11 +83,17 @@ export class Title {
         return new Title({ ...obj, displayTitle });
     }
 
+    /**
+     *
+     */
     #normalizeRating(val, converter) {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter(val);
     }
 
+    /**
+     *
+     */
     get hasRating() {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
     }

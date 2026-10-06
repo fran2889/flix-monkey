@@ -18,7 +18,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @returns {Promise<StorageValue|null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<import('../types/platform.js').StorageValue|null>} The stored value, or `null` if the key does not exist.
      */
     async storageGet(_key) {
         throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
@@ -28,7 +28,7 @@ export class PlatformAdapter {
      * Retrieves all key/value pairs from platform storage.
      *
      * @abstract
-     * @returns {Promise<Record<string, StorageValue>>} All stored entries.
+     * @returns {Promise<Record<string, import('../types/platform.js').StorageValue>>} All stored entries.
      */
     async storageGetAll() {
         throw new FlixMonkeyError('PlatformAdapter: storageGetAll() must be implemented by subclass');
@@ -39,7 +39,7 @@ export class PlatformAdapter {
      *
      * @abstract
      * @param {string} _key - Storage key.
-     * @param {StorageValue} _value - Value to store.
+     * @param {import('../types/platform.js').StorageValue} _value - Value to store.
      * @returns {Promise<void>}
      */
     async storageSet(_key, _value) {
@@ -50,7 +50,7 @@ export class PlatformAdapter {
      * Stores multiple key/value pairs atomically in platform storage.
      *
      * @abstract
-     * @param {Record<string, StorageValue>} _values - Object of key/value pairs to store.
+     * @param {Record<string, import('../types/platform.js').StorageValue>} _values - Object of key/value pairs to store.
      * @returns {Promise<void>}
      */
     async storageSetMany(_values) {

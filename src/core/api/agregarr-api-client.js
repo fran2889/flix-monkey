@@ -12,7 +12,13 @@ import { mapAgregarrTitleType } from './title-type-mappers.js';
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
+/**
+ *
+ */
 export class AgregarrApiClient extends BaseApiClient {
+    /**
+     *
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -25,6 +31,9 @@ export class AgregarrApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     *
+     */
     async search(displayTitle) {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
@@ -53,6 +62,9 @@ export class AgregarrApiClient extends BaseApiClient {
         });
     }
 
+    /**
+     *
+     */
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);

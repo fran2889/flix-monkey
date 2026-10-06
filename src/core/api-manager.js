@@ -6,6 +6,9 @@ import { Title } from './title.js';
 
 /** @typedef {import('./cache/').CacheEntry} CacheEntry */
 
+/**
+ *
+ */
 export class ApiClientManager {
     #cache;
     #client;
@@ -52,6 +55,9 @@ export class ApiClientManager {
         return await this.#fetch(displayTitle);
     }
 
+    /**
+     *
+     */
     async #fetch(displayTitle, imdbId = null) {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
@@ -81,6 +87,9 @@ export class ApiClientManager {
         }
     }
 
+    /**
+     *
+     */
     get disabledManager() {
         return this.#disabledManager;
     }

@@ -7,13 +7,16 @@ const titleFromAttribute = attribute => element => element.getAttribute(attribut
 const containerFromClosest = selector => element => element.closest(selector);
 const containerFromParent = element => element.parentElement;
 
+/**
+ *
+ */
 export class SurfaceManager {
     #SURFACES;
     #logger;
 
     /**
      * @param {import('../logger.js').Logger} logger - Receives selector and container-resolution failures.
-     * @param {Object<string, import('../types/surfaces.js').SurfaceDefinition>} surfaceDefs - Definitions used for DOM discovery.
+     * @param {object} surfaceDefs - Definitions used for DOM discovery.
      */
     constructor(logger, surfaceDefs) {
         this.#SURFACES = Object.values(surfaceDefs);

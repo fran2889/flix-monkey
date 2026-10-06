@@ -3,10 +3,16 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+/**
+ *
+ */
 export class Modal {
     #returnFocus = null;
     #escHandler = null;
 
+    /**
+     *
+     */
     constructor(title) {
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
 
@@ -41,6 +47,9 @@ export class Modal {
         this.overlay.appendChild(content);
     }
 
+    /**
+     *
+     */
     open() {
         if (this.#escHandler) return;
         document.body.appendChild(this.overlay);
@@ -53,6 +62,9 @@ export class Modal {
         document.addEventListener('keydown', this.#escHandler);
     }
 
+    /**
+     *
+     */
     #close() {
         if (this.#escHandler) {
             document.removeEventListener('keydown', this.#escHandler);
@@ -62,6 +74,9 @@ export class Modal {
         this.#returnFocus?.focus();
     }
 
+    /**
+     *
+     */
     getContentContainer() {
         return this.overlay.querySelector('.fm-modal-body');
     }

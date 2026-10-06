@@ -5,6 +5,9 @@
 import { CONFIG_FIELDS } from '../config/index.js';
 import { SettingsView } from './settings-view.js';
 
+/**
+ *
+ */
 export class SettingsUI {
     #adapter;
     #cacheManager;
@@ -31,11 +34,17 @@ export class SettingsUI {
         });
     }
 
+    /**
+     *
+     */
     async render(container) {
         const settings = (await this.#adapter.storageGetAll()) || {};
         this.#view.render(container, settings);
     }
 
+    /**
+     *
+     */
     async save() {
         try {
             const values = this.#view.readValues();
@@ -51,6 +60,9 @@ export class SettingsUI {
         }
     }
 
+    /**
+     *
+     */
     async #clearCache() {
         try {
             await this.#cacheManager.clear();
@@ -60,6 +72,9 @@ export class SettingsUI {
         }
     }
 
+    /**
+     *
+     */
     async #resetClients() {
         try {
             const reenabled = await this.#disabledClientsManager.resetAll();

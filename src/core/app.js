@@ -16,6 +16,7 @@ import { ServiceRegistry } from './services/index.js';
 import { FADE_STATE_LABELS } from './ui/overlay-elements.js';
 import { debounce, runIdle, slugify } from './utils/index.js';
 
+/** Main application class coordinating rating overlay functionality. */
 export class FlixMonkeyApp {
     #api;
     #cache;
@@ -36,13 +37,13 @@ export class FlixMonkeyApp {
     #overrideManager;
 
     /**
-     * @param {Logger} logger
-     * @param {CacheManager} cache
-     * @param {FadeManager} fadeManager
+     * @param {import('./logger.js').Logger} logger
+     * @param {import('./cache/index.js').CacheManager} cache
+     * @param {import('./fade-manager.js').FadeManager} fadeManager
      * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
-     * @param {OverlayRenderer} renderer
+     * @param {import('./overlay.js').OverlayRenderer} renderer
      * @param {import('./surfaces/index.js').SurfaceManager} surfaces
-     * @param {ApiClientManager} api
+     * @param {import('./api-manager.js').ApiClientManager} api
      */
     constructor(logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
@@ -103,6 +104,9 @@ export class FlixMonkeyApp {
         this.#redecorateTitle(dedupKey, displayTitle);
     }
 
+    /**
+     *
+     */
     #initNavigationObservers() {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
@@ -141,6 +145,9 @@ export class FlixMonkeyApp {
         this.#observer.observe(document.body, { childList: true, subtree: true });
     }
 
+    /**
+     *
+     */
     #decorateRoot(root) {
         this.#surfaces.discover(root).forEach(({ container, title, fadeable, showFadeToggle }) => {
             this.#decorateContainer(container, title, fadeable, showFadeToggle).catch(err =>
@@ -149,6 +156,9 @@ export class FlixMonkeyApp {
         });
     }
 
+    /**
+     *
+     */
     async #decorateContainer(container, displayTitle, fadeable, showFadeToggle) {
         if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
@@ -176,6 +186,9 @@ export class FlixMonkeyApp {
         }
     }
 
+    /**
+     *
+     */
     #getTitleRequest(dedupKey, displayTitle) {
         const existing = this.#inFlight.get(dedupKey);
         if (existing) return existing;
@@ -190,6 +203,9 @@ export class FlixMonkeyApp {
         return request;
     }
 
+    /**
+     *
+     */
     #renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride }) {
         if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
@@ -211,6 +227,9 @@ export class FlixMonkeyApp {
         );
     }
 
+    /**
+     *
+     */
     async #handleFadeToggleClick(dedupKey, imdbRating, toggleBadgeEl) {
         const domState = toggleBadgeEl.dataset.state;
         const currentState = domState === 'auto' ? null : domState;
@@ -227,12 +246,18 @@ export class FlixMonkeyApp {
         });
     }
 
+    /**
+     *
+     */
     redecorate() {
         this.#renderer.injectStyles();
         this.#renderer.clearAllOverlays();
         this.#decorateRoot(document);
     }
 
+    /**
+     *
+     */
     #disconnect() {
         this.#observer?.disconnect();
         this.#observer = null;

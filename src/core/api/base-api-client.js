@@ -118,6 +118,9 @@ export class BaseApiClient {
         return this.#queue.enqueue(url, priority, requestUrl => this.#adapter.httpFetch(requestUrl));
     }
 
+    /**
+     *
+     */
     async #isDisabled() {
         return this.#disabledManager.isDisabled(this.#source);
     }
@@ -150,14 +153,23 @@ export class BaseApiClient {
         throw new Error('Not implemented');
     }
 
+    /**
+     *
+     */
     get source() {
         return this.#source;
     }
 
+    /**
+     *
+     */
     get config() {
         return this.#config;
     }
 
+    /**
+     *
+     */
     get logger() {
         return this.#logger;
     }

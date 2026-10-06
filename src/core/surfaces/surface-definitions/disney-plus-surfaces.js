@@ -9,6 +9,9 @@ const DISNEY_PLUS_PREFIX_BLOCK =
 const DISNEY_PLUS_TITLE_END =
     /(?<= )(?:Rated \d+\+|Released \d{4}|Disney\+ Original|Hulu Original Series|Hulu Generic|Action and Adventure|Kids and Family)(?=[. ]|$)/u;
 
+/**
+ *
+ */
 function canonicalizeDisneyPlusTitle(title) {
     const canonicalTitle = title
         .replace(/^A Marvel Television Special Presentation [\u2014-] /u, '')
@@ -17,6 +20,9 @@ function canonicalizeDisneyPlusTitle(title) {
     return starWarsEpisode ? `Star Wars: Episode ${starWarsEpisode[2]} - ${starWarsEpisode[1]}` : canonicalTitle;
 }
 
+/**
+ *
+ */
 export function extractDisneyPlusTitle(tile) {
     const imageTitle = [...tile.querySelectorAll('img[alt]:not([data-testid="set-item-rating"] img)')]
         .map(image => image.alt.trim())
@@ -59,7 +65,13 @@ const DISNEY_PLUS_SURFACES = Object.freeze({
     }),
 });
 
+/**
+ *
+ */
 export class DisneyPlusSurfaceManager extends SurfaceManager {
+    /**
+     *
+     */
     constructor(logger) {
         super(logger, DISNEY_PLUS_SURFACES);
     }

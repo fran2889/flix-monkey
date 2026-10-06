@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import headers from 'eslint-plugin-headers';
+import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
@@ -81,7 +82,29 @@ export default [
             },
         },
     },
-    // 6. License header enforcement - src and tests only (isolated block)
+    // 6. JSDoc validation for exported functions
+    {
+        files: ['src/**/*.js'],
+        plugins: { jsdoc },
+        rules: {
+            'jsdoc/require-jsdoc': [
+                'error',
+                {
+                    require: {
+                        MethodDefinition: true,
+                        ClassDeclaration: true,
+                    },
+                    contexts: ['export'],
+                },
+            ],
+            'jsdoc/require-description': ['error', { contexts: ['export'] }],
+            'jsdoc/require-param': ['error', { contexts: ['export'] }],
+            'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/check-types': 'error',
+            'jsdoc/no-undefined-types': 'error',
+        },
+    },
+    // 7. License header enforcement - src and tests only (isolated block)
     // metadata.js is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {

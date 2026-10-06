@@ -15,6 +15,9 @@ export function nextFadeState(current) {
     return null;
 }
 
+/**
+ *
+ */
 export class FadeManager {
     #adapter;
     #config;

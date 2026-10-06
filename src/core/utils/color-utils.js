@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+/**
+ *
+ */
 function parseHex(hex) {
     return {
         r: Number.parseInt(hex.slice(1, 3), 16),
@@ -11,6 +14,9 @@ function parseHex(hex) {
     };
 }
 
+/**
+ *
+ */
 function rgbToHsl(r, g, b) {
     const rf = r / 255;
     const gf = g / 255;
@@ -42,6 +48,9 @@ function rgbToHsl(r, g, b) {
     return { h, s, l };
 }
 
+/**
+ *
+ */
 function hslToRgb(h, s, l) {
     if (s === 0) {
         const val = Math.round(l * 255);
@@ -63,6 +72,9 @@ function hslToRgb(h, s, l) {
     };
 }
 
+/**
+ *
+ */
 function hueToRgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
@@ -72,6 +84,9 @@ function hueToRgb(p, q, t) {
     return p;
 }
 
+/**
+ *
+ */
 export function interpolateColor(progress, startHex, endHex) {
     const startRgb = parseHex(startHex);
     const endRgb = parseHex(endHex);

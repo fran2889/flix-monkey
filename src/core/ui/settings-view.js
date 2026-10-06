@@ -6,6 +6,9 @@ import { GROUPS, ROW_LABELS } from '../config/index.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
 
+/**
+ *
+ */
 export class SettingsView {
     #fields;
     #actions;
@@ -21,6 +24,9 @@ export class SettingsView {
         this.#actions = actions;
     }
 
+    /**
+     *
+     */
     render(container, settings) {
         this.#container = container;
         this.#injectStyles();
@@ -38,6 +44,9 @@ export class SettingsView {
         this.#setupAutoSave();
     }
 
+    /**
+     *
+     */
     #injectStyles() {
         if (!document.getElementById('flixmonkey-settings-styles')) {
             const style = document.createElement('style');
@@ -47,6 +56,9 @@ export class SettingsView {
         }
     }
 
+    /**
+     *
+     */
     #groupFieldsByGroup() {
         const groups = [];
         const fieldsByGroup = {};
@@ -67,6 +79,9 @@ export class SettingsView {
         return groups;
     }
 
+    /**
+     *
+     */
     #addFieldToGroup(field, fieldsByGroup) {
         const groupId = field.group;
         if (!fieldsByGroup[groupId]) {
@@ -75,6 +90,9 @@ export class SettingsView {
         fieldsByGroup[groupId].push(field);
     }
 
+    /**
+     *
+     */
     #buildGroupElements(groups, fieldsByGroup) {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
             const groupInfo = GROUPS[groupId];
@@ -87,6 +105,9 @@ export class SettingsView {
         }
     }
 
+    /**
+     *
+     */
     #addUngroupedFields(groups, ungroupedFields) {
         if (ungroupedFields.length > 0) {
             groups.push({
@@ -99,6 +120,9 @@ export class SettingsView {
         }
     }
 
+    /**
+     *
+     */
     #groupFieldsByRow(fields) {
         const rows = {};
         for (const field of fields) {
@@ -111,6 +135,9 @@ export class SettingsView {
         return Object.values(rows);
     }
 
+    /**
+     *
+     */
     #createGroupElement(group, settings) {
         const container = document.createElement('div');
 
@@ -150,6 +177,9 @@ export class SettingsView {
         return container;
     }
 
+    /**
+     *
+     */
     #getFieldClassName(row) {
         const hasActions = row.fields.every(f => f.type === 'action');
         const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
@@ -159,6 +189,9 @@ export class SettingsView {
         return 'field';
     }
 
+    /**
+     *
+     */
     #createFieldLabel(row) {
         const label = document.createElement('label');
         label.className = 'field-label';
@@ -194,6 +227,9 @@ export class SettingsView {
         return label;
     }
 
+    /**
+     *
+     */
     #createFieldValueContainer(row, settings) {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
@@ -239,6 +275,9 @@ export class SettingsView {
         return valueContainer;
     }
 
+    /**
+     *
+     */
     #createFieldRow(row, settings) {
         const fieldElement = document.createElement('div');
         fieldElement.className = this.#getFieldClassName(row);
@@ -252,6 +291,9 @@ export class SettingsView {
         return fieldElement;
     }
 
+    /**
+     *
+     */
     #createActionField(field) {
         const btn = document.createElement('button');
         btn.className = 'action-btn';
@@ -267,6 +309,9 @@ export class SettingsView {
         return btn;
     }
 
+    /**
+     *
+     */
     #createInputWithSuffix(field, settings) {
         const container = document.createElement('div');
         container.className = 'input-with-suffix';
@@ -284,6 +329,9 @@ export class SettingsView {
         return container;
     }
 
+    /**
+     *
+     */
     #createInput(field, settings) {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
         input.className = 'field-input';
@@ -312,6 +360,9 @@ export class SettingsView {
         return input;
     }
 
+    /**
+     *
+     */
     #addOptions(select, options) {
         for (const configuredOption of options) {
             const option = document.createElement('option');
@@ -324,10 +375,16 @@ export class SettingsView {
         }
     }
 
+    /**
+     *
+     */
     #settingValue(key, settings, defaultValue) {
         return settings[key] !== undefined ? settings[key] : defaultValue;
     }
 
+    /**
+     *
+     */
     #createStatus() {
         const status = document.createElement('div');
         status.id = 'fm-status';
@@ -335,6 +392,9 @@ export class SettingsView {
         return status;
     }
 
+    /**
+     *
+     */
     #setupAutoSave() {
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
@@ -348,6 +408,9 @@ export class SettingsView {
         }
     }
 
+    /**
+     *
+     */
     readValues() {
         const values = {};
         for (const field of this.#fields) {
@@ -365,6 +428,9 @@ export class SettingsView {
         return values;
     }
 
+    /**
+     *
+     */
     validate(values) {
         const errors = [];
         for (const field of this.#fields) {
@@ -379,6 +445,9 @@ export class SettingsView {
         return errors;
     }
 
+    /**
+     *
+     */
     showStatus(message, type) {
         const status = this.#container.querySelector('[id="fm-status"]');
         if (status) {

@@ -14,7 +14,7 @@
 export class StreamingService {
     /**
      * @abstract
-     * @returns {ReadonlyArray<string>} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
+     * @returns {string[]} Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
      */
     get domains() {
         throw new Error('Not implemented');
@@ -29,7 +29,7 @@ export class StreamingService {
     }
 
     /**
-     * @returns {import('../overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
+     * @returns {import('../types/overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
      */
     get constants() {
         return Object.freeze({});

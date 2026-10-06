@@ -4,12 +4,18 @@
  */
 import { CACHE_TTL_INFINITE } from '../constants.js';
 
+/**
+ * Validates cache TTL values.
+ * @param {string} val - Value to validate
+ * @returns {string|null} Error message or null if valid
+ */
 function validateCacheTtl(val) {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
     const n = Number(val);
     return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Cache duration must be -1 or a positive integer';
 }
 
+/** Settings field groups for UI organization. */
 export const GROUPS = {
     services: { label: 'Streaming Services', icon: '📺' },
     display: { label: 'Display Settings', icon: '🎨' },
@@ -19,11 +25,13 @@ export const GROUPS = {
     debug: { label: 'Debug', icon: '🐛' },
 };
 
+/** Row label configurations for settings UI. */
 export const ROW_LABELS = {
     services: { label: 'Show on', title: 'Enable ratings on these streaming services' },
     'ratings-display': { label: 'Show', title: 'Show these ratings on thumbnails' },
 };
 
+/** All configurable field definitions. */
 export const CONFIG_FIELDS = [
     {
         key: 'enableNetflix',
@@ -221,8 +229,10 @@ export const CONFIG_FIELDS = [
     },
 ];
 
+/** Default values for all config fields. */
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
 
+/** Allowed values for select-type config fields. */
 export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
     CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
 );

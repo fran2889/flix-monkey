@@ -22,7 +22,13 @@ function parseRatings(ratings, sourcePattern) {
     return entry?.value ?? entry?.Value ?? null;
 }
 
+/**
+ *
+ */
 export class OmdbApiClient extends BaseApiClient {
+    /**
+     *
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -35,12 +41,18 @@ export class OmdbApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     *
+     */
     async getStatus() {
         const apiKey = this.config.get('omdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
     }
 
+    /**
+     *
+     */
     async search(displayTitle) {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
@@ -53,6 +65,9 @@ export class OmdbApiClient extends BaseApiClient {
         return this.#parseOmdbResponse(json, displayTitle);
     }
 
+    /**
+     *
+     */
     async getDetails(searchTitle) {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
         if (searchTitle.imdbId && searchTitle.apiTitle === null) {
@@ -73,7 +88,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Parses OMDb JSON response into a Title.
      *
-     * @param {Object} json - OMDb API response
+     * @param {object} json - OMDb API response
      * @param {string} displayTitle - Display title from streaming service
      * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
      * @returns {import('../title.js').Title}

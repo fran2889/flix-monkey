@@ -9,6 +9,9 @@ import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants.js';
  * request URL, response status, and response body metadata.
  */
 export class FlixMonkeyError extends Error {
+    /**
+     *
+     */
     constructor(message, url = null, status = null, body = null) {
         super(message);
         this.name = 'FlixMonkeyError';
@@ -47,7 +50,7 @@ export function debounce(func, wait) {
  * Schedules work with requestIdleCallback and its timeout when available;
  * otherwise schedules it with setTimeout.
  *
- * @param {IdleRequestCallback} func - Function to execute when idle
+ * @param {Function} func - Function to execute when idle
  */
 export function runIdle(func) {
     if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {

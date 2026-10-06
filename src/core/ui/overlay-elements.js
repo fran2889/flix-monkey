@@ -17,6 +17,9 @@ export const FADE_STATE_LABELS = Object.freeze({
     never: 'Never',
 });
 
+/**
+ *
+ */
 function createBadgeElement(label, value, labelClassName, valueClassName) {
     const el = document.createElement('div');
     const spanLabel = document.createElement('span');
@@ -30,6 +33,9 @@ function createBadgeElement(label, value, labelClassName, valueClassName) {
     return el;
 }
 
+/**
+ *
+ */
 function createRatingElement(label, value, className) {
     const el = createBadgeElement(label, value, className, 'fm-value');
 
@@ -41,14 +47,23 @@ function createRatingElement(label, value, className) {
     return el;
 }
 
+/**
+ *
+ */
 function createMissingRatingElement(label, className) {
     return createBadgeElement(label, 'N/A', className, 'fm-na');
 }
 
+/**
+ *
+ */
 function createSearchRatingElement(label, className) {
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
+/**
+ *
+ */
 function createFadeToggle(state, onClick) {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
@@ -86,16 +101,25 @@ function calculateRatingColor(rating, isPercentage) {
     return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
 }
 
+/**
+ *
+ */
 function formatImdbRating(rating) {
     if (typeof rating !== 'number') return String(rating);
     return rating.toFixed(1);
 }
 
+/**
+ *
+ */
 function formatPercentRating(rating) {
     if (typeof rating !== 'number') return String(rating);
     return `${rating}%`;
 }
 
+/**
+ *
+ */
 function formatVoteCount(count) {
     if (count === null || count === undefined) return '';
     const num = Number(count);
@@ -105,6 +129,9 @@ function formatVoteCount(count) {
     return String(Math.round(num));
 }
 
+/**
+ *
+ */
 function buildTooltip(titleParts, imdbId, apiTitle, year) {
     let tooltipContent = 'IMDb: Not found · Search IMDb';
     if (titleParts.length) {
@@ -120,6 +147,9 @@ function buildTooltip(titleParts, imdbId, apiTitle, year) {
     return tooltipContent;
 }
 
+/**
+ *
+ */
 function appendImdbRating(imdbLink, title) {
     const { imdbRating, imdbId, imdbVotes } = title;
     const titleParts = [];
@@ -137,6 +167,9 @@ function appendImdbRating(imdbLink, title) {
     return titleParts;
 }
 
+/**
+ *
+ */
 function createOptionalRatingBadge(label, rating, className, showRating) {
     if (!showRating || rating === null || rating === undefined) return null;
     const formatted = formatPercentRating(rating);
@@ -146,6 +179,9 @@ function createOptionalRatingBadge(label, rating, className, showRating) {
     return badge;
 }
 
+/**
+ *
+ */
 function setupHoverActions(ratingsWrapper, actionsContainer) {
     let hoverTimeout = null;
     const clearHover = () => {
@@ -164,6 +200,9 @@ function setupHoverActions(ratingsWrapper, actionsContainer) {
     ratingsWrapper.addEventListener('mouseleave', clearHover);
 }
 
+/**
+ *
+ */
 function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick) {
     if (showFadeToggle && onFadeToggleClick) {
         container.appendChild(createFadeToggle(fadeToggleState, onFadeToggleClick));
@@ -250,6 +289,9 @@ export function createOverlayElement(
     return container;
 }
 
+/**
+ *
+ */
 function createImdbLink(href) {
     const link = document.createElement('a');
     link.target = '_blank';

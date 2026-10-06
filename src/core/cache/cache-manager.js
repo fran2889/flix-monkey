@@ -6,6 +6,9 @@ import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
 import { slugify } from '../utils/index.js';
 import { CacheEntry } from './cache-entry.js';
 
+/**
+ *
+ */
 export class CacheManager {
     #prefix = 'fmc:';
     #adapter;
@@ -44,6 +47,9 @@ export class CacheManager {
         }
     }
 
+    /**
+     *
+     */
     #getCacheKey(displayTitle) {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
@@ -70,6 +76,9 @@ export class CacheManager {
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
 
+    /**
+     *
+     */
     #calculateTtl(titleObj) {
         const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));

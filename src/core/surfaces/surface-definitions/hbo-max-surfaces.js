@@ -14,6 +14,9 @@ const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
 ]);
 
+/**
+ *
+ */
 function getNormalizedHboMaxAriaLabel(tile) {
     return tile
         .getAttribute('aria-label')
@@ -21,6 +24,9 @@ function getNormalizedHboMaxAriaLabel(tile) {
         .trim();
 }
 
+/**
+ *
+ */
 export function extractHboMaxTitle(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     if (!label) return null;
@@ -42,6 +48,9 @@ export function extractHboMaxTitle(tile) {
     return null;
 }
 
+/**
+ *
+ */
 function isHboMaxTop10Tile(tile) {
     const label = getNormalizedHboMaxAriaLabel(tile);
     return /^Number\s+\d+:\s+/u.test(label ?? '');
@@ -60,7 +69,13 @@ const HBO_MAX_SURFACES = Object.freeze({
     }),
 });
 
+/**
+ *
+ */
 export class HboMaxSurfaceManager extends SurfaceManager {
+    /**
+     *
+     */
     constructor(logger) {
         super(logger, HBO_MAX_SURFACES);
     }

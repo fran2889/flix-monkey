@@ -9,7 +9,13 @@ import { Title } from '../title.js';
 import { BaseApiClient } from './base-api-client.js';
 import { mapXmdbTitleType } from './title-type-mappers.js';
 
+/**
+ *
+ */
 export class XmdbApiClient extends BaseApiClient {
+    /**
+     *
+     */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
             adapter,
@@ -22,12 +28,18 @@ export class XmdbApiClient extends BaseApiClient {
         );
     }
 
+    /**
+     *
+     */
     async getStatus() {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
     }
 
+    /**
+     *
+     */
     async search(displayTitle) {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: 5 });
@@ -57,6 +69,9 @@ export class XmdbApiClient extends BaseApiClient {
         });
     }
 
+    /**
+     *
+     */
     async getDetails(searchTitle) {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
