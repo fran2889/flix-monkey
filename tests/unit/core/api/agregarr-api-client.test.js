@@ -498,23 +498,23 @@ describe('AgregarrApiClient', () => {
             const mockConfig = buildConfig().build();
 
             const xmdbClient = new XmdbApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 mockConfig,
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
             const omdbClient = new OmdbApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 mockConfig,
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );
             const agregarrClient = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
                 mockConfig,
+                mockDisabledManager,
                 mockLogger,
                 mockOverrideManager
             );

@@ -11,7 +11,6 @@ import { HboMaxSurfaceManager } from '../../src/core/surfaces/index.js';
 import fixtures from '../fixtures/hbomax-surfaces.js';
 import { testSurfaceFixtures } from '../helpers/surface-tests.js';
 import { buildMockAdapter } from '../mocks/adapter.js';
-import { buildConfig } from '../mocks/config.js';
 import { buildLogger } from '../mocks/logger.js';
 
 describe('HBO Max surfaces', () => {
@@ -20,7 +19,7 @@ describe('HBO Max surfaces', () => {
     beforeEach(() => {
         surfaceManager = new HboMaxSurfaceManager(buildLogger().build());
         overlayRenderer = new OverlayRenderer(
-            new ConfigManager(buildMockAdapter().build(), buildConfig().build(), buildLogger().build()),
+            new ConfigManager(buildMockAdapter().build(), buildLogger().build()),
             new HboMaxService().constants
         );
         overlayRenderer.injectStyles();

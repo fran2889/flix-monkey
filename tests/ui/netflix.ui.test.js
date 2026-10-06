@@ -11,7 +11,6 @@ import { NetflixSurfaceManager } from '../../src/core/surfaces/index.js';
 import fixtures from '../fixtures/netflix-surfaces.js';
 import { testSurfaceFixtures } from '../helpers/surface-tests.js';
 import { buildMockAdapter } from '../mocks/adapter.js';
-import { buildConfig } from '../mocks/config.js';
 import { buildLogger } from '../mocks/logger.js';
 
 describe('Netflix surfaces', () => {
@@ -20,7 +19,7 @@ describe('Netflix surfaces', () => {
     beforeEach(() => {
         surfaceManager = new NetflixSurfaceManager(buildLogger().build());
         overlayRenderer = new OverlayRenderer(
-            new ConfigManager(buildMockAdapter().build(), buildConfig().build(), buildLogger().build()),
+            new ConfigManager(buildMockAdapter().build(), buildLogger().build()),
             new NetflixService().constants
         );
         overlayRenderer.injectStyles();
