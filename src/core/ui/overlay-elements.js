@@ -11,6 +11,20 @@ import {
 } from '../constants.js';
 import { buildImdbUrl, interpolateColor } from '../utils/index.js';
 
+/**
+ * @typedef {object} OverlayOptions
+ * @property {string} overlayClass - CSS class assigned to the overlay.
+ * @property {boolean} showRtRating - Whether to display Rotten Tomatoes ratings.
+ * @property {boolean} showMcRating - Whether to display Metacritic ratings.
+ * @property {boolean} showFadeToggle - Whether fade toggles are enabled.
+ * @property {'auto'|'always'|'never'|null} fadeToggleState - Current fade override state.
+ * @property {((element: HTMLElement) => void)|null} onFadeToggleClick - Fade-toggle click handler.
+ * @property {string} corner - The overlay corner position (e.g., 'top-left', 'top-right').
+ * @property {((displayTitle: string) => void)|null} onEditClick - Edit icon click handler.
+ * @property {((displayTitle: string) => void)|null} onRefreshClick - Refresh icon click handler.
+ * @property {string} displayTitle - The display title for this overlay.
+ */
+
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',
     always: 'Always',
@@ -169,18 +183,8 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
  * Builds the full rating overlay DOM element with ratings, fade controls, and action buttons.
  *
  * @param {import('../title.js').Title} title - Title and rating data to display.
- * @param {object} options - Overlay presentation options.
- * @param {string} options.overlayClass - CSS class assigned to the overlay.
- * @param {boolean} options.showRtRating - Whether to display Rotten Tomatoes ratings.
- * @param {boolean} options.showMcRating - Whether to display Metacritic ratings.
- * @param {boolean} options.showFadeToggle - Whether fade toggles are enabled.
- * @param {'auto'|'always'|'never'|null} options.fadeToggleState - Current fade override state.
- * @param {((element: HTMLElement) => void)|null} options.onFadeToggleClick - Fade-toggle click handler.
- * @param {string} options.corner - The overlay corner position (e.g., 'top-left', 'top-right').
- * @param {((displayTitle: string) => void)|null} options.onEditClick - Edit icon click handler.
- * @param {((displayTitle: string) => void)|null} options.onRefreshClick - Refresh icon click handler.
- * @param {string} options.displayTitle - The display title for this overlay.
- * @returns {HTMLElement} Completed overlay element.
+ * @param {OverlayOptions} options - Overlay presentation options.
+ * @returns {HTMLElement} Completed overlay element with all configured ratings and controls.
  */
 export function createOverlayElement(
     title,
@@ -273,10 +277,10 @@ function createIconButton(emoji, titleText, onClick) {
  * links to an IMDb search for the title, matching the completed badge of a
  * title with no rating, so it stays usable during a slow lookup.
  *
- * @param {string} overlayClass - CSS class assigned to all overlays.
- * @param {string} loadingClass - CSS class identifying loading overlays.
+ * @param {string} overlayClass - Base CSS class assigned to all overlays.
+ * @param {string} loadingClass - Additional CSS class identifying loading state overlays.
  * @param {string} displayTitle - Title as shown by the streaming service, used as the IMDb search term.
- * @returns {HTMLElement} Loading overlay element.
+ * @returns {HTMLElement} Loading overlay element with spinning indicator.
  */
 export function createLoadingOverlayElement(overlayClass, loadingClass, displayTitle) {
     const container = document.createElement('div');

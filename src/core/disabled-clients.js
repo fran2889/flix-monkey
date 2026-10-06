@@ -18,8 +18,10 @@ export class DisabledClientsManager {
     }
 
     /**
-     * @param {import('./constants.js').ApiSourceValue} source - API source to check.
-     * @returns {Promise<boolean>}
+     * Checks if an API client is currently disabled due to recent failures.
+     *
+     * @param {import('./constants.js').ApiSourceValue} source - The API provider identifier (e.g., 'xmdb', 'omdb').
+     * @returns {Promise<boolean>} True if the source is currently disabled (lockout active), false otherwise.
      */
     async isDisabled(source) {
         const key = `fm_disabled_${source}`;
@@ -34,10 +36,10 @@ export class DisabledClientsManager {
     }
 
     /**
-     * Locks a client out for `durationMs`.
+     * Disables an API client for the specified duration to prevent redundant requests after failures.
      *
-     * @param {string} source - API source to disable.
-     * @param {number} durationMs - Lockout duration in milliseconds.
+     * @param {import('./constants.js').ApiSourceValue} source - The API provider identifier to disable.
+     * @param {number} durationMs - Lockout duration in milliseconds (typically CLIENT_DISABLE_DURATION).
      */
     async disable(source, durationMs) {
         const until = Date.now() + durationMs;
@@ -47,7 +49,7 @@ export class DisabledClientsManager {
     /**
      * Clears all client lockouts and returns list of sources that were previously disabled.
      *
-     * @returns {Promise<import('./constants.js').ApiSourceValue[]>} List of sources that were disabled.
+     * @returns {Promise<import('./constants.js').ApiSourceValue[]>} Array of API source identifiers that were disabled and have been reset.
      */
     async resetAll() {
         const sources = Object.values(ApiSource);

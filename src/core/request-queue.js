@@ -2,6 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+/**
+ * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.
+ */
 export class RequestQueue {
     #queue = [];
     #isProcessing = false;

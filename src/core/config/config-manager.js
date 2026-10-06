@@ -30,8 +30,9 @@ export class ConfigManager {
      * values, and adapter read failures fall back to CONFIG_DEFAULTS. Returned
      * values are normalized to strings; use the typed accessors for conversion.
      *
-     * @param {ConfigKey} key
-     * @returns {string}
+     * @param {ConfigKey} key - The configuration key to retrieve.
+     * @returns {string} The configured value as a string, or the default if not set or invalid.
+     * @throws {import('../utils/index.js').FlixMonkeyError} If the key is not defined in CONFIG_DEFAULTS.
      */
     get(key) {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);

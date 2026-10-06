@@ -117,26 +117,26 @@ const MIGRATIONS = Object.freeze([
 ]);
 
 /**
- * Get a migration by its version number.
+ * Retrieves a migration definition by its version number for targeted migration execution.
  *
- * @param {number} version
- * @returns {import('./types/migrations.js').StorageMigration|undefined}
+ * @param {number} version - The migration version to find (must be positive integer).
+ * @returns {import('./types/migrations.js').StorageMigration|undefined} The migration object or undefined if not found.
  */
 export function getMigrationByVersion(version) {
     return MIGRATIONS.find(m => m.version === version);
 }
 
 /**
- * Run each migration newer than the stored data version.
+ * Runs each migration newer than the stored data version, applying upgrades sequentially.
  *
  * A failed upgrade, including a failed recovery handler, deliberately advances
  * the data version. This prevents a broken migration from trapping startup in
  * an infinite retry loop.
  *
- * @param {import('../platform/adapter.js').PlatformAdapter} adapter
- * @param {{ info: Function, error: Function }} logger
- * @param {readonly import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS]
- * @returns {Promise<void>}
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter for version persistence.
+ * @param {{ info: Function, error: Function }} logger - Logger for migration progress and error reporting.
+ * @param {readonly import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
+ * @returns {Promise<void>} Resolves when all applicable migrations have been executed.
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
     validateMigrations(migrations);
