@@ -5,10 +5,15 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Logger } from '../../../src/core/logger.js';
+import { buildMockAdapter } from '../../mocks/adapter.js';
 
 describe('core/logger', () => {
     function makeLogger(debugVal = false) {
-        return new Logger({ configGet: key => (key === 'debug' ? debugVal : undefined) });
+        return new Logger(
+            buildMockAdapter()
+                .withConfigGetReturning(key => (key === 'debug' ? debugVal : undefined))
+                .build()
+        );
     }
 
     it('should log warn without crashing', () => {
@@ -55,7 +60,11 @@ describe('core/logger', () => {
 
     it('should log debug when adapter returns string "true"', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        const logger = new Logger({ configGet: key => (key === 'debug' ? 'true' : undefined) });
+        const logger = new Logger(
+            buildMockAdapter()
+                .withConfigGetReturning(key => (key === 'debug' ? 'true' : undefined))
+                .build()
+        );
         logger.debug('test debug from userscript');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug from userscript');
         spy.mockRestore();
@@ -63,7 +72,11 @@ describe('core/logger', () => {
 
     it('should not log debug when adapter returns string "false"', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        const logger = new Logger({ configGet: key => (key === 'debug' ? 'false' : undefined) });
+        const logger = new Logger(
+            buildMockAdapter()
+                .withConfigGetReturning(key => (key === 'debug' ? 'false' : undefined))
+                .build()
+        );
         logger.debug('should not appear');
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
@@ -71,7 +84,7 @@ describe('core/logger', () => {
 
     it('should log debug when adapter returns undefined (fresh install default)', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        const logger = new Logger({ configGet: () => undefined });
+        const logger = new Logger(buildMockAdapter().build());
         logger.debug('fresh install debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] fresh install debug');
         spy.mockRestore();
@@ -79,7 +92,11 @@ describe('core/logger', () => {
 
     it('should log debug when adapter returns null', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        const logger = new Logger({ configGet: () => null });
+        const logger = new Logger(
+            buildMockAdapter()
+                .withConfigGetReturning(() => null)
+                .build()
+        );
         logger.debug('null debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] null debug');
         spy.mockRestore();

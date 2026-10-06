@@ -47,7 +47,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -62,7 +62,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );

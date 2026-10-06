@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { afterEach, assert, describe, expect, it, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it } from 'vitest';
 
 import {
     DisneyPlusService,
@@ -17,12 +17,13 @@ import {
     HboMaxSurfaceManager,
     NetflixSurfaceManager,
 } from '../../../../src/core/surfaces/index.js';
+import { buildConfig } from '../../../mocks/config.js';
 
 describe('StreamingService', () => {
     it.each([
         ['domains', service => service.domains],
         ['SurfaceManager', service => service.SurfaceManager],
-        ['isEnabled', service => service.isEnabled({ getBool: () => true })],
+        ['isEnabled', service => service.isEnabled(buildConfig().build())],
     ])('throws on unimplemented %s', (_member, access) => {
         const service = new StreamingService();
         assert.throws(() => access(service), /Not implemented/);
@@ -30,18 +31,16 @@ describe('StreamingService', () => {
 });
 
 describe.each([
-    ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix'],
-    ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax'],
-    ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus'],
-])('%s service', (_name, Service, SurfaceManager, configKey) => {
+    ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix', 'withEnableNetflix'],
+    ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax', 'withEnableHboMax'],
+    ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus', 'withEnableDisneyPlus'],
+])('%s service', (_name, Service, SurfaceManager, _configKey, configMethod) => {
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
-        const config = { getBool: vi.fn().mockReturnValue(false) };
+        const config = buildConfig()[configMethod](false).build();
 
         expect(service.SurfaceManager).toBe(SurfaceManager);
         expect(service.isEnabled(config)).toBe(false);
-        expect(config.getBool).toHaveBeenCalledOnce();
-        expect(config.getBool).toHaveBeenCalledWith(configKey);
     });
 });
 

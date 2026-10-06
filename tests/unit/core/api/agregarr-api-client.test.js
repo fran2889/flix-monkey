@@ -29,7 +29,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -51,7 +51,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -66,7 +66,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -79,7 +79,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -92,7 +92,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -105,7 +105,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -121,7 +121,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -138,7 +138,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -154,7 +154,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -182,7 +182,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -208,7 +208,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -228,7 +228,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -244,7 +244,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -265,7 +265,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient(
             mockAdapter,
             undefined,
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -287,7 +287,7 @@ describe('AgregarrApiClient', () => {
                 super(
                     buildMockAdapter().build(),
                     { get: _k => 'key' },
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
+                    buildMockDisabledClientsManager.notDisabled(),
                     buildLogger().build(),
                     mockOverrideManager
                 );
@@ -320,7 +320,7 @@ describe('AgregarrApiClient', () => {
                 super(
                     buildMockAdapter().build(),
                     { get: _k => 'key' },
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
+                    buildMockDisabledClientsManager.notDisabled(),
                     buildLogger().build(),
                     mockOverrideManager
                 );

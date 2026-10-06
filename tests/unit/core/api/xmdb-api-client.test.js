@@ -2,10 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
 import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
@@ -24,7 +25,7 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -42,7 +43,7 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -55,7 +56,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -72,7 +73,7 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -87,7 +88,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -109,7 +110,7 @@ describe('XmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -123,7 +124,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -145,7 +146,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -167,7 +168,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -188,7 +189,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -202,7 +203,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -226,7 +227,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -240,7 +241,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             buildMockAdapter().build(),
             { get: () => '' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             undefined
         );
@@ -260,7 +261,7 @@ describe('XmdbApiClient', () => {
         const client = new XmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );

@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { OmdbApiClient } from '../../../../src/core/api/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { buildMockDisabledClientsManager } from '../../../mocks/disabled-clients.js';
 import { buildMockIdOverrideManager } from '../../../mocks/id-override-manager.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
@@ -28,7 +29,7 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -42,7 +43,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
             { get: () => '' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             undefined
         );
@@ -63,7 +64,7 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -89,7 +90,7 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -113,7 +114,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -135,7 +136,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -151,7 +152,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             mockLogger,
             undefined
         );
@@ -166,7 +167,7 @@ describe('OmdbApiClient', () => {
             {
                 get: _k => 'key',
             },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -186,7 +187,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -205,7 +206,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -225,10 +226,7 @@ describe('OmdbApiClient', () => {
                 Ratings: [null, { Source: 'Metacritic', Value: '80/100' }],
             })
             .build();
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-            disable: vi.fn().mockResolvedValue(undefined),
-        };
+        const mockDisabledManager = buildMockDisabledClientsManager.notDisabled();
         const client = new OmdbApiClient(
             mockAdapter,
             { get: () => 'apikey' },
@@ -255,7 +253,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
             { get: _k => 'test-api-key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             undefined
         );
@@ -276,7 +274,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             mockAdapter,
             { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             mockOverrideManager
         );
@@ -301,7 +299,7 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient(
             buildMockAdapter().build(),
             { get: _k => 'test-api-key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            buildMockDisabledClientsManager.notDisabled(),
             buildLogger().build(),
             undefined
         );
