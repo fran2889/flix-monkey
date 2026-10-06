@@ -5,7 +5,7 @@
 import { FlixMonkeyError } from '../utils/index.js';
 import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 
-/** @typedef {keyof typeof CONFIG_DEFAULTS} ConfigKey */
+/** @typedef {import('./config-fields.js').ConfigKey} ConfigKey */
 
 /**
  * Manages application configuration with fallback to defaults and type conversion utilities.

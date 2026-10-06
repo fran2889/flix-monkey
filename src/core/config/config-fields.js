@@ -4,6 +4,10 @@
  */
 import { CACHE_TTL_INFINITE } from '../constants.js';
 
+/**
+ * @typedef {'apiClient'|'cacheTtlNoRating'|'cacheTtlRatedNewYear'|'cacheTtlRatedOldYear'|'clearCache'|'debug'|'enableDisneyPlus'|'enableFadeToggle'|'enableFadeUnderRating'|'enableHboMax'|'enableNetflix'|'fadeRatingThreshold'|'omdbApiKey'|'overlayCorner'|'resetClients'|'showImdbRating'|'showMcRating'|'showRtRating'|'xmdbApiKey'} ConfigKey
+ */
+
 function validateCacheTtl(val) {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
     const n = Number(val);
