@@ -465,8 +465,8 @@ describe('AgregarrApiClient', () => {
             expect(result.imdbId).toBe('tt9999999');
             expect(result.displayTitle).toBe('Test Movie');
             expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            // Note: markDisabled is NOT called when getDetails returns null (only when it throws)
-            expect(mockDisabledManager.markDisabled).not.toHaveBeenCalled();
+            // Note: disable is NOT called when getDetails returns null (only when it throws)
+            expect(mockDisabledManager.disable).not.toHaveBeenCalled();
         });
 
         it('should not attempt override or normal fetch when client is disabled', async () => {

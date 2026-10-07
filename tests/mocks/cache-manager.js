@@ -5,11 +5,21 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial CacheManager whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/cache/cache-manager.js').CacheManager> & {
+ *   read: import('vitest').Mock,
+ *   write: import('vitest').Mock,
+ *   delete: import('vitest').Mock,
+ *   clear: import('vitest').Mock
+ * }} MockCacheManager
+ */
+
+/**
  * Builds a mock CacheManager for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockCacheManager() {
-    /** @type {import('../../src/core/cache/cache-manager.js').CacheManager} */
+    /** @type {MockCacheManager} */
     const mock = {
         read: vi.fn(),
         write: vi.fn(),
@@ -21,7 +31,6 @@ function buildMockCacheManager() {
         /**
          * Set the read mock to resolve with a specific value.
          * @param {import('../../src/core/cache/cache-entry.js').CacheEntry|null} value
-         * @returns {Object} Builder for chaining
          */
         withReadResolving(value) {
             mock.read.mockResolvedValue(value);
@@ -30,8 +39,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the write mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withWriteMock(impl) {
             mock.write.mockImplementation(impl);
@@ -41,7 +49,6 @@ function buildMockCacheManager() {
         /**
          * Set the delete mock to resolve with a specific value.
          * @param {*} value
-         * @returns {Object} Builder for chaining
          */
         withDeleteResolving(value) {
             mock.delete.mockResolvedValue(value);
@@ -50,8 +57,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the delete mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withDeleteMock(impl) {
             mock.delete.mockImplementation(impl);
@@ -61,7 +67,6 @@ function buildMockCacheManager() {
         /**
          * Set the clear mock to resolve with a specific value.
          * @param {*} value
-         * @returns {Object} Builder for chaining
          */
         withClearResolving(value) {
             mock.clear.mockResolvedValue(value);
@@ -70,8 +75,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the clear mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withClearMock(impl) {
             mock.clear.mockImplementation(impl);
@@ -82,7 +86,9 @@ function buildMockCacheManager() {
          * @returns {import('../../src/core/cache/cache-manager.js').CacheManager} Mock CacheManager
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/cache/cache-manager.js').CacheManager} */ (
+                /** @type {unknown} */ (mock)
+            );
         },
     };
 }
@@ -92,6 +98,9 @@ buildMockCacheManager.empty = () => {
     return buildMockCacheManager().withReadResolving(null).build();
 };
 
+/**
+ * @param {import('../../src/core/cache/cache-entry.js').CacheEntry|null} entry
+ */
 buildMockCacheManager.withEntry = entry => {
     return buildMockCacheManager().withReadResolving(entry).build();
 };

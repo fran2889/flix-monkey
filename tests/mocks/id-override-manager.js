@@ -5,11 +5,19 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial IdOverrideManager whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/id-override-manager.js').IdOverrideManager> & {
+ *   getImdbId: import('vitest').Mock,
+ *   setImdbId: import('vitest').Mock
+ * }} MockIdOverrideManager
+ */
+
+/**
  * Builds a mock IdOverrideManager for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockIdOverrideManager() {
-    /** @type {import('../../src/core/id-override-manager.js').IdOverrideManager} */
+    /** @type {MockIdOverrideManager} */
     const mock = {
         getImdbId: vi.fn().mockResolvedValue(null),
         setImdbId: vi.fn().mockResolvedValue(undefined),
@@ -18,8 +26,7 @@ function buildMockIdOverrideManager() {
     return {
         /**
          * Set the getImdbId mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withGetImdbId(impl) {
             mock.getImdbId.mockImplementation(impl);
@@ -29,7 +36,6 @@ function buildMockIdOverrideManager() {
         /**
          * Set the getImdbId mock to resolve with a specific value.
          * @param {string|null} value - The IMDb ID or null
-         * @returns {Object} Builder for chaining
          */
         withGetImdbIdResolving(value) {
             mock.getImdbId.mockResolvedValue(value);
@@ -38,8 +44,7 @@ function buildMockIdOverrideManager() {
 
         /**
          * Set the setImdbId mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withSetImdbId(impl) {
             mock.setImdbId.mockImplementation(impl);
@@ -49,7 +54,6 @@ function buildMockIdOverrideManager() {
         /**
          * Set the setImdbId mock to resolve with a specific value.
          * @param {*} value
-         * @returns {Object} Builder for chaining
          */
         withSetImdbIdResolving(value) {
             mock.setImdbId.mockResolvedValue(value);
@@ -60,7 +64,9 @@ function buildMockIdOverrideManager() {
          * @returns {import('../../src/core/id-override-manager.js').IdOverrideManager} Mock IdOverrideManager
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/id-override-manager.js').IdOverrideManager} */ (
+                /** @type {unknown} */ (mock)
+            );
         },
     };
 }
@@ -70,8 +76,16 @@ buildMockIdOverrideManager.empty = () => {
     return buildMockIdOverrideManager().build();
 };
 
+/**
+ * Builds a manager that returns `imdbId` only for the given display title.
+ *
+ * @param {string} displayTitle - Title the override applies to.
+ * @param {string|null} imdbId - IMDb ID returned for that title.
+ */
 buildMockIdOverrideManager.withOverride = (displayTitle, imdbId) => {
-    return buildMockIdOverrideManager().withGetImdbIdResolving(imdbId).build();
+    return buildMockIdOverrideManager()
+        .withGetImdbId(title => (title === displayTitle ? imdbId : null))
+        .build();
 };
 
 buildMockIdOverrideManager.noOverride = () => {

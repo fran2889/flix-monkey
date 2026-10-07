@@ -5,11 +5,18 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial SurfaceManager whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/surfaces/surface-manager.js').SurfaceManager> & {
+ *   discover: import('vitest').Mock
+ * }} MockSurfaceManager
+ */
+
+/**
  * Builds a mock SurfaceManager for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockSurfaceManager() {
-    /** @type {import('../../src/core/surfaces/surface-manager.js').SurfaceManager} */
+    /** @type {MockSurfaceManager} */
     const mock = {
         discover: vi.fn().mockReturnValue([]),
     };
@@ -17,8 +24,7 @@ function buildMockSurfaceManager() {
     return {
         /**
          * Set the discover mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withDiscover(impl) {
             mock.discover.mockImplementation(impl);
@@ -28,7 +34,6 @@ function buildMockSurfaceManager() {
         /**
          * Set the discover mock to return a specific value.
          * @param {import('../../src/types/surfaces.js').DiscoveredSurface[]} value
-         * @returns {Object} Builder for chaining
          */
         withDiscoverReturning(value) {
             mock.discover.mockReturnValue(value);
@@ -37,7 +42,6 @@ function buildMockSurfaceManager() {
 
         /**
          * Set the discover mock to return an empty array.
-         * @returns {Object} Builder for chaining
          */
         withDiscoverReturningEmpty() {
             mock.discover.mockReturnValue([]);
@@ -48,7 +52,9 @@ function buildMockSurfaceManager() {
          * @returns {import('../../src/core/surfaces/surface-manager.js').SurfaceManager} Mock SurfaceManager
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/surfaces/surface-manager.js').SurfaceManager} */ (
+                /** @type {unknown} */ (mock)
+            );
         },
     };
 }
@@ -58,12 +64,18 @@ buildMockSurfaceManager.empty = () => {
     return buildMockSurfaceManager().withDiscoverReturningEmpty().build();
 };
 
+/**
+ * @param {import('../../src/types/surfaces.js').DiscoveredSurface} [surface] - Surface the manager should discover.
+ */
 buildMockSurfaceManager.withSingleSurface = (
     surface = { container: document.createElement('div'), title: 'Test Title', fadeable: false, showFadeToggle: false }
 ) => {
     return buildMockSurfaceManager().withDiscoverReturning([surface]).build();
 };
 
+/**
+ * @param {import('../../src/types/surfaces.js').DiscoveredSurface[]} surfaces - Surfaces the manager should discover.
+ */
 buildMockSurfaceManager.withMultipleSurfaces = surfaces => {
     return buildMockSurfaceManager().withDiscoverReturning(surfaces).build();
 };

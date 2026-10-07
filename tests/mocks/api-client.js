@@ -7,11 +7,21 @@ import { vi } from 'vitest';
 import { ApiSource } from '../../src/core/constants.js';
 
 /**
+ * A partial BaseApiClient whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/api/base-api-client.js').BaseApiClient> & {
+ *   source: import('../../src/types/title.js').ApiSourceValue,
+ *   getStatus: import('vitest').Mock,
+ *   fetch: import('vitest').Mock,
+ *   disable: import('vitest').Mock
+ * }} MockApiClient
+ */
+
+/**
  * Builds a mock API client for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockApiClient() {
-    /** @type {import('../../src/core/api/base-api-client.js').BaseApiClient} */
+    /** @type {MockApiClient} */
     const mock = {
         source: ApiSource.AGREGARR,
         getStatus: vi.fn(),
@@ -22,8 +32,7 @@ function buildMockApiClient() {
     return {
         /**
          * Set the source for this client.
-         * @param {import('../../src/core/constants.js').ApiSourceValue} value
-         * @returns {Object} Builder for chaining
+         * @param {import('../../src/types/title.js').ApiSourceValue} value
          */
         withSource(value) {
             mock.source = value;
@@ -33,7 +42,6 @@ function buildMockApiClient() {
         /**
          * Set the getStatus mock to resolve with a specific value.
          * @param {import('../../src/types/api.js').ClientStatus} value
-         * @returns {Object} Builder for chaining
          */
         withStatusResolving(value) {
             mock.getStatus.mockResolvedValue(value);
@@ -43,7 +51,6 @@ function buildMockApiClient() {
         /**
          * Set the fetch mock to resolve with a specific value.
          * @param {import('../../src/core/title.js').Title|null} value
-         * @returns {Object} Builder for chaining
          */
         withFetchResolving(value) {
             mock.fetch.mockResolvedValue(value);
@@ -53,7 +60,6 @@ function buildMockApiClient() {
         /**
          * Set the fetch mock to reject with a specific error.
          * @param {Error} error
-         * @returns {Object} Builder for chaining
          */
         withFetchRejecting(error) {
             mock.fetch.mockRejectedValue(error);
@@ -62,7 +68,6 @@ function buildMockApiClient() {
 
         /**
          * Set the disable mock to resolve.
-         * @returns {Object} Builder for chaining
          */
         withDisableResolving() {
             mock.disable.mockResolvedValue(undefined);
@@ -73,7 +78,9 @@ function buildMockApiClient() {
          * @returns {import('../../src/core/api/base-api-client.js').BaseApiClient} Mock API client
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/api/base-api-client.js').BaseApiClient} */ (
+                /** @type {unknown} */ (mock)
+            );
         },
     };
 }
@@ -95,6 +102,9 @@ buildMockApiClient.unhealthy = () => {
         .build();
 };
 
+/**
+ * @param {import('../../src/core/title.js').Title|null} result
+ */
 buildMockApiClient.withFetchResult = result => {
     return buildMockApiClient()
         .withSource(ApiSource.AGREGARR)
@@ -104,6 +114,9 @@ buildMockApiClient.withFetchResult = result => {
         .build();
 };
 
+/**
+ * @param {Error} error
+ */
 buildMockApiClient.withFetchError = error => {
     return buildMockApiClient()
         .withSource(ApiSource.AGREGARR)

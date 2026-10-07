@@ -5,11 +5,26 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial OverlayRenderer whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/overlay.js').OverlayRenderer> & {
+ *   injectStyles: import('vitest').Mock,
+ *   hasOverlay: import('vitest').Mock,
+ *   isLoading: import('vitest').Mock,
+ *   ensureRelative: import('vitest').Mock,
+ *   injectLoadingOverlay: import('vitest').Mock,
+ *   injectOverlay: import('vitest').Mock,
+ *   removeLoadingOverlay: import('vitest').Mock,
+ *   applyFade: import('vitest').Mock,
+ *   clearAllOverlays: import('vitest').Mock
+ * }} MockOverlayRenderer
+ */
+
+/**
  * Builds a mock OverlayRenderer for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockOverlayRenderer() {
-    /** @type {import('../../src/core/overlay.js').OverlayRenderer} */
+    /** @type {MockOverlayRenderer} */
     const mock = {
         injectStyles: vi.fn(),
         hasOverlay: vi.fn().mockReturnValue(false),
@@ -25,8 +40,7 @@ function buildMockOverlayRenderer() {
     return {
         /**
          * Set the hasOverlay mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withHasOverlay(impl) {
             mock.hasOverlay.mockImplementation(impl);
@@ -36,7 +50,6 @@ function buildMockOverlayRenderer() {
         /**
          * Set the hasOverlay mock to return a specific value.
          * @param {boolean} value
-         * @returns {Object} Builder for chaining
          */
         withHasOverlayReturning(value) {
             mock.hasOverlay.mockReturnValue(value);
@@ -45,8 +58,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the isLoading mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withIsLoading(impl) {
             mock.isLoading.mockImplementation(impl);
@@ -56,7 +68,6 @@ function buildMockOverlayRenderer() {
         /**
          * Set the isLoading mock to return a specific value.
          * @param {boolean} value
-         * @returns {Object} Builder for chaining
          */
         withIsLoadingReturning(value) {
             mock.isLoading.mockReturnValue(value);
@@ -65,8 +76,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the injectOverlay mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withInjectOverlay(impl) {
             mock.injectOverlay.mockImplementation(impl);
@@ -75,8 +85,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the removeLoadingOverlay mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withRemoveLoadingOverlay(impl) {
             mock.removeLoadingOverlay.mockImplementation(impl);
@@ -85,8 +94,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the applyFade mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withApplyFade(impl) {
             mock.applyFade.mockImplementation(impl);
@@ -95,8 +103,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the clearAllOverlays mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withClearAllOverlays(impl) {
             mock.clearAllOverlays.mockImplementation(impl);
@@ -107,7 +114,7 @@ function buildMockOverlayRenderer() {
          * @returns {import('../../src/core/overlay.js').OverlayRenderer} Mock OverlayRenderer
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/overlay.js').OverlayRenderer} */ (/** @type {unknown} */ (mock));
         },
     };
 }

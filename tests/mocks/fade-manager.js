@@ -5,11 +5,20 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial FadeManager whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/fade-manager.js').FadeManager> & {
+ *   getOverride: import('vitest').Mock,
+ *   setOverride: import('vitest').Mock,
+ *   shouldFade: import('vitest').Mock
+ * }} MockFadeManager
+ */
+
+/**
  * Builds a mock FadeManager for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockFadeManager() {
-    /** @type {import('../../src/core/fade-manager.js').FadeManager} */
+    /** @type {MockFadeManager} */
     const mock = {
         getOverride: vi.fn().mockResolvedValue(null),
         setOverride: vi.fn().mockResolvedValue(undefined),
@@ -19,8 +28,7 @@ function buildMockFadeManager() {
     return {
         /**
          * Set the getOverride mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withGetOverride(impl) {
             mock.getOverride.mockImplementation(impl);
@@ -30,7 +38,6 @@ function buildMockFadeManager() {
         /**
          * Set the getOverride mock to resolve with a specific value.
          * @param {'always'|'never'|null} value
-         * @returns {Object} Builder for chaining
          */
         withGetOverrideResolving(value) {
             mock.getOverride.mockResolvedValue(value);
@@ -39,8 +46,7 @@ function buildMockFadeManager() {
 
         /**
          * Set the setOverride mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withSetOverride(impl) {
             mock.setOverride.mockImplementation(impl);
@@ -50,7 +56,6 @@ function buildMockFadeManager() {
         /**
          * Set the setOverride mock to resolve with a specific value.
          * @param {*} value
-         * @returns {Object} Builder for chaining
          */
         withSetOverrideResolving(value) {
             mock.setOverride.mockResolvedValue(value);
@@ -59,8 +64,7 @@ function buildMockFadeManager() {
 
         /**
          * Set the shouldFade mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withShouldFade(impl) {
             mock.shouldFade.mockImplementation(impl);
@@ -70,7 +74,6 @@ function buildMockFadeManager() {
         /**
          * Set the shouldFade mock to return a specific value.
          * @param {boolean} value
-         * @returns {Object} Builder for chaining
          */
         withShouldFadeReturning(value) {
             mock.shouldFade.mockReturnValue(value);
@@ -81,7 +84,7 @@ function buildMockFadeManager() {
          * @returns {import('../../src/core/fade-manager.js').FadeManager} Mock FadeManager
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/fade-manager.js').FadeManager} */ (/** @type {unknown} */ (mock));
         },
     };
 }

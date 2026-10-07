@@ -5,23 +5,30 @@
 import { vi } from 'vitest';
 
 /**
+ * A partial DisabledClientsManager whose methods are vitest mocks.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/disabled-clients.js').DisabledClientsManager> & {
+ *   isDisabled: import('vitest').Mock,
+ *   disable: import('vitest').Mock,
+ *   resetAll: import('vitest').Mock
+ * }} MockDisabledClientsManager
+ */
+
+/**
  * Builds a mock DisabledClientsManager for testing.
- * @returns {Object} Builder with chainable methods
  */
 function buildMockDisabledClientsManager() {
-    /** @type {import('../../src/core/disabled-clients.js').DisabledClientsManager} */
+    /** @type {MockDisabledClientsManager} */
     const mock = {
         isDisabled: vi.fn().mockResolvedValue(false),
         disable: vi.fn().mockResolvedValue(undefined),
-        enable: vi.fn().mockResolvedValue(undefined),
-        markDisabled: vi.fn().mockResolvedValue(undefined),
+        resetAll: vi.fn().mockResolvedValue([]),
     };
 
     return {
         /**
          * Set the isDisabled mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withIsDisabled(impl) {
             mock.isDisabled.mockImplementation(impl);
@@ -31,7 +38,6 @@ function buildMockDisabledClientsManager() {
         /**
          * Set the isDisabled mock to resolve with a specific value.
          * @param {boolean} value
-         * @returns {Object} Builder for chaining
          */
         withIsDisabledResolving(value) {
             mock.isDisabled.mockResolvedValue(value);
@@ -40,8 +46,7 @@ function buildMockDisabledClientsManager() {
 
         /**
          * Set the disable mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * @param {(...args: any[]) => any} impl
          */
         withDisable(impl) {
             mock.disable.mockImplementation(impl);
@@ -51,7 +56,6 @@ function buildMockDisabledClientsManager() {
         /**
          * Set the disable mock to resolve with a specific value.
          * @param {*} value
-         * @returns {Object} Builder for chaining
          */
         withDisableResolving(value) {
             mock.disable.mockResolvedValue(value);
@@ -59,42 +63,20 @@ function buildMockDisabledClientsManager() {
         },
 
         /**
-         * Set the enable mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
+         * Set the resetAll mock implementation.
+         * @param {(...args: any[]) => any} impl
          */
-        withEnable(impl) {
-            mock.enable.mockImplementation(impl);
+        withResetAll(impl) {
+            mock.resetAll.mockImplementation(impl);
             return this;
         },
 
         /**
-         * Set the enable mock to resolve with a specific value.
-         * @param {*} value
-         * @returns {Object} Builder for chaining
+         * Set the resetAll mock to resolve with a specific value.
+         * @param {import('../../src/types/title.js').ApiSourceValue[]} value
          */
-        withEnableResolving(value) {
-            mock.enable.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the markDisabled mock implementation.
-         * @param {Function} impl
-         * @returns {Object} Builder for chaining
-         */
-        withMarkDisabled(impl) {
-            mock.markDisabled.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the markDisabled mock to resolve with a specific value.
-         * @param {*} value
-         * @returns {Object} Builder for chaining
-         */
-        withMarkDisabledResolving(value) {
-            mock.markDisabled.mockResolvedValue(value);
+        withResetAllResolving(value) {
+            mock.resetAll.mockResolvedValue(value);
             return this;
         },
 
@@ -102,16 +84,14 @@ function buildMockDisabledClientsManager() {
          * @returns {import('../../src/core/disabled-clients.js').DisabledClientsManager} Mock DisabledClientsManager
          */
         build() {
-            return mock;
+            return /** @type {import('../../src/core/disabled-clients.js').DisabledClientsManager} */ (
+                /** @type {unknown} */ (mock)
+            );
         },
     };
 }
 
 // Static presets
-buildMockDisabledClientsManager.empty = () => {
-    return buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
-};
-
 buildMockDisabledClientsManager.disabled = () => {
     return buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
 };
