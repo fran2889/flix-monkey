@@ -12,7 +12,7 @@ import { validateDomain } from './domains.js';
  * request begins.
  *
  * @param {string} url - Requested URL, validated against ALLOWED_DOMAINS.
- * @param {import('../../platform/adapter.js').HttpFetchOptions} options - Requested response format and timeout.
+ * @param {import('../../types/platform.js').HttpFetchOptions} options - Requested response format and timeout.
  * @returns {Promise<import('../../types/extension.js').FetchProxyResponse>} Relay result for the runtime message response.
  */
 export async function handleFetchMessage(url, options) {
