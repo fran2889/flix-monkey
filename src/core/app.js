@@ -213,7 +213,7 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             onFadeToggleClick,
-            (displayTitle, imdbId) => this.#handleEditClick(displayTitle, imdbId),
+            displayTitle => this.#handleEditClick(displayTitle, data.imdbId),
             displayTitle => this.#handleRefreshClick(displayTitle),
             displayTitle
         );

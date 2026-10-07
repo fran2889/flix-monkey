@@ -20,8 +20,8 @@ import { buildImdbUrl, interpolateColor } from '../utils/index.js';
  * @property {'auto'|'always'|'never'|null} fadeToggleState - Current fade override state.
  * @property {((element: HTMLElement) => void)|null} onFadeToggleClick - Fade-toggle click handler.
  * @property {string} corner - The overlay corner position (e.g., 'top-left', 'top-right').
- * @property {((displayTitle: string) => void)|null} onEditClick - Edit icon click handler.
- * @property {((displayTitle: string) => void)|null} onRefreshClick - Refresh icon click handler.
+ * @property {(displayTitle: string) => void} onEditClick - Edit icon click handler.
+ * @property {(displayTitle: string) => void} onRefreshClick - Refresh icon click handler.
  * @property {string} displayTitle - The display title for this overlay.
  */
 
@@ -221,18 +221,12 @@ export function createOverlayElement(
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'fm-actions';
 
-    if (onEditClick || onRefreshClick) {
-        if (onEditClick) {
-            actionsContainer.appendChild(createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle)));
-        }
-        if (onRefreshClick) {
-            actionsContainer.appendChild(
-                createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle))
-            );
-        }
-        imdbRow.appendChild(actionsContainer);
-        setupHoverActions(ratingsWrapper, actionsContainer);
-    }
+    const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle));
+    const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle));
+    actionsContainer.appendChild(editIcon);
+    actionsContainer.appendChild(refreshIcon);
+    imdbRow.appendChild(actionsContainer);
+    setupHoverActions(ratingsWrapper, actionsContainer);
 
     imdbRow.appendChild(imdbLink);
     ratingsWrapper.appendChild(imdbRow);

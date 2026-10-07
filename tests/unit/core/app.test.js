@@ -689,7 +689,11 @@ describe('App', () => {
                 .withIsLoadingReturning(false)
                 .build();
             const fadeManager = buildMockFadeManager().build();
-            const apiManager = { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) };
+            const apiManager = {
+                getData: vi
+                    .fn()
+                    .mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie', imdbId: 'tt9999999' }),
+            };
             const app = new FlixMonkeyApp(
                 buildLogger().build(),
                 mockCache,
@@ -788,6 +792,19 @@ describe('App', () => {
             const promptMock = await withPromptResult(null, () => onEditClick('Test Movie', 'tt9999999'));
 
             expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
+        });
+
+        it('should prefill the prompt with the API IMDb ID when no override exists', async () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            mockOverrideManager.getImdbId.mockResolvedValue(null);
+            const { onEditClick } = await decorateAndCaptureActions(container);
+
+            // The handler receives only displayTitle; the API IMDb ID comes from
+            // the title that was decorated, not from a second argument.
+            const promptMock = await withPromptResult(null, () => onEditClick('Test Movie'));
+
+            expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt9999999');
         });
 
         it('should evict the cache and re-decorate on refresh', async () => {

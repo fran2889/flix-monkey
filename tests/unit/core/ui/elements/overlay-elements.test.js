@@ -14,8 +14,8 @@ const defaultOptions = {
     showFadeToggle: false,
     fadeToggleState: null,
     onFadeToggleClick: null,
-    onEditClick: null,
-    onRefreshClick: null,
+    onEditClick: () => {},
+    onRefreshClick: () => {},
     displayTitle: '',
     corner: 'top-left',
 };
@@ -358,12 +358,6 @@ describe('createOverlayElement', () => {
             expect(iconButtons[1].textContent).toBe('🔄');
         });
 
-        it('should not render edit and refresh icons when handlers are not provided', () => {
-            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
-
-            expect(element.querySelector('.fm-icon-btn')).toBeNull();
-        });
-
         it('should add corner class', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
 
@@ -441,35 +435,16 @@ describe('createOverlayElement', () => {
             expect(onEditClick).toHaveBeenCalled();
         });
 
-        it('should render only the edit icon when onRefreshClick is omitted', () => {
-            const onEditClick = vi.fn();
+        it('should always render both action icons', () => {
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onEditClick, displayTitle: 'Test Movie' }
+                { displayTitle: 'Test Movie' }
             );
 
             const iconButtons = element.querySelectorAll('.fm-icon-btn');
-            expect(iconButtons).toHaveLength(1);
+            expect(iconButtons).toHaveLength(2);
             expect(iconButtons[0].textContent).toBe('✏️');
-
-            // Previously the refresh icon was rendered unconditionally, and
-            // clicking it invoked a null handler.
-            expect(() => element.querySelectorAll('.fm-icon-btn')[1]?.click()).not.toThrow();
-        });
-
-        it('should render only the refresh icon when onEditClick is omitted', () => {
-            const onRefreshClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onRefreshClick, displayTitle: 'Test Movie' }
-            );
-
-            const iconButtons = element.querySelectorAll('.fm-icon-btn');
-            expect(iconButtons).toHaveLength(1);
-            expect(iconButtons[0].textContent).toBe('🔄');
-
-            iconButtons[0].click();
-            expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
+            expect(iconButtons[1].textContent).toBe('🔄');
         });
 
         it('should add fm-rating-badge class to rating badges', () => {
