@@ -7,7 +7,9 @@
  * Accessible modal dialog component for settings and other UI overlays.
  */
 export class Modal {
+    /** @type {Element|null} */
     #returnFocus = null;
+    /** @type {((event: KeyboardEvent) => void)|null} */
     #escHandler = null;
 
     /**

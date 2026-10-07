@@ -26,12 +26,17 @@ export class FlixMonkeyApp {
     #inFlight = new Map();
     #pendingRoots = new Set();
     #debouncedDecorate;
+    /** @type {MutationObserver|null} */
     #observer = null;
     #initialised = false;
+    /** @type {(() => void)|null} */
     #boundDisconnect = null;
     #navigationPatched = false;
+    /** @type {typeof History.prototype.pushState|null} */
     #originalPushState = null;
+    /** @type {typeof History.prototype.replaceState|null} */
     #originalReplaceState = null;
+    /** @type {((event: PopStateEvent) => void)|null} */
     #popstateHandler = null;
     #fadeManager;
     #overrideManager;

@@ -12,7 +12,9 @@ import { SETTINGS_STYLES } from './styles.js';
 export class SettingsView {
     #fields;
     #actions;
+    /** @type {HTMLElement|null} */
     #container = null;
+    /** @type {number|null} */
     #debounceTimer = null;
 
     /**
