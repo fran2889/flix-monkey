@@ -4,10 +4,6 @@
  */
 import { CACHE_TTL_INFINITE } from '../constants.js';
 
-/**
- * @typedef {'apiClient'|'cacheTtlNoRating'|'cacheTtlRatedNewYear'|'cacheTtlRatedOldYear'|'clearCache'|'debug'|'enableDisneyPlus'|'enableFadeToggle'|'enableFadeUnderRating'|'enableHboMax'|'enableNetflix'|'fadeRatingThreshold'|'omdbApiKey'|'overlayCorner'|'resetClients'|'showImdbRating'|'showMcRating'|'showRtRating'|'xmdbApiKey'} ConfigKey
- */
-
 function validateCacheTtl(val) {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
     const n = Number(val);
@@ -33,7 +29,7 @@ export const ROW_LABELS = {
 /** All configurable field definitions. */
 export const CONFIG_FIELDS = [
     {
-        key: 'enableNetflix',
+        key: /** @type {const} */ ('enableNetflix'),
         label: 'Netflix',
         group: 'services',
         type: 'checkbox',
@@ -41,7 +37,7 @@ export const CONFIG_FIELDS = [
         row: 'services',
     },
     {
-        key: 'enableHboMax',
+        key: /** @type {const} */ ('enableHboMax'),
         label: 'HBO Max',
         group: 'services',
         type: 'checkbox',
@@ -49,7 +45,7 @@ export const CONFIG_FIELDS = [
         row: 'services',
     },
     {
-        key: 'enableDisneyPlus',
+        key: /** @type {const} */ ('enableDisneyPlus'),
         label: 'Disney+',
         group: 'services',
         type: 'checkbox',
@@ -57,7 +53,7 @@ export const CONFIG_FIELDS = [
         row: 'services',
     },
     {
-        key: 'overlayCorner',
+        key: /** @type {const} */ ('overlayCorner'),
         label: 'Badge Position',
         group: 'display',
         type: 'select',
@@ -71,7 +67,7 @@ export const CONFIG_FIELDS = [
         title: 'Position of the rating badge on thumbnails',
     },
     {
-        key: 'showImdbRating',
+        key: /** @type {const} */ ('showImdbRating'),
         label: 'IMDb',
         group: 'display',
         type: 'checkbox',
@@ -80,7 +76,7 @@ export const CONFIG_FIELDS = [
         disabled: true,
     },
     {
-        key: 'apiClient',
+        key: /** @type {const} */ ('apiClient'),
         label: 'Rating Provider',
         group: 'providers',
         type: 'select',
@@ -93,7 +89,7 @@ export const CONFIG_FIELDS = [
         title: 'Active rating provider. Agregarr requires no API key',
     },
     {
-        key: 'omdbApiKey',
+        key: /** @type {const} */ ('omdbApiKey'),
         label: 'OMDb API Key',
         group: 'providers',
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
@@ -106,7 +102,7 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'xmdbApiKey',
+        key: /** @type {const} */ ('xmdbApiKey'),
         label: 'XMDb API Key',
         group: 'providers',
         labelUrl: 'https://xmdbapi.com/api-key',
@@ -119,7 +115,7 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'showMcRating',
+        key: /** @type {const} */ ('showMcRating'),
         label: 'Metacritic',
         group: 'display',
         type: 'checkbox',
@@ -127,7 +123,7 @@ export const CONFIG_FIELDS = [
         row: 'ratings-display',
     },
     {
-        key: 'showRtRating',
+        key: /** @type {const} */ ('showRtRating'),
         label: 'Rotten Tomatoes',
         group: 'display',
         type: 'checkbox',
@@ -135,7 +131,7 @@ export const CONFIG_FIELDS = [
         row: 'ratings-display',
     },
     {
-        key: 'enableFadeUnderRating',
+        key: /** @type {const} */ ('enableFadeUnderRating'),
         label: 'Fade below rating',
         group: 'fade',
         type: 'checkbox',
@@ -143,7 +139,7 @@ export const CONFIG_FIELDS = [
         title: 'Fade thumbnails with IMDb rating below the threshold',
     },
     {
-        key: 'fadeRatingThreshold',
+        key: /** @type {const} */ ('fadeRatingThreshold'),
         label: 'Threshold',
         group: 'fade',
         type: 'text',
@@ -159,7 +155,7 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'enableFadeToggle',
+        key: /** @type {const} */ ('enableFadeToggle'),
         label: 'Allow override',
         group: 'fade',
         type: 'checkbox',
@@ -167,7 +163,7 @@ export const CONFIG_FIELDS = [
         title: 'Enable manual title fade toggle',
     },
     {
-        key: 'cacheTtlRatedOldYear',
+        key: /** @type {const} */ ('cacheTtlRatedOldYear'),
         label: 'Older Titles',
         group: 'cache',
         type: 'text',
@@ -178,7 +174,7 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'cacheTtlRatedNewYear',
+        key: /** @type {const} */ ('cacheTtlRatedNewYear'),
         label: 'Recent Titles',
         group: 'cache',
         type: 'text',
@@ -189,7 +185,7 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'cacheTtlNoRating',
+        key: /** @type {const} */ ('cacheTtlNoRating'),
         label: 'No Rating',
         group: 'cache',
         type: 'text',
@@ -200,7 +196,7 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'debug',
+        key: /** @type {const} */ ('debug'),
         label: 'Debug logging',
         group: 'debug',
         type: 'checkbox',
@@ -209,7 +205,7 @@ export const CONFIG_FIELDS = [
         row: 'debug-settings',
     },
     {
-        key: 'clearCache',
+        key: /** @type {const} */ ('clearCache'),
         type: 'action',
         group: 'debug',
         row: 'action-clearCache',
@@ -218,7 +214,7 @@ export const CONFIG_FIELDS = [
         default: null,
     },
     {
-        key: 'resetClients',
+        key: /** @type {const} */ ('resetClients'),
         type: 'action',
         group: 'debug',
         row: 'action-resetClients',
@@ -227,6 +223,12 @@ export const CONFIG_FIELDS = [
         default: null,
     },
 ];
+
+/**
+ * Union of every configurable field key, derived from {@link CONFIG_FIELDS}.
+ *
+ * @typedef {typeof CONFIG_FIELDS[number]['key']} ConfigKey
+ */
 
 /** Default values for all config fields. */
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default]));
