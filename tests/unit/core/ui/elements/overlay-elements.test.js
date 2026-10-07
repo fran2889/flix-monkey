@@ -441,6 +441,37 @@ describe('createOverlayElement', () => {
             expect(onEditClick).toHaveBeenCalled();
         });
 
+        it('should render only the edit icon when onRefreshClick is omitted', () => {
+            const onEditClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onEditClick, displayTitle: 'Test Movie' }
+            );
+
+            const iconButtons = element.querySelectorAll('.fm-icon-btn');
+            expect(iconButtons).toHaveLength(1);
+            expect(iconButtons[0].textContent).toBe('✏️');
+
+            // Previously the refresh icon was rendered unconditionally, and
+            // clicking it invoked a null handler.
+            expect(() => element.querySelectorAll('.fm-icon-btn')[1]?.click()).not.toThrow();
+        });
+
+        it('should render only the refresh icon when onEditClick is omitted', () => {
+            const onRefreshClick = vi.fn();
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onRefreshClick, displayTitle: 'Test Movie' }
+            );
+
+            const iconButtons = element.querySelectorAll('.fm-icon-btn');
+            expect(iconButtons).toHaveLength(1);
+            expect(iconButtons[0].textContent).toBe('🔄');
+
+            iconButtons[0].click();
+            expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
+        });
+
         it('should add fm-rating-badge class to rating badges', () => {
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, rtRating: 80, mcRating: 70 },

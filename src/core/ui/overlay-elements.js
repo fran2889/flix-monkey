@@ -221,13 +221,15 @@ export function createOverlayElement(
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'fm-actions';
 
-    if (onEditClick) {
-        const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle));
-        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
-            onRefreshClick(displayTitle)
-        );
-        actionsContainer.appendChild(editIcon);
-        actionsContainer.appendChild(refreshIcon);
+    if (onEditClick || onRefreshClick) {
+        if (onEditClick) {
+            actionsContainer.appendChild(createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle)));
+        }
+        if (onRefreshClick) {
+            actionsContainer.appendChild(
+                createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle))
+            );
+        }
         imdbRow.appendChild(actionsContainer);
         setupHoverActions(ratingsWrapper, actionsContainer);
     }
