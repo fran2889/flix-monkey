@@ -12,7 +12,7 @@ async function clearCache(adapter) {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {import('./types/migrations.js').StorageMigration[]} */
+/** @type {import('../types/migrations.js').StorageMigration[]} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
@@ -120,7 +120,7 @@ const MIGRATIONS = Object.freeze([
  * Retrieves a migration definition by its version number for targeted migration execution.
  *
  * @param {number} version - The migration version to find (must be positive integer).
- * @returns {import('./types/migrations.js').StorageMigration|undefined} The migration object or undefined if not found.
+ * @returns {import('../types/migrations.js').StorageMigration|undefined} The migration object or undefined if not found.
  */
 export function getMigrationByVersion(version) {
     return MIGRATIONS.find(m => m.version === version);
@@ -135,7 +135,7 @@ export function getMigrationByVersion(version) {
  *
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter for version persistence.
  * @param {{ info: Function, error: Function }} logger - Logger for migration progress and error reporting.
- * @param {import('./types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
+ * @param {import('../types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
  * @returns {Promise<void>} Resolves when all applicable migrations have been executed.
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {

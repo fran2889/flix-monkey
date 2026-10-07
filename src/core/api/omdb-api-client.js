@@ -29,7 +29,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Creates the OMDb client with its own rate-limited request queue.
      *
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
      * @param {import('../logger.js').Logger} logger - Diagnostic sink; every lookup and failure path logs.
@@ -50,7 +50,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Checks if API key is configured and client is healthy.
      *
-     * @returns {Promise<import('../types/api.js').ClientStatus>} Unhealthy when no API key is set or the client is disabled.
+     * @returns {Promise<import('../../types/api.js').ClientStatus>} Unhealthy when no API key is set or the client is disabled.
      */
     async getStatus() {
         const apiKey = this.config.get('omdbApiKey');

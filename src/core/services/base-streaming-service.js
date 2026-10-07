@@ -27,7 +27,7 @@ export class StreamingService {
      * Subclasses return their own SurfaceManager constructor.
      *
      * @abstract
-     * @returns {import('../types/services.js').ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
+     * @returns {import('../../types/services.js').ServiceSurfaceManager} Constructor that accepts a Logger and creates this service's SurfaceManager.
      */
     get SurfaceManager() {
         throw new Error('Not implemented');
@@ -36,7 +36,7 @@ export class StreamingService {
     /**
      * Defaults to no overrides; subclasses may supply presentation constants.
      *
-     * @returns {import('../types/overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
+     * @returns {import('../../types/overlay.js').ServicePresentation} Optional presentation values consumed by OverlayRenderer.
      */
     get constants() {
         return Object.freeze({});

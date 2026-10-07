@@ -19,7 +19,7 @@ export class AgregarrApiClient extends BaseApiClient {
     /**
      * Creates the Agregarr client with its own rate-limited request queue.
      *
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
      * @param {import('../logger.js').Logger} logger - Diagnostic sink; every lookup and failure path logs.

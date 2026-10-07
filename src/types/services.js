@@ -5,7 +5,7 @@
 
 /**
  * Constructor type for service surface managers.
- * @typedef {new (logger: import('../logger.js').Logger) => import('../surfaces/').SurfaceManager} ServiceSurfaceManager
+ * @typedef {new (logger: import('../core/logger.js').Logger) => import('../core/surfaces/').SurfaceManager} ServiceSurfaceManager
  */
 
 export {};

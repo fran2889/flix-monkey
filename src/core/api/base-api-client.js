@@ -88,7 +88,7 @@ export class BaseApiClient {
     /**
      * Reports whether this client is usable for provider selection.
      *
-     * @returns {Promise<import('../types/api.js').ClientStatus>} A health result suitable for provider selection.
+     * @returns {Promise<import('../../types/api.js').ClientStatus>} A health result suitable for provider selection.
      */
     async getStatus() {
         if (await this.#isDisabled()) {

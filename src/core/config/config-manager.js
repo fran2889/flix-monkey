@@ -17,7 +17,7 @@ export class ConfigManager {
     /**
      * Reads never throw for an absent key: they fall back to CONFIG_DEFAULTS.
      *
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter supplying config reads.
+     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter supplying config reads.
      * @param {import('../logger.js').Logger} logger - Required; configuration reads can fail and are logged.
      */
     constructor(adapter, logger) {

@@ -30,7 +30,7 @@ export class SurfaceManager {
      * missing containers fall back to the title element's parent.
      *
      * @param {Element|Document} root - Element or document searched for surfaces.
-     * @returns {import('../types/surfaces.js').DiscoveredSurface[]} Unique surfaces with a usable container and title.
+     * @returns {import('../../types/surfaces.js').DiscoveredSurface[]} Unique surfaces with a usable container and title.
      */
     discover(root) {
         const seen = new Set();
