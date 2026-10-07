@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { afterEach, assert, describe, expect, it } from 'vitest';
+import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 
 import {
     DisneyPlusService,
@@ -34,13 +34,15 @@ describe.each([
     ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix', 'withEnableNetflix'],
     ['HBO Max', HboMaxService, HboMaxSurfaceManager, 'enableHboMax', 'withEnableHboMax'],
     ['Disney+', DisneyPlusService, DisneyPlusSurfaceManager, 'enableDisneyPlus', 'withEnableDisneyPlus'],
-])('%s service', (_name, Service, SurfaceManager, _configKey, configMethod) => {
+])('%s service', (_name, Service, SurfaceManager, configKey, configMethod) => {
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
         const config = buildConfig()[configMethod](false).build();
+        const getBoolSpy = vi.spyOn(config, 'getBool');
 
         expect(service.SurfaceManager).toBe(SurfaceManager);
         expect(service.isEnabled(config)).toBe(false);
+        expect(getBoolSpy).toHaveBeenCalledWith(configKey);
     });
 });
 
