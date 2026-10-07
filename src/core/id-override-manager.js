@@ -13,9 +13,6 @@ export class IdOverrideManager {
     #adapter;
     #prefix = 'fm-idoverride:';
 
-    /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     */
     constructor(adapter) {
         this.#adapter = adapter;
     }

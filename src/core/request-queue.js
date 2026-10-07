@@ -14,6 +14,8 @@ export class RequestQueue {
     #adapter;
 
     /**
+     * Pass `globalSyncKey` to rate-limit across tabs; omit it to rate-limit per context only.
+     *
      * @param {import('../platform/adapter.js').PlatformAdapter|null} adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
      * @param {number} minInterval - Minimum delay between dispatched requests.
      * @param {string|null} globalSyncKey - Storage key used to coordinate the delay across tabs, or null to rate-limit within this context only.
@@ -72,7 +74,11 @@ export class RequestQueue {
         this.#isProcessing = false;
     }
 
-    /** Only reached once {@link #globalSyncKey} and {@link #adapter} are both set. */
+    /**
+     * Only reached once {@link #globalSyncKey} and {@link #adapter} are both set.
+     *
+     * @returns {Promise<number>} Epoch milliseconds of the last cross-tab request, or 0 when unset.
+     */
     async #getLastGlobalRequestTime() {
         const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
         const parsedTime = Number.parseInt(storedTime, 10);

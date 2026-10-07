@@ -17,7 +17,7 @@ export class ServiceRegistry {
     /**
      * Detects the current streaming service from the hostname.
      *
-     * @returns {import('./base-streaming-service.js').StreamingService|null}
+     * @returns {import('./base-streaming-service.js').StreamingService|null} Matching service, or null when the host is unsupported.
      */
     static detect() {
         const currentHost = window.location.hostname;

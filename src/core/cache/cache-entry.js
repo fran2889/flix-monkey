@@ -16,10 +16,12 @@ export class CacheEntry {
     #expires;
 
     /**
-     * @param {string} displayTitle - Netflix display title (search key)
-     * @param {string|null} imdbId - IMDb ID for short-circuit optimization
-     * @param {object} data - Title data without displayTitle
-     * @param {number|null} expires - Expiry timestamp or null for never expires
+     * Creates a cache entry for one title.
+     *
+     * @param {string} displayTitle - Streaming-service display title (search key).
+     * @param {string|null} imdbId - IMDb ID, or null when unknown.
+     * @param {object} data - Title data excluding displayTitle.
+     * @param {number|null} expires - Expiry timestamp in epoch ms, or null for entries that never expire.
      */
     constructor(displayTitle, imdbId, data, expires) {
         this.#displayTitle = displayTitle;
@@ -63,15 +65,14 @@ export class CacheEntry {
         };
     }
 
-    /**
-     * @returns {string|null}
-     */
     get imdbId() {
         return this.#imdbId;
     }
 
     /**
-     * @returns {boolean}
+     * Null expiry means the entry never expires.
+     *
+     * @returns {boolean} True once the expiry timestamp has passed.
      */
     get isExpired() {
         return this.#expires !== null && Date.now() > this.#expires;

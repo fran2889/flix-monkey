@@ -24,6 +24,8 @@ export class BaseApiClient {
     #overrideManager;
 
     /**
+     * Creates a client bound to a source identifier and a dedicated rate-limited queue.
+     *
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
      * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
@@ -83,7 +85,11 @@ export class BaseApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /** @returns {Promise<import('../types/api.js').ClientStatus>} A health result suitable for provider selection. */
+    /**
+     * Reports whether this client is usable for provider selection.
+     *
+     * @returns {Promise<import('../types/api.js').ClientStatus>} A health result suitable for provider selection.
+     */
     async getStatus() {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -95,8 +101,8 @@ export class BaseApiClient {
      * Disables this client for {@link CLIENT_DISABLE_DURATION}, purges its queued
      * requests, and logs a warning.
      *
-     * @returns {Promise<void>}
-     * @note Requests still waiting in this client's queue are removed. An HTTP request already
+     * @returns {Promise<void>} Resolves once the client is disabled and its queue purged.
+     * @remarks Requests still waiting in this client's queue are removed. An HTTP request already
      *   executing at the network level cannot be aborted and may still resolve after disable().
      */
     async disable() {
@@ -151,22 +157,18 @@ export class BaseApiClient {
     }
 
     /**
-     * @returns {import('../constants.js').ApiSourceValue}
+     * Provider this client was built for.
+     *
+     * @returns {import('../constants.js').ApiSourceValue} ApiSource identifier.
      */
     get source() {
         return this.#source;
     }
 
-    /**
-     * @returns {import('../config/config-manager.js').ConfigManager}
-     */
     get config() {
         return this.#config;
     }
 
-    /**
-     * @returns {import('../logger.js').Logger}
-     */
     get logger() {
         return this.#logger;
     }

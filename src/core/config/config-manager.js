@@ -15,7 +15,9 @@ export class ConfigManager {
     #logger;
 
     /**
-     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter
+     * Reads never throw for an absent key: they fall back to CONFIG_DEFAULTS.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter supplying config reads.
      * @param {import('../logger.js').Logger} logger - Required; configuration reads can fail and are logged.
      */
     constructor(adapter, logger) {
@@ -53,8 +55,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as an integer.
      *
-     * @param {ConfigKey} key
-     * @returns {number}
+     * @param {ConfigKey} key - The configuration key to retrieve.
+     * @returns {number} Parsed integer, or the default parsed as an integer when unreadable.
      */
     getInt(key) {
         const val = this.get(key);
@@ -65,8 +67,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as a float.
      *
-     * @param {ConfigKey} key
-     * @returns {number}
+     * @param {ConfigKey} key - The configuration key to retrieve.
+     * @returns {number} Parsed float, or the default parsed as a float when unreadable.
      */
     getFloat(key) {
         const val = this.get(key);
@@ -77,8 +79,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as a boolean.
      *
-     * @param {ConfigKey} key
-     * @returns {boolean}
+     * @param {ConfigKey} key - The configuration key to retrieve.
+     * @returns {boolean} True only when the stored value is the string `'true'`.
      */
     getBool(key) {
         return this.get(key) === 'true';

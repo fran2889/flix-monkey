@@ -27,11 +27,13 @@ function parseRatings(ratings, sourcePattern) {
  */
 export class OmdbApiClient extends BaseApiClient {
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../config/config-manager.js').ConfigManager} config
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('../logger.js').Logger} logger
-     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     * Creates the OMDb client with its own rate-limited request queue.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {import('../logger.js').Logger} logger - Diagnostic sink; every lookup and failure path logs.
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for user-supplied IMDb ID overrides.
      */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
@@ -48,7 +50,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Checks if API key is configured and client is healthy.
      *
-     * @returns {Promise<import('../types/api.js').ClientStatus>}
+     * @returns {Promise<import('../types/api.js').ClientStatus>} Unhealthy when no API key is set or the client is disabled.
      */
     async getStatus() {
         const apiKey = this.config.get('omdbApiKey');
@@ -100,10 +102,10 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Parses OMDb JSON response into a Title.
      *
-     * @param {object} json - OMDb API response
-     * @param {string} displayTitle - Display title from streaming service
-     * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results
-     * @returns {import('../title.js').Title}
+     * @param {object} json - OMDb API response.
+     * @param {string} displayTitle - Display title from streaming service.
+     * @param {string|null} [fallbackImdbId=null] - Fallback IMDb ID from search results.
+     * @returns {import('../title.js').Title} Title populated from the OMDb payload.
      */
     #parseOmdbResponse(json, displayTitle, fallbackImdbId = null) {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;

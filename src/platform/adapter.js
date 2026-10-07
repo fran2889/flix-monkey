@@ -114,7 +114,12 @@ export class PlatformAdapter {
         throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
     }
 
-    /** Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing. */
+    /**
+     * Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing.
+     *
+     * @param {string} _label - Menu entry text shown to the user.
+     * @param {() => void} _fn - Callback invoked when the entry is selected.
+     */
     registerMenuCommand(_label, _fn) {
         // No-op by default
     }

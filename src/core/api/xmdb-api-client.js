@@ -14,11 +14,13 @@ import { mapXmdbTitleType } from './title-type-mappers.js';
  */
 export class XmdbApiClient extends BaseApiClient {
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../config/config-manager.js').ConfigManager} config
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('../logger.js').Logger} logger
-     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     * Creates the XMDb client with its own rate-limited request queue.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {import('../logger.js').Logger} logger - Diagnostic sink; every lookup and failure path logs.
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for user-supplied IMDb ID overrides.
      */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(
@@ -35,7 +37,7 @@ export class XmdbApiClient extends BaseApiClient {
     /**
      * Checks if API key is configured and client is healthy.
      *
-     * @returns {Promise<import('../types/api.js').ClientStatus>}
+     * @returns {Promise<import('../types/api.js').ClientStatus>} Unhealthy when no API key is set or the client is disabled.
      */
     async getStatus() {
         const apiKey = this.config.get('xmdbApiKey');

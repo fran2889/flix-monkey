@@ -60,6 +60,8 @@ export const NETFLIX_SURFACES = Object.freeze({
  */
 export class NetflixSurfaceManager extends SurfaceManager {
     /**
+     * Scopes discovery to the Netflix selectors defined in this module.
+     *
      * @param {import('../../logger.js').Logger} logger - For logging surface discovery issues.
      */
     constructor(logger) {

@@ -10,7 +10,7 @@ const ALLOWED_DOMAINS = new Set(['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr
  * ALLOWED_DOMAINS is accepted.
  *
  * @param {string} url - Candidate external request URL.
- * @returns {import('../../types/extension.js').DomainValidationResult}
+ * @returns {import('../../types/extension.js').DomainValidationResult} Valid, or invalid with a reason describing why.
  */
 export function validateDomain(url) {
     try {

@@ -7,7 +7,7 @@
  * Builds the IMDb URL for a title, falling back to an IMDb search when no
  * IMDb ID is known.
  *
- * @param {object} params
+ * @param {object} params - Title identifiers.
  * @param {string|null} [params.imdbId=null] - IMDb ID (e.g. `"tt1234567"`).
  * @param {string|null} params.displayTitle - Search term used when `imdbId` is absent.
  * @returns {string} IMDb title URL, or an IMDb search URL.

@@ -19,7 +19,7 @@ let app = null;
 /**
  * Gets the cache and disabled clients managers, either from the existing app or by creating new instances.
  *
- * @returns {{cacheManager: import('../../core/cache/').CacheManager, disabledClientsManager: import('../../core/disabled-clients.js').DisabledClientsManager}}
+ * @returns {{cacheManager: import('../../core/cache/').CacheManager, disabledClientsManager: import('../../core/disabled-clients.js').DisabledClientsManager}} Managers shared with the settings UI.
  */
 function getSettingsDependencies() {
     if (app) {

@@ -8,30 +8,23 @@ import { StreamingService } from './base-streaming-service.js';
 /** HBO Max streaming service implementation. */
 export class HboMaxService extends StreamingService {
     /**
-     * @param {import('../config/config-manager.js').ConfigManager} _configManager
-     * @returns {boolean}
+     * Checks whether HBO Max decoration is enabled in configuration.
+     *
+     * @param {import('../config/config-manager.js').ConfigManager} _configManager - Current application configuration.
+     * @returns {boolean} True when `enableHboMax` is set.
      */
     isEnabled(_configManager) {
         return _configManager.getBool('enableHboMax');
     }
 
-    /**
-     * @returns {string[]}
-     */
     get domains() {
         return Object.freeze(['play.hbomax.com']);
     }
 
-    /**
-     * @returns {import('../types/services.js').ServiceSurfaceManager}
-     */
     get SurfaceManager() {
         return HboMaxSurfaceManager;
     }
 
-    /**
-     * @returns {import('../types/overlay.js').ServicePresentation}
-     */
     get constants() {
         return Object.freeze({ TOP_10_SELECTORS: Object.freeze(['.fm-hbo-top-10']), TOP_10_OFFSET: '30%' });
     }

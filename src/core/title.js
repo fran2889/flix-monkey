@@ -23,7 +23,11 @@ export class Title {
     source;
     type;
 
-    /** @param {import('../types/title.js').TitleOptions} [options] */
+    /**
+     * Creates a title from an options object; every field defaults to null.
+     *
+     * @param {import('../types/title.js').TitleOptions} [options] - Partial title fields to initialize.
+     */
     constructor({
         displayTitle = null,
         apiTitle = null,
@@ -88,16 +92,13 @@ export class Title {
         return converter(val);
     }
 
-    /**
-     * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
-     *
-     * @returns {boolean}
-     */
     get hasRating() {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
     }
 
     /**
+     * Builds the IMDb URL for this title.
+     *
      * @returns {string} IMDb URL for this title. Falls back to an IMDb search
      *   URL when `imdbId` is not available.
      */
@@ -106,6 +107,8 @@ export class Title {
     }
 
     /**
+     * Returns a copy of this title tagged with the API source that produced it.
+     *
      * @param {import('../types/title.js').ApiSourceValue} source - API source that produced this title.
      * @returns {Title} A new immutable Title with this source.
      */
@@ -118,7 +121,7 @@ export class Title {
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
      * @param {import('../types/title.js').ApiSourceValue|null} [source=null] - API source that produced the miss.
-     * @returns {Title}
+     * @returns {Title} Title carrying no ratings and no IMDb ID.
      */
     static notFound(displayTitle, source = null) {
         return new Title({ displayTitle, source });

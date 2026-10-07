@@ -37,13 +37,15 @@ export class FlixMonkeyApp {
     #overrideManager;
 
     /**
-     * @param {import('./logger.js').Logger} logger
-     * @param {import('./cache/index.js').CacheManager} cache
-     * @param {import('./fade-manager.js').FadeManager} fadeManager
-     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager
-     * @param {import('./overlay.js').OverlayRenderer} renderer
-     * @param {import('./surfaces/index.js').SurfaceManager} surfaces
-     * @param {import('./api-manager.js').ApiClientManager} api
+     * Creates the application and wires its collaborators together.
+     *
+     * @param {import('./logger.js').Logger} logger - Diagnostic sink for startup and decoration failures.
+     * @param {import('./cache/index.js').CacheManager} cache - Title cache used to avoid repeat lookups.
+     * @param {import('./fade-manager.js').FadeManager} fadeManager - Stores per-title fade overrides.
+     * @param {import('./id-override-manager.js').IdOverrideManager} overrideManager - Manager for user-supplied IMDb ID overrides.
+     * @param {import('./overlay.js').OverlayRenderer} renderer - Builds and updates rating overlays.
+     * @param {import('./surfaces/index.js').SurfaceManager} surfaces - Discovers injectable surface containers.
+     * @param {import('./api-manager.js').ApiClientManager} api - Orchestrates provider selection and fallbacks.
      */
     constructor(logger, cache, fadeManager, overrideManager, renderer, surfaces, api) {
         this.#cache = cache;
@@ -287,12 +289,10 @@ export class FlixMonkeyApp {
         });
     }
 
-    /** @returns {CacheManager} */
     get cacheManager() {
         return this.#cache;
     }
 
-    /** @returns {DisabledClientsManager} */
     get disabledManager() {
         return this.#api.disabledManager;
     }
@@ -320,8 +320,10 @@ function createApiClient(adapter, config, disabledManager, logger, overrideManag
 }
 
 /**
- * @param {import('../platform/adapter.js').PlatformAdapter} adapter
- * @returns {FlixMonkeyApp|null}
+ * Detects the current streaming service and starts the application on it.
+ *
+ * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for storage, HTTP, and config.
+ * @returns {FlixMonkeyApp|null} Running app, or null when no supported service is detected.
  */
 export function startApp(adapter) {
     const currentService = ServiceRegistry.detect();

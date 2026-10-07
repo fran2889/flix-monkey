@@ -24,6 +24,8 @@ export class FadeManager {
     #prefix = 'fm-fade:';
 
     /**
+     * Overrides beat config; config applies only when a title has no stored override.
+     *
      * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Storage adapter for per-title overrides.
      * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration, read when no override applies.
      */
@@ -33,8 +35,10 @@ export class FadeManager {
     }
 
     /**
+     * Reads the stored fade override for a title.
+     *
      * @param {string} dedupKey - Slugified display title.
-     * @returns {Promise<'always'|'never'|null>}
+     * @returns {Promise<'always'|'never'|null>} Stored override, or null when the title is on automatic fade.
      */
     async getOverride(dedupKey) {
         const val = await this.#adapter.storageGet(`${this.#prefix}${dedupKey}`);
@@ -43,9 +47,11 @@ export class FadeManager {
     }
 
     /**
+     * Persists or clears the fade override for a title.
+     *
      * @param {string} dedupKey - Slugified display title.
      * @param {'always'|'never'|null} state - Override state, or null to clear.
-     * @returns {Promise<void>}
+     * @returns {Promise<void>} Resolves once the override is persisted or removed.
      */
     async setOverride(dedupKey, state) {
         const key = `${this.#prefix}${dedupKey}`;

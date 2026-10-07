@@ -16,7 +16,9 @@ export class OverlayRenderer {
     #serviceConstants;
 
     /**
-     * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration
+     * Creates a renderer bound to application configuration.
+     *
+     * @param {import('./config/config-manager.js').ConfigManager} config - Application configuration.
      * @param {import('../types/overlay.js').ServicePresentation} [serviceConstants={}] - Service-specific presentation constants.
      */
     constructor(config, serviceConstants = {}) {
@@ -49,7 +51,7 @@ export class OverlayRenderer {
      * Checks if a container already has a rating overlay.
      *
      * @param {HTMLElement} container - DOM element to check.
-     * @returns {boolean}
+     * @returns {boolean} True when the overlay marker attribute is present.
      */
     hasOverlay(container) {
         return container.hasAttribute(this.#OVERLAY_ATTR);
@@ -59,7 +61,7 @@ export class OverlayRenderer {
      * Checks if a container currently shows a loading indicator.
      *
      * @param {HTMLElement} container - DOM element to check.
-     * @returns {boolean}
+     * @returns {boolean} True when a loading element is present in the container.
      */
     isLoading(container) {
         return container.querySelector(`.${this.#LOADING_CLASS}`) !== null;

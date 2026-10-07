@@ -16,10 +16,12 @@ export class ApiClientManager {
     #logger;
 
     /**
-     * @param {import('./logger.js').Logger} logger
-     * @param {import('./cache/').CacheManager} cache
-     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('./api/base-api-client.js').BaseApiClient} client
+     * Creates a manager over the configured API client and its collaborators.
+     *
+     * @param {import('./logger.js').Logger} logger - Diagnostic sink for lookup and failure paths.
+     * @param {import('./cache/').CacheManager} cache - Title cache consulted before hitting the network.
+     * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {import('./api/base-api-client.js').BaseApiClient} client - Active provider used for lookups.
      */
     constructor(logger, cache, disabledManager, client) {
         this.#cache = cache;
@@ -32,8 +34,8 @@ export class ApiClientManager {
      * Resolves rating data from cache or the configured client. Failed lookups return a
      * not-found Title; client errors with a 4xx status disable that client.
      *
-     * @param {string} displayTitle
-     * @returns {Promise<Title>}
+     * @param {string} displayTitle - Title as shown by the streaming service.
+     * @returns {Promise<Title>} Resolved Title, or a not-found Title when no rating exists.
      */
     async getData(displayTitle) {
         const source = this.#client.source;
@@ -84,9 +86,6 @@ export class ApiClientManager {
         }
     }
 
-    /**
-     * @returns {import('./disabled-clients.js').DisabledClientsManager}
-     */
     get disabledManager() {
         return this.#disabledManager;
     }

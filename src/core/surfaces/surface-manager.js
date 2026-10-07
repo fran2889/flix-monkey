@@ -15,6 +15,8 @@ export class SurfaceManager {
     #logger;
 
     /**
+     * Subclasses supply their service's surface definitions; this class owns discovery.
+     *
      * @param {import('../logger.js').Logger} logger - Receives selector and container-resolution failures.
      * @param {object} surfaceDefs - Definitions used for DOM discovery.
      */
@@ -27,8 +29,8 @@ export class SurfaceManager {
      * Returns unique, valid surfaces discovered below root. Invalid selectors are ignored and
      * missing containers fall back to the title element's parent.
      *
-     * @param {Element|Document} root
-     * @returns {import('../types/surfaces.js').DiscoveredSurface[]}
+     * @param {Element|Document} root - Element or document searched for surfaces.
+     * @returns {import('../types/surfaces.js').DiscoveredSurface[]} Unique surfaces with a usable container and title.
      */
     discover(root) {
         const seen = new Set();

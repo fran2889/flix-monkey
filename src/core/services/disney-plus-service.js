@@ -8,23 +8,19 @@ import { StreamingService } from './base-streaming-service.js';
 /** Disney+ streaming service implementation. */
 export class DisneyPlusService extends StreamingService {
     /**
-     * @param {import('../config/config-manager.js').ConfigManager} _configManager
-     * @returns {boolean}
+     * Checks whether Disney+ decoration is enabled in configuration.
+     *
+     * @param {import('../config/config-manager.js').ConfigManager} _configManager - Current application configuration.
+     * @returns {boolean} True when `enableDisneyPlus` is set.
      */
     isEnabled(_configManager) {
         return _configManager.getBool('enableDisneyPlus');
     }
 
-    /**
-     * @returns {string[]}
-     */
     get domains() {
         return Object.freeze(['disneyplus.com']);
     }
 
-    /**
-     * @returns {import('../types/services.js').ServiceSurfaceManager}
-     */
     get SurfaceManager() {
         return DisneyPlusSurfaceManager;
     }

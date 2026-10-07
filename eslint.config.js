@@ -91,18 +91,41 @@ export default [
                 'error',
                 {
                     require: {
-                        MethodDefinition: true,
-                        ClassDeclaration: true,
+                        MethodDefinition: false,
+                        ClassDeclaration: false,
                     },
-                    contexts: ['export'],
                     publicOnly: true,
+                    contexts: [
+                        'ClassDeclaration',
+                        'FunctionDeclaration',
+                        'MethodDefinition:not([kind="get"]):not([kind="set"]):not([kind="constructor"])',
+                    ],
                 },
             ],
-            'jsdoc/require-description': ['error', { contexts: ['export'] }],
-            'jsdoc/require-param': ['error', { contexts: ['export'] }],
-            'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+
+            'jsdoc/require-description': 'error',
+            'jsdoc/require-param': 'error',
+            'jsdoc/require-returns': 'error',
+            'jsdoc/require-param-description': 'error',
+            'jsdoc/require-returns-description': 'error',
+            'jsdoc/require-param-type': 'error',
+            'jsdoc/require-returns-type': 'error',
+
+            'jsdoc/check-param-names': [
+                'error',
+                {
+                    checkRestProperty: true,
+                    checkDestructured: true,
+                },
+            ],
+            'jsdoc/check-property-names': 'error',
             'jsdoc/check-types': 'error',
+            'jsdoc/valid-types': 'error',
             'jsdoc/no-undefined-types': 'error',
+            'jsdoc/check-tag-names': 'error',
+            'jsdoc/check-syntax': 'error',
+            'jsdoc/no-bad-blocks': 'error',
+            'jsdoc/no-blank-block-descriptions': 'error',
         },
     },
     // 7. License header enforcement - src and tests only (isolated block)

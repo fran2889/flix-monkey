@@ -9,7 +9,7 @@ import { WebExtensionAdapter } from '../../platform/webextension.js';
 /**
  * Create an executor that shares one migration run among all callers.
  *
- * @returns {() => Promise<void>}
+ * @returns {() => Promise<void>} Idempotent callable that runs migrations at most once per process.
  */
 export function createExtensionMigrationExecutor() {
     let migrationPromise = null;

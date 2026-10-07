@@ -11,8 +11,8 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Retrieves a value from GM storage.
      *
-     * @param {string} key
-     * @returns {Promise<unknown>}
+     * @param {string} key - Storage key to read.
+     * @returns {Promise<unknown>} Stored value, or null when the key is absent.
      */
     async storageGet(key) {
         return GM_getValue(key) ?? null;
@@ -21,7 +21,7 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Retrieves all key-value pairs from GM storage.
      *
-     * @returns {Promise<object>}
+     * @returns {Promise<object>} Every stored key mapped to its value.
      */
     async storageGetAll() {
         const keys = GM_listValues();
@@ -35,8 +35,8 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Stores a value in GM storage.
      *
-     * @param {string} key
-     * @param {unknown} value
+     * @param {string} key - Storage key to write.
+     * @param {unknown} value - Value to persist.
      */
     async storageSet(key, value) {
         GM_setValue(key, value);
@@ -45,7 +45,7 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Stores multiple key-value pairs in GM storage.
      *
-     * @param {object} values
+     * @param {object} values - Keys mapped to the values to persist.
      */
     async storageSetMany(values) {
         for (const [key, value] of Object.entries(values)) {
@@ -56,7 +56,7 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Removes a value from GM storage.
      *
-     * @param {string} key
+     * @param {string} key - Storage key to delete.
      */
     async storageDelete(key) {
         GM_deleteValue(key);
@@ -65,8 +65,8 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Retrieves all storage keys matching the given prefix.
      *
-     * @param {string} prefix
-     * @returns {Promise<string[]>}
+     * @param {string} prefix - Leading string the key must start with.
+     * @returns {Promise<string[]>} Matching keys, in storage order.
      */
     async storageGetKeys(prefix) {
         const keys = GM_listValues();
@@ -76,11 +76,11 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Makes HTTP request using GM_xmlhttpRequest.
      *
-     * @param {string} url
-     * @param {object} options
-     * @param {'json'|'text'} [options.responseType='json']
-     * @param {number} [options.timeout=DEFAULT_FETCH_TIMEOUT]
-     * @returns {Promise<unknown>}
+     * @param {string} url - Absolute URL to request.
+     * @param {object} options - Request options.
+     * @param {'json'|'text'} [options.responseType='json'] - How the response body is parsed.
+     * @param {number} [options.timeout=DEFAULT_FETCH_TIMEOUT] - Milliseconds before the request is aborted.
+     * @returns {Promise<unknown>} Parsed response body, or the raw text for `responseType: 'text'`.
      */
     async httpFetch(url, { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = {}) {
         return new Promise((resolve, reject) => {
@@ -119,8 +119,8 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Retrieves configuration value (live-read from GM storage).
      *
-     * @param {string} key
-     * @returns {unknown}
+     * @param {string} key - Config key defined in `CONFIG_FIELDS`.
+     * @returns {unknown} Stored value, or undefined when the key is absent.
      */
     configGet(key) {
         return GM_getValue(key);
@@ -129,8 +129,8 @@ export class UserscriptAdapter extends PlatformAdapter {
     /**
      * Registers a menu command in the userscript manager UI.
      *
-     * @param {string} label
-     * @param {Function} fn
+     * @param {string} label - Menu entry text shown to the user.
+     * @param {() => void} fn - Callback invoked when the entry is selected.
      */
     registerMenuCommand(label, fn) {
         GM_registerMenuCommand(label, fn);

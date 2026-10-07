@@ -10,9 +10,6 @@ export class Logger {
     #prefix = '[FlixMonkey]';
     #adapter;
 
-    /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     */
     constructor(adapter) {
         this.#adapter = adapter;
     }
@@ -20,8 +17,8 @@ export class Logger {
     /**
      * Logs debug message when debug mode is enabled in configuration.
      *
-     * @param {unknown} message
-     * @param {...unknown} args
+     * @param {unknown} message - Message or format string to log.
+     * @param {...unknown} args - Values interpolated into `message`.
      */
     debug(message, ...args) {
         if (String(this.#adapter.configGet('debug') ?? CONFIG_DEFAULTS['debug']) === 'true') {
@@ -32,8 +29,8 @@ export class Logger {
     /**
      * Logs informational message to console.
      *
-     * @param {unknown} message
-     * @param {...unknown} args
+     * @param {unknown} message - Message or format string to log.
+     * @param {...unknown} args - Values interpolated into `message`.
      */
     info(message, ...args) {
         console.info(`${this.#prefix} ${message}`, ...args);
@@ -42,8 +39,8 @@ export class Logger {
     /**
      * Logs warning message to console.
      *
-     * @param {unknown} message
-     * @param {...unknown} args
+     * @param {unknown} message - Message or format string to log.
+     * @param {...unknown} args - Values interpolated into `message`.
      */
     warn(message, ...args) {
         console.warn(`${this.#prefix} ${message}`, ...args);
@@ -52,8 +49,8 @@ export class Logger {
     /**
      * Logs error message to console.
      *
-     * @param {unknown} message
-     * @param {...unknown} args
+     * @param {unknown} message - Message or format string to log.
+     * @param {...unknown} args - Values interpolated into `message`.
      */
     error(message, ...args) {
         console.error(`${this.#prefix} ${message}`, ...args);

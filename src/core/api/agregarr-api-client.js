@@ -17,11 +17,13 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
  */
 export class AgregarrApiClient extends BaseApiClient {
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../config/config-manager.js').ConfigManager} config
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('../logger.js').Logger} logger
-     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     * Creates the Agregarr client with its own rate-limited request queue.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
+     * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
+     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
+     * @param {import('../logger.js').Logger} logger - Diagnostic sink; every lookup and failure path logs.
+     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for user-supplied IMDb ID overrides.
      */
     constructor(adapter, config, disabledManager, logger, overrideManager) {
         super(

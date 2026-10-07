@@ -10,9 +10,6 @@ import { ApiSource } from './constants.js';
 export class DisabledClientsManager {
     #adapter;
 
-    /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     */
     constructor(adapter) {
         this.#adapter = adapter;
     }
