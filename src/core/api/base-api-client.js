@@ -32,7 +32,7 @@ export class BaseApiClient {
      * @param {import('../logger.js').Logger} logger - Required; every lookup and failure path logs.
      * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
      * @param {import('../request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
-     * @param {import('../title.js').ApiSourceValue} source - ApiSource identifier.
+     * @param {import('../../types/title.js').ApiSourceValue} source - ApiSource identifier.
      */
     constructor(adapter, config, disabledManager, logger, overrideManager, queue, source) {
         this.#adapter = adapter;
@@ -159,7 +159,7 @@ export class BaseApiClient {
     /**
      * Provider this client was built for.
      *
-     * @returns {import('../constants.js').ApiSourceValue} ApiSource identifier.
+     * @returns {import('../../types/title.js').ApiSourceValue} ApiSource identifier.
      */
     get source() {
         return this.#source;
