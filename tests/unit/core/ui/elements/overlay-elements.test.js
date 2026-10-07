@@ -407,7 +407,7 @@ describe('createOverlayElement', () => {
             const editIcon = element.querySelector('.fm-icon-btn');
             editIcon.click();
 
-            expect(onEditClick).toHaveBeenCalledWith('Test Movie', 'tt1234567');
+            expect(onEditClick).toHaveBeenCalledWith('Test Movie');
         });
 
         it('should call onRefreshClick when refresh icon is clicked', () => {
