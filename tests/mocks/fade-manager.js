@@ -28,7 +28,7 @@ function buildMockFadeManager() {
     return {
         /**
          * Set the getOverride mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(dedupKey: string) => Promise<'always'|'never'|null>} impl
          */
         withGetOverride(impl) {
             mock.getOverride.mockImplementation(impl);
@@ -46,7 +46,7 @@ function buildMockFadeManager() {
 
         /**
          * Set the setOverride mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(dedupKey: string, state: 'always'|'never'|null) => Promise<void>} impl
          */
         withSetOverride(impl) {
             mock.setOverride.mockImplementation(impl);
@@ -55,7 +55,7 @@ function buildMockFadeManager() {
 
         /**
          * Set the setOverride mock to resolve with a specific value.
-         * @param {*} value
+         * @param {void} value
          */
         withSetOverrideResolving(value) {
             mock.setOverride.mockResolvedValue(value);
@@ -64,7 +64,7 @@ function buildMockFadeManager() {
 
         /**
          * Set the shouldFade mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(override: string|null, rating: number|null) => boolean} impl
          */
         withShouldFade(impl) {
             mock.shouldFade.mockImplementation(impl);

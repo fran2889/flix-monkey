@@ -9,7 +9,7 @@
  * a partial object literal can stand in for the real class.
  *
  * @template T
- * @typedef {{ -readonly [K in keyof T]?: T[K] extends (...args: any[]) => any ? import('vitest').Mock : T[K] }} MockOf
+ * @typedef {{ -readonly [K in keyof T]?: T[K] extends (...args: never[]) => unknown ? import('vitest').Mock : T[K] }} MockOf
  */
 
 export {};

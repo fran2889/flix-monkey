@@ -24,7 +24,7 @@ function buildMockSurfaceManager() {
     return {
         /**
          * Set the discover mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(root: Element|Document) => import('../../src/types/surfaces.js').DiscoveredSurface[]} impl
          */
         withDiscover(impl) {
             mock.discover.mockImplementation(impl);

@@ -40,7 +40,7 @@ function buildMockOverlayRenderer() {
     return {
         /**
          * Set the hasOverlay mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(container: HTMLElement) => boolean} impl
          */
         withHasOverlay(impl) {
             mock.hasOverlay.mockImplementation(impl);
@@ -58,7 +58,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the isLoading mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(container: HTMLElement) => boolean} impl
          */
         withIsLoading(impl) {
             mock.isLoading.mockImplementation(impl);
@@ -76,7 +76,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the injectOverlay mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(container: HTMLElement, titleObj: import('../../src/core/title.js').Title, fadeToggleState: 'always'|'never'|null, onFadeToggleClick: ((state: string|null) => void)|null, onEditClick: (displayTitle: string) => void, onRefreshClick: (displayTitle: string) => void, displayTitle: string) => void} impl
          */
         withInjectOverlay(impl) {
             mock.injectOverlay.mockImplementation(impl);
@@ -85,7 +85,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the removeLoadingOverlay mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(container: HTMLElement) => void} impl
          */
         withRemoveLoadingOverlay(impl) {
             mock.removeLoadingOverlay.mockImplementation(impl);
@@ -94,7 +94,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the applyFade mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(container: HTMLElement, shouldFade: boolean) => void} impl
          */
         withApplyFade(impl) {
             mock.applyFade.mockImplementation(impl);
@@ -103,7 +103,7 @@ function buildMockOverlayRenderer() {
 
         /**
          * Set the clearAllOverlays mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {() => void} impl
          */
         withClearAllOverlays(impl) {
             mock.clearAllOverlays.mockImplementation(impl);

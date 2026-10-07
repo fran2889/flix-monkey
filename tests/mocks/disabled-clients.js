@@ -28,7 +28,7 @@ function buildMockDisabledClientsManager() {
     return {
         /**
          * Set the isDisabled mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(source: import('../../src/types/title.js').ApiSourceValue) => Promise<boolean>} impl
          */
         withIsDisabled(impl) {
             mock.isDisabled.mockImplementation(impl);
@@ -46,7 +46,7 @@ function buildMockDisabledClientsManager() {
 
         /**
          * Set the disable mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(source: import('../../src/types/title.js').ApiSourceValue, durationMs: number) => Promise<void>} impl
          */
         withDisable(impl) {
             mock.disable.mockImplementation(impl);
@@ -55,7 +55,7 @@ function buildMockDisabledClientsManager() {
 
         /**
          * Set the disable mock to resolve with a specific value.
-         * @param {*} value
+         * @param {void} value
          */
         withDisableResolving(value) {
             mock.disable.mockResolvedValue(value);
@@ -64,7 +64,7 @@ function buildMockDisabledClientsManager() {
 
         /**
          * Set the resetAll mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {() => Promise<import('../../src/types/title.js').ApiSourceValue[]>} impl
          */
         withResetAll(impl) {
             mock.resetAll.mockImplementation(impl);

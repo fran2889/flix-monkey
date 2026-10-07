@@ -26,7 +26,7 @@ function buildMockIdOverrideManager() {
     return {
         /**
          * Set the getImdbId mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(displayTitle: string) => Promise<string|null>} impl
          */
         withGetImdbId(impl) {
             mock.getImdbId.mockImplementation(impl);
@@ -44,7 +44,7 @@ function buildMockIdOverrideManager() {
 
         /**
          * Set the setImdbId mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(displayTitle: string, imdbId: string) => Promise<void>} impl
          */
         withSetImdbId(impl) {
             mock.setImdbId.mockImplementation(impl);
@@ -53,7 +53,7 @@ function buildMockIdOverrideManager() {
 
         /**
          * Set the setImdbId mock to resolve with a specific value.
-         * @param {*} value
+         * @param {void} value
          */
         withSetImdbIdResolving(value) {
             mock.setImdbId.mockResolvedValue(value);

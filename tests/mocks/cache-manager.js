@@ -39,7 +39,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the write mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(displayTitle: string, titleObj: import('../../src/core/title.js').Title) => Promise<void>} impl
          */
         withWriteMock(impl) {
             mock.write.mockImplementation(impl);
@@ -48,7 +48,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the delete mock to resolve with a specific value.
-         * @param {*} value
+         * @param {void} value
          */
         withDeleteResolving(value) {
             mock.delete.mockResolvedValue(value);
@@ -57,7 +57,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the delete mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {(displayTitle: string) => Promise<void>} impl
          */
         withDeleteMock(impl) {
             mock.delete.mockImplementation(impl);
@@ -66,7 +66,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the clear mock to resolve with a specific value.
-         * @param {*} value
+         * @param {void} value
          */
         withClearResolving(value) {
             mock.clear.mockResolvedValue(value);
@@ -75,7 +75,7 @@ function buildMockCacheManager() {
 
         /**
          * Set the clear mock implementation.
-         * @param {(...args: any[]) => any} impl
+         * @param {() => Promise<void>} impl
          */
         withClearMock(impl) {
             mock.clear.mockImplementation(impl);
