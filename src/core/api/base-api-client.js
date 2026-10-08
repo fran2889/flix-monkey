@@ -165,10 +165,20 @@ export class BaseApiClient {
         return this.#source;
     }
 
+    /**
+     * Used by subclasses for provider-specific config reads.
+     *
+     * @returns {import('../config/config-manager.js').ConfigManager} Application configuration.
+     */
     get config() {
         return this.#config;
     }
 
+    /**
+     * Used by subclasses for provider-specific logging.
+     *
+     * @returns {import('../logger.js').Logger} Diagnostic sink bound to this client.
+     */
     get logger() {
         return this.#logger;
     }

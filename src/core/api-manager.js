@@ -86,6 +86,11 @@ export class ApiClientManager {
         }
     }
 
+    /**
+     * Collaborator the app forwards to settings for cache and client resets.
+     *
+     * @returns {import('./disabled-clients.js').DisabledClientsManager} Tracks temporarily disabled clients.
+     */
     get disabledManager() {
         return this.#disabledManager;
     }

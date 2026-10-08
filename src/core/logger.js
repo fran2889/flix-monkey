@@ -10,6 +10,11 @@ export class Logger {
     #prefix = '[FlixMonkey]';
     #adapter;
 
+    /**
+     * Creates a logger bound to the platform storage and config.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for debug-flag reads and log persistence.
+     */
     constructor(adapter) {
         this.#adapter = adapter;
     }

@@ -10,6 +10,11 @@ import { ApiSource } from './constants.js';
 export class DisabledClientsManager {
     #adapter;
 
+    /**
+     * Creates a lockout tracker backed by platform storage.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for lockout persistence.
+     */
     constructor(adapter) {
         this.#adapter = adapter;
     }

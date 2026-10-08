@@ -65,6 +65,11 @@ export class CacheEntry {
         };
     }
 
+    /**
+     * IMDb identity hoisted out of the cached payload in migration 2.
+     *
+     * @returns {string|null} IMDb ID for short-circuit lookups, or null when unknown.
+     */
     get imdbId() {
         return this.#imdbId;
     }

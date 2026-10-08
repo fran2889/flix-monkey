@@ -13,6 +13,11 @@ export class IdOverrideManager {
     #adapter;
     #prefix = 'fm-idoverride:';
 
+    /**
+     * Creates a manager for user-supplied IMDb ID overrides.
+     *
+     * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for override persistence.
+     */
     constructor(adapter) {
         this.#adapter = adapter;
     }

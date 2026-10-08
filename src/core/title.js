@@ -92,6 +92,11 @@ export class Title {
         return converter(val);
     }
 
+    /**
+     * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
+     *
+     * @returns {boolean} True when any rating value is present.
+     */
     get hasRating() {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
     }

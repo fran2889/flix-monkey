@@ -294,10 +294,20 @@ export class FlixMonkeyApp {
         });
     }
 
+    /**
+     * Exposed for entry points that wire shared services into settings.
+     *
+     * @returns {CacheManager} Title cache backing this app.
+     */
     get cacheManager() {
         return this.#cache;
     }
 
+    /**
+     * Exposed for entry points that wire shared services into settings.
+     *
+     * @returns {DisabledClientsManager} Client lockout manager owned by the API manager.
+     */
     get disabledManager() {
         return this.#api.disabledManager;
     }
