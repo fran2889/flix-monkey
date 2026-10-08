@@ -9,10 +9,10 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"{src,tests,scripts}/**/*.js\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
-        "format:check": "prettier --check \"{src,tests,scripts}/**/*.js\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
-        "lint": "eslint \"{src,tests}/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
-        "lint:fix": "eslint --fix \"{src,tests}/**/*.js\" \"scripts/**/*.js\" \"*.config.js\"",
+        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
+        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
+        "lint": "eslint \"{src,tests}/**/*.{js,ts}\" \"scripts/**/*.{js,ts}\" \"*.config.js\" \"*.config.ts\"",
+        "lint:fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\" \"scripts/**/*.{js,ts}\" \"*.config.js\" \"*.config.ts\"",
         "build:userscript": "rollup -c --environment TARGET:userscript",
         "build:firefox": "rollup -c --environment TARGET:firefox && node scripts/package.js",
         "build:chrome": "rollup -c --environment TARGET:chrome && node scripts/package.js",
@@ -59,6 +59,7 @@
         "sharp": "^0.35.5",
         "tslib": "^2.6.0",
         "typescript": "^5.3.0",
+        "vite": "^8.3.2",
         "vitest": "^5.0.0",
         "web-ext": "^10.7.0",
         "webextension-polyfill": "^0.12.0"
@@ -68,7 +69,7 @@
     },
     "sideEffects": false,
     "lint-staged": {
-        "{src,tests,scripts}/**/*.js": [
+        "{src,tests,scripts}/**/*.{js,ts}": [
             "prettier --write",
             "eslint --fix"
         ],

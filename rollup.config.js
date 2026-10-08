@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 import sharp from 'sharp';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
@@ -23,7 +24,7 @@ async function userscriptBanner() {
         .trimEnd();
 }
 
-const sharedPlugins = () => [resolve(), commonjs()];
+const sharedPlugins = () => [resolve(), commonjs(), typescript()];
 
 function asciiEscape() {
     return {
