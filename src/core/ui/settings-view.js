@@ -349,9 +349,10 @@ export class SettingsView {
     }
 
     #setupAutoSave() {
+        if (!this.#container) return;
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
-            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            const eventType = input instanceof HTMLInputElement && input.type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, () => {
                 if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
                 this.#debounceTimer = setTimeout(async () => {
@@ -367,17 +368,16 @@ export class SettingsView {
      * @returns {object} Settings values keyed by field keys.
      */
     readValues() {
+        /** @type {Record<string, string|boolean>} */
         const values = {};
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
-            const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
-            if (input) {
-                if (field.type === 'checkbox') {
-                    values[field.key] = input.checked;
-                } else {
-                    values[field.key] = input.value;
-                }
+            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+            if (field.type === 'checkbox') {
+                if (input instanceof HTMLInputElement) values[field.key] = input.checked;
+            } else if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement) {
+                values[field.key] = input.value;
             }
         }
         return values;
@@ -394,7 +394,7 @@ export class SettingsView {
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
-            const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
+            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
             if (!input) continue;
             const error = field.validate ? field.validate(values[field.key], values) : null;
             input.classList.toggle('error', Boolean(error));
@@ -410,7 +410,7 @@ export class SettingsView {
      * @param {string} type - Status type for styling ('success', 'error', etc.).
      */
     showStatus(message, type) {
-        const status = this.#container.querySelector('[id="fm-status"]');
+        const status = this.#container?.querySelector('[id="fm-status"]');
         if (status) {
             status.textContent = message;
             status.className = type ? `status status--${type}` : 'status';
