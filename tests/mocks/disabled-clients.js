@@ -20,7 +20,9 @@ import { vi } from 'vitest';
 function buildMockDisabledClientsManager() {
     /** @type {MockDisabledClientsManager} */
     const mock = {
-        isDisabled: vi.fn().mockResolvedValue(false),
+        // Left bare so notDisabled() is the single way to ask for a client that
+        // is not locked out, rather than one spelling sharing a hidden default.
+        isDisabled: vi.fn(),
         disable: vi.fn().mockResolvedValue(undefined),
         resetAll: vi.fn().mockResolvedValue([]),
     };

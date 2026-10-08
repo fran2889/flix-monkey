@@ -38,15 +38,6 @@ function buildMockCacheManager() {
         },
 
         /**
-         * Set the delete mock to resolve with a specific value.
-         * @param {void} value
-         */
-        withDeleteResolving(value) {
-            mock.delete.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
          * @returns {import('../../src/core/cache/cache-manager.js').CacheManager} Mock CacheManager
          */
         build() {

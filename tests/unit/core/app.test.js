@@ -727,7 +727,7 @@ describe('App', () => {
         };
 
         beforeEach(() => {
-            mockCache = buildMockCacheManager().withDeleteResolving(undefined).build();
+            mockCache = buildMockCacheManager().build();
             mockOverrideManager = buildMockIdOverrideManager().build();
         });
 
