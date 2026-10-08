@@ -126,7 +126,28 @@ export default [
             'jsdoc/no-blank-block-descriptions': 'error',
         },
     },
-    // 7. License header enforcement - src and tests only (isolated block)
+    // 7. JSDoc validation for tests. require-* rules stay in src only, but the
+    // mock builders carry import()-typed typedefs that must parse and resolve.
+    {
+        files: ['tests/**/*.js'],
+        plugins: { jsdoc },
+        rules: {
+            'jsdoc/check-param-names': [
+                'error',
+                {
+                    checkRestProperty: true,
+                    checkDestructured: true,
+                },
+            ],
+            'jsdoc/check-property-names': 'error',
+            'jsdoc/check-types': 'error',
+            'jsdoc/valid-types': 'error',
+            'jsdoc/no-undefined-types': 'error',
+            'jsdoc/check-tag-names': 'error',
+            'jsdoc/check-syntax': 'error',
+        },
+    },
+    // 8. License header enforcement - src and tests only (isolated block)
     // metadata.js is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
