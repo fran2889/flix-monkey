@@ -336,20 +336,29 @@ reuse a released migration version.
 
 ### JSDoc
 
-Use JSDoc for boundaries whose callers need documented semantics to consume
-correctly, not for every method. Document abstract and cross-platform
-contracts; non-obvious exported APIs and injected collaborators; persistence,
-messaging, HTTP, and external-data boundaries; and reused shapes, unions,
+ESLint decides **whether** a JSDoc block is required. `jsdoc/require-jsdoc` runs over `src/`
+with `publicOnly`, so it covers exported classes, their public and static methods, and exported
+functions, arrow functions, and function expressions. Getters, setters, constructors, `#private`
+methods, and anything not exported need no block. Everything below decides **what** the block
+says, and a required block that merely restates the code is still a defect.
+
+Write about boundaries whose callers need documented semantics to consume correctly. Document
+abstract and cross-platform contracts; non-obvious exported APIs and injected collaborators;
+persistence, messaging, HTTP, and external-data boundaries; and reused shapes, unions,
 constrained values, and serialization formats.
 
-Document shared contracts at their defining interface or exported boundary.
-Implementations document only meaningful deviations. Use named `@typedef`s for
-reused shapes, `unknown` for untrusted input, and `import('./path.js').Type`
-for cross-module types. Explain only constraints, fallbacks, side effects, and
-lifecycle requirements that types do not convey.
+Document shared contracts at their defining interface or exported boundary. Implementations
+document only meaningful deviations. Use named `@typedef`s for reused shapes, `unknown` for
+untrusted input, and `import('./path.js').Type` for cross-module types, always naming the file
+explicitly (`./cache/index.js`, never a bare directory). Explain only constraints, fallbacks,
+side effects, and lifecycle requirements that types do not convey.
 
-Omit JSDoc for private helpers, simple pure utilities, routine DOM or UI glue,
-ordinary accessors, and self-evident primitive signatures.
+Once a block exists it must be complete: `jsdoc/require-description`, `require-param`, and
+`require-returns` are unscoped, so a required block needs a description and a tag for every
+parameter and return, including the ones that look obvious. Keep the prose to one clause and do
+not restate the signature. `element => element.parentElement` earns a description plus a bare
+`@param {Element}` and `@returns {Element|null}`, nothing more; a required block padded out to
+explain what the arrow already says is as much a defect as a missing one.
 
 - **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this: a missing or malformed header is a lint error.
 - **Conventional Commits**: Enforced by `commitlint` via a Husky `commit-msg` hook. Format: `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
