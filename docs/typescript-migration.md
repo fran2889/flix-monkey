@@ -26,21 +26,21 @@
 - [x] tests/unit/core/title.test.js → title.test.ts (commit: 73af925)
 - [x] tests/mocks/title.js → title.ts (commit: 73af925)
 
-- [ ] src/core/utils/color-utils.js → color-utils.ts
-- [ ] tests/unit/core/utils/color-utils.test.js → color-utils.test.ts
+- [x] src/core/utils/color-utils.js → color-utils.ts (commit: 3d3f743)
+- [x] tests/unit/core/utils/color-utils.test.js → color-utils.test.ts (commit: 3d3f743)
 
-- [ ] src/core/utils/general-utils.js → general-utils.ts
-- [ ] tests/unit/core/utils/general-utils.test.js → general-utils.test.ts
+- [x] src/core/utils/general-utils.js → general-utils.ts (commit: 3d3f743)
+- [x] tests/unit/core/utils/general-utils.test.js → general-utils.test.ts (commit: 3d3f743)
 
-- [ ] src/core/utils/string-utils.js → string-utils.ts
-- [ ] tests/unit/core/utils/string-utils.test.js → string-utils.test.ts
+- [x] src/core/utils/string-utils.js → string-utils.ts (commit: 3d3f743)
+- [x] tests/unit/core/utils/string-utils.test.js → string-utils.test.ts (commit: 3d3f743)
 
-- [ ] src/core/utils/url-utils.js → url-utils.ts
-- [ ] tests/unit/core/utils/url-utils.test.js → url-utils.test.ts
+- [x] src/core/utils/url-utils.js → url-utils.ts (commit: 3d3f743)
+- [x] tests/unit/core/utils/url-utils.test.js → url-utils.test.ts (commit: 3d3f743)
 
-- [ ] src/core/utils/index.js → index.ts (barrel)
+- [x] src/core/utils/index.js → index.ts (barrel) (commit: 3d3f743)
 
-- [ ] src/core/rate-limits.js → rate-limits.ts
+- [x] src/core/rate-limits.js → rate-limits.ts (commit: 3d3f743)
 
 ### Phase 2: Services & Managers (Medium risk)
 

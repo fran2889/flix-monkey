@@ -401,7 +401,7 @@ git commit -m "feat: migrate Title class and tests to TypeScript (Task 2.2)"
 - Produces: Typed utility modules
 - Consumes: No dependencies on other src files (or minimal)
 
-- [ ] **Step 1: Migrate each utility file**
+- [x] **Step 1: Migrate each utility file**
 
 For each file:
 
@@ -410,31 +410,33 @@ For each file:
 3. Use `null` instead of `undefined`
 4. Ensure all code paths return explicitly
 
-- [ ] **Step 2: Update barrel index**
+- [x] **Step 2: Update barrel index**
 
 Update `src/core/utils/index.ts` to use TypeScript exports
 
-- [ ] **Step 3: Run type-check**
+- [x] **Step 3: Run type-check**
 
 Run: `npm run type-check`
-Expected: No errors
+Expected: No errors ✓
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npm test`
-Expected: All tests pass
+Expected: All tests pass ✓
 
-- [ ] **Step 5: Run build**
+- [x] **Step 5: Run build**
 
 Run: `npm run build`
-Expected: Build succeeds
+Expected: Build succeeds ✓
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
-git add src/core/utils/*.ts tests/unit/core/utils/*.test.ts
-git commit -m "feat(ts-migration): migrate utility functions to TypeScript"
+git add -A
+git commit -m "feat: migrate utility functions to TypeScript (Task 2.3)"
 ```
+
+**Commit:** 3d3f743
 
 ---
 
