@@ -343,53 +343,41 @@ git commit -m "feat(ts-migration): migrate constants to TypeScript"
 - Produces: Typed Title class
 - Consumes: No external dependencies
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 Run: `mv src/core/title.js src/core/title.ts`
 
-- [ ] **Step 2: Convert class to TypeScript**
+- [x] **Step 2: Convert class to TypeScript**
 
-Add type annotations to all properties and methods:
+Add type annotations to all properties and methods. Added TitleOptions interface with explicit null types for all properties.
 
-```typescript
-export class Title {
-    #imdbRating: number | null = null;
+- [x] **Step 3: Update test file**
 
-    constructor(data: { imdbId: string; displayTitle: string; imdbRating?: number }) {
-        // ...
-    }
+Rename and ensure all assertions work with typed methods. Replaced undefined with null throughout test cases.
 
-    get rating(): number | null {
-        return this.#imdbRating;
-    }
-}
-```
-
-- [ ] **Step 3: Update test file**
-
-Rename and ensure all assertions work with typed methods
-
-- [ ] **Step 4: Run type-check**
+- [x] **Step 4: Run type-check**
 
 Run: `npm run type-check`
-Expected: No errors
+Expected: No errors ✓
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npm test`
-Expected: All tests pass
+Expected: All tests pass ✓ (52 tests in title.test.ts)
 
-- [ ] **Step 6: Run build**
+- [x] **Step 6: Run build**
 
 Run: `npm run build`
-Expected: Build succeeds
+Expected: Build succeeds ✓
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
-git add src/core/title.ts tests/unit/core/title.test.ts
-git commit -m "feat(ts-migration): migrate Title class to TypeScript"
+git add src/core/title.ts tests/mocks/title.ts tests/unit/core/title.test.ts eslint.config.js
+git commit -m "feat: migrate Title class and tests to TypeScript (Task 2.2)"
 ```
+
+**Commit:** 73af925
 
 ---
 

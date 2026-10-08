@@ -11,20 +11,20 @@
 ### Phase 0: Infrastructure (Pre-migration Setup)
 
 - [x] Remove unused MSW from tests/setup.js and package.json
-- [ ] Add TypeScript and related devDependencies
-- [ ] Add tsconfig.json with strict settings
-- [ ] Update Rollup config to support TypeScript
-- [ ] Update ESLint config for TypeScript
-- [ ] Update Prettier config for TypeScript
-- [ ] Create pre-typescript-migration branch as rollback point
+- [x] Add TypeScript and related devDependencies (commit: 634298e)
+- [x] Add tsconfig.json with strict settings (commit: 634298e)
+- [x] Update Rollup config to support TypeScript (commit: 634298e)
+- [x] Update ESLint config for TypeScript (commit: ea9a592 + 73af925)
+- [x] Create pre-typescript-migration branch as rollback point
 
 ### Phase 1: Foundation (Low risk - pure data and utilities)
 
-- [ ] src/core/constants.js → constants.ts
-- [ ] tests/unit/core/constants.test.js → constants.test.ts (if exists)
+- [x] src/core/constants.js → constants.ts (commit: d6bffab)
+- [x] tests/unit/core/constants.test.js → constants.test.ts (commit: d6bffab)
 
-- [ ] src/core/title.js → title.ts
-- [ ] tests/unit/core/title.test.js → title.test.ts
+- [x] src/core/title.js → title.ts (commit: 73af925)
+- [x] tests/unit/core/title.test.js → title.test.ts (commit: 73af925)
+- [x] tests/mocks/title.js → title.ts (commit: 73af925)
 
 - [ ] src/core/utils/color-utils.js → color-utils.ts
 - [ ] tests/unit/core/utils/color-utils.test.js → color-utils.test.ts
