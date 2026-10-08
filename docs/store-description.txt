@@ -4,8 +4,10 @@ Available as a Chrome extension, Firefox add-on, and Tampermonkey/Violentmonkey/
 
 ⭐ FEATURES
 • View IMDb ratings directly on Netflix, HBO Max, and Disney+ titles, with Metacritic and Rotten Tomatoes when available
+• Rating badges use gradient that transitions from red to green based on the rating
 • Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
 • Skip low-rated titles by fading out anything below your chosen IMDb threshold
+• Manually override IMDb IDs to correct search mismatches
 
 ⚙️ CUSTOMIZATION
 • Position rating badge in any corner of the thumbnail

@@ -46,12 +46,13 @@ Use the links below to install the add-on for your browser.
 ## Features
 
 - **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages; Metacritic and Rotten Tomatoes scores are available when using OMDb or XMDb providers
+- **Color-Coded Ratings**: Rating badges use gradient that transitions from red (< 5.0) to green (>= 8.5) based on the rating
 - **Click to Open**: Click rating badges to open the title's IMDb page or search IMDb when no match is found
-- **Color-Coded Ratings**: Rating badges change color based on thresholds (red < 5.0, green >= 8.5)
-- **Customizable**: Change badge position, choose rating provider, fade titles below a rating threshold, and more
-- **Smart Caching**: Fast lookups for titles you've seen before; configurable expiration per title type (old, recent, without rating)
-- **Multi-Tab Sync**: Requests and settings are synchronized across Netflix, HBO Max, and Disney+ tabs to prevent redundant lookups
+- **Fade Low-Rated Titles**: Automatically dim titles below your chosen IMDb threshold to help skip poor content
+- **IMDb ID Overrides**: Manually override IMDb IDs to correct search mismatches
+- **Smart Caching & Sync**: Fast lookups for titles you've seen before; requests and settings are synchronized across tabs to prevent redundant lookups
 - **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
+- **Customizable**: Change badge position, choose rating provider, and more
 
 ---
 
@@ -69,12 +70,12 @@ Access settings via:
 
 ### Display Options
 
-| Option                | Default                       | Description                                                                       |
-| --------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
-| Show on               | Netflix, HBO Max, and Disney+ | Run FlixMonkey on Netflix, HBO Max, and Disney+, all enabled by default           |
-| Rating Badge Position | Top Left                      | Corner where rating badges appear                                                 |
-| Rotten Tomatoes       | No                            | Display RT score. Only available when OMDb is the rating provider                 |
-| Metacritic            | No                            | Display Metacritic score. Only available when OMDb or XMDb is the rating provider |
+| Option                | Default                       | Description                                                                                  |
+| --------------------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
+| Show on               | Netflix, HBO Max, and Disney+ | Enable or disable FlixMonkey individually for each streaming service, all enabled by default |
+| Rating Badge Position | Top Left                      | Corner where rating badges appear                                                            |
+| Rotten Tomatoes       | No                            | Display RT score. Only available when OMDb is the rating provider                            |
+| Metacritic            | No                            | Display Metacritic score. Only available when OMDb or XMDb is the rating provider            |
 
 ### Rating Providers
 
@@ -86,11 +87,11 @@ Access settings via:
 
 ### Fade Settings
 
-| Option            | Default | Description                                             |
-| ----------------- | ------- | ------------------------------------------------------- |
-| Fade Below Rating | No      | Fade titles rated below the threshold                   |
-| Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)              |
-| Allow Override    | No      | Show a fade override button on supported title surfaces |
+| Option            | Default | Description                                                                                                |
+| ----------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| Fade Below Rating | No      | Fade titles rated below the threshold                                                                      |
+| Fade threshold    | 6.0     | IMDb rating below which to fade (0.0-10.0)                                                                 |
+| Allow Override    | No      | Show a fade override button on supported title surfaces that cycles through Auto, Always, and Never states |
 
 ### Cache Settings
 
