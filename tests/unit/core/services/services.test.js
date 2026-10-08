@@ -42,6 +42,7 @@ describe.each([
 
         expect(service.SurfaceManager).toBe(SurfaceManager);
         expect(service.isEnabled(config)).toBe(false);
+        expect(getBoolSpy).toHaveBeenCalledTimes(1);
         expect(getBoolSpy).toHaveBeenCalledWith(configKey);
     });
 });
