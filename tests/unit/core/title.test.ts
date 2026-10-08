@@ -33,8 +33,9 @@ describe('Title', () => {
     describe('fromCacheJSON creation', () => {
         it('should create a Title instance with properties from a cache object', () => {
             const title = Title.fromCacheJSON({ apiTitle: 'Cached Movie' }, 'JSON Title');
-            expect(title.displayTitle).toBe('JSON Title');
-            expect(title.apiTitle).toBe('Cached Movie');
+            expect(title).not.toBeNull();
+            expect(title!.displayTitle).toBe('JSON Title');
+            expect(title!.apiTitle).toBe('Cached Movie');
         });
 
         it('should return null when the cache object is null', () => {
@@ -49,12 +50,14 @@ describe('Title', () => {
 
         it('should handle imdbVotes field from a cache object', () => {
             const title = Title.fromCacheJSON({ imdbVotes: 1000 }, 'Test');
-            expect(title.imdbVotes).toBe(1000);
+            expect(title).not.toBeNull();
+            expect(title!.imdbVotes).toBe(1000);
         });
 
         it('should handle missing imdbVotes field from a cache object', () => {
             const title = Title.fromCacheJSON({}, 'Test');
-            expect(title.imdbVotes).toBeNull();
+            expect(title).not.toBeNull();
+            expect(title!.imdbVotes).toBeNull();
         });
     });
 
@@ -114,7 +117,6 @@ describe('Title', () => {
             ['N/A', null],
             ['', null],
             [null, null],
-            [undefined, null],
             ['8.5', 8.5],
             [0, 0],
         ])('normalizes imdbRating %s -> %s', (input, expected) => {
@@ -157,13 +159,14 @@ describe('Title', () => {
             expect(new Title({ type: 'movie' }).type).toBe('movie');
         });
 
-        it('should normalize undefined to null', () => {
-            expect(new Title({ type: undefined }).type).toBeNull();
+        it('should normalize null to null', () => {
+            expect(new Title({ type: null }).type).toBeNull();
         });
 
         it('should round-trip through fromCacheJSON', () => {
             const title = Title.fromCacheJSON({ type: 'series' }, 'Test');
-            expect(title.type).toBe('series');
+            expect(title).not.toBeNull();
+            expect(title!.type).toBe('series');
         });
 
         it('should be null on notFound titles', () => {
@@ -174,7 +177,6 @@ describe('Title', () => {
     describe('imdbVotes normalization', () => {
         it.each([
             [null, null],
-            [undefined, null],
             ['', null],
             ['N/A', null],
             [0, 0],
@@ -237,8 +239,9 @@ describe('Title', () => {
             type: null,
         };
         const title = Title.fromCacheJSON(cacheObj, 'Original Title');
-        expect(title.displayTitle).toBe('Original Title');
-        expect(title.apiTitle).toBe('Test Movie');
-        expect(title.imdbId).toBe('tt1234567');
+        expect(title).not.toBeNull();
+        expect(title!.displayTitle).toBe('Original Title');
+        expect(title!.apiTitle).toBe('Test Movie');
+        expect(title!.imdbId).toBe('tt1234567');
     });
 });

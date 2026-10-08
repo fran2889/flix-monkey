@@ -67,6 +67,13 @@ export default [
             '@typescript-eslint/no-non-null-assertion': 'warn',
         },
     },
+    // 2.5. Disable non-null-assertion warnings in test files
+    {
+        files: ['tests/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-non-null-assertion': 'off',
+        },
+    },
     // 3. Production code must document intentional no-op functions.
     {
         files: ['src/**/*.js', 'src/**/*.ts', 'scripts/**/*.js'],

@@ -2,28 +2,47 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+// @ts-expect-error - utils/index.js not yet migrated to TypeScript, will be fixed in Task 2.3
 import { buildImdbUrl } from './utils/index.js';
+
+/**
+ * Options for creating a Title instance.
+ */
+export interface TitleOptions {
+    displayTitle?: string | null;
+    apiTitle?: string | null;
+    imdbId?: string | null;
+    year?: string | number | null;
+    imdbRating?: string | number | null;
+    imdbVotes?: string | number | null;
+    rtRating?: string | number | null;
+    mcRating?: string | number | null;
+    source?: string | null;
+    type?: string | null;
+}
 
 /**
  * Immutable data class representing a movie or show with its ratings.
  *
- * Rating values are normalised during construction: `null`, `undefined`, empty
+ * Rating values are normalised during construction: `null`, empty
  * strings, and `"N/A"` are all collapsed to `null`; numeric strings are parsed
  * to the appropriate number type per field.
  */
 export class Title {
-    displayTitle;
-    apiTitle;
-    imdbId;
-    year;
-    imdbRating;
-    imdbVotes;
-    rtRating;
-    mcRating;
-    source;
-    type;
+    displayTitle: string | null;
+    apiTitle: string | null;
+    imdbId: string | null;
+    year: number | null;
+    imdbRating: number | null;
+    imdbVotes: number | null;
+    rtRating: number | null;
+    mcRating: number | null;
+    source: string | null;
+    type: string | null;
 
-    /** @param {import('../types/title.js').TitleOptions} [options] */
+    /**
+     * @param {TitleOptions} [options]
+     */
     constructor({
         displayTitle = null,
         apiTitle = null,
@@ -35,24 +54,24 @@ export class Title {
         mcRating = null,
         source = null,
         type = null,
-    } = {}) {
+    }: TitleOptions = {}) {
         this.displayTitle = displayTitle;
         this.apiTitle = apiTitle;
         this.imdbId = imdbId;
-        this.year = year !== null ? Number.parseInt(year, 10) : null;
-        this.imdbRating = this.#normalizeRating(imdbRating, v => {
-            const num = Number.parseFloat(v);
+        this.year = year !== null ? Number.parseInt(year as string, 10) : null;
+        this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
+            const num = Number.parseFloat(v as string);
             return Number.isNaN(num) ? null : num;
         });
-        this.imdbVotes = this.#normalizeRating(imdbVotes, v => {
-            const num = Number.parseInt(v, 10);
+        this.imdbVotes = this.#normalizeRating(imdbVotes, (v: unknown) => {
+            const num = Number.parseInt(v as string, 10);
             return Number.isNaN(num) ? null : num;
         });
-        this.rtRating = this.#normalizeRating(rtRating, v => {
-            const num = Number.parseInt(v, 10);
+        this.rtRating = this.#normalizeRating(rtRating, (v: unknown) => {
+            const num = Number.parseInt(v as string, 10);
             return Number.isNaN(num) ? null : num;
         });
-        this.mcRating = this.#normalizeRating(mcRating, v => {
+        this.mcRating = this.#normalizeRating(mcRating, (v: unknown) => {
             const m = /^(\d+)/.exec(String(v));
             return m ? Number.parseInt(m[1], 10) : null;
         });
@@ -64,26 +83,26 @@ export class Title {
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {object} Title fields without displayTitle
+     * @returns {Omit<Title, 'displayTitle'>} Title fields without displayTitle
      */
-    toCacheJSON() {
+    toCacheJSON(): Omit<Title, 'displayTitle'> {
         const rest = { ...this };
-        delete rest.displayTitle;
-        return rest;
+        delete (rest as { displayTitle?: string | null }).displayTitle;
+        return rest as Omit<Title, 'displayTitle'>;
     }
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
      * @param {object} obj - Cache data object without displayTitle
-     * @param {string|null} displayTitle - Display title from cache entry
-     * @returns {Title} New Title instance
+     * @param {string | null} displayTitle - Display title from cache entry
+     * @returns {Title | null} New Title instance or null if invalid
      */
-    static fromCacheJSON(obj, displayTitle) {
+    static fromCacheJSON(obj: unknown, displayTitle: string | null): Title | null {
         if (!obj || typeof obj !== 'object') return null;
-        return new Title({ ...obj, displayTitle });
+        return new Title({ ...(obj as object), displayTitle });
     }
 
-    #normalizeRating(val, converter) {
+    #normalizeRating(val: unknown, converter: (_v: unknown) => number | null): number | null {
         if (val === null || val === undefined || val === '' || val === 'N/A') return null;
         return converter(val);
     }
@@ -93,7 +112,7 @@ export class Title {
      *
      * @returns {boolean}
      */
-    get hasRating() {
+    get hasRating(): boolean {
         return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
     }
 
@@ -101,15 +120,15 @@ export class Title {
      * @returns {string} IMDb URL for this title. Falls back to an IMDb search
      *   URL when `imdbId` is not available.
      */
-    get imdbUrl() {
+    get imdbUrl(): string {
         return buildImdbUrl({ imdbId: this.imdbId, displayTitle: this.displayTitle });
     }
 
     /**
-     * @param {import('../types/title.js').ApiSourceValue} source - API source that produced this title.
+     * @param {string | null} source - API source that produced this title.
      * @returns {Title} A new immutable Title with this source.
      */
-    withSource(source) {
+    withSource(source: string | null): Title {
         return new Title({ ...this, source });
     }
 
@@ -117,10 +136,10 @@ export class Title {
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
-     * @param {import('../types/title.js').ApiSourceValue|null} [source=null] - API source that produced the miss.
+     * @param {string | null} [source=null] - API source that produced the miss.
      * @returns {Title}
      */
-    static notFound(displayTitle, source = null) {
+    static notFound(displayTitle: string, source: string | null = null): Title {
         return new Title({ displayTitle, source });
     }
 }

@@ -6,7 +6,18 @@ import { Title } from '../../src/core/title.js';
 
 function buildTitle() {
     // Default all Title fields to null for consistency
-    const props = {
+    const props: {
+        displayTitle: string | null;
+        apiTitle: string | null;
+        imdbId: string | null;
+        imdbRating: string | number | null;
+        imdbVotes: string | number | null;
+        rtRating: string | number | null;
+        mcRating: string | number | null;
+        year: string | number | null;
+        source: string | null;
+        type: string | null;
+    } = {
         displayTitle: null,
         apiTitle: null,
         imdbId: null,
@@ -19,43 +30,43 @@ function buildTitle() {
         type: null,
     };
     return {
-        withDisplayTitle(value) {
+        withDisplayTitle(value: string | null) {
             props.displayTitle = value;
             return this;
         },
-        withApiTitle(value) {
+        withApiTitle(value: string | null) {
             props.apiTitle = value;
             return this;
         },
-        withImdbId(value) {
+        withImdbId(value: string | null) {
             props.imdbId = value;
             return this;
         },
-        withImdbRating(value) {
+        withImdbRating(value: string | number | null) {
             props.imdbRating = value;
             return this;
         },
-        withImdbVotes(value) {
+        withImdbVotes(value: string | number | null) {
             props.imdbVotes = value;
             return this;
         },
-        withRtRating(value) {
+        withRtRating(value: string | number | null) {
             props.rtRating = value;
             return this;
         },
-        withMcRating(value) {
+        withMcRating(value: string | number | null) {
             props.mcRating = value;
             return this;
         },
-        withYear(value) {
+        withYear(value: string | number | null) {
             props.year = value;
             return this;
         },
-        withSource(value) {
+        withSource(value: string | null) {
             props.source = value;
             return this;
         },
-        withType(value) {
+        withType(value: string | null) {
             props.type = value;
             return this;
         },
@@ -102,7 +113,7 @@ buildTitle.missingImdbId = () => {
 };
 
 // Parametrized presets
-buildTitle.withRating = rating => {
+buildTitle.withRating = (rating: string | number | null) => {
     return buildTitle()
         .withImdbId('tt1234567')
         .withImdbRating(rating)
@@ -111,19 +122,25 @@ buildTitle.withRating = rating => {
         .build();
 };
 
-buildTitle.fromCacheJSON = json => {
-    return buildTitle()
-        .withApiTitle(json.apiTitle ?? null)
-        .withDisplayTitle(json.displayTitle ?? null)
-        .withImdbId(json.imdbId ?? null)
-        .withImdbRating(json.imdbRating ?? null)
-        .withImdbVotes(json.imdbVotes ?? null)
-        .withRtRating(json.rtRating ?? null)
-        .withMcRating(json.mcRating ?? null)
-        .withYear(json.year ?? null)
-        .withSource(json.source ?? null)
-        .withType(json.type ?? null)
-        .build();
+function extractFromObj(obj: Record<string, unknown> | null | undefined, key: string): unknown {
+    return obj?.[key];
+}
+
+buildTitle.fromCacheJSON = (json: unknown) => {
+    const obj = json as Record<string, unknown> | null;
+    if (!obj) return null;
+    return new Title({
+        apiTitle: (extractFromObj(obj, 'apiTitle') as string | null) ?? null,
+        displayTitle: (extractFromObj(obj, 'displayTitle') as string | null) ?? null,
+        imdbId: (extractFromObj(obj, 'imdbId') as string | null) ?? null,
+        imdbRating: (extractFromObj(obj, 'imdbRating') as string | number | null) ?? null,
+        imdbVotes: (extractFromObj(obj, 'imdbVotes') as string | number | null) ?? null,
+        rtRating: (extractFromObj(obj, 'rtRating') as string | number | null) ?? null,
+        mcRating: (extractFromObj(obj, 'mcRating') as string | number | null) ?? null,
+        year: (extractFromObj(obj, 'year') as string | number | null) ?? null,
+        source: (extractFromObj(obj, 'source') as string | null) ?? null,
+        type: (extractFromObj(obj, 'type') as string | null) ?? null,
+    });
 };
 
 export { buildTitle };
