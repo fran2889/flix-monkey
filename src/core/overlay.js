@@ -93,7 +93,7 @@ export class OverlayRenderer {
      * @param {HTMLElement} container - Surface container to inject into.
      * @param {import('./title.js').Title} titleObj - Resolved title data to render.
      * @param {'always'|'never'|null} fadeToggleState - Stored fade override, or null for auto.
-     * @param {((state: string|null) => void)|null} onFadeToggleClick - Fade toggle handler, or null when the toggle is hidden.
+     * @param {((element: HTMLElement) => void)|null} onFadeToggleClick - Fade toggle handler, invoked with the clicked toggle, or null when the toggle is hidden.
      * @param {(displayTitle: string) => void} onEditClick - Edit icon handler.
      * @param {(displayTitle: string) => void} onRefreshClick - Refresh icon handler.
      * @param {string} displayTitle - Title as shown by the streaming service; also the IMDb search term.
