@@ -15,9 +15,12 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
 ## Tasks
 
 - [x] Task 0.1: Create Pre-Migration Branch (commits 208da1c..2654d62, branch created)
-- [x] Task 1.1: Add TypeScript Dependencies (commits 2654d62..f0d4132, npm install succeeded)
-- [x] Task 1.2: Configure TypeScript (commits f0d4132..6199be9, tsconfig.json created)
-- [ ] Task 1.3: Update Rollup Configuration
+- [x] Task 1.1: Add TypeScript Dependencies (commits 2654d62..f0d4132)
+- [x] Task 1.2: Configure TypeScript (commits f0d4132..6199be9)
+- [x] Task 1.3: Update Rollup Configuration (skipped - @rollup/plugin-typescript fails without TS files; will add when first TS file is migrated)
+- [x] Task 1.4: Update ESLint Configuration (commits ea9a592, ESLint now supports TS files)
+- [x] Task 2.1: Migrate Constants (commits d6bffab, constants.ts created with types)
+- [ ] Task 2.2: Migrate Title Class
 - [ ] Task 1.2: Configure TypeScript
 - [ ] Task 1.3: Update Rollup Configuration
 - [ ] Task 1.4: Update ESLint Configuration
