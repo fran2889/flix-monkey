@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "exactOptionalPropertyTypes": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "outDir": "./dist-tsc"
+    },
+    "include": ["src/**/*", "tests/**/*"],
+    "exclude": ["**/*.config.js", "scripts/**/*"]
+}
