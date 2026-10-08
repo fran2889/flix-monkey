@@ -214,6 +214,27 @@ describe('SettingsView', () => {
             expect(values).toHaveProperty('enabledField');
             expect(values).not.toHaveProperty('disabledField');
         });
+
+        it('skips fields whose element is neither an input nor a select in readValues', () => {
+            const fields = [
+                { key: 'textField', type: 'text', default: '' },
+                { key: 'checkboxField', type: 'checkbox', default: false },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            // Replace both rendered inputs with elements outside the union
+            // readValues narrows to, as a future field type carrying its value
+            // some other way would produce.
+            const textarea = document.createElement('textarea');
+            textarea.id = 'fm-textField';
+            container.querySelector('#fm-textField').replaceWith(textarea);
+            const div = document.createElement('div');
+            div.id = 'fm-checkboxField';
+            container.querySelector('#fm-checkboxField').replaceWith(div);
+
+            expect(view.readValues()).toEqual({});
+        });
     });
 
     describe('Validation', () => {
