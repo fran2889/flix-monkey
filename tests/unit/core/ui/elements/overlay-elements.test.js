@@ -370,7 +370,7 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-ratings-wrapper')).not.toBeNull();
         });
 
-        it('should add imdb-row element when actions are present', () => {
+        it('should always add the imdb-row element', () => {
             const onEditClick = vi.fn();
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
@@ -380,7 +380,7 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-imdb-row')).not.toBeNull();
         });
 
-        it('should add actions container when handlers are present', () => {
+        it('should always add the actions container', () => {
             const onEditClick = vi.fn();
             const onRefreshClick = vi.fn();
             const element = createOverlay(
