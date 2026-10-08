@@ -23,7 +23,7 @@ function buildMockApiClient() {
     /** @type {MockApiClient} */
     const mock = {
         source: ApiSource.AGREGARR,
-        getStatus: vi.fn(),
+        getStatus: vi.fn().mockResolvedValue({ healthy: true }),
         fetch: vi.fn(),
         disable: vi.fn(),
         queuedFetch: vi.fn(),
