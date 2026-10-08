@@ -442,7 +442,7 @@ describe('AgregarrApiClient', () => {
             expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
         });
 
-        it('should disable client when override fetch fails', async () => {
+        it('should not disable the client when getDetails resolves without a match', async () => {
             const mockDisabledManager = buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
             const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
 
@@ -460,12 +460,12 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            // Current behavior: returns a Title with the override ID when getDetails returns null
+            // An override that resolves with no match yields a Title carrying the override ID
             expect(result).toBeInstanceOf(Title);
             expect(result.imdbId).toBe('tt9999999');
             expect(result.displayTitle).toBe('Test Movie');
             expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            // Note: disable is NOT called when getDetails returns null (only when it throws)
+            // A null getDetails is a miss, not a provider failure, so the client stays enabled
             expect(mockDisabledManager.disable).not.toHaveBeenCalled();
         });
 
