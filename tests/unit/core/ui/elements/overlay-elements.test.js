@@ -436,9 +436,13 @@ describe('createOverlayElement', () => {
         });
 
         it('should always render both action icons', () => {
+            // Handlers are required, so passing none is off-contract. They are
+            // overridden explicitly rather than left to defaultOptions so this
+            // case exercises the unconditional render instead of inheriting the
+            // no-op handlers the other cases use.
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { displayTitle: 'Test Movie' }
+                { displayTitle: 'Test Movie', onEditClick: undefined, onRefreshClick: undefined }
             );
 
             const iconButtons = element.querySelectorAll('.fm-icon-btn');
