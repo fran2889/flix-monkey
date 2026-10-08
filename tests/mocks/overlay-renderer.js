@@ -39,29 +39,11 @@ function buildMockOverlayRenderer() {
 
     return {
         /**
-         * Set the hasOverlay mock implementation.
-         * @param {(container: HTMLElement) => boolean} impl
-         */
-        withHasOverlay(impl) {
-            mock.hasOverlay.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the hasOverlay mock to return a specific value.
          * @param {boolean} value
          */
         withHasOverlayReturning(value) {
             mock.hasOverlay.mockReturnValue(value);
-            return this;
-        },
-
-        /**
-         * Set the isLoading mock implementation.
-         * @param {(container: HTMLElement) => boolean} impl
-         */
-        withIsLoading(impl) {
-            mock.isLoading.mockImplementation(impl);
             return this;
         },
 
@@ -75,42 +57,6 @@ function buildMockOverlayRenderer() {
         },
 
         /**
-         * Set the injectOverlay mock implementation.
-         * @param {(container: HTMLElement, titleObj: import('../../src/core/title.js').Title, fadeToggleState: 'always'|'never'|null, onFadeToggleClick: ((state: string|null) => void)|null, onEditClick: (displayTitle: string) => void, onRefreshClick: (displayTitle: string) => void, displayTitle: string) => void} impl
-         */
-        withInjectOverlay(impl) {
-            mock.injectOverlay.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the removeLoadingOverlay mock implementation.
-         * @param {(container: HTMLElement) => void} impl
-         */
-        withRemoveLoadingOverlay(impl) {
-            mock.removeLoadingOverlay.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the applyFade mock implementation.
-         * @param {(container: HTMLElement, shouldFade: boolean) => void} impl
-         */
-        withApplyFade(impl) {
-            mock.applyFade.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the clearAllOverlays mock implementation.
-         * @param {() => void} impl
-         */
-        withClearAllOverlays(impl) {
-            mock.clearAllOverlays.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * @returns {import('../../src/core/overlay.js').OverlayRenderer} Mock OverlayRenderer
          */
         build() {
@@ -118,14 +64,5 @@ function buildMockOverlayRenderer() {
         },
     };
 }
-
-// Static presets
-buildMockOverlayRenderer.empty = () => {
-    return buildMockOverlayRenderer().build();
-};
-
-buildMockOverlayRenderer.withNoOverlays = () => {
-    return buildMockOverlayRenderer().withHasOverlayReturning(false).withIsLoadingReturning(false).build();
-};
 
 export { buildMockOverlayRenderer };

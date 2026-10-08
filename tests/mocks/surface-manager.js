@@ -23,15 +23,6 @@ function buildMockSurfaceManager() {
 
     return {
         /**
-         * Set the discover mock implementation.
-         * @param {(root: Element|Document) => import('../../src/types/surfaces.js').DiscoveredSurface[]} impl
-         */
-        withDiscover(impl) {
-            mock.discover.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the discover mock to return a specific value.
          * @param {import('../../src/types/surfaces.js').DiscoveredSurface[]} value
          */
@@ -58,26 +49,5 @@ function buildMockSurfaceManager() {
         },
     };
 }
-
-// Static presets
-buildMockSurfaceManager.empty = () => {
-    return buildMockSurfaceManager().withDiscoverReturningEmpty().build();
-};
-
-/**
- * @param {import('../../src/types/surfaces.js').DiscoveredSurface} [surface] - Surface the manager should discover.
- */
-buildMockSurfaceManager.withSingleSurface = (
-    surface = { container: document.createElement('div'), title: 'Test Title', fadeable: false, showFadeToggle: false }
-) => {
-    return buildMockSurfaceManager().withDiscoverReturning([surface]).build();
-};
-
-/**
- * @param {import('../../src/types/surfaces.js').DiscoveredSurface[]} surfaces - Surfaces the manager should discover.
- */
-buildMockSurfaceManager.withMultipleSurfaces = surfaces => {
-    return buildMockSurfaceManager().withDiscoverReturning(surfaces).build();
-};
 
 export { buildMockSurfaceManager };

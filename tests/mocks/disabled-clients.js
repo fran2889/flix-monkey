@@ -27,15 +27,6 @@ function buildMockDisabledClientsManager() {
 
     return {
         /**
-         * Set the isDisabled mock implementation.
-         * @param {(source: import('../../src/types/title.js').ApiSourceValue) => Promise<boolean>} impl
-         */
-        withIsDisabled(impl) {
-            mock.isDisabled.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the isDisabled mock to resolve with a specific value.
          * @param {boolean} value
          */
@@ -45,38 +36,11 @@ function buildMockDisabledClientsManager() {
         },
 
         /**
-         * Set the disable mock implementation.
-         * @param {(source: import('../../src/types/title.js').ApiSourceValue, durationMs: number) => Promise<void>} impl
-         */
-        withDisable(impl) {
-            mock.disable.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the disable mock to resolve with a specific value.
          * @param {void} value
          */
         withDisableResolving(value) {
             mock.disable.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the resetAll mock implementation.
-         * @param {() => Promise<import('../../src/types/title.js').ApiSourceValue[]>} impl
-         */
-        withResetAll(impl) {
-            mock.resetAll.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the resetAll mock to resolve with a specific value.
-         * @param {import('../../src/types/title.js').ApiSourceValue[]} value
-         */
-        withResetAllResolving(value) {
-            mock.resetAll.mockResolvedValue(value);
             return this;
         },
 
@@ -92,10 +56,6 @@ function buildMockDisabledClientsManager() {
 }
 
 // Static presets
-buildMockDisabledClientsManager.disabled = () => {
-    return buildMockDisabledClientsManager().withIsDisabledResolving(true).build();
-};
-
 buildMockDisabledClientsManager.notDisabled = () => {
     return buildMockDisabledClientsManager().withIsDisabledResolving(false).build();
 };

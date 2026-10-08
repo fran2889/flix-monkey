@@ -27,51 +27,6 @@ function buildMockFadeManager() {
 
     return {
         /**
-         * Set the getOverride mock implementation.
-         * @param {(dedupKey: string) => Promise<'always'|'never'|null>} impl
-         */
-        withGetOverride(impl) {
-            mock.getOverride.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the getOverride mock to resolve with a specific value.
-         * @param {'always'|'never'|null} value
-         */
-        withGetOverrideResolving(value) {
-            mock.getOverride.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the setOverride mock implementation.
-         * @param {(dedupKey: string, state: 'always'|'never'|null) => Promise<void>} impl
-         */
-        withSetOverride(impl) {
-            mock.setOverride.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the setOverride mock to resolve with a specific value.
-         * @param {void} value
-         */
-        withSetOverrideResolving(value) {
-            mock.setOverride.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the shouldFade mock implementation.
-         * @param {(override: string|null, rating: number|null) => boolean} impl
-         */
-        withShouldFade(impl) {
-            mock.shouldFade.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the shouldFade mock to return a specific value.
          * @param {boolean} value
          */
@@ -88,22 +43,5 @@ function buildMockFadeManager() {
         },
     };
 }
-
-// Static presets
-buildMockFadeManager.empty = () => {
-    return buildMockFadeManager().build();
-};
-
-buildMockFadeManager.alwaysFade = () => {
-    return buildMockFadeManager().withGetOverrideResolving('always').withShouldFadeReturning(true).build();
-};
-
-buildMockFadeManager.neverFade = () => {
-    return buildMockFadeManager().withGetOverrideResolving('never').withShouldFadeReturning(false).build();
-};
-
-buildMockFadeManager.autoFade = () => {
-    return buildMockFadeManager().withGetOverrideResolving(null).withShouldFadeReturning(false).build();
-};
 
 export { buildMockFadeManager };

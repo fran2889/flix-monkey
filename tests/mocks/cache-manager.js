@@ -38,47 +38,11 @@ function buildMockCacheManager() {
         },
 
         /**
-         * Set the write mock implementation.
-         * @param {(displayTitle: string, titleObj: import('../../src/core/title.js').Title) => Promise<void>} impl
-         */
-        withWriteMock(impl) {
-            mock.write.mockImplementation(impl);
-            return this;
-        },
-
-        /**
          * Set the delete mock to resolve with a specific value.
          * @param {void} value
          */
         withDeleteResolving(value) {
             mock.delete.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the delete mock implementation.
-         * @param {(displayTitle: string) => Promise<void>} impl
-         */
-        withDeleteMock(impl) {
-            mock.delete.mockImplementation(impl);
-            return this;
-        },
-
-        /**
-         * Set the clear mock to resolve with a specific value.
-         * @param {void} value
-         */
-        withClearResolving(value) {
-            mock.clear.mockResolvedValue(value);
-            return this;
-        },
-
-        /**
-         * Set the clear mock implementation.
-         * @param {() => Promise<void>} impl
-         */
-        withClearMock(impl) {
-            mock.clear.mockImplementation(impl);
             return this;
         },
 
@@ -92,17 +56,4 @@ function buildMockCacheManager() {
         },
     };
 }
-
-// Static presets
-buildMockCacheManager.empty = () => {
-    return buildMockCacheManager().withReadResolving(null).build();
-};
-
-/**
- * @param {import('../../src/core/cache/cache-entry.js').CacheEntry|null} entry
- */
-buildMockCacheManager.withEntry = entry => {
-    return buildMockCacheManager().withReadResolving(entry).build();
-};
-
 export { buildMockCacheManager };
