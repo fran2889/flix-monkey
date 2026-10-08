@@ -20,7 +20,7 @@ export class SettingsUI {
      *
      * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter.
      * @param {import('../logger.js').Logger} logger - Logger for error reporting.
-     * @param {import('../cache/').CacheManager} cacheManager - Cache manager for clearing data.
+     * @param {import('../cache/index.js').CacheManager} cacheManager - Cache manager for clearing data.
      * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager - Manager for disabled API clients.
      * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS] - Configuration field definitions.
      */

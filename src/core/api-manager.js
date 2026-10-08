@@ -4,7 +4,7 @@
  */
 import { Title } from './title.js';
 
-/** @typedef {import('./cache/').CacheEntry} CacheEntry */
+/** @typedef {import('./cache/index.js').CacheEntry} CacheEntry */
 
 /**
  * Manages API clients, caching, and coordinates fetching rating data.
@@ -19,7 +19,7 @@ export class ApiClientManager {
      * Creates a manager over the configured API client and its collaborators.
      *
      * @param {import('./logger.js').Logger} logger - Diagnostic sink for lookup and failure paths.
-     * @param {import('./cache/').CacheManager} cache - Title cache consulted before hitting the network.
+     * @param {import('./cache/index.js').CacheManager} cache - Title cache consulted before hitting the network.
      * @param {import('./disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
      * @param {import('./api/base-api-client.js').BaseApiClient} client - Active provider used for lookups.
      */
