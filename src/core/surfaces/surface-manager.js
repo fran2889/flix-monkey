@@ -3,8 +3,28 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+/**
+ * Builds a title resolver that reads the title from an element attribute.
+ *
+ * @param {string} attribute - Attribute holding the title, for example `data-title`.
+ * @returns {(element: Element) => string|null} Reads the attribute from the given element.
+ */
 const titleFromAttribute = attribute => element => element.getAttribute(attribute);
+
+/**
+ * Builds a container resolver that walks up the tree with closest().
+ *
+ * @param {string} selector - Selector identifying the surface container.
+ * @returns {(element: Element) => Element|null} Nearest matching ancestor, or null.
+ */
 const containerFromClosest = selector => element => element.closest(selector);
+
+/**
+ * Resolves the surface container as the element's parent.
+ *
+ * @param {Element} element - Surface content element.
+ * @returns {Element|null} Parent element serving as the container.
+ */
 const containerFromParent = element => element.parentElement;
 
 /**

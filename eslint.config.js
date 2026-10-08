@@ -90,14 +90,12 @@ export default [
             'jsdoc/require-jsdoc': [
                 'error',
                 {
-                    require: {
-                        MethodDefinition: false,
-                        ClassDeclaration: false,
-                    },
                     publicOnly: true,
                     contexts: [
                         'ClassDeclaration',
                         'FunctionDeclaration',
+                        'ArrowFunctionExpression',
+                        'FunctionExpression',
                         'MethodDefinition:not([kind="get"]):not([kind="set"]):not([kind="constructor"])',
                     ],
                 },
