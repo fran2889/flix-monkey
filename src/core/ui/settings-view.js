@@ -348,8 +348,21 @@ export class SettingsView {
         return status;
     }
 
+    /**
+     * Returns the container passed to render(), which every DOM-reading method
+     * requires.
+     *
+     * @returns {HTMLElement} The rendered container.
+     * @throws {Error} If render() has not run yet.
+     */
+    #requireContainer() {
+        if (!this.#container) {
+            throw new Error('SettingsView: render() must run before reading the settings form');
+        }
+        return this.#container;
+    }
+
     #setupAutoSave() {
-        if (!this.#container) return;
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
             const eventType = input instanceof HTMLInputElement && input.type === 'checkbox' ? 'change' : 'input';
@@ -373,7 +386,7 @@ export class SettingsView {
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
-            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+            const input = this.#requireContainer().querySelector(`[id="fm-${field.key}"]`);
             if (field.type === 'checkbox') {
                 if (input instanceof HTMLInputElement) values[field.key] = input.checked;
             } else if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement) {
@@ -394,7 +407,7 @@ export class SettingsView {
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
-            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+            const input = this.#requireContainer().querySelector(`[id="fm-${field.key}"]`);
             if (!input) continue;
             const error = field.validate ? field.validate(values[field.key], values) : null;
             input.classList.toggle('error', Boolean(error));
@@ -410,7 +423,7 @@ export class SettingsView {
      * @param {string} type - Status type for styling ('success', 'error', etc.).
      */
     showStatus(message, type) {
-        const status = this.#container?.querySelector('[id="fm-status"]');
+        const status = this.#requireContainer().querySelector('[id="fm-status"]');
         if (status) {
             status.textContent = message;
             status.className = type ? `status status--${type}` : 'status';

@@ -283,6 +283,16 @@ describe('SettingsView', () => {
         });
     });
 
+    describe('Pre-render access', () => {
+        it('throws rather than reporting empty values before render', () => {
+            view = new SettingsView(CONFIG_FIELDS, actions);
+
+            expect(() => view.readValues()).toThrow(/render\(\)/);
+            expect(() => view.validate({})).toThrow(/render\(\)/);
+            expect(() => view.showStatus('Cache cleared.', 'success')).toThrow(/render\(\)/);
+        });
+    });
+
     describe('Auto-save', () => {
         beforeEach(() => {
             vi.useFakeTimers();
