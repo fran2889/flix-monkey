@@ -12,13 +12,14 @@ async function clearCache(adapter) {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-/** @type {import('../types/migrations.js').StorageMigration[]} */
+/** @type {readonly import('../types/migrations.js').StorageMigration[]} */
 const MIGRATIONS = Object.freeze([
     {
         version: 1,
         description: 'Rename cached Title.rating to Title.imdbRating',
         upgrade: async adapter => {
             const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+            /** @type {Record<string, string>} */
             const updates = {};
             let migrated = 0;
             let skipped = 0;
@@ -28,7 +29,7 @@ const MIGRATIONS = Object.freeze([
                 const raw = await adapter.storageGet(key);
                 let entry;
                 try {
-                    entry = JSON.parse(raw);
+                    entry = JSON.parse(String(raw));
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
@@ -60,6 +61,7 @@ const MIGRATIONS = Object.freeze([
         description: 'Pull displayTitle and imdbId to cache entry top level',
         upgrade: async adapter => {
             const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+            /** @type {Record<string, string>} */
             const updates = {};
             let migrated = 0;
             let skipped = 0;
@@ -69,7 +71,7 @@ const MIGRATIONS = Object.freeze([
                 const raw = await adapter.storageGet(key);
                 let entry;
                 try {
-                    entry = JSON.parse(raw);
+                    entry = JSON.parse(String(raw));
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
@@ -135,7 +137,7 @@ export function getMigrationByVersion(version) {
  *
  * @param {import('../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter for version persistence.
  * @param {{ info: Function, error: Function }} logger - Logger for migration progress and error reporting.
- * @param {import('../types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
+ * @param {readonly import('../types/migrations.js').StorageMigration[]} [migrations=MIGRATIONS] - Migration array to execute.
  * @returns {Promise<void>} Resolves when all applicable migrations have been executed.
  */
 export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
