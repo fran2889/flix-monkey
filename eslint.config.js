@@ -126,8 +126,10 @@ export default [
             'jsdoc/no-blank-block-descriptions': 'error',
         },
     },
-    // 7. JSDoc validation for tests. require-* rules stay in src only, but the
-    // mock builders carry import()-typed typedefs that must parse and resolve.
+    // 7. JSDoc validation for tests. The require-* rules stay in src only, so an
+    // undocumented test helper is still allowed; the rules below only inspect
+    // blocks that already exist, which is what the mock builders need, since
+    // they carry import()-typed typedefs that must parse and resolve.
     {
         files: ['tests/**/*.js'],
         plugins: { jsdoc },
