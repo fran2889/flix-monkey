@@ -7,7 +7,7 @@
  * Accessible modal dialog component for settings and other UI overlays.
  */
 export class Modal {
-    /** @type {Element|null} */
+    /** @type {HTMLElement|null} */
     #returnFocus = null;
     /** @type {((event: KeyboardEvent) => void)|null} */
     #escHandler = null;
@@ -57,7 +57,8 @@ export class Modal {
     open() {
         if (this.#escHandler) return;
         document.body.appendChild(this.overlay);
-        this.#returnFocus = document.activeElement;
+        const active = document.activeElement;
+        this.#returnFocus = active instanceof HTMLElement ? active : null;
         this.overlay.style.display = 'flex';
         this.overlay.querySelector('.fm-modal-content').focus();
         this.#escHandler = e => {
