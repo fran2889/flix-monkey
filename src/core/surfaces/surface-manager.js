@@ -54,6 +54,7 @@ export class SurfaceManager {
      */
     discover(root) {
         const seen = new Set();
+        /** @type {import('../../types/surfaces.js').DiscoveredSurface[]} */
         const results = [];
         this.#SURFACES.forEach(surface => {
             let titleEls;
