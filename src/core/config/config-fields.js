@@ -227,6 +227,11 @@ export const CONFIG_FIELDS = [
 /**
  * Union of every configurable field key, derived from {@link CONFIG_FIELDS}.
  *
+ * Every key above must keep its const-type cast. One cast missing widens that
+ * element's key to string, which widens this whole union to string and
+ * silently disables the check on every config read. Nothing at runtime
+ * notices, so this only fails once a typecheck gate runs.
+ *
  * @typedef {typeof CONFIG_FIELDS[number]['key']} ConfigKey
  */
 
