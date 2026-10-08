@@ -25,9 +25,9 @@ describe('Color Utilities', () => {
             const result = interpolateColor(0.5, '#ff0000', '#00dd00');
             const match = result.match(/^rgb\((\d+), (\d+), (\d+)\)$/);
             expect(match).not.toBeNull();
-            const r = parseInt(match[1], 10);
-            const g = parseInt(match[2], 10);
-            const b = parseInt(match[3], 10);
+            const r = parseInt(match![1], 10);
+            const g = parseInt(match![2], 10);
+            const b = parseInt(match![3], 10);
 
             expect(r).toBeGreaterThanOrEqual(0);
             expect(r).toBeLessThanOrEqual(255);
@@ -67,7 +67,9 @@ describe('Color Utilities', () => {
             ['black to grey', '#000000', '#808080'],
         ])('should handle achromatic endpoints for %s', (_desc, start, end) => {
             const result = interpolateColor(0.5, start, end);
-            const [r, g, b] = result.match(/\d+/g).map(Number);
+            const match = result.match(/\d+/g);
+            expect(match).not.toBeNull();
+            const [r, g, b] = match!.map(Number);
 
             // Achromatic interpolation must stay grey rather than picking up a hue.
             expect(r).toBe(g);

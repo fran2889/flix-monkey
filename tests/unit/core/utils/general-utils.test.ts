@@ -46,8 +46,9 @@ describe('core/utils/general-utils', () => {
 
         it('should maintain context', () => {
             const context = { value: 'test' };
-            let capturedContext;
-            const func = function () {
+            let capturedContext: unknown;
+            // eslint-disable-next-line no-unused-vars
+            const func = function (this: { value: string }) {
                 capturedContext = this;
             };
             const debounced = debounce(func, 100);
@@ -88,7 +89,8 @@ describe('core/utils/general-utils', () => {
 
         it('falls back to setTimeout when window is undefined', () => {
             const savedWindow = global.window;
-            global.window = undefined;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (global as any).window = undefined;
             const func = vi.fn();
             runIdle(func);
             vi.advanceTimersByTime(1);

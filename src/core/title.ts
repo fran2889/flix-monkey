@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// @ts-expect-error - utils/index.js not yet migrated to TypeScript, will be fixed in Task 2.3
 import { buildImdbUrl } from './utils/index.js';
 
 /**

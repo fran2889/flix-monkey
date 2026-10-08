@@ -9,13 +9,14 @@
  * @param {string} str - Input string to slugify
  * @returns {string} URL-friendly slug string
  */
-export function slugify(str) {
+export function slugify(str: string): string {
     let slug = '';
 
     for (const char of str.normalize('NFKC').toLowerCase()) {
+        const codePoint = char.codePointAt(0);
         if (/^[a-z0-9]$/.test(char)) {
             slug += char;
-        } else if (char.codePointAt(0) > 0x7f && /[\p{L}\p{N}]/u.test(char)) {
+        } else if (codePoint !== undefined && codePoint > 0x7f && /[\p{L}\p{N}]/u.test(char)) {
             slug += encodeURIComponent(char);
         } else if (slug && !slug.endsWith('_')) {
             slug += '_';

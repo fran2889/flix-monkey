@@ -3,7 +3,19 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-function parseHex(hex) {
+interface RgbColor {
+    r: number;
+    g: number;
+    b: number;
+}
+
+interface HslColor {
+    h: number;
+    s: number;
+    l: number;
+}
+
+function parseHex(hex: string): RgbColor {
     return {
         r: Number.parseInt(hex.slice(1, 3), 16),
         g: Number.parseInt(hex.slice(3, 5), 16),
@@ -11,7 +23,7 @@ function parseHex(hex) {
     };
 }
 
-function rgbToHsl(r, g, b) {
+function rgbToHsl(r: number, g: number, b: number): HslColor {
     const rf = r / 255;
     const gf = g / 255;
     const bf = b / 255;
@@ -42,7 +54,7 @@ function rgbToHsl(r, g, b) {
     return { h, s, l };
 }
 
-function hslToRgb(h, s, l) {
+function hslToRgb(h: number, s: number, l: number): RgbColor {
     if (s === 0) {
         const val = Math.round(l * 255);
         return { r: val, g: val, b: val };
@@ -63,7 +75,7 @@ function hslToRgb(h, s, l) {
     };
 }
 
-function hueToRgb(p, q, t) {
+function hueToRgb(p: number, q: number, t: number): number {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
     if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -80,7 +92,7 @@ function hueToRgb(p, q, t) {
  * @param {string} endHex - Ending hex color (e.g., '#00ff00').
  * @returns {string} Interpolated RGB color string in 'rgb(R, G, B)' format.
  */
-export function interpolateColor(progress, startHex, endHex) {
+export function interpolateColor(progress: number, startHex: string, endHex: string): string {
     const startRgb = parseHex(startHex);
     const endRgb = parseHex(endHex);
 
