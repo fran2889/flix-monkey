@@ -11,6 +11,8 @@ export class Modal {
     #returnFocus = null;
     /** @type {((event: KeyboardEvent) => void)|null} */
     #escHandler = null;
+    /** @type {HTMLElement} */
+    #contentContainer;
 
     /**
      * Creates a modal dialog with the specified title.
@@ -45,6 +47,7 @@ export class Modal {
 
         const body = document.createElement('div');
         body.className = 'fm-modal-body';
+        this.#contentContainer = body;
 
         header.append(heading, closeBtn);
         content.append(header, body);
@@ -82,6 +85,6 @@ export class Modal {
      * @returns {HTMLElement} The modal body container.
      */
     getContentContainer() {
-        return this.overlay.querySelector('.fm-modal-body');
+        return this.#contentContainer;
     }
 }
