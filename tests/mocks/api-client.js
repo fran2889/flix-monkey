@@ -7,14 +7,13 @@ import { vi } from 'vitest';
 import { ApiSource } from '../../src/core/constants.js';
 
 /**
- * A partial BaseApiClient whose methods are vitest mocks.
+ * A BaseApiClient double whose methods are vitest mocks.
  *
- * @typedef {import('./mock-types.js').MockOf<import('../../src/core/api/base-api-client.js').BaseApiClient> & {
- *   source: import('../../src/types/title.js').ApiSourceValue,
- *   getStatus: import('vitest').Mock,
- *   fetch: import('vitest').Mock,
- *   disable: import('vitest').Mock
- * }} MockApiClient
+ * Every public method is provided even though no suite calls queuedFetch,
+ * search or getDetails on the double: the mock-completeness suite fails if one
+ * goes missing.
+ *
+ * @typedef {import('./mock-types.js').MockOf<import('../../src/core/api/base-api-client.js').BaseApiClient>} MockApiClient
  */
 
 /**
@@ -27,6 +26,9 @@ function buildMockApiClient() {
         getStatus: vi.fn(),
         fetch: vi.fn(),
         disable: vi.fn(),
+        queuedFetch: vi.fn(),
+        search: vi.fn(),
+        getDetails: vi.fn(),
     };
 
     return {
