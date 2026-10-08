@@ -46,9 +46,9 @@ Use the links below to install the add-on for your browser.
 ## Features
 
 - **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages; Metacritic and Rotten Tomatoes scores are available when using OMDb or XMDb providers
-- **Color-Coded Ratings**: Rating badges use gradient that transitions from red (< 5.0) to green (>= 8.5) based on the rating
-- **Click to Open**: Click rating badges to open the title's IMDb page or search IMDb when no match is found
-- **Fade Low-Rated Titles**: Automatically dim titles below your chosen IMDb threshold to help skip poor content
+- **Color-Coded Ratings**: Rating badges use gradient that transitions from red (rating < 5.0) to green (rating >= 8.5)
+- **Click to Open**: Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
+- **Fade Low-Rated Titles**: Fade titles rated below your chosen IMDb threshold
 - **IMDb ID Overrides**: Manually override IMDb IDs to correct search mismatches
 - **Smart Caching & Sync**: Fast lookups for titles you've seen before; requests and settings are synchronized across tabs to prevent redundant lookups
 - **Auto-Disable**: Failing APIs are temporarily disabled for 1 hour to prevent lag
