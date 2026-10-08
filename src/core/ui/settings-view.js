@@ -378,7 +378,7 @@ export class SettingsView {
     /**
      * Reads current values from all form inputs in the settings UI.
      *
-     * @returns {object} Settings values keyed by field keys.
+     * @returns {Record<string, string|boolean>} Settings values keyed by field keys. Keys whose element is neither an input nor a select are absent.
      */
     readValues() {
         /** @type {Record<string, string|boolean>} */
@@ -399,7 +399,7 @@ export class SettingsView {
     /**
      * Validates settings values using field-specific validators.
      *
-     * @param {object} values - Settings values to validate.
+     * @param {Record<string, string|boolean>} values - Settings values to validate, as returned by readValues().
      * @returns {string[]} Array of validation error messages, empty if valid.
      */
     validate(values) {
