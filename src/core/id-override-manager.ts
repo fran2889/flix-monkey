@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { PlatformAdapter } from '../platform/adapter.js';
 import { slugify } from './utils/index.js';
 
 /**
@@ -10,46 +11,45 @@ import { slugify } from './utils/index.js';
  * the correct ID for a streaming service title.
  */
 export class IdOverrideManager {
-    #adapter;
+    #adapter: PlatformAdapter;
     #prefix = 'fm-idoverride:';
 
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
+     * @param adapter - Platform adapter for storage.
      */
-    constructor(adapter) {
+    constructor(adapter: PlatformAdapter) {
         this.#adapter = adapter;
     }
 
     /**
      * Retrieve stored ID override for a title.
      *
-     * @param {string} displayTitle - The streaming service display title
-     * @returns {Promise<string|null>} The IMDb ID if override exists, null otherwise
+     * @param displayTitle - The streaming service display title
+     * @returns The IMDb ID if override exists, null otherwise
      */
-    async getImdbId(displayTitle) {
+    async getImdbId(displayTitle: string): Promise<string | null> {
         const key = this.#getKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (raw === null || raw === undefined) return null;
         try {
-            const data = JSON.parse(raw);
-            return data.imdbId || null;
+            const data = JSON.parse(raw as string);
+            return (data as { imdbId?: string }).imdbId ?? null;
         } catch {
             return null;
         }
     }
 
-    #getKey(displayTitle) {
+    #getKey(displayTitle: string): string {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
     /**
      * Store ID override for a title.
      *
-     * @param {string} displayTitle - The streaming service display title
-     * @param {string} imdbId - The IMDb ID to store (e.g., "tt0133093")
-     * @returns {Promise<void>}
+     * @param displayTitle - The streaming service display title
+     * @param imdbId - The IMDb ID to store (e.g., "tt0133093")
      */
-    async setImdbId(displayTitle, imdbId) {
+    async setImdbId(displayTitle: string, imdbId: string): Promise<void> {
         const key = this.#getKey(displayTitle);
         await this.#adapter.storageSet(key, JSON.stringify({ imdbId }));
     }

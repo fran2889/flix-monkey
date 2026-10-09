@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { vi, Mock } from 'vitest';
-import { PlatformAdapter } from '../../src/platform/adapter.js';
-import type { StorageValue, HttpFetchOptions } from '../../src/platform/adapter.js';
+import { Mock, vi } from 'vitest';
+
+import { type HttpFetchOptions, PlatformAdapter, type StorageValue } from '../../src/platform/adapter.js';
 
 // Type for mockable storage methods - compatible with both PlatformAdapter and vi.Mock
 type MockableFn<T extends (..._args: never[]) => unknown> = T & Mock;
@@ -43,7 +43,7 @@ class MockPlatformAdapter extends PlatformAdapter {
         this.storageGetKeys = vi.fn().mockResolvedValue([]);
         this.httpFetch = vi.fn().mockResolvedValue({});
         this.configGet = vi.fn(() => undefined);
-        
+
         // Apply overrides
         Object.assign(this, rest);
     }
@@ -57,7 +57,7 @@ function buildMockAdapter() {
         withStorageGetResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageGet = value as MockableFn<(key: string) => Promise<StorageValue | null>>;
+                overrides.storageGet = value as MockableFn<(_key: string) => Promise<StorageValue | null>>;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageGet = mockFn;
@@ -74,7 +74,7 @@ function buildMockAdapter() {
         withStorageSetResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageSet = value as MockableFn<(key: string, value: StorageValue) => Promise<void>>;
+                overrides.storageSet = value as MockableFn<(_key: string, _value: StorageValue) => Promise<void>>;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageSet = mockFn;
@@ -91,7 +91,7 @@ function buildMockAdapter() {
         withStorageDeleteResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageDelete = value as MockableFn<(key: string) => Promise<void>>;
+                overrides.storageDelete = value as MockableFn<(_key: string) => Promise<void>>;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageDelete = mockFn;
@@ -108,7 +108,7 @@ function buildMockAdapter() {
         withStorageGetKeysResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageGetKeys = value as MockableFn<(prefix: string) => Promise<string[]>>;
+                overrides.storageGetKeys = value as MockableFn<(_prefix: string) => Promise<string[]>>;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageGetKeys = mockFn;
@@ -130,7 +130,9 @@ function buildMockAdapter() {
         withStorageSetManyResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageSetMany = value as MockableFn<(values: Record<string, StorageValue>) => Promise<void>>;
+                overrides.storageSetMany = value as MockableFn<
+                    (_values: Record<string, StorageValue>) => Promise<void>
+                >;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageSetMany = mockFn;
@@ -141,7 +143,9 @@ function buildMockAdapter() {
         withHttpFetchResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.httpFetch = value as MockableFn<(url: string, options?: HttpFetchOptions) => Promise<unknown>>;
+                overrides.httpFetch = value as MockableFn<
+                    (_url: string, _options?: HttpFetchOptions) => Promise<unknown>
+                >;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.httpFetch = mockFn;
@@ -164,7 +168,7 @@ function buildMockAdapter() {
         withConfigGetReturning(valueOrFn: unknown) {
             const mockFn = vi.fn();
             if (typeof valueOrFn === 'function') {
-                mockFn.mockImplementation(valueOrFn as (key: string) => string | boolean | undefined);
+                mockFn.mockImplementation(valueOrFn as (_key: string) => string | boolean | undefined);
             } else {
                 mockFn.mockReturnValue(valueOrFn);
             }

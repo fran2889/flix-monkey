@@ -2,7 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CLIENT_DISABLE_DURATION } from '../constants.js';
+import type { PlatformAdapter } from '../../platform/adapter.js';
+import type { ClientStatus } from '../../types/api.js';
+import type { ConfigManager } from '../config/config-manager.js';
+import { type ApiSourceType, CLIENT_DISABLE_DURATION } from '../constants.js';
+import type { DisabledClientsManager } from '../disabled-clients.js';
+import type { IdOverrideManager } from '../id-override-manager.js';
+import type { Logger } from '../logger.js';
+import type { RequestQueue } from '../request-queue.js';
 import { Title } from '../title.js';
 
 /**
@@ -11,28 +18,34 @@ import { Title } from '../title.js';
  * Implements the template-method pattern: fetch orchestrates the
  * lookup by calling search (find a candidate) then getDetails
  * (hydrate ratings). Subclasses override those two methods for each provider.
- *
- * @abstract
  */
-export class BaseApiClient {
-    #queue;
-    #source;
-    #disabledManager;
-    #adapter;
-    #config;
-    #logger;
-    #overrideManager;
+export abstract class BaseApiClient {
+    #queue: RequestQueue;
+    #source: ApiSourceType;
+    #disabledManager: DisabledClientsManager;
+    #adapter: PlatformAdapter;
+    #config: ConfigManager;
+    #logger: Logger;
+    #overrideManager: IdOverrideManager;
 
     /**
-     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform adapter for HTTP and storage.
-     * @param {import('../config/config-manager.js').ConfigManager} config - Application configuration.
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager - Tracks temporarily disabled clients.
-     * @param {import('../logger.js').Logger} logger - Required; every lookup and failure path logs.
-     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager - Manager for ID overrides.
-     * @param {import('../request-queue.js').RequestQueue} queue - Rate-limited request queue for this client.
-     * @param {import('../title.js').ApiSourceValue} source - ApiSource identifier.
+     * @param adapter - Platform adapter for HTTP and storage.
+     * @param config - Application configuration.
+     * @param disabledManager - Tracks temporarily disabled clients.
+     * @param logger - Required; every lookup and failure path logs.
+     * @param overrideManager - Manager for ID overrides.
+     * @param queue - Rate-limited request queue for this client.
+     * @param source - ApiSource identifier.
      */
-    constructor(adapter, config, disabledManager, logger, overrideManager, queue, source) {
+    constructor(
+        adapter: PlatformAdapter,
+        config: ConfigManager,
+        disabledManager: DisabledClientsManager,
+        logger: Logger,
+        overrideManager: IdOverrideManager,
+        queue: RequestQueue,
+        source: ApiSourceType
+    ) {
         this.#adapter = adapter;
         this.#config = config;
         this.#disabledManager = disabledManager;
@@ -46,11 +59,11 @@ export class BaseApiClient {
      * Fetches ratings for a streaming-service title through the search -> details pipeline.
      * Callers must gate through getStatus before invoking.
      *
-     * @param {string} displayTitle - Title as shown by the streaming service.
-     * @param {string|null} [imdbId=null] - Optional IMDb ID for short-circuiting search.
-     * @returns {Promise<import('../title.js').Title|null>} Hydrated Title with ratings, or null if not found.
+     * @param displayTitle - Title as shown by the streaming service.
+     * @param imdbId - Optional IMDb ID for short-circuiting search.
+     * @returns Hydrated Title with ratings, or null if not found.
      */
-    async fetch(displayTitle, imdbId = null) {
+    async fetch(displayTitle: string, imdbId: string | null = null): Promise<Title | null> {
         if (await this.#isDisabled()) {
             return null;
         }
@@ -83,8 +96,8 @@ export class BaseApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /** @returns {Promise<import('../types/api.js').ClientStatus>} A health result suitable for provider selection. */
-    async getStatus() {
+    /** A health result suitable for provider selection. */
+    async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
         }
@@ -92,14 +105,13 @@ export class BaseApiClient {
     }
 
     /**
-     * Disables this client for {@link CLIENT_DISABLE_DURATION}, purges its queued
+     * Disables this client for CLIENT_DISABLE_DURATION, purges its queued
      * requests, and logs a warning.
      *
-     * @returns {Promise<void>}
      * @note Requests still waiting in this client's queue are removed. An HTTP request already
      *   executing at the network level cannot be aborted and may still resolve after disable().
      */
-    async disable() {
+    async disable(): Promise<void> {
         const count = this.#queue.clear();
         await this.#disabledManager.disable(this.#source, CLIENT_DISABLE_DURATION);
         this.#logger.warn(
@@ -110,15 +122,15 @@ export class BaseApiClient {
     /**
      * Enqueues an HTTP request through the rate-limited queue.
      *
-     * @param {string} url - Request URL.
-     * @param {number} priority - Higher values are processed first.
-     * @returns {Promise<unknown>} Parsed response body.
+     * @param url - Request URL.
+     * @param priority - Higher values are processed first.
+     * @returns Parsed response body.
      */
-    async queuedFetch(url, priority) {
-        return this.#queue.enqueue(url, priority, requestUrl => this.#adapter.httpFetch(requestUrl));
+    async queuedFetch(url: string, priority: number): Promise<unknown> {
+        return this.#queue.enqueue(url, priority, (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
     }
 
-    async #isDisabled() {
+    async #isDisabled(): Promise<boolean> {
         return this.#disabledManager.isDisabled(this.#source);
     }
 
@@ -126,13 +138,10 @@ export class BaseApiClient {
      * Searches the API for a title matching the streaming-service display name.
      * Subclasses must override this method.
      *
-     * @abstract
-     * @param {string} _displayTitle - Title to search for.
-     * @returns {Promise<import('../title.js').Title|null>} A Title with available metadata from search results.
+     * @param _displayTitle - Title to search for.
+     * @returns A Title with available metadata from search results, or null.
      */
-    async search(_displayTitle) {
-        throw new Error('Not implemented');
-    }
+    abstract search(_displayTitle: string): Promise<Title | null>;
 
     /**
      * Fetches ratings and additional details for a title returned by search().
@@ -142,32 +151,23 @@ export class BaseApiClient {
      * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns null/undefined
      * - Override with details fetch values when available
      *
-     * @abstract
-     * @param {import('../title.js').Title} _searchTitle - Title returned by search().
-     * @returns {Promise<import('../title.js').Title|null>} A Title with ratings and details populated.
+     * @param _searchTitle - Title returned by search().
+     * @returns A Title with ratings and details populated, or null.
      */
-    async getDetails(_searchTitle) {
-        throw new Error('Not implemented');
-    }
+    abstract getDetails(_searchTitle: Title): Promise<Title | null>;
 
-    /**
-     * @returns {import('../constants.js').ApiSourceValue}
-     */
-    get source() {
+    /** ApiSource identifier for this client. */
+    get source(): ApiSourceType {
         return this.#source;
     }
 
-    /**
-     * @returns {import('../config/config-manager.js').ConfigManager}
-     */
-    get config() {
+    /** Application configuration. */
+    get config(): ConfigManager {
         return this.#config;
     }
 
-    /**
-     * @returns {import('../logger.js').Logger}
-     */
-    get logger() {
+    /** Logger instance. */
+    get logger(): Logger {
         return this.#logger;
     }
 }

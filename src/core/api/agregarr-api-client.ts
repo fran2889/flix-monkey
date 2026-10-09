@@ -2,7 +2,12 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { PlatformAdapter } from '../../platform/adapter.js';
+import type { ConfigManager } from '../config/config-manager.js';
 import { ApiSource } from '../constants.js';
+import type { DisabledClientsManager } from '../disabled-clients.js';
+import type { IdOverrideManager } from '../id-override-manager.js';
+import type { Logger } from '../logger.js';
 import { RATE_LIMITS } from '../rate-limits.js';
 import { RequestQueue } from '../request-queue.js';
 import { Title } from '../title.js';
@@ -17,13 +22,19 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
  */
 export class AgregarrApiClient extends BaseApiClient {
     /**
-     * @param {import('../platform/adapter.js').PlatformAdapter} adapter
-     * @param {import('../config/config-manager.js').ConfigManager} config
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledManager
-     * @param {import('../logger.js').Logger} logger
-     * @param {import('../id-override-manager.js').IdOverrideManager} overrideManager
+     * @param adapter - Platform adapter for HTTP and storage.
+     * @param config - Application configuration.
+     * @param disabledManager - Tracks temporarily disabled clients.
+     * @param logger - Required; every lookup and failure path logs.
+     * @param overrideManager - Manager for ID overrides.
      */
-    constructor(adapter, config, disabledManager, logger, overrideManager) {
+    constructor(
+        adapter: PlatformAdapter,
+        config: ConfigManager,
+        disabledManager: DisabledClientsManager,
+        logger: Logger,
+        overrideManager: IdOverrideManager
+    ) {
         super(
             adapter,
             config,
@@ -38,13 +49,16 @@ export class AgregarrApiClient extends BaseApiClient {
     /**
      * Searches for a title using IMDb Suggestions API.
      *
-     * @param {string} displayTitle - The title to search for.
-     * @returns {Promise<import('../title.js').Title|null>} Title object or null if not found.
+     * @param displayTitle - The title to search for.
+     * @returns Title object or null if not found.
      */
-    async search(displayTitle) {
+    async search(displayTitle: string): Promise<Title | null> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
-        const data = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
+        const data = (await this.queuedFetch(
+            `https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`,
+            0
+        )) as ImdbSuggestionsResponse;
         const results = data?.d;
         if (!results?.length) {
             this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
@@ -64,7 +78,7 @@ export class AgregarrApiClient extends BaseApiClient {
             imdbVotes: null,
             rtRating: null,
             mcRating: null,
-            type: mapAgregarrTitleType(match.qid),
+            type: mapAgregarrTitleType(match.qid ?? null),
             source: null,
         });
     }
@@ -72,13 +86,17 @@ export class AgregarrApiClient extends BaseApiClient {
     /**
      * Fetches detailed ratings from Agregarr API using the cached IMDb ID.
      *
-     * @param {import('../title.js').Title} searchTitle - Title from search results with IMDb ID.
-     * @returns {Promise<import('../title.js').Title|null>} Title with ratings or null on failure.
+     * @param searchTitle - Title from search results with IMDb ID.
+     * @returns Title with ratings or null on failure.
      */
-    async getDetails(searchTitle) {
+    async getDetails(searchTitle: Title): Promise<Title | null> {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
-        const ratings = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodeURIComponent(id)}`, 1);
+        const encodedId = encodeURIComponent(String(id ?? ''));
+        const ratings = (await this.queuedFetch(
+            `https://api.agregarr.org/api/ratings?id=${encodedId}`,
+            1
+        )) as AgregarrRatingsResponse;
         const entry = ratings?.[0];
         if (!entry) {
             this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
@@ -101,4 +119,22 @@ export class AgregarrApiClient extends BaseApiClient {
             source: null,
         });
     }
+}
+
+/** IMDb Suggestions response type */
+interface ImdbSuggestionsResponse {
+    d?: Array<{
+        qid: string;
+        id?: string;
+        l?: string;
+        y?: number;
+    }>;
+}
+
+/** Agregarr ratings response type */
+interface AgregarrRatingsResponse {
+    [key: number]: {
+        rating?: number;
+        votes?: number;
+    };
 }

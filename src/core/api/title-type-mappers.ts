@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { TitleType } from '../constants.js';
+import { TitleType, type TitleTypeType } from '../constants.js';
 
 /**
  * Maps XMDb title type to canonical TitleType.
  *
- * @param {string|null} apiValue - XMDb API title type value
- * @returns {typeof TitleType.MOVIE|typeof TitleType.SERIES|null} Canonical title type or null
+ * @param apiValue - XMDb API title type value
+ * @returns Canonical title type or null
  */
-export function mapXmdbTitleType(apiValue) {
+export function mapXmdbTitleType(apiValue: string | null): TitleTypeType | null {
     if (apiValue === 'Movie') return TitleType.MOVIE;
     if (apiValue === 'TV Series') return TitleType.SERIES;
     return null;
@@ -20,10 +20,10 @@ export function mapXmdbTitleType(apiValue) {
 /**
  * Maps OMDb title type to canonical TitleType.
  *
- * @param {string|null} apiValue - OMDb API title type value
- * @returns {typeof TitleType.MOVIE|typeof TitleType.SERIES|null} Canonical title type or null
+ * @param apiValue - OMDb API title type value
+ * @returns Canonical title type or null
  */
-export function mapOmdbTitleType(apiValue) {
+export function mapOmdbTitleType(apiValue: string | null): TitleTypeType | null {
     if (apiValue === 'movie') return TitleType.MOVIE;
     if (apiValue === 'series') return TitleType.SERIES;
     return null;
@@ -32,10 +32,10 @@ export function mapOmdbTitleType(apiValue) {
 /**
  * Maps Agregarr title type to canonical TitleType.
  *
- * @param {string|null} apiValue - Agregarr API title type value
- * @returns {typeof TitleType.MOVIE|typeof TitleType.SERIES|null} Canonical title type or null
+ * @param apiValue - Agregarr API title type value
+ * @returns Canonical title type or null
  */
-export function mapAgregarrTitleType(apiValue) {
+export function mapAgregarrTitleType(apiValue: string | null): TitleTypeType | null {
     if (apiValue === 'movie') return TitleType.MOVIE;
     if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
     return null;
