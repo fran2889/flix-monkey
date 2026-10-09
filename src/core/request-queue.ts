@@ -20,7 +20,7 @@ export class RequestQueue {
      * @param minInterval - Minimum delay between dispatched requests.
      * @param globalSyncKey - Storage key used to coordinate the delay across tabs, or null to rate-limit within this context only.
      */
-    constructor(adapter: PlatformAdapter | null, minInterval: number, globalSyncKey: string | null) {
+    constructor(adapter: PlatformAdapter | null, minInterval: number, globalSyncKey: string | null = null) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
