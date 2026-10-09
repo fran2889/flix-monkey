@@ -93,16 +93,16 @@
 
 ### Phase 3: Core Application (Higher risk)
 
-- [ ] src/core/app.js → app.ts
+- [x] src/core/app.js → app.ts (commit: 516168e)
 - [ ] tests/unit/core/app.test.js → app.test.ts
 
-- [ ] src/core/overlay.js → overlay.ts
-- [ ] tests/unit/core/overlay.test.js → overlay.test.ts
+- [x] src/core/overlay.js → overlay.ts (commit: 1f76b22)
+- [x] tests/unit/core/overlay.test.js → overlay.test.ts (commit: 1f76b22)
 
-- [ ] src/core/surfaces/surface-manager.js → surface-manager.ts
-- [ ] tests/unit/core/surfaces/surface-manager.test.js → surface-manager.test.ts
+- [x] src/core/surfaces/surface-manager.js → surface-manager.ts (commit: e7f28f3)
+- [x] tests/unit/core/surfaces/surface-manager.test.js → surface-manager.test.ts (commit: e7f28f3)
 
-- [ ] src/core/surfaces/*.js → *.ts (remaining surface definitions)
+- [x] src/core/surfaces/*.js → *.ts (remaining surface definitions) (commit: e7f28f3)
 
 ### Phase 4: Platform Adapters
 
