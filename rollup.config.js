@@ -158,7 +158,7 @@ const configsByTarget = {
             plugins: sharedPlugins(),
         },
         {
-            input: 'src/targets/chrome/service-worker.js',
+            input: 'src/targets/chrome/service-worker.ts',
             output: { file: 'dist/chrome/service-worker.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
