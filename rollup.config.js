@@ -136,7 +136,7 @@ const configsByTarget = {
             plugins: sharedPlugins(),
         },
         {
-            input: 'src/targets/firefox/background.js',
+            input: 'src/targets/firefox/background.ts',
             output: { file: 'dist/firefox/background.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
