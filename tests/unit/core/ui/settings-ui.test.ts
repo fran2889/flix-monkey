@@ -185,7 +185,7 @@ describe('SettingsUI', () => {
         });
 
         it('shows an error when clearing fails', async () => {
-            mockCacheManager.clear.mockRejectedValue(new Error('disk full'));
+            (mockCacheManager.clear as import('vitest').Mock).mockRejectedValue(new Error('disk full'));
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
@@ -213,7 +213,7 @@ describe('SettingsUI', () => {
 
     describe('Disabled provider reset', () => {
         it('resets clients and shows re-enabled names', async () => {
-            mockDisabledClientsManager.resetAll.mockResolvedValue(['omdb', 'tmdb']);
+            (mockDisabledClientsManager.resetAll as import('vitest').Mock).mockResolvedValue(['omdb', 'tmdb']);
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
@@ -237,7 +237,9 @@ describe('SettingsUI', () => {
         });
 
         it('shows an error when reset fails', async () => {
-            mockDisabledClientsManager.resetAll.mockRejectedValue(new Error('storage unavailable'));
+            (mockDisabledClientsManager.resetAll as import('vitest').Mock).mockRejectedValue(
+                new Error('storage unavailable')
+            );
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
