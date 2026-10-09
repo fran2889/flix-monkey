@@ -106,8 +106,8 @@ export class OverlayRenderer {
         container: HTMLElement,
         titleObj: Title,
         fadeToggleState: 'always' | 'never' | null,
-        onFadeToggleClick: ((_state: string | null) => void) | null,
-        onEditClick: ((_displayTitle: string, _imdbId: string | null) => void) | null,
+        onFadeToggleClick: ((_element: HTMLElement) => void) | null,
+        onEditClick: ((_displayTitle: string) => void) | null,
         onRefreshClick: ((_displayTitle: string) => void) | null,
         displayTitle: string
     ): void {
@@ -118,8 +118,8 @@ export class OverlayRenderer {
             showMcRating: this.#config.getBool('showMcRating'),
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
             fadeToggleState,
-            onFadeToggleClick: onFadeToggleClick as ((_element: HTMLElement) => void) | null,
-            onEditClick: onEditClick as ((_displayTitle: string) => void) | null,
+            onFadeToggleClick,
+            onEditClick,
             onRefreshClick,
             displayTitle,
             corner: this.#config.get('overlayCorner') as OverlayCorner,
