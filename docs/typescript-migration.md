@@ -109,11 +109,11 @@
 - [x] src/platform/adapter.js → adapter.ts (commit: ad058dc)
 - [x] tests/mocks/adapter.js → adapter.ts (commit: ad058dc, updated in 344b9e6)
 
-- [ ] src/platform/userscript.js → userscript.ts
-- [ ] tests/mocks/userscript.js → userscript.ts
+- [x] src/platform/userscript.js → userscript.ts (commit: f2cc712)
+- [x] tests/mocks/userscript.js → userscript.ts (commit: f2cc712)
 
-- [ ] src/platform/webextension.js → webextension.ts
-- [ ] tests/mocks/webextension.js → webextension.ts
+- [x] src/platform/webextension.js → webextension.ts (commit: f2cc712)
+- [x] tests/mocks/webextension.js → webextension.ts (commit: f2cc712)
 
 ### Phase 5: UI Components
 
@@ -256,4 +256,5 @@
 4. ✅ **Remaining Managers** (Task 3.5) - COMPLETED in commit 349f2e3
 5. ✅ **Cache** (Task 3.1) - COMPLETED in commit ad058dc
 6. ✅ **App & Overlay** (Task 4.1-4.3) - COMPLETED in commits 1f76b22, 516168e, 476908a
-7. **Platform Adapters** (Task 5.2) - NEXT: Migrate userscript.js, webextension.js + mocks
+7. ✅ **Platform Adapters** (Task 5.2) - COMPLETED in commit f2cc712
+8. **UI Components** (Task 6.1) - NEXT: Migrate modal.js, settings-ui.js, settings-view.js, overlay-elements.js, overlay-styles.js, styles.js
