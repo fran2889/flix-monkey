@@ -10,18 +10,21 @@ import { Logger } from '../../core/logger.js';
 import { runMigrations } from '../../core/migrations.js';
 import { Modal } from '../../core/ui/modal.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { UserscriptAdapter } from '../../platform/userscript.ts';
+import { UserscriptAdapter } from '../../platform/userscript.js';
 
 const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);
-let app = null;
+let app: import('../../core/app.js').FlixMonkeyApp | null = null;
 
 /**
  * Gets the cache and disabled clients managers, either from the existing app or by creating new instances.
  *
- * @returns {{cacheManager: import('../../core/cache/').CacheManager, disabledClientsManager: import('../../core/disabled-clients.js').DisabledClientsManager}}
+ * @returns cacheManager and disabledClientsManager
  */
-function getSettingsDependencies() {
+function getSettingsDependencies(): {
+    cacheManager: CacheManager;
+    disabledClientsManager: DisabledClientsManager;
+} {
     if (app) {
         return {
             cacheManager: app.cacheManager,
@@ -38,7 +41,7 @@ function getSettingsDependencies() {
 /**
  * Opens the FlixMonkey settings modal with all configuration options.
  */
-function openSettings() {
+function openSettings(): void {
     const { cacheManager, disabledClientsManager } = getSettingsDependencies();
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();

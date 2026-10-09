@@ -139,7 +139,7 @@ export default [
     // cannot detect its existing header and would insert duplicates on --fix.
     {
         files: ['{src,tests}/**/*.{js,cjs,ts}'],
-        ignores: ['src/targets/userscript/metadata.js'],
+        ignores: ['src/targets/userscript/metadata.ts'],
         plugins: { headers },
         rules: {
             'headers/header-format': [

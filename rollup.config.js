@@ -12,7 +12,7 @@ const { displayName, homepage, version, description, author, license } = pkg;
 async function userscriptBanner() {
     const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
     const iconBase64 = iconBuffer.toString('base64');
-    const template = readFileSync('src/targets/userscript/metadata.js', 'utf8');
+    const template = readFileSync('src/targets/userscript/metadata.ts', 'utf8');
     return template
         .replace('__NAME__', displayName)
         .replaceAll('__HOMEPAGE__', homepage)
@@ -105,7 +105,7 @@ if (target && !VALID_TARGETS.includes(target)) {
 const configsByTarget = {
     userscript: [
         {
-            input: 'src/targets/userscript/entry.js',
+            input: 'src/targets/userscript/entry.ts',
             output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: userscriptBanner },
             plugins: [
                 ...sharedPlugins(),
