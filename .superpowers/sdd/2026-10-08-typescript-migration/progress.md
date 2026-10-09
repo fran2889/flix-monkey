@@ -41,7 +41,8 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
 
 ### Phase 3: Core Application
 
-- [x] Task 4.1: Migrate Surfaces (surface-manager.ts, surface-definitions/*.ts, surfaces/index.ts + types/surfaces.ts - current work)
+- [x] Task 4.1: Migrate Surfaces (surface-manager.ts, surface-definitions/*.ts, surfaces/index.ts + types/surfaces.ts)
+- [x] Task 4.2: Migrate Overlay (overlay.ts + overlay.test.ts)
 
 ### Phase 3: Core Application
 
