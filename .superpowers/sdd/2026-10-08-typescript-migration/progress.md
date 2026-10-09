@@ -64,10 +64,30 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
 
 ### Phase 7: Target Entry Points
 
-- [ ] Task 8.1: Migrate Extension Targets (content.js, options.js, fetch-proxy.js, domains.js)
-- [ ] Task 8.2: Migrate Firefox Target (background.js)
-- [ ] Task 8.3: Migrate Chrome Target (service-worker.js)
-- [ ] Task 8.4: Migrate Userscript Target (entry.js, metadata.js)
+- [x] Task 8.1: Migrate Extension Targets (content.js, options.js, fetch-proxy.js, domains.js)
+    - BASE commit: e590733f3254be79a30c7b81d37df8c0ab6241dd
+    - Implementation commit: dc6a936c6c7b7349ac07dc322712e25e01ab625a
+    - Subagent: sdd-impl-task-8-1 (completed)
+    - Files: content.ts, options.ts, fetch-proxy.ts, domains.ts + rollup.config.js update
+    - Verification: type-check ✅, 869 tests ✅, build ✅, lint ✅
+- [x] Task 8.2: Migrate Firefox Target (background.js)
+    - BASE commit: dc6a936c6c7b7349ac07dc322712e25e01ab625a
+    - Implementation commit: 4ced36d7926e6fba86278a409dc3a79521427eee
+    - Subagent: sdd-impl-task-8-2 (completed)
+    - Files: background.ts + rollup.config.js update
+    - Verification: type-check ✅, 869 tests ✅, build ✅, lint ✅
+- [x] Task 8.3: Migrate Chrome Target (service-worker.js)
+    - BASE commit: 4ced36d7926e6fba86278a409dc3a79521427eee
+    - Implementation commit: fe19ad0
+    - Subagent: sdd-impl-task-8-3 (failed, completed manually)
+    - Files: service-worker.ts
+    - Verification: type-check ✅, 869 tests ✅, build ✅, lint ✅
+- [x] Task 8.4: Migrate Userscript Target (entry.js, metadata.js)
+    - BASE commit: fe19ad0d993026ea12d17369cce1b81ae10b2311
+    - Implementation commit: 51fe239a9313879699293ebcad623ef79352ebb4
+    - Subagent: sdd-impl-task-8-4 (completed)
+    - Files: entry.ts, metadata.ts + rollup.config.js update + eslint.config.js update
+    - Verification: type-check ✅, 869 tests ✅, build ✅, lint ✅
 
 ### Phase 8: Test Infrastructure
 
@@ -149,3 +169,34 @@ As of 2026-10-09:
 
 - Files: src/core/ui/modal.js, settings-ui.js, settings-view.js, overlay-elements.js, overlay-styles.js, styles.js + tests
 - Dependencies: All core dependencies are TypeScript, Platform Adapter is complete
+
+## Session Summary (2026-10-09)
+
+**Tasks Completed in this session:**
+
+- Fixed Vitest mock type assertions in settings-ui.test.ts (commit: e590733)
+- Task 8.1: Extension targets (content, options, fetch-proxy, domains) + rollup config (commit: dc6a936)
+- Task 8.2: Firefox target (background) + rollup config (commit: 4ced36d)
+- Task 8.3: Chrome target (service-worker) (commit: fe19ad0) - completed manually after subagent failure
+- Task 8.4: Userscript target (entry, metadata) + rollup/eslint config (commit: 51fe239)
+- Task 9.1: Remaining mocks (chrome, platform) + test import updates (commit: 1686f21)
+
+**Subagents Used:**
+
+- sdd-impl-task-8-1: Task 8.1 - completed successfully
+- sdd-impl-task-8-2: Task 8.2 - completed successfully
+- sdd-impl-task-8-3: Task 8.3 - failed (server disconnect), completed manually
+- sdd-impl-task-8-4: Task 8.4 - completed successfully
+
+**Current State:**
+
+- All target entry points migrated to TypeScript
+- All platform-specific files migrated
+- All test mocks migrated
+- All verifications passing (type-check, 869 tests, build, lint)
+
+**Remaining Work:**
+
+- UI Tests (netflix.ui.test.js, hbomax.ui.test.js, disneyplus.ui.test.js)
+- Test Infrastructure (setup.js)
+- Final Verification (remove all .js files, final checks)

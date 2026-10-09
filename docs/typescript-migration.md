@@ -155,10 +155,17 @@
 
 ### Phase 7: Target Entry Points
 
-- [ ] src/targets/extension/content.js → content.ts
-- [ ] src/targets/extension/options.js → options.ts
-- [ ] src/targets/extension/fetch-proxy.js → fetch-proxy.ts
-- [ ] src/targets/extension/domains.js → domains.ts
+- [x] src/targets/extension/content.js → content.ts (commit: dc6a936)
+- [x] src/targets/extension/options.js → options.ts (commit: dc6a936)
+- [x] src/targets/extension/fetch-proxy.js → fetch-proxy.ts (commit: dc6a936)
+- [x] src/targets/extension/domains.js → domains.ts (commit: dc6a936)
+- [x] rollup.config.js updated for .ts inputs (commit: dc6a936)
+
+- [x] src/targets/firefox/background.js → background.ts (commit: 4ced36d)
+- [x] src/targets/chrome/service-worker.js → service-worker.ts (commit: fe19ad0)
+- [x] src/targets/userscript/entry.js → entry.ts (commit: 51fe239)
+- [x] src/targets/userscript/metadata.js → metadata.ts (commit: 51fe239)
+- [x] eslint.config.js updated (commit: 51fe239)
 
 - [ ] src/targets/firefox/manifest.json → (keep as JSON)
 - [ ] src/targets/firefox/background.js → background.ts
