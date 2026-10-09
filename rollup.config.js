@@ -121,7 +121,7 @@ const configsByTarget = {
     ],
     firefox: [
         {
-            input: 'src/targets/extension/content.js',
+            input: 'src/targets/extension/content.ts',
             output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
             plugins: [
                 ...sharedPlugins(),
@@ -131,7 +131,7 @@ const configsByTarget = {
             ],
         },
         {
-            input: 'src/targets/extension/options.js',
+            input: 'src/targets/extension/options.ts',
             output: { file: 'dist/firefox/options.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
@@ -143,7 +143,7 @@ const configsByTarget = {
     ],
     chrome: [
         {
-            input: 'src/targets/extension/content.js',
+            input: 'src/targets/extension/content.ts',
             output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
             plugins: [
                 ...sharedPlugins(),
@@ -153,7 +153,7 @@ const configsByTarget = {
             ],
         },
         {
-            input: 'src/targets/extension/options.js',
+            input: 'src/targets/extension/options.ts',
             output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
