@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import type { ConfigKey } from '../../../../src/core/config/config-manager.js';
 import { CONFIG_DEFAULTS, ConfigManager } from '../../../../src/core/config/index.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildLogger } from '../../../mocks/logger.js';
@@ -13,7 +14,7 @@ describe('ConfigManager', () => {
         it('should return value from adapter.configGet', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(key => (key === 'overlayCorner' ? 'bottom-right' : undefined))
+                    .withConfigGetReturning((key: ConfigKey) => (key === 'overlayCorner' ? 'bottom-right' : undefined))
                     .build(),
                 buildLogger().build()
             );
@@ -21,10 +22,13 @@ describe('ConfigManager', () => {
         });
 
         it('should handle falsy but valid values (0 and empty string)', () => {
-            const values = { cacheTtlNoRating: 0, omdbApiKey: '' };
+            const values: Partial<Record<ConfigKey, string | number | boolean>> = {
+                cacheTtlNoRating: 0,
+                omdbApiKey: '',
+            };
             const config = new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(key => values[key])
+                    .withConfigGetReturning((key: ConfigKey) => (values[key] ?? undefined) as string | undefined)
                     .build(),
                 buildLogger().build()
             );
@@ -33,10 +37,13 @@ describe('ConfigManager', () => {
         });
 
         it('should normalize legacy string checkbox values to strings', () => {
-            const values = { showRtRating: 'true', showMcRating: 'false' };
+            const values: Partial<Record<ConfigKey, string>> = {
+                showRtRating: 'true',
+                showMcRating: 'false',
+            };
             const config = new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(key => values[key])
+                    .withConfigGetReturning((key: ConfigKey) => (values[key] ?? undefined) as string | undefined)
                     .build(),
                 buildLogger().build()
             );
@@ -113,13 +120,18 @@ describe('ConfigManager', () => {
 
         it('should throw for unknown key', () => {
             const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
-            expect(() => config.get('nonExistentKey')).toThrow('ConfigManager: unknown config key "nonExistentKey"');
+            expect(() => config.get('nonExistentKey' as ConfigKey)).toThrow(
+                'ConfigManager: unknown config key "nonExistentKey"'
+            );
         });
 
-        it.each(Object.entries(CONFIG_DEFAULTS))('should return correct default for key "%s"', (key, expectedValue) => {
-            const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
-            expect(config.get(key)).toBe(String(expectedValue));
-        });
+        it.each(Object.entries(CONFIG_DEFAULTS) as [ConfigKey, string | boolean][])(
+            'should return correct default for key "%s"',
+            (key, expectedValue) => {
+                const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
+                expect(config.get(key as ConfigKey)).toBe(String(expectedValue));
+            }
+        );
     });
 
     describe('getInt', () => {
@@ -160,7 +172,9 @@ describe('ConfigManager', () => {
                     .build(),
                 buildLogger().build()
             );
-            expect(config.getInt('cacheTtlNoRating')).toBe(Number.parseInt(CONFIG_DEFAULTS.cacheTtlNoRating, 10));
+            expect(config.getInt('cacheTtlNoRating')).toBe(
+                Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10)
+            );
         });
 
         it('should return CONFIG_DEFAULTS from getInt when value is non-numeric', () => {
@@ -172,7 +186,7 @@ describe('ConfigManager', () => {
             );
             const result = config.getInt('cacheTtlNoRating');
             expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseInt(CONFIG_DEFAULTS.cacheTtlNoRating, 10));
+            expect(result).toBe(Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10));
         });
     });
 
@@ -214,7 +228,9 @@ describe('ConfigManager', () => {
                     .build(),
                 buildLogger().build()
             );
-            expect(config.getFloat('fadeRatingThreshold')).toBe(Number.parseFloat(CONFIG_DEFAULTS.fadeRatingThreshold));
+            expect(config.getFloat('fadeRatingThreshold')).toBe(
+                Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold))
+            );
         });
 
         it('should return CONFIG_DEFAULTS from getFloat when value is non-numeric', () => {
@@ -226,7 +242,7 @@ describe('ConfigManager', () => {
             );
             const result = config.getFloat('fadeRatingThreshold');
             expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseFloat(CONFIG_DEFAULTS.fadeRatingThreshold));
+            expect(result).toBe(Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold)));
         });
     });
 
