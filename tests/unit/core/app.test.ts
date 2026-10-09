@@ -11,13 +11,17 @@ import { Logger } from '../../../src/core/logger.js';
 import { OverlayRenderer } from '../../../src/core/overlay.js';
 import { NetflixService } from '../../../src/core/services/index.js';
 import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
+import type { Title } from '../../../src/core/title.js';
 import { buildMockAdapter } from '../../mocks/adapter.js';
 import { buildLogger } from '../../mocks/logger.js';
 import { buildTitle } from '../../mocks/title.js';
 
+type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
+
 describe('App', () => {
-    let mockMutationObserverInstance;
-    let appRef = null;
+    let mockMutationObserverInstance: (MutationObserver & { trigger: (_mutations: MutationRecord[]) => void }) | null =
+        null;
+    let appRef: FlixMonkeyApp | null = null;
     const ActualMutationObserver = global.MutationObserver;
 
     beforeEach(async () => {
@@ -30,15 +34,18 @@ describe('App', () => {
 
         // Patch MutationObserver to allow manual triggering of callbacks in tests
         global.MutationObserver = class extends ActualMutationObserver {
-            constructor(callback) {
+            callback: MockMutationCallback;
+            constructor(callback: MockMutationCallback) {
                 super(callback);
                 this.callback = callback;
-                mockMutationObserverInstance = this;
+                mockMutationObserverInstance = this as MutationObserver & {
+                    trigger: (_mutations: MutationRecord[]) => void;
+                };
             }
-            trigger(mutations) {
-                this.callback(mutations);
+            trigger(_mutations: MutationRecord[]): void {
+                this.callback(_mutations, this);
             }
-        };
+        } as unknown as typeof MutationObserver;
     });
 
     afterEach(() => {
@@ -54,7 +61,7 @@ describe('App', () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
         expect(appRef).toBeInstanceOf(FlixMonkeyApp);
-        expect(typeof appRef.redecorate).toBe('function');
+        expect(typeof appRef?.redecorate).toBe('function');
     });
 
     it('should discover titles in JSDOM', () => {
@@ -160,11 +167,21 @@ describe('App', () => {
     `;
         document.body.appendChild(container);
 
-        mockMutationObserverInstance.trigger([
-            {
-                addedNodes: [container],
-            },
-        ]);
+        if (mockMutationObserverInstance) {
+            mockMutationObserverInstance.trigger([
+                {
+                    addedNodes: [container] as unknown as NodeList,
+                    target: document.body,
+                    type: 'childList',
+                    removedNodes: [] as unknown as NodeList,
+                    previousSibling: null,
+                    nextSibling: null,
+                    attributeName: null,
+                    attributeNamespace: null,
+                    oldValue: null,
+                },
+            ]);
+        }
 
         await vi.waitFor(() => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
@@ -197,11 +214,22 @@ describe('App', () => {
             </div>
         `;
 
-        mockMutationObserverInstance.trigger([
-            {
-                addedNodes: [document.querySelector('.title-card')],
-            },
-        ]);
+        if (mockMutationObserverInstance) {
+            const titleCard = document.querySelector('.title-card');
+            mockMutationObserverInstance.trigger([
+                {
+                    addedNodes: titleCard ? ([titleCard] as unknown as NodeList) : ([] as unknown as NodeList),
+                    target: document.body,
+                    type: 'childList',
+                    removedNodes: [] as unknown as NodeList,
+                    previousSibling: null,
+                    nextSibling: null,
+                    attributeName: null,
+                    attributeNamespace: null,
+                    oldValue: null,
+                },
+            ]);
+        }
 
         await vi.waitFor(() => {
             if (spy.mock.calls.length < 2) throw new Error('Not called second time');
@@ -220,8 +248,8 @@ describe('App', () => {
         </div>
     `;
 
-        let resolveApi;
-        const apiPromise = new Promise(resolve => {
+        let resolveApi: (_value: Title) => void = () => {};
+        const apiPromise = new Promise<import('../../../src/core/title.js').Title>(resolve => {
             resolveApi = resolve;
         });
 
@@ -234,17 +262,17 @@ describe('App', () => {
         vi.runAllTimers();
 
         const card = document.querySelector('.title-card');
-        expect(card.querySelector('.fm-loading')).not.toBeNull();
+        expect(card?.querySelector('.fm-loading')).not.toBeNull();
 
-        resolveApi({ apiTitle: 'Test Title' });
+        resolveApi!(buildTitle().withApiTitle('Test Title').build());
         await apiPromise;
 
         // Wait for the app to finish processing and update the UI
         await vi.waitFor(() => {
-            expect(card.querySelector('.fm-loading')).toBeNull();
+            expect(card?.querySelector('.fm-loading')).toBeNull();
         });
 
-        expect(card.querySelector('.fm-rating-overlay')).not.toBeNull();
+        expect(card?.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
 
     it('should remove the loading overlay when getData rejects', async () => {
@@ -265,7 +293,7 @@ describe('App', () => {
 
         const card = document.querySelector('.title-card');
         await vi.waitFor(() => {
-            expect(card.querySelector('.fm-loading')).toBeNull();
+            expect(card?.querySelector('.fm-loading')).toBeNull();
         });
     });
 
@@ -308,7 +336,15 @@ describe('App', () => {
             getOverride: vi.fn().mockResolvedValue(null),
             shouldFade: vi.fn().mockReturnValue(false),
         };
-        const app = new FlixMonkeyApp(buildLogger().build(), {}, mockFadeManager, {}, mockRenderer, mockSurfaces, {});
+        const app = new FlixMonkeyApp(
+            buildLogger().build(),
+            {} as never,
+            mockFadeManager as never,
+            {} as never,
+            mockRenderer as never,
+            mockSurfaces as never,
+            {} as never
+        );
         app.init();
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         window.dispatchEvent(new Event('beforeunload'));
@@ -316,17 +352,17 @@ describe('App', () => {
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
         appRef = startApp(buildMockAdapter().build());
-        expect(appRef.cacheManager).toBeDefined();
-        expect(typeof appRef.cacheManager.clear).toBe('function');
-        expect(appRef.disabledManager).toBeDefined();
-        expect(typeof appRef.disabledManager.resetAll).toBe('function');
+        expect(appRef?.cacheManager).toBeDefined();
+        expect(typeof appRef?.cacheManager.clear).toBe('function');
+        expect(appRef?.disabledManager).toBeDefined();
+        expect(typeof appRef?.disabledManager.resetAll).toBe('function');
     });
 
     it('should return null when Netflix is disabled via enableNetflix config', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = buildMockAdapter()
-            .withConfigGetReturning(key => (key === 'enableNetflix' ? false : undefined))
+            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : null))
             .build();
         const result = startApp(adapter);
         expect(result).toBeNull();
@@ -336,12 +372,14 @@ describe('App', () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = buildMockAdapter()
-            .withConfigGetReturning(key => (key === 'enableNetflix' ? true : undefined))
+            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : null))
             .build();
         const result = startApp(adapter);
         expect(result).not.toBeNull();
-        expect(result).toBeInstanceOf(FlixMonkeyApp);
-        expect(typeof result.redecorate).toBe('function');
+        if (result) {
+            expect(result).toBeInstanceOf(FlixMonkeyApp);
+            expect(typeof result.redecorate).toBe('function');
+        }
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
@@ -352,7 +390,9 @@ describe('App', () => {
 
         // addedNodes: null causes Array.from(null) to throw inside the handler
         expect(() => {
-            mockMutationObserverInstance.trigger([{ addedNodes: null }]);
+            if (mockMutationObserverInstance) {
+                mockMutationObserverInstance.trigger([{ addedNodes: null } as unknown as MutationRecord]);
+            }
         }).not.toThrow();
 
         expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
@@ -406,7 +446,7 @@ describe('App', () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
 
-        const disconnectSpy = vi.spyOn(mockMutationObserverInstance, 'disconnect');
+        const disconnectSpy = vi.spyOn(mockMutationObserverInstance as MutationObserver, 'disconnect');
         window.dispatchEvent(new Event('beforeunload'));
         expect(disconnectSpy).toHaveBeenCalled();
     });
@@ -421,7 +461,11 @@ describe('App', () => {
         const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
 
         // Trigger mutation on parent, with target set
-        mockMutationObserverInstance.trigger([{ addedNodes: [parent], target: parent }]);
+        if (mockMutationObserverInstance) {
+            mockMutationObserverInstance.trigger([
+                { addedNodes: [parent], target: parent } as unknown as MutationRecord,
+            ]);
+        }
 
         vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
         await vi.runAllTimersAsync();
@@ -469,7 +513,9 @@ describe('App', () => {
         expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
         expect(container.hasAttribute('data-fm-injected')).toBe(true);
 
-        appRef.redecorate();
+        if (appRef) {
+            appRef.redecorate();
+        }
 
         // clearAllOverlays() must remove the overlay element AND the attribute,
         // leaving the container eligible for re-decoration
@@ -485,9 +531,9 @@ describe('App', () => {
         container.innerHTML = '<a aria-label="Detach Test"></a>';
         document.body.appendChild(container);
 
-        let resolveData;
+        let resolveData: (_value: Title) => void = () => {};
         vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(
-            new Promise(resolve => {
+            new Promise<import('../../../src/core/title.js').Title>(resolve => {
                 resolveData = resolve;
             })
         );
@@ -527,11 +573,11 @@ describe('App', () => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
         });
         await vi.runAllTimersAsync();
-        const card = document.querySelector('.title-card');
+        const card = document.querySelector('.title-card') as HTMLElement | null;
         await vi.waitFor(() => {
-            if (!card.dataset.fmKey) throw new Error('Not stamped yet');
+            if (!card?.dataset.fmKey) throw new Error('Not stamped yet');
         });
-        expect(card.dataset.fmKey).toBeTruthy();
+        expect(card?.dataset.fmKey).toBeTruthy();
         spy.mockRestore();
     });
 
@@ -551,11 +597,11 @@ describe('App', () => {
             if (spy.mock.calls.length === 0) throw new Error('Not called');
         });
         await vi.runAllTimersAsync();
-        const container = document.querySelector('.previewModal--player_container');
+        const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
         await vi.waitFor(() => {
-            if (!container.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
+            if (!container?.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
         });
-        expect(container.dataset.fmKey).toBeTruthy();
+        expect(container?.dataset.fmKey).toBeTruthy();
         spy.mockRestore();
     });
 
@@ -568,19 +614,19 @@ describe('App', () => {
             </div>
         `;
         const adapter = buildMockAdapter()
-            .withConfigGetReturning(key => (key === 'enableFadeToggle' ? true : undefined))
+            .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : null))
             .withStorageGetResolvingTo(null)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
         );
         appRef = startApp(adapter);
-        const container = document.querySelector('.previewModal--player_container');
+        const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
         await vi.waitFor(() => {
-            if (!container.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
+            if (!container?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
         });
-        expect(container.querySelector('.fm-fade-toggle')).not.toBeNull();
-        expect(container.querySelector('.fm-fade-toggle').dataset.state).toBe('auto');
+        expect(container?.querySelector('.fm-fade-toggle')).not.toBeNull();
+        expect((container?.querySelector('.fm-fade-toggle') as HTMLElement | null)?.dataset.state).toBe('auto');
     });
 
     it('should apply stored "always" fade override to browse title cards on reload', async () => {
@@ -591,11 +637,11 @@ describe('App', () => {
         `;
         const storageGet = vi
             .fn()
-            .mockImplementation(key =>
+            .mockImplementation((key: string) =>
                 key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
             );
         const adapter = buildMockAdapter()
-            .withConfigGetReturning(key => (key === 'enableFadeUnderRating' ? false : undefined))
+            .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : null))
             .withStorageGetResolvingTo(storageGet)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
@@ -603,12 +649,12 @@ describe('App', () => {
         );
         appRef = startApp(adapter);
         vi.advanceTimersToNextTimer();
-        const card = document.querySelector('.title-card');
+        const card = document.querySelector('.title-card') as HTMLElement | null;
         await vi.waitFor(() => {
-            if (!card.querySelector('.fm-rating-overlay:not(.fm-loading)'))
+            if (!card?.querySelector('.fm-rating-overlay:not(.fm-loading)'))
                 throw new Error('Final overlay not injected');
         });
-        expect(card.classList.contains('fm-faded')).toBe(true);
+        expect(card?.classList.contains('fm-faded')).toBe(true);
     });
 
     it('should cycle fade toggle state on click and update sibling cards', async () => {
@@ -623,10 +669,10 @@ describe('App', () => {
         const storageGet = vi.fn().mockResolvedValue(null);
         const storageSet = vi.fn().mockResolvedValue(undefined);
         const adapter = buildMockAdapter()
-            .withConfigGetReturning(key => {
+            .withConfigGetReturning((key: string) => {
                 if (key === 'enableFadeToggle') return true;
                 if (key === 'enableFadeUnderRating') return false;
-                return undefined;
+                return null;
             })
             .withStorageGetResolvingTo(storageGet)
             .withStorageSetResolvingTo(storageSet)
@@ -636,19 +682,19 @@ describe('App', () => {
         );
         appRef = startApp(adapter);
         vi.advanceTimersToNextTimer();
-        const modal = document.querySelector('.previewModal--player_container');
+        const modal = document.querySelector('.previewModal--player_container') as HTMLElement | null;
         await vi.waitFor(() => {
-            if (!modal.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
+            if (!modal?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
         });
-        const toggle = modal.querySelector('.fm-fade-toggle');
-        expect(toggle.dataset.state).toBe('auto');
-        toggle.click();
+        const toggle = modal?.querySelector('.fm-fade-toggle') as HTMLElement | null;
+        expect(toggle?.dataset.state).toBe('auto');
+        toggle?.click();
         await vi.waitFor(() => {
-            if (toggle.dataset.state !== 'always') throw new Error('State not updated');
+            if (toggle?.dataset.state !== 'always') throw new Error('State not updated');
         });
         expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
-        const card = document.querySelector('.title-card');
-        expect(card.classList.contains('fm-faded')).toBe(true);
+        const card = document.querySelector('.title-card') as HTMLElement | null;
+        expect(card?.classList.contains('fm-faded')).toBe(true);
     });
 
     it('should return null when ServiceRegistry.detect returns null', async () => {
@@ -660,21 +706,26 @@ describe('App', () => {
 
     it('should return null when ServiceRegistry.detect returns undefined', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
         const result = startApp(buildMockAdapter().build());
         expect(result).toBeNull();
     });
 
     describe('IMDb ID override handlers', () => {
-        let mockOverrideManager;
-        let mockCache;
-        let mockRenderer;
+        let mockOverrideManager: { getImdbId: () => Promise<string | null>; setImdbId: () => Promise<void> };
+        let mockCache: { delete: () => Promise<void> };
+        let mockRenderer: Record<string, { mock: { calls: unknown[][] } }>;
 
         /**
          * Decorates `container` and resolves with the click callbacks the app wires into
          * the overlay. That wiring is the only production path to the private handlers.
          */
-        const decorateAndCaptureActions = async container => {
+        const decorateAndCaptureActions = async (
+            container: Element
+        ): Promise<{
+            onEditClick: ((_displayTitle: string, _imdbId: string | null) => Promise<void>) | null;
+            onRefreshClick: ((_displayTitle: string) => Promise<void>) | null;
+        }> => {
             mockRenderer = {
                 hasOverlay: vi.fn().mockReturnValue(false),
                 isLoading: vi.fn().mockReturnValue(false),
@@ -687,27 +738,34 @@ describe('App', () => {
             };
             const app = new FlixMonkeyApp(
                 buildLogger().build(),
-                mockCache,
-                {},
-                mockOverrideManager,
-                mockRenderer,
+                mockCache as never,
+                {} as never,
+                mockOverrideManager as never,
+                mockRenderer as never,
                 {
                     discover: vi
                         .fn()
                         .mockReturnValue([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }]),
-                },
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) }
+                } as never,
+                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) } as never
             );
             app.init();
 
             await vi.waitFor(() => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const [, , , , onEditClick, onRefreshClick] = mockRenderer.injectOverlay.mock.calls[0];
-            return { onEditClick, onRefreshClick };
+            const calls = mockRenderer.injectOverlay.mock.calls[0] as unknown[];
+            const [, , , , onEditClick, onRefreshClick] = calls;
+            return {
+                onEditClick: onEditClick as ((_displayTitle: string, _imdbId: string | null) => Promise<void>) | null,
+                onRefreshClick: onRefreshClick as ((_displayTitle: string) => Promise<void>) | null,
+            };
         };
 
-        const withPromptResult = async (promptResult, fn) => {
+        const withPromptResult = async (
+            promptResult: string | null,
+            fn: () => Promise<void>
+        ): Promise<() => string | null> => {
             const originalPrompt = window.prompt;
             const promptMock = vi.fn().mockReturnValue(promptResult);
             window.prompt = promptMock;
@@ -732,7 +790,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult(null, () => onEditClick('Test Movie', null));
+            await withPromptResult(null, () => onEditClick!('Test Movie', null));
 
             expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
             expect(mockCache.delete).not.toHaveBeenCalled();
@@ -746,7 +804,7 @@ describe('App', () => {
             window.alert = vi.fn();
 
             try {
-                await withPromptResult('invalid-id', () => onEditClick('Test Movie', null));
+                await withPromptResult('invalid-id', () => onEditClick!('Test Movie', null));
                 expect(window.alert).toHaveBeenCalledWith(
                     'Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)'
                 );
@@ -762,7 +820,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult('tt0133093', () => onEditClick('Test Movie', null));
+            await withPromptResult('tt0133093', () => onEditClick!('Test Movie', null));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
@@ -773,7 +831,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick('Test Movie', null));
+            await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick!('Test Movie', null));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
@@ -782,10 +840,10 @@ describe('App', () => {
         it('should prefill the prompt with the current override before the API IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
-            mockOverrideManager.getImdbId.mockResolvedValue('tt0000001');
+            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt0000001');
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            const promptMock = await withPromptResult(null, () => onEditClick('Test Movie', 'tt9999999'));
+            const promptMock = await withPromptResult(null, () => onEditClick!('Test Movie', 'tt9999999'));
 
             expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
         });
@@ -796,7 +854,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onRefreshClick } = await decorateAndCaptureActions(container);
 
-            await onRefreshClick('Test Movie');
+            await onRefreshClick!('Test Movie');
 
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
