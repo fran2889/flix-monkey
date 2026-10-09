@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FlixMonkeyError } from '../../../src/core/utils/index.js';
 import { UserscriptAdapter } from '../../../src/platform/userscript.ts';
-import { setupUserscriptMocks } from '../../mocks/platform.js';
+import { setupUserscriptMocks } from '../../mocks/platform.ts';
 
 describe('UserscriptAdapter', () => {
     let adapter;

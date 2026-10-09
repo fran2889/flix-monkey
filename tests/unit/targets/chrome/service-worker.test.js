@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { chrome } from '../../../mocks/chrome.js';
+import { chrome } from '../../../mocks/chrome.ts';
 
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),
