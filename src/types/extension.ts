@@ -5,22 +5,21 @@
 
 /**
  * Result of domain validation.
- * @typedef {{valid: true}|{valid: false, error: string}} DomainValidationResult
  */
+export type DomainValidationResult = { valid: true } | { valid: false; error: string };
 
 /**
  * Response from the extension background fetch proxy.
- * @typedef {{data: unknown}|{error: string, status?: number, body?: string|null}} FetchProxyResponse
  * Response returned by the extension background relay. Error bodies are capped
  * at 200 characters when an HTTP response is available.
  */
+export type FetchProxyResponse = { data: unknown } | { error: string; status?: number; body?: string | null };
 
 /**
  * Actions available in the settings UI.
- * @typedef {object} SettingsActions
- * @property {() => void | Promise<void>} onSave
- * @property {() => void | Promise<void>} onClearCache
- * @property {() => void | Promise<void>} onResetClients
  */
-
-export {};
+export interface SettingsActions {
+    onSave: () => void | Promise<void>;
+    onClearCache: () => void | Promise<void>;
+    onResetClients: () => void | Promise<void>;
+}

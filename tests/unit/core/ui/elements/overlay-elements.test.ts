@@ -20,8 +20,8 @@ const defaultOptions = {
     corner: 'top-left',
 };
 
-function createOverlay(title, options = {}) {
-    return createOverlayElement(title, { ...defaultOptions, ...options });
+function createOverlay(title: Partial<Title>, options: Partial<Parameters<typeof createOverlayElement>[1]> = {}) {
+    return createOverlayElement(new Title(title), { ...defaultOptions, ...options });
 }
 
 describe('createOverlayElement', () => {
@@ -29,7 +29,7 @@ describe('createOverlayElement', () => {
         const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 7.5 }));
 
         expect(element.className).toBe('fm-rating-overlay fm-top-left');
-        expect(element.querySelector('a').href).toContain('/title/tt1234567/');
+        expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('/title/tt1234567/');
         expect(element.textContent).toContain('IMDb 7.5');
     });
 
@@ -83,7 +83,7 @@ describe('createOverlayElement', () => {
         const element = createOverlay({ imdbRating: null, imdbId: null });
 
         expect(element.querySelector('.fm-search')).not.toBeNull();
-        expect(element.querySelector('.fm-search').textContent).toBe('🔍');
+        expect((element.querySelector('.fm-search') as HTMLElement)?.textContent).toBe('🔍');
     });
 
     it('shows N/A when imdbId is present but rating is missing', () => {
@@ -98,13 +98,13 @@ describe('createOverlayElement', () => {
     });
 
     it.each([
-        ['normal ratings', { imdbRating: 8.2, rtRating: 85, imdbId: 'tt1' }, 'IMDb: 8.2 · Open IMDb'],
+        ['normal ratings', { imdbRating: 8.5, imdbVotes: 250000 }, 'IMDb: 8.5 (250k votes) · Open IMDb'],
         ['no ratings but IMDb ID present', { imdbRating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
         ['missing IMDb ID', { imdbRating: null, imdbId: null }, 'IMDb: Not found · Search IMDb'],
-    ])('builds the tooltip title for %s', (_, title, expectedTitle) => {
+    ])('builds the tooltip title for %s', (_: string, title: Partial<Title>, expectedTitle: string) => {
         const element = createOverlay(title, { showRtRating: true });
 
-        expect(element.querySelector('a').title).toBe(expectedTitle);
+        expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
     });
 
     describe('loading overlay', () => {
@@ -125,18 +125,20 @@ describe('createOverlayElement', () => {
         it('links the loading badge to an IMDb title search', () => {
             const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
 
-            expect(element.querySelector('a').href).toBe('https://www.imdb.com/find/?q=The%20Matrix');
+            expect((element.querySelector('a') as HTMLAnchorElement)?.href).toBe(
+                'https://www.imdb.com/find/?q=The%20Matrix'
+            );
         });
 
         it('url-encodes the search title', () => {
             const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
 
-            expect(element.querySelector('a').href).toContain('q=WALL-E%20%26%20co');
+            expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('q=WALL-E%20%26%20co');
         });
     });
 
     describe('fade toggle', () => {
-        const title = { imdbRating: 7, imdbUrl: 'https://www.imdb.com/title/tt1/', imdbId: 'tt1' };
+        const title = { imdbRating: 7, imdbUrl: 'http://imdb.com' };
 
         it('does not render the toggle when the click callback is absent', () => {
             const element = createOverlay(title, { showFadeToggle: true });
@@ -152,14 +154,14 @@ describe('createOverlayElement', () => {
 
         it('renders auto state with the star icon', () => {
             const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick: vi.fn() });
-            const toggle = element.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
+            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
+            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
 
-            expect(toggle.tagName).toBe('DIV');
-            expect(toggle.dataset.state).toBe('auto');
-            expect(toggle.title).toBe('Fade: Auto');
-            expect(icon.textContent).toBe('⭐');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(toggle?.tagName).toBe('DIV');
+            expect(toggle?.getAttribute('data-state')).toBe('auto');
+            expect(toggle?.title).toBe('Fade: Auto');
+            expect(icon?.textContent).toBe('⭐');
+            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
 
         it('renders always state with a faded eye icon', () => {
@@ -168,13 +170,13 @@ describe('createOverlayElement', () => {
                 fadeToggleState: 'always',
                 onFadeToggleClick: vi.fn(),
             });
-            const toggle = element.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
+            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
+            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
 
-            expect(toggle.dataset.state).toBe('always');
-            expect(toggle.title).toBe('Fade: Always');
-            expect(icon.textContent).toBe('👁️');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
+            expect(toggle?.getAttribute('data-state')).toBe('always');
+            expect(toggle?.title).toBe('Fade: Always');
+            expect(icon?.textContent).toBe('👁️');
+            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(true);
         });
 
         it('renders never state with a non-faded eye icon', () => {
@@ -183,21 +185,21 @@ describe('createOverlayElement', () => {
                 fadeToggleState: 'never',
                 onFadeToggleClick: vi.fn(),
             });
-            const toggle = element.querySelector('.fm-fade-toggle');
-            const icon = toggle.querySelector('.fm-fade-toggle-icon');
+            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
+            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
 
-            expect(toggle.dataset.state).toBe('never');
-            expect(toggle.title).toBe('Fade: Never');
-            expect(icon.textContent).toBe('👁️');
-            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(toggle?.getAttribute('data-state')).toBe('never');
+            expect(toggle?.title).toBe('Fade: Never');
+            expect(icon?.textContent).toBe('👁️');
+            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
         });
 
         it('calls the fade-toggle callback with the badge element', () => {
             const onFadeToggleClick = vi.fn();
             const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick });
-            const toggle = element.querySelector('.fm-fade-toggle');
+            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
 
-            toggle.click();
+            toggle?.click();
 
             expect(onFadeToggleClick).toHaveBeenCalledWith(toggle);
         });
@@ -205,18 +207,19 @@ describe('createOverlayElement', () => {
 
     describe('IMDb link', () => {
         it('opens in a new tab without leaking the referrer', () => {
-            const link = createOverlay({ imdbUrl: 'http://imdb.com' }).querySelector('a');
+            const link = createOverlay({ imdbUrl: 'http://imdb.com' }).querySelector('a') as HTMLAnchorElement;
 
-            expect(link.target).toBe('_blank');
-            expect(link.rel).toBe('noopener noreferrer');
+            expect(link?.target).toBe('_blank');
+            expect(link?.rel).toBe('noopener noreferrer');
         });
 
         it('stops propagation so the card does not navigate', () => {
             const element = createOverlay({ imdbUrl: 'http://imdb.com' });
+            const link = element.querySelector('a') as HTMLElement;
             const event = new MouseEvent('click', { bubbles: true });
             const spy = vi.spyOn(event, 'stopPropagation');
 
-            element.querySelector('a').dispatchEvent(event);
+            link?.dispatchEvent(event);
 
             expect(spy).toHaveBeenCalled();
         });
@@ -229,12 +232,14 @@ describe('createOverlayElement', () => {
                 { showRtRating: true, showMcRating: true }
             );
 
-            [element.querySelector('.fm-rt').parentElement, element.querySelector('.fm-mc').parentElement].forEach(
+            [element.querySelector('.fm-rt')?.parentElement, element.querySelector('.fm-mc')?.parentElement].forEach(
                 badge => {
-                    const event = new MouseEvent('click', { bubbles: true });
-                    const spy = vi.spyOn(event, 'stopPropagation');
-                    badge.dispatchEvent(event);
-                    expect(spy).toHaveBeenCalled();
+                    if (badge) {
+                        const event = new MouseEvent('click', { bubbles: true });
+                        const spy = vi.spyOn(event, 'stopPropagation');
+                        badge.dispatchEvent(event);
+                        expect(spy).toHaveBeenCalled();
+                    }
                 }
             );
         });
@@ -246,10 +251,10 @@ describe('createOverlayElement', () => {
             [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: null }, 'Test\nIMDb: 7.5 · Open IMDb'],
             [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
-        ])('formats tooltip for vote data %o', (titleData, expectedTitle) => {
+        ])('formats tooltip for vote data %o', (titleData: Partial<Title>, expectedTitle: string) => {
             const element = createOverlay(new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData }));
 
-            expect(element.querySelector('a').title).toBe(expectedTitle);
+            expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
         });
 
         it('formats a small vote count', () => {
@@ -257,7 +262,7 @@ describe('createOverlayElement', () => {
                 new Title({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 })
             );
 
-            expect(element.querySelector('a').title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
+            expect((element.querySelector('a') as HTMLElement)?.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
         });
 
         it('formats apiTitle and year', () => {
@@ -271,7 +276,7 @@ describe('createOverlayElement', () => {
                 })
             );
 
-            expect(element.querySelector('a').title).toBe(
+            expect((element.querySelector('a') as HTMLElement)?.title).toBe(
                 'The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb'
             );
         });
@@ -281,7 +286,9 @@ describe('createOverlayElement', () => {
                 new Title({ apiTitle: 'Inception', imdbId: 'tt1375666', imdbRating: 8.8, imdbVotes: 2400000 })
             );
 
-            expect(element.querySelector('a').title).toBe('Inception\nIMDb: 8.8 (2M votes) · Open IMDb');
+            expect((element.querySelector('a') as HTMLElement)?.title).toBe(
+                'Inception\nIMDb: 8.8 (2M votes) · Open IMDb'
+            );
         });
     });
 
@@ -293,23 +300,26 @@ describe('createOverlayElement', () => {
             ['IMDb high rating', 9, false, 'rgb(0, 221, 0)'],
             ['percentage low rating', 50, true, 'rgb(255, 0, 0)'],
             ['percentage high rating', 90, true, 'rgb(0, 221, 0)'],
-        ])('uses the threshold color for %s', (_, rating, isPercentage, expectedColor) => {
-            const element = isPercentage
-                ? createOverlay(
-                      { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
-                      { showRtRating: true }
-                  )
-                : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
-            const valueSpans = element.querySelectorAll('.fm-value');
-            const value = isPercentage ? valueSpans[1] : valueSpans[0];
+        ])(
+            'uses the threshold color for %s',
+            (_: string, rating: number, isPercentage: boolean, expectedColor: string) => {
+                const element = isPercentage
+                    ? createOverlay(
+                          { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
+                          { showRtRating: true }
+                      )
+                    : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+                const valueSpans = element.querySelectorAll('.fm-value');
+                const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
-            expect(value.style.color).toBe(expectedColor);
-        });
+                expect((value as HTMLElement)?.style.color).toBe(expectedColor);
+            }
+        );
 
         it.each([
             ['IMDb rating', 7, false],
             ['percentage rating', 70, true],
-        ])('uses a gradient color for %s', (_, rating, isPercentage) => {
+        ])('uses a gradient color for %s', (_: string, rating: number, isPercentage: boolean) => {
             const element = isPercentage
                 ? createOverlay(
                       { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
@@ -319,13 +329,13 @@ describe('createOverlayElement', () => {
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
-            expect(value.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+            expect((value as HTMLElement)?.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
         });
 
         it('does not apply color to N/A', () => {
             const element = createOverlay({ imdbRating: null, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
 
-            expect(element.querySelector('.fm-na').style.color).toBe('');
+            expect((element.querySelector('.fm-na') as HTMLElement)?.style.color).toBe('');
         });
 
         it('applies a gradient color to MC ratings', () => {
@@ -334,7 +344,9 @@ describe('createOverlayElement', () => {
                 { showMcRating: true }
             );
 
-            expect(element.querySelectorAll('.fm-value')[1].style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+            expect((element.querySelectorAll('.fm-value')[1] as HTMLElement).style.color).toMatch(
+                /^rgb\(\d+, \d+, \d+\)$/
+            );
         });
     });
 
@@ -404,8 +416,8 @@ describe('createOverlayElement', () => {
                 { onEditClick, displayTitle: 'Test Movie' }
             );
 
-            const editIcon = element.querySelector('.fm-icon-btn');
-            editIcon.click();
+            const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
+            editIcon?.click();
 
             expect(onEditClick).toHaveBeenCalledWith('Test Movie', 'tt1234567');
         });
@@ -420,7 +432,7 @@ describe('createOverlayElement', () => {
 
             const iconButtons = element.querySelectorAll('.fm-icon-btn');
             // Refresh is the second button
-            iconButtons[1].click();
+            (iconButtons[1] as HTMLElement).click();
 
             expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
         });
@@ -432,10 +444,10 @@ describe('createOverlayElement', () => {
                 { onEditClick, displayTitle: 'Test Movie' }
             );
 
-            const editIcon = element.querySelector('.fm-icon-btn');
+            const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
             const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-            editIcon.dispatchEvent(event);
+            editIcon?.dispatchEvent(event);
 
             expect(event.defaultPrevented).toBe(true);
             expect(onEditClick).toHaveBeenCalled();

@@ -7,15 +7,16 @@
  * Accessible modal dialog component for settings and other UI overlays.
  */
 export class Modal {
-    #returnFocus = null;
-    #escHandler = null;
+    #returnFocus: HTMLElement | null = null;
+    #escHandler: ((_e: KeyboardEvent) => void) | null = null;
+    overlay: HTMLDivElement;
 
     /**
      * Creates a modal dialog with the specified title.
      *
-     * @param {string} title - Modal title displayed in the header.
+     * @param title - Modal title displayed in the header.
      */
-    constructor(title) {
+    constructor(title: string) {
         const titleId = `fm-modal-title-${crypto.randomUUID()}`;
 
         this.overlay = document.createElement('div');
@@ -52,33 +53,40 @@ export class Modal {
     /**
      * Displays the modal and sets up keyboard navigation.
      */
-    open() {
-        if (this.#escHandler) return;
+    open(): void {
+        if (this.#escHandler !== null) return;
         document.body.appendChild(this.overlay);
-        this.#returnFocus = document.activeElement;
+        this.#returnFocus = document.activeElement as HTMLElement | null;
         this.overlay.style.display = 'flex';
-        this.overlay.querySelector('.fm-modal-content').focus();
-        this.#escHandler = e => {
+        const contentElement = this.overlay.querySelector('.fm-modal-content');
+        if (contentElement) {
+            (contentElement as HTMLElement).focus();
+        }
+        this.#escHandler = (e: KeyboardEvent): void => {
             if (e.key === 'Escape') this.#close();
         };
         document.addEventListener('keydown', this.#escHandler);
     }
 
-    #close() {
-        if (this.#escHandler) {
+    #close(): void {
+        if (this.#escHandler !== null) {
             document.removeEventListener('keydown', this.#escHandler);
             this.#escHandler = null;
         }
         this.overlay.remove();
-        this.#returnFocus?.focus();
+        this.#returnFocus?.focus?.();
     }
 
     /**
      * Returns the modal body container for adding custom content.
      *
-     * @returns {HTMLElement} The modal body container.
+     * @returns The modal body container.
      */
-    getContentContainer() {
-        return this.overlay.querySelector('.fm-modal-body');
+    getContentContainer(): HTMLElement {
+        const body = this.overlay.querySelector('.fm-modal-body');
+        if (body === null) {
+            throw new Error('Modal body container not found');
+        }
+        return body as HTMLElement;
     }
 }

@@ -2,29 +2,39 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { PlatformAdapter } from '../../platform/adapter.js';
+import type { CacheManager } from '../cache/index.js';
 import { CONFIG_FIELDS } from '../config/index.js';
-import { SettingsView } from './settings-view.js';
+import type { DisabledClientsManager } from '../disabled-clients.js';
+import type { Logger } from '../logger.js';
+import { type ConfigField, SettingsView } from './settings-view.js';
 
 /**
  * Manages the settings UI, handling rendering, saving, and interactions.
  */
 export class SettingsUI {
-    #adapter;
-    #cacheManager;
-    #disabledClientsManager;
-    #view;
-    #logger;
+    #adapter: PlatformAdapter;
+    #cacheManager: CacheManager;
+    #disabledClientsManager: DisabledClientsManager;
+    #view: SettingsView;
+    #logger: Logger;
 
     /**
      * Creates a new SettingsUI instance.
      *
-     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Platform storage adapter.
-     * @param {import('../logger.js').Logger} logger - Logger for error reporting.
-     * @param {import('../cache/').CacheManager} cacheManager - Cache manager for clearing data.
-     * @param {import('../disabled-clients.js').DisabledClientsManager} disabledClientsManager - Manager for disabled API clients.
-     * @param {typeof CONFIG_FIELDS} [fields=CONFIG_FIELDS] - Configuration field definitions.
+     * @param adapter - Platform storage adapter.
+     * @param logger - Logger for error reporting.
+     * @param cacheManager - Cache manager for clearing data.
+     * @param disabledClientsManager - Manager for disabled API clients.
+     * @param fields - Configuration field definitions.
      */
-    constructor(adapter, logger, cacheManager, disabledClientsManager, fields = CONFIG_FIELDS) {
+    constructor(
+        adapter: PlatformAdapter,
+        logger: Logger,
+        cacheManager: CacheManager,
+        disabledClientsManager: DisabledClientsManager,
+        fields: readonly ConfigField[] = CONFIG_FIELDS as unknown as readonly ConfigField[]
+    ) {
         this.#adapter = adapter;
         this.#cacheManager = cacheManager;
         this.#disabledClientsManager = disabledClientsManager;
@@ -39,17 +49,17 @@ export class SettingsUI {
     /**
      * Renders the settings view into the provided container with current settings.
      *
-     * @param {HTMLElement} container - DOM element to render settings into.
+     * @param container - DOM element to render settings into.
      */
-    async render(container) {
-        const settings = (await this.#adapter.storageGetAll()) || {};
+    async render(container: HTMLElement): Promise<void> {
+        const settings = (await this.#adapter.storageGetAll()) ?? {};
         this.#view.render(container, settings);
     }
 
     /**
      * Saves the current settings values to storage after validation.
      */
-    async save() {
+    async save(): Promise<void> {
         try {
             const values = this.#view.readValues();
             const errors = this.#view.validate(values);
@@ -58,22 +68,23 @@ export class SettingsUI {
                 return;
             }
 
-            await this.#adapter.storageSetMany(values);
+            await this.#adapter.storageSetMany(values as Record<string, string | boolean>);
         } catch (err) {
             this.#logger.error('Settings save error:', err);
         }
     }
 
-    async #clearCache() {
+    async #clearCache(): Promise<void> {
         try {
             await this.#cacheManager.clear();
             this.#view.showStatus('Cache cleared.', 'success');
         } catch (err) {
-            this.#view.showStatus(`Error: ${err.message}`, 'error');
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            this.#view.showStatus(`Error: ${errorMessage}`, 'error');
         }
     }
 
-    async #resetClients() {
+    async #resetClients(): Promise<void> {
         try {
             const reenabled = await this.#disabledClientsManager.resetAll();
             const message =
@@ -82,7 +93,8 @@ export class SettingsUI {
                     : 'No disabled API clients found to re-enable.';
             this.#view.showStatus(message, 'success');
         } catch (err) {
-            this.#view.showStatus(`Error: ${err.message}`, 'error');
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            this.#view.showStatus(`Error: ${errorMessage}`, 'error');
         }
     }
 }

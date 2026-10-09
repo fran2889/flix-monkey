@@ -9,29 +9,32 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants.js';
+import type { Title } from '../title.js';
 import { buildImdbUrl, interpolateColor } from '../utils/index.js';
 
 /**
- * @typedef {object} OverlayOptions
- * @property {string} overlayClass - CSS class assigned to the overlay.
- * @property {boolean} showRtRating - Whether to display Rotten Tomatoes ratings.
- * @property {boolean} showMcRating - Whether to display Metacritic ratings.
- * @property {boolean} showFadeToggle - Whether fade toggles are enabled.
- * @property {'auto'|'always'|'never'|null} fadeToggleState - Current fade override state.
- * @property {((element: HTMLElement) => void)|null} onFadeToggleClick - Fade-toggle click handler.
- * @property {string} corner - The overlay corner position (e.g., 'top-left', 'top-right').
- * @property {((displayTitle: string) => void)|null} onEditClick - Edit icon click handler.
- * @property {((displayTitle: string) => void)|null} onRefreshClick - Refresh icon click handler.
- * @property {string} displayTitle - The display title for this overlay.
+ * Options for creating overlay elements.
  */
+export interface OverlayOptions {
+    overlayClass: string;
+    showRtRating: boolean;
+    showMcRating: boolean;
+    showFadeToggle: boolean;
+    fadeToggleState: 'auto' | 'always' | 'never' | null;
+    onFadeToggleClick: ((_element: HTMLElement) => void) | null;
+    corner: string;
+    onEditClick: ((_displayTitle: string, _imdbId: string | null) => void) | null;
+    onRefreshClick: ((_displayTitle: string) => void) | null;
+    displayTitle: string;
+}
 
 export const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',
     always: 'Always',
     never: 'Never',
-});
+} as const);
 
-function createBadgeElement(label, value, labelClassName, valueClassName) {
+function createBadgeElement(label: string, value: string, labelClassName: string, valueClassName: string): HTMLElement {
     const el = document.createElement('div');
     const spanLabel = document.createElement('span');
     spanLabel.className = `fm-label ${labelClassName}`;
@@ -44,26 +47,29 @@ function createBadgeElement(label, value, labelClassName, valueClassName) {
     return el;
 }
 
-function createRatingElement(label, value, className) {
+function createRatingElement(label: string, value: string, className: string): HTMLElement {
     const el = createBadgeElement(label, value, className, 'fm-value');
 
     // Apply gradient color to rating values
     const numericValue = Number(value.replace('%', ''));
     const isPercentage = value.includes('%');
-    el.lastChild.style.color = calculateRatingColor(numericValue, isPercentage);
+    (el.lastChild as HTMLElement).style.color = calculateRatingColor(numericValue, isPercentage);
 
     return el;
 }
 
-function createMissingRatingElement(label, className) {
+function createMissingRatingElement(label: string, className: string): HTMLElement {
     return createBadgeElement(label, 'N/A', className, 'fm-na');
 }
 
-function createSearchRatingElement(label, className) {
+function createSearchRatingElement(label: string, className: string): HTMLElement {
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
-function createFadeToggle(state, onClick) {
+function createFadeToggle(
+    state: 'auto' | 'always' | 'never' | null | undefined,
+    onClick: (_el: HTMLElement) => void
+): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
     el.dataset.state = state ?? 'auto';
@@ -77,14 +83,14 @@ function createFadeToggle(state, onClick) {
     if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
     el.appendChild(icon);
-    el.addEventListener('click', e => {
+    el.addEventListener('click', (e: Event) => {
         e.stopPropagation();
         onClick(el);
     });
     return el;
 }
 
-function calculateRatingColor(rating, isPercentage) {
+function calculateRatingColor(rating: number, isPercentage: boolean): string {
     const low = isPercentage ? RATING_COLOR_LOW_THRESHOLD * 10 : RATING_COLOR_LOW_THRESHOLD;
     const high = isPercentage ? RATING_COLOR_HIGH_THRESHOLD * 10 : RATING_COLOR_HIGH_THRESHOLD;
 
@@ -95,17 +101,17 @@ function calculateRatingColor(rating, isPercentage) {
     return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
 }
 
-function formatImdbRating(rating) {
+function formatImdbRating(rating: number | string | null): string {
     if (typeof rating !== 'number') return String(rating);
     return rating.toFixed(1);
 }
 
-function formatPercentRating(rating) {
+function formatPercentRating(rating: number | string | null): string {
     if (typeof rating !== 'number') return String(rating);
     return `${rating}%`;
 }
 
-function formatVoteCount(count) {
+function formatVoteCount(count: number | null | undefined): string {
     if (count === null || count === undefined) return '';
     const num = Number(count);
     if (Number.isNaN(num) || num < 0) return '';
@@ -114,7 +120,12 @@ function formatVoteCount(count) {
     return String(Math.round(num));
 }
 
-function buildTooltip(titleParts, imdbId, apiTitle, year) {
+function buildTooltip(
+    titleParts: string[],
+    imdbId: string | null,
+    apiTitle: string | null,
+    year: number | null
+): string {
     let tooltipContent = 'IMDb: Not found · Search IMDb';
     if (titleParts.length) {
         tooltipContent = `${titleParts.join(' · ')} · Open IMDb`;
@@ -129,9 +140,9 @@ function buildTooltip(titleParts, imdbId, apiTitle, year) {
     return tooltipContent;
 }
 
-function appendImdbRating(imdbLink, title) {
+function appendImdbRating(imdbLink: HTMLAnchorElement, title: Title): string[] {
     const { imdbRating, imdbId, imdbVotes } = title;
-    const titleParts = [];
+    const titleParts: string[] = [];
     if (imdbRating !== null && imdbRating !== undefined) {
         const formatted = formatImdbRating(imdbRating);
         const votesStr = formatVoteCount(imdbVotes);
@@ -146,18 +157,23 @@ function appendImdbRating(imdbLink, title) {
     return titleParts;
 }
 
-function createOptionalRatingBadge(label, rating, className, showRating) {
+function createOptionalRatingBadge(
+    label: string,
+    rating: number | null | undefined,
+    className: string,
+    showRating: boolean
+): HTMLElement | null {
     if (!showRating || rating === null || rating === undefined) return null;
     const formatted = formatPercentRating(rating);
     const badge = createRatingElement(label, formatted, className);
     badge.classList.add('fm-rating-badge');
-    badge.addEventListener('click', e => e.stopPropagation());
+    badge.addEventListener('click', (e: Event) => e.stopPropagation());
     return badge;
 }
 
-function setupHoverActions(ratingsWrapper, actionsContainer) {
-    let hoverTimeout = null;
-    const clearHover = () => {
+function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLElement): void {
+    let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+    const clearHover = (): void => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
             hoverTimeout = null;
@@ -173,7 +189,12 @@ function setupHoverActions(ratingsWrapper, actionsContainer) {
     ratingsWrapper.addEventListener('mouseleave', clearHover);
 }
 
-function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeToggleClick) {
+function appendFadeToggle(
+    container: HTMLElement,
+    showFadeToggle: boolean,
+    fadeToggleState: 'auto' | 'always' | 'never' | null,
+    onFadeToggleClick: ((_element: HTMLElement) => void) | null
+): void {
     if (showFadeToggle && onFadeToggleClick) {
         container.appendChild(createFadeToggle(fadeToggleState, onFadeToggleClick));
     }
@@ -182,12 +203,12 @@ function appendFadeToggle(container, showFadeToggle, fadeToggleState, onFadeTogg
 /**
  * Builds the full rating overlay DOM element with ratings, fade controls, and action buttons.
  *
- * @param {import('../title.js').Title} title - Title and rating data to display.
- * @param {OverlayOptions} options - Overlay presentation options.
- * @returns {HTMLElement} Completed overlay element with all configured ratings and controls.
+ * @param title - Title and rating data to display.
+ * @param options - Overlay presentation options.
+ * @returns Completed overlay element with all configured ratings and controls.
  */
 export function createOverlayElement(
-    title,
+    title: Title,
     {
         overlayClass,
         showRtRating,
@@ -199,8 +220,8 @@ export function createOverlayElement(
         onEditClick,
         onRefreshClick,
         displayTitle,
-    }
-) {
+    }: OverlayOptions
+): HTMLElement {
     const container = document.createElement('div');
     container.className = overlayClass;
     container.classList.add(`fm-${corner}`);
@@ -223,11 +244,13 @@ export function createOverlayElement(
 
     if (onEditClick) {
         const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
-        const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
-            onRefreshClick(displayTitle)
-        );
         actionsContainer.appendChild(editIcon);
-        actionsContainer.appendChild(refreshIcon);
+        if (onRefreshClick) {
+            const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
+                onRefreshClick(displayTitle)
+            );
+            actionsContainer.appendChild(refreshIcon);
+        }
         imdbRow.appendChild(actionsContainer);
         setupHoverActions(ratingsWrapper, actionsContainer);
     }
@@ -249,22 +272,22 @@ export function createOverlayElement(
     return container;
 }
 
-function createImdbLink(href) {
+function createImdbLink(href: string): HTMLAnchorElement {
     const link = document.createElement('a');
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.href = href;
     link.classList.add('fm-rating-badge', 'fm-imdb');
-    link.addEventListener('click', e => e.stopPropagation());
+    link.addEventListener('click', (e: Event) => e.stopPropagation());
     return link;
 }
 
-function createIconButton(emoji, titleText, onClick) {
+function createIconButton(emoji: string, titleText: string, onClick: () => void): HTMLSpanElement {
     const btn = document.createElement('span');
     btn.className = 'fm-icon-btn';
     btn.textContent = emoji;
     btn.title = titleText;
-    btn.addEventListener('click', e => {
+    btn.addEventListener('click', (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
         onClick();
@@ -277,12 +300,16 @@ function createIconButton(emoji, titleText, onClick) {
  * links to an IMDb search for the title, matching the completed badge of a
  * title with no rating, so it stays usable during a slow lookup.
  *
- * @param {string} overlayClass - Base CSS class assigned to all overlays.
- * @param {string} loadingClass - Additional CSS class identifying loading state overlays.
- * @param {string} displayTitle - Title as shown by the streaming service, used as the IMDb search term.
- * @returns {HTMLElement} Loading overlay element with spinning indicator.
+ * @param overlayClass - Base CSS class assigned to all overlays.
+ * @param loadingClass - Additional CSS class identifying loading state overlays.
+ * @param displayTitle - Title as shown by the streaming service, used as the IMDb search term.
+ * @returns Loading overlay element with spinning indicator.
  */
-export function createLoadingOverlayElement(overlayClass, loadingClass, displayTitle) {
+export function createLoadingOverlayElement(
+    overlayClass: string,
+    loadingClass: string,
+    displayTitle: string
+): HTMLElement {
     const container = document.createElement('div');
     container.className = `${overlayClass} ${loadingClass}`;
     const link = createImdbLink(buildImdbUrl({ displayTitle }));

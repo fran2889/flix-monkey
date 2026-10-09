@@ -57,10 +57,10 @@ describe('buildOverlayStyles', () => {
         ['bottom-left', '50%'],
         ['top-left', '30%'],
         ['bottom-left', '30%'],
-    ])('offsets Top 10 selectors for %s corners', (corner, top10Offset) => {
+    ])('offsets Top 10 selectors for %s corners', (corner: string, top10Offset: string) => {
         const css = buildOverlayStyles({
             overlayClass: 'fm-rating-overlay',
-            corner,
+            corner: corner as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
             top10Selectors: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
             top10Offset,
         });
@@ -70,10 +70,10 @@ describe('buildOverlayStyles', () => {
         expect(css).toContain(`left: calc(${top10Offset} + 6px)`);
     });
 
-    it.each(['top-right', 'bottom-right'])('does not offset Top 10 selectors for %s corners', corner => {
+    it.each(['top-right', 'bottom-right'])('does not offset Top 10 selectors for %s corners', (corner: string) => {
         const css = buildOverlayStyles({
             overlayClass: 'fm-rating-overlay',
-            corner,
+            corner: corner as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
             top10Selectors: ['.custom-top-10', '[data-uia="custom-ranked-card"]'],
         });
 

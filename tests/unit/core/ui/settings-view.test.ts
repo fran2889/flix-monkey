@@ -5,12 +5,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONFIG_FIELDS } from '../../../../src/core/config/index.js';
-import { SettingsView } from '../../../../src/core/ui/settings-view.js';
+import { type ConfigField, SettingsView } from '../../../../src/core/ui/settings-view.js';
+
+// Helper to cast CONFIG_FIELDS to the expected type for SettingsView
+const configFields = CONFIG_FIELDS as unknown as readonly ConfigField[];
 
 describe('SettingsView', () => {
-    let actions;
-    let container;
-    let view;
+    let actions: {
+        onSave: () => void;
+        onClearCache: () => void;
+        onResetClients: () => void;
+    };
+    let container: HTMLDivElement;
+    let view: SettingsView;
 
     beforeEach(() => {
         actions = {
@@ -19,31 +26,32 @@ describe('SettingsView', () => {
             onResetClients: vi.fn(),
         };
         container = document.createElement('div');
-        view = new SettingsView(CONFIG_FIELDS, actions);
+        view = new SettingsView(configFields, actions);
         document.head.innerHTML = '';
         document.body.innerHTML = '';
         document.body.appendChild(container);
     });
 
     it('reads one value snapshot from its rendered fields', () => {
-        const fields = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
-        const view = new SettingsView(fields, {
+        const fields: readonly ConfigField[] = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
+        const localView = new SettingsView(fields, {
             onSave: vi.fn(),
             onClearCache: vi.fn(),
             onResetClients: vi.fn(),
         });
-        const container = document.createElement('div');
-        view.render(container, {});
-        container.querySelector('#fm-debug').checked = true;
+        const localContainer = document.createElement('div');
+        localView.render(localContainer, {});
+        const debugInput = localContainer.querySelector('#fm-debug') as HTMLInputElement;
+        debugInput.checked = true;
 
-        expect(view.readValues()).toEqual({ debug: true });
+        expect(localView.readValues()).toEqual({ debug: true });
     });
 
     describe('Rendering', () => {
         it('renders each config field from its definition', () => {
             view.render(container, {});
 
-            CONFIG_FIELDS.forEach(field => {
+            configFields.forEach(field => {
                 // Skip action fields - they are rendered as buttons, not inputs
                 if (field.type === 'action') return;
 
@@ -56,29 +64,32 @@ describe('SettingsView', () => {
                 expect(input, `Input for ${field.key} not found`).toBeDefined();
 
                 if (field.type === 'select') {
-                    expect(input.tagName).toBe('SELECT');
+                    expect((input as HTMLSelectElement).tagName).toBe('SELECT');
                 } else if (field.type === 'checkbox') {
-                    expect(input.type).toBe('checkbox');
+                    expect((input as HTMLInputElement).type).toBe('checkbox');
                 } else {
-                    expect(input.type).toBe('text');
+                    expect((input as HTMLInputElement).type).toBe('text');
                 }
 
-                if (field.type === 'select') {
-                    expect([...input.options].map(option => [option.value, option.textContent])).toEqual(
-                        field.options.map(option => (Array.isArray(option) ? option : [option, option]))
-                    );
+                if (field.type === 'select' && field.options) {
+                    expect(
+                        [...(input as HTMLSelectElement).options].map(option => [option.value, option.textContent])
+                    ).toEqual(field.options.map(option => (Array.isArray(option) ? option : [option, option])));
                 }
 
-                if (field.labelUrl) {
-                    const link = label.querySelector('a');
+                if ((field as { labelUrl?: string }).labelUrl) {
+                    const link = label?.querySelector('a');
                     expect(link).not.toBeNull();
-                    expect(link.href).toBe(field.labelUrl);
-                    expect(link.target).toBe('_blank');
+                    expect((link as HTMLAnchorElement)?.href).toBe((field as { labelUrl: string }).labelUrl);
+                    expect((link as HTMLAnchorElement)?.target).toBe('_blank');
                 } else {
-                    expect(label.querySelector('a')).toBeNull();
+                    const link = label?.querySelector('a');
+                    expect(link).toBeNull();
                 }
 
-                expect(label.classList.contains('visually-hidden')).toBe(Boolean(field.labelHidden));
+                expect(label?.classList.contains('visually-hidden')).toBe(
+                    Boolean((field as { labelHidden?: boolean }).labelHidden)
+                );
             });
         });
 
@@ -88,7 +99,7 @@ describe('SettingsView', () => {
             expect(container.classList.contains('fm-settings-container')).toBe(true);
             const style = document.head.querySelector('style#flixmonkey-settings-styles');
             expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.fm-settings-container');
+            expect(style?.textContent).toContain('.fm-settings-container');
         });
 
         it('injects modal styles along with settings styles', () => {
@@ -96,21 +107,25 @@ describe('SettingsView', () => {
 
             const style = document.head.querySelector('style#flixmonkey-settings-styles');
             expect(style).not.toBeNull();
-            expect(style.textContent).toContain('.fm-modal-overlay');
+            expect(style?.textContent).toContain('.fm-modal-overlay');
         });
 
         it('renders suffix text for fields with suffix property', () => {
-            const fields = [{ key: 'cacheDays', type: 'text', default: '30', suffix: 'days' }];
+            const fields: readonly ConfigField[] = [
+                { key: 'cacheDays', type: 'text', label: 'Cache Days', default: '30', suffix: 'days' },
+            ];
             view = new SettingsView(fields, actions);
             view.render(container, { cacheDays: '30' });
 
             const suffixEl = container.querySelector('.field-suffix');
             expect(suffixEl).not.toBeNull();
-            expect(suffixEl.textContent).toBe('days');
+            expect(suffixEl?.textContent).toBe('days');
         });
 
         it('adds field--checkbox modifier for single checkbox fields', () => {
-            const fields = [{ key: 'singleCheckbox', type: 'checkbox', default: true }];
+            const fields: readonly ConfigField[] = [
+                { key: 'singleCheckbox', type: 'checkbox', label: 'Single Checkbox', default: true },
+            ];
             view = new SettingsView(fields, actions);
             view.render(container, { singleCheckbox: true });
 
@@ -119,8 +134,16 @@ describe('SettingsView', () => {
         });
 
         it('adds field--actions modifier and hides label for action rows', () => {
-            const fields = [
-                { key: 'clearCache', type: 'action', actionLabel: 'Clear', group: 'debug', row: 'actions' },
+            const fields: readonly ConfigField[] = [
+                {
+                    key: 'clearCache',
+                    type: 'action',
+                    label: '',
+                    group: 'debug',
+                    row: 'actions',
+                    actionLabel: 'Clear',
+                    default: null,
+                },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, {});
@@ -128,9 +151,9 @@ describe('SettingsView', () => {
             const actionField = container.querySelector('.field--actions');
             expect(actionField).not.toBeNull();
 
-            const label = actionField.querySelector('.field-label');
+            const label = actionField?.querySelector('.field-label');
             expect(label).not.toBeNull();
-            expect(label.style.visibility).toBe('hidden');
+            expect((label as HTMLElement)?.style.visibility).toBe('hidden');
         });
 
         it('renders action buttons and status placeholder', () => {
@@ -144,7 +167,7 @@ describe('SettingsView', () => {
         it('renders the fixed IMDb rating control', () => {
             view.render(container, {});
 
-            const checkbox = container.querySelector('#fm-showImdbRating');
+            const checkbox = container.querySelector('#fm-showImdbRating') as HTMLInputElement;
             expect(checkbox.type).toBe('checkbox');
             expect(checkbox.checked).toBe(true);
             expect(checkbox.disabled).toBe(true);
@@ -155,38 +178,42 @@ describe('SettingsView', () => {
         it('populates every field with its default when settings are empty', () => {
             view.render(container, {});
 
-            CONFIG_FIELDS.forEach(field => {
+            configFields.forEach(field => {
                 if (field.type === 'action') return;
-                const input = container.querySelector(`#fm-${field.key}`);
-                const value = field.type === 'checkbox' ? input.checked : input.value;
+                const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
+                const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(field.default);
             });
         });
 
         it('populates every field with its stored value', () => {
             const storedSettings = Object.fromEntries(
-                CONFIG_FIELDS.filter(f => f.type !== 'action').map(field => {
-                    if (field.type === 'checkbox') return [field.key, !field.default];
-                    if (field.type === 'select') {
-                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
-                        return [field.key, optionValues.find(option => option !== field.default)];
-                    }
-                    return [field.key, `stored-${field.key}`];
-                })
+                configFields
+                    .filter(f => f.type !== 'action')
+                    .map(field => {
+                        if (field.type === 'checkbox') return [field.key, !field.default];
+                        if (field.type === 'select' && field.options) {
+                            const optionValues = field.options.map(option =>
+                                Array.isArray(option) ? option[0] : option
+                            );
+                            return [field.key, optionValues.find(option => option !== field.default)];
+                        }
+                        return [field.key, `stored-${field.key}`];
+                    })
             );
 
             view.render(container, storedSettings);
 
-            CONFIG_FIELDS.forEach(field => {
+            configFields.forEach(field => {
                 if (field.type === 'action') return;
-                const input = container.querySelector(`#fm-${field.key}`);
-                const value = field.type === 'checkbox' ? input.checked : input.value;
+                const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
+                const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(storedSettings[field.key]);
             });
         });
 
         it('uses configured defaults for optional rating fields', () => {
-            const fields = [
+            const fields: readonly ConfigField[] = [
                 {
                     key: 'showMcRating',
                     label: 'Metacritic',
@@ -199,13 +226,13 @@ describe('SettingsView', () => {
 
             view.render(container, {});
 
-            expect(container.querySelector('#fm-showMcRating').checked).toBe(true);
+            expect((container.querySelector('#fm-showMcRating') as HTMLInputElement).checked).toBe(true);
         });
 
         it('skips disabled fields in readValues', () => {
-            const fields = [
-                { key: 'enabledField', type: 'text', default: 'value' },
-                { key: 'disabledField', type: 'text', default: 'value', disabled: true },
+            const fields: readonly ConfigField[] = [
+                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value' },
+                { key: 'disabledField', type: 'text', label: 'Disabled Field', default: 'value', disabled: true },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, { enabledField: 'test', disabledField: 'ignored' });
@@ -219,18 +246,19 @@ describe('SettingsView', () => {
     describe('Validation', () => {
         it('returns errors and marks invalid fields', () => {
             view.render(container, {});
-            container.querySelector('#fm-fadeRatingThreshold').value = 'abc';
+            const input = container.querySelector('#fm-fadeRatingThreshold') as HTMLInputElement;
+            input.value = 'abc';
 
             const errors = view.validate(view.readValues());
 
             expect(errors.length).toBeGreaterThan(0);
-            expect(container.querySelector('#fm-fadeRatingThreshold').classList.contains('error')).toBe(true);
+            expect(container.querySelector('#fm-fadeRatingThreshold')?.classList.contains('error')).toBe(true);
             expect(container.querySelector('.error-message')).toBeNull();
         });
 
         it('passes checked values to checkbox validators', () => {
             const validate = vi.fn().mockReturnValue(null);
-            const fields = [
+            const fields: readonly ConfigField[] = [
                 {
                     key: 'testCheckbox',
                     label: 'Test Checkbox',
@@ -241,7 +269,8 @@ describe('SettingsView', () => {
             ];
             view = new SettingsView(fields, actions);
             view.render(container, {});
-            container.querySelector('#fm-testCheckbox').checked = true;
+            const testCheckbox = container.querySelector('#fm-testCheckbox') as HTMLInputElement;
+            testCheckbox.checked = true;
             const values = view.readValues();
 
             view.validate(values);
@@ -254,8 +283,8 @@ describe('SettingsView', () => {
         it('wires each button to its supplied action', () => {
             view.render(container, {});
 
-            container.querySelector('#fm-clearCache').click();
-            container.querySelector('#fm-resetClients').click();
+            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
 
             expect(actions.onClearCache).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
@@ -264,22 +293,25 @@ describe('SettingsView', () => {
 
     describe('Scoping', () => {
         it('scopes reads and status updates to its rendered container', () => {
-            const fields = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
+            const fields: readonly ConfigField[] = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
             const otherContainer = document.createElement('div');
             const otherView = new SettingsView(fields, actions);
             view = new SettingsView(fields, actions);
             document.body.appendChild(otherContainer);
             view.render(container, {});
             otherView.render(otherContainer, {});
-            container.querySelector('#fm-debug').checked = true;
+            const debugInput = container.querySelector('#fm-debug') as HTMLInputElement;
+            debugInput.checked = true;
 
             view.showStatus('First', 'success');
 
             expect(view.readValues()).toEqual({ debug: true });
             expect(otherView.readValues()).toEqual({ debug: false });
-            expect(container.querySelector('[id="fm-status"]').textContent).toBe('First');
-            expect(container.querySelector('[id="fm-status"]').className).toBe('status status--success');
-            expect(otherContainer.querySelector('[id="fm-status"]').textContent).toBe('');
+            expect(container.querySelector('[id="fm-status"]')?.textContent).toBe('First');
+            expect((container.querySelector('[id="fm-status"]') as HTMLElement)?.className).toBe(
+                'status status--success'
+            );
+            expect(otherContainer.querySelector('[id="fm-status"]')?.textContent).toBe('');
         });
     });
 
@@ -293,11 +325,13 @@ describe('SettingsView', () => {
         });
 
         it('uses change event for checkboxes', () => {
-            const fields = [{ key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false }];
+            const fields: readonly ConfigField[] = [
+                { key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false },
+            ];
             view = new SettingsView(fields, actions);
             view.render(container, {});
 
-            const checkbox = container.querySelector('#fm-checkboxField');
+            const checkbox = container.querySelector('#fm-checkboxField') as HTMLInputElement;
 
             checkbox.checked = true;
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
@@ -308,11 +342,11 @@ describe('SettingsView', () => {
         });
 
         it('uses input event for text fields', () => {
-            const fields = [{ key: 'textField', label: 'Text', type: 'text', default: '' }];
+            const fields: readonly ConfigField[] = [{ key: 'textField', label: 'Text', type: 'text', default: '' }];
             view = new SettingsView(fields, actions);
             view.render(container, {});
 
-            const textInput = container.querySelector('#fm-textField');
+            const textInput = container.querySelector('#fm-textField') as HTMLInputElement;
 
             textInput.value = 'new-value';
             textInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -323,7 +357,7 @@ describe('SettingsView', () => {
         });
 
         it('uses input event for select fields', () => {
-            const fields = [
+            const fields: readonly ConfigField[] = [
                 {
                     key: 'selectField',
                     label: 'Select',
@@ -335,7 +369,7 @@ describe('SettingsView', () => {
             view = new SettingsView(fields, actions);
             view.render(container, {});
 
-            const select = container.querySelector('#fm-selectField');
+            const select = container.querySelector('#fm-selectField') as HTMLSelectElement;
 
             select.value = 'option2';
             select.dispatchEvent(new Event('input', { bubbles: true }));
@@ -347,7 +381,7 @@ describe('SettingsView', () => {
 
         it('debounces save calls on rapid text input changes', () => {
             view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
+            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
 
             textInput.value = 'a';
             textInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -367,7 +401,7 @@ describe('SettingsView', () => {
 
         it('triggers save after debounce period on text input', () => {
             view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
+            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
 
             textInput.value = 'new-api-key';
             textInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -380,7 +414,7 @@ describe('SettingsView', () => {
 
         it('triggers save immediately on checkbox change', () => {
             view.render(container, {});
-            const checkbox = container.querySelector('#fm-debug');
+            const checkbox = container.querySelector('#fm-debug') as HTMLInputElement;
 
             checkbox.checked = true;
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
@@ -391,7 +425,7 @@ describe('SettingsView', () => {
 
         it('triggers save on select change', () => {
             view.render(container, {});
-            const select = container.querySelector('#fm-apiClient');
+            const select = container.querySelector('#fm-apiClient') as HTMLSelectElement;
 
             select.value = 'omdb';
             select.dispatchEvent(new Event('input', { bubbles: true }));
@@ -402,7 +436,7 @@ describe('SettingsView', () => {
 
         it('debounces multiple rapid changes into a single save', () => {
             view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
+            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
 
             for (let i = 0; i < 10; i++) {
                 textInput.value = `value${i}`;
@@ -417,7 +451,7 @@ describe('SettingsView', () => {
 
         it('uses change event for rating checkboxes', () => {
             view.render(container, {});
-            const checkbox = container.querySelector('#fm-showRtRating');
+            const checkbox = container.querySelector('#fm-showRtRating') as HTMLInputElement;
 
             checkbox.checked = true;
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
@@ -428,7 +462,7 @@ describe('SettingsView', () => {
 
         it('cancels previous debounce timer when new event occurs', () => {
             view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey');
+            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
 
             textInput.value = 'first';
             textInput.dispatchEvent(new Event('input', { bubbles: true }));

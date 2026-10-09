@@ -2,26 +2,46 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { SettingsActions } from '../../types/extension.js';
 import { GROUPS, ROW_LABELS } from '../config/index.js';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
 import { SETTINGS_STYLES } from './styles.js';
+
+/** Config field definition type */
+export interface ConfigField {
+    readonly key: string;
+    readonly label: string;
+    readonly group?: string;
+    readonly type: 'checkbox' | 'select' | 'text' | 'action';
+    readonly default: string | boolean | null;
+    readonly row?: string;
+    readonly options?: ReadonlyArray<string | readonly [string, string]>;
+    readonly title?: string;
+    readonly labelUrl?: string;
+    readonly labelHidden?: boolean;
+    readonly disabled?: boolean;
+    readonly suffix?: string;
+    readonly short?: boolean;
+    readonly validate?: ((_value: unknown, _allValues?: Record<string, unknown>) => string | null) | undefined;
+    readonly actionLabel?: string;
+}
 
 /**
  * UI component that renders and manages the settings panel with grouped configuration fields.
  */
 export class SettingsView {
-    #fields;
-    #actions;
-    #container = null;
-    #debounceTimer = null;
+    #fields: readonly ConfigField[];
+    #actions: SettingsActions;
+    #container: HTMLElement | null = null;
+    #debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     /**
      * Creates a SettingsView instance.
      *
-     * @param {typeof import('../config/index.js').CONFIG_FIELDS} fields - Configuration field definitions.
-     * @param {import('../../types/extension.js').SettingsActions} actions - Action handlers for settings events.
+     * @param fields - Configuration field definitions.
+     * @param actions - Action handlers for settings events.
      */
-    constructor(fields, actions) {
+    constructor(fields: readonly ConfigField[], actions: SettingsActions) {
         this.#fields = fields;
         this.#actions = actions;
     }
@@ -29,10 +49,10 @@ export class SettingsView {
     /**
      * Renders the complete settings UI into the specified container with current values.
      *
-     * @param {HTMLElement} container - DOM element to render into.
-     * @param {object} settings - Current settings values.
+     * @param container - DOM element to render into.
+     * @param settings - Current settings values.
      */
-    render(container, settings) {
+    render(container: HTMLElement, settings: Record<string, unknown>): void {
         this.#container = container;
         this.#injectStyles();
         container.className = 'fm-settings-container';
@@ -49,7 +69,7 @@ export class SettingsView {
         this.#setupAutoSave();
     }
 
-    #injectStyles() {
+    #injectStyles(): void {
         if (!document.getElementById('flixmonkey-settings-styles')) {
             const style = document.createElement('style');
             style.id = 'flixmonkey-settings-styles';
@@ -58,13 +78,25 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByGroup() {
-        const groups = [];
-        const fieldsByGroup = {};
-        const ungroupedFields = [];
+    #groupFieldsByGroup(): Array<{
+        id: string;
+        label: string;
+        icon: string;
+        fields: Array<{ id: string; fields: readonly ConfigField[] }>;
+        isUngrouped?: boolean;
+    }> {
+        const groups: Array<{
+            id: string;
+            label: string;
+            icon: string;
+            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
+            isUngrouped?: boolean;
+        }> = [];
+        const fieldsByGroup: Record<string, ConfigField[]> = {};
+        const ungroupedFields: ConfigField[] = [];
 
         for (const field of this.#fields) {
-            const hasValidGroup = field.group && GROUPS[field.group];
+            const hasValidGroup = field.group && GROUPS[field.group as keyof typeof GROUPS];
             if (hasValidGroup) {
                 this.#addFieldToGroup(field, fieldsByGroup);
             } else if (field.type !== 'action') {
@@ -78,17 +110,25 @@ export class SettingsView {
         return groups;
     }
 
-    #addFieldToGroup(field, fieldsByGroup) {
-        const groupId = field.group;
+    #addFieldToGroup(field: ConfigField, fieldsByGroup: Record<string, ConfigField[]>): void {
+        const groupId = field.group as string;
         if (!fieldsByGroup[groupId]) {
             fieldsByGroup[groupId] = [];
         }
         fieldsByGroup[groupId].push(field);
     }
 
-    #buildGroupElements(groups, fieldsByGroup) {
+    #buildGroupElements(
+        groups: Array<{
+            id: string;
+            label: string;
+            icon: string;
+            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
+        }>,
+        fieldsByGroup: Record<string, ConfigField[]>
+    ): void {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
-            const groupInfo = GROUPS[groupId];
+            const groupInfo = GROUPS[groupId as keyof typeof GROUPS];
             groups.push({
                 id: groupId,
                 label: groupInfo.label,
@@ -98,7 +138,16 @@ export class SettingsView {
         }
     }
 
-    #addUngroupedFields(groups, ungroupedFields) {
+    #addUngroupedFields(
+        groups: Array<{
+            id: string;
+            label: string;
+            icon: string;
+            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
+            isUngrouped?: boolean;
+        }>,
+        ungroupedFields: ConfigField[]
+    ): void {
         if (ungroupedFields.length > 0) {
             groups.push({
                 id: 'ungrouped',
@@ -110,8 +159,8 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByRow(fields) {
-        const rows = {};
+    #groupFieldsByRow(fields: ConfigField[]): Array<{ id: string; fields: ConfigField[] }> {
+        const rows: Record<string, { id: string; fields: ConfigField[] }> = {};
         for (const field of fields) {
             const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
             if (!rows[rowId]) {
@@ -122,7 +171,16 @@ export class SettingsView {
         return Object.values(rows);
     }
 
-    #createGroupElement(group, settings) {
+    #createGroupElement(
+        group: {
+            id: string;
+            label: string;
+            icon: string;
+            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
+            isUngrouped?: boolean;
+        },
+        settings: Record<string, unknown>
+    ): HTMLElement {
         const container = document.createElement('div');
 
         if (group.isUngrouped) {
@@ -150,7 +208,7 @@ export class SettingsView {
             container.appendChild(fieldElement);
 
             const actionFields = this.#fields.filter(
-                f => f.type === 'action' && f.group === group.id && f.row === row.id
+                (f): boolean => f.type === 'action' && f.group === group.id && f.row === row.id
             );
             for (const actionField of actionFields) {
                 const actionElement = this.#createActionField(actionField);
@@ -161,8 +219,8 @@ export class SettingsView {
         return container;
     }
 
-    #getFieldClassName(row) {
-        const hasActions = row.fields.every(f => f.type === 'action');
+    #getFieldClassName(row: { id: string; fields: readonly ConfigField[] }): string {
+        const hasActions = row.fields.every((f): boolean => f.type === 'action');
         const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
 
         if (hasActions) return 'field field--actions';
@@ -170,15 +228,15 @@ export class SettingsView {
         return 'field';
     }
 
-    #createFieldLabel(row) {
+    #createFieldLabel(row: { id: string; fields: readonly ConfigField[] }): HTMLLabelElement {
         const label = document.createElement('label');
         label.className = 'field-label';
 
-        const rowLabelObj = ROW_LABELS[row.id];
-        const rowLabel = rowLabelObj?.label || row.fields[0].label;
+        const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
+        const rowLabel = rowLabelObj?.label ?? row.fields[0].label;
         const onlyField = row.fields[0];
-        const hasActions = row.fields.every(f => f.type === 'action');
-        const tooltip = hasActions ? '' : rowLabelObj?.title || row.fields[0].title || '';
+        const hasActions = row.fields.every((f): boolean => f.type === 'action');
+        const tooltip = hasActions ? '' : (rowLabelObj?.title ?? row.fields[0].title ?? '');
 
         if (hasActions) {
             label.textContent = '\u00A0';
@@ -205,12 +263,15 @@ export class SettingsView {
         return label;
     }
 
-    #createFieldValueContainer(row, settings) {
+    #createFieldValueContainer(
+        row: { id: string; fields: readonly ConfigField[] },
+        settings: Record<string, unknown>
+    ): HTMLElement {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
-        const hasActions = row.fields.every(f => f.type === 'action');
-        const isCheckboxGroup = row.fields.length > 1 && row.fields.every(f => f.type === 'checkbox');
+        const hasActions = row.fields.every((f): boolean => f.type === 'action');
+        const isCheckboxGroup = row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox');
 
         if (hasActions) {
             for (const field of row.fields) {
@@ -250,7 +311,10 @@ export class SettingsView {
         return valueContainer;
     }
 
-    #createFieldRow(row, settings) {
+    #createFieldRow(
+        row: { id: string; fields: readonly ConfigField[] },
+        settings: Record<string, unknown>
+    ): HTMLElement {
         const fieldElement = document.createElement('div');
         fieldElement.className = this.#getFieldClassName(row);
 
@@ -263,11 +327,11 @@ export class SettingsView {
         return fieldElement;
     }
 
-    #createActionField(field) {
+    #createActionField(field: ConfigField): HTMLButtonElement {
         const btn = document.createElement('button');
         btn.className = 'action-btn';
         btn.id = `fm-${field.key}`;
-        btn.textContent = field.actionLabel;
+        btn.textContent = field.actionLabel ?? '';
         btn.addEventListener('click', () => {
             if (field.key === 'clearCache') {
                 this.#actions.onClearCache();
@@ -278,7 +342,7 @@ export class SettingsView {
         return btn;
     }
 
-    #createInputWithSuffix(field, settings) {
+    #createInputWithSuffix(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
         const container = document.createElement('div');
         container.className = 'input-with-suffix';
 
@@ -295,25 +359,28 @@ export class SettingsView {
         return container;
     }
 
-    #createInput(field, settings) {
+    #createInput(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
         input.className = 'field-input';
         input.name = field.key;
         input.id = `fm-${field.key}`;
 
         if (field.type === 'select') {
-            this.#addOptions(input, field.options);
-            input.value = this.#settingValue(field.key, settings, field.default);
+            const selectInput = input as HTMLSelectElement;
+            this.#addOptions(selectInput, field.options ?? []);
+            selectInput.value = String(this.#settingValue(field.key, settings, field.default));
         } else if (field.type === 'checkbox') {
-            input.type = 'checkbox';
-            input.checked = this.#settingValue(field.key, settings, field.default);
+            const checkboxInput = input as HTMLInputElement;
+            checkboxInput.type = 'checkbox';
+            checkboxInput.checked = Boolean(this.#settingValue(field.key, settings, field.default));
         } else {
-            input.type = 'text';
-            input.value = this.#settingValue(field.key, settings, field.default);
+            const textInput = input as HTMLInputElement;
+            textInput.type = 'text';
+            textInput.value = String(this.#settingValue(field.key, settings, field.default));
         }
 
         if (field.disabled) {
-            input.disabled = true;
+            (input as HTMLInputElement).disabled = true;
         }
 
         if (field.short) {
@@ -323,7 +390,7 @@ export class SettingsView {
         return input;
     }
 
-    #addOptions(select, options) {
+    #addOptions(select: HTMLSelectElement, options: ReadonlyArray<string | readonly [string, string]>): void {
         for (const configuredOption of options) {
             const option = document.createElement('option');
             const [value, text] = Array.isArray(configuredOption)
@@ -335,21 +402,22 @@ export class SettingsView {
         }
     }
 
-    #settingValue(key, settings, defaultValue) {
+    #settingValue(key: string, settings: Record<string, unknown>, defaultValue: unknown): unknown {
         return settings[key] !== undefined ? settings[key] : defaultValue;
     }
 
-    #createStatus() {
+    #createStatus(): HTMLElement {
         const status = document.createElement('div');
         status.id = 'fm-status';
         status.className = 'status';
         return status;
     }
 
-    #setupAutoSave() {
+    #setupAutoSave(): void {
+        if (this.#container === null) return;
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
-            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            const eventType = (input as HTMLInputElement).type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, () => {
                 if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
                 this.#debounceTimer = setTimeout(async () => {
@@ -362,19 +430,19 @@ export class SettingsView {
     /**
      * Reads current values from all form inputs in the settings UI.
      *
-     * @returns {object} Settings values keyed by field keys.
+     * @returns Settings values keyed by field keys.
      */
-    readValues() {
-        const values = {};
+    readValues(): Record<string, unknown> {
+        const values: Record<string, unknown> = {};
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
-            const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
+            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
             if (input) {
                 if (field.type === 'checkbox') {
-                    values[field.key] = input.checked;
+                    values[field.key] = (input as HTMLInputElement).checked;
                 } else {
-                    values[field.key] = input.value;
+                    values[field.key] = (input as HTMLInputElement).value;
                 }
             }
         }
@@ -384,11 +452,12 @@ export class SettingsView {
     /**
      * Validates settings values using field-specific validators.
      *
-     * @param {object} values - Settings values to validate.
-     * @returns {string[]} Array of validation error messages, empty if valid.
+     * @param values - Settings values to validate.
+     * @returns Array of validation error messages, empty if valid.
      */
-    validate(values) {
-        const errors = [];
+    validate(values: Record<string, unknown>): string[] {
+        const errors: string[] = [];
+        if (this.#container === null) return errors;
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
@@ -404,10 +473,11 @@ export class SettingsView {
     /**
      * Displays a status message in the settings UI.
      *
-     * @param {string} message - Status message to display.
-     * @param {string} type - Status type for styling ('success', 'error', etc.).
+     * @param message - Status message to display.
+     * @param type - Status type for styling ('success', 'error', etc.).
      */
-    showStatus(message, type) {
+    showStatus(message: string, type: string): void {
+        if (this.#container === null) return;
         const status = this.#container.querySelector('[id="fm-status"]');
         if (status) {
             status.textContent = message;

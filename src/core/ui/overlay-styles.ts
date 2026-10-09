@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-const CSS_VARS = `
+const CSS_VARS: string = `
     :root {
         --fm-bg-badge: rgba(0, 0, 0, 0.72);
         --fm-bg-badge-hover: rgba(0, 0, 0, 0.92);
@@ -21,15 +21,16 @@ const CSS_VARS = `
 `;
 
 /**
- * @typedef {object} BuildOverlayStylesOptions
- * @property {string} overlayClass - CSS class assigned to the overlay.
- * @property {'top-left'|'top-right'|'bottom-left'|'bottom-right'} corner - Badge corner position,
- *   validated against `CONFIG_SELECT_ALLOWED.overlayCorner` by ConfigManager.
- * @property {string[]} [top10Selectors=[]] - Selectors for Top 10 elements that need offset adjustments.
- * @property {string} [top10Offset='50%'] - Offset value for Top 10 badges.
+ * Options for building overlay styles.
  */
+export interface BuildOverlayStylesOptions {
+    overlayClass: string;
+    corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    top10Selectors?: string[] | null;
+    top10Offset?: string | null;
+}
 
-function buildBaseStyles(overlayClass, positionCss, flexDirection) {
+function buildBaseStyles(overlayClass: string, positionCss: string, flexDirection: string): string {
     return `
             ${CSS_VARS}
             .${overlayClass} {
@@ -57,7 +58,12 @@ function buildBaseStyles(overlayClass, positionCss, flexDirection) {
         `;
 }
 
-function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offset) {
+function buildTop10OffsetStyles(
+    overlayClass: string,
+    corner: string,
+    top10Selectors: string[] | undefined | null,
+    top10Offset: string | undefined | null
+): string {
     if (!corner.includes('left') || !top10Selectors?.length) return '';
 
     const selectors = top10Selectors.map(selector => `${selector} .${overlayClass}`);
@@ -65,14 +71,14 @@ function buildTop10OffsetStyles(overlayClass, corner, top10Selectors, top10Offse
     return `\n            ${selectors.join(',\n            ')} { left: calc(${offset} + 6px); }`;
 }
 
-function buildFadeStyles() {
+function buildFadeStyles(): string {
     return `
             .fm-faded { opacity: 0.30; transition: opacity 0.2s; }
             .fm-faded:hover { opacity: 1; }
         `;
 }
 
-function buildFadeToggleStyles(overlayClass) {
+function buildFadeToggleStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-fade-toggle {
                 background: var(--fm-bg-badge);
@@ -99,7 +105,7 @@ function buildFadeToggleStyles(overlayClass) {
         `;
 }
 
-function buildRatingsWrapperStyles(overlayClass) {
+function buildRatingsWrapperStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-ratings-wrapper {
                 display: flex;
@@ -110,7 +116,7 @@ function buildRatingsWrapperStyles(overlayClass) {
         `;
 }
 
-function buildImdbRowStyles(overlayClass) {
+function buildImdbRowStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-imdb-row {
                 display: flex;
@@ -134,7 +140,7 @@ function buildImdbRowStyles(overlayClass) {
         `;
 }
 
-function buildActionsStyles(overlayClass) {
+function buildActionsStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-actions {
                 display: flex;
@@ -148,7 +154,7 @@ function buildActionsStyles(overlayClass) {
         `;
 }
 
-function buildIconButtonStyles(overlayClass) {
+function buildIconButtonStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-icon-btn {
                 background: var(--fm-bg-icon-btn);
@@ -174,7 +180,7 @@ function buildIconButtonStyles(overlayClass) {
         `;
 }
 
-function buildIconBadgeStyles(overlayClass) {
+function buildIconBadgeStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-icon-badge {
                 display: none;
@@ -197,7 +203,7 @@ function buildIconBadgeStyles(overlayClass) {
         `;
 }
 
-function buildRatingBadgeStyles(overlayClass) {
+function buildRatingBadgeStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-rating-badge {
                 background: var(--fm-bg-badge);
@@ -225,16 +231,21 @@ function buildRatingBadgeStyles(overlayClass) {
 /**
  * Builds all CSS styles for the rating overlay, including base positioning, fade effects, and rating badges.
  *
- * @param {BuildOverlayStylesOptions} options - Overlay styling configuration.
- * @returns {string} Complete CSS string for the overlay.
+ * @param options - Overlay styling configuration.
+ * @returns Complete CSS string for the overlay.
  */
-export function buildOverlayStyles({ overlayClass, corner, top10Selectors = [], top10Offset = '50%' }) {
+export function buildOverlayStyles({
+    overlayClass,
+    corner,
+    top10Selectors = [],
+    top10Offset = '50%',
+}: BuildOverlayStylesOptions): string {
     const cornerStyles = {
         'top-left': 'top:6px;left:6px;',
         'top-right': 'top:6px;right:6px;',
         'bottom-left': 'bottom:6px;left:6px;',
         'bottom-right': 'bottom:6px;right:6px;',
-    };
+    } as const;
     const positionCss = cornerStyles[corner];
     const flexDirection = corner.includes('bottom') ? 'column-reverse' : 'column';
     return [
