@@ -5,58 +5,62 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
+import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
+import type { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
+import type { IdOverrideManager } from '../../../../src/core/id-override-manager.js';
+import type { Logger } from '../../../../src/core/logger.js';
+import type { PlatformAdapter } from '../../../../src/platform/adapter.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildLogger } from '../../../mocks/logger.js';
 
-interface MockOverrideManager {
-    getImdbId: () => Promise<string | null>;
-}
-
-const mockOverrideManager: MockOverrideManager = {
+const mockOverrideManager: IdOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
-};
+    setImdbId: vi.fn().mockResolvedValue(undefined),
+} as unknown as IdOverrideManager;
+
+const mockAdapter: PlatformAdapter = buildMockAdapter().build();
+const mockConfig: ConfigManager = {
+    get: (_k: string) => 'key',
+} as unknown as ConfigManager;
+const mockDisabledManager: DisabledClientsManager = {
+    isDisabled: vi.fn().mockResolvedValue(false),
+    disable: vi.fn().mockResolvedValue(undefined),
+    resetAll: vi.fn().mockResolvedValue([]),
+} as unknown as DisabledClientsManager;
+const mockLogger: Logger = buildLogger().build();
 
 describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return healthy status when not disabled', async () => {
-        const mockDisabledManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-        };
-        const client = new XmdbApiClient(
-            {},
-            { get: _k => 'key' },
-            mockDisabledManager,
-            buildLogger().build(),
-            mockOverrideManager
-        );
+        const client = new XmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
         const status = await client.getStatus();
         expect(status).toEqual({ healthy: true });
     });
 
     it('should return unhealthy status when disabled', async () => {
-        const mockDisabledManager = {
+        const mockDisabledManagerForTest: DisabledClientsManager = {
             isDisabled: vi.fn().mockResolvedValue(true),
-        };
+            disable: vi.fn().mockResolvedValue(undefined),
+            resetAll: vi.fn().mockResolvedValue([]),
+        } as unknown as DisabledClientsManager;
         const client = new XmdbApiClient(
-            {},
-            { get: _k => 'key' },
-            mockDisabledManager,
-            buildLogger().build(),
+            mockAdapter,
+            mockConfig,
+            mockDisabledManagerForTest,
+            mockLogger,
             mockOverrideManager
         );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
-        expect(status.reason).toBeDefined();
+        expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
     });
 
     it('should throw when fetch encounters an error', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
 
@@ -64,14 +68,12 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should return null if search returns no match', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.fetch('Unknown');
@@ -79,26 +81,27 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     });
 
     it('should return Title with override ID when override exists but getDetails returns null', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(null).build();
-        const mockOverrideManager: MockOverrideManager = {
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(null).build();
+        const mockOverrideManagerForTest: IdOverrideManager = {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
-        };
+            setImdbId: vi.fn().mockResolvedValue(undefined),
+        } as unknown as IdOverrideManager;
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
-            mockOverrideManager
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManagerForTest
         );
         client.getDetails = vi.fn().mockResolvedValue(null);
 
         const result = await client.fetch('Some Title');
 
         expect(result).not.toBeNull();
-        expect(result.imdbId).toBe('tt1234567');
-        expect(result.displayTitle).toBe('Some Title');
-        expect(result.imdbRating).toBeNull();
-        expect(result.source).toBe('xmdb');
-        expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Some Title');
+        expect(result!.imdbId).toBe('tt1234567');
+        expect(result!.displayTitle).toBe('Some Title');
+        expect(result!.imdbRating).toBeNull();
+        expect(result!.source).toBe('xmdb');
+        expect(mockOverrideManagerForTest.getImdbId).toHaveBeenCalledWith('Some Title');
     });
 });

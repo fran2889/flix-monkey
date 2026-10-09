@@ -264,16 +264,23 @@
 - All target entry points (extension: content, options, fetch-proxy, domains, migrations; firefox: background; chrome: service-worker; userscript: entry, metadata)
 - All test infrastructure (all mocks, setup, helpers)
 - All UI tests (netflix, hbomax, disneyplus)
+- All platform and target tests (userscript, webextension, chrome manifest/service-worker, extension content/options, firefox background, userscript entry)
 
 **Remaining:**
 
-1. Final verification - remove remaining .js files (optional)
-2. Final checks and cleanup
+1. Clean up remaining duplicate .js files in src/ and tests/ directories
+2. Final verification - ensure type-check passes for all files
+
+**Completed in this session:**
+
+- Fixed type errors in API client test files (agregarr, base, omdb, xmdb)
+- Cleaned up duplicate .js API client test files
 
 **Blockers:** None
 
 ## Next Steps
 
-1. **Final verification** - ensure all tests pass, type-check passes, build succeeds, lint passes
-2. **Optional cleanup** - remove remaining .js files that have been superseded by .ts versions
-3. **Final migration complete** - all source and test files are TypeScript
+1. **Clean up duplicate files** - remove .js files that have been superseded by .ts versions
+2. **Fix type errors** - resolve type errors in API client test files (partial mocks vs full types)
+3. **Final verification** - ensure all tests pass, type-check passes, build succeeds, lint passes
+4. **Final migration complete** - all source and test files are TypeScript

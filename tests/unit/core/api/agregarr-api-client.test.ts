@@ -5,19 +5,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../../src/core/api/index.js';
+import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
+import type { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
+import type { IdOverrideManager } from '../../../../src/core/id-override-manager.js';
+import type { Logger } from '../../../../src/core/logger.js';
 import { Title } from '../../../../src/core/title.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildConfig } from '../../../mocks/config';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
 
-interface MockOverrideManager {
-    getImdbId: () => Promise<string | null>;
-}
-
-const mockOverrideManager: MockOverrideManager = {
+const mockOverrideManager: IdOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
-};
+    setImdbId: vi.fn().mockResolvedValue(undefined),
+} as unknown as IdOverrideManager;
+
+const mockDisabledManager: DisabledClientsManager = {
+    isDisabled: vi.fn().mockResolvedValue(false),
+    disable: vi.fn().mockResolvedValue(undefined),
+    resetAll: vi.fn().mockResolvedValue([]),
+} as unknown as DisabledClientsManager;
+
+const mockConfig: ConfigManager = buildConfig().build() as unknown as ConfigManager;
 
 describe('AgregarrApiClient', () => {
     it('should return the first supported IMDb Suggestions result', async () => {
@@ -32,15 +41,15 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
-        expect(result.imdbId).toBe('tt0003');
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.type).toBe('movie');
+        expect(result!.imdbId).toBe('tt0003');
+        expect(result!.apiTitle).toBe('Movie 1');
+        expect(result!.type).toBe('movie');
     });
 
     it.each([
@@ -54,23 +63,23 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
 
         const result = await client.search('Show 1');
 
-        expect(result.type).toBe(type);
+        expect(result!.type).toBe(type);
     });
 
     it('should return null if no results found', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -82,10 +91,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             mockLogger,
-            buildConfig().build()
+            mockOverrideManager
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -95,8 +104,8 @@ describe('AgregarrApiClient', () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -108,10 +117,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             mockLogger,
-            buildConfig().build()
+            mockOverrideManager
         );
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
@@ -124,10 +133,10 @@ describe('AgregarrApiClient', () => {
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             mockLogger,
-            buildConfig().build()
+            mockOverrideManager
         );
         expect(await client.search('Unknown')).toBeNull();
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -141,8 +150,8 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -157,8 +166,8 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -170,13 +179,13 @@ describe('AgregarrApiClient', () => {
             .withType('movie')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.imdbId).toBe('tt1');
-        expect(result.year).toBe(2020);
-        expect(result.imdbRating).toBe(8.8);
-        expect(result.rtRating).toBeNull();
-        expect(result.mcRating).toBeNull();
-        expect(result.type).toBe('movie');
+        expect(result!.apiTitle).toBe('Movie 1');
+        expect(result!.imdbId).toBe('tt1');
+        expect(result!.year).toBe(2020);
+        expect(result!.imdbRating).toBe(8.8);
+        expect(result!.rtRating).toBeNull();
+        expect(result!.mcRating).toBeNull();
+        expect(result!.type).toBe('movie');
     });
 
     it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
@@ -185,8 +194,8 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -198,8 +207,8 @@ describe('AgregarrApiClient', () => {
             .withType('series')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result.imdbRating).toBeNull();
-        expect(result.type).toBe('series');
+        expect(result!.imdbRating).toBeNull();
+        expect(result!.type).toBe('series');
     });
 
     it('should handle the full IMDb Suggestions and Agregarr fetch flow', async () => {
@@ -211,18 +220,18 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
-        expect(result.displayTitle).toBe('Movie 1');
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.imdbId).toBe('tt1');
-        expect(result.imdbRating).toBe(8.8);
-        expect(result.source).toBe('agregarr');
-        expect(result.type).toBe('movie');
+        expect(result!.displayTitle).toBe('Movie 1');
+        expect(result!.apiTitle).toBe('Movie 1');
+        expect(result!.imdbId).toBe('tt1');
+        expect(result!.imdbRating).toBe(8.8);
+        expect(result!.source).toBe('agregarr');
+        expect(result!.type).toBe('movie');
     });
 
     it('should lowercase and encode non-ASCII titles in IMDb Suggestions URLs', async () => {
@@ -231,8 +240,8 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -247,8 +256,8 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -259,7 +268,7 @@ describe('AgregarrApiClient', () => {
             .withDisplayTitle('Test')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result.imdbVotes).toBe(2500000);
+        expect(result!.imdbVotes).toBe(2500000);
     });
 
     it('should handle null votes from Agregarr response', async () => {
@@ -268,8 +277,8 @@ describe('AgregarrApiClient', () => {
             .build();
         const client = new AgregarrApiClient(
             mockAdapter,
-            buildConfig().build(),
-            { isDisabled: vi.fn().mockResolvedValue(false) },
+            mockConfig,
+            mockDisabledManager,
             buildLogger().build(),
             mockOverrideManager
         );
@@ -280,18 +289,21 @@ describe('AgregarrApiClient', () => {
             .withDisplayTitle('Test')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result.imdbVotes).toBeNull();
+        expect(result!.imdbVotes).toBeNull();
     });
 
     it('should skip search when imdbId is provided', async () => {
+        const mockConfigForTest: ConfigManager = {
+            get: (_k: string) => 'key',
+        } as unknown as ConfigManager;
         class TestClient extends AgregarrApiClient {
             searchCalled = false;
             getDetailsCalled = false;
             constructor() {
                 super(
                     buildMockAdapter().build(),
-                    { get: _k => 'key' },
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
+                    mockConfigForTest,
+                    mockDisabledManager,
                     buildLogger().build(),
                     mockOverrideManager
                 );
@@ -313,18 +325,21 @@ describe('AgregarrApiClient', () => {
         const result = await client.fetch('Test Movie', 'tt123');
         expect(client.searchCalled).toBe(false);
         expect(client.getDetailsCalled).toBe(true);
-        expect(result.imdbRating).toBe(8.0);
+        expect(result!.imdbRating).toBe(8.0);
     });
 
     it('should call search when imdbId is not provided', async () => {
+        const mockConfigForTest: ConfigManager = {
+            get: (_k: string) => 'key',
+        } as unknown as ConfigManager;
         class TestClient extends AgregarrApiClient {
             searchCalled = false;
             getDetailsCalled = false;
             constructor() {
                 super(
                     buildMockAdapter().build(),
-                    { get: _k => 'key' },
-                    { isDisabled: vi.fn().mockResolvedValue(false) },
+                    mockConfigForTest,
+                    mockDisabledManager,
                     buildLogger().build(),
                     mockOverrideManager
                 );
@@ -346,18 +361,19 @@ describe('AgregarrApiClient', () => {
         const result = await client.fetch('Test Movie');
         expect(client.searchCalled).toBe(true);
         expect(client.getDetailsCalled).toBe(true);
-        expect(result.imdbRating).toBe(8.0);
+        expect(result!.imdbRating).toBe(8.0);
     });
 
     describe('IMDb ID override support', () => {
-        let mockOverrideManager: MockOverrideManager;
-        let mockLogger: ReturnType<typeof buildLogger.build>;
+        let mockOverrideManagerForTests: IdOverrideManager;
+        let mockLoggerForTests: Logger;
 
         beforeEach(() => {
-            mockOverrideManager = {
+            mockOverrideManagerForTests = {
                 getImdbId: vi.fn().mockResolvedValue(null),
-            };
-            mockLogger = buildLogger().build();
+                setImdbId: vi.fn().mockResolvedValue(undefined),
+            } as unknown as IdOverrideManager;
+            mockLoggerForTests = buildLogger().build();
         });
 
         it('should use override IMDb ID when available', async () => {
@@ -368,16 +384,20 @@ describe('AgregarrApiClient', () => {
                         Promise.resolve({ name: 'Overridden Movie', ratings: [{ source: 'imdb', value: '8.5' }] }),
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
 
-            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt9999999');
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                buildConfig().build(),
-                mockDisabledManager,
-                mockLogger,
-                mockOverrideManager
+                mockConfig,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(
@@ -386,9 +406,9 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            expect(result.imdbId).toBe('tt9999999');
-            expect(result.imdbRating).toBe(8.5);
+            expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result!.imdbId).toBe('tt9999999');
+            expect(result!.imdbRating).toBe(8.5);
         });
 
         it('should use displayTitle from override fetch when details fetch fails', async () => {
@@ -398,25 +418,29 @@ describe('AgregarrApiClient', () => {
                     json: () => Promise.resolve({ name: 'Overridden Movie', ratings: [] }),
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
 
-            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt9999999');
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                buildConfig().build(),
-                mockDisabledManager,
-                mockLogger,
-                mockOverrideManager
+                mockConfig,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(null);
 
             const result = await client.fetch('Test Movie');
 
-            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
-            expect(result.imdbId).toBe('tt9999999');
-            expect(result.displayTitle).toBe('Test Movie');
+            expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result!.imdbId).toBe('tt9999999');
+            expect(result!.displayTitle).toBe('Test Movie');
         });
 
         it('should fall back to normal search when no override exists', async () => {
@@ -425,16 +449,20 @@ describe('AgregarrApiClient', () => {
                     d: [{ id: 'tt1234567', l: 'Normal Movie', qid: 'movie', y: 2020 }],
                 })
                 .build();
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
 
-            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue(null);
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue(null);
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                buildConfig().build(),
-                mockDisabledManager,
-                mockLogger,
-                mockOverrideManager
+                mockConfig,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(
@@ -444,22 +472,26 @@ describe('AgregarrApiClient', () => {
             const result = await client.fetch('Test Movie');
 
             expect(result).not.toBeNull();
-            expect(result.imdbId).toBe('tt1234567');
-            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result!.imdbId).toBe('tt1234567');
+            expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
         });
 
         it('should disable client when override fetch fails', async () => {
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(false), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
             const mockAdapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
 
-            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt9999999');
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue('tt9999999');
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                buildConfig().build(),
-                mockDisabledManager,
-                mockLogger,
-                mockOverrideManager
+                mockConfig,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             vi.spyOn(client, 'getDetails').mockResolvedValue(null);
@@ -468,15 +500,19 @@ describe('AgregarrApiClient', () => {
 
             // Current behavior: returns a Title with the override ID when getDetails returns null
             expect(result).toBeInstanceOf(Title);
-            expect(result.imdbId).toBe('tt9999999');
-            expect(result.displayTitle).toBe('Test Movie');
-            expect(mockOverrideManager.getImdbId).toHaveBeenCalledWith('Test Movie');
+            expect(result!.imdbId).toBe('tt9999999');
+            expect(result!.displayTitle).toBe('Test Movie');
+            expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
             // Note: markDisabled is NOT called when getDetails returns null (only when it throws)
-            expect(mockDisabledManager.markDisabled).not.toHaveBeenCalled();
+            expect(mockDisabledManagerForTest.disable).not.toHaveBeenCalled();
         });
 
         it('should not attempt override or normal fetch when client is disabled', async () => {
-            const mockDisabledManager = { isDisabled: vi.fn().mockResolvedValue(true), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(true),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     ok: true,
@@ -486,43 +522,47 @@ describe('AgregarrApiClient', () => {
 
             const client = new AgregarrApiClient(
                 mockAdapter,
-                buildConfig().build(),
-                mockDisabledManager,
-                mockLogger,
-                mockOverrideManager
+                mockConfig,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             const result = await client.fetch('Test Movie');
 
             expect(result).toBeNull();
-            expect(mockOverrideManager.getImdbId).not.toHaveBeenCalled();
+            expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled();
         });
 
         it('should pass overrideManager to subclass constructors', () => {
-            const mockDisabledManager = { isDisabled: vi.fn(), markDisabled: vi.fn() };
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn(),
+                disable: vi.fn(),
+                resetAll: vi.fn(),
+            } as unknown as DisabledClientsManager;
             const mockAdapter = buildMockAdapter().build();
-            const mockConfig = buildConfig().build();
+            const mockConfigForTest = buildConfig().build() as unknown as ConfigManager;
 
             const xmdbClient = new XmdbApiClient(
-                mockDisabledManager,
                 mockAdapter,
-                mockConfig,
-                mockLogger,
-                mockOverrideManager
+                mockConfigForTest,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
             const omdbClient = new OmdbApiClient(
-                mockDisabledManager,
                 mockAdapter,
-                mockConfig,
-                mockLogger,
-                mockOverrideManager
+                mockConfigForTest,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
             const agregarrClient = new AgregarrApiClient(
-                mockDisabledManager,
                 mockAdapter,
-                mockConfig,
-                mockLogger,
-                mockOverrideManager
+                mockConfigForTest,
+                mockDisabledManagerForTest,
+                mockLoggerForTests,
+                mockOverrideManagerForTests
             );
 
             expect(xmdbClient).toBeInstanceOf(XmdbApiClient);

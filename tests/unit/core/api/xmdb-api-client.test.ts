@@ -5,103 +5,110 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { XmdbApiClient } from '../../../../src/core/api/index.js';
+import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
+import type { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
+import type { IdOverrideManager } from '../../../../src/core/id-override-manager.js';
+import type { Logger } from '../../../../src/core/logger.js';
+import type { PlatformAdapter } from '../../../../src/platform/adapter.js';
 import { buildMockAdapter } from '../../../mocks/adapter.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
 
-interface MockOverrideManager {
-    getImdbId: () => Promise<string | null>;
-}
-
-const mockOverrideManager: MockOverrideManager = {
+const mockOverrideManager: IdOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),
-};
+    setImdbId: vi.fn().mockResolvedValue(undefined),
+} as unknown as IdOverrideManager;
+
+const mockAdapter: PlatformAdapter = buildMockAdapter().build();
+const mockConfig: ConfigManager = {
+    get: (_k: string) => 'key',
+} as unknown as ConfigManager;
+const mockDisabledManager: DisabledClientsManager = {
+    isDisabled: vi.fn().mockResolvedValue(false),
+    disable: vi.fn().mockResolvedValue(undefined),
+    resetAll: vi.fn().mockResolvedValue([]),
+} as unknown as DisabledClientsManager;
+const mockLogger: Logger = buildLogger().build();
 
 describe('XmdbApiClient', () => {
     it('should handle search with results', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 results: [{ type: 'title', id: 'm1', title: 'Movie 1', year: 2020 }],
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
-        expect(result.imdbId).toBe('m1');
-        expect(result.apiTitle).toBe('Movie 1');
-        expect(result.year).toBe(2020);
-        expect(result.imdbRating).toBeNull();
+        expect(result!.imdbId).toBe('m1');
+        expect(result!.apiTitle).toBe('Movie 1');
+        expect(result!.year).toBe(2020);
+        expect(result!.imdbRating).toBeNull();
     });
 
     it('should return null if no search results found', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         expect(await client.search('Movie 1')).toBeNull();
     });
 
     it('should log info when no search results found', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
-        const mockLogger = buildLogger().build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
+        const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockLogger,
-            undefined
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLoggerForTest,
+            mockOverrideManager
         );
         await client.search('Movie 1');
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
+        expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
     });
 
     it('should return null if search results have no titles', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', name: 'Someone' }] })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         expect(await client.search('Movie 1')).toBeNull();
     });
 
     it('should log info when search results have no titles', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', name: 'Someone' }] })
             .build();
-        const mockLogger = buildLogger().build();
+        const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockLogger,
-            undefined
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLoggerForTest,
+            mockOverrideManager
         );
         await client.search('Movie 1');
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
+        expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
     });
 
     it('should handle details with Metacritic rating in ratings array', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'm1' }] })
             .withHttpFetchResolvingToOnce({
                 title: 'Movie 1',
@@ -110,26 +117,24 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            {
-                get: _k => 'key',
-            },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
-        expect(result.year).toBe(2020);
-        expect(result.mcRating).toBe(88);
+        expect(result!.year).toBe(2020);
+        expect(result!.mcRating).toBe(88);
     });
 
     it('should return null if details fetch returns an error', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 'not found' }).build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ error: 'not found' }).build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.getDetails(buildTitle().withImdbId('m1').withDisplayTitle('Movie 1').build());
@@ -137,7 +142,7 @@ describe('XmdbApiClient', () => {
     });
 
     it('should map title_type to TitleType in getDetails', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt1' }] })
             .withHttpFetchResolvingToOnce({
                 id: 'tt1',
@@ -148,18 +153,18 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.fetch('Movie 1');
-        expect(result.type).toBe('movie');
+        expect(result!.type).toBe('movie');
     });
 
     it('should map TV Series title_type to series', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt2' }] })
             .withHttpFetchResolvingToOnce({
                 id: 'tt2',
@@ -170,18 +175,18 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.fetch('Show 1');
-        expect(result.type).toBe('series');
+        expect(result!.type).toBe('series');
     });
 
     it('should return null for unknown title_type', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt3' }] })
             .withHttpFetchResolvingToOnce({
                 id: 'tt3',
@@ -191,35 +196,35 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.fetch('Short 1');
-        expect(result.type).toBeNull();
+        expect(result!.type).toBeNull();
     });
 
     it('should log warn when details response has error field', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingToOnce({ error: 'not found' }).build();
-        const mockLogger = buildLogger().build();
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingToOnce({ error: 'not found' }).build();
+        const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            mockLogger,
-            undefined
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLoggerForTest,
+            mockOverrideManager
         );
         await client.getDetails(buildTitle().withImdbId('m1').withDisplayTitle('Movie 1').build());
-        expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect(mockLoggerForTest.warn).toHaveBeenCalledWith(
             expect.stringContaining('Movie 1'),
             expect.objectContaining({ response: { error: 'not found' } })
         );
     });
 
     it('should return null when details response has no title', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',
                 title: null,
@@ -229,10 +234,10 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.getDetails(
@@ -242,19 +247,22 @@ describe('XmdbApiClient', () => {
     });
 
     it('should return unhealthy status when API key is missing', async () => {
+        const mockConfigForTest: ConfigManager = {
+            get: () => '',
+        } as unknown as ConfigManager;
         const client = new XmdbApiClient(
-            buildMockAdapter().build(),
-            { get: () => '' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
-            undefined
+            mockAdapter,
+            mockConfigForTest,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
         );
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
     });
 
     it('should extract vote_count from XMDB response', async () => {
-        const mockAdapter = buildMockAdapter()
+        const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 id: 'tt1',
                 title: 'Test',
@@ -263,13 +271,13 @@ describe('XmdbApiClient', () => {
             })
             .build();
         const client = new XmdbApiClient(
-            mockAdapter,
-            { get: _k => 'key' },
-            { isDisabled: vi.fn().mockResolvedValue(false) },
-            buildLogger().build(),
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
             mockOverrideManager
         );
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
-        expect(result.imdbVotes).toBe(2500000);
+        expect(result!.imdbVotes).toBe(2500000);
     });
 });
