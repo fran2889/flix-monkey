@@ -117,18 +117,22 @@
 
 ### Phase 5: UI Components
 
-- [ ] src/core/ui/modal.js → modal.ts
-- [ ] tests/unit/core/ui/modal.test.js → modal.test.ts (if exists)
+- [x] src/core/ui/modal.js → modal.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/modal.test.js → modal.test.ts (commit: 4c49812)
 
-- [ ] src/core/ui/settings-ui.js → settings-ui.ts
+- [x] src/core/ui/settings-ui.js → settings-ui.ts (commit: 4c49812)
 
-- [ ] src/core/ui/settings-view.js → settings-view.ts
+- [x] src/core/ui/settings-view.js → settings-view.ts (commit: 4c49812)
 
-- [ ] src/core/ui/overlay-elements.js → overlay-elements.ts
+- [x] src/core/ui/overlay-elements.js → overlay-elements.ts (commit: 4c49812)
 
-- [ ] src/core/ui/overlay-styles.js → overlay-styles.ts
+- [x] src/core/ui/overlay-styles.js → overlay-styles.ts (commit: 4c49812)
 
-- [ ] src/core/ui/styles.js → styles.ts
+- [x] src/core/ui/styles.js → styles.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/settings-ui.test.js → settings-ui.test.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/settings-view.test.js → settings-view.test.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/elements/overlay-elements.test.js → overlay-elements.test.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/styles/overlay-styles.test.ts → overlay-styles.test.ts (commit: 4c49812)
 
 ### Phase 6: API Clients
 
@@ -257,4 +261,5 @@
 5. ✅ **Cache** (Task 3.1) - COMPLETED in commit ad058dc
 6. ✅ **App & Overlay** (Task 4.1-4.3) - COMPLETED in commits 1f76b22, 516168e, 476908a
 7. ✅ **Platform Adapters** (Task 5.2) - COMPLETED in commit f2cc712
-8. **UI Components** (Task 6.1) - NEXT: Migrate modal.js, settings-ui.js, settings-view.js, overlay-elements.js, overlay-styles.js, styles.js
+8. ✅ **UI Components** (Task 6.1) - COMPLETED in commit 4c49812
+9. **Target Entry Points** (Tasks 8.1-8.4) - NEXT: Migrate content.js, options.js, fetch-proxy.js, domains.js, background.js, service-worker.js, entry.js, metadata.js
