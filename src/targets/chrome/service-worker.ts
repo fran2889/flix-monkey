@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { HttpFetchOptions } from '../../platform/adapter.js';
-import type { FetchProxyResponse } from '../../types/extension.js';
 import { handleFetchMessage } from '../extension/fetch-proxy.js';
 import { createExtensionMigrationExecutor } from '../extension/migrations.js';
 
@@ -11,6 +10,9 @@ import { createExtensionMigrationExecutor } from '../extension/migrations.js';
  * Chrome service worker global: chrome API is available as a bare global.
  * This declaration provides minimal typing for the chrome namespace used in this module.
  */
+type ChromeMessageSender = { id?: string };
+type ChromeSendResponse = (_response?: unknown) => void;
+
 declare const chrome: {
     runtime: {
         id: string;
@@ -19,8 +21,8 @@ declare const chrome: {
             addListener: (
                 _callback: (
                     _msg: unknown,
-                    _sender: { id?: string },
-                    _sendResponse: (_response: unknown) => void
+                    _sender: ChromeMessageSender,
+                    _sendResponse: ChromeSendResponse
                 ) => boolean | void
             ) => void;
         };
@@ -40,11 +42,8 @@ type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
 
 const executeMigrations = createExtensionMigrationExecutor();
 
-/**
- * Run migrations on extension install.
- */
-chrome.runtime.onInstalled.addListener((): void => {
-    executeMigrations().catch((error: unknown): void => {
+chrome.runtime.onInstalled.addListener(() => {
+    executeMigrations().catch((error: unknown) => {
         console.error('Failed to run storage migrations', error);
     });
 });
@@ -53,14 +52,9 @@ chrome.runtime.onInstalled.addListener((): void => {
  * Handle messages from other extension contexts.
  * Chrome service workers use the bare 'chrome' global.
  * All code paths must explicitly return.
- * Uses sendResponse callback pattern for chrome.runtime.onMessage.
  */
 chrome.runtime.onMessage.addListener(
-    (
-        msg: unknown,
-        sender: { id?: string },
-        sendResponse: (_response: FetchProxyResponse | Record<string, never>) => void
-    ): boolean => {
+    (msg: unknown, sender: ChromeMessageSender, sendResponse: ChromeSendResponse): boolean => {
         if (sender?.id !== chrome.runtime.id) {
             return false;
         }
@@ -68,15 +62,10 @@ chrome.runtime.onMessage.addListener(
         const message = msg as ExtensionMessage;
         if (message.type === 'FM_RUN_MIGRATIONS') {
             executeMigrations().then(
-                (): void => {
-                    sendResponse({});
-                },
-                (error: unknown): void => {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    sendResponse({ error: errorMessage });
-                }
+                () => sendResponse({}),
+                (error: unknown) => sendResponse({ error: error instanceof Error ? error.message : String(error) })
             );
-            return true; // keep message channel open for async sendResponse
+            return true;
         }
 
         if (message.type !== 'FM_FETCH') {
