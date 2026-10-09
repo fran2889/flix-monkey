@@ -35,7 +35,7 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
 
 - [x] Task 3.1: Migrate Cache (commit: ad058dc - cache-entry.ts, cache-manager.ts, cache/index.ts, cache.test.ts, mocks/cache.ts)
 - [x] Task 3.2: Migrate Config (config-fields.ts, config-manager.ts, config/index.ts done; config-manager.test.ts migrated in commit 0fe5bb7)
-- [ ] Task 3.3: Migrate API Manager (api-manager.js, api-manager.test.js - blocked by base-api-client.js dependency)
+- [x] Task 3.3: Migrate API Manager (api-manager.js, api-manager.test.js - commit: 2cb2b2b)
 - [ ] Task 3.4: Migrate Services (base-streaming-service.js, netflix-service.js, disney-plus-service.js, hbo-max-service.js, service-registry.js, services/index.js + tests)
 - [x] Task 3.5: Migrate Remaining Managers (disabled-clients.ts, disabled-clients.test.ts migrated in commit 2206bf2)
 
@@ -97,10 +97,11 @@ As of 2026-10-09:
 - Cache, Config, Logger, Platform Adapter migrated
 - Disabled Clients migrated (source + test)
 - API Clients migrated (base-api-client, xmdb-api-client, omdb-api-client, agregarr-api-client, title-type-mappers) + dependencies (id-override-manager, request-queue)
+- API Manager migrated (api-manager.ts, api-manager.test.ts) - commit: 2cb2b2b
 - Mocks for migrated modules migrated
 - All tests passing (742 tests), type-check passing, lint passing
-- API Manager (Task 3.3) now unblocked by API Clients completion
-- Next: Migrate API Manager (Task 3.3), then Services (Task 3.4)
+- Services (Task 3.4) now unblocked
+- Next: Migrate Services (Task 3.4), then remaining managers
 
 ## Commands Reference
 

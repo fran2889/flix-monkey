@@ -45,9 +45,9 @@
 
 ### Phase 2: Services & Managers (Medium risk)
 
-- [ ] src/core/api-manager.js → api-manager.ts
-- [ ] tests/unit/core/api-manager.test.js → api-manager.test.ts
-    - **Status**: Unblocked - API Clients (Task 7.1) completed in commit 344b9e6
+- [x] src/core/api-manager.js → api-manager.ts (commit: 2cb2b2b)
+- [x] tests/unit/core/api-manager.test.js → api-manager.test.ts (commit: 2cb2b2b)
+    - **Status**: COMPLETED - Unblocked by API Clients (Task 7.1) completion in commit 344b9e6
 
 - [ ] src/core/services/base-streaming-service.js → base-streaming-service.ts
 - [ ] tests/unit/core/services/base-streaming-service.test.js → base-streaming-service.test.ts
@@ -246,6 +246,6 @@
 ## Next Steps
 
 1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6 (base-api-client, xmdb, omdb, agregarr, title-type-mappers + dependencies: id-override-manager, request-queue)
-2. Migrate **API Manager** (Task 3.3) - NOW UNBLOCKED, can proceed
-3. Migrate **Services** (Task 3.4) - base-streaming-service, netflix, disney, hbo, registry
+2. ✅ **API Manager** (Task 3.3) - COMPLETED in commit 2cb2b2b (api-manager.ts, api-manager.test.ts)
+3. Migrate **Services** (Task 3.4) - NOW UNBLOCKED - base-streaming-service, netflix, disney, hbo, registry
 4. Continue with **remaining managers** - fade-manager, request-queue.test, id-override-manager.test, migrations, logger.test
