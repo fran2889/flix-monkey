@@ -88,15 +88,20 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
     - Subagent: sdd-impl-task-8-4 (completed)
     - Files: entry.ts, metadata.ts + rollup.config.js update + eslint.config.js update
     - Verification: type-check ✅, 869 tests ✅, build ✅, lint ✅
+- [x] Task 8.5: Migrate Extension Migrations (migrations.js)
+    - Files: migrations.ts + migrations.test.ts
+    - Verification: type-check ✅, 870 tests ✅, build ✅, lint ✅
 
 ### Phase 8: Test Infrastructure
 
 - [x] Task 9.1: Migrate Mocks (adapter.ts, cache.ts, config.ts, logger.ts in ad058dc)
-- [ ] Task 9.1: Migrate Remaining Mocks (chrome.js, platform.js, webextension.js, userscript.js, setup.js)
+- [x] Task 9.2: Migrate Remaining Mocks (chrome.ts, platform.ts, userscript.ts, webextension.ts in 1686f21)
+- [x] Task 9.3: Migrate Setup (setup.js → setup.ts)
+- [x] Task 9.4: Migrate Test Helpers (surface-tests.js → surface-tests.ts)
 
 ### Phase 9: UI Tests
 
-- [ ] Task 10.1: Migrate UI Test Files (netflix.ui.test.js, hbomax.ui.test.js, disneyplus.ui.test.ts)
+- [x] Task 10.1: Migrate UI Test Files (netflix.ui.test.ts, hbomax.ui.test.ts, disneyplus.ui.test.ts)
 
 ### Final Verification
 
@@ -122,7 +127,12 @@ As of 2026-10-09:
 - Platform Implementations (userscript, webextension + mocks) migrated
 - Type definitions migrated
 - UI Modules (modal, settings-ui, settings-view, overlay-elements, overlay-styles, styles + tests) migrated
-- All tests passing (869 tests), type-check passing, lint passing, build passing
+- All target entry points migrated to TypeScript
+- All platform-specific files migrated
+- All test mocks migrated
+- Test infrastructure (setup, helpers) migrated
+- UI tests (netflix, hbomax, disneyplus) migrated
+- All verifications passing (type-check ✅, 873 tests ✅, build ✅, lint ✅)
 
 ## Task Completion Summary
 

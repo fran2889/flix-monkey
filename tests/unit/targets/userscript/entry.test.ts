@@ -14,11 +14,11 @@ let settingsConstructor;
 let migrationRunner;
 let resolveMigrations;
 
-vi.mock('../../../../src/core/app.js', () => ({
+vi.mock('../../../../src/core/app', () => ({
     startApp: vi.fn(() => appHandle),
 }));
 
-vi.mock('../../../../src/platform/userscript.ts', () => ({
+vi.mock('../../../../src/platform/userscript', () => ({
     UserscriptAdapter: class {
         constructor() {
             return adapter;
@@ -26,7 +26,7 @@ vi.mock('../../../../src/platform/userscript.ts', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/cache/cache-manager.js', () => ({
+vi.mock('../../../../src/core/cache/cache-manager', () => ({
     CacheManager: class {
         constructor(...args) {
             return cacheConstructor(...args);
@@ -34,7 +34,7 @@ vi.mock('../../../../src/core/cache/cache-manager.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/config/config-manager.js', () => ({
+vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
         constructor(...args) {
             return configConstructor(...args);
@@ -42,7 +42,7 @@ vi.mock('../../../../src/core/config/config-manager.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/disabled-clients.js', () => ({
+vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {
         constructor(...args) {
             return disabledConstructor(...args);
@@ -50,7 +50,7 @@ vi.mock('../../../../src/core/disabled-clients.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/logger.js', () => ({
+vi.mock('../../../../src/core/logger', () => ({
     Logger: class {
         constructor(...args) {
             return loggerConstructor(...args);
@@ -58,11 +58,11 @@ vi.mock('../../../../src/core/logger.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/migrations.js', () => ({
+vi.mock('../../../../src/core/migrations', () => ({
     runMigrations: vi.fn((...args) => migrationRunner(...args)),
 }));
 
-vi.mock('../../../../src/core/ui/modal.js', () => ({
+vi.mock('../../../../src/core/ui/modal', () => ({
     Modal: class {
         getContentContainer() {
             return document.body;
@@ -74,7 +74,7 @@ vi.mock('../../../../src/core/ui/modal.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/ui/settings-ui.js', () => ({
+vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
         constructor(...args) {
             settingsConstructor(...args);
@@ -108,10 +108,10 @@ describe('userscript entry point', () => {
     });
 
     it('waits for migrations before starting the app and registering the menu', async () => {
-        const migrationsModule = await import('../../../../src/core/migrations.js');
-        const appModule = await import('../../../../src/core/app.js');
+        const migrationsModule = await import('../../../../src/core/migrations');
+        const appModule = await import('../../../../src/core/app');
 
-        await import('../../../../src/targets/userscript/entry.js');
+        await import('../../../../src/targets/userscript/entry');
 
         expect(migrationsModule.runMigrations).toHaveBeenCalledWith(adapter, expect.anything());
         expect(appModule.startApp).not.toHaveBeenCalled();
@@ -134,10 +134,10 @@ describe('userscript entry point', () => {
     });
 
     it('registers the settings menu when startApp returns null', async () => {
-        const appModule = await import('../../../../src/core/app.js');
-        const migrationsModule = await import('../../../../src/core/migrations.js');
+        const appModule = await import('../../../../src/core/app');
+        const migrationsModule = await import('../../../../src/core/migrations');
 
-        await import('../../../../src/targets/userscript/entry.js');
+        await import('../../../../src/targets/userscript/entry');
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
 
@@ -168,7 +168,7 @@ describe('userscript entry point', () => {
         const disabledManager = { source: 'app-disabled' };
         appHandle = { cacheManager, disabledManager };
 
-        await import('../../../../src/targets/userscript/entry.js');
+        await import('../../../../src/targets/userscript/entry');
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
         const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];

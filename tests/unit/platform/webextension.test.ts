@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
-import { WebExtensionAdapter } from '../../../src/platform/webextension.ts';
+import { WebExtensionAdapter } from '../../../src/platform/webextension';
 
 vi.mock('webextension-polyfill', () => ({
     default: {
@@ -15,7 +15,7 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 describe('WebExtensionAdapter', () => {
-    let adapter;
+    let adapter: WebExtensionAdapter;
 
     beforeEach(() => {
         vi.clearAllMocks();

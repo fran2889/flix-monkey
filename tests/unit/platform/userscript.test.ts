@@ -4,12 +4,12 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { FlixMonkeyError } from '../../../src/core/utils/index.js';
-import { UserscriptAdapter } from '../../../src/platform/userscript.ts';
-import { setupUserscriptMocks } from '../../mocks/platform.ts';
+import { FlixMonkeyError } from '../../../src/core/utils/index';
+import { UserscriptAdapter } from '../../../src/platform/userscript';
+import { setupUserscriptMocks } from '../../mocks/platform';
 
 describe('UserscriptAdapter', () => {
-    let adapter;
+    let adapter: UserscriptAdapter;
 
     beforeEach(() => {
         setupUserscriptMocks();

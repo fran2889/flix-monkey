@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import '../../../mocks/webextension.ts';
+import '../../../mocks/webextension';
 
 import { describe, expect, it } from 'vitest';
 

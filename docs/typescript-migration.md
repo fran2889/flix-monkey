@@ -43,24 +43,19 @@
 
 - [x] src/core/rate-limits.js → rate-limits.ts (commit: 3d3f743)
 
+### Phase 1.5: Type Definitions
+
+- [x] src/types/services.js → services.ts (commit: 18ff681)
+- [x] src/types/overlay.js → overlay.ts (commit: 18ff681)
+- [x] src/types/extension.js → extension.ts (commit: 18ff681)
+- [x] src/types/index.js → index.ts (commit: 18ff681)
+- [x] src/types/migrations.js → migrations.ts (commit: 18ff681)
+- [x] src/types/platform.js → platform.ts (commit: 18ff681)
+- [x] src/types/surfaces.js → surfaces.ts (commit: 18ff681)
+- [x] src/types/title.js → title.ts (commit: 18ff681)
+- [x] src/types/api.ts → api.ts (commit: 344b9e6)
+
 ### Phase 2: Services & Managers (Medium risk)
-
-- [x] src/core/api-manager.js → api-manager.ts (commit: 2cb2b2b)
-- [x] tests/unit/core/api-manager.test.js → api-manager.test.ts (commit: 2cb2b2b)
-    - **Status**: COMPLETED - Unblocked by API Clients (Task 7.1) completion in commit 344b9e6
-
-- [x] src/core/services/base-streaming-service.js → base-streaming-service.ts (commit: 18ff681)
-- [x] tests/unit/core/services/services.test.js → services.test.ts (commit: 18ff681)
-
-- [x] src/core/services/netflix-service.js → netflix-service.ts (commit: 18ff681)
-
-- [x] src/core/services/disney-plus-service.js → disney-plus-service.ts (commit: 18ff681)
-
-- [x] src/core/services/hbo-max-service.js → hbo-max-service.ts (commit: 18ff681)
-
-- [x] src/core/services/service-registry.js → service-registry.ts (commit: 18ff681)
-
-- [x] src/core/services/index.js → index.ts (barrel) (commit: 18ff681)
 
 - [x] src/core/cache/cache-entry.js → cache-entry.ts (commit: ad058dc)
 - [x] src/core/cache/cache-manager.js → cache-manager.ts (commit: ad058dc)
@@ -72,6 +67,9 @@
 - [x] src/core/config/config-manager.js → config-manager.ts (commit: ad058dc)
 - [x] src/core/config/index.js → index.ts (barrel) (commit: ad058dc)
 - [x] tests/unit/core/config/config-manager.test.js → config-manager.test.ts (commit: 0fe5bb7)
+
+- [x] src/core/api-manager.js → api-manager.ts (commit: 2cb2b2b)
+- [x] tests/unit/core/api-manager.test.js → api-manager.test.ts (commit: 2cb2b2b)
 
 - [x] src/core/disabled-clients.js → disabled-clients.ts (commit: 2206bf2)
 - [x] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts (commit: 2206bf2)
@@ -91,18 +89,28 @@
 - [x] src/core/migrations.js → migrations.ts (commit: 349f2e3)
 - [x] tests/unit/core/migrations.test.js → migrations.test.ts (commit: 349f2e3)
 
-### Phase 3: Core Application (Higher risk)
+- [x] src/core/services/base-streaming-service.js → base-streaming-service.ts (commit: 18ff681)
+- [x] src/core/services/netflix-service.js → netflix-service.ts (commit: 18ff681)
+- [x] src/core/services/disney-plus-service.js → disney-plus-service.ts (commit: 18ff681)
+- [x] src/core/services/hbo-max-service.js → hbo-max-service.ts (commit: 18ff681)
+- [x] src/core/services/service-registry.js → service-registry.ts (commit: 18ff681)
+- [x] src/core/services/index.js → index.ts (barrel) (commit: 18ff681)
+- [x] tests/unit/core/services/services.test.js → services.test.ts (commit: 18ff681)
 
-- [x] src/core/app.js → app.ts (commit: 516168e)
-- [x] tests/unit/core/app.test.js → app.test.ts (commit: 476908a)
+### Phase 3: Core Application (Higher risk)
 
 - [x] src/core/overlay.js → overlay.ts (commit: 1f76b22)
 - [x] tests/unit/core/overlay.test.js → overlay.test.ts (commit: 1f76b22)
 
 - [x] src/core/surfaces/surface-manager.js → surface-manager.ts (commit: e7f28f3)
+- [x] src/core/surfaces/index.js → index.ts (barrel) (commit: e7f28f3)
 - [x] tests/unit/core/surfaces/surface-manager.test.js → surface-manager.test.ts (commit: e7f28f3)
+- [x] src/core/surfaces/surface-definitions/netflix-surfaces.js → netflix-surfaces.ts (commit: e7f28f3)
+- [x] src/core/surfaces/surface-definitions/disney-plus-surfaces.js → disney-plus-surfaces.ts (commit: e7f28f3)
+- [x] src/core/surfaces/surface-definitions/hbo-max-surfaces.js → hbo-max-surfaces.ts (commit: e7f28f3)
 
-- [x] src/core/surfaces/*.js → *.ts (remaining surface definitions) (commit: e7f28f3)
+- [x] src/core/app.js → app.ts (commit: 516168e)
+- [x] tests/unit/core/app.test.js → app.test.ts (commit: 476908a)
 
 ### Phase 4: Platform Adapters
 
@@ -121,18 +129,18 @@
 - [x] tests/unit/core/ui/modal.test.js → modal.test.ts (commit: 4c49812)
 
 - [x] src/core/ui/settings-ui.js → settings-ui.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/settings-ui.test.js → settings-ui.test.ts (commit: 4c49812)
 
 - [x] src/core/ui/settings-view.js → settings-view.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/settings-view.test.js → settings-view.test.ts (commit: 4c49812)
 
 - [x] src/core/ui/overlay-elements.js → overlay-elements.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/elements/overlay-elements.test.js → overlay-elements.test.ts (commit: 4c49812)
 
 - [x] src/core/ui/overlay-styles.js → overlay-styles.ts (commit: 4c49812)
+- [x] tests/unit/core/ui/styles/overlay-styles.test.ts → overlay-styles.test.ts (commit: 4c49812)
 
 - [x] src/core/ui/styles.js → styles.ts (commit: 4c49812)
-- [x] tests/unit/core/ui/settings-ui.test.js → settings-ui.test.ts (commit: 4c49812)
-- [x] tests/unit/core/ui/settings-view.test.js → settings-view.test.ts (commit: 4c49812)
-- [x] tests/unit/core/ui/elements/overlay-elements.test.js → overlay-elements.test.ts (commit: 4c49812)
-- [x] tests/unit/core/ui/styles/overlay-styles.test.ts → overlay-styles.test.ts (commit: 4c49812)
 
 ### Phase 6: API Clients
 
@@ -162,39 +170,36 @@
 - [x] rollup.config.js updated for .ts inputs (commit: dc6a936)
 
 - [x] src/targets/firefox/background.js → background.ts (commit: 4ced36d)
+
 - [x] src/targets/chrome/service-worker.js → service-worker.ts (commit: fe19ad0)
+
 - [x] src/targets/userscript/entry.js → entry.ts (commit: 51fe239)
 - [x] src/targets/userscript/metadata.js → metadata.ts (commit: 51fe239)
 - [x] eslint.config.js updated (commit: 51fe239)
 
-- [ ] src/targets/firefox/manifest.json → (keep as JSON)
-- [ ] src/targets/firefox/background.js → background.ts
-
-- [ ] src/targets/chrome/manifest.json → (keep as JSON)
-- [ ] src/targets/chrome/service-worker.js → service-worker.ts
-
-- [ ] src/targets/userscript/entry.js → entry.ts
-- [ ] src/targets/userscript/metadata.js → metadata.ts
+- [x] src/targets/extension/migrations.js → migrations.ts (commit: CURRENT)
+- [x] tests/unit/targets/extension/migrations.test.js → migrations.test.ts (commit: CURRENT)
 
 ### Phase 8: Test Infrastructure
 
-- [ ] tests/mocks/chrome.js → chrome.ts
+- [x] tests/mocks/adapter.js → adapter.ts (commit: ad058dc, updated in 344b9e6)
+- [x] tests/mocks/cache.js → cache.ts (commit: ad058dc)
+- [x] tests/mocks/chrome.js → chrome.ts (commit: 1686f21)
 - [x] tests/mocks/config.js → config.ts (commit: ad058dc)
 - [x] tests/mocks/logger.js → logger.ts (commit: ad058dc)
-- [ ] tests/mocks/platform.js → platform.ts
-- [ ] tests/mocks/webextension.js → webextension.ts
-- [ ] tests/setup.js → setup.ts (already cleaned of MSW)
+- [x] tests/mocks/platform.js → platform.ts (commit: 1686f21)
+- [x] tests/mocks/title.js → title.ts (commit: 73af925)
+- [x] tests/mocks/userscript.js → userscript.ts (commit: f2cc712)
+- [x] tests/mocks/webextension.js → webextension.ts (commit: f2cc712)
 
-### Phase 8.5: Cache Tests
-
-- [x] tests/mocks/cache.js → cache.ts (commit: ad058dc)
-- [x] tests/unit/core/cache/cache.test.js → cache.test.ts (commit: ad058dc)
+- [x] tests/setup.js → setup.ts (commit: CURRENT)
+- [x] tests/helpers/surface-tests.js → surface-tests.ts (commit: CURRENT)
 
 ### Phase 9: UI Tests
 
-- [ ] tests/ui/netflix.ui.test.js → netflix.ui.test.ts
-- [ ] tests/ui/hbomax.ui.test.js → hbomax.ui.test.ts
-- [ ] tests/ui/disneyplus.ui.test.ts → disneyplus.ui.test.ts
+- [x] tests/ui/netflix.ui.test.js → netflix.ui.test.ts (commit: CURRENT)
+- [x] tests/ui/hbomax.ui.test.js → hbomax.ui.test.ts (commit: CURRENT)
+- [x] tests/ui/disneyplus.ui.test.js → disneyplus.ui.test.ts (commit: CURRENT)
 
 ---
 
@@ -244,29 +249,31 @@
 - Optional properties are truly optional (no `undefined` values)
 - Add JSDoc types for complex return types to help with migration
 
-## Current Blockers
+## Current Status (2026-10-09)
 
-- **None** - API Manager (Task 3.3) unblocked by API Clients (Task 7.1) completion in commit 344b9e6
+**Completed:**
 
-### Phase 0.5: Type Definitions
+- All infrastructure setup
+- All foundation files (constants, title, utils, rate-limits)
+- All type definitions
+- All services and managers (cache, config, API manager, disabled-clients, fade-manager, id-override-manager, request-queue, logger, migrations)
+- All API clients (base, xmdb, omdb, agregarr, title-type-mappers)
+- All core application (overlay, surfaces, app)
+- All platform adapters (adapter, userscript, webextension) + mocks
+- All UI components (modal, settings-ui, settings-view, overlay-elements, overlay-styles, styles) + tests
+- All target entry points (extension: content, options, fetch-proxy, domains, migrations; firefox: background; chrome: service-worker; userscript: entry, metadata)
+- All test infrastructure (all mocks, setup, helpers)
+- All UI tests (netflix, hbomax, disneyplus)
 
-- [x] src/types/services.js → services.ts (commit: 18ff681)
-- [x] src/types/overlay.js → overlay.ts (commit: 18ff681)
-- [x] src/types/extension.js → extension.ts (commit: 18ff681)
-- [x] src/types/index.js → index.ts (commit: 18ff681)
-- [x] src/types/migrations.js → migrations.ts (commit: 18ff681)
-- [x] src/types/platform.js → platform.ts (commit: 18ff681)
-- [x] src/types/surfaces.js → surfaces.ts (commit: 18ff681)
-- [x] src/types/title.js → title.ts (commit: 18ff681)
+**Remaining:**
+
+1. Final verification - remove remaining .js files (optional)
+2. Final checks and cleanup
+
+**Blockers:** None
 
 ## Next Steps
 
-1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6
-2. ✅ **API Manager** (Task 3.3) - COMPLETED in commit 2cb2b2b
-3. ✅ **Services** (Task 3.4) - COMPLETED in commit 18ff681
-4. ✅ **Remaining Managers** (Task 3.5) - COMPLETED in commit 349f2e3
-5. ✅ **Cache** (Task 3.1) - COMPLETED in commit ad058dc
-6. ✅ **App & Overlay** (Task 4.1-4.3) - COMPLETED in commits 1f76b22, 516168e, 476908a
-7. ✅ **Platform Adapters** (Task 5.2) - COMPLETED in commit f2cc712
-8. ✅ **UI Components** (Task 6.1) - COMPLETED in commit 4c49812
-9. **Target Entry Points** (Tasks 8.1-8.4) - NEXT: Migrate content.js, options.js, fetch-proxy.js, domains.js, background.js, service-worker.js, entry.js, metadata.js
+1. **Final verification** - ensure all tests pass, type-check passes, build succeeds, lint passes
+2. **Optional cleanup** - remove remaining .js files that have been superseded by .ts versions
+3. **Final migration complete** - all source and test files are TypeScript

@@ -4,13 +4,13 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { browser } from '../../../mocks/webextension.ts';
+import { browser } from '../../../mocks/webextension';
 
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),
 }));
 
-vi.mock('../../../../src/targets/extension/migrations.js', () => ({
+vi.mock('../../../../src/targets/extension/migrations', () => ({
     createExtensionMigrationExecutor: () => executeMigrations,
 }));
 
@@ -53,7 +53,7 @@ describe('Firefox Background Script', () => {
             }
         };
 
-        await import('../../../../src/targets/firefox/background.js');
+        await import('../../../../src/targets/firefox/background');
     });
 
     it.each([{ reason: 'install' }, { reason: 'update' }])(

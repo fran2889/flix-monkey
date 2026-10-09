@@ -32,7 +32,7 @@ vi.mock('webextension-polyfill', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/app.js', () => ({
+vi.mock('../../../../src/core/app', () => ({
     startApp: vi.fn(() => mockAppHandle),
 }));
 
@@ -58,7 +58,7 @@ describe('content.js entry point', () => {
         };
 
         // Re-import so vi.resetModules() takes effect and content.js IIFE runs fresh.
-        const appModule = await import('../../../../src/core/app.js');
+        const appModule = await import('../../../../src/core/app');
         startAppSpy = appModule.startApp;
         vi.mocked(startAppSpy).mockReturnValue(mockAppHandle);
 
@@ -66,7 +66,7 @@ describe('content.js entry point', () => {
     });
 
     async function startAfterMigrations() {
-        const entryImport = import('../../../../src/targets/extension/content.js');
+        const entryImport = import('../../../../src/targets/extension/content');
         await entryImport;
         resolveMigrations({});
         await Promise.resolve();
@@ -74,7 +74,7 @@ describe('content.js entry point', () => {
     }
 
     it('waits for migrations before reading storage and starting the app', async () => {
-        const entryImport = import('../../../../src/targets/extension/content.js');
+        const entryImport = import('../../../../src/targets/extension/content');
         await entryImport;
 
         expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });

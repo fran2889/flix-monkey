@@ -12,7 +12,7 @@ let tabsReloadSpy;
 let migrationPromise;
 let resolveMigrations;
 
-vi.mock('../../../../src/core/ui/settings-ui.js', () => ({
+vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
         constructor() {
             capturedInstance = this;
@@ -45,7 +45,7 @@ vi.mock('webextension-polyfill', () => ({
 
 // options.js constructs ConfigManager, CacheManager, and DisabledClientsManager
 // with `new`. Use class stubs so they are valid constructors.
-vi.mock('../../../../src/core/config/config-manager.js', () => ({
+vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
         configGet() {
             return null;
@@ -53,11 +53,11 @@ vi.mock('../../../../src/core/config/config-manager.js', () => ({
     },
 }));
 
-vi.mock('../../../../src/core/cache/cache-manager.js', () => ({
+vi.mock('../../../../src/core/cache/cache-manager', () => ({
     CacheManager: class {},
 }));
 
-vi.mock('../../../../src/core/disabled-clients.js', () => ({
+vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {},
 }));
 
@@ -81,7 +81,7 @@ describe('options.js entry point', () => {
     });
 
     async function startAfterMigrations() {
-        const entryImport = import('../../../../src/targets/extension/options.js');
+        const entryImport = import('../../../../src/targets/extension/options');
         await entryImport;
         resolveMigrations({});
         await Promise.resolve();
@@ -89,7 +89,7 @@ describe('options.js entry point', () => {
     }
 
     it('waits for migrations before rendering settings', async () => {
-        const entryImport = import('../../../../src/targets/extension/options.js');
+        const entryImport = import('../../../../src/targets/extension/options');
         await entryImport;
 
         expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });

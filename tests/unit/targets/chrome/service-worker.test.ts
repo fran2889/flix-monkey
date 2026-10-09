@@ -4,13 +4,13 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { chrome } from '../../../mocks/chrome.ts';
+import { chrome } from '../../../mocks/chrome';
 
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),
 }));
 
-vi.mock('../../../../src/targets/extension/migrations.js', () => ({
+vi.mock('../../../../src/targets/extension/migrations', () => ({
     createExtensionMigrationExecutor: () => executeMigrations,
 }));
 
@@ -53,7 +53,7 @@ describe('Chrome Service Worker', () => {
             }
         };
 
-        await import('../../../../src/targets/chrome/service-worker.js');
+        await import('../../../../src/targets/chrome/service-worker');
     });
 
     it.each([{ reason: 'install' }, { reason: 'update' }])(
