@@ -3,6 +3,7 @@
 **Goal**: Convert flix-monkey from JavaScript to TypeScript with strict type safety.
 
 **Philosophy**: Use `null`, not `undefined`. All code paths must return explicitly.
+**Type Precision**: Use precise types - `string | null` or `number | null` for stored properties, only `string | number | null` for input parameters that get normalized. Nullability only where properties can actually be null.
 
 ---
 
@@ -64,13 +65,9 @@
 
 - [ ] src/core/services/index.js → index.ts (barrel)
 
-- [ ] src/core/cache/cache-entry.js → cache-entry.ts
-- [ ] tests/unit/core/cache/cache-entry.test.js → cache-entry.test.ts
-
-- [ ] src/core/cache/cache-manager.js → cache-manager.ts
-- [ ] tests/unit/core/cache/cache-manager.test.js → cache-manager.test.ts
-
-- [ ] src/core/cache/index.js → index.ts (barrel)
+- [x] src/core/cache/cache-entry.js → cache-entry.ts (commit: ad058dc)
+- [x] src/core/cache/cache-manager.js → cache-manager.ts (commit: ad058dc)
+- [x] src/core/cache/index.js → index.ts (barrel) (commit: ad058dc)
 
 - [ ] src/core/disabled-clients.js → disabled-clients.ts
 - [ ] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts
@@ -84,12 +81,12 @@
 - [ ] src/core/request-queue.js → request-queue.ts
 - [ ] tests/unit/core/request-queue.test.js → request-queue.test.ts
 
-- [ ] src/core/config/config-fields.js → config-fields.ts
-- [ ] src/core/config/config-manager.js → config-manager.ts
-- [ ] src/core/config/index.js → index.ts (barrel)
+- [x] src/core/config/config-fields.js → config-fields.ts (commit: ad058dc)
+- [x] src/core/config/config-manager.js → config-manager.ts (commit: ad058dc)
+- [x] src/core/config/index.js → index.ts (barrel) (commit: ad058dc)
 - [ ] tests/unit/core/config/config-manager.test.js → config-manager.test.ts
 
-- [ ] src/core/logger.js → logger.ts
+- [x] src/core/logger.js → logger.ts (commit: ad058dc)
 - [ ] tests/unit/core/logger.test.js → logger.test.ts
 
 - [ ] src/core/migrations.js → migrations.ts
@@ -110,8 +107,8 @@
 
 ### Phase 4: Platform Adapters
 
-- [ ] src/platform/adapter.js → adapter.ts
-- [ ] tests/mocks/adapter.js → adapter.ts
+- [x] src/platform/adapter.js → adapter.ts (commit: ad058dc)
+- [x] tests/mocks/adapter.js → adapter.ts (commit: ad058dc)
 
 - [ ] src/platform/userscript.js → userscript.ts
 - [ ] tests/mocks/userscript.js → userscript.ts
@@ -169,11 +166,16 @@
 ### Phase 8: Test Infrastructure
 
 - [ ] tests/mocks/chrome.js → chrome.ts
-- [ ] tests/mocks/config.js → config.ts
-- [ ] tests/mocks/logger.js → logger.ts
+- [x] tests/mocks/config.js → config.ts (commit: ad058dc)
+- [x] tests/mocks/logger.js → logger.ts (commit: ad058dc)
 - [ ] tests/mocks/platform.js → platform.ts
 - [ ] tests/mocks/webextension.js → webextension.ts
 - [ ] tests/setup.js → setup.ts (already cleaned of MSW)
+
+### Phase 8.5: Cache Tests
+
+- [x] tests/mocks/cache.js → cache.ts (commit: ad058dc)
+- [x] tests/unit/core/cache/cache.test.js → cache.test.ts (commit: ad058dc)
 
 ### Phase 9: UI Tests
 
