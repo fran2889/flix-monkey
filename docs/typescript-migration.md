@@ -49,22 +49,18 @@
 - [x] tests/unit/core/api-manager.test.js → api-manager.test.ts (commit: 2cb2b2b)
     - **Status**: COMPLETED - Unblocked by API Clients (Task 7.1) completion in commit 344b9e6
 
-- [ ] src/core/services/base-streaming-service.js → base-streaming-service.ts
-- [ ] tests/unit/core/services/base-streaming-service.test.js → base-streaming-service.test.ts
+- [x] src/core/services/base-streaming-service.js → base-streaming-service.ts (commit: 18ff681)
+- [x] tests/unit/core/services/services.test.js → services.test.ts (commit: 18ff681)
 
-- [ ] src/core/services/netflix-service.js → netflix-service.ts
-- [ ] tests/unit/core/services/netflix-service.test.js → netflix-service.test.ts
+- [x] src/core/services/netflix-service.js → netflix-service.ts (commit: 18ff681)
 
-- [ ] src/core/services/disney-plus-service.js → disney-plus-service.ts
-- [ ] tests/unit/core/services/disney-plus-service.test.js → disney-plus-service.test.ts
+- [x] src/core/services/disney-plus-service.js → disney-plus-service.ts (commit: 18ff681)
 
-- [ ] src/core/services/hbo-max-service.js → hbo-max-service.ts
-- [ ] tests/unit/core/services/hbo-max-service.test.js → hbo-max-service.test.ts
+- [x] src/core/services/hbo-max-service.js → hbo-max-service.ts (commit: 18ff681)
 
-- [ ] src/core/services/service-registry.js → service-registry.ts
-- [ ] tests/unit/core/services/service-registry.test.js → service-registry.test.ts
+- [x] src/core/services/service-registry.js → service-registry.ts (commit: 18ff681)
 
-- [ ] src/core/services/index.js → index.ts (barrel)
+- [x] src/core/services/index.js → index.ts (barrel) (commit: 18ff681)
 
 - [x] src/core/cache/cache-entry.js → cache-entry.ts (commit: ad058dc)
 - [x] src/core/cache/cache-manager.js → cache-manager.ts (commit: ad058dc)
@@ -77,24 +73,23 @@
 - [x] src/core/config/index.js → index.ts (barrel) (commit: ad058dc)
 - [x] tests/unit/core/config/config-manager.test.js → config-manager.test.ts (commit: 0fe5bb7)
 
-- [ ] src/core/disabled-clients.js → disabled-clients.ts
-- [ ] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts
-    - **Status**: Migrated in commit 2206bf2 ✓
+- [x] src/core/disabled-clients.js → disabled-clients.ts (commit: 2206bf2)
+- [x] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts (commit: 2206bf2)
 
-- [ ] src/core/fade-manager.js → fade-manager.ts
-- [ ] tests/unit/core/fade-manager.test.js → fade-manager.test.ts
+- [x] src/core/fade-manager.js → fade-manager.ts (commit: 344b9e6)
+- [x] tests/unit/core/fade-manager.test.js → fade-manager.test.ts (commit: 349f2e3)
 
 - [x] src/core/id-override-manager.js → id-override-manager.ts (commit: 344b9e6)
-- [ ] tests/unit/core/id-override-manager.test.js → id-override-manager.test.ts
+- [x] tests/unit/core/id-override-manager.test.js → id-override-manager.test.ts (commit: 349f2e3)
 
 - [x] src/core/request-queue.js → request-queue.ts (commit: 344b9e6)
-- [ ] tests/unit/core/request-queue.test.js → request-queue.test.ts
+- [x] tests/unit/core/request-queue.test.js → request-queue.test.ts (commit: 349f2e3)
 
 - [x] src/core/logger.js → logger.ts (commit: ad058dc)
-- [ ] tests/unit/core/logger.test.js → logger.test.ts
+- [x] tests/unit/core/logger.test.js → logger.test.ts (commit: 349f2e3)
 
-- [ ] src/core/migrations.js → migrations.ts
-- [ ] tests/unit/core/migrations.test.js → migrations.test.ts
+- [x] src/core/migrations.js → migrations.ts (commit: 349f2e3)
+- [x] tests/unit/core/migrations.test.js → migrations.test.ts (commit: 349f2e3)
 
 ### Phase 3: Core Application (Higher risk)
 
@@ -138,17 +133,16 @@
 ### Phase 6: API Clients
 
 - [x] src/core/api/base-api-client.js → base-api-client.ts (commit: 344b9e6)
-- [ ] tests/unit/core/api/base-api-client.test.js → base-api-client.test.ts
-    - **Priority**: HIGH - blocks API Manager migration
+- [x] tests/unit/core/api/base-api-client.test.js → base-api-client.test.ts (commit: 344b9e6)
 
 - [x] src/core/api/xmdb-api-client.js → xmdb-api-client.ts (commit: 344b9e6)
-- [ ] tests/unit/core/api/xmdb-api-client.test.js → xmdb-api-client.test.ts
+- [x] tests/unit/core/api/xmdb-api-client.test.js → xmdb-api-client.test.ts (commit: 344b9e6)
 
 - [x] src/core/api/omdb-api-client.js → omdb-api-client.ts (commit: 344b9e6)
-- [ ] tests/unit/core/api/omdb-api-client.test.js → omdb-api-client.test.ts
+- [x] tests/unit/core/api/omdb-api-client.test.js → omdb-api-client.test.ts (commit: 344b9e6)
 
 - [x] src/core/api/agregarr-api-client.js → agregarr-api-client.ts (commit: 344b9e6)
-- [ ] tests/unit/core/api/agregarr-api-client.test.js → agregarr-api-client.test.ts
+- [x] tests/unit/core/api/agregarr-api-client.test.js → agregarr-api-client.test.ts (commit: 344b9e6)
 
 - [x] src/core/api/title-type-mappers.js → title-type-mappers.ts (commit: 344b9e6)
 - [x] tests/unit/core/api/title-type-mappers.test.js → title-type-mappers.test.ts (commit: 344b9e6)
@@ -243,9 +237,22 @@
 
 - **None** - API Manager (Task 3.3) unblocked by API Clients (Task 7.1) completion in commit 344b9e6
 
+### Phase 0.5: Type Definitions
+
+- [x] src/types/services.js → services.ts (commit: 18ff681)
+- [x] src/types/overlay.js → overlay.ts (commit: 18ff681)
+- [x] src/types/extension.js → extension.ts (commit: 18ff681)
+- [x] src/types/index.js → index.ts (commit: 18ff681)
+- [x] src/types/migrations.js → migrations.ts (commit: 18ff681)
+- [x] src/types/platform.js → platform.ts (commit: 18ff681)
+- [x] src/types/surfaces.js → surfaces.ts (commit: 18ff681)
+- [x] src/types/title.js → title.ts (commit: 18ff681)
+
 ## Next Steps
 
 1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6 (base-api-client, xmdb, omdb, agregarr, title-type-mappers + dependencies: id-override-manager, request-queue)
 2. ✅ **API Manager** (Task 3.3) - COMPLETED in commit 2cb2b2b (api-manager.ts, api-manager.test.ts)
-3. Migrate **Services** (Task 3.4) - NOW UNBLOCKED - base-streaming-service, netflix, disney, hbo, registry
-4. Continue with **remaining managers** - fade-manager, request-queue.test, id-override-manager.test, migrations, logger.test
+3. ✅ **Services** (Task 3.4) - COMPLETED in commit 18ff681 (base-streaming-service, netflix, disney, hbo, registry + test + types)
+4. ✅ **Remaining Managers** (Task 3.5) - COMPLETED in commit 349f2e3 (fade-manager, id-override-manager, request-queue, migrations, logger + tests)
+5. Continue with **Cache** (Task 3.1) - cache-entry, cache-manager + tests
+6. Continue with **App & Overlay** (Task 4.1-4.3) - app.ts, overlay.ts + tests
