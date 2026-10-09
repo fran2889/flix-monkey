@@ -5,22 +5,26 @@
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
 import { slugify } from '../utils/index.js';
 import { CacheEntry } from './cache-entry.js';
+import { Title } from '../title.js';
+import type { PlatformAdapter } from '../../platform/adapter.js';
+import type { ConfigManager } from '../config/config-manager.js';
+import type { Logger } from '../logger.js';
 
 /**
  * Manages cached title data with configurable TTL based on rating and release year.
  */
 export class CacheManager {
     #prefix = 'fmc:';
-    #adapter;
-    #config;
-    #logger;
+    #adapter: PlatformAdapter;
+    #config: ConfigManager;
+    #logger: Logger;
 
     /**
-     * @param {import('../../platform/adapter.js').PlatformAdapter} adapter - Persistent storage provider.
-     * @param {import('../config/config-manager.js').ConfigManager} config - TTL configuration provider.
-     * @param {import('../logger.js').Logger} logger - Corrupt-entry diagnostics sink.
+     * @param adapter - Persistent storage provider.
+     * @param config - TTL configuration provider.
+     * @param logger - Corrupt-entry diagnostics sink.
      */
-    constructor(adapter, config, logger) {
+    constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger) {
         this.#adapter = adapter;
         this.#config = config;
         this.#logger = logger;
@@ -31,23 +35,23 @@ export class CacheManager {
      * hits and expired entries (which may be used for short-circuit refresh).
      * Returns null for complete cache misses or corrupt entries.
      *
-     * @param {string} displayTitle - Streaming-service title used to derive the cache key.
-     * @returns {Promise<CacheEntry|null>} Cache entry (including expired), or null for miss/corrupt.
+     * @param displayTitle - Streaming-service title used to derive the cache key.
+     * @returns Cache entry (including expired), or null for miss/corrupt.
      */
-    async read(displayTitle) {
+    async read(displayTitle: string): Promise<CacheEntry | null> {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
         if (!raw) return null;
         try {
             // Always return entry; ApiClientManager handles validation and short-circuit logic
-            return CacheEntry.fromJSON(raw);
+            return CacheEntry.fromJSON(raw as string);
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
             return null;
         }
     }
 
-    #getCacheKey(displayTitle) {
+    #getCacheKey(displayTitle: string): string {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
@@ -56,11 +60,11 @@ export class CacheManager {
      * rating and release year. Stores displayTitle and imdbId at the top
      * level, with Title data (excluding displayTitle) in the data field.
      *
-     * @param {string} displayTitle - Streaming-service title used to derive the cache key.
-     * @param {import('../title.js').Title} titleObj - Title to serialize.
+     * @param displayTitle - Streaming-service title used to derive the cache key.
+     * @param titleObj - Title to serialize.
      * @returns {Promise<void>}
      */
-    async write(displayTitle, titleObj) {
+    async write(displayTitle: string, titleObj: Title): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
         const now = Date.now();
         const ttl = this.#calculateTtl(titleObj);
@@ -73,10 +77,15 @@ export class CacheManager {
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }
 
-    #calculateTtl(titleObj) {
-        const getTtlMs = days => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
-        if (!titleObj.hasRating) return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
-        if (!titleObj.year) return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
+    #calculateTtl(titleObj: Title): number {
+        const getTtlMs = (days: number): number =>
+            days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS;
+        if (!titleObj.hasRating) {
+            return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
+        }
+        if (!titleObj.year) {
+            return getTtlMs(this.#config.getInt('cacheTtlRatedNewYear'));
+        }
         const currentYear = new Date().getFullYear();
         const isOldRelease = currentYear - titleObj.year > 1;
         const ttlDays = isOldRelease
@@ -90,20 +99,22 @@ export class CacheManager {
      *
      * @returns {Promise<void>}
      */
-    async clear() {
+    async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
-        await Promise.all(keys.map(key => this.#adapter.storageDelete(key)));
+        await Promise.all(
+            keys.map((key: string) => this.#adapter.storageDelete(key))
+        );
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
 
     /**
      * Removes a cached title entry by its display title.
      *
-     * @param {string} displayTitle - Streaming-service title used to derive the cache key.
+     * @param displayTitle - Streaming-service title used to derive the cache key.
      * @returns {Promise<void>}
      */
-    async delete(displayTitle) {
+    async delete(displayTitle: string): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
         await this.#adapter.storageDelete(key);
         this.#logger.debug(`Cache entry deleted: ${key}`);

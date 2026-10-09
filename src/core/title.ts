@@ -6,6 +6,7 @@ import { buildImdbUrl } from './utils/index.js';
 
 /**
  * Options for creating a Title instance.
+ * String values for numeric fields are accepted and normalized to numbers.
  */
 export interface TitleOptions {
     displayTitle?: string | null;

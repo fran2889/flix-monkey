@@ -5,10 +5,11 @@
 import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index.js';
 import { buildMockAdapter } from './adapter.js';
 import { buildLogger } from './logger.js';
+import type { ConfigKey } from '../../src/core/config/config-manager.js';
 
 function buildConfig() {
     // Default all config fields to null for consistency
-    const overrides = {
+    const overrides: Record<ConfigKey, string | number | boolean | null> = {
         apiClient: null,
         xmdbApiKey: null,
         omdbApiKey: null,
@@ -22,64 +23,65 @@ function buildConfig() {
         fadeRatingThreshold: null,
         enableFadeToggle: null,
         debug: null,
-    };
+    } as Record<ConfigKey, string | number | boolean | null>;
+
     return {
-        withApiClient(value) {
+        withApiClient(value: string | null) {
             overrides.apiClient = value;
             return this;
         },
-        withXmdbApiKey(value) {
+        withXmdbApiKey(value: string | null) {
             overrides.xmdbApiKey = value;
             return this;
         },
-        withOmdbApiKey(value) {
+        withOmdbApiKey(value: string | null) {
             overrides.omdbApiKey = value;
             return this;
         },
-        withOverlayCorner(value) {
+        withOverlayCorner(value: string | null) {
             overrides.overlayCorner = value;
             return this;
         },
-        withShowRtRating(value) {
+        withShowRtRating(value: boolean | null) {
             overrides.showRtRating = value;
             return this;
         },
-        withShowMcRating(value) {
+        withShowMcRating(value: boolean | null) {
             overrides.showMcRating = value;
             return this;
         },
-        withCacheTtlRatedOldYear(value) {
+        withCacheTtlRatedOldYear(value: string | number | null) {
             overrides.cacheTtlRatedOldYear = value;
             return this;
         },
-        withCacheTtlRatedNewYear(value) {
+        withCacheTtlRatedNewYear(value: string | number | null) {
             overrides.cacheTtlRatedNewYear = value;
             return this;
         },
-        withCacheTtlNoRating(value) {
+        withCacheTtlNoRating(value: string | number | null) {
             overrides.cacheTtlNoRating = value;
             return this;
         },
-        withEnableFadeUnderRating(value) {
+        withEnableFadeUnderRating(value: boolean | null) {
             overrides.enableFadeUnderRating = value;
             return this;
         },
-        withFadeRatingThreshold(value) {
+        withFadeRatingThreshold(value: string | number | null) {
             overrides.fadeRatingThreshold = value;
             return this;
         },
-        withEnableFadeToggle(value) {
+        withEnableFadeToggle(value: boolean | null) {
             overrides.enableFadeToggle = value;
             return this;
         },
-        withDebug(value) {
+        withDebug(value: boolean | null) {
             overrides.debug = value;
             return this;
         },
-        build() {
+        build(): ConfigManager {
             return new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(key => (key in overrides ? overrides[key] : CONFIG_DEFAULTS[key]))
+                    .withConfigGetReturning((key: string) => (key in overrides ? overrides[key as ConfigKey] : CONFIG_DEFAULTS[key as ConfigKey]))
                     .build(),
                 buildLogger().build()
             );
@@ -88,39 +90,39 @@ function buildConfig() {
 }
 
 // Static presets
-buildConfig.allOptionsEnabled = () => {
+buildConfig.allOptionsEnabled = (): ConfigManager => {
     return buildConfig()
-        .withApiClient(CONFIG_DEFAULTS.apiClient)
-        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey)
-        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey)
+        .withApiClient(CONFIG_DEFAULTS.apiClient as string)
+        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey as string)
+        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey as string)
         .withShowRtRating(true)
         .withShowMcRating(true)
         .withEnableFadeUnderRating(true)
-        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold)
+        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold as string)
         .withEnableFadeToggle(true)
         .withDebug(true)
         .build();
 };
 
-buildConfig.allOptionsDisabled = () => {
+buildConfig.allOptionsDisabled = (): ConfigManager => {
     return buildConfig()
-        .withApiClient(CONFIG_DEFAULTS.apiClient)
-        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey)
-        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey)
+        .withApiClient(CONFIG_DEFAULTS.apiClient as string)
+        .withXmdbApiKey(CONFIG_DEFAULTS.xmdbApiKey as string)
+        .withOmdbApiKey(CONFIG_DEFAULTS.omdbApiKey as string)
         .withShowRtRating(false)
         .withShowMcRating(false)
         .withEnableFadeUnderRating(false)
-        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold)
+        .withFadeRatingThreshold(CONFIG_DEFAULTS.fadeRatingThreshold as string)
         .withEnableFadeToggle(false)
         .withDebug(false)
         .build();
 };
 
-buildConfig.ratingsEnabled = () => {
+buildConfig.ratingsEnabled = (): ConfigManager => {
     return buildConfig().withShowRtRating(true).withShowMcRating(true).build();
 };
 
-buildConfig.fadeEnabled = (threshold = 6.0) => {
+buildConfig.fadeEnabled = (threshold: string | number = 6.0): ConfigManager => {
     return buildConfig()
         .withEnableFadeUnderRating(true)
         .withFadeRatingThreshold(threshold)
@@ -128,20 +130,20 @@ buildConfig.fadeEnabled = (threshold = 6.0) => {
         .build();
 };
 
-buildConfig.defaultCacheTtl = () => {
+buildConfig.defaultCacheTtl = (): ConfigManager => {
     return buildConfig()
-        .withCacheTtlRatedOldYear(CONFIG_DEFAULTS.cacheTtlRatedOldYear)
-        .withCacheTtlRatedNewYear(CONFIG_DEFAULTS.cacheTtlRatedNewYear)
-        .withCacheTtlNoRating(CONFIG_DEFAULTS.cacheTtlNoRating)
+        .withCacheTtlRatedOldYear(CONFIG_DEFAULTS.cacheTtlRatedOldYear as string)
+        .withCacheTtlRatedNewYear(CONFIG_DEFAULTS.cacheTtlRatedNewYear as string)
+        .withCacheTtlNoRating(CONFIG_DEFAULTS.cacheTtlNoRating as string)
         .build();
 };
 
 // Parametrized presets
-buildConfig.withCacheTtl = ttl => {
+buildConfig.withCacheTtl = (ttl: string | number): ConfigManager => {
     return buildConfig().withCacheTtlRatedOldYear(ttl).withCacheTtlRatedNewYear(ttl).withCacheTtlNoRating(ttl).build();
 };
 
-buildConfig.withFadeThreshold = threshold => {
+buildConfig.withFadeThreshold = (threshold: string | number): ConfigManager => {
     return buildConfig()
         .withFadeRatingThreshold(threshold)
         .withEnableFadeUnderRating(true)

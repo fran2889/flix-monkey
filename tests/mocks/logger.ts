@@ -9,18 +9,20 @@ import { Logger } from '../../src/core/logger.js';
 import { buildMockAdapter } from './adapter.js';
 
 function buildLogger() {
-    let debugValue = CONFIG_DEFAULTS.debug;
+    let debugValue: string | boolean = CONFIG_DEFAULTS.debug;
 
     return {
-        withDebug(enabled) {
+        withDebug(enabled: boolean) {
             debugValue = enabled ? 'true' : 'false';
             return this;
         },
 
-        build() {
+        build(): Logger {
             // Create adapter with configured debug value
             const adapter = buildMockAdapter()
-                .withConfigGetReturning(key => (key === 'debug' ? debugValue : CONFIG_DEFAULTS[key]))
+                .withConfigGetReturning((key: string) =>
+                    key === 'debug' ? debugValue : CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS]
+                )
                 .build();
 
             const logger = new Logger(adapter);
