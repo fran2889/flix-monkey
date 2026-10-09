@@ -2,28 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// webextension-polyfill has no types, we cast it below
 import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';
 import { FlixMonkeyError } from '../core/utils/index.js';
 import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter.js';
-
-/**
- * Type for the browser object from webextension-polyfill.
- */
-interface BrowserPolyfill {
-    storage: {
-        local: {
-            get: <T>(_keys?: string | string[] | null) => Promise<{ [key: string]: T }>;
-            set: (_items: Record<string, StorageValue>) => Promise<void>;
-            remove: (_keys: string | string[]) => Promise<void>;
-        };
-    };
-    runtime: {
-        sendMessage: <T>(_message: unknown) => Promise<T>;
-    };
-}
 
 /**
  * Type for the fetch response from the background service worker.
@@ -34,8 +17,6 @@ interface FetchResponse {
     body?: string | null;
     data?: unknown;
 }
-
-const browserTyped = browser as unknown as BrowserPolyfill;
 
 /**
  * WebExtension platform adapter using browser.* APIs via polyfill.
@@ -48,7 +29,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
     #configLoaded = false;
 
     /**
-     * Seeds the config snapshot from `browserTyped.storage.local`.
+     * Seeds the config snapshot from `browser.storage.local`.
      *
      * Content bootstrap normally calls this before `startApp()`. Until then,
      * `configGet` safely returns `undefined`, so ConfigManager uses defaults.
@@ -57,7 +38,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * reflects subsequent storage changes without another `setConfigData` call.
      *
      * @override
-     * @param data - Full contents of `browserTyped.storage.local`.
+     * @param data - Full contents of `browser.storage.local`.
      */
     setConfigData(data: Record<string, StorageValue>): void {
         this.#configData = data;
@@ -72,8 +53,8 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<StorageValue | null>} The stored value, or `null` if the key does not exist.
      */
     async storageGet(key: string): Promise<StorageValue | null> {
-        const result = await browserTyped.storage.local.get<StorageValue>(key);
-        return result[key] ?? null;
+        const result = await browser.storage.local.get(key);
+        return (result[key] as StorageValue | null) ?? null;
     }
 
     /**
@@ -83,7 +64,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<Record<string, StorageValue>>} All stored entries.
      */
     async storageGetAll(): Promise<Record<string, StorageValue>> {
-        return (await browserTyped.storage.local.get(null)) as Record<string, StorageValue>;
+        return (await browser.storage.local.get(null)) as Record<string, StorageValue>;
     }
 
     /**
@@ -95,7 +76,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<void>}
      */
     async storageSet(key: string, value: StorageValue): Promise<void> {
-        await browserTyped.storage.local.set({ [key]: value });
+        await browser.storage.local.set({ [key]: value });
     }
 
     /**
@@ -106,7 +87,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<void>}
      */
     async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
-        await browserTyped.storage.local.set(values);
+        await browser.storage.local.set(values);
     }
 
     /**
@@ -117,7 +98,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<void>}
      */
     async storageDelete(key: string): Promise<void> {
-        await browserTyped.storage.local.remove(key);
+        await browser.storage.local.remove(key);
     }
 
     /**
@@ -128,7 +109,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns {Promise<string[]>} Matching keys.
      */
     async storageGetKeys(prefix: string): Promise<string[]> {
-        const all = (await browserTyped.storage.local.get(null)) as Record<string, StorageValue>;
+        const all = await browser.storage.local.get(null);
         return Object.keys(all).filter(key => key.startsWith(prefix));
     }
 
@@ -144,7 +125,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      */
     async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
         const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT;
-        const fetchPromise = browserTyped.runtime.sendMessage<FetchResponse>({ type: 'FM_FETCH', url, options });
+        const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
         let timerId: ReturnType<typeof setTimeout> | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -152,7 +133,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
         });
 
         try {
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
+            const response = (await Promise.race([fetchPromise, timeoutPromise])) as FetchResponse;
             if (!response) {
                 throw new FlixMonkeyError('empty background response', url);
             }

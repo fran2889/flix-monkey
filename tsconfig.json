@@ -17,7 +17,7 @@
         "noEmit": true,
         "outDir": "./dist",
         "allowJs": true,
-        "types": ["@violentmonkey/types"]
+        "types": ["@violentmonkey/types", "@types/webextension-polyfill"]
     },
     "include": ["src/**/*", "tests/**/*"],
     "exclude": ["**/*.config.js", "scripts/**/*"]

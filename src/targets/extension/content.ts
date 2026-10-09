@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// webextension-polyfill has no types, we cast it below
 import browser from 'webextension-polyfill';
 
 import { startApp } from '../../core/app.js';
@@ -54,14 +53,16 @@ interface MigrationResponse {
      */
     const appRef = { app: null as ReturnType<typeof startApp> };
 
-    browser.storage.onChanged.addListener(((changes: Record<string, { newValue: unknown }>, _areaName: string) => {
+    browser.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, _areaName: string) => {
         Object.entries(changes).forEach(([k, v]) => {
-            stored[k] = v.newValue as StorageValue;
+            if (v.newValue !== undefined) {
+                stored[k] = v.newValue as StorageValue;
+            }
         });
         if (Object.keys(changes).some(k => VISUAL_SETTINGS.has(k))) {
             appRef.app?.redecorate();
         }
-    }) as Parameters<typeof browser.storage.onChanged.addListener>[0]);
+    });
 
     appRef.app = startApp(adapter);
 })();

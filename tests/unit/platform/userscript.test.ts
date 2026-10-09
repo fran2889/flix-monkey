@@ -8,7 +8,7 @@ import { FlixMonkeyError } from '../../../src/core/utils/index';
 import { UserscriptAdapter } from '../../../src/platform/userscript';
 import { setupUserscriptMocks } from '../../mocks/platform';
 
-// Type assertions for mocked GM_* globals - using any to avoid generic issues with Mock type
+// Declare mocked GM_* globals - they are mocked by setupUserscriptMocks() in beforeEach
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const GM_getValue: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

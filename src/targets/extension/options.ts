@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// webextension-polyfill has no types, we cast it below
 import browser from 'webextension-polyfill';
 
 import { CacheManager } from '../../core/cache/index.js';
