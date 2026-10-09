@@ -8,6 +8,27 @@ import { FlixMonkeyError } from '../../../src/core/utils/index';
 import { UserscriptAdapter } from '../../../src/platform/userscript';
 import { setupUserscriptMocks } from '../../mocks/platform';
 
+// Type assertions for mocked GM_* globals - using any to avoid generic issues with Mock type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_getValue: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_setValue: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_deleteValue: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_listValues: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_registerMenuCommand: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const GM_xmlhttpRequest: any;
+
+// Type for XHR callback parameters
+type XHRCallbacks = {
+    onload?: (_response: unknown) => void;
+    onerror?: () => void;
+    ontimeout?: () => void;
+};
+
 describe('UserscriptAdapter', () => {
     let adapter: UserscriptAdapter;
 
@@ -31,7 +52,7 @@ describe('UserscriptAdapter', () => {
 
     it('storageGetAll should call GM_listValues and GM_getValue for each key', async () => {
         GM_listValues.mockReturnValue(['key1', 'key2']);
-        GM_getValue.mockImplementation(key => `val-${key}`);
+        GM_getValue.mockImplementation((key: string) => `val-${key}`);
         const result = await adapter.storageGetAll();
         expect(GM_listValues).toHaveBeenCalled();
         expect(GM_getValue).toHaveBeenCalledWith('key1');
@@ -69,8 +90,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should resolve with JSON on success', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 200, response: { data: 'ok' } });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 200, response: { data: 'ok' } });
         });
 
         const result = await adapter.httpFetch('http://example.com');
@@ -79,8 +100,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should reject on HTTP error', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 404 });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 404 });
         });
 
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
@@ -88,8 +109,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should reject on network error', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ onerror }) => {
-            onerror();
+        GM_xmlhttpRequest.mockImplementation(({ onerror }: XHRCallbacks) => {
+            onerror?.();
         });
 
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
@@ -97,8 +118,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should reject on timeout', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ ontimeout }) => {
-            ontimeout();
+        GM_xmlhttpRequest.mockImplementation(({ ontimeout }: XHRCallbacks) => {
+            ontimeout?.();
         });
 
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(FlixMonkeyError);
@@ -107,8 +128,8 @@ describe('UserscriptAdapter', () => {
 
     it('httpFetch should pass timeout to GM_xmlhttpRequest', async () => {
         const customTimeout = 5432;
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 200, response: {} });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 200, response: {} });
         });
 
         await adapter.httpFetch('http://example.com', { timeout: customTimeout });
@@ -116,8 +137,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should resolve with text when responseType is not json', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 200, responseText: 'plain text' });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 200, responseText: 'plain text' });
         });
 
         const result = await adapter.httpFetch('http://example.com', { responseType: 'text' });
@@ -125,8 +146,8 @@ describe('UserscriptAdapter', () => {
     });
 
     it('httpFetch should resolve with JSON.parse(responseText) if response is missing', async () => {
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 200, response: null, responseText: '{"data":"parsed"}' });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 200, response: null, responseText: '{"data":"parsed"}' });
         });
 
         const result = await adapter.httpFetch('http://example.com');
@@ -135,67 +156,72 @@ describe('UserscriptAdapter', () => {
 
     it('httpFetch should include url on HTTP error', async () => {
         expect.assertions(1);
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 403, responseText: '' });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 403, responseText: '' });
         });
 
         try {
             await adapter.httpFetch('http://example.com/api');
-        } catch (e) {
-            expect(e.url).toBe('http://example.com/api');
+        } catch (e: unknown) {
+            const err = e as Error & { url?: string };
+            expect(err.url).toBe('http://example.com/api');
         }
     });
 
     it('httpFetch should include truncated body on HTTP error', async () => {
         expect.assertions(1);
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 401, responseText: 'Invalid API key' });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 401, responseText: 'Invalid API key' });
         });
 
         try {
             await adapter.httpFetch('http://example.com/api');
-        } catch (e) {
-            expect(e.body).toBe('Invalid API key');
+        } catch (e: unknown) {
+            const err = e as Error & { body?: string };
+            expect(err.body).toBe('Invalid API key');
         }
     });
 
     it('httpFetch should truncate body to 200 characters', async () => {
         expect.assertions(1);
         const longBody = 'x'.repeat(500);
-        GM_xmlhttpRequest.mockImplementation(({ onload }) => {
-            onload({ status: 500, responseText: longBody });
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 500, responseText: longBody });
         });
 
         try {
             await adapter.httpFetch('http://example.com/api');
-        } catch (e) {
-            expect(e.body).toHaveLength(200);
+        } catch (e: unknown) {
+            const err = e as Error & { body?: string };
+            expect(err.body).toHaveLength(200);
         }
     });
 
     it('httpFetch should include url on network error', async () => {
         expect.assertions(1);
-        GM_xmlhttpRequest.mockImplementation(({ onerror }) => {
-            onerror();
+        GM_xmlhttpRequest.mockImplementation(({ onerror }: XHRCallbacks) => {
+            onerror?.();
         });
 
         try {
             await adapter.httpFetch('http://example.com/api');
-        } catch (e) {
-            expect(e.url).toBe('http://example.com/api');
+        } catch (e: unknown) {
+            const err = e as Error & { url?: string };
+            expect(err.url).toBe('http://example.com/api');
         }
     });
 
     it('httpFetch should include url on timeout error', async () => {
         expect.assertions(1);
-        GM_xmlhttpRequest.mockImplementation(({ ontimeout }) => {
-            ontimeout();
+        GM_xmlhttpRequest.mockImplementation(({ ontimeout }: XHRCallbacks) => {
+            ontimeout?.();
         });
 
         try {
             await adapter.httpFetch('http://example.com/api');
-        } catch (e) {
-            expect(e.url).toBe('http://example.com/api');
+        } catch (e: unknown) {
+            const err = e as Error & { url?: string };
+            expect(err.url).toBe('http://example.com/api');
         }
     });
 

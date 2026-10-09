@@ -228,12 +228,33 @@ export const CONFIG_FIELDS = [
 ] as const;
 
 /** Default values for all config fields. */
-export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default])) as Record<ConfigFieldKey, string | boolean>;
+export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default])) as Record<
+    ConfigFieldKey,
+    string | boolean
+>;
 
 /** Allowed values for select-type config fields. */
 export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
     CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
 ) as Record<ConfigFieldKey, string[]>;
+
+// Type for a single config field
+export interface ConfigField {
+    key: string;
+    label: string;
+    group: GroupKey;
+    type: ConfigFieldType;
+    default: ConfigValueType;
+    row?: RowLabelKey;
+    title?: string;
+    short?: boolean;
+    disabled?: boolean;
+    labelUrl?: string;
+    suffix?: string;
+    actionLabel?: string;
+    options?: (string | [string, string])[];
+    validate?: (_val: string, _allValues?: Record<string, unknown>) => string | null;
+}
 
 // Type for config field keys
 export type ConfigFieldKey = (typeof CONFIG_FIELDS)[number]['key'];

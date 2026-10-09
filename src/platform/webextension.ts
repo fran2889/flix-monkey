@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// @ts-expect-error - webextension-polyfill has no types, we cast it below
+// webextension-polyfill has no types, we cast it below
 import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants.js';

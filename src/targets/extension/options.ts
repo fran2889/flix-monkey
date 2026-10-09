@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// @ts-expect-error - webextension-polyfill has no types, we cast it below
+// webextension-polyfill has no types, we cast it below
 import browser from 'webextension-polyfill';
 
 import { CacheManager } from '../../core/cache/index.js';
@@ -12,9 +12,16 @@ import { Logger } from '../../core/logger.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
 import { WebExtensionAdapter } from '../../platform/webextension.js';
 
+/**
+ * Type for migration response from background script.
+ */
+interface MigrationResponse {
+    error?: string;
+}
+
 /* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async () => {
     const adapter = new WebExtensionAdapter();
-    const migrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
+    const migrationResponse: MigrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
     if (migrationResponse?.error) {
         throw new Error(migrationResponse.error);
     }

@@ -7,12 +7,35 @@ import browser from 'webextension-polyfill';
 
 import { WebExtensionAdapter } from '../../../src/platform/webextension';
 
+// Type for the mocked browser object - using any to avoid generic issues
+// The actual mocks are created by vi.fn() in the vi.mock call
+
+type MockBrowser = {
+    storage: {
+        local: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            get: any;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            set: any;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            remove: any;
+        };
+    };
+    runtime: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sendMessage: any;
+    };
+};
+
 vi.mock('webextension-polyfill', () => ({
     default: {
         storage: { local: { get: vi.fn(), set: vi.fn(), remove: vi.fn() } },
         runtime: { sendMessage: vi.fn() },
     },
 }));
+
+// Cast browser to the mocked type
+const mockedBrowser = browser as unknown as MockBrowser;
 
 describe('WebExtensionAdapter', () => {
     let adapter: WebExtensionAdapter;
@@ -23,47 +46,49 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('storageGet should call storage.local.get', async () => {
-        browser.storage.local.get.mockResolvedValue({ key: 'value' });
+        mockedBrowser.storage.local.get.mockResolvedValue({ key: 'value' });
         const result = await adapter.storageGet('key');
-        expect(browser.storage.local.get).toHaveBeenCalledWith('key');
+        expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith('key');
         expect(result).toBe('value');
     });
 
     it('storageGetAll should call storage.local.get(null)', async () => {
-        browser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
+        mockedBrowser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
         const result = await adapter.storageGetAll();
-        expect(browser.storage.local.get).toHaveBeenCalledWith(null);
+        expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith(null);
         expect(result).toEqual({ k1: 'v1', k2: 'v2' });
     });
 
     it('storageSet should call storage.local.set', async () => {
         await adapter.storageSet('key', 'value');
-        expect(browser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
+        expect(mockedBrowser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
     });
 
     it('storageSetMany should call storage.local.set with values', async () => {
         const values = { k1: 'v1', k2: 'v2' };
         await adapter.storageSetMany(values);
-        expect(browser.storage.local.set).toHaveBeenCalledWith(values);
+        expect(mockedBrowser.storage.local.set).toHaveBeenCalledWith(values);
     });
 
     it('storageDelete should call storage.local.remove', async () => {
         await adapter.storageDelete('key');
-        expect(browser.storage.local.remove).toHaveBeenCalledWith('key');
+        expect(mockedBrowser.storage.local.remove).toHaveBeenCalledWith('key');
     });
 
     it('storageGetKeys should call storage.local.get(null) and filter by prefix', async () => {
-        browser.storage.local.get.mockResolvedValue({ 'fmc:1': 'v1', 'other:2': 'v2', 'fmc:3': 'v3' });
+        mockedBrowser.storage.local.get.mockResolvedValue({ 'fmc:1': 'v1', 'other:2': 'v2', 'fmc:3': 'v3' });
         const result = await adapter.storageGetKeys('fmc:');
-        expect(browser.storage.local.get).toHaveBeenCalledWith(null);
+        expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith(null);
         expect(result.sort()).toEqual(['fmc:1', 'fmc:3'].sort());
     });
 
     it('httpFetch should send message to background and return data', async () => {
-        browser.runtime.sendMessage.mockResolvedValue({ data: { success: true } });
-        const result = await adapter.httpFetch('https://api.example.com', { responseType: 'json' });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { success: true } });
+        const result = (await adapter.httpFetch('https://api.example.com', { responseType: 'json' })) as {
+            success: boolean;
+        };
 
-        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
+        expect(mockedBrowser.runtime.sendMessage).toHaveBeenCalledWith({
             type: 'FM_FETCH',
             url: 'https://api.example.com',
             options: { responseType: 'json' },
@@ -72,23 +97,24 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('httpFetch should throw error if background returns error', async () => {
-        browser.runtime.sendMessage.mockResolvedValue({ error: 'Not Found', status: 404 });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ error: 'Not Found', status: 404 });
 
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('Not Found');
 
         try {
             await adapter.httpFetch('https://api.example.com');
-        } catch (e) {
-            expect(e.status).toBe(404);
+        } catch (e: unknown) {
+            const err = e as Error & { status?: number };
+            expect(err.status).toBe(404);
         }
     });
 
     it('httpFetch should pass timeout to background', async () => {
         const customTimeout = 3000;
-        browser.runtime.sendMessage.mockResolvedValue({ data: {} });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: {} });
 
         await adapter.httpFetch('https://api.example.com', { timeout: customTimeout });
-        expect(browser.runtime.sendMessage).toHaveBeenCalledWith(
+        expect(mockedBrowser.runtime.sendMessage).toHaveBeenCalledWith(
             expect.objectContaining({
                 options: expect.objectContaining({ timeout: customTimeout }),
             })
@@ -96,7 +122,7 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('storageGet should return null if key is not found', async () => {
-        browser.storage.local.get.mockResolvedValue({});
+        mockedBrowser.storage.local.get.mockResolvedValue({});
         const result = await adapter.storageGet('nonexistent');
         expect(result).toBeNull();
     });
@@ -118,37 +144,39 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
-        browser.runtime.sendMessage.mockResolvedValue(undefined);
+        mockedBrowser.runtime.sendMessage.mockResolvedValue(undefined);
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
     });
 
     it('httpFetch should include url on HTTP error from background', async () => {
         expect.assertions(3);
-        browser.runtime.sendMessage.mockResolvedValue({ error: 'HTTP 403', status: 403, body: 'Forbidden' });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ error: 'HTTP 403', status: 403, body: 'Forbidden' });
 
         try {
             await adapter.httpFetch('https://api.example.com/test');
-        } catch (e) {
-            expect(e.url).toBe('https://api.example.com/test');
-            expect(e.status).toBe(403);
-            expect(e.body).toBe('Forbidden');
+        } catch (e: unknown) {
+            const err = e as Error & { url?: string; status?: number; body?: string };
+            expect(err.url).toBe('https://api.example.com/test');
+            expect(err.status).toBe(403);
+            expect(err.body).toBe('Forbidden');
         }
     });
 
     it('httpFetch should include url on empty background response', async () => {
         expect.assertions(1);
-        browser.runtime.sendMessage.mockResolvedValue(undefined);
+        mockedBrowser.runtime.sendMessage.mockResolvedValue(undefined);
 
         try {
             await adapter.httpFetch('https://api.example.com/test');
-        } catch (e) {
-            expect(e.url).toBe('https://api.example.com/test');
+        } catch (e: unknown) {
+            const err = e as Error & { url?: string };
+            expect(err.url).toBe('https://api.example.com/test');
         }
     });
 
     it('httpFetch clears the timeout after a successful fetch', async () => {
         const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
-        browser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
         await adapter.httpFetch('https://api.example.com');
         expect(clearSpy).toHaveBeenCalled();
         clearSpy.mockRestore();

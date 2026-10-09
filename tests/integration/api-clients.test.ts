@@ -15,8 +15,8 @@ import type { PlatformAdapter } from '../../src/platform/adapter.js';
 import { buildMockAdapter } from '../mocks/adapter.js';
 
 const adapter: Partial<PlatformAdapter> = {
-    httpFetch: async (url, options) => {
-        const response = await fetch(url, options);
+    httpFetch: async (url, _options) => {
+        const response = await fetch(url);
         const text = await response.text();
         if (!response.ok) {
             const err = new Error(`HTTP ${response.status}: ${text}`);

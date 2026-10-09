@@ -4,6 +4,7 @@
  */
 
 // Re-export from the TypeScript files
+export type { ConfigField, ConfigFieldKey, ConfigFieldType, ConfigValueType } from './config-fields.js';
 export { CONFIG_DEFAULTS, CONFIG_FIELDS, CONFIG_SELECT_ALLOWED, GROUPS, ROW_LABELS } from './config-fields.js';
 export type { ConfigKey } from './config-manager.js';
 export { ConfigManager } from './config-manager.js';

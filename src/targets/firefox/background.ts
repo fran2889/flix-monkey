@@ -57,7 +57,7 @@ browser.runtime.onMessage.addListener(
         const message = msg as ExtensionMessage;
         if (message.type === 'FM_RUN_MIGRATIONS') {
             await executeMigrations();
-            return {};
+            return undefined;
         }
 
         if (message.type !== 'FM_FETCH') {

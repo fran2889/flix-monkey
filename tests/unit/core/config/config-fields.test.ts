@@ -4,7 +4,8 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConfigField } from '../../../../src/core/config/config-fields.js';
+import type { ConfigField } from '../../../../src/core/config/index.js';
+// eslint-disable-next-line no-duplicate-imports
 import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index.js';
 
 describe('core/config-fields', () => {
@@ -23,7 +24,7 @@ describe('core/config-fields', () => {
                 expect(field).toHaveProperty('options');
                 expect(Array.isArray(field.options)).toBe(true);
 
-                field.options.forEach(option => {
+                field.options.forEach((option: string | [string, string]) => {
                     const isValidString = typeof option === 'string';
                     const isValidArray =
                         Array.isArray(option) &&
