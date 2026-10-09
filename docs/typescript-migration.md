@@ -47,6 +47,7 @@
 
 - [ ] src/core/api-manager.js → api-manager.ts
 - [ ] tests/unit/core/api-manager.test.js → api-manager.test.ts
+    - **Status**: Unblocked - API Clients (Task 7.1) completed in commit 344b9e6
 
 - [ ] src/core/services/base-streaming-service.js → base-streaming-service.ts
 - [ ] tests/unit/core/services/base-streaming-service.test.js → base-streaming-service.test.ts
@@ -68,23 +69,26 @@
 - [x] src/core/cache/cache-entry.js → cache-entry.ts (commit: ad058dc)
 - [x] src/core/cache/cache-manager.js → cache-manager.ts (commit: ad058dc)
 - [x] src/core/cache/index.js → index.ts (barrel) (commit: ad058dc)
-
-- [ ] src/core/disabled-clients.js → disabled-clients.ts
-- [ ] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts
-
-- [ ] src/core/fade-manager.js → fade-manager.ts
-- [ ] tests/unit/core/fade-manager.test.js → fade-manager.test.ts
-
-- [ ] src/core/id-override-manager.js → id-override-manager.ts
-- [ ] tests/unit/core/id-override-manager.test.js → id-override-manager.test.ts
-
-- [ ] src/core/request-queue.js → request-queue.ts
-- [ ] tests/unit/core/request-queue.test.js → request-queue.test.ts
+- [x] tests/unit/core/cache/cache.test.js → cache.test.ts (commit: ad058dc)
+- [x] tests/mocks/cache.js → cache.ts (commit: ad058dc)
 
 - [x] src/core/config/config-fields.js → config-fields.ts (commit: ad058dc)
 - [x] src/core/config/config-manager.js → config-manager.ts (commit: ad058dc)
 - [x] src/core/config/index.js → index.ts (barrel) (commit: ad058dc)
-- [ ] tests/unit/core/config/config-manager.test.js → config-manager.test.ts
+- [x] tests/unit/core/config/config-manager.test.js → config-manager.test.ts (commit: 0fe5bb7)
+
+- [ ] src/core/disabled-clients.js → disabled-clients.ts
+- [ ] tests/unit/core/disabled-clients.test.js → disabled-clients.test.ts
+    - **Status**: Migrated in commit 2206bf2 ✓
+
+- [ ] src/core/fade-manager.js → fade-manager.ts
+- [ ] tests/unit/core/fade-manager.test.js → fade-manager.test.ts
+
+- [x] src/core/id-override-manager.js → id-override-manager.ts (commit: 344b9e6)
+- [ ] tests/unit/core/id-override-manager.test.js → id-override-manager.test.ts
+
+- [x] src/core/request-queue.js → request-queue.ts (commit: 344b9e6)
+- [ ] tests/unit/core/request-queue.test.js → request-queue.test.ts
 
 - [x] src/core/logger.js → logger.ts (commit: ad058dc)
 - [ ] tests/unit/core/logger.test.js → logger.test.ts
@@ -108,7 +112,7 @@
 ### Phase 4: Platform Adapters
 
 - [x] src/platform/adapter.js → adapter.ts (commit: ad058dc)
-- [x] tests/mocks/adapter.js → adapter.ts (commit: ad058dc)
+- [x] tests/mocks/adapter.js → adapter.ts (commit: ad058dc, updated in 344b9e6)
 
 - [ ] src/platform/userscript.js → userscript.ts
 - [ ] tests/mocks/userscript.js → userscript.ts
@@ -133,19 +137,23 @@
 
 ### Phase 6: API Clients
 
-- [ ] src/core/api/base-api-client.js → base-api-client.ts
+- [x] src/core/api/base-api-client.js → base-api-client.ts (commit: 344b9e6)
 - [ ] tests/unit/core/api/base-api-client.test.js → base-api-client.test.ts
+    - **Priority**: HIGH - blocks API Manager migration
 
-- [ ] src/core/api/xmdb-api-client.js → xmdb-api-client.ts
+- [x] src/core/api/xmdb-api-client.js → xmdb-api-client.ts (commit: 344b9e6)
 - [ ] tests/unit/core/api/xmdb-api-client.test.js → xmdb-api-client.test.ts
 
-- [ ] src/core/api/omdb-api-client.js → omdb-api-client.ts
+- [x] src/core/api/omdb-api-client.js → omdb-api-client.ts (commit: 344b9e6)
 - [ ] tests/unit/core/api/omdb-api-client.test.js → omdb-api-client.test.ts
 
-- [ ] src/core/api/agregarr-api-client.js → agregarr-api-client.ts
+- [x] src/core/api/agregarr-api-client.js → agregarr-api-client.ts (commit: 344b9e6)
 - [ ] tests/unit/core/api/agregarr-api-client.test.js → agregarr-api-client.test.ts
 
-- [ ] src/core/api/index.js → index.ts (barrel)
+- [x] src/core/api/title-type-mappers.js → title-type-mappers.ts (commit: 344b9e6)
+- [x] tests/unit/core/api/title-type-mappers.test.js → title-type-mappers.test.ts (commit: 344b9e6)
+
+- [x] src/core/api/index.js → index.ts (barrel) (commit: 344b9e6)
 
 ### Phase 7: Target Entry Points
 
@@ -230,3 +238,14 @@
 - All functions must explicitly return on all code paths
 - Optional properties are truly optional (no `undefined` values)
 - Add JSDoc types for complex return types to help with migration
+
+## Current Blockers
+
+- **None** - API Manager (Task 3.3) unblocked by API Clients (Task 7.1) completion in commit 344b9e6
+
+## Next Steps
+
+1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6 (base-api-client, xmdb, omdb, agregarr, title-type-mappers + dependencies: id-override-manager, request-queue)
+2. Migrate **API Manager** (Task 3.3) - NOW UNBLOCKED, can proceed
+3. Migrate **Services** (Task 3.4) - base-streaming-service, netflix, disney, hbo, registry
+4. Continue with **remaining managers** - fade-manager, request-queue.test, id-override-manager.test, migrations, logger.test
