@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { FlixMonkeyError } from '../utils/index.js';
-import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 import type { PlatformAdapter } from '../../platform/adapter.js';
 import type { Logger } from '../logger.js';
+import { FlixMonkeyError } from '../utils/index.js';
+import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
 
 export type ConfigKey = keyof typeof CONFIG_DEFAULTS;
 
@@ -40,7 +40,9 @@ export class ConfigManager {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
             const val = this.#adapter.configGet(key);
-            const defaultValue = String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null);
+            const defaultValue = String(
+                CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null
+            );
             if (val === undefined || val === null) return defaultValue;
             const normalizedVal = String(val);
             const allowed = CONFIG_SELECT_ALLOWED[key as keyof typeof CONFIG_SELECT_ALLOWED] as string[] | undefined;
@@ -61,7 +63,12 @@ export class ConfigManager {
     getInt(key: ConfigKey): number {
         const val = this.get(key);
         const num = Number.parseInt(val, 10);
-        return Number.isNaN(num) ? Number.parseInt(String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null), 10) : num;
+        return Number.isNaN(num)
+            ? Number.parseInt(
+                  String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null),
+                  10
+              )
+            : num;
     }
 
     /**
@@ -73,7 +80,9 @@ export class ConfigManager {
     getFloat(key: ConfigKey): number {
         const val = this.get(key);
         const num = Number.parseFloat(val);
-        return Number.isNaN(num) ? Number.parseFloat(String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null)) : num;
+        return Number.isNaN(num)
+            ? Number.parseFloat(String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null))
+            : num;
     }
 
     /**

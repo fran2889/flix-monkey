@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { ConfigKey } from '../../src/core/config/config-manager.js';
 import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index.js';
 import { buildMockAdapter } from './adapter.js';
 import { buildLogger } from './logger.js';
-import type { ConfigKey } from '../../src/core/config/config-manager.js';
 
 function buildConfig() {
     // Default all config fields to null for consistency
@@ -81,7 +81,9 @@ function buildConfig() {
         build(): ConfigManager {
             return new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning((key: string) => (key in overrides ? overrides[key as ConfigKey] : CONFIG_DEFAULTS[key as ConfigKey]))
+                    .withConfigGetReturning((key: string) =>
+                        key in overrides ? overrides[key as ConfigKey] : CONFIG_DEFAULTS[key as ConfigKey]
+                    )
                     .build(),
                 buildLogger().build()
             );

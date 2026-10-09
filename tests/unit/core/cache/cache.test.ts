@@ -5,14 +5,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheEntry, CacheManager } from '../../../../src/core/cache/index.js';
+import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
+import type { Logger } from '../../../../src/core/logger.js';
 import { Title } from '../../../../src/core/title.js';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter.js';
 import { buildCacheEntry } from '../../../mocks/cache.js';
 import { buildConfig } from '../../../mocks/config.js';
 import { buildLogger } from '../../../mocks/logger.js';
 import { buildTitle } from '../../../mocks/title.js';
-import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
-import type { Logger } from '../../../../src/core/logger.js';
 
 describe('CacheManager', () => {
     let adapter: MockPlatformAdapter;

@@ -2,13 +2,13 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
-import { slugify } from '../utils/index.js';
-import { CacheEntry } from './cache-entry.js';
-import { Title } from '../title.js';
 import type { PlatformAdapter } from '../../platform/adapter.js';
 import type { ConfigManager } from '../config/config-manager.js';
+import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
 import type { Logger } from '../logger.js';
+import { Title } from '../title.js';
+import { slugify } from '../utils/index.js';
+import { CacheEntry } from './cache-entry.js';
 
 /**
  * Manages cached title data with configurable TTL based on rating and release year.
@@ -78,8 +78,7 @@ export class CacheManager {
     }
 
     #calculateTtl(titleObj: Title): number {
-        const getTtlMs = (days: number): number =>
-            days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS;
+        const getTtlMs = (days: number): number => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) {
             return getTtlMs(this.#config.getInt('cacheTtlNoRating'));
         }
@@ -102,9 +101,7 @@ export class CacheManager {
     async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
-        await Promise.all(
-            keys.map((key: string) => this.#adapter.storageDelete(key))
-        );
+        await Promise.all(keys.map((key: string) => this.#adapter.storageDelete(key)));
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
 
