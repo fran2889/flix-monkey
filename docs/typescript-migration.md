@@ -94,7 +94,7 @@
 ### Phase 3: Core Application (Higher risk)
 
 - [x] src/core/app.js → app.ts (commit: 516168e)
-- [ ] tests/unit/core/app.test.js → app.test.ts
+- [x] tests/unit/core/app.test.js → app.test.ts (commit: 476908a)
 
 - [x] src/core/overlay.js → overlay.ts (commit: 1f76b22)
 - [x] tests/unit/core/overlay.test.js → overlay.test.ts (commit: 1f76b22)
@@ -250,9 +250,10 @@
 
 ## Next Steps
 
-1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6 (base-api-client, xmdb, omdb, agregarr, title-type-mappers + dependencies: id-override-manager, request-queue)
-2. ✅ **API Manager** (Task 3.3) - COMPLETED in commit 2cb2b2b (api-manager.ts, api-manager.test.ts)
-3. ✅ **Services** (Task 3.4) - COMPLETED in commit 18ff681 (base-streaming-service, netflix, disney, hbo, registry + test + types)
-4. ✅ **Remaining Managers** (Task 3.5) - COMPLETED in commit 349f2e3 (fade-manager, id-override-manager, request-queue, migrations, logger + tests)
-5. Continue with **Cache** (Task 3.1) - cache-entry, cache-manager + tests
-6. Continue with **App & Overlay** (Task 4.1-4.3) - app.ts, overlay.ts + tests
+1. ✅ **API Clients** (Task 7.1) - COMPLETED in commit 344b9e6
+2. ✅ **API Manager** (Task 3.3) - COMPLETED in commit 2cb2b2b
+3. ✅ **Services** (Task 3.4) - COMPLETED in commit 18ff681
+4. ✅ **Remaining Managers** (Task 3.5) - COMPLETED in commit 349f2e3
+5. ✅ **Cache** (Task 3.1) - COMPLETED in commit ad058dc
+6. ✅ **App & Overlay** (Task 4.1-4.3) - COMPLETED in commits 1f76b22, 516168e, 476908a
+7. **Platform Adapters** (Task 5.2) - NEXT: Migrate userscript.js, webextension.js + mocks
