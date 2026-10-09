@@ -5,7 +5,7 @@
 import type { ServicePresentation } from '../../types/overlay';
 import type { ServiceSurfaceManager } from '../../types/services';
 import type { ConfigManager } from '../config/config-manager.js';
-import { NetflixSurfaceManager } from '../surfaces/index.js';
+import { NetflixSurfaceManager } from '../surfaces/index';
 import { StreamingService } from './base-streaming-service.js';
 
 /** Netflix streaming service implementation. */

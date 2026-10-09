@@ -35,13 +35,13 @@ Pre-flight: No conflicts found. All interface dependencies are sequential.
 
 - [x] Task 3.1: Migrate Cache (commit: ad058dc - cache-entry.ts, cache-manager.ts, cache/index.ts, cache.test.ts, mocks/cache.ts)
 - [x] Task 3.2: Migrate Config (config-fields.ts, config-manager.ts, config/index.ts done; config-manager.test.ts migrated in commit 0fe5bb7)
-- [x] Task 3.3: Migrate API Manager (api-manager.js, api-manager.test.js - commit: 2cb2b2b)
-- [ ] Task 3.4: Migrate Services (base-streaming-service.js, netflix-service.js, disney-plus-service.js, hbo-max-service.js, service-registry.js, services/index.js + tests)
-- [x] Task 3.5: Migrate Remaining Managers (disabled-clients.ts, disabled-clients.test.ts migrated in commit 2206bf2)
+- [x] Task 3.3: Migrate API Manager (commit: 2cb2b2b - api-manager.ts, api-manager.test.js; updated in 18ff681)
+- [x] Task 3.4: Migrate Services (commit: 18ff681 - base-streaming-service.ts, netflix-service.ts, disney-plus-service.ts, hbo-max-service.ts, service-registry.ts, services/index.ts + tests)
+- [x] Task 3.5: Migrate Remaining Managers (commit: 2206bf2 - disabled-clients.ts; commit: 349f2e3 - fade-manager.ts, id-override-manager.ts, request-queue.ts; commit: 47ba18f - fade-manager.ts updated; migrations.ts, logger.ts also migrated)
 
-### Phase 2: Managers (Continued)
+### Phase 3: Core Application
 
-- [ ] Task 3.5: Continue with fade-manager, id-override-manager, request-queue, migrations
+- [x] Task 4.1: Migrate Surfaces (surface-manager.ts, surface-definitions/*.ts, surfaces/index.ts + types/surfaces.ts - current work)
 
 ### Phase 3: Core Application
 

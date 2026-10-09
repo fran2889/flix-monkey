@@ -4,7 +4,7 @@
  */
 import type { ServiceSurfaceManager } from '../../types/services';
 import type { ConfigManager } from '../config/config-manager.js';
-import { DisneyPlusSurfaceManager } from '../surfaces/index.js';
+import { DisneyPlusSurfaceManager } from '../surfaces/index';
 import { StreamingService } from './base-streaming-service.js';
 
 /** Disney+ streaming service implementation. */

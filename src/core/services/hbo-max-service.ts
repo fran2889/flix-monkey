@@ -5,7 +5,7 @@
 import type { ServicePresentation } from '../../types/overlay';
 import type { ServiceSurfaceManager } from '../../types/services';
 import type { ConfigManager } from '../config/config-manager.js';
-import { HboMaxSurfaceManager } from '../surfaces/index.js';
+import { HboMaxSurfaceManager } from '../surfaces/index';
 import { StreamingService } from './base-streaming-service.js';
 
 /** HBO Max streaming service implementation. */

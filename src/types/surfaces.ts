@@ -5,22 +5,28 @@
 
 /**
  * Definition for discovering and processing surfaces on a streaming service.
- * @typedef {object} SurfaceDefinition
- * @property {string} titleSelector - CSS selector for title elements.
- * @property {(element: Element) => string|null|undefined} getTitle - Returns the title text.
- * @property {(element: Element) => Element|null|undefined} getContainer - Returns the container element.
- * @property {(container: Element, element: Element) => void} [decorateContainer] - Optional container decorator.
- * @property {boolean} [fadeable=false] - Whether this surface supports fading.
- * @property {boolean} [showFadeToggle=false] - Whether to show fade toggle button.
  */
+export interface SurfaceDefinition {
+    /** CSS selector for title elements. */
+    titleSelector: string;
+    /** Returns the title text. */
+    getTitle: (_element: Element) => string | null;
+    /** Returns the container element. */
+    getContainer: (_element: Element) => Element | null;
+    /** Optional container decorator. */
+    decorateContainer?: (_container: Element, _element: Element) => void;
+    /** Whether this surface supports fading. Default: false */
+    fadeable?: boolean;
+    /** Whether to show fade toggle button. Default: false */
+    showFadeToggle?: boolean;
+}
 
 /**
  * A surface discovered on the page.
- * @typedef {object} DiscoveredSurface
- * @property {Element} container
- * @property {string} title
- * @property {boolean} fadeable
- * @property {boolean} showFadeToggle
  */
-
-export {};
+export interface DiscoveredSurface {
+    container: Element;
+    title: string;
+    fadeable: boolean;
+    showFadeToggle: boolean;
+}
