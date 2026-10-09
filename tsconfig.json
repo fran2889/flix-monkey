@@ -16,7 +16,8 @@
         "forceConsistentCasingInFileNames": true,
         "noEmit": true,
         "outDir": "./dist",
-        "allowJs": true
+        "allowJs": true,
+        "types": ["@violentmonkey/types"]
     },
     "include": ["src/**/*", "tests/**/*"],
     "exclude": ["**/*.config.js", "scripts/**/*"]

@@ -7,50 +7,6 @@ import { FlixMonkeyError } from '../core/utils/index.js';
 import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter.js';
 
 /**
- * Type declaration for GM_xmlhttpRequest options.
- */
-interface GMXmlHttpRequestOptions {
-    method: string;
-    url: string;
-    responseType: 'json' | 'text';
-    headers?: Record<string, string>;
-    timeout: number;
-    onload: (_response: { status: number; response?: unknown; responseText: string }) => void;
-    onerror: () => void;
-    ontimeout: () => void;
-}
-
-/**
- * Type declaration for GM_xmlhttpRequest function.
- */
-declare function GM_xmlhttpRequest(_options: GMXmlHttpRequestOptions): void;
-
-/**
- * Type declaration for GM_getValue function.
- */
-declare function GM_getValue(_key: string): StorageValue | undefined;
-
-/**
- * Type declaration for GM_setValue function.
- */
-declare function GM_setValue(_key: string, _value: StorageValue): void;
-
-/**
- * Type declaration for GM_deleteValue function.
- */
-declare function GM_deleteValue(_key: string): void;
-
-/**
- * Type declaration for GM_listValues function.
- */
-declare function GM_listValues(): string[];
-
-/**
- * Type declaration for GM_registerMenuCommand function.
- */
-declare function GM_registerMenuCommand(_label: string, _fn: () => void): void;
-
-/**
  * Userscript platform adapter using GM_* APIs.
  */
 export class UserscriptAdapter extends PlatformAdapter {
@@ -73,7 +29,7 @@ export class UserscriptAdapter extends PlatformAdapter {
         const keys = GM_listValues();
         const all: Record<string, StorageValue> = {};
         for (const key of keys) {
-            const value = GM_getValue(key);
+            const value = GM_getValue<StorageValue>(key);
             if (value !== undefined) {
                 all[key] = value;
             }
@@ -141,16 +97,16 @@ export class UserscriptAdapter extends PlatformAdapter {
             GM_xmlhttpRequest({
                 method: 'GET',
                 url,
-                responseType,
+                responseType: responseType as 'json' | 'text' | 'blob' | 'arraybuffer' | 'document',
                 headers: {
                     'Accept-Language': 'en-US,en;q=0.9',
                 },
                 timeout,
-                onload: (r: { status: number; response?: unknown; responseText: string }) => {
-                    const { status, response, responseText } = r;
+                onload: resp => {
+                    const { status, response, responseText } = resp;
                     if (status >= 200 && status < 300) {
                         if (responseType === 'json') {
-                            resolve(response ?? JSON.parse(responseText));
+                            resolve(response ?? JSON.parse(responseText ?? ''));
                         } else {
                             resolve(responseText);
                         }
