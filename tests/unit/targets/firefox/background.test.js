@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { browser } from '../../../mocks/webextension.js';
+import { browser } from '../../../mocks/webextension.ts';
 
 const { executeMigrations } = vi.hoisted(() => ({
     executeMigrations: vi.fn(),

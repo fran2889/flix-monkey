@@ -5,7 +5,7 @@
 import browser from 'webextension-polyfill';
 
 import { startApp } from '../../core/app.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { WebExtensionAdapter } from '../../platform/webextension.ts';
 
 /*
  * Settings that can be hot-applied without a page reload: they only affect overlay

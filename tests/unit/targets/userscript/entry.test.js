@@ -18,7 +18,7 @@ vi.mock('../../../../src/core/app.js', () => ({
     startApp: vi.fn(() => appHandle),
 }));
 
-vi.mock('../../../../src/platform/userscript.js', () => ({
+vi.mock('../../../../src/platform/userscript.ts', () => ({
     UserscriptAdapter: class {
         constructor() {
             return adapter;

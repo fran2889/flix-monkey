@@ -12,7 +12,7 @@ const { Logger, runMigrations, WebExtensionAdapter } = vi.hoisted(() => ({
 
 vi.mock('../../../../src/core/logger.js', () => ({ Logger }));
 vi.mock('../../../../src/core/migrations.js', () => ({ runMigrations }));
-vi.mock('../../../../src/platform/webextension.js', () => ({ WebExtensionAdapter }));
+vi.mock('../../../../src/platform/webextension.ts', () => ({ WebExtensionAdapter }));
 
 describe('createExtensionMigrationExecutor', () => {
     it('shares one in-flight migration run with concurrent callers', async () => {

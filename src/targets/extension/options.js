@@ -9,7 +9,7 @@ import { ConfigManager } from '../../core/config/index.js';
 import { DisabledClientsManager } from '../../core/disabled-clients.js';
 import { Logger } from '../../core/logger.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { WebExtensionAdapter } from '../../platform/webextension.ts';
 
 /* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async () => {
     const adapter = new WebExtensionAdapter();

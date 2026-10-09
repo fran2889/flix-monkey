@@ -128,6 +128,6 @@ export class PlatformAdapter {
      * @param _data - Config key/value pairs.
      */
     setConfigData(_data: Record<string, StorageValue>): void {
-        // overridden in webextension.js
+        // overridden in webextension.ts
     }
 }

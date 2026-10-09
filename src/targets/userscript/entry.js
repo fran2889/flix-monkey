@@ -10,7 +10,7 @@ import { Logger } from '../../core/logger.js';
 import { runMigrations } from '../../core/migrations.js';
 import { Modal } from '../../core/ui/modal.js';
 import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { UserscriptAdapter } from '../../platform/userscript.js';
+import { UserscriptAdapter } from '../../platform/userscript.ts';
 
 const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);

@@ -4,7 +4,7 @@
  */
 import { Logger } from '../../core/logger.js';
 import { runMigrations } from '../../core/migrations.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { WebExtensionAdapter } from '../../platform/webextension.ts';
 
 /**
  * Create an executor that shares one migration run among all callers.
