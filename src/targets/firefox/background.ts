@@ -49,9 +49,9 @@ browser.runtime.onInstalled.addListener((): void => {
  * All code paths must explicitly return.
  */
 browser.runtime.onMessage.addListener(
-    async (msg: unknown, sender: { id?: string }): Promise<FetchProxyResponse | Record<string, never>> => {
+    async (msg: unknown, sender: { id?: string }): Promise<FetchProxyResponse | undefined> => {
         if (sender?.id !== browser.runtime.id) {
-            return {};
+            return undefined;
         }
 
         const message = msg as ExtensionMessage;
@@ -61,7 +61,7 @@ browser.runtime.onMessage.addListener(
         }
 
         if (message.type !== 'FM_FETCH') {
-            return {};
+            return undefined;
         }
 
         const { url, options } = message;
