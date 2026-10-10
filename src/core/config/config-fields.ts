@@ -32,71 +32,71 @@ export type RowLabelKey = keyof typeof ROW_LABELS;
 /** All configurable field definitions. */
 export const CONFIG_FIELDS = [
     {
-        key: 'enableNetflix' as const,
+        key: 'enableNetflix',
         label: 'Netflix',
-        group: 'services' as const,
-        type: 'checkbox' as const,
+        group: 'services',
+        type: 'checkbox',
         default: true,
-        row: 'services' as const,
+        row: 'services',
     },
     {
-        key: 'enableHboMax' as const,
+        key: 'enableHboMax',
         label: 'HBO Max',
-        group: 'services' as const,
-        type: 'checkbox' as const,
+        group: 'services',
+        type: 'checkbox',
         default: true,
-        row: 'services' as const,
+        row: 'services',
     },
     {
-        key: 'enableDisneyPlus' as const,
+        key: 'enableDisneyPlus',
         label: 'Disney+',
-        group: 'services' as const,
-        type: 'checkbox' as const,
+        group: 'services',
+        type: 'checkbox',
         default: true,
-        row: 'services' as const,
+        row: 'services',
     },
     {
-        key: 'overlayCorner' as const,
+        key: 'overlayCorner',
         label: 'Badge Position',
-        group: 'display' as const,
-        type: 'select' as const,
+        group: 'display',
+        type: 'select',
         options: [
-            ['top-left', 'Top Left'],
-            ['top-right', 'Top Right'],
-            ['bottom-left', 'Bottom Left'],
-            ['bottom-right', 'Bottom Right'],
+            ['top-left', 'Top Left'] as const,
+            ['top-right', 'Top Right'] as const,
+            ['bottom-left', 'Bottom Left'] as const,
+            ['bottom-right', 'Bottom Right'] as const,
         ],
         default: 'top-left',
         title: 'Position of the rating badge on thumbnails',
     },
     {
-        key: 'showImdbRating' as const,
+        key: 'showImdbRating',
         label: 'IMDb',
-        group: 'display' as const,
-        type: 'checkbox' as const,
+        group: 'display',
+        type: 'checkbox',
         default: true,
-        row: 'ratings-display' as const,
+        row: 'ratings-display',
         disabled: true,
     },
     {
-        key: 'apiClient' as const,
+        key: 'apiClient',
         label: 'Rating Provider',
-        group: 'providers' as const,
-        type: 'select' as const,
+        group: 'providers',
+        type: 'select',
         options: [
-            ['agregarr', 'Agregarr'],
-            ['omdb', 'OMDb'],
-            ['xmdb', 'XMDb'],
+            ['agregarr', 'Agregarr'] as const,
+            ['omdb', 'OMDb'] as const,
+            ['xmdb', 'XMDb'] as const,
         ],
         default: 'agregarr',
         title: 'Active rating provider. Agregarr requires no API key',
     },
     {
-        key: 'omdbApiKey' as const,
+        key: 'omdbApiKey',
         label: 'OMDb API Key',
-        group: 'providers' as const,
+        group: 'providers',
         labelUrl: 'https://www.omdbapi.com/apikey.aspx',
-        type: 'text' as const,
+        type: 'text',
         default: '',
         title: 'Required for OMDb ratings',
         validate: (val: string, allValues?: Record<string, unknown>): string | null => {
@@ -105,11 +105,11 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'xmdbApiKey' as const,
+        key: 'xmdbApiKey',
         label: 'XMDb API Key',
-        group: 'providers' as const,
+        group: 'providers',
         labelUrl: 'https://xmdbapi.com/api-key',
-        type: 'text' as const,
+        type: 'text',
         default: '',
         title: 'Required for XMDb ratings',
         validate: (val: string, allValues?: Record<string, unknown>): string | null => {
@@ -118,34 +118,34 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'showMcRating' as const,
+        key: 'showMcRating',
         label: 'Metacritic',
-        group: 'display' as const,
-        type: 'checkbox' as const,
+        group: 'display',
+        type: 'checkbox',
         default: false,
-        row: 'ratings-display' as const,
+        row: 'ratings-display',
     },
     {
-        key: 'showRtRating' as const,
+        key: 'showRtRating',
         label: 'Rotten Tomatoes',
-        group: 'display' as const,
-        type: 'checkbox' as const,
+        group: 'display',
+        type: 'checkbox',
         default: false,
-        row: 'ratings-display' as const,
+        row: 'ratings-display',
     },
     {
-        key: 'enableFadeUnderRating' as const,
+        key: 'enableFadeUnderRating',
         label: 'Fade below rating',
-        group: 'fade' as const,
-        type: 'checkbox' as const,
+        group: 'fade',
+        type: 'checkbox',
         default: false,
         title: 'Fade thumbnails with IMDb rating below the threshold',
     },
     {
-        key: 'fadeRatingThreshold' as const,
+        key: 'fadeRatingThreshold',
         label: 'Threshold',
-        group: 'fade' as const,
-        type: 'text' as const,
+        group: 'fade',
+        type: 'text',
         default: '6.0',
         title: 'IMDb rating threshold (0.0-10.0)',
         short: true,
@@ -158,18 +158,18 @@ export const CONFIG_FIELDS = [
         },
     },
     {
-        key: 'enableFadeToggle' as const,
+        key: 'enableFadeToggle',
         label: 'Allow override',
-        group: 'fade' as const,
-        type: 'checkbox' as const,
+        group: 'fade',
+        type: 'checkbox',
         default: false,
         title: 'Enable manual title fade toggle',
     },
     {
-        key: 'cacheTtlRatedOldYear' as const,
+        key: 'cacheTtlRatedOldYear',
         label: 'Older Titles',
-        group: 'cache' as const,
-        type: 'text' as const,
+        group: 'cache',
+        type: 'text',
         default: String(CACHE_TTL_INFINITE),
         title: 'Cache duration for titles released over a year ago. -1 = forever',
         validate: validateCacheTtl,
@@ -177,10 +177,10 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'cacheTtlRatedNewYear' as const,
+        key: 'cacheTtlRatedNewYear',
         label: 'Recent Titles',
-        group: 'cache' as const,
-        type: 'text' as const,
+        group: 'cache',
+        type: 'text',
         default: '30',
         title: 'Cache duration for titles released within the last year',
         validate: validateCacheTtl,
@@ -188,10 +188,10 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'cacheTtlNoRating' as const,
+        key: 'cacheTtlNoRating',
         label: 'No Rating',
-        group: 'cache' as const,
-        type: 'text' as const,
+        group: 'cache',
+        type: 'text',
         default: '1',
         title: 'Cache duration for titles without a rating',
         validate: validateCacheTtl,
@@ -199,33 +199,33 @@ export const CONFIG_FIELDS = [
         short: true,
     },
     {
-        key: 'debug' as const,
+        key: 'debug',
         label: 'Debug logging',
-        group: 'debug' as const,
-        type: 'checkbox' as const,
+        group: 'debug',
+        type: 'checkbox',
         default: true,
         title: 'Show detailed logs in browser console',
-        row: 'debug-settings' as const,
+        row: 'debug-settings',
     },
     {
-        key: 'clearCache' as const,
-        type: 'action' as const,
-        group: 'debug' as const,
-        row: 'action-clearCache' as const,
+        key: 'clearCache',
+        type: 'action',
+        group: 'debug',
+        row: 'action-clearCache',
         label: '',
         actionLabel: 'Clear Cache',
         default: null,
     },
     {
-        key: 'resetClients' as const,
-        type: 'action' as const,
-        group: 'debug' as const,
-        row: 'action-resetClients' as const,
+        key: 'resetClients',
+        type: 'action',
+        group: 'debug',
+        row: 'action-resetClients',
         label: '',
         actionLabel: 'Reset Providers',
         default: null,
     },
-] as const;
+] satisfies readonly ConfigField[];
 
 /** Default values for all config fields. */
 export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default])) as Record<
@@ -238,6 +238,9 @@ export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
     CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
 ) as Record<ConfigFieldKey, string[]>;
 
+// Type for row label keys - includes all possible row values used in config
+export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
+
 // Type for a single config field
 export interface ConfigField {
     key: string;
@@ -245,14 +248,14 @@ export interface ConfigField {
     group: GroupKey;
     type: ConfigFieldType;
     default: ConfigValueType;
-    row?: RowLabelKey;
+    row?: AllRowKeys;
     title?: string;
     short?: boolean;
     disabled?: boolean;
     labelUrl?: string;
     suffix?: string;
     actionLabel?: string;
-    options?: (string | [string, string])[];
+    options?: readonly (string | readonly [string, string])[];
     validate?: (_val: string, _allValues?: Record<string, unknown>) => string | null;
 }
 

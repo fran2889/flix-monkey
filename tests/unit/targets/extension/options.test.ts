@@ -2,23 +2,24 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Module-level spies captured by the hoisted vi.mock() factories.
-let renderSpy;
-let capturedInstance;
-let tabsQuerySpy;
-let tabsReloadSpy;
-let migrationPromise;
-let resolveMigrations;
+let renderSpy: Mock;
+let capturedInstance: { render: Mock };
+let tabsQuerySpy: Mock;
+let tabsReloadSpy: Mock;
+let migrationPromise: Promise<unknown>;
+let resolveMigrations: (_value: unknown) => void;
 
 vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
         constructor() {
-            capturedInstance = this;
+            capturedInstance = this as unknown as { render: Mock };
         }
-        render(...args) {
-            return renderSpy(...args);
+        render(..._args: unknown[]) {
+            return renderSpy(..._args);
         }
     },
 }));
@@ -37,8 +38,8 @@ vi.mock('webextension-polyfill', () => ({
             id: 'test-extension-id',
         },
         tabs: {
-            query: (...args) => tabsQuerySpy(...args),
-            reload: (...args) => tabsReloadSpy(...args),
+            query: (..._args: unknown[]) => tabsQuerySpy(..._args),
+            reload: (..._args: unknown[]) => tabsReloadSpy(..._args),
         },
     },
 }));
@@ -62,7 +63,11 @@ vi.mock('../../../../src/core/disabled-clients', () => ({
 }));
 
 describe('options.js entry point', () => {
-    let browser;
+    let browser: {
+        runtime: { sendMessage: Mock; id: string };
+        storage: { local: { get: Mock; set: Mock } };
+        tabs: { query: Mock; reload: Mock };
+    };
 
     beforeEach(async () => {
         vi.resetModules();
@@ -72,12 +77,16 @@ describe('options.js entry point', () => {
             resolveMigrations = resolve;
         });
 
-        capturedInstance = null;
+        capturedInstance = vi.fn() as unknown as { render: Mock };
         renderSpy = vi.fn().mockResolvedValue(undefined);
         tabsQuerySpy = vi.fn().mockResolvedValue([{ id: 1 }, { id: 42 }]);
         tabsReloadSpy = vi.fn().mockResolvedValue(undefined);
 
-        browser = (await import('webextension-polyfill')).default;
+        browser = (await import('webextension-polyfill')).default as unknown as {
+            runtime: { sendMessage: Mock; id: string };
+            storage: { local: { get: Mock; set: Mock } };
+            tabs: { query: Mock; reload: Mock };
+        };
     });
 
     async function startAfterMigrations() {

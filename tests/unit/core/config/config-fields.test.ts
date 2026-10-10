@@ -24,7 +24,8 @@ describe('core/config-fields', () => {
                 expect(field).toHaveProperty('options');
                 expect(Array.isArray(field.options)).toBe(true);
 
-                field.options.forEach((option: string | [string, string]) => {
+                // Handle readonly options by casting
+                (field.options as Array<string | [string, string]>).forEach((option: string | [string, string]) => {
                     const isValidString = typeof option === 'string';
                     const isValidArray =
                         Array.isArray(option) &&
@@ -53,15 +54,15 @@ describe('core/config-fields', () => {
             });
 
             it('should accept valid key when provider is selected', () => {
-                expect(field.validate('valid-key', { apiClient: provider })).toBeNull();
+                expect(field.validate?.('valid-key', { apiClient: provider })).toBeNull();
             });
 
             it('should reject empty key when provider is selected', () => {
-                expect(typeof field.validate('', { apiClient: provider })).toBe('string');
+                expect(typeof field.validate?.('', { apiClient: provider })).toBe('string');
             });
 
             it('should accept empty key when provider is not selected', () => {
-                expect(field.validate('', { apiClient: 'agregarr' })).toBeNull();
+                expect(field.validate?.('', { apiClient: 'agregarr' })).toBeNull();
             });
         });
 
@@ -72,12 +73,12 @@ describe('core/config-fields', () => {
             });
 
             it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
-                expect(field.validate(val)).toBeNull();
+                expect(field.validate?.(val)).toBeNull();
             });
 
             it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
-                expect(typeof field.validate(val)).toBe('string');
-                expect(field.validate(val)).toBe('Fade threshold must be a number between 0 and 10');
+                expect(typeof field.validate?.(val)).toBe('string');
+                expect(field.validate?.(val)).toBe('Fade threshold must be a number between 0 and 10');
             });
         });
 
@@ -88,12 +89,12 @@ describe('core/config-fields', () => {
             });
 
             it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {
-                expect(field.validate(val)).toBeNull();
+                expect(field.validate?.(val)).toBeNull();
             });
 
             it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {
-                expect(typeof field.validate(val)).toBe('string');
-                expect(field.validate(val)).toBe('Cache duration must be -1 or a positive integer');
+                expect(typeof field.validate?.(val)).toBe('string');
+                expect(field.validate?.(val)).toBe('Cache duration must be -1 or a positive integer');
             });
         });
     });

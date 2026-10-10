@@ -15,25 +15,25 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
 }));
 
 describe('Chrome Service Worker', () => {
-    let messageListener;
-    let installedListener;
-    let actionListener;
+    let messageListener: (message: unknown, sender: unknown, sendResponse: unknown) => Promise<unknown> | void;
+    let installedListener: (details: { reason: string }) => Promise<unknown> | void;
+    let actionListener: () => Promise<unknown> | void;
 
     beforeEach(async () => {
         vi.resetModules();
         vi.useFakeTimers();
         executeMigrations.mockReset();
-        executeMigrations.mockResolvedValue();
+        executeMigrations.mockResolvedValue(undefined);
 
         chrome.runtime.id = 'test-ext';
-        chrome.runtime.onMessage.addListener = vi.fn(fn => {
+        chrome.runtime.onMessage.addListener = vi.fn((fn: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void) => {
             messageListener = fn;
         });
-        chrome.runtime.onInstalled.addListener = vi.fn(fn => {
+        chrome.runtime.onInstalled.addListener = vi.fn((fn: (_details: { reason: string }) => Promise<unknown> | void) => {
             installedListener = fn;
         });
         chrome.runtime.openOptionsPage = vi.fn();
-        chrome.action.onClicked.addListener = vi.fn(fn => {
+        chrome.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
             actionListener = fn;
         });
 
@@ -45,13 +45,14 @@ describe('Chrome Service Worker', () => {
 
         global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
         global.AbortController = class {
+            signal: { aborted: boolean };
             constructor() {
                 this.signal = { aborted: false };
             }
             abort() {
                 this.signal.aborted = true;
             }
-        };
+        } as unknown as { new(): AbortController; prototype: AbortController };
 
         await import('../../../../src/targets/chrome/service-worker');
     });
@@ -139,7 +140,8 @@ describe('Chrome Service Worker', () => {
             vi.fn()
         );
 
-        const fetchOptions = global.fetch.mock.calls[0][1];
+        const fetchMock = global.fetch as unknown as { mock: { calls: Array<[string, { signal: { aborted: boolean } }]> } };
+        const fetchOptions = fetchMock.mock.calls[0][1];
         expect(fetchOptions.signal.aborted).toBe(false);
 
         await vi.advanceTimersByTimeAsync(customTimeout + 10);
@@ -149,7 +151,7 @@ describe('Chrome Service Worker', () => {
     it('should handle successful JSON response', async () => {
         const sendResponse = vi.fn();
         const mockData = { test: 'data' };
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: true,
             json: async () => mockData,
         });
@@ -172,7 +174,7 @@ describe('Chrome Service Worker', () => {
     it('should handle successful text response', async () => {
         const sendResponse = vi.fn();
         const mockData = 'plain text';
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: true,
             text: async () => mockData,
         });
@@ -193,7 +195,7 @@ describe('Chrome Service Worker', () => {
 
     it('should handle HTTP error response', async () => {
         const sendResponse = vi.fn();
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: false,
             status: 404,
             text: () => Promise.resolve('Not Found'),
@@ -210,7 +212,7 @@ describe('Chrome Service Worker', () => {
 
     it('should handle fetch exception', async () => {
         const sendResponse = vi.fn();
-        global.fetch.mockRejectedValue(new Error('Network error'));
+        (global.fetch as unknown as { mockRejectedValue: (_error: unknown) => void }).mockRejectedValue(new Error('Network error'));
 
         messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 

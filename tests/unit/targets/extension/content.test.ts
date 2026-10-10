@@ -2,15 +2,18 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // These module-level variables are captured by the hoisted vi.mock() factory.
 // They are mutated in beforeEach so each test run gets a fresh state.
-let onChangedListener;
-let mockAppHandle;
-let migrationPromise;
-let resolveMigrations;
-let storedObject;
+let onChangedListener: (_changes: Record<string, { newValue: unknown }>) => void;
+let mockAppHandle: { redecorate: Mock; clearCache: Mock; disconnect: Mock };
+let migrationPromise: Promise<unknown>;
+let resolveMigrations: (_value: unknown) => void;
+let storedObject: Record<string, unknown>;
+let startAppSpy: Mock;
+let browser: { runtime: { sendMessage: Mock; id: string }; storage: { local: { get: Mock }; onChanged: { addListener: Mock } } };
 
 vi.mock('webextension-polyfill', () => ({
     default: {
@@ -20,7 +23,7 @@ vi.mock('webextension-polyfill', () => ({
                 get: vi.fn().mockImplementation(() => Promise.resolve(storedObject)),
             },
             onChanged: {
-                addListener: vi.fn(fn => {
+                addListener: vi.fn((fn: (_changes: Record<string, { newValue: unknown }>) => void) => {
                     onChangedListener = fn;
                 }),
             },
@@ -37,8 +40,6 @@ vi.mock('../../../../src/core/app', () => ({
 }));
 
 describe('content.js entry point', () => {
-    let startAppSpy;
-    let browser;
 
     beforeEach(async () => {
         vi.resetModules();
@@ -50,7 +51,7 @@ describe('content.js entry point', () => {
 
         storedObject = { overlayCorner: 'top-right' };
 
-        onChangedListener = undefined;
+        onChangedListener = vi.fn() as unknown as (_changes: Record<string, { newValue: unknown }>) => void;
         mockAppHandle = {
             redecorate: vi.fn(),
             clearCache: vi.fn(),
@@ -58,11 +59,16 @@ describe('content.js entry point', () => {
         };
 
         // Re-import so vi.resetModules() takes effect and content.js IIFE runs fresh.
-        const appModule = await import('../../../../src/core/app');
+        const appModule = (await import('../../../../src/core/app')) as unknown as {
+            startApp: Mock;
+        };
         startAppSpy = appModule.startApp;
         vi.mocked(startAppSpy).mockReturnValue(mockAppHandle);
 
-        browser = (await import('webextension-polyfill')).default;
+        browser = (await import('webextension-polyfill')).default as unknown as {
+            runtime: { sendMessage: Mock; id: string };
+            storage: { local: { get: Mock }; onChanged: { addListener: Mock } };
+        };
     });
 
     async function startAfterMigrations() {

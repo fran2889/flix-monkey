@@ -15,25 +15,25 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
 }));
 
 describe('Firefox Background Script', () => {
-    let messageListener;
-    let installedListener;
-    let actionListener;
+    let messageListener: (...args: unknown[]) => Promise<unknown> | void;
+    let installedListener: (details: { reason: string }) => Promise<unknown> | void;
+    let actionListener: () => Promise<unknown> | void;
 
     beforeEach(async () => {
         vi.resetModules();
         vi.useFakeTimers();
         executeMigrations.mockReset();
-        executeMigrations.mockResolvedValue();
+        executeMigrations.mockResolvedValue(undefined);
 
         browser.runtime.id = undefined;
-        browser.runtime.onMessage.addListener = vi.fn(fn => {
+        browser.runtime.onMessage.addListener = vi.fn((fn: (..._args: unknown[]) => Promise<unknown> | void) => {
             messageListener = fn;
         });
-        browser.runtime.onInstalled.addListener = vi.fn(fn => {
+        browser.runtime.onInstalled.addListener = vi.fn((fn: (_details: { reason: string }) => Promise<unknown> | void) => {
             installedListener = fn;
         });
         browser.runtime.openOptionsPage = vi.fn();
-        browser.action.onClicked.addListener = vi.fn(fn => {
+        browser.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
             actionListener = fn;
         });
 
@@ -45,13 +45,14 @@ describe('Firefox Background Script', () => {
 
         global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
         global.AbortController = class {
+            signal: { aborted: boolean };
             constructor() {
                 this.signal = { aborted: false };
             }
             abort() {
                 this.signal.aborted = true;
             }
-        };
+        } as unknown as { new(): AbortController; prototype: AbortController };
 
         await import('../../../../src/targets/firefox/background');
     });
@@ -69,7 +70,7 @@ describe('Firefox Background Script', () => {
         const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: undefined });
 
         expect(executeMigrations).toHaveBeenCalledOnce();
-        expect(result).toEqual({});
+        expect(result).toBeUndefined();
     });
 
     it('ignores migration messages from a foreign sender', async () => {
@@ -115,7 +116,8 @@ describe('Firefox Background Script', () => {
         const customTimeout = 500;
         messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
 
-        const fetchOptions = global.fetch.mock.calls[0][1];
+        const fetchMock = global.fetch as unknown as { mock: { calls: Array<[string, { signal: { aborted: boolean } }]> } };
+        const fetchOptions = fetchMock.mock.calls[0][1];
         expect(fetchOptions.signal.aborted).toBe(false);
 
         await vi.advanceTimersByTimeAsync(customTimeout + 10);
@@ -124,7 +126,7 @@ describe('Firefox Background Script', () => {
 
     it('should handle successful JSON response', async () => {
         const mockData = { test: 'data' };
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: true,
             json: async () => mockData,
         });
@@ -140,7 +142,7 @@ describe('Firefox Background Script', () => {
 
     it('should handle successful text response', async () => {
         const mockData = 'plain text';
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: true,
             text: async () => mockData,
         });
@@ -155,7 +157,7 @@ describe('Firefox Background Script', () => {
     });
 
     it('should handle HTTP error response', async () => {
-        global.fetch.mockResolvedValue({
+        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
             ok: false,
             status: 404,
             text: () => Promise.resolve('Not Found'),
@@ -167,7 +169,7 @@ describe('Firefox Background Script', () => {
     });
 
     it('should handle fetch exception', async () => {
-        global.fetch.mockRejectedValue(new Error('Network error'));
+        (global.fetch as unknown as { mockRejectedValue: (_error: unknown) => void }).mockRejectedValue(new Error('Network error'));
 
         const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
