@@ -240,16 +240,12 @@ export class FlixMonkeyApp {
                       );
                   }
                 : null,
-            data.displayTitle
-                ? (dt: string) => {
-                      this.#handleEditClick(dt, data.imdbId);
-                  }
-                : null,
-            data.displayTitle
-                ? (dt: string) => {
-                      this.#handleRefreshClick(dt);
-                  }
-                : null,
+            (dt: string) => {
+                this.#handleEditClick(dt, data.imdbId);
+            },
+            (dt: string) => {
+                this.#handleRefreshClick(dt);
+            },
             displayTitle
         );
     }

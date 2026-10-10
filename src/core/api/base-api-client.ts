@@ -91,8 +91,6 @@ export abstract class BaseApiClient {
 
         const searchTitle = await this.search(displayTitle);
         if (!searchTitle) return null;
-        // Details endpoints are keyed by IMDb ID. A search result can lack one,
-        // so skip the lookup and keep the identity fields search already gave us.
         if (!searchTitle.imdbId) return searchTitle.withSource(this.#source);
         const detailedTitle = await this.getDetails(searchTitle);
         if (!detailedTitle) return null;

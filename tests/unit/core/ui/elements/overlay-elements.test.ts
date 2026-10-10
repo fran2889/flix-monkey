@@ -14,8 +14,8 @@ const defaultOptions = {
     showFadeToggle: false,
     fadeToggleState: null,
     onFadeToggleClick: null,
-    onEditClick: null,
-    onRefreshClick: null,
+    onEditClick: (_displayTitle: string) => {},
+    onRefreshClick: (_displayTitle: string) => {},
     displayTitle: '',
     corner: 'top-left',
 };
@@ -370,12 +370,6 @@ describe('createOverlayElement', () => {
             expect(iconButtons[1].textContent).toBe('🔄');
         });
 
-        it('should not render edit and refresh icons when handlers are not provided', () => {
-            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
-
-            expect(element.querySelector('.fm-icon-btn')).toBeNull();
-        });
-
         it('should add corner class', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
 
@@ -419,7 +413,7 @@ describe('createOverlayElement', () => {
             const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
             editIcon?.click();
 
-            expect(onEditClick).toHaveBeenCalledWith('Test Movie', 'tt1234567');
+            expect(onEditClick).toHaveBeenCalledWith('Test Movie');
         });
 
         it('should call onRefreshClick when refresh icon is clicked', () => {

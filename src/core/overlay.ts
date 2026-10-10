@@ -98,8 +98,8 @@ export class OverlayRenderer {
      * @param titleObj - Resolved title data to render.
      * @param fadeToggleState - Stored fade override, or null for auto.
      * @param onFadeToggleClick - Fade toggle handler, or null when the toggle is hidden.
-     * @param onEditClick - Edit icon handler, or null to omit the icon.
-     * @param onRefreshClick - Refresh icon handler, or null to omit the icon.
+     * @param onEditClick - Edit icon handler.
+     * @param onRefreshClick - Refresh icon handler.
      * @param displayTitle - Title as shown by the streaming service; also the IMDb search term.
      */
     injectOverlay(
@@ -107,8 +107,8 @@ export class OverlayRenderer {
         titleObj: Title,
         fadeToggleState: 'always' | 'never' | null,
         onFadeToggleClick: ((_element: HTMLElement) => void) | null,
-        onEditClick: ((_displayTitle: string) => void) | null,
-        onRefreshClick: ((_displayTitle: string) => void) | null,
+        onEditClick: (_displayTitle: string) => void,
+        onRefreshClick: (_displayTitle: string) => void,
         displayTitle: string
     ): void {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();

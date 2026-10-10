@@ -723,8 +723,8 @@ describe('App', () => {
         const decorateAndCaptureActions = async (
             container: Element
         ): Promise<{
-            onEditClick: ((_displayTitle: string, _imdbId: string | null) => Promise<void>) | null;
-            onRefreshClick: ((_displayTitle: string) => Promise<void>) | null;
+            onEditClick: (_displayTitle: string) => Promise<void>;
+            onRefreshClick: (_displayTitle: string) => Promise<void>;
         }> => {
             mockRenderer = {
                 hasOverlay: vi.fn().mockReturnValue(false),
@@ -757,8 +757,8 @@ describe('App', () => {
             const calls = mockRenderer.injectOverlay.mock.calls[0] as unknown[];
             const [, , , , onEditClick, onRefreshClick] = calls;
             return {
-                onEditClick: onEditClick as ((_displayTitle: string, _imdbId: string | null) => Promise<void>) | null,
-                onRefreshClick: onRefreshClick as ((_displayTitle: string) => Promise<void>) | null,
+                onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
+                onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
             };
         };
 
@@ -790,7 +790,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult(null, () => onEditClick!('Test Movie', null));
+            await withPromptResult(null, () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
             expect(mockCache.delete).not.toHaveBeenCalled();
@@ -804,7 +804,7 @@ describe('App', () => {
             window.alert = vi.fn();
 
             try {
-                await withPromptResult('invalid-id', () => onEditClick!('Test Movie', null));
+                await withPromptResult('invalid-id', () => onEditClick('Test Movie'));
                 expect(window.alert).toHaveBeenCalledWith(
                     'Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)'
                 );
@@ -820,7 +820,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult('tt0133093', () => onEditClick!('Test Movie', null));
+            await withPromptResult('tt0133093', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
@@ -831,7 +831,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick!('Test Movie', null));
+            await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
@@ -843,7 +843,7 @@ describe('App', () => {
             mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt0000001');
             const { onEditClick } = await decorateAndCaptureActions(container);
 
-            const promptMock = await withPromptResult(null, () => onEditClick!('Test Movie', 'tt9999999'));
+            const promptMock = await withPromptResult(null, () => onEditClick('Test Movie'));
 
             expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
         });
@@ -854,7 +854,7 @@ describe('App', () => {
             document.body.appendChild(container);
             const { onRefreshClick } = await decorateAndCaptureActions(container);
 
-            await onRefreshClick!('Test Movie');
+            await onRefreshClick('Test Movie');
 
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
