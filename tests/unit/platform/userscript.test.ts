@@ -2,25 +2,20 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { FlixMonkeyError } from '../../../src/core/utils/index';
 import { UserscriptAdapter } from '../../../src/platform/userscript';
 import { setupUserscriptMocks } from '../../mocks/platform';
 
 // Declare mocked GM_* globals - they are mocked by setupUserscriptMocks() in beforeEach
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_getValue: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_setValue: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_deleteValue: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_listValues: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_registerMenuCommand: any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const GM_xmlhttpRequest: any;
+// Using Mock type for all to maintain type safety
+declare const GM_getValue: Mock;
+declare const GM_setValue: Mock;
+declare const GM_deleteValue: Mock;
+declare const GM_listValues: Mock;
+declare const GM_registerMenuCommand: Mock;
+declare const GM_xmlhttpRequest: Mock;
 
 // Type for XHR callback parameters
 type XHRCallbacks = {

@@ -3,30 +3,11 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import browser from 'webextension-polyfill';
 
 import { WebExtensionAdapter } from '../../../src/platform/webextension';
 
-// Type for the mocked browser object - using any to avoid generic issues
-// The actual mocks are created by vi.fn() in the vi.mock call
-
-type MockBrowser = {
-    storage: {
-        local: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            get: any;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            set: any;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            remove: any;
-        };
-    };
-    runtime: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendMessage: any;
-    };
-};
-
+// Mock webextension-polyfill before any imports that use it
+// vi.mock is hoisted, so this runs before the WebExtensionAdapter import
 vi.mock('webextension-polyfill', () => ({
     default: {
         storage: { local: { get: vi.fn(), set: vi.fn(), remove: vi.fn() } },
@@ -34,8 +15,12 @@ vi.mock('webextension-polyfill', () => ({
     },
 }));
 
-// Cast browser to the mocked type
-const mockedBrowser = browser as unknown as MockBrowser;
+// Import browser after the mock is set up
+import browser from 'webextension-polyfill';
+
+// Cast browser to the mocked type - using the type from our helper
+import type { MockedBrowser } from '../../mocks/browser';
+const mockedBrowser = browser as unknown as MockedBrowser;
 
 describe('WebExtensionAdapter', () => {
     let adapter: WebExtensionAdapter;

@@ -2,17 +2,18 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-let adapter;
-let appHandle;
-let cacheConstructor;
-let configConstructor;
-let disabledConstructor;
-let loggerConstructor;
-let settingsConstructor;
-let migrationRunner;
-let resolveMigrations;
+let adapter: { registerMenuCommand: Mock };
+let appHandle: { cacheManager: unknown; disabledManager: unknown } | null;
+let cacheConstructor: Mock<(..._args: unknown[]) => unknown>;
+let configConstructor: Mock<(..._args: unknown[]) => unknown>;
+let disabledConstructor: Mock<(..._args: unknown[]) => unknown>;
+let loggerConstructor: Mock<(..._args: unknown[]) => unknown>;
+let settingsConstructor: Mock<(..._args: unknown[]) => void>;
+let migrationRunner: Mock<(..._args: unknown[]) => Promise<unknown>>;
+let resolveMigrations: (_value?: unknown) => void;
 
 vi.mock('../../../../src/core/app', () => ({
     startApp: vi.fn(() => appHandle),
@@ -26,40 +27,47 @@ vi.mock('../../../../src/platform/userscript', () => ({
     },
 }));
 
+// Mock the actual implementations - these are test mocks
+// The constructor return types don't match the actual classes because we're returning mock objects
+
 vi.mock('../../../../src/core/cache/cache-manager', () => ({
     CacheManager: class {
-        constructor(...args) {
-            return cacheConstructor(...args);
+        constructor(..._args: any[]) {
+            // @ts-ignore - constructor returns mock object, not actual CacheManager
+            return cacheConstructor(..._args);
         }
     },
 }));
 
 vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
-        constructor(...args) {
-            return configConstructor(...args);
+        constructor(..._args: any[]) {
+            // @ts-ignore - constructor returns mock object, not actual ConfigManager
+            return configConstructor(..._args);
         }
     },
 }));
 
 vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {
-        constructor(...args) {
-            return disabledConstructor(...args);
+        constructor(..._args: any[]) {
+            // @ts-ignore - constructor returns mock object, not actual DisabledClientsManager
+            return disabledConstructor(..._args);
         }
     },
 }));
 
 vi.mock('../../../../src/core/logger', () => ({
     Logger: class {
-        constructor(...args) {
-            return loggerConstructor(...args);
+        constructor(..._args: any[]) {
+            // @ts-ignore - constructor returns mock object, not actual Logger
+            return loggerConstructor(..._args);
         }
     },
 }));
 
 vi.mock('../../../../src/core/migrations', () => ({
-    runMigrations: vi.fn((...args) => migrationRunner(...args)),
+    runMigrations: vi.fn((..._args: any[]) => migrationRunner(..._args)),
 }));
 
 vi.mock('../../../../src/core/ui/modal', () => ({
@@ -76,8 +84,8 @@ vi.mock('../../../../src/core/ui/modal', () => ({
 
 vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
-        constructor(...args) {
-            settingsConstructor(...args);
+        constructor(..._args: any[]) {
+            settingsConstructor(..._args);
         }
 
         render() {
@@ -94,14 +102,14 @@ describe('userscript entry point', () => {
             registerMenuCommand: vi.fn(),
         };
         appHandle = null;
-        cacheConstructor = vi.fn(() => ({ source: 'fallback-cache' }));
-        configConstructor = vi.fn(() => ({ source: 'fallback-config' }));
-        disabledConstructor = vi.fn(() => ({ source: 'fallback-disabled' }));
-        loggerConstructor = vi.fn(() => ({ source: 'fallback-logger' }));
+        cacheConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-cache' }));
+        configConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-config' }));
+        disabledConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-disabled' }));
+        loggerConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-logger' }));
         settingsConstructor = vi.fn();
         migrationRunner = vi.fn(
-            () =>
-                new Promise(resolve => {
+            (..._: any[]) =>
+                new Promise((resolve: (_value: unknown) => void) => {
                     resolveMigrations = resolve;
                 })
         );
@@ -117,19 +125,24 @@ describe('userscript entry point', () => {
         expect(appModule.startApp).not.toHaveBeenCalled();
         expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
 
+        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => {
             expect(appModule.startApp).toHaveBeenCalledWith(adapter);
             expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
         });
 
-        expect(migrationsModule.runMigrations.mock.calls[0][1]).toBe(loggerConstructor.mock.results[0].value);
+        // @ts-ignore - accessing .mock on vi.mock'd function
+        expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(loggerConstructor.mock.results[0].value);
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect(appModule.startApp.mock.invocationCallOrder[0]).toBeGreaterThan(
-            migrationsModule.runMigrations.mock.invocationCallOrder[0]
+        // @ts-ignore - accessing .mock on vi.mock'd function
+        expect((appModule.startApp as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
+            // @ts-ignore - accessing .mock on vi.mock'd function
+            (migrationsModule.runMigrations as Mock).mock.invocationCallOrder[0]
         );
-        expect(adapter.registerMenuCommand.mock.invocationCallOrder[0]).toBeGreaterThan(
-            appModule.startApp.mock.invocationCallOrder[0]
+        expect((adapter.registerMenuCommand as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
+            // @ts-ignore - accessing .mock on vi.mock'd function
+            (appModule.startApp as Mock).mock.invocationCallOrder[0]
         );
     });
 
@@ -138,6 +151,7 @@ describe('userscript entry point', () => {
         const migrationsModule = await import('../../../../src/core/migrations');
 
         await import('../../../../src/targets/userscript/entry');
+        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
 
@@ -148,11 +162,13 @@ describe('userscript entry point', () => {
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
 
-        const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];
+        // @ts-ignore - accessing .mock on vi.mock'd function
+        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0][1];
         menuCallback();
 
         const logger = loggerConstructor.mock.results[0].value;
-        expect(migrationsModule.runMigrations.mock.calls[0][1]).toBe(logger);
+        // @ts-ignore - accessing .mock on vi.mock'd function
+        expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(logger);
         const config = configConstructor.mock.results[0].value;
         const cacheManager = cacheConstructor.mock.results[0].value;
         const disabledManager = disabledConstructor.mock.results[0].value;
@@ -169,6 +185,7 @@ describe('userscript entry point', () => {
         appHandle = { cacheManager, disabledManager };
 
         await import('../../../../src/targets/userscript/entry');
+        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
         const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];
