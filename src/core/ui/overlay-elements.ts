@@ -23,8 +23,8 @@ export interface OverlayOptions {
     fadeToggleState: 'auto' | 'always' | 'never' | null;
     onFadeToggleClick: ((_element: HTMLElement) => void) | null;
     corner: string;
-    onEditClick: ((_displayTitle: string, _imdbId: string | null) => void) | null;
-    onRefreshClick: ((_displayTitle: string) => void) | null;
+    onEditClick: (_displayTitle: string) => void;
+    onRefreshClick: (_displayTitle: string) => void;
     displayTitle: string;
 }
 
@@ -242,18 +242,12 @@ export function createOverlayElement(
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'fm-actions';
 
-    if (onEditClick) {
-        const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle, imdbId ?? null));
-        actionsContainer.appendChild(editIcon);
-        if (onRefreshClick) {
-            const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () =>
-                onRefreshClick(displayTitle)
-            );
-            actionsContainer.appendChild(refreshIcon);
-        }
-        imdbRow.appendChild(actionsContainer);
-        setupHoverActions(ratingsWrapper, actionsContainer);
-    }
+    const editIcon = createIconButton('✏️', 'Override IMDb ID', () => onEditClick(displayTitle));
+    const refreshIcon = createIconButton('🔄', 'Refresh ratings (clears cache)', () => onRefreshClick(displayTitle));
+    actionsContainer.appendChild(editIcon);
+    actionsContainer.appendChild(refreshIcon);
+    imdbRow.appendChild(actionsContainer);
+    setupHoverActions(ratingsWrapper, actionsContainer);
 
     imdbRow.appendChild(imdbLink);
     ratingsWrapper.appendChild(imdbRow);
