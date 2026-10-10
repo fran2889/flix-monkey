@@ -15,8 +15,8 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
 }));
 
 describe('Chrome Service Worker', () => {
-    let messageListener: (message: unknown, sender: unknown, sendResponse: unknown) => Promise<unknown> | void;
-    let installedListener: (details: { reason: string }) => Promise<unknown> | void;
+    let messageListener: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void;
+    let installedListener: (_details: { reason: string }) => Promise<unknown> | void;
     let actionListener: () => Promise<unknown> | void;
 
     beforeEach(async () => {
@@ -26,12 +26,16 @@ describe('Chrome Service Worker', () => {
         executeMigrations.mockResolvedValue(undefined);
 
         chrome.runtime.id = 'test-ext';
-        chrome.runtime.onMessage.addListener = vi.fn((fn: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void) => {
-            messageListener = fn;
-        });
-        chrome.runtime.onInstalled.addListener = vi.fn((fn: (_details: { reason: string }) => Promise<unknown> | void) => {
-            installedListener = fn;
-        });
+        chrome.runtime.onMessage.addListener = vi.fn(
+            (fn: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void) => {
+                messageListener = fn;
+            }
+        );
+        chrome.runtime.onInstalled.addListener = vi.fn(
+            (fn: (_details: { reason: string }) => Promise<unknown> | void) => {
+                installedListener = fn;
+            }
+        );
         chrome.runtime.openOptionsPage = vi.fn();
         chrome.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
             actionListener = fn;
@@ -52,7 +56,7 @@ describe('Chrome Service Worker', () => {
             abort() {
                 this.signal.aborted = true;
             }
-        } as unknown as { new(): AbortController; prototype: AbortController };
+        } as unknown as { new (): AbortController; prototype: AbortController };
 
         await import('../../../../src/targets/chrome/service-worker');
     });
@@ -140,7 +144,9 @@ describe('Chrome Service Worker', () => {
             vi.fn()
         );
 
-        const fetchMock = global.fetch as unknown as { mock: { calls: Array<[string, { signal: { aborted: boolean } }]> } };
+        const fetchMock = global.fetch as unknown as {
+            mock: { calls: Array<[string, { signal: { aborted: boolean } }]> };
+        };
         const fetchOptions = fetchMock.mock.calls[0][1];
         expect(fetchOptions.signal.aborted).toBe(false);
 
@@ -212,7 +218,9 @@ describe('Chrome Service Worker', () => {
 
     it('should handle fetch exception', async () => {
         const sendResponse = vi.fn();
-        (global.fetch as unknown as { mockRejectedValue: (_error: unknown) => void }).mockRejectedValue(new Error('Network error'));
+        (global.fetch as unknown as { mockRejectedValue: (_error: unknown) => void }).mockRejectedValue(
+            new Error('Network error')
+        );
 
         messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 

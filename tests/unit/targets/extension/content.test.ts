@@ -2,8 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { Mock } from 'vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 // These module-level variables are captured by the hoisted vi.mock() factory.
 // They are mutated in beforeEach so each test run gets a fresh state.
@@ -13,7 +12,10 @@ let migrationPromise: Promise<unknown>;
 let resolveMigrations: (_value: unknown) => void;
 let storedObject: Record<string, unknown>;
 let startAppSpy: Mock;
-let browser: { runtime: { sendMessage: Mock; id: string }; storage: { local: { get: Mock }; onChanged: { addListener: Mock } } };
+let browser: {
+    runtime: { sendMessage: Mock; id: string };
+    storage: { local: { get: Mock }; onChanged: { addListener: Mock } };
+};
 
 vi.mock('webextension-polyfill', () => ({
     default: {
@@ -40,7 +42,6 @@ vi.mock('../../../../src/core/app', () => ({
 }));
 
 describe('content.js entry point', () => {
-
     beforeEach(async () => {
         vi.resetModules();
         vi.clearAllMocks();
