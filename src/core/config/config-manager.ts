@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { Logger } from '../logger.js';
-import { FlixMonkeyError } from '../utils/index.js';
-import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { Logger } from '../logger';
+import { FlixMonkeyError } from '../utils/index';
+import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields';
 
 export type ConfigKey = keyof typeof CONFIG_DEFAULTS;
 

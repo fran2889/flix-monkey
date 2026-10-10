@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants.js';
-import type { HttpFetchOptions } from '../../platform/adapter.js';
-import type { FetchProxyResponse } from '../../types/extension.js';
+import { DEFAULT_FETCH_TIMEOUT } from '../../core/constants';
+import type { HttpFetchOptions } from '../../platform/adapter';
+import type { FetchProxyResponse } from '../../types/extension';
 import { validateDomain } from './domains';
 
 /**

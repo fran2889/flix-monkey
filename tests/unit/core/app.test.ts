@@ -4,17 +4,17 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiClientManager } from '../../../src/core/api-manager.js';
-import { FlixMonkeyApp, startApp } from '../../../src/core/app.js';
-import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants.js';
-import { Logger } from '../../../src/core/logger.js';
-import { OverlayRenderer } from '../../../src/core/overlay.js';
-import { NetflixService } from '../../../src/core/services/index.js';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index.js';
-import type { Title } from '../../../src/core/title.js';
-import { buildMockAdapter } from '../../mocks/adapter.js';
-import { buildLogger } from '../../mocks/logger.js';
-import { buildTitle } from '../../mocks/title.js';
+import { ApiClientManager } from '../../../src/core/api-manager';
+import { FlixMonkeyApp, startApp } from '../../../src/core/app';
+import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants';
+import { Logger } from '../../../src/core/logger';
+import { OverlayRenderer } from '../../../src/core/overlay';
+import { NetflixService } from '../../../src/core/services/index';
+import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
+import type { Title } from '../../../src/core/title';
+import { buildMockAdapter } from '../../mocks/adapter';
+import { buildLogger } from '../../mocks/logger';
+import { buildTitle } from '../../mocks/title';
 
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 

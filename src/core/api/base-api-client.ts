@@ -2,15 +2,15 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { ClientStatus } from '../../types/api.js';
-import type { ConfigManager } from '../config/config-manager.js';
-import { type ApiSourceType, CLIENT_DISABLE_DURATION } from '../constants.js';
-import type { DisabledClientsManager } from '../disabled-clients.js';
-import type { IdOverrideManager } from '../id-override-manager.js';
-import type { Logger } from '../logger.js';
-import type { RequestQueue } from '../request-queue.js';
-import { Title } from '../title.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { ClientStatus } from '../../types/api';
+import type { ConfigManager } from '../config/config-manager';
+import { type ApiSourceType, CLIENT_DISABLE_DURATION } from '../constants';
+import type { DisabledClientsManager } from '../disabled-clients';
+import type { IdOverrideManager } from '../id-override-manager';
+import type { Logger } from '../logger';
+import type { RequestQueue } from '../request-queue';
+import { Title } from '../title';
 
 /**
  * Abstract base class for API clients.

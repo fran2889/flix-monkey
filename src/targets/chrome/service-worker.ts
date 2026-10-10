@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { HttpFetchOptions } from '../../platform/adapter.js';
-import { handleFetchMessage } from '../extension/fetch-proxy.js';
-import { createExtensionMigrationExecutor } from '../extension/migrations.js';
+import type { HttpFetchOptions } from '../../platform/adapter';
+import { handleFetchMessage } from '../extension/fetch-proxy';
+import { createExtensionMigrationExecutor } from '../extension/migrations';
 
 /**
  * Chrome service worker global: chrome API is available as a bare global.

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { PlatformAdapter } from '../../../src/platform/adapter.js';
+import { PlatformAdapter } from '../../../src/platform/adapter';
 
 describe('PlatformAdapter', () => {
     const adapter = new PlatformAdapter();

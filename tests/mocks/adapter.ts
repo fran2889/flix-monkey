@@ -4,7 +4,7 @@
  */
 import { Mock, vi } from 'vitest';
 
-import { type HttpFetchOptions, PlatformAdapter, type StorageValue } from '../../src/platform/adapter.js';
+import { type HttpFetchOptions, PlatformAdapter, type StorageValue } from '../../src/platform/adapter';
 
 // Type for mockable storage methods - compatible with both PlatformAdapter and vi.Mock
 type MockableFn<T extends (..._args: never[]) => unknown> = T & Mock;

@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { Modal } from '../../../../src/core/ui/modal.js';
+import { Modal } from '../../../../src/core/ui/modal';
 
 describe('Modal', () => {
     beforeEach(() => {

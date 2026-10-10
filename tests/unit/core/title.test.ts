@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { Title } from '../../../src/core/title.js';
+import { Title } from '../../../src/core/title';
 
 describe('Title', () => {
     describe('imdbUrl generation', () => {

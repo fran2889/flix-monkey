@@ -4,15 +4,15 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api/index.js';
-import { ConfigManager } from '../../src/core/config/index.js';
-import { ApiSource, ApiSourceType, TitleType, TitleTypeType } from '../../src/core/constants.js';
-import { DisabledClientsManager } from '../../src/core/disabled-clients.js';
-import { IdOverrideManager } from '../../src/core/id-override-manager.js';
-import { Logger } from '../../src/core/logger.js';
-import { Title } from '../../src/core/title.js';
-import type { PlatformAdapter } from '../../src/platform/adapter.js';
-import { buildMockAdapter } from '../mocks/adapter.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api/index';
+import { ConfigManager } from '../../src/core/config/index';
+import { ApiSource, ApiSourceType, TitleType, TitleTypeType } from '../../src/core/constants';
+import { DisabledClientsManager } from '../../src/core/disabled-clients';
+import { IdOverrideManager } from '../../src/core/id-override-manager';
+import { Logger } from '../../src/core/logger';
+import { Title } from '../../src/core/title';
+import type { PlatformAdapter } from '../../src/platform/adapter';
+import { buildMockAdapter } from '../mocks/adapter';
 
 const adapter: Partial<PlatformAdapter> = {
     httpFetch: async (url, _options) => {

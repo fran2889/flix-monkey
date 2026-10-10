@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { DomainValidationResult } from '../../types/extension.js';
+import type { DomainValidationResult } from '../../types/extension';
 
 /** External API hosts that extension background contexts may fetch. */
 const ALLOWED_DOMAINS = new Set(['www.omdbapi.com', 'xmdbapi.com', 'api.agregarr.org', 'v3.sg.media-imdb.com']);

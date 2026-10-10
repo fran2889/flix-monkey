@@ -2,11 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { ServicePresentation } from '../types/overlay.js';
-import type { ConfigManager } from './config/config-manager.js';
-import type { Title } from './title.js';
-import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements.js';
-import { buildOverlayStyles } from './ui/overlay-styles.js';
+import type { ServicePresentation } from '../types/overlay';
+import type { ConfigManager } from './config/config-manager';
+import type { Title } from './title';
+import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements';
+import { buildOverlayStyles } from './ui/overlay-styles';
 
 /** Valid overlay corner positions. */
 type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

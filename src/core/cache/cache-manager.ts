@@ -2,13 +2,13 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { ConfigManager } from '../config/config-manager.js';
-import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants.js';
-import type { Logger } from '../logger.js';
-import { Title } from '../title.js';
-import { slugify } from '../utils/index.js';
-import { CacheEntry } from './cache-entry.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { ConfigManager } from '../config/config-manager';
+import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
+import type { Logger } from '../logger';
+import { Title } from '../title';
+import { slugify } from '../utils/index';
+import { CacheEntry } from './cache-entry';
 
 /**
  * Manages cached title data with configurable TTL based on rating and release year.

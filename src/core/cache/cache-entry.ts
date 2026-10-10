@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Title, type Title as TitleType } from '../title.js';
+import { Title, type Title as TitleType } from '../title';
 
 /**
  * Cache entry encapsulating both metadata and API data.
@@ -46,7 +46,12 @@ export class CacheEntry {
             data: object | null;
             expires: number | null;
         };
-        return new CacheEntry(obj.displayTitle, obj.imdbId, obj.data as Omit<TitleType, 'displayTitle'> | null, obj.expires);
+        return new CacheEntry(
+            obj.displayTitle,
+            obj.imdbId,
+            obj.data as Omit<TitleType, 'displayTitle'> | null,
+            obj.expires
+        );
     }
 
     /**

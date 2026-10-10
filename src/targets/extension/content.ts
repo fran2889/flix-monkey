@@ -4,9 +4,9 @@
  */
 import browser from 'webextension-polyfill';
 
-import { startApp } from '../../core/app.js';
-import type { StorageValue } from '../../platform/adapter.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { startApp } from '../../core/app';
+import type { StorageValue } from '../../platform/adapter';
+import { WebExtensionAdapter } from '../../platform/webextension';
 
 /*
  * Settings that can be hot-applied without a page reload: they only affect overlay

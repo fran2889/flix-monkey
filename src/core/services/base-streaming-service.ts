@@ -4,7 +4,7 @@
  */
 import type { ServicePresentation } from '../../types/overlay';
 import type { ServiceSurfaceManager } from '../../types/services';
-import type { ConfigManager } from '../config/config-manager.js';
+import type { ConfigManager } from '../config/config-manager';
 
 /**
  * Abstract contract for a supported streaming service. Implementations provide

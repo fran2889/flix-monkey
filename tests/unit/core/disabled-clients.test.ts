@@ -4,8 +4,8 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { DisabledClientsManager } from '../../../src/core/disabled-clients.js';
-import { buildMockAdapter, MockPlatformAdapter } from '../../mocks/adapter.js';
+import { DisabledClientsManager } from '../../../src/core/disabled-clients';
+import { buildMockAdapter, MockPlatformAdapter } from '../../mocks/adapter';
 
 describe('core/disabled-clients', () => {
     let mockAdapter: MockPlatformAdapter;

@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Title } from '../../src/core/title.js';
+import { Title } from '../../src/core/title';
 
 function buildTitle() {
     // Default all Title fields to null for consistency

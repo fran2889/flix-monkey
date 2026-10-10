@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Logger } from '../../core/logger.js';
-import { runMigrations } from '../../core/migrations.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { Logger } from '../../core/logger';
+import { runMigrations } from '../../core/migrations';
+import { WebExtensionAdapter } from '../../platform/webextension';
 
 /**
  * Create an executor that shares one migration run among all callers.

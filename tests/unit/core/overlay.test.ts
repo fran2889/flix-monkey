@@ -17,7 +17,15 @@ describe('OverlayRenderer', () => {
 
     /** Injects an overlay with the action handlers and display title the signature requires. */
     const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title) =>
-        renderer.injectOverlay(container, title, null, null, null, null, title.displayTitle ?? 'Test Title');
+        renderer.injectOverlay(
+            container,
+            title,
+            null,
+            null,
+            () => {},
+            () => {},
+            title.displayTitle ?? 'Test Title'
+        );
 
     describe('style injection', () => {
         it('injects styles into document head', () => {

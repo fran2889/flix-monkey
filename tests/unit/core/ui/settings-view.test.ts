@@ -4,8 +4,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS } from '../../../../src/core/config/index.js';
-import { type ConfigField, SettingsView } from '../../../../src/core/ui/settings-view.js';
+import { CONFIG_FIELDS } from '../../../../src/core/config/index';
+import { type ConfigField, SettingsView } from '../../../../src/core/ui/settings-view';
 
 // Helper to cast CONFIG_FIELDS to the expected type for SettingsView
 const configFields = CONFIG_FIELDS as unknown as readonly ConfigField[];

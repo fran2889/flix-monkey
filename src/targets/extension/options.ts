@@ -4,12 +4,12 @@
  */
 import browser from 'webextension-polyfill';
 
-import { CacheManager } from '../../core/cache/index.js';
-import { ConfigManager } from '../../core/config/index.js';
-import { DisabledClientsManager } from '../../core/disabled-clients.js';
-import { Logger } from '../../core/logger.js';
-import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { WebExtensionAdapter } from '../../platform/webextension.js';
+import { CacheManager } from '../../core/cache/index';
+import { ConfigManager } from '../../core/config/index';
+import { DisabledClientsManager } from '../../core/disabled-clients';
+import { Logger } from '../../core/logger';
+import { SettingsUI } from '../../core/ui/settings-ui';
+import { WebExtensionAdapter } from '../../platform/webextension';
 
 /**
  * Type for migration response from background script.

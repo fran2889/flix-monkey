@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { TitleType, type TitleTypeType } from '../constants.js';
+import { TitleType, type TitleTypeType } from '../constants';
 
 /**
  * Maps XMDb title type to canonical TitleType.

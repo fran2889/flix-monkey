@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { FlixMonkeyError } from '../core/utils/index.js';
+import { FlixMonkeyError } from '../core/utils/index';
 
 export type StorageValue = string | boolean;
 

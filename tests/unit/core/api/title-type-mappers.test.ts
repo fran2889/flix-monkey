@@ -4,12 +4,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import {
-    mapAgregarrTitleType,
-    mapOmdbTitleType,
-    mapXmdbTitleType,
-} from '../../../../src/core/api/title-type-mappers.js';
-import { TitleType } from '../../../../src/core/constants.js';
+import { mapAgregarrTitleType, mapOmdbTitleType, mapXmdbTitleType } from '../../../../src/core/api/title-type-mappers';
+import { TitleType } from '../../../../src/core/constants';
 
 describe('mapXmdbTitleType', () => {
     it('should map Movie to MOVIE', () => {

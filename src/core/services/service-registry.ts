@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { StreamingService } from './base-streaming-service.js';
-import { DisneyPlusService } from './disney-plus-service.js';
-import { HboMaxService } from './hbo-max-service.js';
-import { NetflixService } from './netflix-service.js';
+import type { StreamingService } from './base-streaming-service';
+import { DisneyPlusService } from './disney-plus-service';
+import { HboMaxService } from './hbo-max-service';
+import { NetflixService } from './netflix-service';
 
 const SERVICES = Object.freeze({
     netflix: new NetflixService(),

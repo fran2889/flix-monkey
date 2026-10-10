@@ -2,11 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { BaseApiClient } from './api/base-api-client.js';
-import type { CacheEntry, CacheManager } from './cache/index.js';
-import type { DisabledClientsManager } from './disabled-clients.js';
-import type { Logger } from './logger.js';
-import { Title } from './title.js';
+import type { BaseApiClient } from './api/base-api-client';
+import type { CacheEntry, CacheManager } from './cache/index';
+import type { DisabledClientsManager } from './disabled-clients';
+import type { Logger } from './logger';
+import { Title } from './title';
 
 /**
  * Manages API clients, caching, and coordinates fetching rating data.

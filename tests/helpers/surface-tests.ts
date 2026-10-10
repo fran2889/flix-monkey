@@ -4,9 +4,9 @@
  */
 import { expect } from 'vitest';
 
-import type { OverlayRenderer } from '../../src/core/overlay.js';
-import type { SurfaceManager } from '../../src/core/surfaces/index.js';
-import { Title } from '../../src/core/title.js';
+import type { OverlayRenderer } from '../../src/core/overlay';
+import type { SurfaceManager } from '../../src/core/surfaces/index';
+import { Title } from '../../src/core/title';
 import type { DiscoveredSurface } from '../../src/types/surfaces';
 
 /**
@@ -50,8 +50,8 @@ export function testSurfaceFixtures(
             new Title({ imdbRating: 8.5, imdbId: 'tt1234567' }),
             null,
             null,
-            null,
-            null,
+            () => {},
+            () => {},
             surface.title
         );
         expect(surface.container.querySelector('.fm-rating-overlay')).not.toBeNull();

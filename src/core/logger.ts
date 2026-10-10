@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import type { PlatformAdapter } from '../platform/adapter.js';
-import { CONFIG_DEFAULTS } from './config/index.js';
+import type { PlatformAdapter } from '../platform/adapter';
+import { CONFIG_DEFAULTS } from './config/index';
 
 /** Centralized logging with platform-specific config support. */
 export class Logger {

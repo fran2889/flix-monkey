@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { SettingsActions } from '../../types/extension.js';
-import { GROUPS, ROW_LABELS } from '../config/index.js';
-import { AUTOSAVE_DEBOUNCE_MS } from '../constants.js';
-import { SETTINGS_STYLES } from './styles.js';
+import type { SettingsActions } from '../../types/extension';
+import { GROUPS, ROW_LABELS } from '../config/index';
+import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
+import { SETTINGS_STYLES } from './styles';
 
 /** Config field definition type */
 export interface ConfigField {

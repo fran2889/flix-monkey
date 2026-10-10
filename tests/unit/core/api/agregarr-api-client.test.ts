@@ -4,16 +4,16 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../../src/core/api/index.js';
-import type { ConfigManager } from '../../../../src/core/config/config-manager.js';
-import type { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
-import type { IdOverrideManager } from '../../../../src/core/id-override-manager.js';
-import type { Logger } from '../../../../src/core/logger.js';
-import { Title } from '../../../../src/core/title.js';
-import { buildMockAdapter } from '../../../mocks/adapter.js';
+import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../../../src/core/api/index';
+import type { ConfigManager } from '../../../../src/core/config/config-manager';
+import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
+import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
+import type { Logger } from '../../../../src/core/logger';
+import { Title } from '../../../../src/core/title';
+import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildConfig } from '../../../mocks/config';
-import { buildLogger } from '../../../mocks/logger.js';
-import { buildTitle } from '../../../mocks/title.js';
+import { buildLogger } from '../../../mocks/logger';
+import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(null),

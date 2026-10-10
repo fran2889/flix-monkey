@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../platform/adapter.js';
+import type { PlatformAdapter } from '../platform/adapter';
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index';
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
@@ -16,7 +16,7 @@ import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './
 import { ServiceRegistry } from './services/index';
 import type { SurfaceManager } from './surfaces/index';
 import type { Title } from './title';
-import { FADE_STATE_LABELS } from './ui/overlay-elements.js';
+import { FADE_STATE_LABELS } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
 
 /** Main application class coordinating rating overlay functionality. */

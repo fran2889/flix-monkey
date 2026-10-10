@@ -4,9 +4,9 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConfigField } from '../../../../src/core/config/index.js';
+import type { ConfigField } from '../../../../src/core/config/index';
 // eslint-disable-next-line no-duplicate-imports
-import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index.js';
+import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index';
 
 describe('core/config-fields', () => {
     describe('field structures', () => {

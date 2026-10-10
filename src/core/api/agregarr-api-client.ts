@@ -2,17 +2,17 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { ConfigManager } from '../config/config-manager.js';
-import { ApiSource } from '../constants.js';
-import type { DisabledClientsManager } from '../disabled-clients.js';
-import type { IdOverrideManager } from '../id-override-manager.js';
-import type { Logger } from '../logger.js';
-import { RATE_LIMITS } from '../rate-limits.js';
-import { RequestQueue } from '../request-queue.js';
-import { Title } from '../title.js';
-import { BaseApiClient } from './base-api-client.js';
-import { mapAgregarrTitleType } from './title-type-mappers.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { ConfigManager } from '../config/config-manager';
+import { ApiSource } from '../constants';
+import type { DisabledClientsManager } from '../disabled-clients';
+import type { IdOverrideManager } from '../id-override-manager';
+import type { Logger } from '../logger';
+import { RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
+import { Title } from '../title';
+import { BaseApiClient } from './base-api-client';
+import { mapAgregarrTitleType } from './title-type-mappers';
 
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);

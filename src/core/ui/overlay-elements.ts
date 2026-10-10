@@ -8,9 +8,9 @@ import {
     RATING_COLOR_HIGH_THRESHOLD,
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
-} from '../constants.js';
-import type { Title } from '../title.js';
-import { buildImdbUrl, interpolateColor } from '../utils/index.js';
+} from '../constants';
+import type { Title } from '../title';
+import { buildImdbUrl, interpolateColor } from '../utils/index';
 
 /**
  * Options for creating overlay elements.

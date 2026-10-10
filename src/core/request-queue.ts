@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../platform/adapter.js';
+import type { PlatformAdapter } from '../platform/adapter';
 
 /**
  * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.

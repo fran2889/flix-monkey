@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../platform/adapter.js';
-import type { ConfigManager } from './config/config-manager.js';
+import type { PlatformAdapter } from '../platform/adapter';
+import type { ConfigManager } from './config/config-manager';
 
 /**
  * Fade override state type.

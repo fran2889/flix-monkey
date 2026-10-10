@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { slugify } from '../../../../src/core/utils/index.js';
+import { slugify } from '../../../../src/core/utils/index';
 
 describe('core/utils/string-utils', () => {
     describe('slugify', () => {

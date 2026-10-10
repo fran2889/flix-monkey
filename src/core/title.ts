@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { buildImdbUrl } from './utils/index.js';
+import { buildImdbUrl } from './utils/index';
 
 /**
  * Options for creating a Title instance.

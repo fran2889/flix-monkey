@@ -4,14 +4,14 @@
  */
 import { beforeEach, describe, it } from 'vitest';
 
-import { ConfigManager } from '../../src/core/config/index.js';
-import { OverlayRenderer } from '../../src/core/overlay.js';
-import { HboMaxService } from '../../src/core/services/index.js';
-import { HboMaxSurfaceManager } from '../../src/core/surfaces/index.js';
-import fixtures from '../fixtures/hbomax-surfaces.js';
-import { testSurfaceFixtures } from '../helpers/surface-tests.js';
-import { buildMockAdapter } from '../mocks/adapter.js';
-import { buildLogger } from '../mocks/logger.js';
+import { ConfigManager } from '../../src/core/config/index';
+import { OverlayRenderer } from '../../src/core/overlay';
+import { HboMaxService } from '../../src/core/services/index';
+import { HboMaxSurfaceManager } from '../../src/core/surfaces/index';
+import fixtures from '../fixtures/hbomax-surfaces';
+import { testSurfaceFixtures } from '../helpers/surface-tests';
+import { buildMockAdapter } from '../mocks/adapter';
+import { buildLogger } from '../mocks/logger';
 
 describe('HBO Max surfaces', () => {
     let surfaceManager: HboMaxSurfaceManager;

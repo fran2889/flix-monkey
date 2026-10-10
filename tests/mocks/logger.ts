@@ -4,9 +4,9 @@
  */
 import { vi } from 'vitest';
 
-import { CONFIG_DEFAULTS } from '../../src/core/config/index.js';
-import { Logger } from '../../src/core/logger.js';
-import { buildMockAdapter } from './adapter.js';
+import { CONFIG_DEFAULTS } from '../../src/core/config/index';
+import { Logger } from '../../src/core/logger';
+import { buildMockAdapter } from './adapter';
 
 function buildLogger() {
     let debugValue: string | boolean = CONFIG_DEFAULTS.debug;

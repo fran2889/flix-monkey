@@ -3,6 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-export { AgregarrApiClient } from './agregarr-api-client.js';
-export { OmdbApiClient } from './omdb-api-client.js';
-export { XmdbApiClient } from './xmdb-api-client.js';
+export { AgregarrApiClient } from './agregarr-api-client';
+export { OmdbApiClient } from './omdb-api-client';
+export { XmdbApiClient } from './xmdb-api-client';

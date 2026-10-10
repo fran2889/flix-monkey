@@ -2,18 +2,18 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { ClientStatus } from '../../types/api.js';
-import type { ConfigManager } from '../config/config-manager.js';
-import { ApiSource } from '../constants.js';
-import type { DisabledClientsManager } from '../disabled-clients.js';
-import type { IdOverrideManager } from '../id-override-manager.js';
-import type { Logger } from '../logger.js';
-import { RATE_LIMITS } from '../rate-limits.js';
-import { RequestQueue } from '../request-queue.js';
-import { Title } from '../title.js';
-import { BaseApiClient } from './base-api-client.js';
-import { mapXmdbTitleType } from './title-type-mappers.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { ClientStatus } from '../../types/api';
+import type { ConfigManager } from '../config/config-manager';
+import { ApiSource } from '../constants';
+import type { DisabledClientsManager } from '../disabled-clients';
+import type { IdOverrideManager } from '../id-override-manager';
+import type { Logger } from '../logger';
+import { RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
+import { Title } from '../title';
+import { BaseApiClient } from './base-api-client';
+import { mapXmdbTitleType } from './title-type-mappers';
 
 /**
  * API client for XMDb service that provides comprehensive movie and series data with ratings.

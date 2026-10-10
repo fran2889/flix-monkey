@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants.js';
+import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants';
 
 /**
  * Error used at application boundaries. HTTP request failures may include the

@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../platform/adapter.js';
-import { slugify } from './utils/index.js';
+import type { PlatformAdapter } from '../platform/adapter';
+import { slugify } from './utils/index';
 
 /**
  * Manages per-title ID overrides stored persistently.

@@ -2,15 +2,15 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { startApp } from '../../core/app.js';
-import { CacheManager } from '../../core/cache/index.js';
-import { ConfigManager } from '../../core/config/index.js';
-import { DisabledClientsManager } from '../../core/disabled-clients.js';
-import { Logger } from '../../core/logger.js';
-import { runMigrations } from '../../core/migrations.js';
-import { Modal } from '../../core/ui/modal.js';
-import { SettingsUI } from '../../core/ui/settings-ui.js';
-import { UserscriptAdapter } from '../../platform/userscript.js';
+import { startApp } from '../../core/app';
+import { CacheManager } from '../../core/cache/index';
+import { ConfigManager } from '../../core/config/index';
+import { DisabledClientsManager } from '../../core/disabled-clients';
+import { Logger } from '../../core/logger';
+import { runMigrations } from '../../core/migrations';
+import { Modal } from '../../core/ui/modal';
+import { SettingsUI } from '../../core/ui/settings-ui';
+import { UserscriptAdapter } from '../../platform/userscript';
 
 const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);

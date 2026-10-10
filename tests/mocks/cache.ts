@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CacheEntry } from '../../src/core/cache/index.js';
-import type { Title } from '../../src/core/title.js';
+import { CacheEntry } from '../../src/core/cache/index';
+import type { Title } from '../../src/core/title';
 
 type CacheEntryBuilder = {
     withDisplayTitle(_value: string): CacheEntryBuilder;

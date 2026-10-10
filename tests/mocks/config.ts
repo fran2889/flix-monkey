@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { ConfigKey } from '../../src/core/config/config-manager.js';
-import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index.js';
-import { buildMockAdapter } from './adapter.js';
-import { buildLogger } from './logger.js';
+import type { ConfigKey } from '../../src/core/config/config-manager';
+import { CONFIG_DEFAULTS, ConfigManager } from '../../src/core/config/index';
+import { buildMockAdapter } from './adapter';
+import { buildLogger } from './logger';
 
 function buildConfig() {
     // Default all config fields to null for consistency

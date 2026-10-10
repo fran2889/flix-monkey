@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { CACHE_TTL_INFINITE } from '../constants.js';
+import { CACHE_TTL_INFINITE } from '../constants';
 
 function validateCacheTtl(val: string): string | null {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
@@ -83,11 +83,7 @@ export const CONFIG_FIELDS = [
         label: 'Rating Provider',
         group: 'providers',
         type: 'select',
-        options: [
-            ['agregarr', 'Agregarr'] as const,
-            ['omdb', 'OMDb'] as const,
-            ['xmdb', 'XMDb'] as const,
-        ],
+        options: [['agregarr', 'Agregarr'] as const, ['omdb', 'OMDb'] as const, ['xmdb', 'XMDb'] as const],
         default: 'agregarr',
         title: 'Active rating provider. Agregarr requires no API key',
     },

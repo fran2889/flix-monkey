@@ -4,8 +4,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { Title } from '../../../../../src/core/title.js';
-import { createLoadingOverlayElement, createOverlayElement } from '../../../../../src/core/ui/overlay-elements.js';
+import { Title } from '../../../../../src/core/title';
+import { createLoadingOverlayElement, createOverlayElement } from '../../../../../src/core/ui/overlay-elements';
 
 const defaultOptions = {
     overlayClass: 'fm-rating-overlay',

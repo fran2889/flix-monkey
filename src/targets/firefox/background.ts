@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { HttpFetchOptions } from '../../platform/adapter.js';
-import type { FetchProxyResponse } from '../../types/extension.js';
-import { handleFetchMessage } from '../extension/fetch-proxy.js';
-import { createExtensionMigrationExecutor } from '../extension/migrations.js';
+import type { HttpFetchOptions } from '../../platform/adapter';
+import type { FetchProxyResponse } from '../../types/extension';
+import { handleFetchMessage } from '../extension/fetch-proxy';
+import { createExtensionMigrationExecutor } from '../extension/migrations';
 
 /**
  * Firefox background script global: browser API is available as a bare global.

@@ -4,14 +4,14 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CacheManager } from '../../../../src/core/cache/index.js';
-import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index.js';
-import { DisabledClientsManager } from '../../../../src/core/disabled-clients.js';
-import { Logger } from '../../../../src/core/logger.js';
-import { SettingsUI } from '../../../../src/core/ui/settings-ui.js';
-import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter.js';
-import { buildLogger } from '../../../mocks/logger.js';
-import { buildTitle } from '../../../mocks/title.js';
+import { CacheManager } from '../../../../src/core/cache/index';
+import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index';
+import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
+import { Logger } from '../../../../src/core/logger';
+import { SettingsUI } from '../../../../src/core/ui/settings-ui';
+import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
+import { buildLogger } from '../../../mocks/logger';
+import { buildTitle } from '../../../mocks/title';
 
 describe('SettingsUI', () => {
     let mockAdapter: MockPlatformAdapter;

@@ -2,12 +2,12 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter.js';
-import type { CacheManager } from '../cache/index.js';
-import { CONFIG_FIELDS } from '../config/index.js';
-import type { DisabledClientsManager } from '../disabled-clients.js';
-import type { Logger } from '../logger.js';
-import { type ConfigField, SettingsView } from './settings-view.js';
+import type { PlatformAdapter } from '../../platform/adapter';
+import type { CacheManager } from '../cache/index';
+import { CONFIG_FIELDS } from '../config/index';
+import type { DisabledClientsManager } from '../disabled-clients';
+import type { Logger } from '../logger';
+import { type ConfigField, SettingsView } from './settings-view';
 
 /**
  * Manages the settings UI, handling rendering, saving, and interactions.

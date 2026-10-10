@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../platform/adapter.js';
-import { ApiSource, type ApiSourceType } from './constants.js';
+import type { PlatformAdapter } from '../platform/adapter';
+import { ApiSource, type ApiSourceType } from './constants';
 
 /**
  * Tracks temporarily disabled API clients to prevent redundant requests after failures.
