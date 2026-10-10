@@ -14,10 +14,10 @@ import { CacheEntry } from './cache-entry';
  * Manages cached title data with configurable TTL based on rating and release year.
  */
 export class CacheManager {
-    #prefix = 'fmc:';
-    #adapter: PlatformAdapter;
-    #config: ConfigManager;
-    #logger: Logger;
+    readonly #prefix = 'fmc:';
+    readonly #adapter: PlatformAdapter;
+    readonly #config: ConfigManager;
+    readonly #logger: Logger;
 
     /**
      * @param adapter - Persistent storage provider.
@@ -101,7 +101,7 @@ export class CacheManager {
     async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
-        await Promise.all(keys.map((key: string) => this.#adapter.storageDelete(key)));
+        await Promise.all(keys.map(async (key: string) => this.#adapter.storageDelete(key)));
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
 

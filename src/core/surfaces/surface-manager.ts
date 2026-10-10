@@ -10,7 +10,7 @@ const titleFromAttribute =
     (attribute: string) =>
     (element: Element): string | null => {
         const value = element.getAttribute(attribute);
-        return value !== null ? value : null;
+        return value ?? null;
     };
 
 const containerFromClosest =
@@ -27,8 +27,8 @@ const containerFromParent = (element: Element): Element | null => {
  * Manages discovery and identification of streaming service surfaces for rating overlay injection.
  */
 export class SurfaceManager {
-    #SURFACES: SurfaceDefinition[];
-    #logger: Logger;
+    readonly #SURFACES: SurfaceDefinition[];
+    readonly #logger: Logger;
 
     /**
      * @param logger - Receives selector and container-resolution failures.

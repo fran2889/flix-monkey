@@ -10,10 +10,10 @@ import { Title, type Title as TitleType } from '../title';
  * and API-returned data (Title fields).
  */
 export class CacheEntry {
-    #displayTitle: string;
-    #imdbId: string | null;
-    #data: Omit<TitleType, 'displayTitle'> | null;
-    #expires: number | null;
+    readonly #displayTitle: string;
+    readonly #imdbId: string | null;
+    readonly #data: Omit<TitleType, 'displayTitle'> | null;
+    readonly #expires: number | null;
 
     /**
      * @param {string} displayTitle - Netflix display title (search key)

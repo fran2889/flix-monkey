@@ -154,7 +154,7 @@ function buildMockAdapter() {
         },
 
         withHttpFetchResolvingToOnce(value: unknown) {
-            overrides.httpFetch = overrides.httpFetch || vi.fn();
+            overrides.httpFetch = overrides.httpFetch ?? vi.fn();
             (overrides.httpFetch as Mock).mockResolvedValueOnce(value);
             return this;
         },

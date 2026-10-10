@@ -8,8 +8,8 @@ import { CONFIG_DEFAULTS } from './config/index';
 
 /** Centralized logging with platform-specific config support. */
 export class Logger {
-    #prefix = '[FlixMonkey]';
-    #adapter: PlatformAdapter;
+    readonly #prefix = '[FlixMonkey]';
+    readonly #adapter: PlatformAdapter;
 
     /**
      * @param adapter

@@ -25,9 +25,9 @@ import { mapOmdbTitleType } from './title-type-mappers';
 function parseRatings(ratings: unknown, sourcePattern: RegExp): number | null {
     if (!Array.isArray(ratings)) return null;
     const entry = ratings.find(
-        r => r && sourcePattern.test(((r as OmdbRatingEntry).source || (r as OmdbRatingEntry).Source) ?? '')
+        r => r && sourcePattern.test((r as OmdbRatingEntry).source ?? (r as OmdbRatingEntry).Source ?? '')
     ) as OmdbRatingEntry | undefined;
-    return entry?.value !== undefined ? entry.value : (entry?.Value ?? null);
+    return entry?.value ?? entry?.Value ?? null;
 }
 
 /**

@@ -20,13 +20,13 @@ import { Title } from '../title';
  * (hydrate ratings). Subclasses override those two methods for each provider.
  */
 export abstract class BaseApiClient {
-    #queue: RequestQueue;
-    #source: ApiSourceType;
-    #disabledManager: DisabledClientsManager;
-    #adapter: PlatformAdapter;
-    #config: ConfigManager;
-    #logger: Logger;
-    #overrideManager: IdOverrideManager;
+    readonly #queue: RequestQueue;
+    readonly #source: ApiSourceType;
+    readonly #disabledManager: DisabledClientsManager;
+    readonly #adapter: PlatformAdapter;
+    readonly #config: ConfigManager;
+    readonly #logger: Logger;
+    readonly #overrideManager: IdOverrideManager;
 
     /**
      * @param adapter - Platform adapter for HTTP and storage.
@@ -128,7 +128,7 @@ export abstract class BaseApiClient {
      * @returns Parsed response body.
      */
     async queuedFetch(url: string, priority: number): Promise<unknown> {
-        return this.#queue.enqueue(url, priority, (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
+        return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
     }
 
     async #isDisabled(): Promise<boolean> {

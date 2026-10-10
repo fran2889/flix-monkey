@@ -12,10 +12,10 @@ import { Title } from './title';
  * Manages API clients, caching, and coordinates fetching rating data.
  */
 export class ApiClientManager {
-    #cache: CacheManager;
-    #client: BaseApiClient;
-    #disabledManager: DisabledClientsManager;
-    #logger: Logger;
+    readonly #cache: CacheManager;
+    readonly #client: BaseApiClient;
+    readonly #disabledManager: DisabledClientsManager;
+    readonly #logger: Logger;
 
     /**
      * @param logger - Logger instance for debug/error messages
@@ -51,10 +51,10 @@ export class ApiClientManager {
 
         if (entry?.imdbId) {
             this.#logger.debug(`Using cached IMDb ID ${entry.imdbId} for "${displayTitle}"`);
-            return await this.#fetch(displayTitle, entry.imdbId);
+            return this.#fetch(displayTitle, entry.imdbId);
         }
 
-        return await this.#fetch(displayTitle);
+        return this.#fetch(displayTitle);
     }
 
     async #fetch(displayTitle: string, imdbId: string | null = null): Promise<Title> {

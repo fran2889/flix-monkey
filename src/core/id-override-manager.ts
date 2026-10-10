@@ -11,8 +11,8 @@ import { slugify } from './utils/index';
  * the correct ID for a streaming service title.
  */
 export class IdOverrideManager {
-    #adapter: PlatformAdapter;
-    #prefix = 'fm-idoverride:';
+    readonly #adapter: PlatformAdapter;
+    readonly #prefix = 'fm-idoverride:';
 
     /**
      * @param adapter - Platform adapter for storage.

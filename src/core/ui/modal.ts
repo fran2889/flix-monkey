@@ -40,7 +40,7 @@ export class Modal {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'fm-modal-close';
         closeBtn.textContent = '×';
-        closeBtn.onclick = () => this.#close();
+        closeBtn.onclick = (): void => this.#close();
 
         const body = document.createElement('div');
         body.className = 'fm-modal-body';

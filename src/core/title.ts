@@ -88,7 +88,7 @@ export class Title {
     toCacheJSON(): Omit<Title, 'displayTitle'> {
         const rest = { ...this };
         delete (rest as { displayTitle?: string | null }).displayTitle;
-        return rest as Omit<Title, 'displayTitle'>;
+        return rest;
     }
 
     /**
@@ -99,7 +99,7 @@ export class Title {
      */
     static fromCacheJSON(obj: unknown, displayTitle: string | null): Title | null {
         if (!obj || typeof obj !== 'object') return null;
-        return new Title({ ...(obj as object), displayTitle });
+        return new Title({ ...obj, displayTitle });
     }
 
     #normalizeRating(val: unknown, converter: (_v: unknown) => number | null): number | null {

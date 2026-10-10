@@ -97,7 +97,7 @@ export class UserscriptAdapter extends PlatformAdapter {
             GM_xmlhttpRequest({
                 method: 'GET',
                 url,
-                responseType: responseType as 'json' | 'text' | 'blob' | 'arraybuffer' | 'document',
+                responseType: responseType,
                 headers: {
                     'Accept-Language': 'en-US,en;q=0.9',
                 },
@@ -137,7 +137,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @returns {string | boolean | undefined} The current config value, or `undefined` if absent.
      */
     configGet(key: string): string | boolean | undefined {
-        return GM_getValue(key) as string | boolean | undefined;
+        return GM_getValue<string | boolean | undefined>(key);
     }
 
     /**

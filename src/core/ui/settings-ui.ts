@@ -13,11 +13,11 @@ import { type ConfigField, SettingsView } from './settings-view';
  * Manages the settings UI, handling rendering, saving, and interactions.
  */
 export class SettingsUI {
-    #adapter: PlatformAdapter;
-    #cacheManager: CacheManager;
-    #disabledClientsManager: DisabledClientsManager;
-    #view: SettingsView;
-    #logger: Logger;
+    readonly #adapter: PlatformAdapter;
+    readonly #cacheManager: CacheManager;
+    readonly #disabledClientsManager: DisabledClientsManager;
+    readonly #view: SettingsView;
+    readonly #logger: Logger;
 
     /**
      * Creates a new SettingsUI instance.
@@ -40,9 +40,9 @@ export class SettingsUI {
         this.#disabledClientsManager = disabledClientsManager;
         this.#logger = logger;
         this.#view = new SettingsView(fields, {
-            onSave: () => this.save(),
-            onClearCache: () => this.#clearCache(),
-            onResetClients: () => this.#resetClients(),
+            onSave: async (): Promise<void> => this.save(),
+            onClearCache: async (): Promise<void> => this.#clearCache(),
+            onResetClients: async (): Promise<void> => this.#resetClients(),
         });
     }
 

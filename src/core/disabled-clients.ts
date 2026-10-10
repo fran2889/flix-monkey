@@ -9,7 +9,7 @@ import { ApiSource, type ApiSourceType } from './constants';
  * Tracks temporarily disabled API clients to prevent redundant requests after failures.
  */
 export class DisabledClientsManager {
-    #adapter: PlatformAdapter;
+    readonly #adapter: PlatformAdapter;
 
     /**
      * @param adapter

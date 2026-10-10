@@ -15,11 +15,11 @@ type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
  * Handles creation and management of rating overlay DOM elements.
  */
 export class OverlayRenderer {
-    #OVERLAY_CLASS = 'fm-rating-overlay';
-    #OVERLAY_ATTR = 'data-fm-injected';
-    #LOADING_CLASS = 'fm-loading';
-    #config: ConfigManager;
-    #serviceConstants: ServicePresentation;
+    readonly #OVERLAY_CLASS = 'fm-rating-overlay';
+    readonly #OVERLAY_ATTR = 'data-fm-injected';
+    readonly #LOADING_CLASS = 'fm-loading';
+    readonly #config: ConfigManager;
+    readonly #serviceConstants: ServicePresentation;
 
     /**
      * @param config - Application configuration
@@ -122,7 +122,7 @@ export class OverlayRenderer {
             onEditClick,
             onRefreshClick,
             displayTitle,
-            corner: this.#config.get('overlayCorner') as OverlayCorner,
+            corner: this.#config.get('overlayCorner'),
         });
         container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');

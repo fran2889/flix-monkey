@@ -33,8 +33,8 @@ export interface ConfigField {
  * UI component that renders and manages the settings panel with grouped configuration fields.
  */
 export class SettingsView {
-    #fields: readonly ConfigField[];
-    #actions: SettingsActions;
+    readonly #fields: readonly ConfigField[];
+    readonly #actions: SettingsActions;
     #container: HTMLElement | null = null;
     #debounceTimer: ReturnType<typeof setTimeout> | null = null;
 

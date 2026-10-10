@@ -13,8 +13,8 @@ export type ConfigKey = keyof typeof CONFIG_DEFAULTS;
  * Manages application configuration with fallback to defaults and type conversion utilities.
  */
 export class ConfigManager {
-    #adapter: PlatformAdapter;
-    #logger: Logger;
+    readonly #adapter: PlatformAdapter;
+    readonly #logger: Logger;
 
     /**
      * @param adapter
@@ -40,17 +40,15 @@ export class ConfigManager {
         if (!(key in CONFIG_DEFAULTS)) throw new FlixMonkeyError(`ConfigManager: unknown config key "${key}"`);
         try {
             const val = this.#adapter.configGet(key);
-            const defaultValue = String(
-                CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null
-            );
+            const defaultValue = String(CONFIG_DEFAULTS[key]);
             if (val === undefined || val === null) return defaultValue;
             const normalizedVal = String(val);
-            const allowed = CONFIG_SELECT_ALLOWED[key as keyof typeof CONFIG_SELECT_ALLOWED] as string[] | undefined;
+            const allowed = CONFIG_SELECT_ALLOWED[key] as string[] | undefined;
             if (allowed && !allowed.includes(normalizedVal)) return defaultValue;
             return normalizedVal;
         } catch (err) {
             this.#logger.warn('ConfigManager.get error, using fallback', { key, err });
-            return String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null);
+            return String(CONFIG_DEFAULTS[key]);
         }
     }
 
@@ -63,12 +61,7 @@ export class ConfigManager {
     getInt(key: ConfigKey): number {
         const val = this.get(key);
         const num = Number.parseInt(val, 10);
-        return Number.isNaN(num)
-            ? Number.parseInt(
-                  String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null),
-                  10
-              )
-            : num;
+        return Number.isNaN(num) ? Number.parseInt(String(CONFIG_DEFAULTS[key]), 10) : num;
     }
 
     /**
@@ -80,9 +73,7 @@ export class ConfigManager {
     getFloat(key: ConfigKey): number {
         const val = this.get(key);
         const num = Number.parseFloat(val);
-        return Number.isNaN(num)
-            ? Number.parseFloat(String(CONFIG_DEFAULTS[key as keyof typeof CONFIG_DEFAULTS] as string | boolean | null))
-            : num;
+        return Number.isNaN(num) ? Number.parseFloat(String(CONFIG_DEFAULTS[key])) : num;
     }
 
     /**

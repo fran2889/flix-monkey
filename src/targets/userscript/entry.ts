@@ -51,7 +51,7 @@ function openSettings(): void {
     });
 }
 
-void (async () => {
+void (async (): Promise<void> => {
     await runMigrations(adapter, logger);
     app = startApp(adapter);
     adapter.registerMenuCommand('FlixMonkey Settings', openSettings);

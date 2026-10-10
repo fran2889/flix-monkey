@@ -26,9 +26,9 @@ export function nextFadeState(current: FadeOverrideState): FadeOverrideState {
  * Manages fade state overrides for individual titles based on user preferences and ratings.
  */
 export class FadeManager {
-    #adapter: PlatformAdapter;
-    #config: ConfigManager;
-    #prefix = 'fm-fade:';
+    readonly #adapter: PlatformAdapter;
+    readonly #config: ConfigManager;
+    readonly #prefix = 'fm-fade:';
 
     /**
      * @param adapter - Storage adapter for per-title overrides.

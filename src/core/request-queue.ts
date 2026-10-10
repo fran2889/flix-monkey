@@ -8,12 +8,12 @@ import type { PlatformAdapter } from '../platform/adapter';
  * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.
  */
 export class RequestQueue {
-    #queue: Array<QueueItem> = [];
+    readonly #queue: Array<QueueItem> = [];
     #isProcessing = false;
     #lastLocalReqTime = 0;
-    #minInterval: number;
-    #globalSyncKey: string | null;
-    #adapter: PlatformAdapter | null;
+    readonly #minInterval: number;
+    readonly #globalSyncKey: string | null;
+    readonly #adapter: PlatformAdapter | null;
 
     /**
      * @param adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
@@ -35,14 +35,14 @@ export class RequestQueue {
      * @param fetchFn - Request operation.
      * @returns Result returned by fetchFn.
      */
-    enqueue<T>(_url: string, _priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
+    async enqueue<T>(_url: string, _priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
         return new Promise((resolve: (_value: T | PromiseLike<T>) => void, reject) => {
             this.#queue.push({
                 url: _url,
                 priority: _priority,
                 resolve: resolve as (_value2: unknown) => void,
                 reject,
-                fetchFn: fetchFn as (_url2: string) => Promise<unknown>,
+                fetchFn: fetchFn,
             });
             if (this.#queue.length > 1) {
                 this.#queue.sort((a, b) => b.priority - a.priority);

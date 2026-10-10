@@ -18,7 +18,7 @@ interface MigrationResponse {
     error?: string;
 }
 
-/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async () => {
+/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async (): Promise<void> => {
     const adapter = new WebExtensionAdapter();
     const migrationResponse: MigrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
     if (migrationResponse?.error) {

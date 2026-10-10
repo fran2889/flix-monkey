@@ -47,7 +47,7 @@ describe('core/utils/general-utils', () => {
         it('should maintain context', () => {
             const context = { value: 'test' };
             let capturedContext: unknown;
-            // eslint-disable-next-line no-unused-vars
+
             const func = function (this: { value: string }) {
                 capturedContext = this;
             };

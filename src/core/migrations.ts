@@ -10,7 +10,7 @@ const CACHE_PREFIX: string = 'fmc:';
 
 async function clearCache(adapter: PlatformAdapter): Promise<MigrationSummary> {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
-    await Promise.all(keys.map(key => adapter.storageDelete(key)));
+    await Promise.all(keys.map(async key => adapter.storageDelete(key)));
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 

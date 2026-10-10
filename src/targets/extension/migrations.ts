@@ -14,7 +14,7 @@ import { WebExtensionAdapter } from '../../platform/webextension';
 export function createExtensionMigrationExecutor(): () => Promise<void> {
     let migrationPromise: Promise<void> | null = null;
 
-    return () => {
+    return async () => {
         if (!migrationPromise) {
             const adapter = new WebExtensionAdapter();
             migrationPromise = runMigrations(adapter, new Logger(adapter));

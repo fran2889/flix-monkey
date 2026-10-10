@@ -21,14 +21,14 @@ import { debounce, runIdle, slugify } from './utils/index';
 
 /** Main application class coordinating rating overlay functionality. */
 export class FlixMonkeyApp {
-    #api: ApiClientManagerType;
-    #cache: CacheManagerType;
-    #renderer: OverlayRendererType;
-    #surfaces: SurfaceManager;
-    #logger: Logger;
-    #inFlight = new Map<string, Promise<Title>>();
-    #pendingRoots = new Set<Element | Document>();
-    #debouncedDecorate: () => void;
+    readonly #api: ApiClientManagerType;
+    readonly #cache: CacheManagerType;
+    readonly #renderer: OverlayRendererType;
+    readonly #surfaces: SurfaceManager;
+    readonly #logger: Logger;
+    readonly #inFlight = new Map<string, Promise<Title>>();
+    readonly #pendingRoots = new Set<Element | Document>();
+    readonly #debouncedDecorate: () => void;
     #observer: MutationObserver | null = null;
     #initialised = false;
     #boundDisconnect: (() => void) | null = null;
@@ -36,8 +36,8 @@ export class FlixMonkeyApp {
     #originalPushState: ((..._args: unknown[]) => void) | null = null;
     #originalReplaceState: ((..._args: unknown[]) => void) | null = null;
     #popstateHandler: (() => void) | null = null;
-    #fadeManager: FadeManagerType;
-    #overrideManager: IdOverrideManagerType;
+    readonly #fadeManager: FadeManagerType;
+    readonly #overrideManager: IdOverrideManagerType;
 
     /**
      * @param logger - Logger instance
@@ -79,7 +79,7 @@ export class FlixMonkeyApp {
         this.#renderer.injectStyles();
         this.#initNavigationObservers();
         this.#decorateRoot(document);
-        this.#boundDisconnect = () => this.#disconnect();
+        this.#boundDisconnect = (): void => this.#disconnect();
         window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
@@ -122,16 +122,16 @@ export class FlixMonkeyApp {
         this.#originalPushState = history.pushState as ((..._args: unknown[]) => void) | null;
         this.#originalReplaceState = history.replaceState as ((..._args: unknown[]) => void) | null;
 
-        history.pushState = (..._args: unknown[]) => {
+        history.pushState = (..._args: unknown[]): void => {
             this.#originalPushState?.apply(history, _args);
             this.#debouncedDecorate();
         };
-        history.replaceState = (..._args: unknown[]) => {
+        history.replaceState = (..._args: unknown[]): void => {
             this.#originalReplaceState?.apply(history, _args);
             this.#debouncedDecorate();
         };
 
-        this.#popstateHandler = () => this.#debouncedDecorate();
+        this.#popstateHandler = (): void => this.#debouncedDecorate();
         window.addEventListener('popstate', this.#popstateHandler);
 
         this.#observer = new MutationObserver(mutations => {
@@ -194,7 +194,7 @@ export class FlixMonkeyApp {
         }
     }
 
-    #getTitleRequest(dedupKey: string, displayTitle: string): Promise<Title> {
+    async #getTitleRequest(dedupKey: string, displayTitle: string): Promise<Title> {
         const existing = this.#inFlight.get(dedupKey);
         if (existing) return existing;
 
@@ -234,7 +234,7 @@ export class FlixMonkeyApp {
             data,
             showFadeToggle ? fadeOverride : null,
             showFadeToggle
-                ? (el: HTMLElement) => {
+                ? (el: HTMLElement): void => {
                       this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
                           /* istanbul ignore next */ () => undefined
                       );
