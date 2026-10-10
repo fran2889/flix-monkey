@@ -1,0 +1,120 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Fran
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { debounce, FlixMonkeyError, runIdle } from '../../../../src/core/utils/index';
+
+describe('core/utils/general-utils', () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    describe('debounce', () => {
+        it('should debounce function calls', () => {
+            const func = vi.fn();
+            const debounced = debounce(func, 100);
+
+            debounced();
+            debounced();
+            debounced();
+
+            expect(func).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(50);
+            expect(func).not.toHaveBeenCalled();
+
+            vi.advanceTimersByTime(51);
+            expect(func).toHaveBeenCalledTimes(1);
+        });
+
+        it('should pass arguments to the debounced function', () => {
+            const func = vi.fn();
+            const debounced = debounce(func, 100);
+
+            debounced('arg1', 'arg2');
+            vi.advanceTimersByTime(101);
+
+            expect(func).toHaveBeenCalledWith('arg1', 'arg2');
+        });
+
+        it('should maintain context', () => {
+            const context = { value: 'test' };
+            let capturedContext: unknown;
+
+            const func = function (this: { value: string }) {
+                capturedContext = this;
+            };
+            const debounced = debounce(func, 100);
+
+            debounced.call(context);
+            vi.advanceTimersByTime(101);
+
+            expect(capturedContext).toBe(context);
+        });
+    });
+
+    describe('runIdle', () => {
+        it('should use requestIdleCallback if available', () => {
+            const mockRIC = vi.fn(callback => callback());
+            vi.stubGlobal('requestIdleCallback', mockRIC);
+
+            const func = vi.fn();
+            runIdle(func);
+
+            expect(mockRIC).toHaveBeenCalled();
+            expect(func).toHaveBeenCalled();
+
+            vi.unstubAllGlobals();
+        });
+
+        it('should fallback to setTimeout if requestIdleCallback is not available', () => {
+            vi.stubGlobal('requestIdleCallback', undefined);
+
+            const func = vi.fn();
+            runIdle(func);
+
+            expect(func).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1);
+            expect(func).toHaveBeenCalled();
+
+            vi.unstubAllGlobals();
+        });
+
+        it('falls back to setTimeout when window is undefined', () => {
+            const savedWindow = global.window;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (global as any).window = undefined;
+            const func = vi.fn();
+            runIdle(func);
+            vi.advanceTimersByTime(1);
+            expect(func).toHaveBeenCalled();
+            global.window = savedWindow;
+        });
+    });
+
+    describe('FlixMonkeyError', () => {
+        it('should store all constructor params', () => {
+            const err = new FlixMonkeyError('HTTP 401', 'https://api.example.com/foo', 401, 'Unauthorized');
+            expect(err).toBeInstanceOf(Error);
+            expect(err.name).toBe('FlixMonkeyError');
+            expect(err.message).toBe('HTTP 401');
+            expect(err.url).toBe('https://api.example.com/foo');
+            expect(err.status).toBe(401);
+            expect(err.body).toBe('Unauthorized');
+        });
+
+        it('should default optional params to null', () => {
+            const err = new FlixMonkeyError('test error');
+            expect(err.url).toBeNull();
+            expect(err.status).toBeNull();
+            expect(err.body).toBeNull();
+        });
+    });
+});

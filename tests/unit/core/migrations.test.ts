@@ -1,0 +1,524 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Fran
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { DATA_VERSION_KEY, getMigrationByVersion, runMigrations } from '../../../src/core/migrations';
+import type { StorageMigration } from '../../../src/types/migrations';
+import { buildMockAdapter } from '../../mocks/adapter';
+
+const migration1 = getMigrationByVersion(1);
+
+describe('runMigrations', () => {
+    const logger = {
+        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
+        error: vi.fn((_message: string, _error: unknown) => {}),
+    };
+
+    it.each([null, 'bad', '-1', -1])('treats %j as version zero', async _stored => {
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(_stored).build();
+        const upgrade = vi.fn().mockResolvedValue({ migrated: 2, skipped: 0, deleted: 1 });
+
+        await runMigrations(adapter, logger, [{ version: 1, description: 'Test migration', upgrade }]);
+
+        expect(upgrade).toHaveBeenCalledWith(adapter);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Migration 1 (Test migration) completed'), {
+            migrated: 2,
+            skipped: 0,
+            deleted: 1,
+        });
+    });
+
+    it('runs only newer migrations in ascending order', async () => {
+        const calls: number[] = [];
+        const migrations = [
+            {
+                version: 1,
+                description: 'First',
+                upgrade: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 0 }),
+            },
+            {
+                version: 2,
+                description: 'Second',
+                upgrade: vi.fn(async () => {
+                    calls.push(2);
+                    return { migrated: 0, skipped: 0, deleted: 0 };
+                }),
+            },
+            {
+                version: 3,
+                description: 'Third',
+                upgrade: vi.fn(async () => {
+                    calls.push(3);
+                    return { migrated: 0, skipped: 0, deleted: 0 };
+                }),
+            },
+        ];
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('1').build();
+
+        await runMigrations(adapter, logger, migrations);
+
+        expect(calls).toEqual([2, 3]);
+        expect(migrations[0].upgrade).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenNthCalledWith(1, DATA_VERSION_KEY, '2');
+        expect(adapter.storageSet).toHaveBeenNthCalledWith(2, DATA_VERSION_KEY, '3');
+    });
+
+    it('runs recovery, logs it, and advances after upgrade failure', async () => {
+        const error = new Error('bad cache entry');
+        const onFailure = vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 4 });
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('0').build();
+
+        await runMigrations(adapter, logger, [
+            { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(error), onFailure },
+        ]);
+
+        expect(onFailure).toHaveBeenCalledWith(adapter, error);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('Migration 1 (Test migration) failed'),
+            error
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+            expect.stringContaining('Migration 1 (Test migration) recovery completed'),
+            {
+                migrated: 0,
+                skipped: 0,
+                deleted: 4,
+            }
+        );
+    });
+
+    it('does not write when all migrations are current', async () => {
+        const adapter = buildMockAdapter().withStorageGetResolvingTo('2').build();
+        await runMigrations(adapter, logger, [
+            { version: 1, description: 'First', upgrade: vi.fn() },
+            { version: 2, description: 'Second', upgrade: vi.fn() },
+        ]);
+        expect(adapter.storageSet).not.toHaveBeenCalled();
+    });
+
+    it('advances without recovery when onFailure is absent', async () => {
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
+        await runMigrations(adapter, logger, [
+            { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(new Error('bad')) },
+        ]);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+    });
+
+    it('logs recovery failure and continues to later migrations', async () => {
+        const recoveryError = new Error('recovery bad');
+        const calls: number[] = [];
+        const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
+        await runMigrations(adapter, logger, [
+            {
+                version: 1,
+                description: 'Test migration',
+                upgrade: vi.fn().mockRejectedValue(new Error('upgrade bad')),
+                onFailure: vi.fn().mockRejectedValue(recoveryError),
+            },
+            {
+                version: 2,
+                description: 'Second migration',
+                upgrade: vi.fn(async () => {
+                    calls.push(2);
+                    return { migrated: 0, skipped: 0, deleted: 0 };
+                }),
+            },
+        ]);
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('Migration 1 (Test migration) recovery failed'),
+            recoveryError
+        );
+        expect(calls).toEqual([2]);
+        expect(adapter.storageSet).toHaveBeenNthCalledWith(2, DATA_VERSION_KEY, '2');
+    });
+
+    it.each([
+        [
+            'duplicate versions',
+            [
+                { version: 1, description: 'First', upgrade: vi.fn() },
+                { version: 1, description: 'Second', upgrade: vi.fn() },
+            ],
+        ],
+        [
+            'unordered versions',
+            [
+                { version: 2, description: 'Second', upgrade: vi.fn() },
+                { version: 1, description: 'First', upgrade: vi.fn() },
+            ],
+        ],
+        ['zero version', [{ version: 0, description: 'Bad', upgrade: vi.fn() }]],
+        [
+            'non-integer version',
+            [
+                {
+                    version: 1.5,
+                    description: 'Bad',
+                    upgrade: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 0 }),
+                },
+            ],
+        ],
+        ['missing upgrade', [{ version: 1, description: 'Bad', upgrade: undefined as unknown }]],
+        [
+            'non-function onFailure',
+            [
+                {
+                    version: 1,
+                    description: 'Bad',
+                    upgrade: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 0 }),
+                    onFailure: true as unknown,
+                },
+            ],
+        ],
+        [
+            'missing description',
+            [
+                {
+                    version: 1,
+                    description: '' as unknown,
+                    upgrade: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 0 }),
+                },
+            ],
+        ],
+        [
+            'empty description',
+            [
+                {
+                    version: 1,
+                    description: '',
+                    upgrade: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 0 }),
+                },
+            ],
+        ],
+    ])('rejects %s registries', async (_name, migrations) => {
+        await expect(
+            runMigrations(buildMockAdapter().build(), logger, migrations as unknown as StorageMigration[])
+        ).rejects.toThrow();
+    });
+});
+
+describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
+    const logger = {
+        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
+        error: vi.fn((_message: string, _error: unknown) => {}),
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it.each([
+        [
+            'string rating',
+            {
+                inputData: { displayTitle: 'Test', rating: '8.5', rtRating: 90 },
+                expectedData: { displayTitle: 'Test', rtRating: 90, imdbRating: '8.5' },
+            },
+        ],
+        [
+            'numeric rating',
+            {
+                inputData: { displayTitle: 'Test', rating: 9.1 },
+                expectedData: { displayTitle: 'Test', imdbRating: 9.1 },
+            },
+        ],
+        [
+            'null rating',
+            {
+                inputData: { displayTitle: 'Test', rating: null },
+                expectedData: { displayTitle: 'Test', imdbRating: null },
+            },
+        ],
+        [
+            'both rating and imdbRating',
+            {
+                inputData: { displayTitle: 'Test', rating: null, imdbRating: 7.2 },
+                expectedData: { displayTitle: 'Test', imdbRating: 7.2 },
+            },
+        ],
+    ])('migrates entries with rating field: %s', async (_desc, { inputData, expectedData }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data: inputData, expires }) };
+        const expected = { [key]: JSON.stringify({ data: expectedData, expires }) };
+        const result = { migrated: 1, skipped: 0, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration1!]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1!.version} (${migration1!.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['preserves imdbRating field', { data: { imdbRating: 8.5 } }],
+        ['skips entries without rating', { data: { displayTitle: 'Test' } }],
+    ])('skips valid entries without rating: %s', async (_desc, { data }) => {
+        const key = 'fmc:test';
+        const expires = 12345;
+        const entries = { [key]: JSON.stringify({ data, expires }) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration1!]);
+
+        expect(adapter.storageDelete).not.toHaveBeenCalled();
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1!.version} (${migration1!.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes entries without data', { value: { expires: 12345 } }],
+        ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const deletedKeys = [key];
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration1!]);
+
+        for (const k of deletedKeys) {
+            expect(adapter.storageDelete).toHaveBeenCalledWith(k);
+        }
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration1!.version} (${migration1!.description}) completed`,
+            result
+        );
+    });
+
+    it('clears cache on failure via onFailure handler', async () => {
+        const entries = {
+            'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
+            'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
+        };
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (key: string) =>
+            key === DATA_VERSION_KEY ? null : entries[key as keyof typeof entries]
+        );
+
+        const failingMigration1 = {
+            ...migration1!,
+            upgrade: vi.fn().mockRejectedValue(new Error('migration failed')),
+        };
+
+        await runMigrations(adapter, logger, [failingMigration1]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:second');
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration1!.version} (${migration1!.description}) failed`),
+            expect.any(Error)
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration1!.version} (${migration1!.description}) recovery completed`),
+            { migrated: 0, skipped: 0, deleted: 2 }
+        );
+    });
+});
+
+const migration2 = getMigrationByVersion(2);
+
+describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
+    const logger = {
+        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
+        error: vi.fn((_message: string, _error: unknown) => {}),
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it.each([
+        [
+            'entry with displayTitle and imdbId in data',
+            {
+                inputData: { displayTitle: 'Test Movie', imdbId: 'tt1234567', imdbRating: 8.5 },
+                expectedDisplayTitle: 'Test Movie',
+                expectedImdbId: 'tt1234567',
+                expectedData: { imdbId: 'tt1234567', imdbRating: 8.5 },
+            },
+        ],
+        [
+            'entry with only displayTitle in data',
+            {
+                inputData: { displayTitle: 'Another Movie' },
+                expectedDisplayTitle: 'Another Movie',
+                expectedImdbId: null,
+                expectedData: {},
+            },
+        ],
+        [
+            'entry with displayTitle and imdbId and other fields in data',
+            {
+                inputData: { displayTitle: 'Third Movie', imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
+                expectedDisplayTitle: 'Third Movie',
+                expectedImdbId: 'tt333',
+                expectedData: { imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
+            },
+        ],
+    ])(
+        'migrates old format entries: %s',
+        async (_desc, { inputData, expectedDisplayTitle, expectedImdbId, expectedData }) => {
+            const key = 'fmc:test-movie';
+            const expires = 12345;
+            const oldEntry = { data: inputData, expires };
+            const entries = { [key]: JSON.stringify(oldEntry) };
+            const expectedEntry = {
+                displayTitle: expectedDisplayTitle,
+                imdbId: expectedImdbId,
+                data: expectedData,
+                expires,
+            };
+            const expected = { [key]: JSON.stringify(expectedEntry) };
+            const result = { migrated: 1, skipped: 0, deleted: 0 };
+
+            const adapter = buildMockAdapter()
+                .withStorageGetResolvingTo(null)
+                .withStorageGetKeysResolvingTo(Object.keys(entries))
+                .build();
+            adapter.storageGet = vi.fn(async (k: string) =>
+                k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+            );
+
+            await runMigrations(adapter, logger, [migration2!]);
+
+            expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+            expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
+            expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+            expect(logger.info).toHaveBeenCalledWith(
+                `Migration ${migration2!.version} (${migration2!.description}) completed`,
+                result
+            );
+        }
+    );
+
+    it('skips entries already in new format', async () => {
+        const key = 'fmc:new-format';
+        const expires = 12345;
+        const newEntry = { displayTitle: 'New Movie', imdbId: 'tt111', data: { imdbRating: 9.0 }, expires };
+        const entries = { [key]: JSON.stringify(newEntry) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration2!]);
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2!.version} (${migration2!.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['entries without displayTitle in data', { data: { imdbId: 'tt222', imdbRating: 7.5 }, expires: 12345 }],
+        ['entries with null displayTitle in data', { data: { displayTitle: null, imdbId: 'tt999' }, expires: 12345 }],
+        ['entries with non-string displayTitle in data', { data: { displayTitle: 123 }, expires: 12345 }],
+    ])('deletes entries that cannot be migrated: %s', async (_desc, entry) => {
+        const key = 'fmc:test';
+        const entries = { [key]: JSON.stringify(entry) };
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration2!]);
+
+        expect(adapter.storageDelete).toHaveBeenCalledWith(key);
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2!.version} (${migration2!.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes entries without data', { value: { expires: 12345 } }],
+        ['deletes entries with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration2!]);
+
+        expect(adapter.storageDelete).toHaveBeenCalledWith(key);
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration2!.version} (${migration2!.description}) completed`,
+            result
+        );
+    });
+});

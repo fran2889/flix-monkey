@@ -12,4 +12,5 @@ if [ -n "$GLOBAL_HOOKS_PATH" -a -x "$GLOBAL_HOOKS_PATH/pre-commit" ]; then
 fi
 
 # Run project-specific hook
+npm run type-check
 npx lint-staged
