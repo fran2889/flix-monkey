@@ -7,6 +7,9 @@ import { GROUPS, ROW_LABELS } from '../config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
 
+/** Select option as a named tuple with value and label */
+export type SelectOption = readonly [value: string, label: string];
+
 /** Config field definition type */
 export interface ConfigField {
     readonly key: string;
@@ -15,7 +18,7 @@ export interface ConfigField {
     readonly type: 'checkbox' | 'select' | 'text' | 'action';
     readonly default: string | boolean | null;
     readonly row?: string;
-    readonly options?: ReadonlyArray<string | readonly [string, string]>;
+    readonly options?: ReadonlyArray<string | SelectOption>;
     readonly title?: string;
     readonly labelUrl?: string;
     readonly labelHidden?: boolean;

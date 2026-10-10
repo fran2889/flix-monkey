@@ -61,11 +61,11 @@ export const CONFIG_FIELDS = [
         group: 'display',
         type: 'select',
         options: [
-            ['top-left', 'Top Left'] as const,
-            ['top-right', 'Top Right'] as const,
-            ['bottom-left', 'Bottom Left'] as const,
-            ['bottom-right', 'Bottom Right'] as const,
-        ],
+            ['top-left' as const, 'Top Left' as const],
+            ['top-right' as const, 'Top Right' as const],
+            ['bottom-left' as const, 'Bottom Left' as const],
+            ['bottom-right' as const, 'Bottom Right' as const],
+        ] as const,
         default: 'top-left',
         title: 'Position of the rating badge on thumbnails',
     },
@@ -83,7 +83,11 @@ export const CONFIG_FIELDS = [
         label: 'Rating Provider',
         group: 'providers',
         type: 'select',
-        options: [['agregarr', 'Agregarr'] as const, ['omdb', 'OMDb'] as const, ['xmdb', 'XMDb'] as const],
+        options: [
+            ['agregarr' as const, 'Agregarr' as const],
+            ['omdb' as const, 'OMDb' as const],
+            ['xmdb' as const, 'XMDb' as const],
+        ],
         default: 'agregarr',
         title: 'Active rating provider. Agregarr requires no API key',
     },
@@ -238,6 +242,9 @@ export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
 export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
 
 // Type for a single config field
+/** Select option as a named tuple with value and label */
+export type SelectOption = readonly [value: string, label: string];
+
 export interface ConfigField {
     key: string;
     label: string;
@@ -251,7 +258,7 @@ export interface ConfigField {
     labelUrl?: string;
     suffix?: string;
     actionLabel?: string;
-    options?: readonly (string | readonly [string, string])[];
+    options?: readonly (string | SelectOption)[];
     validate?: (_val: string, _allValues?: Record<string, unknown>) => string | null;
 }
 
