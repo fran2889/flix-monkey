@@ -8,16 +8,16 @@ import type { Logger } from '../logger';
 
 const titleFromAttribute =
     (attribute: string) =>
-    (element: Element): string | null => {
-        const value = element.getAttribute(attribute);
-        return value ?? null;
-    };
+        (element: Element): string | null => {
+            const value = element.getAttribute(attribute);
+            return value ?? null;
+        };
 
 const containerFromClosest =
     (selector: string) =>
-    (element: Element): Element | null => {
-        return element.closest(selector);
-    };
+        (element: Element): Element | null => {
+            return element.closest(selector);
+        };
 
 const containerFromParent = (element: Element): Element | null => {
     return element.parentElement;

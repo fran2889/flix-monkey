@@ -24,7 +24,7 @@ let app: import('../../core/app.js').FlixMonkeyApp | null = null;
 function getSettingsDependencies(): {
     cacheManager: CacheManager;
     disabledClientsManager: DisabledClientsManager;
-} {
+    } {
     if (app) {
         return {
             cacheManager: app.cacheManager,

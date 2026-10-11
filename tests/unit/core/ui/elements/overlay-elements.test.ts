@@ -305,9 +305,9 @@ describe('createOverlayElement', () => {
             (_: string, rating: number, isPercentage: boolean, expectedColor: string) => {
                 const element = isPercentage
                     ? createOverlay(
-                          { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
-                          { showRtRating: true }
-                      )
+                        { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
+                        { showRtRating: true }
+                    )
                     : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
                 const valueSpans = element.querySelectorAll('.fm-value');
                 const value = isPercentage ? valueSpans[1] : valueSpans[0];
@@ -322,9 +322,9 @@ describe('createOverlayElement', () => {
         ])('uses a gradient color for %s', (_: string, rating: number, isPercentage: boolean) => {
             const element = isPercentage
                 ? createOverlay(
-                      { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
-                      { showRtRating: true }
-                  )
+                    { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
+                    { showRtRating: true }
+                )
                 : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
