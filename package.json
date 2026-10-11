@@ -13,10 +13,10 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
-        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\" \"src/**/*.html\" \"*.{json,md,yml,html}\"",
-        "lint": "eslint \"{src,tests}/**/*.{js,ts}\" \"scripts/**/*.{js,ts}\" \"*.config.js\"",
-        "lint:fix": "eslint --fix \"{src,tests}/**/*.{js,ts}\" \"scripts/**/*.{js,ts}\" \"*.config.js\"",
+        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\"",
+        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\"",
+        "lint": "eslint \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
+        "lint:fix": "eslint --fix \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "type-check": "tsc --noEmit",
         "clean": "npx rimraf dist coverage",
         "prebuild": "npm run clean",
@@ -81,10 +81,10 @@
             "prettier --write",
             "eslint --fix"
         ],
-        "src/**/*.html": [
+        "*.{json,md}": [
             "prettier --write"
         ],
-        "*.{json,md,yml,html}": [
+        "src/**/*.{html,json}": [
             "prettier --write"
         ]
     }
