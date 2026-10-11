@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 import sharp from 'sharp';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
@@ -11,7 +12,7 @@ const { displayName, homepage, version, description, author, license } = pkg;
 async function userscriptBanner() {
     const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
     const iconBase64 = iconBuffer.toString('base64');
-    const template = readFileSync('src/targets/userscript/metadata.js', 'utf8');
+    const template = readFileSync('src/targets/userscript/metadata.ts', 'utf8');
     return template
         .replace('__NAME__', displayName)
         .replaceAll('__HOMEPAGE__', homepage)
@@ -23,7 +24,7 @@ async function userscriptBanner() {
         .trimEnd();
 }
 
-const sharedPlugins = () => [resolve(), commonjs()];
+const sharedPlugins = () => [resolve(), commonjs(), typescript()];
 
 function asciiEscape() {
     return {
@@ -104,7 +105,7 @@ if (target && !VALID_TARGETS.includes(target)) {
 const configsByTarget = {
     userscript: [
         {
-            input: 'src/targets/userscript/entry.js',
+            input: 'src/targets/userscript/entry.ts',
             output: { file: 'dist/FlixMonkey.user.js', format: 'iife', banner: userscriptBanner },
             plugins: [
                 ...sharedPlugins(),
@@ -120,7 +121,7 @@ const configsByTarget = {
     ],
     firefox: [
         {
-            input: 'src/targets/extension/content.js',
+            input: 'src/targets/extension/content.ts',
             output: { file: 'dist/firefox/content.js', format: 'iife', sourcemap: true },
             plugins: [
                 ...sharedPlugins(),
@@ -130,19 +131,19 @@ const configsByTarget = {
             ],
         },
         {
-            input: 'src/targets/extension/options.js',
+            input: 'src/targets/extension/options.ts',
             output: { file: 'dist/firefox/options.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
         {
-            input: 'src/targets/firefox/background.js',
+            input: 'src/targets/firefox/background.ts',
             output: { file: 'dist/firefox/background.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
     ],
     chrome: [
         {
-            input: 'src/targets/extension/content.js',
+            input: 'src/targets/extension/content.ts',
             output: { file: 'dist/chrome/content.js', format: 'iife', sourcemap: true },
             plugins: [
                 ...sharedPlugins(),
@@ -152,12 +153,12 @@ const configsByTarget = {
             ],
         },
         {
-            input: 'src/targets/extension/options.js',
+            input: 'src/targets/extension/options.ts',
             output: { file: 'dist/chrome/options.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },
         {
-            input: 'src/targets/chrome/service-worker.js',
+            input: 'src/targets/chrome/service-worker.ts',
             output: { file: 'dist/chrome/service-worker.js', format: 'iife', sourcemap: true },
             plugins: sharedPlugins(),
         },

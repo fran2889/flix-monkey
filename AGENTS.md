@@ -12,12 +12,12 @@ This file is for AI agents. For human contributor guidelines, see [CONTRIBUTING.
 
 The project uses a **Platform Adapter** pattern to abstract differences between `GM_*` (userscript) and `browser.*` (WebExtension) APIs.
 
-- **Language**: JavaScript (ES2022), `"type": "module"` throughout
+- **Language**: TypeScript (ES2022), `"type": "module"` throughout
 - **Runtime**: Node.js >= 24
 - **Bundler**: Rollup
 - **Linter**: ESLint (flat config, `eslint.config.js`)
 - **Formatter**: Prettier
-- **Test runner**: Vitest + jsdom + MSW
+- **Test runner**: Vitest + jsdom
 - **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb Suggestions (`v3.sg.media-imdb.com`)
 
 ## Setup
@@ -92,46 +92,48 @@ Reuse this persistent profile. Do not use temporary or fresh user-data directori
 ### Test Environment
 
 - **jsdom** is the global test environment (configured in `vitest.config.js`).
-- **MSW** (`msw/node`) is used in `tests/setup.js` for HTTP mocking. The shared server instance (`server`) is exported from that file; individual test files import it to add handlers.
-- **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.js`.
+- **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.ts`.
 - **Coverage thresholds**: 90% lines and 90% functions (enforced by Vitest).
 
 ### Test Layout
 
 ```
 tests/
-  setup.js              # Global: MSW server lifecycle + jest-dom matchers
+  setup.ts              # Global: jest-dom matchers
   fixtures/             # Netflix surface snippets for UI tests, one file per service
-    netflix-surfaces.js     # Array of {name, html, expected} objects
-    hbomax-surfaces.js
-    disneyplus-surfaces.js
+    netflix-surfaces.ts     # Array of {name, html, expected} objects
+    hbomax-surfaces.ts
+    disneyplus-surfaces.ts
   helpers/
-    surface-tests.js    # Shared testSurfaceFixtures() driver for UI tests
+    surface-tests.ts    # Shared testSurfaceFixtures() driver for UI tests
   scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
-    adapter.js          # Mock PlatformAdapter
-    chrome.js           # chrome.* API stubs
-    config.js           # Mock ConfigManager
-    logger.js           # Mock Logger
-    platform.js         # Platform-level helpers
-    userscript.js       # GM_* API stubs
-    webextension.js     # browser.* API stubs
+    adapter.ts          # Mock PlatformAdapter
+    browser.ts          # browser.* API stubs
+    cache.ts            # Mock CacheManager
+    chrome.ts           # chrome.* API stubs
+    config.ts           # Mock ConfigManager
+    logger.ts           # Mock Logger
+    platform.ts         # Platform-level helpers
+    title.ts            # Mock Title
+    userscript.ts       # GM_* API stubs
+    webextension.ts     # browser.* API stubs
   unit/                 # Unit tests mirroring src/ structure
     core/               # Mirrors src/core/
     platform/
     targets/
   ui/                   # Per-service surface discovery and injection tests
-    netflix.ui.test.js
-    hbomax.ui.test.js
-    disneyplus.ui.test.js
+    netflix.ui.test.ts
+    hbomax.ui.test.ts
+    disneyplus.ui.test.ts
   integration/
-    setup.js              # Loads .env + fails if required API keys are missing
-    api-clients.test.js
+    setup.ts              # Loads .env + fails if required API keys are missing
+    api-clients.test.ts
 ```
 
-Fixtures are JavaScript modules exporting an array of `{name, html, expected}` objects, not HTML
+Fixtures are TypeScript modules exporting an array of `{name, html, expected}` objects, not HTML
 files. Each entry must represent exactly one surface so `testSurfaceFixtures()` can assert on
-`surfaces[0]` unambiguously. `tests/helpers/surface-tests.js` owns the shared assertions.
+`surfaces[0]` unambiguously. `tests/helpers/surface-tests.ts` owns the shared assertions.
 
 ### Test Taxonomy
 
@@ -163,7 +165,7 @@ APIs. They run only via `npm run test:integration` (the dedicated
 `vitest.integration.config.js`) and on the nightly `Nightly Integration`
 workflow: never in per-PR CI. They require `XMDB_API_KEY` and `OMDB_API_KEY`
 in the environment: locally via a `.env` file (loaded by
-`tests/integration/setup.js` through `dotenv`), and in CI via repository Actions
+`tests/integration/setup.ts` through `dotenv`), and in CI via repository Actions
 secrets. If either key is missing the suite **fails fast** with a clear error
 rather than skipping. Do not mock HTTP in integration tests.
 
@@ -175,38 +177,38 @@ Platform-agnostic business logic. All modules are pure ES modules.
 
 | Module                   | Responsibility                                                                          |
 | ------------------------ | --------------------------------------------------------------------------------------- |
-| `app.js`                 | Main `FlixMonkeyApp` class and `startApp` factory function                              |
-| `api-manager.js`         | Orchestrates API clients, handles provider selection and fallbacks                      |
+| `app.ts`                 | Main `FlixMonkeyApp` class and `startApp` factory function                              |
+| `api-manager.ts`         | Orchestrates API clients, handles provider selection and fallbacks                      |
 | `api/`                   | API clients: `BaseApiClient`, XMDb, OMDb, Agregarr, title-type mappers                  |
 | `cache/`                 | Async cache with per-entry TTL logic backed by the platform adapter                     |
-| `config/`                | `ConfigManager` reactive config object and `config-fields.js` settings                  |
-| `disabled-clients.js`    | Tracks failing API clients to avoid redundant requests (1-hour lockout)                 |
-| `id-override-manager.js` | User-supplied IMDb ID overrides for individual titles                                   |
-| `request-queue.js`       | Rate limiting and cross-tab synchronization via `fm_last_req` in storage                |
-| `overlay.js`             | DOM rendering of rating badges on Netflix thumbnails and banners                        |
+| `config/`                | `ConfigManager` reactive config object and `config-fields.ts` settings                  |
+| `disabled-clients.ts`    | Tracks failing API clients to avoid redundant requests (1-hour lockout)                 |
+| `id-override-manager.ts` | User-supplied IMDb ID overrides for individual titles                                   |
+| `request-queue.ts`       | Rate limiting and cross-tab synchronization via `fm_last_req` in storage                |
+| `overlay.ts`             | DOM rendering of rating badges on Netflix thumbnails and banners                        |
 | `services/`              | Streaming services: base class, Netflix, Disney+, HBO Max, registry                     |
 | `surfaces/`              | DOM discovery: `SurfaceManager` plus per-service surface definitions                    |
-| `fade-manager.js`        | Manages fade state overrides for individual titles                                      |
-| `logger.js`              | Centralized logging; honours the `debug` config flag                                    |
-| `migrations.js`          | Versioned persistent-storage migrations tracked by `fm_data_version`                    |
-| `rate-limits.js`         | Per-client rate limit intervals                                                         |
-| `utils/`                 | Shared helpers: `general-utils.js`, `color-utils.js`, `string-utils.js`, `url-utils.js` |
-| `title.js`               | Pure title data class; IMDb scores use the `imdbRating` field                           |
-| `constants.js`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum                     |
+| `fade-manager.ts`        | Manages fade state overrides for individual titles                                      |
+| `logger.ts`              | Centralized logging; honours the `debug` config flag                                    |
+| `migrations.ts`          | Versioned persistent-storage migrations tracked by `fm_data_version`                    |
+| `rate-limits.ts`         | Per-client rate limit intervals                                                         |
+| `utils/`                 | Shared helpers: `general-utils.ts`, `color-utils.ts`, `string-utils.ts`, `url-utils.ts` |
+| `title.ts`               | Pure title data class; IMDb scores use the `imdbRating` field                           |
+| `constants.ts`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum                     |
 
-Directory modules are imported through their `index.js` barrel using an explicit
-path (for example `../core/config/index.js`), never as a bare directory.
+Directory modules are imported through their `index.ts` barrel using an explicit
+path (for example `../core/config/index.ts`), never as a bare directory.
 
 **`src/core/ui/`**: Shared UI components
 
 | Module                | Responsibility                                                   |
 | --------------------- | ---------------------------------------------------------------- |
-| `modal.js`            | Accessible modal dialog component                                |
-| `settings-ui.js`      | Wires `SettingsView` to the adapter, cache, and disabled clients |
-| `settings-view.js`    | Settings panel built dynamically from `config-fields`            |
-| `overlay-elements.js` | Rating badge, fade toggle, and action element factories          |
-| `overlay-styles.js`   | CSS string builder for the rating overlay                        |
-| `styles.js`           | Shared CSS injected into the streaming-service page              |
+| `modal.ts`            | Accessible modal dialog component                                |
+| `settings-ui.ts`      | Wires `SettingsView` to the adapter, cache, and disabled clients |
+| `settings-view.ts`    | Settings panel built dynamically from `config-fields`            |
+| `overlay-elements.ts` | Rating badge, fade toggle, and action element factories          |
+| `overlay-styles.ts`   | CSS string builder for the rating overlay                        |
+| `styles.ts`           | Shared CSS injected into the streaming-service page              |
 
 ### 2. Platform (`src/platform/`)
 
@@ -214,9 +216,9 @@ Implementations of the `PlatformAdapter` abstract interface.
 
 | Module            | Responsibility                                                                                     |
 | ----------------- | -------------------------------------------------------------------------------------------------- |
-| `adapter.js`      | Abstract base class; all methods throw `FlixMonkeyError` if not overridden                         |
-| `userscript.js`   | `UserscriptAdapter`: implements all methods using `GM_*` APIs                                      |
-| `webextension.js` | `WebExtensionAdapter`: implements all methods using `browser.*` APIs (via `webextension-polyfill`) |
+| `adapter.ts`      | Abstract base class; all methods throw `FlixMonkeyError` if not overridden                         |
+| `userscript.ts`   | `UserscriptAdapter`: implements all methods using `GM_*` APIs                                      |
+| `webextension.ts` | `WebExtensionAdapter`: implements all methods using `browser.*` APIs (via `webextension-polyfill`) |
 
 ### 3. Targets (`src/targets/`)
 
@@ -226,26 +228,26 @@ Entry points and platform-specific files.
 
 | File             | Role                                                                                   |
 | ---------------- | -------------------------------------------------------------------------------------- |
-| `content.js`     | Content script entry point; bootstraps the app                                         |
-| `options.js`     | Options page entry point                                                               |
+| `content.ts`     | Content script entry point; bootstraps the app                                         |
+| `options.ts`     | Options page entry point                                                               |
 | `options.html`   | Options page HTML (copied verbatim to `dist/<target>/`)                                |
-| `fetch-proxy.js` | Background fetch handler shared by both Firefox and Chrome                             |
-| `domains.js`     | Domain allowlist (`ALLOWED_DOMAINS`) and `validateDomain()` used by background scripts |
+| `fetch-proxy.ts` | Background fetch handler shared by both Firefox and Chrome                             |
+| `domains.ts`     | Domain allowlist (`ALLOWED_DOMAINS`) and `validateDomain()` used by background scripts |
 
 **`src/targets/firefox/`**:
 
 - `manifest.json`: Firefox MV3 manifest (uses `"background": { "scripts": [...] }`)
-- `background.js`: Background page that imports `fetch-proxy.js`
+- `background.ts`: Background page that imports `fetch-proxy.ts`
 
 **`src/targets/chrome/`**:
 
 - `manifest.json`: Chrome MV3 manifest (uses `"background": { "service_worker": ... }`)
-- `service-worker.js`: Service worker that imports `fetch-proxy.js`
+- `service-worker.ts`: Service worker that imports `fetch-proxy.ts`
 
 **`src/targets/userscript/`**:
 
-- `entry.js`: Userscript entry; wires GM_config and starts the app
-- `metadata.js`: Userscript metadata banner template with placeholders
+- `entry.ts`: Userscript entry; wires GM_config and starts the app
+- `metadata.ts`: Userscript metadata banner template with placeholders
 
 ## Platform Adapter Interface
 
@@ -269,7 +271,7 @@ class PlatformAdapter {
 }
 ```
 
-## Storage Migrations (`migrations.js`)
+## Storage Migrations (`migrations.ts`)
 
 `MIGRATIONS` contains persistent-storage upgrades in strictly increasing
 integer version order. `runMigrations()` compares this registry with the
@@ -282,7 +284,7 @@ When changing a persisted shape, append a new migration version and add unit
 tests for transformed, already-current, and malformed data. Do not edit or
 reuse a released migration version.
 
-## Settings (`config/config-fields.js`)
+## Settings (`config/config-fields.ts`)
 
 `CONFIG_FIELDS` is the single source of truth for all user-configurable settings. Each entry defines `key`, `label`, `type` (`text`, `checkbox`, `select`), `default`, `title`, and optionally a `validate` function. `CONFIG_DEFAULTS` is a derived object of `{ key: default }` pairs.
 
@@ -302,7 +304,7 @@ reuse a released migration version.
 | `enableFadeToggle`      | checkbox | `false`    | Show fade override button in hover preview                     |
 | `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
 
-## Constants (`constants.js`)
+## Constants (`constants.ts`)
 
 | Export                     | Value / Type  | Notes                                              |
 | -------------------------- | ------------- | -------------------------------------------------- |
@@ -318,7 +320,7 @@ reuse a released migration version.
 | `ApiSource`                | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
 | `TitleType`                | frozen object | `{ MOVIE, SERIES }`: title type enum               |
 
-## Rate Limits (`rate-limits.js`)
+## Rate Limits (`rate-limits.ts`)
 
 | Export        | Value / Type | Notes                                                                |
 | ------------- | ------------ | -------------------------------------------------------------------- |
@@ -331,7 +333,7 @@ reuse a released migration version.
 - **Private fields**: Use `#field` syntax for class-private state.
 - **Naming**: PascalCase for classes, camelCase for methods/variables.
 - **Explicit file paths**: every relative import names a file. Directory modules go through their
-  `index.js` barrel with an explicit path (for example `../core/config/index.js`), never as a bare
+  `index.ts` barrel with an explicit path (for example `../core/config/index.ts`), never as a bare
   directory (`../core/config`).
 
 ### JSDoc
@@ -344,7 +346,7 @@ constrained values, and serialization formats.
 
 Document shared contracts at their defining interface or exported boundary.
 Implementations document only meaningful deviations. Use named `@typedef`s for
-reused shapes, `unknown` for untrusted input, and `import('./path.js').Type`
+reused shapes, `unknown` for untrusted input, and `import('./path.ts').Type`
 for cross-module types. Explain only constraints, fallbacks, side effects, and
 lifecycle requirements that types do not convey.
 
@@ -453,11 +455,11 @@ npm run build && npm test
 
 ## Common Gotchas
 
-- **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.js` / `service-worker.js`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.js` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
+- **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.ts` / `service-worker.ts`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
+- **Domain allowlist**: `domains.ts` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
-- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.js`.
+- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.ts`.
 - **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
-- **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.js` for application logging, not raw `console` calls in `src/`.
+- **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.ts` for application logging, not raw `console` calls in `src/`.
 - **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract: it throws if not implemented. Every adapter must implement it.
 - **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment: a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.

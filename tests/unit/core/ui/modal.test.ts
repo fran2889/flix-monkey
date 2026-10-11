@@ -1,0 +1,90 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Fran
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { Modal } from '../../../../src/core/ui/modal';
+
+describe('Modal', () => {
+    beforeEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    it('should correctly render the modal and its sub-elements', () => {
+        const modal = new Modal('Test Modal');
+        modal.open();
+
+        expect(document.querySelector('.fm-modal-overlay')).not.toBeNull();
+        expect(document.querySelector('.fm-modal-content')).not.toBeNull();
+        expect(document.querySelector('.fm-modal-header')).not.toBeNull();
+        expect(document.querySelector('.fm-modal-title')).not.toBeNull();
+        expect(document.querySelector('.fm-modal-title')?.textContent).toBe('Test Modal');
+        expect(document.querySelector('.fm-modal-close')).not.toBeNull();
+        expect(document.querySelector('.fm-modal-body')).not.toBeNull();
+    });
+
+    it('should return the correct content container', () => {
+        const modal = new Modal('Test Modal');
+        const container = modal.getContentContainer();
+        expect(container.className).toBe('fm-modal-body');
+    });
+
+    it('should show the modal when open() is called', () => {
+        const modal = new Modal('Test Modal');
+        modal.open();
+        expect((document.querySelector('.fm-modal-overlay') as HTMLElement)?.style.display).toBe('flex');
+    });
+
+    it('should remove the modal from DOM when the close button is used', () => {
+        const modal = new Modal('Test Modal');
+        modal.open();
+        (document.querySelector('.fm-modal-close') as HTMLElement)?.click();
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should have role="dialog" and aria-modal on the content element', () => {
+        const modal = new Modal('A11y Modal');
+        modal.open();
+        const content = document.querySelector('.fm-modal-content') as HTMLElement;
+        expect(content?.getAttribute('role')).toBe('dialog');
+        expect(content?.getAttribute('aria-modal')).toBe('true');
+        const labelledBy = content?.getAttribute('aria-labelledby');
+        expect(labelledBy).toBeTruthy();
+        const titleEl = document.getElementById(labelledBy ?? '');
+        expect(titleEl).not.toBeNull();
+        expect(titleEl?.textContent).toBe('A11y Modal');
+    });
+
+    it('should close when Escape is pressed', () => {
+        const modal = new Modal('Escape Modal');
+        modal.open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should not register duplicate Escape listeners when opened twice', () => {
+        const modal = new Modal('Double Open');
+        modal.open();
+        modal.open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should not be in the DOM before open() is called', () => {
+        new Modal('Pre-open Modal');
+        expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should return focus to the trigger element after close', () => {
+        const trigger = document.createElement('button');
+        document.body.appendChild(trigger);
+        trigger.focus();
+
+        const modal = new Modal('Focus Modal');
+        modal.open();
+        (document.querySelector('.fm-modal-close') as HTMLElement)?.click();
+
+        expect(document.activeElement).toBe(trigger);
+    });
+});

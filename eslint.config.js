@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import typescriptPlugin from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -10,7 +12,6 @@ const commonRules = {
     'no-var': 'error',
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     complexity: ['error', 16],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
@@ -18,6 +19,24 @@ const commonRules = {
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
+};
+
+const typescriptRules = {
+    ...commonRules,
+    // TypeScript-specific strict rules
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'error',
+    '@typescript-eslint/explicit-module-boundary-types': 'off', // Too many false positives for internal modules
+    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+    '@typescript-eslint/prefer-nullish-coalescing': 'error',
+    '@typescript-eslint/prefer-optional-chain': 'error',
+    '@typescript-eslint/prefer-readonly': 'warn', // Start with warn to ease migration
+    '@typescript-eslint/return-await': 'error',
+    '@typescript-eslint/promise-function-async': 'error',
+    '@typescript-eslint/prefer-string-starts-ends-with': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-unused-vars': 'off',
 };
 
 const userscriptGlobals = {
@@ -32,7 +51,7 @@ const userscriptGlobals = {
 
 export default [
     js.configs.recommended,
-    // 1. Base configuration and rules for all JS files
+    // 1. Base configuration for JS files
     {
         files: ['**/*.{js,cjs}'],
         languageOptions: {
@@ -45,16 +64,45 @@ export default [
         },
         rules: commonRules,
     },
-    // 2. Production code must document intentional no-op functions.
+    // 2. TypeScript files - strict TypeScript rules
     {
-        files: ['src/**/*.js', 'scripts/**/*.js'],
+        files: ['**/*.ts'],
+        languageOptions: {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+            parser: typescriptParser,
+            parserOptions: {
+                project: true,
+            },
+        },
+        plugins: {
+            '@typescript-eslint': typescriptPlugin,
+            'simple-import-sort': simpleImportSort,
+            'unused-imports': eslintPluginUnusedImports,
+        },
+        rules: typescriptRules,
+    },
+    // 2.5. Relax some rules in test files (non-null-assertion for mocks, type assertions, promise-returning)
+    {
+        files: ['tests/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-non-null-assertion': 'off',
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+            '@typescript-eslint/promise-function-async': 'off',
+            '@typescript-eslint/prefer-readonly': 'off',
+        },
+    },
+    // 3. Production code must document intentional no-op functions.
+    {
+        files: ['src/**/*.{js,ts}', 'scripts/**/*.js'],
         rules: {
             'no-empty-function': 'error',
         },
     },
-    // 3. Browser & WebExtension globals (src, tests)
+    // 4. Browser & WebExtension globals (src, tests)
     {
-        files: ['src/**/*.js', 'tests/**/*.{js,cjs}'],
+        files: ['src/**/*.{js,ts}', 'tests/**/*.{js,cjs,ts}'],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -64,27 +112,27 @@ export default [
             },
         },
     },
-    // 4. Vitest globals (tests)
+    // 5. Vitest globals (tests)
     {
-        files: ['tests/**/*.{js,cjs}'],
+        files: ['tests/**/*.{js,cjs,ts}'],
         languageOptions: {
             globals: {
                 ...globals.vitest,
             },
         },
     },
-    // 5. Node.js globals (scripts, configs, tests)
+    // 6. Node.js globals (scripts, configs, tests)
     {
-        files: ['scripts/**/*.js', '*.config.js', '*.config.cjs', 'tests/**/*.{js,cjs}'],
+        files: ['scripts/**/*.{js,ts}', '*.config.js', '*.config.cjs', '*.config.ts', 'tests/**/*.{js,cjs,ts}'],
         languageOptions: {
             globals: {
                 ...globals.node,
             },
         },
     },
-    // 6. JSDoc validation for exported functions
+    // 7. JSDoc validation for exported functions
     {
-        files: ['src/**/*.js'],
+        files: ['src/**/*.{js,ts}'],
         plugins: { jsdoc },
         rules: {
             'jsdoc/require-jsdoc': [
@@ -105,12 +153,12 @@ export default [
             'jsdoc/no-undefined-types': 'error',
         },
     },
-    // 7. License header enforcement - src and tests only (isolated block)
-    // metadata.js is a comment-only template file (no AST tokens). The plugin
+    // 8. License header enforcement - src and tests only (isolated block)
+    // metadata.ts is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
-        files: ['{src,tests}/**/*.{js,cjs}'],
-        ignores: ['src/targets/userscript/metadata.js'],
+        files: ['{src,tests}/**/*.{js,cjs,ts}'],
+        ignores: ['src/targets/userscript/metadata.ts'],
         plugins: { headers },
         rules: {
             'headers/header-format': [
