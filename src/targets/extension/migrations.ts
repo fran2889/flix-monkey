@@ -14,6 +14,7 @@ import { WebExtensionAdapter } from '../../platform/webextension';
 export function createExtensionMigrationExecutor(): () => Promise<void> {
     let migrationPromise: Promise<void> | null = null;
 
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
     return () => {
         if (!migrationPromise) {
             const adapter = new WebExtensionAdapter();
