@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+# Discover global hooks path from git config
+GLOBAL_HOOKS_PATH=$(git config --global --get core.hooksPath 2>/dev/null || echo "")
+
+# If a global hooks path is configured, try to run the global pre-push hook
+if [ -n "$GLOBAL_HOOKS_PATH" -a -x "$GLOBAL_HOOKS_PATH/pre-push" ]; then
+  "$GLOBAL_HOOKS_PATH/pre-push" "$@"
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+fi
+
+# Run project-specific hook
+npm run type-check
