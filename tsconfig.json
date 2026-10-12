@@ -17,6 +17,7 @@
         "isolatedModules": true,
         "forceConsistentCasingInFileNames": true,
         "noEmit": true,
+        "skipLibCheck": true,
         "types": ["@violentmonkey/types", "@types/webextension-polyfill"]
     },
     "include": ["src/**/*", "tests/**/*"],
