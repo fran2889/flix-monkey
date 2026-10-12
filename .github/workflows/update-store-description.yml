@@ -1,5 +1,7 @@
 name: Update Store Description
 
+description: Sync Firefox AMO description from docs
+
 on:
     workflow_dispatch:
     push:
@@ -18,7 +20,8 @@ jobs:
 
             - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
               with:
-                  node-version: '24'
+                  node-version: '24.x'
+                  cache: 'npm'
 
             - name: Update Firefox AMO description
               env:

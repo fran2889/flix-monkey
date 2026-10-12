@@ -1,10 +1,12 @@
 name: CI
 
+description: Build, lint, test all targets on push/PR
+
 on:
     push:
         branches: [main]
     pull_request:
-        branches: [main]
+        branches: ['**']
 
 permissions:
     contents: read
