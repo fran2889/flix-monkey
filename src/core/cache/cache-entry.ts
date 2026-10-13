@@ -74,7 +74,7 @@ export class CacheEntry {
         imdbId: string | null;
         data: Omit<TitleType, 'displayTitle'> | null;
         expires: number | null;
-        } {
+    } {
         return {
             displayTitle: this.#displayTitle,
             imdbId: this.#imdbId,

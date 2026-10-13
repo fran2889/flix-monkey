@@ -211,8 +211,8 @@ export default async function () {
     const userscriptBannerText =
         target === 'userscript' || !target
             ? await userscriptBanner().catch(err => {
-                throw new Error(`Failed to generate userscript banner: ${err.message}`, { cause: err });
-            })
+                  throw new Error(`Failed to generate userscript banner: ${err.message}`, { cause: err });
+              })
             : undefined;
 
     const configsByTarget = {

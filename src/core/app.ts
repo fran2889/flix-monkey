@@ -235,10 +235,10 @@ export class FlixMonkeyApp {
             showFadeToggle ? fadeOverride : null,
             showFadeToggle
                 ? (el: HTMLElement): void => {
-                    this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
-                        /* istanbul ignore next */ () => undefined
-                    );
-                }
+                      this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
+                          /* istanbul ignore next */ () => undefined
+                      );
+                  }
                 : null,
             (dt: string) => {
                 this.#handleEditClick(dt, data.imdbId);
