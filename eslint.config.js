@@ -8,7 +8,7 @@ import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 const commonRules = {
-    indent: ['error', 4],
+    indent: 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
