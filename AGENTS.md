@@ -106,7 +106,6 @@ tests/
     disneyplus-surfaces.ts
   helpers/
     surface-tests.ts    # Shared testSurfaceFixtures() driver for UI tests
-  scripts/              # Python tests for developer scripts
   mocks/                # Shared mock factories
     adapter.ts          # Mock PlatformAdapter
     browser.ts          # browser.* API stubs
