@@ -8,6 +8,7 @@ import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 const commonRules = {
+    indent: 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
@@ -95,14 +96,14 @@ export default [
     },
     // 3. Production code must document intentional no-op functions.
     {
-        files: ['src/**/*.{js,ts}', 'scripts/**/*.js'],
+        files: ['src/**/*.ts', 'scripts/**/*.js'],
         rules: {
             'no-empty-function': 'error',
         },
     },
     // 4. Browser & WebExtension globals (src, tests)
     {
-        files: ['src/**/*.{js,ts}', 'tests/**/*.{js,cjs,ts}'],
+        files: ['src/**/*.ts', 'tests/**/*.ts'],
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -114,7 +115,7 @@ export default [
     },
     // 5. Vitest globals (tests)
     {
-        files: ['tests/**/*.{js,cjs,ts}'],
+        files: ['tests/**/*.ts'],
         languageOptions: {
             globals: {
                 ...globals.vitest,
@@ -123,7 +124,7 @@ export default [
     },
     // 6. Node.js globals (scripts, configs, tests)
     {
-        files: ['scripts/**/*.{js,ts}', '*.config.js', '*.config.cjs', '*.config.ts', 'tests/**/*.{js,cjs,ts}'],
+        files: ['scripts/**/*.{js,ts}', '*.config.js', '*.config.cjs', '*.config.ts', 'tests/**/*.ts'],
         languageOptions: {
             globals: {
                 ...globals.node,
@@ -132,7 +133,7 @@ export default [
     },
     // 7. JSDoc validation for exported functions
     {
-        files: ['src/**/*.{js,ts}'],
+        files: ['src/**/*.ts'],
         plugins: { jsdoc },
         rules: {
             'jsdoc/require-jsdoc': [
@@ -157,7 +158,7 @@ export default [
     // metadata.ts is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
-        files: ['{src,tests}/**/*.{js,cjs,ts}'],
+        files: ['{src,tests}/**/*.ts'],
         ignores: ['src/targets/userscript/metadata.ts'],
         plugins: { headers },
         rules: {

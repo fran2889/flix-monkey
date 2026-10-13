@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import https from 'node:https';
 
 const DESCRIPTION_FILE = 'docs/store-description.txt';
+const JWT_EXPIRY_SECONDS = 180; // AMO API v5 requires JWT to expire within 3 minutes
 
 function logInfo(message) {
     console.log(`[INFO] ${new Date().toISOString()} ${message}`);
@@ -28,15 +29,12 @@ function getEnv(name) {
 
 function generateJWT(issuer, secret) {
     const header = { alg: 'HS256', typ: 'JWT' };
-    // AMO API v5 requires JWT to expire within 3 minutes
     const now = Math.floor(Date.now() / 1000);
     const payload = {
         iss: issuer,
         iat: now,
-        exp: now + 180, // 180 seconds = 3 minutes
+        exp: now + JWT_EXPIRY_SECONDS,
     };
-
-    logInfo(`JWT payload: ${JSON.stringify(payload)}`);
 
     const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -45,11 +43,19 @@ function generateJWT(issuer, secret) {
     const signature = crypto.createHmac('sha256', secret).update(signatureInput).digest('base64url');
 
     const jwtToken = `${signatureInput}.${signature}`;
-    logInfo('JWT generated successfully');
     return jwtToken;
 }
 
-function makeAMORequest(method, path, jwt, payload = null) {
+/**
+ * Makes an HTTP request to the AMO API.
+ * @param {'PATCH' | 'GET' | 'POST' | 'PUT' | 'DELETE'} method - The HTTP method
+ * @param {string} path - The API path (without base URL)
+ * @param {string} jwt - The JWT token for authentication
+ * @param {string | null} [payload] - The request body
+ * @returns {Promise<Record<string, unknown>>} The parsed response body
+ * @throws {Error} If the request fails
+ */
+async function makeAMORequest(method, path, jwt, payload = null) {
     const options = {
         hostname: 'addons.mozilla.org',
         path: `/api/v5${path}`,
@@ -59,10 +65,6 @@ function makeAMORequest(method, path, jwt, payload = null) {
             Authorization: `JWT ${jwt}`,
         },
     };
-
-    if (payload) {
-        options.headers['Content-Length'] = Buffer.byteLength(payload);
-    }
 
     return new Promise((resolve, reject) => {
         const req = https.request(options, res => {
@@ -75,7 +77,7 @@ function makeAMORequest(method, path, jwt, payload = null) {
                 }
 
                 if (res.statusCode >= 400) {
-                    return reject(new Error(`AMO API request failed: ${res.statusCode} ${data}`));
+                    return reject(new Error(`AMO API request failed with status ${res.statusCode}: ${data}`));
                 }
 
                 try {
@@ -85,8 +87,8 @@ function makeAMORequest(method, path, jwt, payload = null) {
                         return reject(new Error(`AMO API error: ${JSON.stringify(parsed.error || parsed.errors)}`));
                     }
                     resolve(parsed);
-                } catch (error) {
-                    logError(`Failed to parse response: ${error.message}`);
+                } catch (parseError) {
+                    logError(`Failed to parse response: ${parseError.message}`);
                     resolve({ status: res.statusCode, raw: data });
                 }
             });
@@ -101,15 +103,15 @@ function makeAMORequest(method, path, jwt, payload = null) {
 }
 
 function validateDescription(content) {
-    const maxLength = 10000; // AMO limit
-    if (content.length > maxLength) {
-        logError(`Description exceeds AMO maximum length (${maxLength}). Truncating.`);
-        return content.substring(0, maxLength);
+    const MAX_DESCRIPTION_LENGTH = 10000; // AMO limit
+    if (content.length > MAX_DESCRIPTION_LENGTH) {
+        logError(`Description exceeds AMO maximum length (${MAX_DESCRIPTION_LENGTH}). Truncating.`);
+        return content.substring(0, MAX_DESCRIPTION_LENGTH);
     }
     return content;
 }
 
-try {
+async function main() {
     logInfo(`Reading description from ${DESCRIPTION_FILE}`);
     let content;
     try {
@@ -135,7 +137,6 @@ try {
     logInfo(`Using AMO addon ID: ${addonId}`);
     logInfo('Generating JWT for AMO API...');
     const jwt = generateJWT(issuer, secret);
-    logInfo('JWT generated successfully');
 
     logInfo(`Updating Firefox AMO description for add-on ${addonId}`);
     const payload = JSON.stringify({
@@ -151,7 +152,9 @@ try {
     logInfo(JSON.stringify(result, null, 2));
 
     process.exit(0);
-} catch (error) {
+}
+
+main().catch(error => {
     logError(`Failed to update Firefox description: ${error.message}`);
     process.exit(1);
-}
+});

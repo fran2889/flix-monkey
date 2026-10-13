@@ -1,5 +1,7 @@
 name: Nightly Integration
 
+description: Run daily integration tests with live APIs
+
 on:
     schedule:
         - cron: '0 3 * * *' # 03:00 UTC daily

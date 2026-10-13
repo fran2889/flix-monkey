@@ -30,7 +30,7 @@ function verifyDistFiles(dir, target) {
     }
 }
 
-function zipDirectory(sourceDir, outPath) {
+async function zipDirectory(sourceDir, outPath) {
     return new Promise((resolve, reject) => {
         const output = fs.createWriteStream(outPath);
         const archive = new ZipArchive({ zlib: { level: 9 } });
@@ -48,13 +48,17 @@ function zipDirectory(sourceDir, outPath) {
             reject(err);
         });
 
+        archive.on('warning', err => {
+            console.warn(`Archive warning: ${err.message}`);
+        });
+
         archive.pipe(output);
         archive.directory(sourceDir, false, entry => (entry.name.endsWith('.map') ? false : entry));
         void archive.finalize();
     });
 }
 
-try {
+async function main() {
     const chromeDir = path.join('dist', 'chrome');
     const firefoxDir = path.join('dist', 'firefox');
     let packaged = false;
@@ -74,7 +78,9 @@ try {
     if (!packaged) {
         console.warn('No extension directories found to package.');
     }
-} catch (error) {
-    console.error('Packaging failed:', error);
-    process.exit(1);
 }
+
+main().catch(error => {
+    console.error('Packaging failed:', error.message || String(error));
+    process.exit(1);
+});

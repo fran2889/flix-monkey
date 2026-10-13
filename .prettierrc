@@ -3,7 +3,7 @@
   "tabWidth": 4,
   "singleQuote": true,
   "trailingComma": "es5",
+  "semi": true,
   "arrowParens": "avoid",
-  "semi": true
+  "endOfLine": "lf"
 }
-
