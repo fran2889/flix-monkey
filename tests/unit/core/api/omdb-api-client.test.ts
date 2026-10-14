@@ -9,13 +9,14 @@ import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
+import { Title, type TitleData } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -299,7 +300,7 @@ describe('OmdbApiClient', () => {
         expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
     });
 
-    it('should update apiTitle from OMDb response when fallback has null apiTitle', async () => {
+    it('should update apiTitle from OMDb response when fallback has no apiTitle', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt123',
@@ -313,5 +314,49 @@ describe('OmdbApiClient', () => {
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbId).toBe('tt123');
         expect(result!.displayTitle).toBe('Test');
+    });
+
+    it('should treat a null imdbRating in the response as no rating instead of 0', async () => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({
+                Response: 'True',
+                imdbRating: null,
+                imdbID: 'tt1',
+                Title: 'Movie 1',
+            })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbRating).toBeUndefined();
+        expect(result!.hasRating).toBe(false);
+    });
+
+    it('should fetch details for a cached title that still carries a null apiTitle', async () => {
+        const mockResponse = {
+            Response: 'True',
+            imdbID: 'tt123',
+            Title: 'Updated Title',
+            imdbRating: '8.5',
+            Type: 'movie',
+        };
+        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+        // A cache entry written before the null to undefined migration carries a literal null.
+        const legacyCachedTitle = Title.fromCacheJSON(
+            { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
+            'Test'
+        );
+        const result = await client.getDetails(legacyCachedTitle);
+
+        expect(result!.apiTitle).toBe('Updated Title');
+        expect(result!.imdbRating).toBe(8.5);
+        expect(client.queuedFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123', 1);
     });
 });

@@ -712,7 +712,7 @@ describe('App', () => {
     });
 
     describe('IMDb ID override handlers', () => {
-        let mockOverrideManager: { getImdbId: () => Promise<string | null>; setImdbId: () => Promise<void> };
+        let mockOverrideManager: { getImdbId: () => Promise<string | undefined>; setImdbId: () => Promise<void> };
         let mockCache: { delete: () => Promise<void> };
         let mockRenderer: Record<string, { mock: { calls: unknown[][] } }>;
 
@@ -780,7 +780,7 @@ describe('App', () => {
         beforeEach(() => {
             mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
             mockOverrideManager = {
-                getImdbId: vi.fn().mockResolvedValue(null),
+                getImdbId: vi.fn().mockResolvedValue(undefined),
                 setImdbId: vi.fn().mockResolvedValue(undefined),
             };
         });

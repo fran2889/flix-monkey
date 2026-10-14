@@ -96,7 +96,7 @@ export class OmdbApiClient extends BaseApiClient {
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
-        if (searchTitle.imdbId && searchTitle.apiTitle === undefined) {
+        if (searchTitle.imdbId && (searchTitle.apiTitle === undefined || searchTitle.apiTitle === null)) {
             const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
@@ -122,6 +122,8 @@ export class OmdbApiClient extends BaseApiClient {
      */
     #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | undefined): Title {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
+        // `?? undefined` collapses a literal JSON null so it never reaches Number() and becomes 0.
+        const rating = imdbRating ?? undefined;
         const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
         return new Title({
@@ -129,7 +131,7 @@ export class OmdbApiClient extends BaseApiClient {
             apiTitle: apiTitle ?? undefined,
             imdbId: imdbID ?? fallbackImdbId ?? undefined,
             year: releaseYear ? Number(releaseYear) : undefined,
-            imdbRating: imdbRating !== undefined ? Number(imdbRating) : undefined,
+            imdbRating: rating !== undefined ? Number(rating) : undefined,
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
