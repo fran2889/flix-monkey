@@ -17,9 +17,9 @@ describe('IdOverrideManager', () => {
     });
 
     describe('getImdbId', () => {
-        it('returns null when no override exists', async () => {
+        it('returns undefined when no override exists', async () => {
             const result = await manager.getImdbId('The Matrix');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
 
         it('returns stored imdbId when override exists', async () => {
@@ -40,10 +40,10 @@ describe('IdOverrideManager', () => {
             expect(mockAdapter.storageGet).toHaveBeenCalledWith('fm-idoverride:the_matrix_reloaded');
         });
 
-        it('returns null when storage returns undefined', async () => {
+        it('returns undefined when storage returns undefined', async () => {
             mockAdapter.storageGet.mockResolvedValue(undefined);
             const result = await manager.getImdbId('The Matrix');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
     });
 
@@ -67,7 +67,7 @@ describe('IdOverrideManager', () => {
         it('handles corrupt storage data gracefully', async () => {
             mockAdapter.storageGet.mockResolvedValue('not-valid-json{');
             const result = await manager.getImdbId('Corrupt Movie');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
     });
 });

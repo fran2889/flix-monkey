@@ -25,17 +25,17 @@ export class IdOverrideManager {
      * Retrieve stored ID override for a title.
      *
      * @param displayTitle - The streaming service display title
-     * @returns The IMDb ID if override exists, null otherwise
+     * @returns The IMDb ID if override exists, undefined otherwise
      */
-    async getImdbId(displayTitle: string): Promise<string | null> {
+    async getImdbId(displayTitle: string): Promise<string | undefined> {
         const key = this.#getKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (raw === null || raw === undefined) return null;
+        if (raw === null || raw === undefined) return undefined;
         try {
             const data = JSON.parse(raw as string);
-            return (data as { imdbId?: string }).imdbId ?? null;
+            return (data as { imdbId?: string }).imdbId ?? undefined;
         } catch {
-            return null;
+            return undefined;
         }
     }
 
