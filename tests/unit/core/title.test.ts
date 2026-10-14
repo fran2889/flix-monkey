@@ -33,46 +33,54 @@ describe('Title', () => {
     describe('fromCacheJSON creation', () => {
         it('should create a Title instance with properties from a cache object', () => {
             const title = Title.fromCacheJSON({ apiTitle: 'Cached Movie' }, 'JSON Title');
-            expect(title).not.toBeNull();
+            expect(title).not.toBeUndefined();
             expect(title!.displayTitle).toBe('JSON Title');
             expect(title!.apiTitle).toBe('Cached Movie');
         });
 
-        it('should return null when the cache object is null', () => {
-            expect(Title.fromCacheJSON(null, 'JSON Title')).toBeNull();
+        it('should return a Title with displayTitle when the cache object is null', () => {
+            const title = Title.fromCacheJSON(null, 'JSON Title');
+            expect(title).not.toBeUndefined();
+            expect(title.displayTitle).toBe('JSON Title');
         });
 
-        it('should return null for non-object input', () => {
-            expect(Title.fromCacheJSON(null, 'x')).toBeNull();
-            expect(Title.fromCacheJSON('string', 'x')).toBeNull();
-            expect(Title.fromCacheJSON(42, 'x')).toBeNull();
+        it('should return a Title with displayTitle for non-object input', () => {
+            const title1 = Title.fromCacheJSON(null, 'x');
+            expect(title1).not.toBeUndefined();
+            expect(title1.displayTitle).toBe('x');
+            const title2 = Title.fromCacheJSON('string', 'x');
+            expect(title2).not.toBeUndefined();
+            expect(title2.displayTitle).toBe('x');
+            const title3 = Title.fromCacheJSON(42, 'x');
+            expect(title3).not.toBeUndefined();
+            expect(title3.displayTitle).toBe('x');
         });
 
         it('should handle imdbVotes field from a cache object', () => {
             const title = Title.fromCacheJSON({ imdbVotes: 1000 }, 'Test');
-            expect(title).not.toBeNull();
+            expect(title).not.toBeUndefined();
             expect(title!.imdbVotes).toBe(1000);
         });
 
         it('should handle missing imdbVotes field from a cache object', () => {
             const title = Title.fromCacheJSON({}, 'Test');
-            expect(title).not.toBeNull();
-            expect(title!.imdbVotes).toBeNull();
+            expect(title).not.toBeUndefined();
+            expect(title!.imdbVotes).toBeUndefined();
         });
     });
 
-    it('should create notFound title with default null source', () => {
+    it('should create notFound title with default undefined source', () => {
         const title = Title.notFound('Missing Movie');
         expect(title.displayTitle).toBe('Missing Movie');
-        expect(title.imdbRating).toBeNull();
-        expect(title.source).toBeNull();
+        expect(title.imdbRating).toBeUndefined();
+        expect(title.source).toBeUndefined();
     });
 
     it('should create notFound title with provided source', () => {
         const title = Title.notFound('Missing Movie', 'omdb');
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.source).toBe('omdb');
-        expect(title.imdbRating).toBeNull();
+        expect(title.imdbRating).toBeUndefined();
     });
 
     it('should return an immutable copy with only its source changed', () => {
@@ -107,7 +115,7 @@ describe('Title', () => {
         it('should be true when mcRating is "0/100"', () => {
             expect(new Title({ mcRating: '0/100' }).hasRating).toBe(true);
         });
-        it('should be false when all ratings are null', () => {
+        it('should be false when all ratings are undefined', () => {
             expect(new Title({}).hasRating).toBe(false);
         });
     });
@@ -232,14 +240,14 @@ describe('Title', () => {
             imdbId: 'tt1234567',
             year: 2024,
             imdbRating: '8.5',
-            imdbVotes: null,
-            rtRating: null,
-            mcRating: null,
-            source: null,
-            type: null,
+            imdbVotes: undefined,
+            rtRating: undefined,
+            mcRating: undefined,
+            source: undefined,
+            type: undefined,
         };
         const title = Title.fromCacheJSON(cacheObj, 'Original Title');
-        expect(title).not.toBeNull();
+        expect(title).not.toBeUndefined();
         expect(title!.displayTitle).toBe('Original Title');
         expect(title!.apiTitle).toBe('Test Movie');
         expect(title!.imdbId).toBe('tt1234567');

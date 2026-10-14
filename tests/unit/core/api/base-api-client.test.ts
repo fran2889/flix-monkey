@@ -77,7 +77,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Unknown');
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should return Title with override ID when override exists but getDetails returns null', async () => {
@@ -97,10 +97,10 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
 
         const result = await client.fetch('Some Title');
 
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.imdbId).toBe('tt1234567');
         expect(result!.displayTitle).toBe('Some Title');
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
         expect(result!.source).toBe('xmdb');
         expect(mockOverrideManagerForTest.getImdbId).toHaveBeenCalledWith('Some Title');
     });

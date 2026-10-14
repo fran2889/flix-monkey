@@ -83,7 +83,7 @@ describe('AgregarrApiClient', () => {
             buildLogger().build(),
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
     });
 
     it('should log info when no results found', async () => {
@@ -109,7 +109,7 @@ describe('AgregarrApiClient', () => {
             buildLogger().build(),
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
     });
 
     it('should log info when IMDb Suggestions response has no d array', async () => {
@@ -138,7 +138,7 @@ describe('AgregarrApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith(
             'No supported title-type results found in IMDb Suggestions for "Unknown"'
         );
@@ -183,8 +183,8 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbId).toBe('tt1');
         expect(result!.year).toBe(2020);
         expect(result!.imdbRating).toBe(8.8);
-        expect(result!.rtRating).toBeNull();
-        expect(result!.mcRating).toBeNull();
+        expect(result!.rtRating).toBeUndefined();
+        expect(result!.mcRating).toBeUndefined();
         expect(result!.type).toBe('movie');
     });
 
@@ -207,7 +207,7 @@ describe('AgregarrApiClient', () => {
             .withType('series')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
         expect(result!.type).toBe('series');
     });
 
@@ -289,7 +289,7 @@ describe('AgregarrApiClient', () => {
             .withDisplayTitle('Test')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result!.imdbVotes).toBeNull();
+        expect(result!.imdbVotes).toBeUndefined();
     });
 
     it('should skip search when imdbId is provided', async () => {
@@ -471,7 +471,7 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(result).not.toBeNull();
+            expect(result).not.toBeUndefined();
             expect(result!.imdbId).toBe('tt1234567');
             expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
         });
@@ -530,7 +530,7 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
             expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled();
         });
 

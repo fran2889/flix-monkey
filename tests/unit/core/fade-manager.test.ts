@@ -10,10 +10,10 @@ import { buildConfig } from '../../mocks/config';
 
 describe('FadeManager', () => {
     describe('getOverride', () => {
-        it('returns null when key is absent', async () => {
+        it('returns undefined when key is absent', async () => {
             const adapter = buildMockAdapter().withStorageGetResolvingTo(null).build();
             const fm = new FadeManager(adapter, buildConfig().build());
-            expect(await fm.getOverride('tt1234567')).toBeNull();
+            expect(await fm.getOverride('tt1234567')).toBeUndefined();
             expect(adapter.storageGet).toHaveBeenCalledWith('fm-fade:tt1234567');
         });
 
@@ -27,9 +27,9 @@ describe('FadeManager', () => {
             expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBe('never');
         });
 
-        it('returns null for an unknown stored value', async () => {
+        it('returns undefined for an unknown stored value', async () => {
             const adapter = buildMockAdapter().withStorageGetResolvingTo('bad-value').build();
-            expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBeNull();
+            expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBeUndefined();
         });
     });
 

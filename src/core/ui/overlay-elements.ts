@@ -79,7 +79,7 @@ function createFadeToggle(
     label.textContent = 'Fade ';
     const icon = document.createElement('span');
     icon.className = 'fm-fade-toggle-icon';
-    icon.textContent = state === null ? '⭐' : '👁️';
+    icon.textContent = state === undefined ? '⭐' : '👁️';
     if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
     el.appendChild(icon);

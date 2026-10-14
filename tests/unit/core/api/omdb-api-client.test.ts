@@ -85,7 +85,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
-        expect(result!.year).toBeNull();
+        expect(result!.year).toBeUndefined();
     });
 
     it('should parse ratings from OMDB correctly', async () => {
@@ -184,7 +184,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Unknown');
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should extract imdbVotes from OMDB response', async () => {
@@ -223,7 +223,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Test');
-        expect(result!.imdbVotes).toBeNull();
+        expect(result!.imdbVotes).toBeUndefined();
     });
 
     it('should not throw when the Ratings array contains a null element', async () => {
@@ -251,7 +251,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Some Title');
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.mcRating).toBe(80);
     });
 
@@ -271,7 +271,7 @@ describe('OmdbApiClient', () => {
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
         const result = await client.getDetails(minimalTitle);
 
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.imdbId).toBe('tt1234567');
         expect(result!.imdbRating).toBe(8.5);
         expect(result!.apiTitle).toBe('Test Movie');

@@ -48,7 +48,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbId).toBe('m1');
         expect(result!.apiTitle).toBe('Movie 1');
         expect(result!.year).toBe(2020);
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
     });
 
     it('should return null if no search results found', async () => {
@@ -60,7 +60,7 @@ describe('XmdbApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Movie 1')).toBeNull();
+        expect(await client.search('Movie 1')).toBeUndefined();
     });
 
     it('should log info when no search results found', async () => {
@@ -88,7 +88,7 @@ describe('XmdbApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Movie 1')).toBeNull();
+        expect(await client.search('Movie 1')).toBeUndefined();
     });
 
     it('should log info when search results have no titles', async () => {
@@ -138,7 +138,7 @@ describe('XmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.getDetails(buildTitle().withImdbId('m1').withDisplayTitle('Movie 1').build());
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should map title_type to TitleType in getDetails', async () => {
@@ -203,7 +203,7 @@ describe('XmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Short 1');
-        expect(result!.type).toBeNull();
+        expect(result!.type).toBeUndefined();
     });
 
     it('should log warn when details response has error field', async () => {
@@ -243,7 +243,7 @@ describe('XmdbApiClient', () => {
         const result = await client.getDetails(
             buildTitle().withImdbId('tt0000000').withDisplayTitle('nonexistent').build()
         );
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should return unhealthy status when API key is missing', async () => {
