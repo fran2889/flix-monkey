@@ -14,6 +14,34 @@ async function clearCache(adapter: PlatformAdapter): Promise<MigrationSummary> {
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
+function isValidCacheEntry(entry: unknown): entry is Record<string, unknown> {
+    return !!entry && typeof entry === 'object' && !Array.isArray(entry);
+}
+
+function migrateEntryNullToUndefined(entry: Record<string, unknown>): boolean {
+    let needsMigration = false;
+
+    const fieldsToCheck = ['imdbId', 'expires', 'data'] as const;
+    for (const field of fieldsToCheck) {
+        if (entry[field] === null) {
+            entry[field] = undefined;
+            needsMigration = true;
+        }
+    }
+
+    const data = entry.data as Record<string, unknown> | undefined;
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+        for (const key of Object.keys(data)) {
+            if (data[key] === null) {
+                data[key] = undefined;
+                needsMigration = true;
+            }
+        }
+    }
+
+    return needsMigration;
+}
+
 const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
     {
         version: 1,
@@ -118,6 +146,53 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                     expires: entry.expires,
                 });
                 migrated += 1;
+            }
+
+            if (migrated > 0) await adapter.storageSetMany(updates);
+            return { migrated, skipped, deleted };
+        },
+        onFailure: async (adapter: PlatformAdapter): Promise<MigrationSummary> => clearCache(adapter),
+    },
+    {
+        version: 3,
+        description: 'Convert null values to undefined in cache entries',
+        upgrade: async (adapter: PlatformAdapter): Promise<MigrationSummary> => {
+            const keys = await adapter.storageGetKeys(CACHE_PREFIX);
+            const updates: Record<string, string> = {};
+            let migrated = 0;
+            let skipped = 0;
+            let deleted = 0;
+
+            for (const key of keys) {
+                const raw = await adapter.storageGet(key);
+                if (typeof raw !== 'string') {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+
+                let entry: Record<string, unknown>;
+                try {
+                    entry = JSON.parse(raw);
+                } catch {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+
+                if (!isValidCacheEntry(entry)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+
+                const needsMigration = migrateEntryNullToUndefined(entry);
+                if (needsMigration) {
+                    updates[key] = JSON.stringify(entry);
+                    migrated += 1;
+                } else {
+                    skipped += 1;
+                }
             }
 
             if (migrated > 0) await adapter.storageSetMany(updates);

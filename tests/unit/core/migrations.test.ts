@@ -522,3 +522,239 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         );
     });
 });
+
+const migration3 = getMigrationByVersion(3);
+
+describe(`migration ${migration3!.version}: ${migration3!.description}`, () => {
+    const logger = {
+        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
+        error: vi.fn((_message: string, _error: unknown) => {}),
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it.each([
+        [
+            'entry with null imdbId',
+            { imdbId: null, data: { imdbRating: 8.5 }, expires: 12345 },
+            { imdbId: undefined, data: { imdbRating: 8.5 }, expires: 12345 },
+        ],
+        [
+            'entry with null expires',
+            { imdbId: 'tt123', data: { imdbRating: 8.5 }, expires: null },
+            { imdbId: 'tt123', data: { imdbRating: 8.5 }, expires: undefined },
+        ],
+        [
+            'entry with null data',
+            { imdbId: 'tt123', data: null, expires: 12345 },
+            { imdbId: 'tt123', data: undefined, expires: 12345 },
+        ],
+        [
+            'entry with null in nested data fields',
+            { imdbId: 'tt123', data: { imdbRating: null, year: null, imdbId: 'tt456' }, expires: 12345 },
+            { imdbId: 'tt123', data: { imdbRating: undefined, year: undefined, imdbId: 'tt456' }, expires: 12345 },
+        ],
+        [
+            'entry with multiple null values',
+            { imdbId: null, data: { imdbRating: null }, expires: null },
+            { imdbId: undefined, data: { imdbRating: undefined }, expires: undefined },
+        ],
+    ])('migrates entries with null values: %s', async (_desc, inputEntry, expectedEntry) => {
+        const key = 'fmc:test';
+        const entries = { [key]: JSON.stringify(inputEntry) };
+        const expected = { [key]: JSON.stringify(expectedEntry) };
+        const result = { migrated: 1, skipped: 0, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration3!]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration3!.version} (${migration3!.description}) completed`,
+            result
+        );
+    });
+
+    it('skips entries without null values', async () => {
+        const key = 'fmc:no-nulls';
+        const entry = { displayTitle: 'Test', imdbId: 'tt123', data: { imdbRating: 8.5 }, expires: 12345 };
+        const entries = { [key]: JSON.stringify(entry) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration3!]);
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration3!.version} (${migration3!.description}) completed`,
+            result
+        );
+    });
+
+    it('skips entries with undefined values (already migrated)', async () => {
+        const key = 'fmc:already-migrated';
+        const entry = { displayTitle: 'Test', imdbId: undefined, data: { imdbRating: undefined }, expires: undefined };
+        const entries = { [key]: JSON.stringify(entry) };
+        const result = { migrated: 0, skipped: 1, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration3!]);
+
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration3!.version} (${migration3!.description}) completed`,
+            result
+        );
+    });
+
+    it.each([
+        ['deletes non-string raw value', { value: 123 }],
+        ['deletes malformed JSON', { value: '{bad json' }],
+    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        const key = 'fmc:test';
+        const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
+        const result = { migrated: 0, skipped: 0, deleted: 1 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration3!]);
+
+        expect(adapter.storageDelete).toHaveBeenCalledWith(key);
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration3!.version} (${migration3!.description}) completed`,
+            result
+        );
+    });
+
+    it('clears cache on failure via onFailure handler', async () => {
+        const entries = {
+            'fmc:first': JSON.stringify({
+                displayTitle: 'Test',
+                imdbId: null,
+                data: { imdbRating: 8.5 },
+                expires: 12345,
+            }),
+            'fmc:second': JSON.stringify({ displayTitle: 'Test 2', imdbId: 'tt123', data: null, expires: 67890 }),
+        };
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .withStorageDeleteResolvingTo(undefined)
+            .build();
+        adapter.storageGet = vi.fn(async (key: string) =>
+            key === DATA_VERSION_KEY ? null : entries[key as keyof typeof entries]
+        );
+
+        const failingMigration3 = {
+            ...migration3!,
+            upgrade: vi.fn().mockRejectedValue(new Error('migration failed')),
+        };
+
+        await runMigrations(adapter, logger, [failingMigration3]);
+
+        expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:second');
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration3!.version} (${migration3!.description}) failed`),
+            expect.any(Error)
+        );
+        expect(logger.info).toHaveBeenCalledWith(
+            expect.stringContaining(`Migration ${migration3!.version} (${migration3!.description}) recovery completed`),
+            { migrated: 0, skipped: 0, deleted: 2 }
+        );
+    });
+
+    it('migrates entries with null in deeply nested data', async () => {
+        const key = 'fmc:nested-nulls';
+        const inputEntry = {
+            displayTitle: 'Test Movie',
+            imdbId: 'tt123',
+            data: {
+                apiTitle: null,
+                year: null,
+                imdbRating: 8.5,
+                imdbVotes: null,
+                rtRating: null,
+                mcRating: null,
+                source: null,
+                type: null,
+                imdbId: 'tt123',
+            },
+            expires: 12345,
+        };
+        const expectedEntry = {
+            displayTitle: 'Test Movie',
+            imdbId: 'tt123',
+            data: {
+                apiTitle: undefined,
+                year: undefined,
+                imdbRating: 8.5,
+                imdbVotes: undefined,
+                rtRating: undefined,
+                mcRating: undefined,
+                source: undefined,
+                type: undefined,
+                imdbId: 'tt123',
+            },
+            expires: 12345,
+        };
+        const entries = { [key]: JSON.stringify(inputEntry) };
+        const expected = { [key]: JSON.stringify(expectedEntry) };
+        const result = { migrated: 1, skipped: 0, deleted: 0 };
+
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(null)
+            .withStorageGetKeysResolvingTo(Object.keys(entries))
+            .build();
+        adapter.storageGet = vi.fn(async (k: string) =>
+            k === DATA_VERSION_KEY ? null : entries[k as keyof typeof entries]
+        );
+
+        await runMigrations(adapter, logger, [migration3!]);
+
+        expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
+        expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '3');
+        expect(logger.info).toHaveBeenCalledWith(
+            `Migration ${migration3!.version} (${migration3!.description}) completed`,
+            result
+        );
+    });
+});
