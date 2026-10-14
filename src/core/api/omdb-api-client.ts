@@ -74,7 +74,7 @@ export class OmdbApiClient extends BaseApiClient {
      * Searches for a title using OMDb API.
      *
      * @param displayTitle - The title to search for.
-     * @returns Title object or null if not found.
+     * @returns Title object or undefined if not found.
      */
     async search(displayTitle: string): Promise<Title | undefined> {
         const apiKey = this.config.get('omdbApiKey');

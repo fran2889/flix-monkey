@@ -50,7 +50,7 @@ export class AgregarrApiClient extends BaseApiClient {
      * Searches for a title using IMDb Suggestions API.
      *
      * @param displayTitle - The title to search for.
-     * @returns Title object or null if not found.
+     * @returns Title object or undefined if not found.
      */
     async search(displayTitle: string): Promise<Title | undefined> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
@@ -87,7 +87,7 @@ export class AgregarrApiClient extends BaseApiClient {
      * Fetches detailed ratings from Agregarr API using the cached IMDb ID.
      *
      * @param searchTitle - Title from search results with IMDb ID.
-     * @returns Title with ratings or null on failure.
+     * @returns Title with ratings or undefined on failure.
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;

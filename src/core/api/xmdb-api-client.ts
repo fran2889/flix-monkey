@@ -59,7 +59,7 @@ export class XmdbApiClient extends BaseApiClient {
      * Searches for a title using XMDb API.
      *
      * @param displayTitle - The title to search for.
-     * @returns Title object or null if not found.
+     * @returns Title object or undefined if not found.
      */
     async search(displayTitle: string): Promise<Title | undefined> {
         const apiKey = this.config.get('xmdbApiKey');
@@ -98,7 +98,7 @@ export class XmdbApiClient extends BaseApiClient {
      * Fetches detailed ratings and metadata from XMDb API.
      *
      * @param searchTitle - Title from search results with IMDb ID.
-     * @returns Title with ratings and metadata or null on failure.
+     * @returns Title with ratings and metadata or undefined on failure.
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;
