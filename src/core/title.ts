@@ -58,7 +58,7 @@ export class Title {
         this.displayTitle = displayTitle;
         this.apiTitle = apiTitle;
         this.imdbId = imdbId;
-        this.year = year !== undefined ? Number.parseInt(year as string, 10) : undefined;
+        this.year = year !== undefined && year !== null ? Number.parseInt(year as string, 10) : undefined;
         this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
             const num = Number.parseFloat(v as string);
             return Number.isNaN(num) ? undefined : num;
@@ -102,7 +102,7 @@ export class Title {
     }
 
     #normalizeRating(val: unknown, converter: (_v: unknown) => number | undefined): number | undefined {
-        if (val === undefined || val === '' || val === 'N/A') return undefined;
+        if (val === null || val === undefined || val === '' || val === 'N/A') return undefined;
         return converter(val);
     }
 

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { Title, type TitleData } from '../../../src/core/title';
+import { Title, type TitleData, type TitleOptions } from '../../../src/core/title';
 
 const emptyTitleData: TitleData = {
     apiTitle: undefined,
@@ -149,6 +149,21 @@ describe('Title', () => {
 
         it('parses year from open-ended range string', () => {
             expect(new Title({ year: '2020-' }).year).toBe(2020);
+        });
+
+        it('normalizes untyped null inputs to undefined', () => {
+            const title = new Title({
+                year: null,
+                imdbRating: null,
+                imdbVotes: null,
+                rtRating: null,
+                mcRating: null,
+            } as unknown as TitleOptions);
+            expect(title.year).toBeUndefined();
+            expect(title.imdbRating).toBeUndefined();
+            expect(title.imdbVotes).toBeUndefined();
+            expect(title.rtRating).toBeUndefined();
+            expect(title.mcRating).toBeUndefined();
         });
     });
 
