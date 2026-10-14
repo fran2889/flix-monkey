@@ -83,9 +83,9 @@ export class Title {
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {Omit<Title, 'displayTitle'>} Title fields without displayTitle
+     * @returns {TitleData} Title fields without displayTitle
      */
-    toCacheJSON(): Omit<Title, 'displayTitle'> {
+    toCacheJSON(): TitleData {
         const rest = { ...this };
         delete (rest as { displayTitle?: string }).displayTitle;
         return rest;
@@ -93,12 +93,11 @@ export class Title {
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
-     * @param {object} obj - Cache data object without displayTitle
+     * @param {TitleData} obj - Cache data object without displayTitle
      * @param {string} displayTitle - Display title from cache entry
      * @returns {Title} New Title instance
      */
-    static fromCacheJSON(obj: unknown, displayTitle: string): Title {
-        if (!obj || typeof obj !== 'object') return new Title({ displayTitle });
+    static fromCacheJSON(obj: TitleData, displayTitle: string): Title {
         return new Title({ ...obj, displayTitle });
     }
 
@@ -143,3 +142,12 @@ export class Title {
         return new Title({ displayTitle, source });
     }
 }
+
+/**
+ * Plain data shape for a serialized Title: the normalized field values
+ * without displayTitle (stored separately at the cache entry level).
+ */
+export type TitleData = Pick<
+    Title,
+    'apiTitle' | 'imdbId' | 'year' | 'imdbRating' | 'imdbVotes' | 'rtRating' | 'mcRating' | 'source' | 'type'
+>;

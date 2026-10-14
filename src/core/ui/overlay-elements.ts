@@ -103,13 +103,11 @@ function calculateRatingColor(rating: number, isPercentage: boolean): string {
     return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
 }
 
-function formatImdbRating(rating: number | string | undefined): string {
-    if (typeof rating !== 'number') return String(rating);
+function formatImdbRating(rating: number): string {
     return rating.toFixed(1);
 }
 
-function formatPercentRating(rating: number | string | undefined): string {
-    if (typeof rating !== 'number') return String(rating);
+function formatPercentRating(rating: number): string {
     return `${rating}%`;
 }
 

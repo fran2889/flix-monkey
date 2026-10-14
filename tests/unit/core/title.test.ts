@@ -4,7 +4,19 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { Title } from '../../../src/core/title';
+import { Title, type TitleData } from '../../../src/core/title';
+
+const emptyTitleData: TitleData = {
+    apiTitle: undefined,
+    imdbId: undefined,
+    year: undefined,
+    imdbRating: undefined,
+    imdbVotes: undefined,
+    rtRating: undefined,
+    mcRating: undefined,
+    source: undefined,
+    type: undefined,
+};
 
 describe('Title', () => {
     describe('imdbUrl generation', () => {
@@ -32,38 +44,20 @@ describe('Title', () => {
 
     describe('fromCacheJSON creation', () => {
         it('should create a Title instance with properties from a cache object', () => {
-            const title = Title.fromCacheJSON({ apiTitle: 'Cached Movie' }, 'JSON Title');
+            const title = Title.fromCacheJSON({ ...emptyTitleData, apiTitle: 'Cached Movie' }, 'JSON Title');
             expect(title).not.toBeUndefined();
             expect(title!.displayTitle).toBe('JSON Title');
             expect(title!.apiTitle).toBe('Cached Movie');
         });
 
-        it('should return a Title with displayTitle when the cache object is null', () => {
-            const title = Title.fromCacheJSON(null, 'JSON Title');
-            expect(title).not.toBeUndefined();
-            expect(title.displayTitle).toBe('JSON Title');
-        });
-
-        it('should return a Title with displayTitle for non-object input', () => {
-            const title1 = Title.fromCacheJSON(null, 'x');
-            expect(title1).not.toBeUndefined();
-            expect(title1.displayTitle).toBe('x');
-            const title2 = Title.fromCacheJSON('string', 'x');
-            expect(title2).not.toBeUndefined();
-            expect(title2.displayTitle).toBe('x');
-            const title3 = Title.fromCacheJSON(42, 'x');
-            expect(title3).not.toBeUndefined();
-            expect(title3.displayTitle).toBe('x');
-        });
-
         it('should handle imdbVotes field from a cache object', () => {
-            const title = Title.fromCacheJSON({ imdbVotes: 1000 }, 'Test');
+            const title = Title.fromCacheJSON({ ...emptyTitleData, imdbVotes: 1000 }, 'Test');
             expect(title).not.toBeUndefined();
             expect(title!.imdbVotes).toBe(1000);
         });
 
         it('should handle missing imdbVotes field from a cache object', () => {
-            const title = Title.fromCacheJSON({}, 'Test');
+            const title = Title.fromCacheJSON(emptyTitleData, 'Test');
             expect(title).not.toBeUndefined();
             expect(title!.imdbVotes).toBeUndefined();
         });
@@ -172,7 +166,7 @@ describe('Title', () => {
         });
 
         it('should round-trip through fromCacheJSON', () => {
-            const title = Title.fromCacheJSON({ type: 'series' }, 'Test');
+            const title = Title.fromCacheJSON({ ...emptyTitleData, type: 'series' }, 'Test');
             expect(title).not.toBeUndefined();
             expect(title!.type).toBe('series');
         });
@@ -235,11 +229,11 @@ describe('Title', () => {
     });
 
     it('should reconstruct Title with displayTitle from fromCacheJSON', () => {
-        const cacheObj = {
+        const cacheObj: TitleData = {
             apiTitle: 'Test Movie',
             imdbId: 'tt1234567',
             year: 2024,
-            imdbRating: '8.5',
+            imdbRating: 8.5,
             imdbVotes: undefined,
             rtRating: undefined,
             mcRating: undefined,

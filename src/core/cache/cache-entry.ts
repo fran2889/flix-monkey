@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Title, type Title as TitleType } from '../title';
+import { Title, type TitleData } from '../title';
 
 /**
  * Cache entry encapsulating both metadata and API data.
@@ -12,19 +12,19 @@ import { Title, type Title as TitleType } from '../title';
 export class CacheEntry {
     readonly #displayTitle: string;
     readonly #imdbId: string | undefined;
-    readonly #data: Omit<TitleType, 'displayTitle'> | undefined;
+    readonly #data: TitleData | undefined;
     readonly #expires: number | undefined;
 
     /**
      * @param {string} displayTitle - Netflix display title (search key)
      * @param {string | undefined} imdbId - IMDb ID for short-circuit optimization
-     * @param {Omit<TitleType, 'displayTitle'> | undefined} data - Title data without displayTitle
+     * @param {TitleData | undefined} data - Title data without displayTitle
      * @param {number | undefined} expires - Expiry timestamp or undefined for never expires
      */
     constructor(
         displayTitle: string,
         imdbId: string | undefined,
-        data: Omit<TitleType, 'displayTitle'> | undefined,
+        data: TitleData | undefined,
         expires: number | undefined
     ) {
         this.#displayTitle = displayTitle;
@@ -46,12 +46,7 @@ export class CacheEntry {
             data: object | undefined;
             expires: number | undefined;
         };
-        return new CacheEntry(
-            obj.displayTitle,
-            obj.imdbId,
-            obj.data as Omit<TitleType, 'displayTitle'> | undefined,
-            obj.expires
-        );
+        return new CacheEntry(obj.displayTitle, obj.imdbId, obj.data as TitleData | undefined, obj.expires);
     }
 
     /**
@@ -72,7 +67,7 @@ export class CacheEntry {
     toJSON(): {
         displayTitle: string;
         imdbId: string | undefined;
-        data: Omit<TitleType, 'displayTitle'> | undefined;
+        data: TitleData | undefined;
         expires: number | undefined;
     } {
         return {

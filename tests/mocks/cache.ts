@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { CacheEntry } from '../../src/core/cache/index';
-import type { Title } from '../../src/core/title';
+import type { Title, TitleData } from '../../src/core/title';
 
 type CacheEntryBuilder = {
     withDisplayTitle(_value: string): CacheEntryBuilder;
     withImdbId(_value: string | undefined): CacheEntryBuilder;
-    withData(_value: Omit<Title, 'displayTitle'> | undefined): CacheEntryBuilder;
+    withData(_value: TitleData | undefined): CacheEntryBuilder;
     withExpiry(_value: number | undefined): CacheEntryBuilder;
     build(): CacheEntry;
 };
@@ -18,7 +18,7 @@ function buildCacheEntry(): CacheEntryBuilder {
     const props = {
         displayTitle: '',
         imdbId: undefined as string | undefined,
-        data: undefined as Omit<Title, 'displayTitle'> | undefined,
+        data: undefined as TitleData | undefined,
         expires: undefined as number | undefined,
     };
     return {
@@ -30,7 +30,7 @@ function buildCacheEntry(): CacheEntryBuilder {
             props.imdbId = _value;
             return this;
         },
-        withData(_value: Omit<Title, 'displayTitle'> | undefined): CacheEntryBuilder {
+        withData(_value: TitleData | undefined): CacheEntryBuilder {
             props.data = _value;
             return this;
         },
