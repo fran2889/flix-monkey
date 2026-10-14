@@ -164,8 +164,8 @@ function createOptionalRatingBadge(
     rating: number | undefined,
     className: string,
     showRating: boolean
-): HTMLElement | null {
-    if (!showRating || rating === undefined) return null;
+): HTMLElement | undefined {
+    if (!showRating || rating === undefined) return undefined;
     const formatted = formatPercentRating(rating);
     const badge = createRatingElement(label, formatted, className);
     badge.classList.add('fm-rating-badge');
