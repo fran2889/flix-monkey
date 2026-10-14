@@ -81,7 +81,7 @@ export class ApiClientManager {
                 body?: string | undefined;
             };
             const status = error.status;
-            const isHttpError = status !== undefined && status !== null && Number.isInteger(status) && status >= 400;
+            const isHttpError = status !== undefined && Number.isInteger(status) && status >= 400;
             if (isHttpError && status < 500) {
                 await this.#client.disable();
             }

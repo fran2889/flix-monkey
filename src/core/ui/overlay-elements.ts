@@ -145,7 +145,7 @@ function buildTooltip(
 function appendImdbRating(imdbLink: HTMLAnchorElement, title: Title): string[] {
     const { imdbRating, imdbId, imdbVotes } = title;
     const titleParts: string[] = [];
-    if (imdbRating !== null && imdbRating !== undefined) {
+    if (imdbRating !== undefined) {
         const formatted = formatImdbRating(imdbRating);
         const votesStr = formatVoteCount(imdbVotes);
         const voteText = votesStr ? ` (${votesStr} votes)` : '';
