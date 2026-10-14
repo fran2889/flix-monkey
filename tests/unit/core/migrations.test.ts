@@ -637,6 +637,8 @@ describe(`migration ${migration3!.version}: ${migration3!.description}`, () => {
     it.each([
         ['deletes non-string raw value', { value: 123 }],
         ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes array entries', { value: '[1,2]' }],
+        ['deletes null entries', { value: 'null' }],
     ])('deletes invalid entries: %s', async (_desc, { value }) => {
         const key = 'fmc:test';
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
