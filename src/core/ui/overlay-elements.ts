@@ -68,7 +68,7 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
 
 function createFadeToggle(
     state: 'auto' | 'always' | 'never' | undefined,
-    onClick: ((_el: HTMLElement) => void) | undefined
+    onClick: (_el: HTMLElement) => void
 ): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
@@ -83,12 +83,10 @@ function createFadeToggle(
     if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
     el.appendChild(icon);
-    if (onClick !== undefined) {
-        el.addEventListener('click', (e: Event) => {
-            e.stopPropagation();
-            onClick(el);
-        });
-    }
+    el.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        onClick(el);
+    });
     return el;
 }
 
