@@ -67,8 +67,8 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
 }
 
 function createFadeToggle(
-    state: 'auto' | 'always' | 'never' | null | undefined,
-    onClick: (_el: HTMLElement) => void
+    state: 'auto' | 'always' | 'never' | null,
+    onClick: ((_el: HTMLElement) => void) | null
 ): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
@@ -83,10 +83,12 @@ function createFadeToggle(
     if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
     el.appendChild(icon);
-    el.addEventListener('click', (e: Event) => {
-        e.stopPropagation();
-        onClick(el);
-    });
+    if (onClick !== null) {
+        el.addEventListener('click', (e: Event) => {
+            e.stopPropagation();
+            onClick(el);
+        });
+    }
     return el;
 }
 
@@ -111,8 +113,8 @@ function formatPercentRating(rating: number | string | null): string {
     return `${rating}%`;
 }
 
-function formatVoteCount(count: number | null | undefined): string {
-    if (count === null || count === undefined) return '';
+function formatVoteCount(count: number | null): string {
+    if (count === null) return '';
     const num = Number(count);
     if (Number.isNaN(num) || num < 0) return '';
     if (num >= 1000000) return `${Math.round(num / 1000000)}M`;
@@ -159,11 +161,11 @@ function appendImdbRating(imdbLink: HTMLAnchorElement, title: Title): string[] {
 
 function createOptionalRatingBadge(
     label: string,
-    rating: number | null | undefined,
+    rating: number | null,
     className: string,
     showRating: boolean
 ): HTMLElement | null {
-    if (!showRating || rating === null || rating === undefined) return null;
+    if (!showRating || rating === null) return null;
     const formatted = formatPercentRating(rating);
     const badge = createRatingElement(label, formatted, className);
     badge.classList.add('fm-rating-badge');
