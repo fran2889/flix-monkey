@@ -61,7 +61,7 @@ export class XmdbApiClient extends BaseApiClient {
      * @param displayTitle - The title to search for.
      * @returns Title object or null if not found.
      */
-    async search(displayTitle: string): Promise<Title | null> {
+    async search(displayTitle: string): Promise<Title | undefined> {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: String(5) });
         this.logger.debug(`Searching XMDb for title: "${displayTitle}"`);
@@ -72,25 +72,25 @@ export class XmdbApiClient extends BaseApiClient {
         const { results } = response;
         if (!results?.length) {
             this.logger.info(`No search results found in XMDb for "${displayTitle}"`);
-            return null;
+            return undefined;
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
             this.logger.info(`No title-type results found in XMDb for "${displayTitle}"`);
-            return null;
+            return undefined;
         }
         const match = titleResults[0];
         return new Title({
             displayTitle,
-            apiTitle: match.title ?? null,
-            imdbId: match.id ?? null,
-            year: match.release_year ?? match.year ?? null,
-            imdbRating: null,
-            imdbVotes: null,
-            rtRating: null,
-            mcRating: null,
-            type: null,
-            source: null,
+            apiTitle: match.title ?? undefined,
+            imdbId: match.id ?? undefined,
+            year: match.release_year ?? match.year ?? undefined,
+            imdbRating: undefined,
+            imdbVotes: undefined,
+            rtRating: undefined,
+            mcRating: undefined,
+            type: undefined,
+            source: undefined,
         });
     }
 
@@ -100,7 +100,7 @@ export class XmdbApiClient extends BaseApiClient {
      * @param searchTitle - Title from search results with IMDb ID.
      * @returns Title with ratings and metadata or null on failure.
      */
-    async getDetails(searchTitle: Title): Promise<Title | null> {
+    async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
@@ -111,9 +111,9 @@ export class XmdbApiClient extends BaseApiClient {
         )) as XmdbDetailsResponse;
         if (!detailsJson || detailsJson.error || !detailsJson.title) {
             this.logger.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: detailsJson ?? null,
+                response: detailsJson ?? undefined,
             });
-            return null;
+            return undefined;
         }
         const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
         return new Title({
@@ -121,12 +121,12 @@ export class XmdbApiClient extends BaseApiClient {
             apiTitle: title ?? searchTitle.apiTitle,
             imdbId: id,
             year: release_year ?? searchTitle.year,
-            imdbRating: rating ?? null,
-            imdbVotes: vote_count ?? null,
-            rtRating: null,
-            mcRating: metascore ?? null,
-            type: mapXmdbTitleType(title_type ?? null),
-            source: null,
+            imdbRating: rating ?? undefined,
+            imdbVotes: vote_count ?? undefined,
+            rtRating: undefined,
+            mcRating: metascore ?? undefined,
+            type: mapXmdbTitleType(title_type ?? undefined),
+            source: undefined,
         });
     }
 }

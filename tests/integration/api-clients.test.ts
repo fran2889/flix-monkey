@@ -36,8 +36,8 @@ const adapter: Partial<PlatformAdapter> = {
 const disabledManager = new DisabledClientsManager(adapter as PlatformAdapter);
 const overrideManager = new IdOverrideManager(adapter as PlatformAdapter);
 
-function assertNonNullTitle(result: Title | null): asserts result is Title {
-    expect(result).not.toBeNull();
+function assertNonNullTitle(result: Title | undefined): asserts result is Title {
+    expect(result).not.toBeUndefined();
 }
 
 function expectCommonTitleFields(
@@ -67,19 +67,19 @@ function expectCommonTitleFields(
     expectImdbRating(result.imdbRating);
 }
 
-function expectImdbRating(rating: number | null, label: string = 'IMDb rating'): void {
+function expectImdbRating(rating: number | undefined, label: string = 'IMDb rating'): void {
     expect(rating, `${label} missing`).toBeTypeOf('number');
     expect(rating, `${label} out of range`).toBeGreaterThan(0);
     expect(rating, `${label} out of range`).toBeLessThanOrEqual(10);
 }
 
-function expectPercentageRating(rating: number | null, label: string): void {
+function expectPercentageRating(rating: number | undefined, label: string): void {
     expect(rating, `${label} missing`).toBeTypeOf('number');
     expect(rating, `${label} out of range`).toBeGreaterThanOrEqual(0);
     expect(rating, `${label} out of range`).toBeLessThanOrEqual(100);
 }
 
-function _expectImdbVotes(votes: number | null, label: string = 'IMDb votes'): void {
+function _expectImdbVotes(votes: number | undefined, label: string = 'IMDb votes'): void {
     expect(votes, `${label} missing`).toBeTypeOf('number');
     expect(votes, `${label} out of range`).toBeGreaterThanOrEqual(0);
 }

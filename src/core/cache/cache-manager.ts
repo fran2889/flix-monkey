@@ -33,21 +33,21 @@ export class CacheManager {
     /**
      * Reads a cache entry by display title. Returns a CacheEntry for both
      * hits and expired entries (which may be used for short-circuit refresh).
-     * Returns null for complete cache misses or corrupt entries.
+     * Returns undefined for complete cache misses or corrupt entries.
      *
      * @param displayTitle - Streaming-service title used to derive the cache key.
-     * @returns Cache entry (including expired), or null for miss/corrupt.
+     * @returns Cache entry (including expired), or undefined for miss/corrupt.
      */
-    async read(displayTitle: string): Promise<CacheEntry | null> {
+    async read(displayTitle: string): Promise<CacheEntry | undefined> {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (!raw) return null;
+        if (!raw) return undefined;
         try {
             // Always return entry; ApiClientManager handles validation and short-circuit logic
             return CacheEntry.fromJSON(raw as string);
         } catch {
             this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
-            return null;
+            return undefined;
         }
     }
 
@@ -72,7 +72,7 @@ export class CacheManager {
             displayTitle,
             titleObj.imdbId,
             titleObj.toCacheJSON(),
-            ttl === Infinity ? null : now + ttl
+            ttl === Infinity ? undefined : now + ttl
         );
         await this.#adapter.storageSet(key, JSON.stringify(entry));
     }

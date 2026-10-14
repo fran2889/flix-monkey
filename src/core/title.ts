@@ -9,71 +9,71 @@ import { buildImdbUrl } from './utils/index';
  * String values for numeric fields are accepted and normalized to numbers.
  */
 export interface TitleOptions {
-    displayTitle?: string | null;
-    apiTitle?: string | null;
-    imdbId?: string | null;
-    year?: string | number | null;
-    imdbRating?: string | number | null;
-    imdbVotes?: string | number | null;
-    rtRating?: string | number | null;
-    mcRating?: string | number | null;
-    source?: string | null;
-    type?: string | null;
+    displayTitle?: string | undefined;
+    apiTitle?: string | undefined;
+    imdbId?: string | undefined;
+    year?: string | number | undefined;
+    imdbRating?: string | number | undefined;
+    imdbVotes?: string | number | undefined;
+    rtRating?: string | number | undefined;
+    mcRating?: string | number | undefined;
+    source?: string | undefined;
+    type?: string | undefined;
 }
 
 /**
  * Immutable data class representing a movie or show with its ratings.
  *
- * Rating values are normalised during construction: `null`, empty
- * strings, and `"N/A"` are all collapsed to `null`; numeric strings are parsed
+ * Rating values are normalised during construction: `undefined`, empty
+ * strings, and `"N/A"` are all collapsed to `undefined`; numeric strings are parsed
  * to the appropriate number type per field.
  */
 export class Title {
-    displayTitle: string | null;
-    apiTitle: string | null;
-    imdbId: string | null;
-    year: number | null;
-    imdbRating: number | null;
-    imdbVotes: number | null;
-    rtRating: number | null;
-    mcRating: number | null;
-    source: string | null;
-    type: string | null;
+    displayTitle: string | undefined;
+    apiTitle: string | undefined;
+    imdbId: string | undefined;
+    year: number | undefined;
+    imdbRating: number | undefined;
+    imdbVotes: number | undefined;
+    rtRating: number | undefined;
+    mcRating: number | undefined;
+    source: string | undefined;
+    type: string | undefined;
 
     /**
      * @param {TitleOptions} [options]
      */
     constructor({
-        displayTitle = null,
-        apiTitle = null,
-        imdbId = null,
-        year = null,
-        imdbRating = null,
-        imdbVotes = null,
-        rtRating = null,
-        mcRating = null,
-        source = null,
-        type = null,
+        displayTitle = undefined,
+        apiTitle = undefined,
+        imdbId = undefined,
+        year = undefined,
+        imdbRating = undefined,
+        imdbVotes = undefined,
+        rtRating = undefined,
+        mcRating = undefined,
+        source = undefined,
+        type = undefined,
     }: TitleOptions = {}) {
         this.displayTitle = displayTitle;
         this.apiTitle = apiTitle;
         this.imdbId = imdbId;
-        this.year = year !== null ? Number.parseInt(year as string, 10) : null;
+        this.year = year !== undefined ? Number.parseInt(year as string, 10) : undefined;
         this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
             const num = Number.parseFloat(v as string);
-            return Number.isNaN(num) ? null : num;
+            return Number.isNaN(num) ? undefined : num;
         });
         this.imdbVotes = this.#normalizeRating(imdbVotes, (v: unknown) => {
             const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? null : num;
+            return Number.isNaN(num) ? undefined : num;
         });
         this.rtRating = this.#normalizeRating(rtRating, (v: unknown) => {
             const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? null : num;
+            return Number.isNaN(num) ? undefined : num;
         });
         this.mcRating = this.#normalizeRating(mcRating, (v: unknown) => {
             const m = /^(\d+)/.exec(String(v));
-            return m ? Number.parseInt(m[1], 10) : null;
+            return m ? Number.parseInt(m[1], 10) : undefined;
         });
         this.source = source;
         this.type = type;
@@ -87,23 +87,23 @@ export class Title {
      */
     toCacheJSON(): Omit<Title, 'displayTitle'> {
         const rest = { ...this };
-        delete (rest as { displayTitle?: string | null }).displayTitle;
+        delete (rest as { displayTitle?: string }).displayTitle;
         return rest;
     }
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
      * @param {object} obj - Cache data object without displayTitle
-     * @param {string | null} displayTitle - Display title from cache entry
-     * @returns {Title | null} New Title instance or null if invalid
+     * @param {string} displayTitle - Display title from cache entry
+     * @returns {Title} New Title instance
      */
-    static fromCacheJSON(obj: unknown, displayTitle: string | null): Title | null {
-        if (!obj || typeof obj !== 'object') return null;
+    static fromCacheJSON(obj: unknown, displayTitle: string): Title {
+        if (!obj || typeof obj !== 'object') return new Title({ displayTitle });
         return new Title({ ...obj, displayTitle });
     }
 
-    #normalizeRating(val: unknown, converter: (_v: unknown) => number | null): number | null {
-        if (val === null || val === undefined || val === '' || val === 'N/A') return null;
+    #normalizeRating(val: unknown, converter: (_v: unknown) => number | undefined): number | undefined {
+        if (val === undefined || val === '' || val === 'N/A') return undefined;
         return converter(val);
     }
 
@@ -113,7 +113,7 @@ export class Title {
      * @returns {boolean}
      */
     get hasRating(): boolean {
-        return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
+        return this.imdbRating !== undefined || this.rtRating !== undefined || this.mcRating !== undefined;
     }
 
     /**
@@ -125,10 +125,10 @@ export class Title {
     }
 
     /**
-     * @param {string | null} source - API source that produced this title.
+     * @param {string} source - API source that produced this title.
      * @returns {Title} A new immutable Title with this source.
      */
-    withSource(source: string | null): Title {
+    withSource(source: string): Title {
         return new Title({ ...this, source });
     }
 
@@ -136,10 +136,10 @@ export class Title {
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
-     * @param {string | null} [source=null] - API source that produced the miss.
+     * @param {string} [source] - API source that produced the miss.
      * @returns {Title}
      */
-    static notFound(displayTitle: string, source: string | null = null): Title {
+    static notFound(displayTitle: string, source?: string): Title {
         return new Title({ displayTitle, source });
     }
 }

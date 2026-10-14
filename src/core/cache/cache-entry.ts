@@ -11,21 +11,21 @@ import { Title, type Title as TitleType } from '../title';
  */
 export class CacheEntry {
     readonly #displayTitle: string;
-    readonly #imdbId: string | null;
-    readonly #data: Omit<TitleType, 'displayTitle'> | null;
-    readonly #expires: number | null;
+    readonly #imdbId: string | undefined;
+    readonly #data: Omit<TitleType, 'displayTitle'> | undefined;
+    readonly #expires: number | undefined;
 
     /**
      * @param {string} displayTitle - Netflix display title (search key)
-     * @param {string | null} imdbId - IMDb ID for short-circuit optimization
-     * @param {Omit<TitleType, 'displayTitle'> | null} data - Title data without displayTitle
-     * @param {number | null} expires - Expiry timestamp or null for never expires
+     * @param {string | undefined} imdbId - IMDb ID for short-circuit optimization
+     * @param {Omit<TitleType, 'displayTitle'> | undefined} data - Title data without displayTitle
+     * @param {number | undefined} expires - Expiry timestamp or undefined for never expires
      */
     constructor(
         displayTitle: string,
-        imdbId: string | null,
-        data: Omit<TitleType, 'displayTitle'> | null,
-        expires: number | null
+        imdbId: string | undefined,
+        data: Omit<TitleType, 'displayTitle'> | undefined,
+        expires: number | undefined
     ) {
         this.#displayTitle = displayTitle;
         this.#imdbId = imdbId;
@@ -42,14 +42,14 @@ export class CacheEntry {
     static fromJSON(raw: string): CacheEntry {
         const obj = JSON.parse(raw) as {
             displayTitle: string;
-            imdbId: string | null;
-            data: object | null;
-            expires: number | null;
+            imdbId: string | undefined;
+            data: object | undefined;
+            expires: number | undefined;
         };
         return new CacheEntry(
             obj.displayTitle,
             obj.imdbId,
-            obj.data as Omit<TitleType, 'displayTitle'> | null,
+            obj.data as Omit<TitleType, 'displayTitle'> | undefined,
             obj.expires
         );
     }
@@ -57,10 +57,10 @@ export class CacheEntry {
     /**
      * Combines cached data with entry metadata to create a complete Title object.
      *
-     * @returns {Title|null} Hydrated Title, or null if data is missing
+     * @returns {Title|undefined} Hydrated Title, or undefined if data is missing
      */
-    getTitle(): Title | null {
-        if (!this.#data) return null;
+    getTitle(): Title | undefined {
+        if (!this.#data) return undefined;
         return Title.fromCacheJSON(this.#data, this.#displayTitle);
     }
 
@@ -71,9 +71,9 @@ export class CacheEntry {
      */
     toJSON(): {
         displayTitle: string;
-        imdbId: string | null;
-        data: Omit<TitleType, 'displayTitle'> | null;
-        expires: number | null;
+        imdbId: string | undefined;
+        data: Omit<TitleType, 'displayTitle'> | undefined;
+        expires: number | undefined;
     } {
         return {
             displayTitle: this.#displayTitle,
@@ -84,9 +84,9 @@ export class CacheEntry {
     }
 
     /**
-     * @returns {string | null} The IMDb ID for this cache entry
+     * @returns {string | undefined} The IMDb ID for this cache entry
      */
-    get imdbId(): string | null {
+    get imdbId(): string | undefined {
         return this.#imdbId;
     }
 
@@ -94,6 +94,6 @@ export class CacheEntry {
      * @returns {boolean} Whether this cache entry has expired
      */
     get isExpired(): boolean {
-        return this.#expires !== null && Date.now() > this.#expires;
+        return this.#expires !== undefined && Date.now() > this.#expires;
     }
 }

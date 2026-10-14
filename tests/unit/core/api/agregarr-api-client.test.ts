@@ -16,7 +16,7 @@ import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -312,7 +312,7 @@ describe('AgregarrApiClient', () => {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | null> {
+            async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
@@ -348,7 +348,7 @@ describe('AgregarrApiClient', () => {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | null> {
+            async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
@@ -370,7 +370,7 @@ describe('AgregarrApiClient', () => {
 
         beforeEach(() => {
             mockOverrideManagerForTests = {
-                getImdbId: vi.fn().mockResolvedValue(null),
+                getImdbId: vi.fn().mockResolvedValue(undefined),
                 setImdbId: vi.fn().mockResolvedValue(undefined),
             } as unknown as IdOverrideManager;
             mockLoggerForTests = buildLogger().build();
@@ -434,7 +434,7 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManagerForTests
             );
 
-            vi.spyOn(client, 'getDetails').mockResolvedValue(null);
+            vi.spyOn(client, 'getDetails').mockResolvedValue(undefined);
 
             const result = await client.fetch('Test Movie');
 
@@ -455,7 +455,7 @@ describe('AgregarrApiClient', () => {
                 resetAll: vi.fn().mockResolvedValue([]),
             } as unknown as DisabledClientsManager;
 
-            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue(null);
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue(undefined);
 
             const client = new AgregarrApiClient(
                 mockAdapter,
@@ -494,7 +494,7 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManagerForTests
             );
 
-            vi.spyOn(client, 'getDetails').mockResolvedValue(null);
+            vi.spyOn(client, 'getDetails').mockResolvedValue(undefined);
 
             const result = await client.fetch('Test Movie');
 

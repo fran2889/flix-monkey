@@ -7,9 +7,9 @@ import type { Title } from '../../src/core/title';
 
 type CacheEntryBuilder = {
     withDisplayTitle(_value: string): CacheEntryBuilder;
-    withImdbId(_value: string | null): CacheEntryBuilder;
-    withData(_value: Omit<Title, 'displayTitle'> | null): CacheEntryBuilder;
-    withExpiry(_value: number | null): CacheEntryBuilder;
+    withImdbId(_value: string | undefined): CacheEntryBuilder;
+    withData(_value: Omit<Title, 'displayTitle'> | undefined): CacheEntryBuilder;
+    withExpiry(_value: number | undefined): CacheEntryBuilder;
     build(): CacheEntry;
 };
 
@@ -17,24 +17,24 @@ function buildCacheEntry(): CacheEntryBuilder {
     // Default all CacheEntry fields
     const props = {
         displayTitle: '',
-        imdbId: null as string | null,
-        data: null as Omit<Title, 'displayTitle'> | null,
-        expires: null as number | null,
+        imdbId: undefined as string | undefined,
+        data: undefined as Omit<Title, 'displayTitle'> | undefined,
+        expires: undefined as number | undefined,
     };
     return {
         withDisplayTitle(_value: string): CacheEntryBuilder {
             props.displayTitle = _value;
             return this;
         },
-        withImdbId(_value: string | null): CacheEntryBuilder {
+        withImdbId(_value: string | undefined): CacheEntryBuilder {
             props.imdbId = _value;
             return this;
         },
-        withData(_value: Omit<Title, 'displayTitle'> | null): CacheEntryBuilder {
+        withData(_value: Omit<Title, 'displayTitle'> | undefined): CacheEntryBuilder {
             props.data = _value;
             return this;
         },
-        withExpiry(_value: number | null): CacheEntryBuilder {
+        withExpiry(_value: number | undefined): CacheEntryBuilder {
             props.expires = _value;
             return this;
         },
@@ -49,7 +49,7 @@ buildCacheEntry.expired = (): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Expired Movie')
         .withImdbId('tt1234567')
-        .withData(null)
+        .withData(undefined)
         .withExpiry(Date.now() - 1000)
         .build();
 };
@@ -58,8 +58,8 @@ buildCacheEntry.indefinite = (): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Indefinite Movie')
         .withImdbId('tt1234567')
-        .withData(null)
-        .withExpiry(null)
+        .withData(undefined)
+        .withExpiry(undefined)
         .build();
 };
 
@@ -68,7 +68,7 @@ buildCacheEntry.withExpiry = (ms: number): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Movie')
         .withImdbId('tt1234567')
-        .withData(null)
+        .withData(undefined)
         .withExpiry(Date.now() + ms)
         .build();
 };
@@ -76,7 +76,7 @@ buildCacheEntry.withExpiry = (ms: number): CacheEntry => {
 buildCacheEntry.fromTitle = (title: Title, expiryMs: number = 86400000): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle(title.displayTitle ?? title.apiTitle ?? '')
-        .withImdbId(title.imdbId ?? null)
+        .withImdbId(title.imdbId ?? undefined)
         .withData(title.toCacheJSON())
         .withExpiry(Date.now() + expiryMs)
         .build();

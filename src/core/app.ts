@@ -86,9 +86,9 @@ export class FlixMonkeyApp {
     /**
      * Sets or updates the IMDb ID override for a title from user input.
      * @param displayTitle - The title to set override for
-     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists. Default: null
+     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists. Default: undefined
      */
-    async #handleEditClick(displayTitle: string, imdbId: string | null = null): Promise<void> {
+    async #handleEditClick(displayTitle: string, imdbId: string | undefined = undefined): Promise<void> {
         const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
         const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride ?? imdbId ?? '');
         if (userInput === null) return;
@@ -183,7 +183,7 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
+        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : undefined;
         const request = this.#getTitleRequest(dedupKey, displayTitle);
 
         try {
@@ -232,14 +232,14 @@ export class FlixMonkeyApp {
         this.#renderer.injectOverlay(
             container as HTMLElement,
             data,
-            showFadeToggle ? fadeOverride : null,
+            showFadeToggle ? fadeOverride : undefined,
             showFadeToggle
                 ? (el: HTMLElement): void => {
                       this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
                           /* istanbul ignore next */ () => undefined
                       );
                   }
-                : null,
+                : undefined,
             (dt: string) => {
                 this.#handleEditClick(dt, data.imdbId);
             },
@@ -252,22 +252,25 @@ export class FlixMonkeyApp {
 
     async #handleFadeToggleClick(
         dedupKey: string,
-        imdbRating: string | number | null,
+        imdbRating: string | number | undefined,
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
         const currentState: import('./fade-manager').FadeOverrideState =
-            domState === 'auto' ? null : (domState as 'always' | 'never');
+            domState === 'auto' ? undefined : (domState as 'always' | 'never');
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
         toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
         const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
         if (icon) {
-            icon.textContent = nextState === null ? '⭐' : '👁️';
+            icon.textContent = nextState === undefined ? '⭐' : '👁️';
             icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
         }
-        const shouldFade = this.#fadeManager.shouldFade(nextState, typeof imdbRating === 'number' ? imdbRating : null);
+        const shouldFade = this.#fadeManager.shouldFade(
+            nextState,
+            typeof imdbRating === 'number' ? imdbRating : undefined
+        );
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c as HTMLElement, shouldFade);
         });

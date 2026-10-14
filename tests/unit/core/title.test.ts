@@ -20,9 +20,9 @@ describe('Title', () => {
                 description: 'displayTitle is provided',
             },
             {
-                props: { displayTitle: null },
+                props: { displayTitle: undefined },
                 expected: 'https://www.imdb.com/find/?q=',
-                description: 'displayTitle is null',
+                description: 'displayTitle is undefined',
             },
         ])('should generate correct URL when $description', ({ props, expected }) => {
             const title = new Title(props);
@@ -114,9 +114,9 @@ describe('Title', () => {
 
     describe('IMDb rating normalization', () => {
         it.each([
-            ['N/A', null],
-            ['', null],
-            [null, null],
+            ['N/A', undefined],
+            ['', undefined],
+            [undefined, undefined],
             ['8.5', 8.5],
             [0, 0],
         ])('normalizes imdbRating %s -> %s', (input, expected) => {
@@ -126,9 +126,9 @@ describe('Title', () => {
         it.each([
             ['90%', 90],
             ['0%', 0],
-            ['N/A', null],
-            ['', null],
-            [null, null],
+            ['N/A', undefined],
+            ['', undefined],
+            [undefined, undefined],
             ['8.5/10', 8], // parseInt stops at non-digit
         ])('normalizes rtRating %s -> %s', (input, expected) => {
             expect(new Title({ rtRating: input }).rtRating).toBe(expected);
@@ -137,10 +137,10 @@ describe('Title', () => {
         it.each([
             ['85/100', 85],
             ['0/100', 0],
-            ['N/A', null],
-            ['', null],
-            [null, null],
-            ['abc', null],
+            ['N/A', undefined],
+            ['', undefined],
+            [undefined, undefined],
+            ['abc', undefined],
         ])('normalizes mcRating %s -> %s', (input, expected) => {
             expect(new Title({ mcRating: input }).mcRating).toBe(expected);
         });
@@ -151,34 +151,34 @@ describe('Title', () => {
     });
 
     describe('type field', () => {
-        it('should default to null', () => {
-            expect(new Title({}).type).toBeNull();
+        it('should default to undefined', () => {
+            expect(new Title({}).type).toBeUndefined();
         });
 
         it('should accept a type value', () => {
             expect(new Title({ type: 'movie' }).type).toBe('movie');
         });
 
-        it('should normalize null to null', () => {
-            expect(new Title({ type: null }).type).toBeNull();
+        it('should normalize undefined to undefined', () => {
+            expect(new Title({ type: undefined }).type).toBeUndefined();
         });
 
         it('should round-trip through fromCacheJSON', () => {
             const title = Title.fromCacheJSON({ type: 'series' }, 'Test');
-            expect(title).not.toBeNull();
+            expect(title).not.toBeUndefined();
             expect(title!.type).toBe('series');
         });
 
-        it('should be null on notFound titles', () => {
-            expect(Title.notFound('Missing').type).toBeNull();
+        it('should be undefined on notFound titles', () => {
+            expect(Title.notFound('Missing').type).toBeUndefined();
         });
     });
 
     describe('imdbVotes normalization', () => {
         it.each([
-            [null, null],
-            ['', null],
-            ['N/A', null],
+            [undefined, undefined],
+            ['', undefined],
+            ['N/A', undefined],
             [0, 0],
             [1, 1],
             [999, 999],
@@ -186,7 +186,7 @@ describe('Title', () => {
             [2500000, 2500000],
             ['2500000', 2500000],
             ['2,500,000', 2], // parseInt stops at comma, returns 2
-            ['not a number', null],
+            ['not a number', undefined],
         ])('normalizes imdbVotes %s -> %s', (input, expected) => {
             expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
         });

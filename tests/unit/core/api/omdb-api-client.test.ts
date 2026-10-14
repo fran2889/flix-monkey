@@ -308,7 +308,7 @@ describe('OmdbApiClient', () => {
         };
         const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
-        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(null).build();
+        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(undefined).build();
         const result = await client.getDetails(minimalTitle);
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbId).toBe('tt123');

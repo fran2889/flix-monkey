@@ -5,68 +5,68 @@
 import { Title } from '../../src/core/title';
 
 function buildTitle() {
-    // Default all Title fields to null for consistency
+    // Default all Title fields to undefined for consistency
     const props: {
-        displayTitle: string | null;
-        apiTitle: string | null;
-        imdbId: string | null;
-        imdbRating: string | number | null;
-        imdbVotes: string | number | null;
-        rtRating: string | number | null;
-        mcRating: string | number | null;
-        year: string | number | null;
-        source: string | null;
-        type: string | null;
+        displayTitle: string | undefined;
+        apiTitle: string | undefined;
+        imdbId: string | undefined;
+        imdbRating: string | number | undefined;
+        imdbVotes: string | number | undefined;
+        rtRating: string | number | undefined;
+        mcRating: string | number | undefined;
+        year: string | number | undefined;
+        source: string | undefined;
+        type: string | undefined;
     } = {
-        displayTitle: null,
-        apiTitle: null,
-        imdbId: null,
-        imdbRating: null,
-        imdbVotes: null,
-        rtRating: null,
-        mcRating: null,
-        year: null,
-        source: null,
-        type: null,
+        displayTitle: undefined,
+        apiTitle: undefined,
+        imdbId: undefined,
+        imdbRating: undefined,
+        imdbVotes: undefined,
+        rtRating: undefined,
+        mcRating: undefined,
+        year: undefined,
+        source: undefined,
+        type: undefined,
     };
     return {
-        withDisplayTitle(value: string | null) {
+        withDisplayTitle(value: string | undefined) {
             props.displayTitle = value;
             return this;
         },
-        withApiTitle(value: string | null) {
+        withApiTitle(value: string | undefined) {
             props.apiTitle = value;
             return this;
         },
-        withImdbId(value: string | null) {
+        withImdbId(value: string | undefined) {
             props.imdbId = value;
             return this;
         },
-        withImdbRating(value: string | number | null) {
+        withImdbRating(value: string | number | undefined) {
             props.imdbRating = value;
             return this;
         },
-        withImdbVotes(value: string | number | null) {
+        withImdbVotes(value: string | number | undefined) {
             props.imdbVotes = value;
             return this;
         },
-        withRtRating(value: string | number | null) {
+        withRtRating(value: string | number | undefined) {
             props.rtRating = value;
             return this;
         },
-        withMcRating(value: string | number | null) {
+        withMcRating(value: string | number | undefined) {
             props.mcRating = value;
             return this;
         },
-        withYear(value: string | number | null) {
+        withYear(value: string | number | undefined) {
             props.year = value;
             return this;
         },
-        withSource(value: string | null) {
+        withSource(value: string | undefined) {
             props.source = value;
             return this;
         },
-        withType(value: string | null) {
+        withType(value: string | undefined) {
             props.type = value;
             return this;
         },
@@ -93,9 +93,9 @@ buildTitle.unrated = () => {
         .withApiTitle('Unrated Movie')
         .withDisplayTitle('Unrated Movie')
         .withImdbId('tt9999999')
-        .withImdbRating(null)
-        .withRtRating(null)
-        .withMcRating(null)
+        .withImdbRating(undefined)
+        .withRtRating(undefined)
+        .withMcRating(undefined)
         .withYear(2024)
         .withSource('agregarr')
         .build();
@@ -105,7 +105,7 @@ buildTitle.missingImdbId = () => {
     return buildTitle()
         .withApiTitle('No ID Movie')
         .withDisplayTitle('No ID Movie')
-        .withImdbId(null)
+        .withImdbId(undefined)
         .withImdbRating(7.0)
         .withYear(2024)
         .withSource('agregarr')
@@ -113,7 +113,7 @@ buildTitle.missingImdbId = () => {
 };
 
 // Parametrized presets
-buildTitle.withRating = (rating: string | number | null) => {
+buildTitle.withRating = (rating: string | number | undefined) => {
     return buildTitle()
         .withImdbId('tt1234567')
         .withImdbRating(rating)
@@ -122,24 +122,24 @@ buildTitle.withRating = (rating: string | number | null) => {
         .build();
 };
 
-function extractFromObj(obj: Record<string, unknown> | null | undefined, key: string): unknown {
+function extractFromObj(obj: Record<string, unknown> | undefined, key: string): unknown {
     return obj?.[key];
 }
 
 buildTitle.fromCacheJSON = (json: unknown) => {
-    const obj = json as Record<string, unknown> | null;
-    if (!obj) return null;
+    const obj = json as Record<string, unknown> | undefined;
+    if (!obj) return undefined;
     return new Title({
-        apiTitle: (extractFromObj(obj, 'apiTitle') as string | null) ?? null,
-        displayTitle: (extractFromObj(obj, 'displayTitle') as string | null) ?? null,
-        imdbId: (extractFromObj(obj, 'imdbId') as string | null) ?? null,
-        imdbRating: (extractFromObj(obj, 'imdbRating') as string | number | null) ?? null,
-        imdbVotes: (extractFromObj(obj, 'imdbVotes') as string | number | null) ?? null,
-        rtRating: (extractFromObj(obj, 'rtRating') as string | number | null) ?? null,
-        mcRating: (extractFromObj(obj, 'mcRating') as string | number | null) ?? null,
-        year: (extractFromObj(obj, 'year') as string | number | null) ?? null,
-        source: (extractFromObj(obj, 'source') as string | null) ?? null,
-        type: (extractFromObj(obj, 'type') as string | null) ?? null,
+        apiTitle: (extractFromObj(obj, 'apiTitle') as string | undefined) ?? undefined,
+        displayTitle: (extractFromObj(obj, 'displayTitle') as string | undefined) ?? undefined,
+        imdbId: (extractFromObj(obj, 'imdbId') as string | undefined) ?? undefined,
+        imdbRating: (extractFromObj(obj, 'imdbRating') as string | number | undefined) ?? undefined,
+        imdbVotes: (extractFromObj(obj, 'imdbVotes') as string | number | undefined) ?? undefined,
+        rtRating: (extractFromObj(obj, 'rtRating') as string | number | undefined) ?? undefined,
+        mcRating: (extractFromObj(obj, 'mcRating') as string | number | undefined) ?? undefined,
+        year: (extractFromObj(obj, 'year') as string | number | undefined) ?? undefined,
+        source: (extractFromObj(obj, 'source') as string | undefined) ?? undefined,
+        type: (extractFromObj(obj, 'type') as string | undefined) ?? undefined,
     });
 };
 
