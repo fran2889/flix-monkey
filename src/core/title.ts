@@ -96,16 +96,16 @@ export class Title {
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
-     * Storage JSON is untrusted, so a null, primitive, or array payload is
-     * rejected instead of silently producing an empty Title.
+     * This is the single validation boundary for untrusted Title payloads, so
+     * callers holding decoded storage JSON hand the value over unchecked.
      *
-     * @param {TitleData} obj - Cache data object without displayTitle
+     * @param {unknown} obj - Untrusted cache data object without displayTitle
      * @param {string} displayTitle - Display title from cache entry
      * @returns {Title | undefined} New Title instance, or undefined if obj is not a title object
      */
-    static fromCacheJSON(obj: TitleData, displayTitle: string): Title | undefined {
+    static fromCacheJSON(obj: unknown, displayTitle: string): Title | undefined {
         if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
-        return new Title({ ...obj, displayTitle });
+        return new Title({ ...(obj as TitleData), displayTitle });
     }
 
     #normalizeRating(val: unknown, converter: (_v: unknown) => number | undefined): number | undefined {

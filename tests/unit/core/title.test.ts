@@ -62,19 +62,13 @@ describe('Title', () => {
             expect(title!.imdbVotes).toBeUndefined();
         });
 
-        it('should return undefined when the cache object is null', () => {
-            expect(Title.fromCacheJSON(null as unknown as TitleData, 'JSON Title')).toBeUndefined();
-        });
-
-        it('should return undefined for non-object input', () => {
-            expect(Title.fromCacheJSON('string' as unknown as TitleData, 'x')).toBeUndefined();
-            expect(Title.fromCacheJSON(42 as unknown as TitleData, 'x')).toBeUndefined();
-            expect(Title.fromCacheJSON(undefined as unknown as TitleData, 'x')).toBeUndefined();
-        });
-
-        it('should return undefined for an array instead of a title object', () => {
-            expect(Title.fromCacheJSON([] as unknown as TitleData, 'x')).toBeUndefined();
-        });
+        // Storage JSON is untrusted, so these payloads need no cast to be rejected.
+        it.each([[null], ['string'], [42], [undefined], [[]], [true]])(
+            'should return undefined for the non-title payload %o',
+            (payload: unknown) => {
+                expect(Title.fromCacheJSON(payload, 'JSON Title')).toBeUndefined();
+            }
+        );
     });
 
     it('should create notFound title with default undefined source', () => {
