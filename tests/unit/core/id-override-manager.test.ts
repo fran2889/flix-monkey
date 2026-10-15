@@ -12,7 +12,10 @@ describe('IdOverrideManager', () => {
     let mockAdapter: MockPlatformAdapter;
 
     beforeEach(() => {
-        mockAdapter = buildMockAdapter().withStorageGetResolvingTo(null).withStorageSetResolvingTo(undefined).build();
+        mockAdapter = buildMockAdapter()
+            .withStorageGetResolvingTo(undefined)
+            .withStorageSetResolvingTo(undefined)
+            .build();
         manager = new IdOverrideManager(mockAdapter);
     });
 
@@ -33,7 +36,7 @@ describe('IdOverrideManager', () => {
                 if (key === 'fm-idoverride:the_matrix_reloaded') {
                     return Promise.resolve('{"imdbId":"tt0242653"}');
                 }
-                return Promise.resolve(null);
+                return Promise.resolve(undefined);
             });
             const result = await manager.getImdbId('The Matrix: Reloaded!');
             expect(result).toBe('tt0242653');

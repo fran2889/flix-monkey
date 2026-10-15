@@ -30,7 +30,7 @@ export class IdOverrideManager {
     async getImdbId(displayTitle: string): Promise<string | undefined> {
         const key = this.#getKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (raw === null || raw === undefined) return undefined;
+        if (raw === undefined) return undefined;
         try {
             const data = JSON.parse(raw as string);
             return (data as { imdbId?: string }).imdbId ?? undefined;

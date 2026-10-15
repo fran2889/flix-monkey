@@ -106,10 +106,10 @@ describe('WebExtensionAdapter', () => {
         );
     });
 
-    it('storageGet should return null if key is not found', async () => {
+    it('storageGet should return undefined if key is not found', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({});
         const result = await adapter.storageGet('nonexistent');
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('configGet should return value from configData', () => {

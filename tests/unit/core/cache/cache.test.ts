@@ -22,7 +22,7 @@ describe('CacheManager', () => {
 
     beforeEach(() => {
         adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(null)
+            .withStorageGetResolvingTo(undefined)
             .withStorageSetResolvingTo(undefined)
             .withStorageDeleteResolvingTo(undefined)
             .withStorageGetKeysResolvingTo([])
@@ -37,7 +37,7 @@ describe('CacheManager', () => {
     });
 
     it('should return undefined when cache is empty', async () => {
-        adapter.storageGet.mockResolvedValue(null);
+        adapter.storageGet.mockResolvedValue(undefined);
         const result = await cacheManager.read('Some Title');
         expect(result).toBeUndefined();
     });
@@ -59,7 +59,7 @@ describe('CacheManager', () => {
     });
 
     it('should write data to storage', async () => {
-        adapter.storageGet.mockResolvedValue(null);
+        adapter.storageGet.mockResolvedValue(undefined);
         const title = buildTitle().withApiTitle('Test Title').build();
         await cacheManager.write('Test Title', title);
         expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.stringContaining('Test Title'));
@@ -85,8 +85,10 @@ describe('CacheManager', () => {
             .build();
         adapter.storageSet.mockImplementation((key, value) => {
             // Store the written value so we can return it on read
-            adapter.storageGet.mockImplementation(k => (k === key ? Promise.resolve(value) : Promise.resolve(null)));
-            return Promise.resolve(null as unknown as void);
+            adapter.storageGet.mockImplementation(k =>
+                k === key ? Promise.resolve(value) : Promise.resolve(undefined)
+            );
+            return Promise.resolve(undefined);
         });
         await cacheManager.write('Test Title', titleObj);
         expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.any(String));
@@ -212,7 +214,7 @@ describe('CacheManager', () => {
             .withImdbId('tt123')
             .withYear(2024)
             .build();
-        adapter.storageSet.mockResolvedValue(null as unknown as void);
+        adapter.storageSet.mockResolvedValue(undefined);
         await cacheManager.write('Test', title);
         const call = adapter.storageSet.mock.calls[0];
         const entry = JSON.parse(call[1] as string);
@@ -278,7 +280,7 @@ describe('CacheManager', () => {
     });
 
     it('should return undefined for cache miss', async () => {
-        adapter.storageGet.mockResolvedValue(null);
+        adapter.storageGet.mockResolvedValue(undefined);
         const result = await cacheManager.read('Missing Movie');
         expect(result).toBeUndefined();
     });

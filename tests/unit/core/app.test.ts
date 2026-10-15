@@ -615,7 +615,7 @@ describe('App', () => {
         `;
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : undefined))
-            .withStorageGetResolvingTo(null)
+            .withStorageGetResolvingTo(undefined)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
@@ -638,7 +638,7 @@ describe('App', () => {
         const storageGet = vi
             .fn()
             .mockImplementation((key: string) =>
-                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
+                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(undefined)
             );
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : undefined))
@@ -666,7 +666,7 @@ describe('App', () => {
                 </div>
             </div>
         `;
-        const storageGet = vi.fn().mockResolvedValue(null);
+        const storageGet = vi.fn().mockResolvedValue(undefined);
         const storageSet = vi.fn().mockResolvedValue(undefined);
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => {

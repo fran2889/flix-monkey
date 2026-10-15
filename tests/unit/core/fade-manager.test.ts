@@ -11,7 +11,7 @@ import { buildConfig } from '../../mocks/config';
 describe('FadeManager', () => {
     describe('getOverride', () => {
         it('returns undefined when key is absent', async () => {
-            const adapter = buildMockAdapter().withStorageGetResolvingTo(null).build();
+            const adapter = buildMockAdapter().withStorageGetResolvingTo(undefined).build();
             const fm = new FadeManager(adapter, buildConfig().build());
             expect(await fm.getOverride('tt1234567')).toBeUndefined();
             expect(adapter.storageGet).toHaveBeenCalledWith('fm-fade:tt1234567');

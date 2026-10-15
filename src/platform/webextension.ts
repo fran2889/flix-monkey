@@ -50,11 +50,11 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Storage key.
-     * @returns {Promise<StorageValue | null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<StorageValue | undefined>} The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(key: string): Promise<StorageValue | null> {
+    async storageGet(key: string): Promise<StorageValue | undefined> {
         const result = await browser.storage.local.get(key);
-        return (result[key] as StorageValue | null) ?? null;
+        return (result[key] as StorageValue | undefined) ?? undefined;
     }
 
     /**
