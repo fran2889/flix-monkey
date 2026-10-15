@@ -198,6 +198,21 @@ Platform-agnostic business logic. All modules are pure ES modules.
 Directory modules are imported through their `index.ts` barrel using an explicit
 path (for example `../core/config/index.ts`), never as a bare directory.
 
+**Nullability**: use `undefined`, never `null`, for "no value" across `src/` and
+`tests/`. Omit the property rather than assigning `undefined`. The only `null`s
+allowed are the ones the platform dictates (`prompt()`, `getAttribute()`,
+`querySelector()`, `browser.storage.local.get(null)`).
+
+**Rating normalization**: each API client owns the wire format of its provider
+and converts it to a number before constructing a `Title`. `Title` accepts
+`number | undefined` for `imdbRating`, `imdbVotes`, `rtRating`, and `mcRating`
+and collapses anything else to `undefined`; it must not parse strings. `year` is
+the exception: providers report it as a partial string such as `"2020-"`.
+
+**Untrusted payloads**: `Title.fromCacheJSON` is the single validation boundary
+for decoded storage JSON. Pass the parsed value through unchanged and let it
+reject malformed input; do not cast untrusted data to a trusted shape upstream.
+
 **`src/core/ui/`**: Shared UI components
 
 | Module                | Responsibility                                                   |
@@ -276,12 +291,24 @@ class PlatformAdapter {
 integer version order. `runMigrations()` compares this registry with the
 stored `fm_data_version`, runs newer migrations before application startup,
 and advances the stored version even when a migration or its recovery handler
-fails. Migration version 1 renames cached `Title.rating` data to
-`Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.
+fails.
+
+Released migrations:
+
+| Version | Description                                                                                                             |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1       | Renames cached `Title.rating` data to `Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.       |
+| 2       | Hoists `displayTitle` and `imdbId` out of the nested `data` payload to the cache entry top level, preserving `expires`. |
 
 When changing a persisted shape, append a new migration version and add unit
 tests for transformed, already-current, and malformed data. Do not edit or
 reuse a released migration version.
+
+Absent fields are written as _omitted keys_, not as `null`: `JSON.stringify`
+drops `undefined`, so a missing key and an explicit `undefined` are
+indistinguishable on read. Code reading `fmc:*` entries must therefore treat a
+missing key as "no value" and stay compatible with entries written by older
+versions that stored `null`.
 
 ## Settings (`config/config-fields.ts`)
 
