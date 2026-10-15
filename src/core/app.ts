@@ -252,7 +252,7 @@ export class FlixMonkeyApp {
 
     async #handleFadeToggleClick(
         dedupKey: string,
-        imdbRating: string | number | undefined,
+        imdbRating: number | undefined,
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
@@ -267,10 +267,7 @@ export class FlixMonkeyApp {
             icon.textContent = nextState === undefined ? '⭐' : '👁️';
             icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
         }
-        const shouldFade = this.#fadeManager.shouldFade(
-            nextState,
-            typeof imdbRating === 'number' ? imdbRating : undefined
-        );
+        const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c as HTMLElement, shouldFade);
         });
