@@ -110,12 +110,10 @@ function formatPercentRating(rating: number): string {
 }
 
 function formatVoteCount(count: number | undefined): string {
-    if (count === undefined) return '';
-    const num = Number(count);
-    if (Number.isNaN(num) || num < 0) return '';
-    if (num >= 1000000) return `${Math.round(num / 1000000)}M`;
-    if (num >= 1000) return `${Math.round(num / 1000)}k`;
-    return String(Math.round(num));
+    if (count === undefined || count < 0) return '';
+    if (count >= 1000000) return `${Math.round(count / 1000000)}M`;
+    if (count >= 1000) return `${Math.round(count / 1000)}k`;
+    return String(Math.round(count));
 }
 
 function buildTooltip(

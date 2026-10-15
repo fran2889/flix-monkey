@@ -255,6 +255,8 @@ describe('createOverlayElement', () => {
             [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: undefined }, 'Test\nIMDb: 7.5 · Open IMDb'],
             [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
         ])('formats tooltip for vote data %o', (titleData: Partial<Title>, expectedTitle: string) => {
             const element = createOverlay(new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData }));
 
