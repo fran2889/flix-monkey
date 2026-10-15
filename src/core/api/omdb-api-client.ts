@@ -16,6 +16,22 @@ import { BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /**
+ * Converts an OMDb numeric field to a number.
+ *
+ * OMDb sends ratings as strings, and a literal null, an empty string, or
+ * "N/A" all mean "no rating". Unparseable input becomes undefined so a
+ * blank field can never be coerced into a 0.0 rating.
+ *
+ * @param value - Raw field value from the OMDb response.
+ * @returns The parsed number, or undefined when the field carries no rating.
+ */
+function toRating(value: unknown): number | undefined {
+    if (value === null || value === undefined) return undefined;
+    const num = Number.parseFloat(String(value));
+    return Number.isNaN(num) ? undefined : num;
+}
+
+/**
  * Extracts a rating value from an OMDb `Ratings` array by matching its source label.
  *
  * @param ratings - The `Ratings` field from an OMDb response.
@@ -27,7 +43,7 @@ function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefin
     const entry = ratings.find(
         r => r && sourcePattern.test((r as OmdbRatingEntry).source ?? (r as OmdbRatingEntry).Source ?? '')
     ) as OmdbRatingEntry | undefined;
-    return entry?.value ?? entry?.Value ?? undefined;
+    return toRating(entry?.value ?? entry?.Value);
 }
 
 /**
@@ -122,8 +138,6 @@ export class OmdbApiClient extends BaseApiClient {
      */
     #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | undefined): Title {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
-        // `?? undefined` collapses a literal JSON null so it never reaches Number() and becomes 0.
-        const rating = imdbRating ?? undefined;
         const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
         return new Title({
@@ -131,7 +145,7 @@ export class OmdbApiClient extends BaseApiClient {
             apiTitle: apiTitle ?? undefined,
             imdbId: imdbID ?? fallbackImdbId ?? undefined,
             year: releaseYear ? Number(releaseYear) : undefined,
-            imdbRating: rating !== undefined ? Number(rating) : undefined,
+            imdbRating: toRating(imdbRating),
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
@@ -141,12 +155,12 @@ export class OmdbApiClient extends BaseApiClient {
     }
 }
 
-/** OMDb rating entry type */
+/** OMDb rating entry type. Ratings arrive as strings, for example "8.5" or "90%". */
 interface OmdbRatingEntry {
     source?: string;
     Source?: string;
-    value?: number;
-    Value?: number;
+    value?: string | number;
+    Value?: string | number;
 }
 
 /** OMDb API response type */

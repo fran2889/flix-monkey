@@ -115,6 +115,50 @@ describe('OmdbApiClient', () => {
         expect(result!.mcRating).toBe(85);
     });
 
+    it.each(['', ' ', 'N/A'])('should treat imdbRating %o as missing', async (value: string) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbRating).toBeUndefined();
+        expect(result!.hasRating).toBe(false);
+    });
+
+    it('should convert OMDb rating strings to numbers', async () => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({
+                Response: 'True',
+                imdbRating: '8.0',
+                Ratings: [
+                    { Source: 'Rotten Tomatoes', Value: '90%' },
+                    { Source: 'Metacritic', Value: '85/100' },
+                ],
+                imdbID: 'tt1',
+                Title: 'Movie 1',
+            })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(typeof result!.imdbRating).toBe('number');
+        expect(typeof result!.rtRating).toBe('number');
+        expect(typeof result!.mcRating).toBe('number');
+    });
+
     it('should map Type to TitleType in getDetails', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
