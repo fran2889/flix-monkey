@@ -142,7 +142,6 @@ describe('SettingsView', () => {
                     group: 'debug',
                     row: 'actions',
                     actionLabel: 'Clear',
-                    default: null,
                 },
             ];
             view = new SettingsView(fields, actions);
@@ -257,7 +256,7 @@ describe('SettingsView', () => {
         });
 
         it('passes checked values to checkbox validators', () => {
-            const validate = vi.fn().mockReturnValue(null);
+            const validate = vi.fn().mockReturnValue(undefined);
             const fields: readonly ConfigField[] = [
                 {
                     key: 'testCheckbox',

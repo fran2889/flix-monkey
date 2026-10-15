@@ -111,7 +111,7 @@ export class UserscriptAdapter extends PlatformAdapter {
                             resolve(responseText);
                         }
                     } else {
-                        const body = responseText ? responseText.slice(0, 200) : null;
+                        const body = responseText ? responseText.slice(0, 200) : undefined;
                         reject(new FlixMonkeyError(`HTTP ${status}`, url, status, body));
                         return;
                     }

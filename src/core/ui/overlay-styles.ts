@@ -26,8 +26,8 @@ const CSS_VARS: string = `
 export interface BuildOverlayStylesOptions {
     overlayClass: string;
     corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-    top10Selectors?: string[] | null;
-    top10Offset?: string | null;
+    top10Selectors?: string[] | undefined;
+    top10Offset?: string | undefined;
 }
 
 function buildBaseStyles(overlayClass: string, positionCss: string, flexDirection: string): string {
@@ -61,8 +61,8 @@ function buildBaseStyles(overlayClass: string, positionCss: string, flexDirectio
 function buildTop10OffsetStyles(
     overlayClass: string,
     corner: string,
-    top10Selectors: string[] | undefined | null,
-    top10Offset: string | undefined | null
+    top10Selectors: string[] | undefined,
+    top10Offset: string | undefined
 ): string {
     if (!corner.includes('left') || !top10Selectors?.length) return '';
 

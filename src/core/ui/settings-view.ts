@@ -16,7 +16,7 @@ export interface ConfigField {
     readonly label: string;
     readonly group?: string;
     readonly type: 'checkbox' | 'select' | 'text' | 'action';
-    readonly default: string | boolean | null;
+    readonly default?: string | boolean;
     readonly row?: string;
     readonly options?: ReadonlyArray<string | SelectOption>;
     readonly title?: string;
@@ -25,7 +25,7 @@ export interface ConfigField {
     readonly disabled?: boolean;
     readonly suffix?: string;
     readonly short?: boolean;
-    readonly validate?: ((_value: unknown, _allValues?: Record<string, unknown>) => string | null) | undefined;
+    readonly validate?: ((_value: unknown, _allValues?: Record<string, unknown>) => string | undefined) | undefined;
     readonly actionLabel?: string;
 }
 
@@ -466,7 +466,7 @@ export class SettingsView {
             if (field.disabled) continue;
             const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
             if (!input) continue;
-            const error = field.validate ? field.validate(values[field.key], values) : null;
+            const error = field.validate ? field.validate(values[field.key], values) : undefined;
             input.classList.toggle('error', Boolean(error));
             if (error) errors.push(error);
         }

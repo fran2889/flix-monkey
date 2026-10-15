@@ -4,10 +4,10 @@
  */
 import { CACHE_TTL_INFINITE } from '../constants';
 
-function validateCacheTtl(val: string): string | null {
+function validateCacheTtl(val: string): string | undefined {
     if (typeof val === 'string' && val.trim() === '') return 'Cache duration must be -1 or a positive integer';
     const n = Number(val);
-    return Number.isInteger(n) && (n >= 0 || n === -1) ? null : 'Cache duration must be -1 or a positive integer';
+    return Number.isInteger(n) && (n >= 0 || n === -1) ? undefined : 'Cache duration must be -1 or a positive integer';
 }
 
 /** Settings field groups for UI organization. */
@@ -99,9 +99,9 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '',
         title: 'Required for OMDb ratings',
-        validate: (val: string, allValues?: Record<string, unknown>): string | null => {
-            if (allValues?.apiClient !== 'omdb') return null;
-            return val && val.length > 0 ? null : 'OMDb API Key is required';
+        validate: (val: string, allValues?: Record<string, unknown>): string | undefined => {
+            if (allValues?.apiClient !== 'omdb') return undefined;
+            return val && val.length > 0 ? undefined : 'OMDb API Key is required';
         },
     },
     {
@@ -112,9 +112,9 @@ export const CONFIG_FIELDS = [
         type: 'text',
         default: '',
         title: 'Required for XMDb ratings',
-        validate: (val: string, allValues?: Record<string, unknown>): string | null => {
-            if (allValues?.apiClient !== 'xmdb') return null;
-            return val && val.length > 0 ? null : 'XMDb API Key is required';
+        validate: (val: string, allValues?: Record<string, unknown>): string | undefined => {
+            if (allValues?.apiClient !== 'xmdb') return undefined;
+            return val && val.length > 0 ? undefined : 'XMDb API Key is required';
         },
     },
     {
@@ -149,11 +149,11 @@ export const CONFIG_FIELDS = [
         default: '6.0',
         title: 'IMDb rating threshold (0.0-10.0)',
         short: true,
-        validate: (val: string): string | null => {
+        validate: (val: string): string | undefined => {
             if (typeof val === 'string' && val.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(val);
             return !Number.isNaN(n) && n >= 0.0 && n <= 10.0
-                ? null
+                ? undefined
                 : 'Fade threshold must be a number between 0 and 10';
         },
     },
@@ -214,7 +214,6 @@ export const CONFIG_FIELDS = [
         row: 'action-clearCache',
         label: '',
         actionLabel: 'Clear Cache',
-        default: null,
     },
     {
         key: 'resetClients',
@@ -223,7 +222,6 @@ export const CONFIG_FIELDS = [
         row: 'action-resetClients',
         label: '',
         actionLabel: 'Reset Providers',
-        default: null,
     },
 ] satisfies readonly ConfigField[];
 
@@ -250,7 +248,7 @@ export interface ConfigField {
     label: string;
     group: GroupKey;
     type: ConfigFieldType;
-    default: ConfigValueType;
+    default?: ConfigValueType;
     row?: AllRowKeys;
     title?: string;
     short?: boolean;
@@ -259,7 +257,7 @@ export interface ConfigField {
     suffix?: string;
     actionLabel?: string;
     options?: readonly (string | SelectOption)[];
-    validate?: (_val: string, _allValues?: Record<string, unknown>) => string | null;
+    validate?: (_val: string, _allValues?: Record<string, unknown>) => string | undefined;
 }
 
 // Type for config field keys
@@ -269,4 +267,4 @@ export type ConfigFieldKey = (typeof CONFIG_FIELDS)[number]['key'];
 export type ConfigFieldType = 'checkbox' | 'select' | 'text' | 'action';
 
 // Type for config values based on their field type
-export type ConfigValueType = string | boolean | null;
+export type ConfigValueType = string | boolean;

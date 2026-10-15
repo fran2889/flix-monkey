@@ -14,7 +14,7 @@ import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter';
 interface FetchResponse {
     error?: string;
     status?: number;
-    body?: string | null;
+    body?: string | undefined;
     data?: unknown;
 }
 
@@ -138,7 +138,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
                 throw new FlixMonkeyError('empty background response', url);
             }
             if (response.error) {
-                throw new FlixMonkeyError(response.error, url, response.status, response.body ?? null);
+                throw new FlixMonkeyError(response.error, url, response.status, response.body);
             }
             return response.data;
         } finally {

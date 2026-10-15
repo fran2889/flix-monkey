@@ -697,16 +697,9 @@ describe('App', () => {
         expect(card?.classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should return null when ServiceRegistry.detect returns null', async () => {
+    it('should return null when ServiceRegistry.detect finds no service', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
-        const result = startApp(buildMockAdapter().build());
-        expect(result).toBeNull();
-    });
-
-    it('should return null when ServiceRegistry.detect returns undefined', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
         const result = startApp(buildMockAdapter().build());
         expect(result).toBeNull();
     });

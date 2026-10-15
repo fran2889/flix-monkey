@@ -14,7 +14,12 @@ describe('core/config-fields', () => {
             expect(field).toHaveProperty('key');
             expect(field).toHaveProperty('label');
             expect(field).toHaveProperty('type');
-            expect(field).toHaveProperty('default');
+            if (field.type === 'action') {
+                // Action rows trigger handlers and never render a value, so they carry no default.
+                expect(field).toHaveProperty('actionLabel');
+            } else {
+                expect(field).toHaveProperty('default');
+            }
 
             expect(field).toHaveProperty('group');
             expect(typeof field.group).toBe('string');
@@ -54,7 +59,7 @@ describe('core/config-fields', () => {
             });
 
             it('should accept valid key when provider is selected', () => {
-                expect(field.validate?.('valid-key', { apiClient: provider })).toBeNull();
+                expect(field.validate!('valid-key', { apiClient: provider })).toBeUndefined();
             });
 
             it('should reject empty key when provider is selected', () => {
@@ -62,7 +67,7 @@ describe('core/config-fields', () => {
             });
 
             it('should accept empty key when provider is not selected', () => {
-                expect(field.validate?.('', { apiClient: 'agregarr' })).toBeNull();
+                expect(field.validate!('', { apiClient: 'agregarr' })).toBeUndefined();
             });
         });
 
@@ -73,7 +78,7 @@ describe('core/config-fields', () => {
             });
 
             it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
-                expect(field.validate?.(val)).toBeNull();
+                expect(field.validate!(val)).toBeUndefined();
             });
 
             it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
@@ -89,7 +94,7 @@ describe('core/config-fields', () => {
             });
 
             it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {
-                expect(field.validate?.(val)).toBeNull();
+                expect(field.validate!(val)).toBeUndefined();
             });
 
             it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {

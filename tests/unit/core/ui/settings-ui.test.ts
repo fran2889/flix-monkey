@@ -93,9 +93,9 @@ describe('SettingsUI', () => {
                 label: 'Snapshot',
                 type: 'text' as const,
                 default: 'initial',
-                validate: (_value: unknown, _allValues?: Record<string, unknown>): string | null => {
+                validate: (_value: unknown, _allValues?: Record<string, unknown>): string | undefined => {
                     container.querySelector('#fm-snapshot')?.setAttribute('value', 'changed-during-validation');
-                    return null;
+                    return undefined;
                 },
             };
             settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);

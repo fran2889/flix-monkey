@@ -9,19 +9,19 @@ import { IDLE_CALLBACK_TIMEOUT_MS } from '../constants';
  * request URL, response status, and response body metadata.
  */
 export class FlixMonkeyError extends Error {
-    url: string | null;
-    status: number | null;
-    body: string | null;
+    url: string | undefined;
+    status: number | undefined;
+    body: string | undefined;
 
     /**
      * Creates a FlixMonkeyError with optional request details.
      *
      * @param {string} message - Error message.
-     * @param {string | null} [url=null] - Request URL if applicable.
-     * @param {number | null} [status=null] - HTTP status code if applicable.
-     * @param {string | null} [body=null] - Response body if applicable.
+     * @param {string} [url] - Request URL if applicable.
+     * @param {number} [status] - HTTP status code if applicable.
+     * @param {string} [body] - Response body if applicable.
      */
-    constructor(message: string, url: string | null = null, status: number | null = null, body: string | null = null) {
+    constructor(message: string, url?: string, status?: number, body?: string) {
         super(message);
         this.name = 'FlixMonkeyError';
         this.url = url;
