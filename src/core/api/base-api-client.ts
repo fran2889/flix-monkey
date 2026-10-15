@@ -63,7 +63,7 @@ export abstract class BaseApiClient {
      * @param imdbId - Optional IMDb ID for short-circuiting search.
      * @returns Hydrated Title with ratings, or undefined if not found.
      */
-    async fetch(displayTitle: string, imdbId: string | undefined = undefined): Promise<Title | undefined> {
+    async fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined> {
         if (await this.#isDisabled()) {
             return undefined;
         }

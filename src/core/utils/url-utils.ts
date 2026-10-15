@@ -18,7 +18,7 @@ export interface BuildImdbUrlOptions {
  * @param {BuildImdbUrlOptions} params - URL building options
  * @returns {string} IMDb title URL, or an IMDb search URL.
  */
-export function buildImdbUrl({ imdbId = undefined, displayTitle }: BuildImdbUrlOptions): string {
+export function buildImdbUrl({ imdbId, displayTitle }: BuildImdbUrlOptions): string {
     return imdbId
         ? `https://www.imdb.com/title/${imdbId}/`
         : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle ?? '')}`;

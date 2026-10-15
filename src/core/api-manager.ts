@@ -57,7 +57,7 @@ export class ApiClientManager {
         return this.#fetch(displayTitle);
     }
 
-    async #fetch(displayTitle: string, imdbId: string | undefined = undefined): Promise<Title> {
+    async #fetch(displayTitle: string, imdbId?: string): Promise<Title> {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
             return Title.notFound(displayTitle, this.#client.source);
@@ -87,7 +87,7 @@ export class ApiClientManager {
             }
             this.#logger[isHttpError ? 'error' : 'warn'](
                 `Failed to fetch ratings for "${displayTitle}": ${error.message ?? ''}`,
-                { url: error.url ?? undefined, status: error.status ?? undefined, body: error.body ?? undefined }
+                { url: error.url, status: error.status, body: error.body }
             );
             return Title.notFound(displayTitle, this.#client.source);
         }

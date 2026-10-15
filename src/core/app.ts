@@ -86,9 +86,9 @@ export class FlixMonkeyApp {
     /**
      * Sets or updates the IMDb ID override for a title from user input.
      * @param displayTitle - The title to set override for
-     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists. Default: undefined
+     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists.
      */
-    async #handleEditClick(displayTitle: string, imdbId: string | undefined = undefined): Promise<void> {
+    async #handleEditClick(displayTitle: string, imdbId?: string): Promise<void> {
         const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
         const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride ?? imdbId ?? '');
         if (userInput === null) return;
