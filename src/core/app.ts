@@ -232,6 +232,13 @@ export class FlixMonkeyApp {
         this.#renderer.injectOverlay(
             container as HTMLElement,
             data,
+            (dt: string) => {
+                this.#handleEditClick(dt, data.imdbId);
+            },
+            (dt: string) => {
+                this.#handleRefreshClick(dt);
+            },
+            displayTitle,
             showFadeToggle ? fadeOverride : undefined,
             showFadeToggle
                 ? (el: HTMLElement): void => {
@@ -239,14 +246,7 @@ export class FlixMonkeyApp {
                           /* istanbul ignore next */ () => undefined
                       );
                   }
-                : undefined,
-            (dt: string) => {
-                this.#handleEditClick(dt, data.imdbId);
-            },
-            (dt: string) => {
-                this.#handleRefreshClick(dt);
-            },
-            displayTitle
+                : undefined
         );
     }
 

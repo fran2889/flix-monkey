@@ -748,7 +748,7 @@ describe('App', () => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
             const calls = mockRenderer.injectOverlay.mock.calls[0] as unknown[];
-            const [, , , , onEditClick, onRefreshClick] = calls;
+            const [, , onEditClick, onRefreshClick] = calls;
             return {
                 onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,

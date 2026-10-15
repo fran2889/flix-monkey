@@ -48,8 +48,6 @@ export function testSurfaceFixtures(
         overlayRenderer.injectOverlay(
             surface.container as unknown as HTMLElement,
             new Title({ imdbRating: 8.5, imdbId: 'tt1234567' }),
-            undefined,
-            undefined,
             () => {},
             () => {},
             surface.title

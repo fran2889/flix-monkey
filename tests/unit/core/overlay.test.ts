@@ -20,8 +20,6 @@ describe('OverlayRenderer', () => {
         renderer.injectOverlay(
             container,
             title,
-            undefined,
-            undefined,
             () => {},
             () => {},
             title.displayTitle ?? 'Test Title'
