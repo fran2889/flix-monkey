@@ -147,6 +147,22 @@ describe('CacheManager', () => {
         expect(result!.getTitle()?.displayTitle).toBe('Indefinite Title');
     });
 
+    it('treats a pre-migration entry with null expiry as never expiring', async () => {
+        const legacyRaw = JSON.stringify({
+            displayTitle: 'Legacy Movie',
+            imdbId: null,
+            data: { apiTitle: 'Legacy Movie', imdbRating: 8.1 },
+            expires: null,
+        });
+        adapter.storageGet.mockResolvedValue(legacyRaw);
+
+        const result = await cacheManager.read('Legacy Movie');
+
+        expect(result).toBeDefined();
+        expect(result!.isExpired).toBe(false);
+        expect(result!.imdbId).toBeUndefined();
+    });
+
     it('should return undefined and log the display title when JSON parsing fails in read', async () => {
         adapter.storageGet.mockResolvedValue('invalid-json{');
         const result = await cacheManager.read('Some Title');

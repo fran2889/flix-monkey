@@ -35,6 +35,8 @@ export class CacheEntry {
 
     /**
      * Parses a JSON string from storage and returns a CacheEntry instance.
+     * Literal nulls from entries written before the null to undefined
+     * migration are normalized to undefined.
      *
      * @param {string} raw - Raw JSON string from storage
      * @returns {CacheEntry} New CacheEntry instance
@@ -42,11 +44,18 @@ export class CacheEntry {
     static fromJSON(raw: string): CacheEntry {
         const obj = JSON.parse(raw) as {
             displayTitle: string;
-            imdbId: string | undefined;
-            data: object | undefined;
-            expires: number | undefined;
+            imdbId: string | null | undefined;
+            data: object | null | undefined;
+            expires: number | null | undefined;
         };
-        return new CacheEntry(obj.displayTitle, obj.imdbId, obj.data as TitleData | undefined, obj.expires);
+        // Entries written before the null to undefined migration carry literal nulls;
+        // collapse them here so the parsed entry keeps the undefined-only contract.
+        return new CacheEntry(
+            obj.displayTitle,
+            obj.imdbId ?? undefined,
+            (obj.data ?? undefined) as TitleData | undefined,
+            obj.expires ?? undefined
+        );
     }
 
     /**
