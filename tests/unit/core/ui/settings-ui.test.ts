@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
-import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index';
+import { CONFIG_FIELDS, ConfigManager, type ConfigValueType } from '../../../../src/core/config/index';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
@@ -93,7 +93,8 @@ describe('SettingsUI', () => {
                 label: 'Snapshot',
                 type: 'text' as const,
                 default: 'initial',
-                validate: (_value: unknown, _allValues?: Record<string, unknown>): string | undefined => {
+                group: 'cache' as const,
+                validate: (_value: ConfigValueType, _allValues?: Record<string, unknown>): string | undefined => {
                     container.querySelector('#fm-snapshot')?.setAttribute('value', 'changed-during-validation');
                     return undefined;
                 },

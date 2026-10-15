@@ -3,31 +3,9 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SettingsActions } from '../../types/extension';
-import { GROUPS, ROW_LABELS } from '../config/index';
+import { type ConfigField, type ConfigValueType, GROUPS, ROW_LABELS } from '../config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
-
-/** Select option as a named tuple with value and label */
-export type SelectOption = readonly [value: string, label: string];
-
-/** Config field definition type */
-export interface ConfigField {
-    readonly key: string;
-    readonly label: string;
-    readonly group?: string;
-    readonly type: 'checkbox' | 'select' | 'text' | 'action';
-    readonly default?: string | boolean;
-    readonly row?: string;
-    readonly options?: ReadonlyArray<string | SelectOption>;
-    readonly title?: string;
-    readonly labelUrl?: string;
-    readonly labelHidden?: boolean;
-    readonly disabled?: boolean;
-    readonly suffix?: string;
-    readonly short?: boolean;
-    readonly validate?: ((_value: unknown, _allValues?: Record<string, unknown>) => string | undefined) | undefined;
-    readonly actionLabel?: string;
-}
 
 /**
  * UI component that renders and manages the settings panel with grouped configuration fields.
@@ -99,7 +77,7 @@ export class SettingsView {
         const ungroupedFields: ConfigField[] = [];
 
         for (const field of this.#fields) {
-            const hasValidGroup = field.group && GROUPS[field.group as keyof typeof GROUPS];
+            const hasValidGroup = field.group && GROUPS[field.group];
             if (hasValidGroup) {
                 this.#addFieldToGroup(field, fieldsByGroup);
             } else if (field.type !== 'action') {
@@ -114,7 +92,7 @@ export class SettingsView {
     }
 
     #addFieldToGroup(field: ConfigField, fieldsByGroup: Record<string, ConfigField[]>): void {
-        const groupId = field.group as string;
+        const groupId = field.group;
         if (!fieldsByGroup[groupId]) {
             fieldsByGroup[groupId] = [];
         }
@@ -435,8 +413,8 @@ export class SettingsView {
      *
      * @returns Settings values keyed by field keys.
      */
-    readValues(): Record<string, unknown> {
-        const values: Record<string, unknown> = {};
+    readValues(): Record<string, ConfigValueType> {
+        const values: Record<string, ConfigValueType> = {};
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
@@ -458,7 +436,7 @@ export class SettingsView {
      * @param values - Settings values to validate.
      * @returns Array of validation error messages, empty if valid.
      */
-    validate(values: Record<string, unknown>): string[] {
+    validate(values: Record<string, ConfigValueType>): string[] {
         const errors: string[] = [];
         if (this.#container === undefined) return errors;
         for (const field of this.#fields) {

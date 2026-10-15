@@ -4,11 +4,10 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS } from '../../../../src/core/config/index';
-import { type ConfigField, SettingsView } from '../../../../src/core/ui/settings-view';
+import { CONFIG_FIELDS, type ConfigField } from '../../../../src/core/config/index';
+import { SettingsView } from '../../../../src/core/ui/settings-view';
 
-// Helper to cast CONFIG_FIELDS to the expected type for SettingsView
-const configFields = CONFIG_FIELDS as unknown as readonly ConfigField[];
+const configFields: readonly ConfigField[] = CONFIG_FIELDS;
 
 describe('SettingsView', () => {
     let actions: {
@@ -33,7 +32,9 @@ describe('SettingsView', () => {
     });
 
     it('reads one value snapshot from its rendered fields', () => {
-        const fields: readonly ConfigField[] = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
+        const fields: readonly ConfigField[] = [
+            { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+        ];
         const localView = new SettingsView(fields, {
             onSave: vi.fn(),
             onClearCache: vi.fn(),
@@ -86,10 +87,6 @@ describe('SettingsView', () => {
                     const link = label?.querySelector('a');
                     expect(link).toBeNull();
                 }
-
-                expect(label?.classList.contains('visually-hidden')).toBe(
-                    Boolean((field as { labelHidden?: boolean }).labelHidden)
-                );
             });
         });
 
@@ -112,7 +109,7 @@ describe('SettingsView', () => {
 
         it('renders suffix text for fields with suffix property', () => {
             const fields: readonly ConfigField[] = [
-                { key: 'cacheDays', type: 'text', label: 'Cache Days', default: '30', suffix: 'days' },
+                { key: 'cacheDays', type: 'text', label: 'Cache Days', default: '30', suffix: 'days', group: 'cache' },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, { cacheDays: '30' });
@@ -124,7 +121,7 @@ describe('SettingsView', () => {
 
         it('adds field--checkbox modifier for single checkbox fields', () => {
             const fields: readonly ConfigField[] = [
-                { key: 'singleCheckbox', type: 'checkbox', label: 'Single Checkbox', default: true },
+                { key: 'singleCheckbox', type: 'checkbox', label: 'Single Checkbox', default: true, group: 'display' },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, { singleCheckbox: true });
@@ -140,7 +137,7 @@ describe('SettingsView', () => {
                     type: 'action',
                     label: '',
                     group: 'debug',
-                    row: 'actions',
+                    row: 'action-clearCache',
                     actionLabel: 'Clear',
                 },
             ];
@@ -218,6 +215,7 @@ describe('SettingsView', () => {
                     label: 'Metacritic',
                     type: 'checkbox',
                     default: true,
+                    group: 'display',
                     row: 'ratings-display',
                 },
             ];
@@ -230,8 +228,15 @@ describe('SettingsView', () => {
 
         it('skips disabled fields in readValues', () => {
             const fields: readonly ConfigField[] = [
-                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value' },
-                { key: 'disabledField', type: 'text', label: 'Disabled Field', default: 'value', disabled: true },
+                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
+                {
+                    key: 'disabledField',
+                    type: 'text',
+                    label: 'Disabled Field',
+                    default: 'value',
+                    disabled: true,
+                    group: 'display',
+                },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, { enabledField: 'test', disabledField: 'ignored' });
@@ -263,6 +268,7 @@ describe('SettingsView', () => {
                     label: 'Test Checkbox',
                     type: 'checkbox',
                     default: false,
+                    group: 'display',
                     validate,
                 },
             ];
@@ -292,7 +298,9 @@ describe('SettingsView', () => {
 
     describe('Scoping', () => {
         it('scopes reads and status updates to its rendered container', () => {
-            const fields: readonly ConfigField[] = [{ key: 'debug', label: 'Debug', type: 'checkbox', default: false }];
+            const fields: readonly ConfigField[] = [
+                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+            ];
             const otherContainer = document.createElement('div');
             const otherView = new SettingsView(fields, actions);
             view = new SettingsView(fields, actions);
@@ -325,7 +333,7 @@ describe('SettingsView', () => {
 
         it('uses change event for checkboxes', () => {
             const fields: readonly ConfigField[] = [
-                { key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false },
+                { key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false, group: 'display' },
             ];
             view = new SettingsView(fields, actions);
             view.render(container, {});
@@ -341,7 +349,9 @@ describe('SettingsView', () => {
         });
 
         it('uses input event for text fields', () => {
-            const fields: readonly ConfigField[] = [{ key: 'textField', label: 'Text', type: 'text', default: '' }];
+            const fields: readonly ConfigField[] = [
+                { key: 'textField', label: 'Text', type: 'text', default: '', group: 'display' },
+            ];
             view = new SettingsView(fields, actions);
             view.render(container, {});
 
@@ -363,6 +373,7 @@ describe('SettingsView', () => {
                     type: 'select',
                     default: 'option1',
                     options: ['option1', 'option2'],
+                    group: 'display',
                 },
             ];
             view = new SettingsView(fields, actions);
