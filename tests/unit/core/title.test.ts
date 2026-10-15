@@ -61,6 +61,20 @@ describe('Title', () => {
             expect(title).not.toBeUndefined();
             expect(title!.imdbVotes).toBeUndefined();
         });
+
+        it('should return undefined when the cache object is null', () => {
+            expect(Title.fromCacheJSON(null as unknown as TitleData, 'JSON Title')).toBeUndefined();
+        });
+
+        it('should return undefined for non-object input', () => {
+            expect(Title.fromCacheJSON('string' as unknown as TitleData, 'x')).toBeUndefined();
+            expect(Title.fromCacheJSON(42 as unknown as TitleData, 'x')).toBeUndefined();
+            expect(Title.fromCacheJSON(undefined as unknown as TitleData, 'x')).toBeUndefined();
+        });
+
+        it('should return undefined for an array instead of a title object', () => {
+            expect(Title.fromCacheJSON([] as unknown as TitleData, 'x')).toBeUndefined();
+        });
     });
 
     it('should create notFound title with default undefined source', () => {

@@ -61,7 +61,7 @@ export class CacheEntry {
     /**
      * Combines cached data with entry metadata to create a complete Title object.
      *
-     * @returns {Title|undefined} Hydrated Title, or undefined if data is missing
+     * @returns {Title|undefined} Hydrated Title, or undefined if data is missing or invalid
      */
     getTitle(): Title | undefined {
         if (!this.#data) return undefined;

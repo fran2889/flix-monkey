@@ -352,7 +352,7 @@ describe('OmdbApiClient', () => {
         const legacyCachedTitle = Title.fromCacheJSON(
             { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
             'Test'
-        );
+        )!;
         const result = await client.getDetails(legacyCachedTitle);
 
         expect(result!.apiTitle).toBe('Updated Title');
