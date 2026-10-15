@@ -127,7 +127,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
         const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT;
         const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
-        let timerId: ReturnType<typeof setTimeout> | null = null;
+        let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
             timerId = setTimeout(() => reject(new FlixMonkeyError('background relay timeout', url)), timeout);
         });
@@ -142,7 +142,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
             }
             return response.data;
         } finally {
-            if (timerId !== null) {
+            if (timerId !== undefined) {
                 clearTimeout(timerId);
             }
         }

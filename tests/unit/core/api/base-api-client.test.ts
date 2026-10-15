@@ -67,7 +67,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         await expect(client.fetch('Some Title')).rejects.toThrow('Network error');
     });
 
-    it('should return null if search returns no match', async () => {
+    it('should return undefined if search returns no match', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -80,7 +80,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should return Title with override ID when override exists but getDetails returns null', async () => {
+    it('should return Title with override ID when override exists but getDetails returns undefined', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(null).build();
         const mockOverrideManagerForTest: IdOverrideManager = {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
@@ -93,7 +93,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             mockLogger,
             mockOverrideManagerForTest
         );
-        client.getDetails = vi.fn().mockResolvedValue(null);
+        client.getDetails = vi.fn().mockResolvedValue(undefined);
 
         const result = await client.fetch('Some Title');
 

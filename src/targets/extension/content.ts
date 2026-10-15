@@ -51,7 +51,7 @@ interface MigrationResponse {
      * The ref wrapper avoids a temporal dead zone: the listener closure captures the object,
      * and app is assigned into it synchronously before any storage events can fire.
      */
-    const appRef = { app: null as ReturnType<typeof startApp> };
+    const appRef = { app: undefined as ReturnType<typeof startApp> };
 
     browser.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, _areaName: string) => {
         Object.entries(changes).forEach(([k, v]) => {

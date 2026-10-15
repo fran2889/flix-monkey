@@ -73,7 +73,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should skip unhealthy client and not cache the result', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const unhealthyClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: false }),
@@ -109,7 +109,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should disable client on 4xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const error = new FlixMonkeyError('HTTP 401', 'https://api.example.com', 401, 'Unauthorized');
         const mockClient = {
             source: 'xmdb',
@@ -125,7 +125,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should NOT disable client on 5xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const error = new FlixMonkeyError('HTTP 500', 'https://api.example.com', 500, 'Internal Server Error');
         const mockClient = {
             source: 'xmdb',
@@ -140,7 +140,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should log at error level for HTTP errors with status, url, and body', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const error = new FlixMonkeyError('HTTP 403', 'https://api.example.com/search', 403, 'Forbidden');
         const mockClient = {
             source: 'xmdb',
@@ -178,7 +178,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should log on successful data retrieval', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(null), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const title = buildTitle().withApiTitle('Logged Movie').withSource('agregarr').build();
         const mockClient = {
             source: 'agregarr',

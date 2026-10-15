@@ -91,9 +91,9 @@ describe('api-clients integration', () => {
 
     beforeAll(() => {
         logger = new Logger(adapter as PlatformAdapter);
-        const getter = (key: string): string | null => {
+        const getter = (key: string): string | undefined => {
             const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
-            return process.env[envKey] ?? null;
+            return process.env[envKey] ?? undefined;
         };
         configManager = new ConfigManager(buildMockAdapter().withConfigGetReturning(getter).build(), logger);
         badKeyConfigManager = new ConfigManager(
@@ -133,7 +133,7 @@ describe('api-clients integration', () => {
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
             expectPercentageRating(result.mcRating, 'XMDB Metacritic');
-            expect(result.rtRating).toBeNull();
+            expect(result.rtRating).toBeUndefined();
         });
 
         it('OMDB', async () => {
@@ -164,8 +164,8 @@ describe('api-clients integration', () => {
             assertNonNullTitle(result);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
-            expect(result.rtRating).toBeNull();
-            expect(result.mcRating).toBeNull();
+            expect(result.rtRating).toBeUndefined();
+            expect(result.mcRating).toBeUndefined();
         });
     });
 
@@ -236,7 +236,7 @@ describe('api-clients integration', () => {
                 logger,
                 overrideManager
             );
-            expect(await client.search(TITLE)).toBeNull();
+            expect(await client.search(TITLE)).toBeUndefined();
         });
 
         it('OMDB', async () => {
@@ -248,7 +248,7 @@ describe('api-clients integration', () => {
                 overrideManager
             );
             const result = await client.search(TITLE);
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
 
         it('Agregarr', async () => {
@@ -259,7 +259,7 @@ describe('api-clients integration', () => {
                 logger,
                 overrideManager
             );
-            expect(await client.search(TITLE)).toBeNull();
+            expect(await client.search(TITLE)).toBeUndefined();
         });
     });
 
@@ -276,7 +276,7 @@ describe('api-clients integration', () => {
             );
             const searchResult = new Title({ imdbId: INVALID_ID, displayTitle: 'nonexistent' });
             const result = await client.getDetails(searchResult);
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
     });
 

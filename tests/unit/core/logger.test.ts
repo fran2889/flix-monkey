@@ -8,7 +8,7 @@ import { Logger } from '../../../src/core/logger';
 import { buildMockAdapter } from '../../mocks/adapter';
 
 describe('core/logger', () => {
-    function makeLogger(debugVal: boolean | string | null = false) {
+    function makeLogger(debugVal: boolean | string = false) {
         return new Logger(
             buildMockAdapter()
                 .withConfigGetReturning((key: string) => (key === 'debug' ? debugVal : undefined))

@@ -170,11 +170,11 @@ function createOptionalRatingBadge(
 }
 
 function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLElement): void {
-    let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
     const clearHover = (): void => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
-            hoverTimeout = null;
+            hoverTimeout = undefined;
         }
         actionsContainer.classList.remove('fm-actions-visible');
     };

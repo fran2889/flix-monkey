@@ -70,7 +70,7 @@ export class OmdbApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB], null),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB]),
             ApiSource.OMDB
         );
     }

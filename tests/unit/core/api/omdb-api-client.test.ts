@@ -219,7 +219,7 @@ describe('OmdbApiClient', () => {
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null on OMDB False response', async () => {
+    it('should return undefined on OMDB False response', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const client = new OmdbApiClient(
             mockAdapterForTest,

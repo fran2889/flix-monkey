@@ -10,9 +10,9 @@ export interface SurfaceDefinition {
     /** CSS selector for title elements. */
     titleSelector: string;
     /** Returns the title text. */
-    getTitle: (_element: Element) => string | null;
+    getTitle: (_element: Element) => string | undefined;
     /** Returns the container element. */
-    getContainer: (_element: Element) => Element | null;
+    getContainer: (_element: Element) => Element | undefined;
     /** Optional container decorator. */
     decorateContainer?: (_container: Element, _element: Element) => void;
     /** Whether this surface supports fading. Default: false */

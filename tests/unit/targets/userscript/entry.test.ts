@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 let adapter: { registerMenuCommand: Mock };
-let appHandle: { cacheManager: unknown; disabledManager: unknown } | null;
+let appHandle: { cacheManager: unknown; disabledManager: unknown } | undefined;
 let cacheConstructor: Mock<(..._args: unknown[]) => unknown>;
 let configConstructor: Mock<(..._args: unknown[]) => unknown>;
 let disabledConstructor: Mock<(..._args: unknown[]) => unknown>;
@@ -101,7 +101,7 @@ describe('userscript entry point', () => {
         adapter = {
             registerMenuCommand: vi.fn(),
         };
-        appHandle = null;
+        appHandle = undefined;
         cacheConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-cache' }));
         configConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-config' }));
         disabledConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-disabled' }));
@@ -146,7 +146,7 @@ describe('userscript entry point', () => {
         );
     });
 
-    it('registers the settings menu when startApp returns null', async () => {
+    it('registers the settings menu when startApp returns undefined', async () => {
         const appModule = await import('../../../../src/core/app');
         const migrationsModule = await import('../../../../src/core/migrations');
 

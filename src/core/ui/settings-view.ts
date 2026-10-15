@@ -35,8 +35,8 @@ export interface ConfigField {
 export class SettingsView {
     readonly #fields: readonly ConfigField[];
     readonly #actions: SettingsActions;
-    #container: HTMLElement | null = null;
-    #debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    #container: HTMLElement | undefined;
+    #debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
     /**
      * Creates a SettingsView instance.
@@ -417,7 +417,7 @@ export class SettingsView {
     }
 
     #setupAutoSave(): void {
-        if (this.#container === null) return;
+        if (this.#container === undefined) return;
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
             const eventType = (input as HTMLInputElement).type === 'checkbox' ? 'change' : 'input';
@@ -460,7 +460,7 @@ export class SettingsView {
      */
     validate(values: Record<string, unknown>): string[] {
         const errors: string[] = [];
-        if (this.#container === null) return errors;
+        if (this.#container === undefined) return errors;
         for (const field of this.#fields) {
             if (field.type === 'action') continue;
             if (field.disabled) continue;
@@ -480,7 +480,7 @@ export class SettingsView {
      * @param type - Status type for styling ('success', 'error', etc.).
      */
     showStatus(message: string, type: string): void {
-        if (this.#container === null) return;
+        if (this.#container === undefined) return;
         const status = this.#container.querySelector('[id="fm-status"]');
         if (status) {
             status.textContent = message;

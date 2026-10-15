@@ -29,13 +29,13 @@ export class FlixMonkeyApp {
     readonly #inFlight = new Map<string, Promise<Title>>();
     readonly #pendingRoots = new Set<Element | Document>();
     readonly #debouncedDecorate: () => void;
-    #observer: MutationObserver | null = null;
+    #observer: MutationObserver | undefined;
     #initialised = false;
-    #boundDisconnect: (() => void) | null = null;
+    #boundDisconnect: (() => void) | undefined;
     #navigationPatched = false;
-    #originalPushState: ((..._args: unknown[]) => void) | null = null;
-    #originalReplaceState: ((..._args: unknown[]) => void) | null = null;
-    #popstateHandler: (() => void) | null = null;
+    #originalPushState: ((..._args: unknown[]) => void) | undefined;
+    #originalReplaceState: ((..._args: unknown[]) => void) | undefined;
+    #popstateHandler: (() => void) | undefined;
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
 
@@ -119,8 +119,8 @@ export class FlixMonkeyApp {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
 
-        this.#originalPushState = history.pushState as ((..._args: unknown[]) => void) | null;
-        this.#originalReplaceState = history.replaceState as ((..._args: unknown[]) => void) | null;
+        this.#originalPushState = history.pushState as (..._args: unknown[]) => void;
+        this.#originalReplaceState = history.replaceState as (..._args: unknown[]) => void;
 
         history.pushState = (..._args: unknown[]): void => {
             this.#originalPushState?.apply(history, _args);
@@ -284,10 +284,10 @@ export class FlixMonkeyApp {
 
     #disconnect(): void {
         this.#observer?.disconnect();
-        this.#observer = null;
+        this.#observer = undefined;
         if (this.#boundDisconnect) {
             window.removeEventListener('beforeunload', this.#boundDisconnect);
-            this.#boundDisconnect = null;
+            this.#boundDisconnect = undefined;
         }
         if (this.#navigationPatched) {
             if (this.#originalPushState) {
@@ -306,10 +306,10 @@ export class FlixMonkeyApp {
     /**
      * Extract IMDb ID from user input (direct ID or URL).
      * @param input - User input
-     * @returns Extracted IMDb ID or null if invalid
+     * @returns Extracted IMDb ID or undefined if invalid
      */
-    #extractImdbId(input: string): string | null {
-        if (!input) return null;
+    #extractImdbId(input: string): string | undefined {
+        if (!input) return undefined;
         const trimmed = input.trim();
         if (/^tt\d+$/.test(trimmed)) {
             return trimmed;
@@ -319,7 +319,7 @@ export class FlixMonkeyApp {
         if (match) {
             return `tt${match[1]}`;
         }
-        return null;
+        return undefined;
     }
 
     /**
@@ -378,18 +378,18 @@ function createApiClient(
 
 /**
  * @param adapter - Platform adapter
- * @returns FlixMonkeyApp or null if service not detected or not enabled
+ * @returns FlixMonkeyApp or undefined if service not detected or not enabled
  */
-export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | null {
+export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const currentService = ServiceRegistry.detect();
     if (!currentService) {
-        return null;
+        return undefined;
     }
 
     const logger = new Logger(adapter);
     const configManager = new ConfigManager(adapter, logger);
     if (!currentService.isEnabled(configManager)) {
-        return null;
+        return undefined;
     }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);

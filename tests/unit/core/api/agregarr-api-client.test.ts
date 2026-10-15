@@ -74,7 +74,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe(type);
     });
 
-    it('should return null if no results found', async () => {
+    it('should return undefined if no results found', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const client = new AgregarrApiClient(
             mockAdapter,
@@ -100,7 +100,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null if IMDb Suggestions response has no d array', async () => {
+    it('should return undefined if IMDb Suggestions response has no d array', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const client = new AgregarrApiClient(
             mockAdapter,
@@ -126,7 +126,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null when IMDb Suggestions has no supported title types', async () => {
+    it('should return undefined when IMDb Suggestions has no supported title types', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
             .build();
@@ -498,12 +498,12 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            // Current behavior: returns a Title with the override ID when getDetails returns null
+            // Current behavior: returns a Title with the override ID when getDetails returns undefined
             expect(result).toBeInstanceOf(Title);
             expect(result!.imdbId).toBe('tt9999999');
             expect(result!.displayTitle).toBe('Test Movie');
             expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
-            // Note: markDisabled is NOT called when getDetails returns null (only when it throws)
+            // Note: markDisabled is NOT called when getDetails returns undefined (only when it throws)
             expect(mockDisabledManagerForTest.disable).not.toHaveBeenCalled();
         });
 

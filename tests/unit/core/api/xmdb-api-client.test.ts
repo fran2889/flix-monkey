@@ -51,7 +51,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbRating).toBeUndefined();
     });
 
-    it('should return null if no search results found', async () => {
+    it('should return undefined if no search results found', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -77,7 +77,7 @@ describe('XmdbApiClient', () => {
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
     });
 
-    it('should return null if search results have no titles', async () => {
+    it('should return undefined if search results have no titles', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', name: 'Someone' }] })
             .build();
@@ -128,7 +128,7 @@ describe('XmdbApiClient', () => {
         expect(result!.mcRating).toBe(88);
     });
 
-    it('should return null if details fetch returns an error', async () => {
+    it('should return undefined if details fetch returns an error', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ error: 'not found' }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -185,7 +185,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should return null for unknown title_type', async () => {
+    it('should return undefined for unknown title_type', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt3' }] })
             .withHttpFetchResolvingToOnce({
@@ -223,7 +223,7 @@ describe('XmdbApiClient', () => {
         );
     });
 
-    it('should return null when details response has no title', async () => {
+    it('should return undefined when details response has no title', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',

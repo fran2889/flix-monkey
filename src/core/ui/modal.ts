@@ -7,8 +7,8 @@
  * Accessible modal dialog component for settings and other UI overlays.
  */
 export class Modal {
-    #returnFocus: HTMLElement | null = null;
-    #escHandler: ((_e: KeyboardEvent) => void) | null = null;
+    #returnFocus: HTMLElement | undefined;
+    #escHandler: ((_e: KeyboardEvent) => void) | undefined;
     overlay: HTMLDivElement;
 
     /**
@@ -54,9 +54,9 @@ export class Modal {
      * Displays the modal and sets up keyboard navigation.
      */
     open(): void {
-        if (this.#escHandler !== null) return;
+        if (this.#escHandler !== undefined) return;
         document.body.appendChild(this.overlay);
-        this.#returnFocus = document.activeElement as HTMLElement | null;
+        this.#returnFocus = (document.activeElement as HTMLElement | null) ?? undefined;
         this.overlay.style.display = 'flex';
         const contentElement = this.overlay.querySelector('.fm-modal-content');
         if (contentElement) {
@@ -69,9 +69,9 @@ export class Modal {
     }
 
     #close(): void {
-        if (this.#escHandler !== null) {
+        if (this.#escHandler !== undefined) {
             document.removeEventListener('keydown', this.#escHandler);
-            this.#escHandler = null;
+            this.#escHandler = undefined;
         }
         this.overlay.remove();
         this.#returnFocus?.focus?.();
