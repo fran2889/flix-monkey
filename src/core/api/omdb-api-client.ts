@@ -96,7 +96,7 @@ export class OmdbApiClient extends BaseApiClient {
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
-        if (searchTitle.imdbId && (searchTitle.apiTitle === undefined || searchTitle.apiTitle === null)) {
+        if (searchTitle.imdbId && searchTitle.apiTitle === undefined) {
             const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });

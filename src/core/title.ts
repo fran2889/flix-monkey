@@ -44,21 +44,24 @@ export class Title {
      * @param {TitleOptions} [options]
      */
     constructor({
-        displayTitle = undefined,
-        apiTitle = undefined,
-        imdbId = undefined,
-        year = undefined,
-        imdbRating = undefined,
-        imdbVotes = undefined,
-        rtRating = undefined,
-        mcRating = undefined,
-        source = undefined,
-        type = undefined,
+        displayTitle,
+        apiTitle,
+        imdbId,
+        year,
+        imdbRating,
+        imdbVotes,
+        rtRating,
+        mcRating,
+        source,
+        type,
     }: TitleOptions = {}) {
-        this.displayTitle = displayTitle;
-        this.apiTitle = apiTitle;
-        this.imdbId = imdbId;
-        this.year = year !== undefined && year !== null ? Number.parseInt(year as string, 10) : undefined;
+        // JSON-decoded input (legacy cache entries, untyped callers) can carry literal
+        // nulls; collapse them here so no instance ever holds a null field.
+        this.displayTitle = displayTitle ?? undefined;
+        this.apiTitle = apiTitle ?? undefined;
+        this.imdbId = imdbId ?? undefined;
+        const normalizedYear = year ?? undefined;
+        this.year = normalizedYear === undefined ? undefined : Number.parseInt(normalizedYear as string, 10);
         this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
             const num = Number.parseFloat(v as string);
             return Number.isNaN(num) ? undefined : num;
@@ -75,8 +78,8 @@ export class Title {
             const m = /^(\d+)/.exec(String(v));
             return m ? Number.parseInt(m[1], 10) : undefined;
         });
-        this.source = source;
-        this.type = type;
+        this.source = source ?? undefined;
+        this.type = type ?? undefined;
         Object.freeze(this);
     }
 

@@ -165,6 +165,21 @@ describe('Title', () => {
             expect(title.rtRating).toBeUndefined();
             expect(title.mcRating).toBeUndefined();
         });
+
+        it('normalizes untyped null identity fields to undefined', () => {
+            const title = new Title({
+                displayTitle: null,
+                apiTitle: null,
+                imdbId: null,
+                source: null,
+                type: null,
+            } as unknown as TitleOptions);
+            expect(title.displayTitle).toBeUndefined();
+            expect(title.apiTitle).toBeUndefined();
+            expect(title.imdbId).toBeUndefined();
+            expect(title.source).toBeUndefined();
+            expect(title.type).toBeUndefined();
+        });
     });
 
     describe('type field', () => {
