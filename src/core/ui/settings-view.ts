@@ -76,6 +76,13 @@ export class SettingsView {
         const fieldsByGroup: Record<string, ConfigField[]> = {};
         const ungroupedFields: ConfigField[] = [];
 
+        // TODO: remove the ungrouped-fields fallback. `ConfigField.group` is a required
+        // GroupKey, so GROUPS[field.group] is always defined, hasValidGroup is always
+        // truthy and ungroupedFields is always empty. The fallback only existed to
+        // tolerate a weaker duplicate of ConfigField. Deleting it also makes the
+        // isUngrouped flag, #addUngroupedFields and the isUngrouped branch in
+        // #createGroupElement unreachable; note that branch currently assigns
+        // container.className = 'settings-group' in both arms and only skips the header.
         for (const field of this.#fields) {
             const hasValidGroup = field.group && GROUPS[field.group];
             if (hasValidGroup) {
