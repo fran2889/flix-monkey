@@ -6,17 +6,22 @@ import { buildImdbUrl } from './utils/index';
 
 /**
  * Options for creating a Title instance.
- * String values for numeric fields are accepted and normalized to numbers.
+ *
+ * Rating fields are strictly numeric: each API client owns the wire format of
+ * its provider and converts it to a number before constructing a Title. Anything
+ * that is not a finite number is collapsed to `undefined`. `year` additionally
+ * accepts a string because providers report it as a partial year such as
+ * `"2020-"`.
  */
 export interface TitleOptions {
     displayTitle?: string | undefined;
     apiTitle?: string | undefined;
     imdbId?: string | undefined;
     year?: string | number | undefined;
-    imdbRating?: string | number | undefined;
-    imdbVotes?: string | number | undefined;
-    rtRating?: string | number | undefined;
-    mcRating?: string | number | undefined;
+    imdbRating?: number | undefined;
+    imdbVotes?: number | undefined;
+    rtRating?: number | undefined;
+    mcRating?: number | undefined;
     source?: string | undefined;
     type?: string | undefined;
 }
@@ -24,9 +29,8 @@ export interface TitleOptions {
 /**
  * Immutable data class representing a movie or show with its ratings.
  *
- * Rating values are normalised during construction: `undefined`, empty
- * strings, and `"N/A"` are all collapsed to `undefined`; numeric strings are parsed
- * to the appropriate number type per field.
+ * Ratings are normalised during construction: every field that is not a finite
+ * number is collapsed to `undefined`.
  */
 export class Title {
     displayTitle: string | undefined;
@@ -60,24 +64,11 @@ export class Title {
         this.displayTitle = displayTitle ?? undefined;
         this.apiTitle = apiTitle ?? undefined;
         this.imdbId = imdbId ?? undefined;
-        const normalizedYear = year ?? undefined;
-        this.year = normalizedYear === undefined ? undefined : Number.parseInt(normalizedYear as string, 10);
-        this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
-            const num = Number.parseFloat(v as string);
-            return Number.isNaN(num) ? undefined : num;
-        });
-        this.imdbVotes = this.#normalizeRating(imdbVotes, (v: unknown) => {
-            const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? undefined : num;
-        });
-        this.rtRating = this.#normalizeRating(rtRating, (v: unknown) => {
-            const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? undefined : num;
-        });
-        this.mcRating = this.#normalizeRating(mcRating, (v: unknown) => {
-            const m = /^(\d+)/.exec(String(v));
-            return m ? Number.parseInt(m[1], 10) : undefined;
-        });
+        this.year = year === undefined || year === null ? undefined : Number.parseInt(String(year), 10);
+        this.imdbRating = this.#toRating(imdbRating);
+        this.imdbVotes = this.#toRating(imdbVotes);
+        this.rtRating = this.#toRating(rtRating);
+        this.mcRating = this.#toRating(mcRating);
         this.source = source ?? undefined;
         this.type = type ?? undefined;
         Object.freeze(this);
@@ -108,9 +99,12 @@ export class Title {
         return new Title({ ...(obj as TitleData), displayTitle });
     }
 
-    #normalizeRating(val: unknown, converter: (_v: unknown) => number | undefined): number | undefined {
-        if (val === null || val === undefined || val === '' || val === 'N/A') return undefined;
-        return converter(val);
+    /**
+     * Enforces the numeric rating contract: anything that is not a finite number
+     * (null, undefined, NaN, Infinity, or a raw wire-format string) has no rating.
+     */
+    #toRating(val: unknown): number | undefined {
+        return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
     }
 
     /**

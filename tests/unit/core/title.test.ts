@@ -69,6 +69,12 @@ describe('Title', () => {
                 expect(Title.fromCacheJSON(payload, 'JSON Title')).toBeUndefined();
             }
         );
+
+        it('should collapse a legacy string rating in the payload to undefined', () => {
+            const title = Title.fromCacheJSON({ ...emptyTitleData, imdbRating: '8.5' }, 'Legacy');
+            expect(title!.imdbRating).toBeUndefined();
+            expect(title!.hasRating).toBe(false);
+        });
     });
 
     it('should create notFound title with default undefined source', () => {
@@ -111,48 +117,44 @@ describe('Title', () => {
         it('should be true when imdbRating is 0', () => {
             expect(new Title({ imdbRating: 0 }).hasRating).toBe(true);
         });
-        it('should be true when rtRating is "0%"', () => {
-            expect(new Title({ rtRating: '0%' }).hasRating).toBe(true);
+        it('should be true when rtRating is 0', () => {
+            expect(new Title({ rtRating: 0 }).hasRating).toBe(true);
         });
-        it('should be true when mcRating is "0/100"', () => {
-            expect(new Title({ mcRating: '0/100' }).hasRating).toBe(true);
+        it('should be true when mcRating is 0', () => {
+            expect(new Title({ mcRating: 0 }).hasRating).toBe(true);
         });
         it('should be false when all ratings are undefined', () => {
             expect(new Title({}).hasRating).toBe(false);
         });
     });
 
-    describe('IMDb rating normalization', () => {
+    describe('rating normalization', () => {
+        // Ratings arrive as numbers: each API client owns its provider's wire format
+        // and converts it before constructing a Title. Anything that is not a finite
+        // number carries no rating, including raw wire strings reaching an untyped caller.
+        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['8.5'], ['90%'], ['N/A'], ['']])(
+            'collapses non-numeric input %s to undefined',
+            (input: unknown) => {
+                const options = { imdbRating: input, imdbVotes: input, rtRating: input, mcRating: input };
+                const title = new Title(options as unknown as TitleOptions);
+                expect(title.imdbRating).toBeUndefined();
+                expect(title.imdbVotes).toBeUndefined();
+                expect(title.rtRating).toBeUndefined();
+                expect(title.mcRating).toBeUndefined();
+                expect(title.hasRating).toBe(false);
+            }
+        );
+
         it.each([
-            ['N/A', undefined],
-            ['', undefined],
-            [undefined, undefined],
-            ['8.5', 8.5],
             [0, 0],
-        ])('normalizes imdbRating %s -> %s', (input, expected) => {
-            expect(new Title({ imdbRating: input }).imdbRating).toBe(expected);
-        });
-
-        it.each([
-            ['90%', 90],
-            ['0%', 0],
-            ['N/A', undefined],
-            ['', undefined],
-            [undefined, undefined],
-            ['8.5/10', 8], // parseInt stops at non-digit
-        ])('normalizes rtRating %s -> %s', (input, expected) => {
-            expect(new Title({ rtRating: input }).rtRating).toBe(expected);
-        });
-
-        it.each([
-            ['85/100', 85],
-            ['0/100', 0],
-            ['N/A', undefined],
-            ['', undefined],
-            [undefined, undefined],
-            ['abc', undefined],
-        ])('normalizes mcRating %s -> %s', (input, expected) => {
-            expect(new Title({ mcRating: input }).mcRating).toBe(expected);
+            [8.5, 8.5],
+            [90, 90],
+        ])('keeps the numeric rating %s -> %s', (input, expected) => {
+            const title = new Title({ imdbRating: input, rtRating: input, mcRating: input, imdbVotes: input });
+            expect(title.imdbRating).toBe(expected);
+            expect(title.rtRating).toBe(expected);
+            expect(title.mcRating).toBe(expected);
+            expect(title.imdbVotes).toBe(expected);
         });
 
         it('parses year from open-ended range string', () => {
@@ -217,17 +219,12 @@ describe('Title', () => {
     describe('imdbVotes normalization', () => {
         it.each([
             [undefined, undefined],
-            ['', undefined],
-            ['N/A', undefined],
             [0, 0],
             [1, 1],
             [999, 999],
             [1000, 1000],
             [2500000, 2500000],
-            ['2500000', 2500000],
-            ['2,500,000', 2], // parseInt stops at comma, returns 2
-            ['not a number', undefined],
-        ])('normalizes imdbVotes %s -> %s', (input, expected) => {
+        ])('keeps numeric imdbVotes %s -> %s', (input, expected) => {
             expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });
@@ -256,7 +253,7 @@ describe('Title', () => {
             apiTitle: 'Test Movie',
             imdbId: 'tt1234567',
             year: 2024,
-            imdbRating: '8.5',
+            imdbRating: 8.5,
         });
         const cacheObj = title.toCacheJSON();
         expect(cacheObj).not.toHaveProperty('displayTitle');

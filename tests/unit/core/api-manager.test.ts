@@ -13,7 +13,7 @@ import { buildTitle } from '../../mocks/title';
 
 describe('ApiClientManager', () => {
     it('should return cached data if available', async () => {
-        const titleObj = buildTitle().withApiTitle('Cached Movie').withImdbRating('8.0').withSource('agregarr').build();
+        const titleObj = buildTitle().withApiTitle('Cached Movie').withImdbRating(8.0).withSource('agregarr').build();
         const entry = buildCacheEntry()
             .withDisplayTitle('Some Title')
             .withImdbId(undefined)
@@ -282,7 +282,7 @@ describe('ApiClientManager', () => {
             .withDisplayTitle('Fresh Movie')
             .withApiTitle('Fresh Movie')
             .withImdbId('tt456')
-            .withImdbRating('8.0')
+            .withImdbRating(8.0)
             .build();
         const entry = buildCacheEntry()
             .withDisplayTitle('Fresh Movie')
@@ -368,7 +368,7 @@ describe('ApiClientManager', () => {
                     buildTitle()
                         .withApiTitle('Provider Switch Movie')
                         .withImdbId('tt1234567')
-                        .withImdbRating('7.5')
+                        .withImdbRating(7.5)
                         .withSource('agregarr')
                         .build()
                 ),

@@ -10,10 +10,10 @@ function buildTitle() {
         displayTitle: string | undefined;
         apiTitle: string | undefined;
         imdbId: string | undefined;
-        imdbRating: string | number | undefined;
-        imdbVotes: string | number | undefined;
-        rtRating: string | number | undefined;
-        mcRating: string | number | undefined;
+        imdbRating: number | undefined;
+        imdbVotes: number | undefined;
+        rtRating: number | undefined;
+        mcRating: number | undefined;
         year: string | number | undefined;
         source: string | undefined;
         type: string | undefined;
@@ -42,19 +42,19 @@ function buildTitle() {
             props.imdbId = value;
             return this;
         },
-        withImdbRating(value: string | number | undefined) {
+        withImdbRating(value: number | undefined) {
             props.imdbRating = value;
             return this;
         },
-        withImdbVotes(value: string | number | undefined) {
+        withImdbVotes(value: number | undefined) {
             props.imdbVotes = value;
             return this;
         },
-        withRtRating(value: string | number | undefined) {
+        withRtRating(value: number | undefined) {
             props.rtRating = value;
             return this;
         },
-        withMcRating(value: string | number | undefined) {
+        withMcRating(value: number | undefined) {
             props.mcRating = value;
             return this;
         },
@@ -113,7 +113,7 @@ buildTitle.missingImdbId = () => {
 };
 
 // Parametrized presets
-buildTitle.withRating = (rating: string | number | undefined) => {
+buildTitle.withRating = (rating: number | undefined) => {
     return buildTitle()
         .withImdbId('tt1234567')
         .withImdbRating(rating)
@@ -133,10 +133,10 @@ buildTitle.fromCacheJSON = (json: unknown) => {
         apiTitle: (extractFromObj(obj, 'apiTitle') as string | undefined) ?? undefined,
         displayTitle: (extractFromObj(obj, 'displayTitle') as string | undefined) ?? undefined,
         imdbId: (extractFromObj(obj, 'imdbId') as string | undefined) ?? undefined,
-        imdbRating: (extractFromObj(obj, 'imdbRating') as string | number | undefined) ?? undefined,
-        imdbVotes: (extractFromObj(obj, 'imdbVotes') as string | number | undefined) ?? undefined,
-        rtRating: (extractFromObj(obj, 'rtRating') as string | number | undefined) ?? undefined,
-        mcRating: (extractFromObj(obj, 'mcRating') as string | number | undefined) ?? undefined,
+        imdbRating: (extractFromObj(obj, 'imdbRating') as number | undefined) ?? undefined,
+        imdbVotes: (extractFromObj(obj, 'imdbVotes') as number | undefined) ?? undefined,
+        rtRating: (extractFromObj(obj, 'rtRating') as number | undefined) ?? undefined,
+        mcRating: (extractFromObj(obj, 'mcRating') as number | undefined) ?? undefined,
         year: (extractFromObj(obj, 'year') as string | number | undefined) ?? undefined,
         source: (extractFromObj(obj, 'source') as string | undefined) ?? undefined,
         type: (extractFromObj(obj, 'type') as string | undefined) ?? undefined,

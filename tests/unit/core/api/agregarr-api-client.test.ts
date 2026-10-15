@@ -317,7 +317,7 @@ describe('AgregarrApiClient', () => {
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
                     .withImdbId(searchTitle.imdbId)
-                    .withImdbRating('8.0')
+                    .withImdbRating(8.0)
                     .build();
             }
         }
@@ -353,7 +353,7 @@ describe('AgregarrApiClient', () => {
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
                     .withImdbId(searchTitle.imdbId)
-                    .withImdbRating('8.0')
+                    .withImdbRating(8.0)
                     .build();
             }
         }

@@ -81,7 +81,7 @@ describe('CacheManager', () => {
             .withDisplayTitle('Test Title')
             .withApiTitle('Test Title')
             .withYear(2026)
-            .withImdbRating('8.0')
+            .withImdbRating(8.0)
             .build();
         adapter.storageSet.mockImplementation((key, value) => {
             // Store the written value so we can return it on read
@@ -135,7 +135,7 @@ describe('CacheManager', () => {
         const titleObj = buildTitle()
             .withDisplayTitle('Indefinite Title')
             .withApiTitle('Indefinite Title')
-            .withImdbRating('8.0')
+            .withImdbRating(8.0)
             .build();
         const entry = buildCacheEntry()
             .withDisplayTitle('Indefinite Title')
@@ -179,7 +179,7 @@ describe('CacheManager', () => {
         const titleObj = buildTitle()
             .withDisplayTitle('Cached Movie')
             .withApiTitle('Cached Movie')
-            .withImdbRating('8.0')
+            .withImdbRating(8.0)
             .withSource('omdb')
             .build();
         const entry = buildCacheEntry()
