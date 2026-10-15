@@ -6,9 +6,28 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { ConfigField } from '../../../../src/core/config/index';
 // eslint-disable-next-line no-duplicate-imports
-import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index';
+import { CONFIG_DEFAULTS, CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index';
 
 describe('core/config-fields', () => {
+    describe('CONFIG_DEFAULTS', () => {
+        // Action fields carry no stored value. If they leaked into CONFIG_DEFAULTS,
+        // ConfigManager.get would accept them as keys and stringify the missing value.
+        it('should exclude action fields', () => {
+            const actionKeys = CONFIG_FIELDS.filter(f => f.type === 'action').map(f => f.key);
+            expect(actionKeys.length).toBeGreaterThan(0);
+            expect(actionKeys.every(key => !(key in CONFIG_DEFAULTS))).toBe(true);
+        });
+
+        it('should hold a concrete value for every settings key', () => {
+            const settingKeys = CONFIG_FIELDS.filter(f => f.type !== 'action').map(f => f.key);
+            expect(Object.keys(CONFIG_DEFAULTS).sort()).toEqual([...settingKeys].sort());
+            for (const value of Object.values(CONFIG_DEFAULTS)) {
+                expect(['string', 'boolean']).toContain(typeof value);
+            }
+            expect(CONFIG_DEFAULTS.debug).toBe(true);
+        });
+    });
+
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', (field: ConfigField) => {
             expect(field).toHaveProperty('key');

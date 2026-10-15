@@ -225,16 +225,24 @@ export const CONFIG_FIELDS = [
     },
 ] satisfies readonly ConfigField[];
 
-/** Default values for all config fields. */
-export const CONFIG_DEFAULTS = Object.fromEntries(CONFIG_FIELDS.map(f => [f.key, f.default])) as Record<
-    ConfigFieldKey,
-    string | boolean
->;
+/**
+ * Key of an action-type field. Action fields carry no stored value, so they
+ * have no default and are excluded from {@link CONFIG_DEFAULTS}.
+ */
+export type ActionKey = 'clearCache' | 'resetClients';
+
+/** Key of a field that stores a user-configurable value. */
+export type SettingKey = Exclude<ConfigFieldKey, ActionKey>;
+
+/** Default values for all settings-bearing config fields. */
+export const CONFIG_DEFAULTS = Object.fromEntries(
+    CONFIG_FIELDS.filter(f => f.type !== 'action').map(f => [f.key, f.default])
+) as Record<SettingKey, string | boolean>;
 
 /** Allowed values for select-type config fields. */
 export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
     CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
-) as Record<ConfigFieldKey, string[]>;
+) as Record<SettingKey, string[]>;
 
 // Type for row label keys - includes all possible row values used in config
 export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
