@@ -7,17 +7,15 @@ import { buildImdbUrl } from './utils/index';
 /**
  * Options for creating a Title instance.
  *
- * Rating fields are strictly numeric: each API client owns the wire format of
+ * Numeric fields are strictly numeric: each API client owns the wire format of
  * its provider and converts it to a number before constructing a Title. Anything
- * that is not a finite number is collapsed to `undefined`. `year` additionally
- * accepts a string because providers report it as a partial year such as
- * `"2020-"`.
+ * that is not a finite number is collapsed to `undefined`.
  */
 export interface TitleOptions {
     displayTitle?: string | undefined;
     apiTitle?: string | undefined;
     imdbId?: string | undefined;
-    year?: string | number | undefined;
+    year?: number | undefined;
     imdbRating?: number | undefined;
     imdbVotes?: number | undefined;
     rtRating?: number | undefined;
@@ -29,8 +27,8 @@ export interface TitleOptions {
 /**
  * Immutable data class representing a movie or show with its ratings.
  *
- * Ratings are normalised during construction: every field that is not a finite
- * number is collapsed to `undefined`.
+ * `year` and the rating fields are normalised during construction: every field
+ * that is not a finite number is collapsed to `undefined`.
  */
 export class Title {
     displayTitle: string | undefined;
@@ -64,11 +62,11 @@ export class Title {
         this.displayTitle = displayTitle ?? undefined;
         this.apiTitle = apiTitle ?? undefined;
         this.imdbId = imdbId ?? undefined;
-        this.year = year === undefined || year === null ? undefined : Number.parseInt(String(year), 10);
-        this.imdbRating = this.#toRating(imdbRating);
-        this.imdbVotes = this.#toRating(imdbVotes);
-        this.rtRating = this.#toRating(rtRating);
-        this.mcRating = this.#toRating(mcRating);
+        this.year = this.#toFiniteNumber(year);
+        this.imdbRating = this.#toFiniteNumber(imdbRating);
+        this.imdbVotes = this.#toFiniteNumber(imdbVotes);
+        this.rtRating = this.#toFiniteNumber(rtRating);
+        this.mcRating = this.#toFiniteNumber(mcRating);
         this.source = source ?? undefined;
         this.type = type ?? undefined;
         Object.freeze(this);
@@ -100,10 +98,10 @@ export class Title {
     }
 
     /**
-     * Enforces the numeric rating contract: anything that is not a finite number
-     * (null, undefined, NaN, Infinity, or a raw wire-format string) has no rating.
+     * Enforces the numeric contract: anything that is not a finite number (null,
+     * undefined, NaN, Infinity, or a raw wire-format string) carries no value.
      */
-    #toRating(val: unknown): number | undefined {
+    #toFiniteNumber(val: unknown): number | undefined {
         return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
     }
 

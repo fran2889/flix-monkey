@@ -89,6 +89,29 @@ describe('OmdbApiClient', () => {
         expect(result!.year).toBeUndefined();
     });
 
+    // OMDb reports Year as a free-form string, so this client owns extracting the
+    // digits. Title only ever receives a number.
+    it.each([
+        ['2020', 2020],
+        ['2020-', 2020],
+        ['2020-01-01', 2020],
+        ['invalid', undefined],
+    ])('should convert Year %o -> %o', async (raw: string, expected: number | undefined) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.year).toBe(expected);
+    });
+
     it('should parse ratings from OMDB correctly', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({

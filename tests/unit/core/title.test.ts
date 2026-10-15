@@ -157,9 +157,18 @@ describe('Title', () => {
             expect(title.imdbVotes).toBe(expected);
         });
 
-        it('parses year from open-ended range string', () => {
-            expect(new Title({ year: '2020-' }).year).toBe(2020);
+        it('keeps a numeric year', () => {
+            expect(new Title({ year: 2020 }).year).toBe(2020);
         });
+
+        // Providers report years as partial strings such as "2020-"; extracting the
+        // digits is the client's job, so Title rejects the raw wire value.
+        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['2020-'], ['2020']])(
+            'collapses non-numeric year %s to undefined',
+            (input: unknown) => {
+                expect(new Title({ year: input } as unknown as TitleOptions).year).toBeUndefined();
+            }
+        );
 
         it('normalizes untyped null inputs to undefined', () => {
             const title = new Title({

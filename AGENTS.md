@@ -205,9 +205,11 @@ allowed are the ones the platform dictates (`prompt()`, `getAttribute()`,
 
 **Rating normalization**: each API client owns the wire format of its provider
 and converts it to a number before constructing a `Title`. `Title` accepts
-`number | undefined` for `imdbRating`, `imdbVotes`, `rtRating`, and `mcRating`
-and collapses anything else to `undefined`; it must not parse strings. `year` is
-the exception: providers report it as a partial string such as `"2020-"`.
+`number | undefined` for `year`, `imdbRating`, `imdbVotes`, `rtRating`, and
+`mcRating` and collapses anything else to `undefined`; it must not parse
+strings. Note that a provider's declared response type can be optimistic:
+OMDb sends ratings and years as strings (`"8.5"`, `"90%"`, `"2020-"`), so each
+client converts rather than trusting its interface.
 
 **Untrusted payloads**: `Title.fromCacheJSON` is the single validation boundary
 for decoded storage JSON. Pass the parsed value through unchanged and let it

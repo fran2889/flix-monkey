@@ -14,7 +14,7 @@ function buildTitle() {
         imdbVotes: number | undefined;
         rtRating: number | undefined;
         mcRating: number | undefined;
-        year: string | number | undefined;
+        year: number | undefined;
         source: string | undefined;
         type: string | undefined;
     } = {
@@ -58,7 +58,7 @@ function buildTitle() {
             props.mcRating = value;
             return this;
         },
-        withYear(value: string | number | undefined) {
+        withYear(value: number | undefined) {
             props.year = value;
             return this;
         },
@@ -137,7 +137,7 @@ buildTitle.fromCacheJSON = (json: unknown) => {
         imdbVotes: (extractFromObj(obj, 'imdbVotes') as number | undefined) ?? undefined,
         rtRating: (extractFromObj(obj, 'rtRating') as number | undefined) ?? undefined,
         mcRating: (extractFromObj(obj, 'mcRating') as number | undefined) ?? undefined,
-        year: (extractFromObj(obj, 'year') as string | number | undefined) ?? undefined,
+        year: (extractFromObj(obj, 'year') as number | undefined) ?? undefined,
         source: (extractFromObj(obj, 'source') as string | undefined) ?? undefined,
         type: (extractFromObj(obj, 'type') as string | undefined) ?? undefined,
     });
