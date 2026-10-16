@@ -12,7 +12,7 @@ import { WebExtensionAdapter } from '../../platform/webextension';
  * @returns A function that returns a Promise that resolves when migrations are complete
  */
 export function createExtensionMigrationExecutor(): () => Promise<void> {
-    let migrationPromise: Promise<void> | null = null;
+    let migrationPromise: Promise<void> | undefined;
 
     // eslint-disable-next-line @typescript-eslint/promise-function-async
     return () => {

@@ -12,14 +12,17 @@ describe('IdOverrideManager', () => {
     let mockAdapter: MockPlatformAdapter;
 
     beforeEach(() => {
-        mockAdapter = buildMockAdapter().withStorageGetResolvingTo(null).withStorageSetResolvingTo(undefined).build();
+        mockAdapter = buildMockAdapter()
+            .withStorageGetResolvingTo(undefined)
+            .withStorageSetResolvingTo(undefined)
+            .build();
         manager = new IdOverrideManager(mockAdapter);
     });
 
     describe('getImdbId', () => {
-        it('returns null when no override exists', async () => {
+        it('returns undefined when no override exists', async () => {
             const result = await manager.getImdbId('The Matrix');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
 
         it('returns stored imdbId when override exists', async () => {
@@ -33,17 +36,29 @@ describe('IdOverrideManager', () => {
                 if (key === 'fm-idoverride:the_matrix_reloaded') {
                     return Promise.resolve('{"imdbId":"tt0242653"}');
                 }
-                return Promise.resolve(null);
+                return Promise.resolve(undefined);
             });
             const result = await manager.getImdbId('The Matrix: Reloaded!');
             expect(result).toBe('tt0242653');
             expect(mockAdapter.storageGet).toHaveBeenCalledWith('fm-idoverride:the_matrix_reloaded');
         });
 
-        it('returns null when storage returns undefined', async () => {
+        it('returns undefined when storage returns undefined', async () => {
             mockAdapter.storageGet.mockResolvedValue(undefined);
             const result = await manager.getImdbId('The Matrix');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined when the stored payload has no imdbId key', async () => {
+            mockAdapter.storageGet.mockResolvedValue('{}');
+            const result = await manager.getImdbId('The Matrix');
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined when the stored imdbId is a literal null', async () => {
+            mockAdapter.storageGet.mockResolvedValue('{"imdbId":null}');
+            const result = await manager.getImdbId('The Matrix');
+            expect(result).toBeUndefined();
         });
     });
 
@@ -67,7 +82,7 @@ describe('IdOverrideManager', () => {
         it('handles corrupt storage data gracefully', async () => {
             mockAdapter.storageGet.mockResolvedValue('not-valid-json{');
             const result = await manager.getImdbId('Corrupt Movie');
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
         });
     });
 });

@@ -67,12 +67,12 @@ describe('ServiceRegistry', () => {
             assert(ServiceRegistry.detect() instanceof Service);
         });
 
-        it.each(['www.hbomax.com', 'evilnetflix.com', 'www.youtube.com', ''])('returns null for %s', hostname => {
+        it.each(['www.hbomax.com', 'evilnetflix.com', 'www.youtube.com', ''])('returns undefined for %s', hostname => {
             Object.defineProperty(window, 'location', {
                 value: { hostname },
                 configurable: true,
             });
-            assert.equal(ServiceRegistry.detect(), null);
+            assert.strictEqual(ServiceRegistry.detect(), undefined);
         });
     });
 });

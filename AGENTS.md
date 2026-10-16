@@ -93,7 +93,11 @@ Reuse this persistent profile. Do not use temporary or fresh user-data directori
 
 - **jsdom** is the global test environment (configured in `vitest.config.js`).
 - **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.ts`.
-- **Coverage thresholds**: 90% lines and 90% functions (enforced by Vitest).
+- **Coverage thresholds**: 90% for branches, statements, and functions (enforced by Vitest in
+  `vitest.config.js`). All four metrics are gated, so `npm run test:coverage` must stay clean
+  locally and in CI. Branch coverage is the strictest in practice: a change that adds
+  nullish-coalescing or type-guard branches without a matching test will fail the gate even when
+  statements and functions look healthy.
 
 ### Test Layout
 
@@ -198,6 +202,23 @@ Platform-agnostic business logic. All modules are pure ES modules.
 Directory modules are imported through their `index.ts` barrel using an explicit
 path (for example `../core/config/index.ts`), never as a bare directory.
 
+**Nullability**: use `undefined`, never `null`, for "no value" across `src/` and
+`tests/`. Omit the property rather than assigning `undefined`. The only `null`s
+allowed are the ones the platform dictates (`prompt()`, `getAttribute()`,
+`querySelector()`, `browser.storage.local.get(null)`).
+
+**Rating normalization**: each API client owns the wire format of its provider
+and converts it to a number before constructing a `Title`. `Title` accepts
+`number | undefined` for `year`, `imdbRating`, `imdbVotes`, `rtRating`, and
+`mcRating` and collapses anything else to `undefined`; it must not parse
+strings. Note that a provider's declared response type can be optimistic:
+OMDb sends ratings and years as strings (`"8.5"`, `"90%"`, `"2020-"`), so each
+client converts rather than trusting its interface.
+
+**Untrusted payloads**: `Title.fromCacheJSON` is the single validation boundary
+for decoded storage JSON. Pass the parsed value through unchanged and let it
+reject malformed input; do not cast untrusted data to a trusted shape upstream.
+
 **`src/core/ui/`**: Shared UI components
 
 | Module                | Responsibility                                                   |
@@ -255,7 +276,7 @@ All platform-specific I/O must go through the `adapter` instance. All abstract m
 ```js
 class PlatformAdapter {
     // All abstract; must be implemented:
-    async storageGet(key)           // Returns stored value or null when the key is absent
+    async storageGet(key)           // Returns stored value or undefined when the key is absent
     async storageGetAll()           // Returns all key/value pairs as object
     async storageSet(key, value)    // Stores a single key/value
     async storageSetMany(obj)       // Stores multiple key/values atomically
@@ -276,12 +297,24 @@ class PlatformAdapter {
 integer version order. `runMigrations()` compares this registry with the
 stored `fm_data_version`, runs newer migrations before application startup,
 and advances the stored version even when a migration or its recovery handler
-fails. Migration version 1 renames cached `Title.rating` data to
-`Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.
+fails.
+
+Released migrations:
+
+| Version | Description                                                                                                             |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1       | Renames cached `Title.rating` data to `Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.       |
+| 2       | Hoists `displayTitle` and `imdbId` out of the nested `data` payload to the cache entry top level, preserving `expires`. |
 
 When changing a persisted shape, append a new migration version and add unit
 tests for transformed, already-current, and malformed data. Do not edit or
 reuse a released migration version.
+
+Absent fields are written as _omitted keys_, not as `null`: `JSON.stringify`
+drops `undefined`, so a missing key and an explicit `undefined` are
+indistinguishable on read. Code reading `fmc:*` entries must therefore treat a
+missing key as "no value" and stay compatible with entries written by older
+versions that stored `null`.
 
 ## Settings (`config/config-fields.ts`)
 

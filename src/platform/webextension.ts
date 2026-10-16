@@ -14,7 +14,7 @@ import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter';
 interface FetchResponse {
     error?: string;
     status?: number;
-    body?: string | null;
+    body?: string | undefined;
     data?: unknown;
 }
 
@@ -50,11 +50,11 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Storage key.
-     * @returns {Promise<StorageValue | null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<StorageValue | undefined>} The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(key: string): Promise<StorageValue | null> {
+    async storageGet(key: string): Promise<StorageValue | undefined> {
         const result = await browser.storage.local.get(key);
-        return (result[key] as StorageValue | null) ?? null;
+        return (result[key] as StorageValue | undefined) ?? undefined;
     }
 
     /**
@@ -127,7 +127,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
         const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT;
         const fetchPromise = browser.runtime.sendMessage({ type: 'FM_FETCH', url, options });
 
-        let timerId: ReturnType<typeof setTimeout> | null = null;
+        let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
             timerId = setTimeout(() => reject(new FlixMonkeyError('background relay timeout', url)), timeout);
         });
@@ -138,11 +138,11 @@ export class WebExtensionAdapter extends PlatformAdapter {
                 throw new FlixMonkeyError('empty background response', url);
             }
             if (response.error) {
-                throw new FlixMonkeyError(response.error, url, response.status, response.body ?? null);
+                throw new FlixMonkeyError(response.error, url, response.status, response.body);
             }
             return response.data;
         } finally {
-            if (timerId !== null) {
+            if (timerId !== undefined) {
                 clearTimeout(timerId);
             }
         }

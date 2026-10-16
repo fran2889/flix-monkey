@@ -33,8 +33,8 @@ export async function handleFetchMessage(url: string, options: HttpFetchOptions)
         });
         clearTimeout(timeoutId);
         if (!res.ok) {
-            const body = await res.text().catch(() => null);
-            return { error: `HTTP ${res.status}`, status: res.status, body: body ? body.slice(0, 200) : null };
+            const body = await res.text().catch(() => undefined);
+            return { error: `HTTP ${res.status}`, status: res.status, body: body ? body.slice(0, 200) : undefined };
         }
         const data = responseType === 'json' ? await res.json() : await res.text();
         return { data };

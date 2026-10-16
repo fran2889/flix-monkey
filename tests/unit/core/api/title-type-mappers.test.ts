@@ -17,14 +17,14 @@ describe('mapXmdbTitleType', () => {
     });
 
     it.each(['TV Mini Series', 'movie', 'MOVIE', 'tv series', 'Series'])(
-        'should return null for unrecognised value %s',
+        'should return undefined for unrecognised value %s',
         value => {
-            expect(mapXmdbTitleType(value)).toBeNull();
+            expect(mapXmdbTitleType(value)).toBeUndefined();
         }
     );
 
-    it('should return null for null', () => {
-        expect(mapXmdbTitleType(null)).toBeNull();
+    it('should return undefined for undefined', () => {
+        expect(mapXmdbTitleType(undefined)).toBeUndefined();
     });
 });
 
@@ -38,14 +38,14 @@ describe('mapOmdbTitleType', () => {
     });
 
     it.each(['Movie', 'Series', 'MOVIE', 'TV Series', 'episode'])(
-        'should return null for unrecognised value %s',
+        'should return undefined for unrecognised value %s',
         value => {
-            expect(mapOmdbTitleType(value)).toBeNull();
+            expect(mapOmdbTitleType(value)).toBeUndefined();
         }
     );
 
-    it('should return null for null', () => {
-        expect(mapOmdbTitleType(null)).toBeNull();
+    it('should return undefined for undefined', () => {
+        expect(mapOmdbTitleType(undefined)).toBeUndefined();
     });
 });
 
@@ -59,13 +59,13 @@ describe('mapAgregarrTitleType', () => {
     });
 
     it.each(['tvShow', 'Movie', 'series', 'tvMovie', 'videoGame'])(
-        'should return null for unrecognised value %s',
+        'should return undefined for unrecognised value %s',
         value => {
-            expect(mapAgregarrTitleType(value)).toBeNull();
+            expect(mapAgregarrTitleType(value)).toBeUndefined();
         }
     );
 
-    it('should return null for null', () => {
-        expect(mapAgregarrTitleType(null)).toBeNull();
+    it('should return undefined for undefined', () => {
+        expect(mapAgregarrTitleType(undefined)).toBeUndefined();
     });
 });

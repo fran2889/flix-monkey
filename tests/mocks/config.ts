@@ -8,73 +8,73 @@ import { buildMockAdapter } from './adapter';
 import { buildLogger } from './logger';
 
 function buildConfig() {
-    // Default all config fields to null for consistency
-    const overrides: Record<ConfigKey, string | number | boolean | null> = {
-        apiClient: null,
-        xmdbApiKey: null,
-        omdbApiKey: null,
-        overlayCorner: null,
-        showRtRating: null,
-        showMcRating: null,
-        cacheTtlRatedOldYear: null,
-        cacheTtlRatedNewYear: null,
-        cacheTtlNoRating: null,
-        enableFadeUnderRating: null,
-        fadeRatingThreshold: null,
-        enableFadeToggle: null,
-        debug: null,
-    } as Record<ConfigKey, string | number | boolean | null>;
+    // Leave every config field unset so ConfigManager falls back to the default
+    const overrides: Record<ConfigKey, string | number | boolean | undefined> = {
+        apiClient: undefined,
+        xmdbApiKey: undefined,
+        omdbApiKey: undefined,
+        overlayCorner: undefined,
+        showRtRating: undefined,
+        showMcRating: undefined,
+        cacheTtlRatedOldYear: undefined,
+        cacheTtlRatedNewYear: undefined,
+        cacheTtlNoRating: undefined,
+        enableFadeUnderRating: undefined,
+        fadeRatingThreshold: undefined,
+        enableFadeToggle: undefined,
+        debug: undefined,
+    } as Record<ConfigKey, string | number | boolean | undefined>;
 
     return {
-        withApiClient(value: string | null) {
+        withApiClient(value: string | undefined) {
             overrides.apiClient = value;
             return this;
         },
-        withXmdbApiKey(value: string | null) {
+        withXmdbApiKey(value: string | undefined) {
             overrides.xmdbApiKey = value;
             return this;
         },
-        withOmdbApiKey(value: string | null) {
+        withOmdbApiKey(value: string | undefined) {
             overrides.omdbApiKey = value;
             return this;
         },
-        withOverlayCorner(value: string | null) {
+        withOverlayCorner(value: string | undefined) {
             overrides.overlayCorner = value;
             return this;
         },
-        withShowRtRating(value: boolean | null) {
+        withShowRtRating(value: boolean | undefined) {
             overrides.showRtRating = value;
             return this;
         },
-        withShowMcRating(value: boolean | null) {
+        withShowMcRating(value: boolean | undefined) {
             overrides.showMcRating = value;
             return this;
         },
-        withCacheTtlRatedOldYear(value: string | number | null) {
+        withCacheTtlRatedOldYear(value: string | number | undefined) {
             overrides.cacheTtlRatedOldYear = value;
             return this;
         },
-        withCacheTtlRatedNewYear(value: string | number | null) {
+        withCacheTtlRatedNewYear(value: string | number | undefined) {
             overrides.cacheTtlRatedNewYear = value;
             return this;
         },
-        withCacheTtlNoRating(value: string | number | null) {
+        withCacheTtlNoRating(value: string | number | undefined) {
             overrides.cacheTtlNoRating = value;
             return this;
         },
-        withEnableFadeUnderRating(value: boolean | null) {
+        withEnableFadeUnderRating(value: boolean | undefined) {
             overrides.enableFadeUnderRating = value;
             return this;
         },
-        withFadeRatingThreshold(value: string | number | null) {
+        withFadeRatingThreshold(value: string | number | undefined) {
             overrides.fadeRatingThreshold = value;
             return this;
         },
-        withEnableFadeToggle(value: boolean | null) {
+        withEnableFadeToggle(value: boolean | undefined) {
             overrides.enableFadeToggle = value;
             return this;
         },
-        withDebug(value: boolean | null) {
+        withDebug(value: boolean | undefined) {
             overrides.debug = value;
             return this;
         },

@@ -16,18 +16,34 @@ import { BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /**
+ * Converts an OMDb numeric field to a number.
+ *
+ * OMDb sends ratings as strings, and a literal null, an empty string, or
+ * "N/A" all mean "no rating". Unparseable input becomes undefined so a
+ * blank field can never be coerced into a 0.0 rating.
+ *
+ * @param value - Raw field value from the OMDb response.
+ * @returns The parsed number, or undefined when the field carries no rating.
+ */
+function toRating(value: unknown): number | undefined {
+    if (value === null || value === undefined) return undefined;
+    const num = Number.parseFloat(String(value));
+    return Number.isNaN(num) ? undefined : num;
+}
+
+/**
  * Extracts a rating value from an OMDb `Ratings` array by matching its source label.
  *
  * @param ratings - The `Ratings` field from an OMDb response.
  * @param sourcePattern - Pattern matched against the rating source name.
- * @returns Rating value, or null when absent or not an array.
+ * @returns Rating value, or undefined when absent or not an array.
  */
-function parseRatings(ratings: unknown, sourcePattern: RegExp): number | null {
-    if (!Array.isArray(ratings)) return null;
+function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefined {
+    if (!Array.isArray(ratings)) return undefined;
     const entry = ratings.find(
         r => r && sourcePattern.test((r as OmdbRatingEntry).source ?? (r as OmdbRatingEntry).Source ?? '')
     ) as OmdbRatingEntry | undefined;
-    return entry?.value ?? entry?.Value ?? null;
+    return toRating(entry?.value ?? entry?.Value);
 }
 
 /**
@@ -54,7 +70,7 @@ export class OmdbApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB], null),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB]),
             ApiSource.OMDB
         );
     }
@@ -74,18 +90,18 @@ export class OmdbApiClient extends BaseApiClient {
      * Searches for a title using OMDb API.
      *
      * @param displayTitle - The title to search for.
-     * @returns Title object or null if not found.
+     * @returns Title object or undefined if not found.
      */
-    async search(displayTitle: string): Promise<Title | null> {
+    async search(displayTitle: string): Promise<Title | undefined> {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
         this.logger.debug(`Searching OMDb for title: "${displayTitle}"`);
         const json = (await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1)) as OmdbResponse;
         if (json.Response === 'False') {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
-            return null;
+            return undefined;
         }
-        return this.#parseOmdbResponse(json, displayTitle, null);
+        return this.#parseOmdbResponse(json, displayTitle, undefined);
     }
 
     /**
@@ -94,9 +110,9 @@ export class OmdbApiClient extends BaseApiClient {
      * @param searchTitle - Title from search results.
      * @returns Title with full details.
      */
-    async getDetails(searchTitle: Title): Promise<Title | null> {
+    async getDetails(searchTitle: Title): Promise<Title | undefined> {
         // OMDb search already returns full details; only fetch if we have a minimal title (no apiTitle)
-        if (searchTitle.imdbId && searchTitle.apiTitle === null) {
+        if (searchTitle.imdbId && searchTitle.apiTitle === undefined) {
             const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
@@ -104,7 +120,7 @@ export class OmdbApiClient extends BaseApiClient {
             const json = (await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1)) as OmdbResponse;
             if (json.Response === 'False') {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
-                return null;
+                return undefined;
             }
             // @ts-ignore - TypeScript incorrectly infers parameter type due to exactOptionalPropertyTypes
             return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
@@ -120,31 +136,31 @@ export class OmdbApiClient extends BaseApiClient {
      * @param fallbackImdbId - Fallback IMDb ID from search results
      * @returns Title instance
      */
-    #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | null): Title {
+    #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | undefined): Title {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
-        const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? null) : null;
-        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : null;
+        const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
+        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
         return new Title({
             displayTitle,
-            apiTitle: apiTitle ?? null,
-            imdbId: imdbID ?? fallbackImdbId ?? null,
-            year: releaseYear ? Number(releaseYear) : null,
-            imdbRating: imdbRating !== undefined ? Number(imdbRating) : null,
+            apiTitle: apiTitle ?? undefined,
+            imdbId: imdbID ?? fallbackImdbId ?? undefined,
+            year: releaseYear ? Number(releaseYear) : undefined,
+            imdbRating: toRating(imdbRating),
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
-            type: mapOmdbTitleType(apiType ?? null),
-            source: null,
+            type: mapOmdbTitleType(apiType ?? undefined),
+            source: undefined,
         });
     }
 }
 
-/** OMDb rating entry type */
+/** OMDb rating entry type. Ratings arrive as strings, for example "8.5" or "90%". */
 interface OmdbRatingEntry {
     source?: string;
     Source?: string;
-    value?: number;
-    Value?: number;
+    value?: string | number;
+    Value?: string | number;
 }
 
 /** OMDb API response type */

@@ -9,13 +9,14 @@ import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
+import { Title, type TitleData } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -69,6 +70,31 @@ describe('OmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
+    it('should defer to the base health check when an API key is configured', async () => {
+        // mockConfig.get() returns a non-empty key, so the client falls through to
+        // BaseApiClient.getStatus(), which gates on the disabled manager.
+        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        expect(await client.getStatus()).toEqual({ healthy: true });
+    });
+
+    it('should report unhealthy when disabled even though an API key is configured', async () => {
+        const mockDisabledManagerForTest: DisabledClientsManager = {
+            isDisabled: vi.fn().mockResolvedValue(true),
+            disable: vi.fn().mockResolvedValue(undefined),
+            resetAll: vi.fn().mockResolvedValue([]),
+        } as unknown as DisabledClientsManager;
+        const client = new OmdbApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManagerForTest,
+            mockLogger,
+            mockOverrideManager
+        );
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
+        expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
+    });
+
     it('should handle missing or invalid Year', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
@@ -85,7 +111,30 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Movie 1');
-        expect(result!.year).toBeNull();
+        expect(result!.year).toBeUndefined();
+    });
+
+    // OMDb reports Year as a free-form string, so this client owns extracting the
+    // digits. Title only ever receives a number.
+    it.each([
+        ['2020', 2020],
+        ['2020-', 2020],
+        ['2020-01-01', 2020],
+        ['invalid', undefined],
+    ])('should convert Year %o -> %o', async (raw: string, expected: number | undefined) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.year).toBe(expected);
     });
 
     it('should parse ratings from OMDB correctly', async () => {
@@ -112,6 +161,96 @@ describe('OmdbApiClient', () => {
 
         expect(result!.rtRating).toBe(90);
         expect(result!.mcRating).toBe(85);
+    });
+
+    it.each(['', ' ', 'N/A'])('should treat imdbRating %o as missing', async (value: string) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbRating).toBeUndefined();
+        expect(result!.hasRating).toBe(false);
+    });
+
+    // The OMDb wire format is stringly typed, so this client owns converting it to
+    // numbers. Title only ever receives `number | undefined`.
+    it.each([
+        ['8.0', 8],
+        ['8.7', 8.7],
+        [8, 8],
+    ])('should convert imdbRating %o -> %o', async (raw: string | number, expected: number) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbRating).toBe(expected);
+    });
+
+    it.each([
+        [{ Source: 'Rotten Tomatoes', Value: '90%' }, 90],
+        [{ Source: 'Rotten Tomatoes', Value: '0%' }, 0],
+        [{ source: 'Rotten Tomatoes', value: '85%' }, 85],
+        [{ Source: 'Rotten Tomatoes', Value: 'N/A' }, undefined],
+        [{ Source: 'Metacritic', Value: '85/100' }, 85],
+        [{ Source: 'Metacritic', Value: '0/100' }, 0],
+        [{ Source: 'Metacritic', Value: 'N/A' }, undefined],
+    ])('should convert Ratings entry %o -> %o', async (entry: object, expected: number | undefined) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({
+                Response: 'True',
+                imdbID: 'tt1',
+                Title: 'Movie 1',
+                Ratings: [entry],
+            })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        const rating = entry as { Source?: string; source?: string };
+        const isRottenTomatoes = /Rotten Tomatoes/i.test(rating.Source ?? rating.source ?? '');
+        expect(isRottenTomatoes ? result!.rtRating : result!.mcRating).toBe(expected);
+    });
+
+    it.each([
+        ['2,500,000', 2500000],
+        ['2500000', 2500000],
+        ['', undefined],
+    ])('should convert imdbVotes %o -> %o', async (raw: string, expected: number | undefined) => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: '8.0', imdbVotes: raw, imdbID: 'tt1' })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbVotes).toBe(expected);
     });
 
     it('should map Type to TitleType in getDetails', async () => {
@@ -174,7 +313,7 @@ describe('OmdbApiClient', () => {
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null on OMDB False response', async () => {
+    it('should return undefined on OMDB False response', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const client = new OmdbApiClient(
             mockAdapterForTest,
@@ -184,7 +323,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Unknown');
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should extract imdbVotes from OMDB response', async () => {
@@ -223,7 +362,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.search('Test');
-        expect(result!.imdbVotes).toBeNull();
+        expect(result!.imdbVotes).toBeUndefined();
     });
 
     it('should not throw when the Ratings array contains a null element', async () => {
@@ -251,7 +390,7 @@ describe('OmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Some Title');
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.mcRating).toBe(80);
     });
 
@@ -271,7 +410,7 @@ describe('OmdbApiClient', () => {
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
         const result = await client.getDetails(minimalTitle);
 
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.imdbId).toBe('tt1234567');
         expect(result!.imdbRating).toBe(8.5);
         expect(result!.apiTitle).toBe('Test Movie');
@@ -299,7 +438,7 @@ describe('OmdbApiClient', () => {
         expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
     });
 
-    it('should update apiTitle from OMDb response when fallback has null apiTitle', async () => {
+    it('should update apiTitle from OMDb response when fallback has no apiTitle', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt123',
@@ -308,10 +447,54 @@ describe('OmdbApiClient', () => {
         };
         const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
-        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(null).build();
+        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(undefined).build();
         const result = await client.getDetails(minimalTitle);
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbId).toBe('tt123');
         expect(result!.displayTitle).toBe('Test');
+    });
+
+    it('should treat a null imdbRating in the response as no rating instead of 0', async () => {
+        const mockAdapterForTest = buildMockAdapter()
+            .withHttpFetchResolvingTo({
+                Response: 'True',
+                imdbRating: null,
+                imdbID: 'tt1',
+                Title: 'Movie 1',
+            })
+            .build();
+        const client = new OmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const result = await client.search('Movie 1');
+
+        expect(result!.imdbRating).toBeUndefined();
+        expect(result!.hasRating).toBe(false);
+    });
+
+    it('should fetch details for a cached title that still carries a null apiTitle', async () => {
+        const mockResponse = {
+            Response: 'True',
+            imdbID: 'tt123',
+            Title: 'Updated Title',
+            imdbRating: '8.5',
+            Type: 'movie',
+        };
+        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+        // A cache entry written before the null to undefined migration carries a literal null.
+        const legacyCachedTitle = Title.fromCacheJSON(
+            { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
+            'Test'
+        )!;
+        const result = await client.getDetails(legacyCachedTitle);
+
+        expect(result!.apiTitle).toBe('Updated Title');
+        expect(result!.imdbRating).toBe(8.5);
+        expect(client.queuedFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123', 1);
     });
 });

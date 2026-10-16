@@ -29,13 +29,13 @@ export class FlixMonkeyApp {
     readonly #inFlight = new Map<string, Promise<Title>>();
     readonly #pendingRoots = new Set<Element | Document>();
     readonly #debouncedDecorate: () => void;
-    #observer: MutationObserver | null = null;
+    #observer: MutationObserver | undefined;
     #initialised = false;
-    #boundDisconnect: (() => void) | null = null;
+    #boundDisconnect: (() => void) | undefined;
     #navigationPatched = false;
-    #originalPushState: ((..._args: unknown[]) => void) | null = null;
-    #originalReplaceState: ((..._args: unknown[]) => void) | null = null;
-    #popstateHandler: (() => void) | null = null;
+    #originalPushState: ((..._args: unknown[]) => void) | undefined;
+    #originalReplaceState: ((..._args: unknown[]) => void) | undefined;
+    #popstateHandler: (() => void) | undefined;
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
 
@@ -86,9 +86,9 @@ export class FlixMonkeyApp {
     /**
      * Sets or updates the IMDb ID override for a title from user input.
      * @param displayTitle - The title to set override for
-     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists. Default: null
+     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists.
      */
-    async #handleEditClick(displayTitle: string, imdbId: string | null = null): Promise<void> {
+    async #handleEditClick(displayTitle: string, imdbId?: string): Promise<void> {
         const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
         const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride ?? imdbId ?? '');
         if (userInput === null) return;
@@ -119,8 +119,8 @@ export class FlixMonkeyApp {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
 
-        this.#originalPushState = history.pushState as ((..._args: unknown[]) => void) | null;
-        this.#originalReplaceState = history.replaceState as ((..._args: unknown[]) => void) | null;
+        this.#originalPushState = history.pushState as (..._args: unknown[]) => void;
+        this.#originalReplaceState = history.replaceState as (..._args: unknown[]) => void;
 
         history.pushState = (..._args: unknown[]): void => {
             this.#originalPushState?.apply(history, _args);
@@ -183,7 +183,7 @@ export class FlixMonkeyApp {
          */
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : null;
+        const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : undefined;
         const request = this.#getTitleRequest(dedupKey, displayTitle);
 
         try {
@@ -232,42 +232,42 @@ export class FlixMonkeyApp {
         this.#renderer.injectOverlay(
             container as HTMLElement,
             data,
-            showFadeToggle ? fadeOverride : null,
-            showFadeToggle
-                ? (el: HTMLElement): void => {
-                      this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
-                          /* istanbul ignore next */ () => undefined
-                      );
-                  }
-                : null,
             (dt: string) => {
                 this.#handleEditClick(dt, data.imdbId);
             },
             (dt: string) => {
                 this.#handleRefreshClick(dt);
             },
-            displayTitle
+            displayTitle,
+            showFadeToggle ? fadeOverride : undefined,
+            showFadeToggle
+                ? (el: HTMLElement): void => {
+                      this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
+                          /* istanbul ignore next */ () => undefined
+                      );
+                  }
+                : undefined
         );
     }
 
     async #handleFadeToggleClick(
         dedupKey: string,
-        imdbRating: string | number | null,
+        imdbRating: number | undefined,
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
         const currentState: import('./fade-manager').FadeOverrideState =
-            domState === 'auto' ? null : (domState as 'always' | 'never');
+            domState === 'auto' ? undefined : (domState as 'always' | 'never');
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
         toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
         const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
         if (icon) {
-            icon.textContent = nextState === null ? '⭐' : '👁️';
+            icon.textContent = nextState === undefined ? '⭐' : '👁️';
             icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
         }
-        const shouldFade = this.#fadeManager.shouldFade(nextState, typeof imdbRating === 'number' ? imdbRating : null);
+        const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             this.#renderer.applyFade(c as HTMLElement, shouldFade);
         });
@@ -284,10 +284,10 @@ export class FlixMonkeyApp {
 
     #disconnect(): void {
         this.#observer?.disconnect();
-        this.#observer = null;
+        this.#observer = undefined;
         if (this.#boundDisconnect) {
             window.removeEventListener('beforeunload', this.#boundDisconnect);
-            this.#boundDisconnect = null;
+            this.#boundDisconnect = undefined;
         }
         if (this.#navigationPatched) {
             if (this.#originalPushState) {
@@ -306,10 +306,10 @@ export class FlixMonkeyApp {
     /**
      * Extract IMDb ID from user input (direct ID or URL).
      * @param input - User input
-     * @returns Extracted IMDb ID or null if invalid
+     * @returns Extracted IMDb ID or undefined if invalid
      */
-    #extractImdbId(input: string): string | null {
-        if (!input) return null;
+    #extractImdbId(input: string): string | undefined {
+        if (!input) return undefined;
         const trimmed = input.trim();
         if (/^tt\d+$/.test(trimmed)) {
             return trimmed;
@@ -319,7 +319,7 @@ export class FlixMonkeyApp {
         if (match) {
             return `tt${match[1]}`;
         }
-        return null;
+        return undefined;
     }
 
     /**
@@ -378,18 +378,18 @@ function createApiClient(
 
 /**
  * @param adapter - Platform adapter
- * @returns FlixMonkeyApp or null if service not detected or not enabled
+ * @returns FlixMonkeyApp or undefined if service not detected or not enabled
  */
-export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | null {
+export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const currentService = ServiceRegistry.detect();
     if (!currentService) {
-        return null;
+        return undefined;
     }
 
     const logger = new Logger(adapter);
     const configManager = new ConfigManager(adapter, logger);
     if (!currentService.isEnabled(configManager)) {
-        return null;
+        return undefined;
     }
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);

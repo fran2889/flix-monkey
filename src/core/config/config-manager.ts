@@ -5,9 +5,10 @@
 import type { PlatformAdapter } from '../../platform/adapter';
 import type { Logger } from '../logger';
 import { FlixMonkeyError } from '../utils/index';
-import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED } from './config-fields';
+import { CONFIG_DEFAULTS, CONFIG_SELECT_ALLOWED, type SettingKey } from './config-fields';
 
-export type ConfigKey = keyof typeof CONFIG_DEFAULTS;
+/** Key of a user-configurable setting. Action-only fields are not settings and are excluded. */
+export type ConfigKey = SettingKey;
 
 /**
  * Manages application configuration with fallback to defaults and type conversion utilities.

@@ -14,7 +14,7 @@ import { UserscriptAdapter } from '../../platform/userscript';
 
 const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);
-let app: import('../../core/app.js').FlixMonkeyApp | null = null;
+let app: import('../../core/app.js').FlixMonkeyApp | undefined;
 
 /**
  * Gets the cache and disabled clients managers, either from the existing app or by creating new instances.

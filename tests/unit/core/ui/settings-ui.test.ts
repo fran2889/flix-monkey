@@ -5,7 +5,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
-import { CONFIG_FIELDS, ConfigManager } from '../../../../src/core/config/index';
+import { CONFIG_FIELDS, ConfigManager, type ConfigValueType } from '../../../../src/core/config/index';
+import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
@@ -93,9 +94,10 @@ describe('SettingsUI', () => {
                 label: 'Snapshot',
                 type: 'text' as const,
                 default: 'initial',
-                validate: (_value: unknown, _allValues?: Record<string, unknown>): string | null => {
+                group: 'cache' as const,
+                validate: (_value: ConfigValueType, _allValues?: Record<string, unknown>): string | undefined => {
                     container.querySelector('#fm-snapshot')?.setAttribute('value', 'changed-during-validation');
-                    return null;
+                    return undefined;
                 },
             };
             settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);
@@ -140,6 +142,25 @@ describe('SettingsUI', () => {
     });
 
     describe('Autosave integration', () => {
+        it('autosaves through the view when a text input changes', async () => {
+            await settingsUI.render(container);
+            const input = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
+            input.value = 'typed-key';
+            vi.useFakeTimers();
+            try {
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                // The view debounces before delegating to SettingsUI.save().
+                await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS + 10);
+            } finally {
+                vi.useRealTimers();
+            }
+
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
+                expect.objectContaining({ xmdbApiKey: 'typed-key' })
+            );
+        });
+
         it('saves settings without external callback', async () => {
             await settingsUI.render(container);
 

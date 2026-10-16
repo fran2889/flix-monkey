@@ -5,15 +5,19 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Title } from '../../../../../src/core/title';
-import { createLoadingOverlayElement, createOverlayElement } from '../../../../../src/core/ui/overlay-elements';
+import {
+    createLoadingOverlayElement,
+    createOverlayElement,
+    type OverlayOptions,
+} from '../../../../../src/core/ui/overlay-elements';
 
-const defaultOptions = {
+const defaultOptions: OverlayOptions = {
     overlayClass: 'fm-rating-overlay',
     showRtRating: false,
     showMcRating: false,
     showFadeToggle: false,
-    fadeToggleState: null,
-    onFadeToggleClick: null,
+    fadeToggleState: undefined,
+    onFadeToggleClick: undefined,
     onEditClick: (_displayTitle: string) => {},
     onRefreshClick: (_displayTitle: string) => {},
     displayTitle: '',
@@ -80,7 +84,7 @@ describe('createOverlayElement', () => {
     });
 
     it('shows the search icon when imdbId is missing', () => {
-        const element = createOverlay({ imdbRating: null, imdbId: null });
+        const element = createOverlay({ imdbRating: undefined, imdbId: undefined });
 
         expect(element.querySelector('.fm-search')).not.toBeNull();
         expect((element.querySelector('.fm-search') as HTMLElement)?.textContent).toBe('🔍');
@@ -90,7 +94,7 @@ describe('createOverlayElement', () => {
         const element = createOverlay({
             imdbId: 'tt1234567',
             imdbUrl: 'https://imdb.com/title/tt1234567/',
-            imdbRating: null,
+            imdbRating: undefined,
         });
 
         expect(element.textContent).toContain('N/A');
@@ -99,8 +103,8 @@ describe('createOverlayElement', () => {
 
     it.each([
         ['normal ratings', { imdbRating: 8.5, imdbVotes: 250000 }, 'IMDb: 8.5 (250k votes) · Open IMDb'],
-        ['no ratings but IMDb ID present', { imdbRating: null, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
-        ['missing IMDb ID', { imdbRating: null, imdbId: null }, 'IMDb: Not found · Search IMDb'],
+        ['no ratings but IMDb ID present', { imdbRating: undefined, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
+        ['missing IMDb ID', { imdbRating: undefined, imdbId: undefined }, 'IMDb: Not found · Search IMDb'],
     ])('builds the tooltip title for %s', (_: string, title: Partial<Title>, expectedTitle: string) => {
         const element = createOverlay(title, { showRtRating: true });
 
@@ -249,8 +253,10 @@ describe('createOverlayElement', () => {
         it.each([
             [{ imdbRating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
             [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
-            [{ imdbRating: 7.5, imdbVotes: null }, 'Test\nIMDb: 7.5 · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: undefined }, 'Test\nIMDb: 7.5 · Open IMDb'],
             [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
+            [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
         ])('formats tooltip for vote data %o', (titleData: Partial<Title>, expectedTitle: string) => {
             const element = createOverlay(new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData }));
 
@@ -333,7 +339,7 @@ describe('createOverlayElement', () => {
         });
 
         it('does not apply color to N/A', () => {
-            const element = createOverlay({ imdbRating: null, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+            const element = createOverlay({ imdbRating: undefined, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
 
             expect((element.querySelector('.fm-na') as HTMLElement)?.style.color).toBe('');
         });

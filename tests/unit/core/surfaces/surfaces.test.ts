@@ -39,7 +39,7 @@ describe('SurfaceManager', () => {
         expect(discover('<div class="title-card"><a aria-label="   "></a></div>')).toHaveLength(0);
     });
 
-    it('should skip element with null title', () => {
+    it('should skip element with missing title attribute', () => {
         const mockEl = {
             closest: () => document.body,
             parentElement: document.body,
@@ -60,7 +60,7 @@ describe('SurfaceManager', () => {
         expect(results[0].title).toBe('First');
     });
 
-    it('should fall back to parentElement when the container resolver returns null', () => {
+    it('should fall back to parentElement when the container resolver finds nothing', () => {
         const logger = buildLogger().build();
         const sm = new SurfaceManager(logger, NETFLIX_SURFACES);
         const fakeParent = document.createElement('div');
@@ -148,7 +148,7 @@ describe('SurfaceManager', () => {
         expect(surface.container).toHaveClass('decorated');
     });
 
-    it('falls back to parentElement when a surface getContainer callback returns null', () => {
+    it('falls back to parentElement when a surface getContainer callback returns undefined', () => {
         document.body.innerHTML = `
             <div data-container>
                 <span data-title="Fallback Title"></span>
@@ -158,7 +158,7 @@ describe('SurfaceManager', () => {
             card: {
                 titleSelector: '[data-title]',
                 getTitle: (element: Element) => (element as HTMLElement).dataset.title as string,
-                getContainer: () => null,
+                getContainer: () => undefined,
             },
         });
 
@@ -246,6 +246,15 @@ describe('HBO Max surfaces', () => {
         expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
     });
 
+    it('extracts no HBO Max title when the tile has no sonic-type', () => {
+        // The manager selector requires data-sonic-type, but extractHboMaxTitle is also
+        // called directly, where a missing attribute must not read as a supported type.
+        const tile = document.createElement('a');
+        tile.setAttribute('aria-label', 'Title. 1 of 20.');
+
+        expect(extractHboMaxTitle(tile)).toBeUndefined();
+    });
+
     it.each([
         ['a missing aria-label', undefined],
         ['a label without card-position metadata', 'Title'],
@@ -261,7 +270,7 @@ describe('HBO Max surfaces', () => {
         if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
         document.body.replaceChildren(tile);
 
-        expect(extractHboMaxTitle(tile)).toBeNull();
+        expect(extractHboMaxTitle(tile)).toBeUndefined();
         expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
     });
 });
@@ -350,7 +359,7 @@ describe('Disney+ surfaces', () => {
         if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
         tile.innerHTML = '<img alt="">';
 
-        expect(extractDisneyPlusTitle(tile)).toBeNull();
+        expect(extractDisneyPlusTitle(tile)).toBeUndefined();
     });
 
     it('uses the shelf-card parent as the fadeable Disney+ overlay container', () => {

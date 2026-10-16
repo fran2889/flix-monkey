@@ -15,7 +15,7 @@ import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -48,10 +48,10 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbId).toBe('m1');
         expect(result!.apiTitle).toBe('Movie 1');
         expect(result!.year).toBe(2020);
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
     });
 
-    it('should return null if no search results found', async () => {
+    it('should return undefined if no search results found', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -60,7 +60,7 @@ describe('XmdbApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Movie 1')).toBeNull();
+        expect(await client.search('Movie 1')).toBeUndefined();
     });
 
     it('should log info when no search results found', async () => {
@@ -77,7 +77,7 @@ describe('XmdbApiClient', () => {
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
     });
 
-    it('should return null if search results have no titles', async () => {
+    it('should return undefined if search results have no titles', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', name: 'Someone' }] })
             .build();
@@ -88,7 +88,7 @@ describe('XmdbApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Movie 1')).toBeNull();
+        expect(await client.search('Movie 1')).toBeUndefined();
     });
 
     it('should log info when search results have no titles', async () => {
@@ -128,7 +128,7 @@ describe('XmdbApiClient', () => {
         expect(result!.mcRating).toBe(88);
     });
 
-    it('should return null if details fetch returns an error', async () => {
+    it('should return undefined if details fetch returns an error', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ error: 'not found' }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -138,7 +138,7 @@ describe('XmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.getDetails(buildTitle().withImdbId('m1').withDisplayTitle('Movie 1').build());
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should map title_type to TitleType in getDetails', async () => {
@@ -185,7 +185,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should return null for unknown title_type', async () => {
+    it('should return undefined for unknown title_type', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt3' }] })
             .withHttpFetchResolvingToOnce({
@@ -203,7 +203,7 @@ describe('XmdbApiClient', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Short 1');
-        expect(result!.type).toBeNull();
+        expect(result!.type).toBeUndefined();
     });
 
     it('should log warn when details response has error field', async () => {
@@ -223,7 +223,7 @@ describe('XmdbApiClient', () => {
         );
     });
 
-    it('should return null when details response has no title', async () => {
+    it('should return undefined when details response has no title', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',
@@ -243,7 +243,7 @@ describe('XmdbApiClient', () => {
         const result = await client.getDetails(
             buildTitle().withImdbId('tt0000000').withDisplayTitle('nonexistent').build()
         );
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should return unhealthy status when API key is missing', async () => {
@@ -279,5 +279,30 @@ describe('XmdbApiClient', () => {
         );
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
         expect(result!.imdbVotes).toBe(2500000);
+    });
+
+    it.each([
+        ['an error field', { error: 'Movie not found' }],
+        ['a missing title', { rating: 8.8 }],
+        ['a null response', null],
+        ['an undefined response', undefined],
+    ])('should return undefined when the details response has %s', async (_label, response) => {
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+        const mockLoggerForTest = buildLogger().build();
+        const client = new XmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLoggerForTest,
+            mockOverrideManager
+        );
+
+        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+        expect(result).toBeUndefined();
+        expect(mockLoggerForTest.warn).toHaveBeenCalledWith(
+            expect.stringContaining('XMDb details request failed for "Test"'),
+            expect.anything()
+        );
     });
 });

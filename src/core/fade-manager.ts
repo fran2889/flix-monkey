@@ -8,18 +8,18 @@ import type { ConfigManager } from './config/config-manager';
 /**
  * Fade override state type.
  */
-export type FadeOverrideState = 'always' | 'never' | null;
+export type FadeOverrideState = 'always' | 'never' | undefined;
 
 /**
  * Advances a fade override to its next state in the auto -> always -> never cycle.
  *
- * @param current - Current override state, or null for auto.
- * @returns Next override state, or null to return to auto.
+ * @param current - Current override state, or undefined for auto.
+ * @returns Next override state, or undefined to return to auto.
  */
 export function nextFadeState(current: FadeOverrideState): FadeOverrideState {
-    if (current === null) return 'always';
+    if (current === undefined) return 'always';
     if (current === 'always') return 'never';
-    return null;
+    return undefined;
 }
 
 /**
@@ -41,22 +41,22 @@ export class FadeManager {
 
     /**
      * @param dedupKey - Slugified display title.
-     * @returns Promise resolving to the override state, or null when auto.
+     * @returns Promise resolving to the override state, or undefined when auto.
      */
     async getOverride(dedupKey: string): Promise<FadeOverrideState> {
         const val = await this.#adapter.storageGet(`${this.#prefix}${dedupKey}`);
         if (val === 'always' || val === 'never') return val;
-        return null;
+        return undefined;
     }
 
     /**
      * @param dedupKey - Slugified display title.
-     * @param state - Override state, or null to clear.
+     * @param state - Override state, or undefined to clear.
      * @returns Promise that resolves when the operation is complete.
      */
     async setOverride(dedupKey: string, state: FadeOverrideState): Promise<void> {
         const key = `${this.#prefix}${dedupKey}`;
-        if (state === null) {
+        if (state === undefined) {
             await this.#adapter.storageDelete(key);
         } else {
             await this.#adapter.storageSet(key, state);
@@ -66,11 +66,11 @@ export class FadeManager {
     /**
      * Decides whether a container should be dimmed.
      *
-     * @param override - Stored per-title override, or null when auto.
-     * @param rating - IMDb rating, or null when unknown.
+     * @param override - Stored per-title override, or undefined when auto.
+     * @param rating - IMDb rating, or undefined when unknown.
      * @returns True when the container should be faded.
      */
-    shouldFade(override: FadeOverrideState, rating: number | null): boolean {
+    shouldFade(override: FadeOverrideState, rating: number | undefined): boolean {
         if (override === 'always') return true;
         if (override === 'never') return false;
         if (!this.#config.getBool('enableFadeUnderRating')) return false;

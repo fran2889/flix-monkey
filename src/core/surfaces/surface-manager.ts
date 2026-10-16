@@ -8,19 +8,19 @@ import type { Logger } from '../logger';
 
 const titleFromAttribute =
     (attribute: string) =>
-    (element: Element): string | null => {
+    (element: Element): string | undefined => {
         const value = element.getAttribute(attribute);
-        return value ?? null;
+        return value ?? undefined;
     };
 
 const containerFromClosest =
     (selector: string) =>
-    (element: Element): Element | null => {
-        return element.closest(selector);
+    (element: Element): Element | undefined => {
+        return element.closest(selector) ?? undefined;
     };
 
-const containerFromParent = (element: Element): Element | null => {
-    return element.parentElement;
+const containerFromParent = (element: Element): Element | undefined => {
+    return element.parentElement ?? undefined;
 };
 
 /**
@@ -58,12 +58,12 @@ export class SurfaceManager {
             }
             titleEls.forEach(titleEl => {
                 const rawTitle = surface.getTitle(titleEl);
-                const title = rawTitle?.trim() ?? null;
+                const title = rawTitle?.trim();
                 if (!title) return;
-                let container: Element | null = surface.getContainer(titleEl) ?? null;
+                let container = surface.getContainer(titleEl);
                 if (!container) {
                     this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
-                    container = titleEl.parentElement;
+                    container = titleEl.parentElement ?? undefined;
                 }
                 if (!container || seen.has(container)) return;
                 surface.decorateContainer?.(container, titleEl);

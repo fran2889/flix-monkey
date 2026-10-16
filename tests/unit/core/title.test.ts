@@ -4,7 +4,19 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { Title } from '../../../src/core/title';
+import { Title, type TitleData, type TitleOptions } from '../../../src/core/title';
+
+const emptyTitleData: TitleData = {
+    apiTitle: undefined,
+    imdbId: undefined,
+    year: undefined,
+    imdbRating: undefined,
+    imdbVotes: undefined,
+    rtRating: undefined,
+    mcRating: undefined,
+    source: undefined,
+    type: undefined,
+};
 
 describe('Title', () => {
     describe('imdbUrl generation', () => {
@@ -20,9 +32,9 @@ describe('Title', () => {
                 description: 'displayTitle is provided',
             },
             {
-                props: { displayTitle: null },
+                props: { displayTitle: undefined },
                 expected: 'https://www.imdb.com/find/?q=',
-                description: 'displayTitle is null',
+                description: 'displayTitle is undefined',
             },
         ])('should generate correct URL when $description', ({ props, expected }) => {
             const title = new Title(props);
@@ -32,47 +44,51 @@ describe('Title', () => {
 
     describe('fromCacheJSON creation', () => {
         it('should create a Title instance with properties from a cache object', () => {
-            const title = Title.fromCacheJSON({ apiTitle: 'Cached Movie' }, 'JSON Title');
-            expect(title).not.toBeNull();
+            const title = Title.fromCacheJSON({ ...emptyTitleData, apiTitle: 'Cached Movie' }, 'JSON Title');
+            expect(title).not.toBeUndefined();
             expect(title!.displayTitle).toBe('JSON Title');
             expect(title!.apiTitle).toBe('Cached Movie');
         });
 
-        it('should return null when the cache object is null', () => {
-            expect(Title.fromCacheJSON(null, 'JSON Title')).toBeNull();
-        });
-
-        it('should return null for non-object input', () => {
-            expect(Title.fromCacheJSON(null, 'x')).toBeNull();
-            expect(Title.fromCacheJSON('string', 'x')).toBeNull();
-            expect(Title.fromCacheJSON(42, 'x')).toBeNull();
-        });
-
         it('should handle imdbVotes field from a cache object', () => {
-            const title = Title.fromCacheJSON({ imdbVotes: 1000 }, 'Test');
-            expect(title).not.toBeNull();
+            const title = Title.fromCacheJSON({ ...emptyTitleData, imdbVotes: 1000 }, 'Test');
+            expect(title).not.toBeUndefined();
             expect(title!.imdbVotes).toBe(1000);
         });
 
         it('should handle missing imdbVotes field from a cache object', () => {
-            const title = Title.fromCacheJSON({}, 'Test');
-            expect(title).not.toBeNull();
-            expect(title!.imdbVotes).toBeNull();
+            const title = Title.fromCacheJSON(emptyTitleData, 'Test');
+            expect(title).not.toBeUndefined();
+            expect(title!.imdbVotes).toBeUndefined();
+        });
+
+        // Storage JSON is untrusted, so these payloads need no cast to be rejected.
+        it.each([[null], ['string'], [42], [undefined], [[]], [true]])(
+            'should return undefined for the non-title payload %o',
+            (payload: unknown) => {
+                expect(Title.fromCacheJSON(payload, 'JSON Title')).toBeUndefined();
+            }
+        );
+
+        it('should collapse a legacy string rating in the payload to undefined', () => {
+            const title = Title.fromCacheJSON({ ...emptyTitleData, imdbRating: '8.5' }, 'Legacy');
+            expect(title!.imdbRating).toBeUndefined();
+            expect(title!.hasRating).toBe(false);
         });
     });
 
-    it('should create notFound title with default null source', () => {
+    it('should create notFound title with default undefined source', () => {
         const title = Title.notFound('Missing Movie');
         expect(title.displayTitle).toBe('Missing Movie');
-        expect(title.imdbRating).toBeNull();
-        expect(title.source).toBeNull();
+        expect(title.imdbRating).toBeUndefined();
+        expect(title.source).toBeUndefined();
     });
 
     it('should create notFound title with provided source', () => {
         const title = Title.notFound('Missing Movie', 'omdb');
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.source).toBe('omdb');
-        expect(title.imdbRating).toBeNull();
+        expect(title.imdbRating).toBeUndefined();
     });
 
     it('should return an immutable copy with only its source changed', () => {
@@ -101,93 +117,123 @@ describe('Title', () => {
         it('should be true when imdbRating is 0', () => {
             expect(new Title({ imdbRating: 0 }).hasRating).toBe(true);
         });
-        it('should be true when rtRating is "0%"', () => {
-            expect(new Title({ rtRating: '0%' }).hasRating).toBe(true);
+        it('should be true when rtRating is 0', () => {
+            expect(new Title({ rtRating: 0 }).hasRating).toBe(true);
         });
-        it('should be true when mcRating is "0/100"', () => {
-            expect(new Title({ mcRating: '0/100' }).hasRating).toBe(true);
+        it('should be true when mcRating is 0', () => {
+            expect(new Title({ mcRating: 0 }).hasRating).toBe(true);
         });
-        it('should be false when all ratings are null', () => {
+        it('should be false when all ratings are undefined', () => {
             expect(new Title({}).hasRating).toBe(false);
         });
     });
 
-    describe('IMDb rating normalization', () => {
+    describe('rating normalization', () => {
+        // Ratings arrive as numbers: each API client owns its provider's wire format
+        // and converts it before constructing a Title. Anything that is not a finite
+        // number carries no rating, including raw wire strings reaching an untyped caller.
+        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['8.5'], ['90%'], ['N/A'], ['']])(
+            'collapses non-numeric input %s to undefined',
+            (input: unknown) => {
+                const options = { imdbRating: input, imdbVotes: input, rtRating: input, mcRating: input };
+                const title = new Title(options as unknown as TitleOptions);
+                expect(title.imdbRating).toBeUndefined();
+                expect(title.imdbVotes).toBeUndefined();
+                expect(title.rtRating).toBeUndefined();
+                expect(title.mcRating).toBeUndefined();
+                expect(title.hasRating).toBe(false);
+            }
+        );
+
         it.each([
-            ['N/A', null],
-            ['', null],
-            [null, null],
-            ['8.5', 8.5],
             [0, 0],
-        ])('normalizes imdbRating %s -> %s', (input, expected) => {
-            expect(new Title({ imdbRating: input }).imdbRating).toBe(expected);
+            [8.5, 8.5],
+            [90, 90],
+        ])('keeps the numeric rating %s -> %s', (input, expected) => {
+            const title = new Title({ imdbRating: input, rtRating: input, mcRating: input, imdbVotes: input });
+            expect(title.imdbRating).toBe(expected);
+            expect(title.rtRating).toBe(expected);
+            expect(title.mcRating).toBe(expected);
+            expect(title.imdbVotes).toBe(expected);
         });
 
-        it.each([
-            ['90%', 90],
-            ['0%', 0],
-            ['N/A', null],
-            ['', null],
-            [null, null],
-            ['8.5/10', 8], // parseInt stops at non-digit
-        ])('normalizes rtRating %s -> %s', (input, expected) => {
-            expect(new Title({ rtRating: input }).rtRating).toBe(expected);
+        it('keeps a numeric year', () => {
+            expect(new Title({ year: 2020 }).year).toBe(2020);
         });
 
-        it.each([
-            ['85/100', 85],
-            ['0/100', 0],
-            ['N/A', null],
-            ['', null],
-            [null, null],
-            ['abc', null],
-        ])('normalizes mcRating %s -> %s', (input, expected) => {
-            expect(new Title({ mcRating: input }).mcRating).toBe(expected);
+        // Providers report years as partial strings such as "2020-"; extracting the
+        // digits is the client's job, so Title rejects the raw wire value.
+        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['2020-'], ['2020']])(
+            'collapses non-numeric year %s to undefined',
+            (input: unknown) => {
+                expect(new Title({ year: input } as unknown as TitleOptions).year).toBeUndefined();
+            }
+        );
+
+        it('normalizes untyped null inputs to undefined', () => {
+            const title = new Title({
+                year: null,
+                imdbRating: null,
+                imdbVotes: null,
+                rtRating: null,
+                mcRating: null,
+            } as unknown as TitleOptions);
+            expect(title.year).toBeUndefined();
+            expect(title.imdbRating).toBeUndefined();
+            expect(title.imdbVotes).toBeUndefined();
+            expect(title.rtRating).toBeUndefined();
+            expect(title.mcRating).toBeUndefined();
         });
 
-        it('parses year from open-ended range string', () => {
-            expect(new Title({ year: '2020-' }).year).toBe(2020);
+        it('normalizes untyped null identity fields to undefined', () => {
+            const title = new Title({
+                displayTitle: null,
+                apiTitle: null,
+                imdbId: null,
+                source: null,
+                type: null,
+            } as unknown as TitleOptions);
+            expect(title.displayTitle).toBeUndefined();
+            expect(title.apiTitle).toBeUndefined();
+            expect(title.imdbId).toBeUndefined();
+            expect(title.source).toBeUndefined();
+            expect(title.type).toBeUndefined();
         });
     });
 
     describe('type field', () => {
-        it('should default to null', () => {
-            expect(new Title({}).type).toBeNull();
+        it('should default to undefined', () => {
+            expect(new Title({}).type).toBeUndefined();
         });
 
         it('should accept a type value', () => {
             expect(new Title({ type: 'movie' }).type).toBe('movie');
         });
 
-        it('should normalize null to null', () => {
-            expect(new Title({ type: null }).type).toBeNull();
+        it('should normalize undefined to undefined', () => {
+            expect(new Title({ type: undefined }).type).toBeUndefined();
         });
 
         it('should round-trip through fromCacheJSON', () => {
-            const title = Title.fromCacheJSON({ type: 'series' }, 'Test');
-            expect(title).not.toBeNull();
+            const title = Title.fromCacheJSON({ ...emptyTitleData, type: 'series' }, 'Test');
+            expect(title).not.toBeUndefined();
             expect(title!.type).toBe('series');
         });
 
-        it('should be null on notFound titles', () => {
-            expect(Title.notFound('Missing').type).toBeNull();
+        it('should be undefined on notFound titles', () => {
+            expect(Title.notFound('Missing').type).toBeUndefined();
         });
     });
 
     describe('imdbVotes normalization', () => {
         it.each([
-            [null, null],
-            ['', null],
-            ['N/A', null],
+            [undefined, undefined],
             [0, 0],
             [1, 1],
             [999, 999],
             [1000, 1000],
             [2500000, 2500000],
-            ['2500000', 2500000],
-            ['2,500,000', 2], // parseInt stops at comma, returns 2
-            ['not a number', null],
-        ])('normalizes imdbVotes %s -> %s', (input, expected) => {
+        ])('keeps numeric imdbVotes %s -> %s', (input, expected) => {
             expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });
@@ -216,7 +262,7 @@ describe('Title', () => {
             apiTitle: 'Test Movie',
             imdbId: 'tt1234567',
             year: 2024,
-            imdbRating: '8.5',
+            imdbRating: 8.5,
         });
         const cacheObj = title.toCacheJSON();
         expect(cacheObj).not.toHaveProperty('displayTitle');
@@ -227,19 +273,19 @@ describe('Title', () => {
     });
 
     it('should reconstruct Title with displayTitle from fromCacheJSON', () => {
-        const cacheObj = {
+        const cacheObj: TitleData = {
             apiTitle: 'Test Movie',
             imdbId: 'tt1234567',
             year: 2024,
-            imdbRating: '8.5',
-            imdbVotes: null,
-            rtRating: null,
-            mcRating: null,
-            source: null,
-            type: null,
+            imdbRating: 8.5,
+            imdbVotes: undefined,
+            rtRating: undefined,
+            mcRating: undefined,
+            source: undefined,
+            type: undefined,
         };
         const title = Title.fromCacheJSON(cacheObj, 'Original Title');
-        expect(title).not.toBeNull();
+        expect(title).not.toBeUndefined();
         expect(title!.displayTitle).toBe('Original Title');
         expect(title!.apiTitle).toBe('Test Movie');
         expect(title!.imdbId).toBe('tt1234567');

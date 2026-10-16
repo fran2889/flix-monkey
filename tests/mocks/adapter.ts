@@ -11,7 +11,7 @@ type MockableFn<T extends (..._args: never[]) => unknown> = T & Mock;
 
 // Type for mockable storage methods
 interface MockStorageMethods {
-    storageGet: MockableFn<(_key: string) => Promise<StorageValue | null>>;
+    storageGet: MockableFn<(_key: string) => Promise<StorageValue | undefined>>;
     storageGetAll: MockableFn<() => Promise<Record<string, StorageValue>>>;
     storageSet: MockableFn<(_key: string, _value: StorageValue) => Promise<void>>;
     storageSetMany: MockableFn<(_values: Record<string, StorageValue>) => Promise<void>>;
@@ -23,7 +23,7 @@ interface MockStorageMethods {
 
 class MockPlatformAdapter extends PlatformAdapter {
     // Override abstract methods with mockable implementations
-    storageGet: MockableFn<(_key: string) => Promise<StorageValue | null>>;
+    storageGet: MockableFn<(_key: string) => Promise<StorageValue | undefined>>;
     storageGetAll: MockableFn<() => Promise<Record<string, StorageValue>>>;
     storageSet: MockableFn<(_key: string, _value: StorageValue) => Promise<void>>;
     storageSetMany: MockableFn<(_values: Record<string, StorageValue>) => Promise<void>>;
@@ -35,7 +35,7 @@ class MockPlatformAdapter extends PlatformAdapter {
     constructor({ ...rest }: Partial<MockStorageMethods> = {}) {
         super();
         // Initialize with default mock implementations
-        this.storageGet = vi.fn().mockResolvedValue(null);
+        this.storageGet = vi.fn().mockResolvedValue(undefined);
         this.storageGetAll = vi.fn().mockResolvedValue({});
         this.storageSet = vi.fn().mockResolvedValue(undefined);
         this.storageSetMany = vi.fn().mockResolvedValue(undefined);
@@ -57,7 +57,7 @@ function buildMockAdapter() {
         withStorageGetResolvingTo(value: unknown) {
             const mockFn = vi.fn();
             if (typeof value === 'function') {
-                overrides.storageGet = value as MockableFn<(_key: string) => Promise<StorageValue | null>>;
+                overrides.storageGet = value as MockableFn<(_key: string) => Promise<StorageValue | undefined>>;
             } else {
                 mockFn.mockResolvedValue(value);
                 overrides.storageGet = mockFn;
@@ -190,7 +190,7 @@ function buildMockAdapter() {
 // Static presets
 buildMockAdapter.cacheMiss = (): MockPlatformAdapter => {
     return buildMockAdapter()
-        .withStorageGetResolvingTo(null)
+        .withStorageGetResolvingTo(undefined)
         .withStorageGetAllResolvingTo({})
         .withStorageGetKeysResolvingTo([])
         .build();
@@ -198,7 +198,7 @@ buildMockAdapter.cacheMiss = (): MockPlatformAdapter => {
 
 buildMockAdapter.storageSuccess = (): MockPlatformAdapter => {
     return buildMockAdapter()
-        .withStorageGetResolvingTo(null)
+        .withStorageGetResolvingTo(undefined)
         .withStorageSetResolvingTo(undefined)
         .withStorageDeleteResolvingTo(undefined)
         .withStorageGetKeysResolvingTo([])
