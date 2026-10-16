@@ -160,6 +160,36 @@ describe('SettingsView', () => {
             expect(container.querySelector('#fm-status')).not.toBeNull();
         });
 
+        it('renders an action field that shares a row with a non-action field', () => {
+            // An action field is keyed by its own `key`, so it only joins another field's
+            // row when the two share an id. The row is then neither all-action nor a
+            // checkbox group, so the mixed layout renders the action as a button.
+            const fields: readonly ConfigField[] = [
+                {
+                    key: 'debug',
+                    label: 'Debug logging',
+                    type: 'checkbox',
+                    default: false,
+                    group: 'debug',
+                    row: 'debug-settings',
+                },
+                {
+                    key: 'debug-settings',
+                    type: 'action',
+                    label: '',
+                    group: 'debug',
+                    row: 'debug-settings',
+                    actionLabel: 'Run It',
+                },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const row = container.querySelector('.field-value');
+            expect(row?.querySelector('#fm-debug')).not.toBeNull();
+            expect(row?.querySelector('#fm-debug-settings')).not.toBeNull();
+        });
+
         it('renders the fixed IMDb rating control', () => {
             view.render(container, {});
 

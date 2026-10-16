@@ -292,6 +292,42 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbVotes).toBeUndefined();
     });
 
+    it('should return undefined when the Agregarr ratings array is empty', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Agregarr details request failed for "Movie 1"'),
+            { response: [] }
+        );
+    });
+
+    it('should return undefined when the Agregarr response carries no ratings array', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(undefined).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        // The logged response collapses an absent payload to undefined rather than null.
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { response: undefined });
+    });
+
     it('should skip search when imdbId is provided', async () => {
         const mockConfigForTest: ConfigManager = {
             get: (_k: string) => 'key',

@@ -280,4 +280,29 @@ describe('XmdbApiClient', () => {
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
         expect(result!.imdbVotes).toBe(2500000);
     });
+
+    it.each([
+        ['an error field', { error: 'Movie not found' }],
+        ['a missing title', { rating: 8.8 }],
+        ['a null response', null],
+        ['an undefined response', undefined],
+    ])('should return undefined when the details response has %s', async (_label, response) => {
+        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+        const mockLoggerForTest = buildLogger().build();
+        const client = new XmdbApiClient(
+            mockAdapterForTest,
+            mockConfig,
+            mockDisabledManager,
+            mockLoggerForTest,
+            mockOverrideManager
+        );
+
+        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+        expect(result).toBeUndefined();
+        expect(mockLoggerForTest.warn).toHaveBeenCalledWith(
+            expect.stringContaining('XMDb details request failed for "Test"'),
+            expect.anything()
+        );
+    });
 });

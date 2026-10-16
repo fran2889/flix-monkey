@@ -246,6 +246,15 @@ describe('HBO Max surfaces', () => {
         expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
     });
 
+    it('extracts no HBO Max title when the tile has no sonic-type', () => {
+        // The manager selector requires data-sonic-type, but extractHboMaxTitle is also
+        // called directly, where a missing attribute must not read as a supported type.
+        const tile = document.createElement('a');
+        tile.setAttribute('aria-label', 'Title. 1 of 20.');
+
+        expect(extractHboMaxTitle(tile)).toBeUndefined();
+    });
+
     it.each([
         ['a missing aria-label', undefined],
         ['a label without card-position metadata', 'Title'],

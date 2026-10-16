@@ -93,7 +93,11 @@ Reuse this persistent profile. Do not use temporary or fresh user-data directori
 
 - **jsdom** is the global test environment (configured in `vitest.config.js`).
 - **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.ts`.
-- **Coverage thresholds**: 90% lines and 90% functions (enforced by Vitest).
+- **Coverage thresholds**: 90% for branches, statements, and functions (enforced by Vitest in
+  `vitest.config.js`). All four metrics are gated, so `npm run test:coverage` must stay clean
+  locally and in CI. Branch coverage is the strictest in practice: a change that adds
+  nullish-coalescing or type-guard branches without a matching test will fail the gate even when
+  statements and functions look healthy.
 
 ### Test Layout
 

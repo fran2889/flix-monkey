@@ -70,6 +70,31 @@ describe('OmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
+    it('should defer to the base health check when an API key is configured', async () => {
+        // mockConfig.get() returns a non-empty key, so the client falls through to
+        // BaseApiClient.getStatus(), which gates on the disabled manager.
+        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        expect(await client.getStatus()).toEqual({ healthy: true });
+    });
+
+    it('should report unhealthy when disabled even though an API key is configured', async () => {
+        const mockDisabledManagerForTest: DisabledClientsManager = {
+            isDisabled: vi.fn().mockResolvedValue(true),
+            disable: vi.fn().mockResolvedValue(undefined),
+            resetAll: vi.fn().mockResolvedValue([]),
+        } as unknown as DisabledClientsManager;
+        const client = new OmdbApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManagerForTest,
+            mockLogger,
+            mockOverrideManager
+        );
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
+        expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
+    });
+
     it('should handle missing or invalid Year', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({

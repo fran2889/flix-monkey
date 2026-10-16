@@ -48,6 +48,18 @@ describe('IdOverrideManager', () => {
             const result = await manager.getImdbId('The Matrix');
             expect(result).toBeUndefined();
         });
+
+        it('returns undefined when the stored payload has no imdbId key', async () => {
+            mockAdapter.storageGet.mockResolvedValue('{}');
+            const result = await manager.getImdbId('The Matrix');
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined when the stored imdbId is a literal null', async () => {
+            mockAdapter.storageGet.mockResolvedValue('{"imdbId":null}');
+            const result = await manager.getImdbId('The Matrix');
+            expect(result).toBeUndefined();
+        });
     });
 
     describe('setImdbId', () => {

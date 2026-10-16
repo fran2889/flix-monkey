@@ -131,6 +131,50 @@ describe('CacheManager', () => {
         expect(entry.expires).toBeUndefined();
     });
 
+    it('should apply the rated-new-year TTL to a rated title that has no year', async () => {
+        // A rated title without a release year cannot be classified as old or new,
+        // so it falls back to cacheTtlRatedNewYear rather than cacheTtlNoRating.
+        const titleObj = buildTitle()
+            .withDisplayTitle('Yearless Title')
+            .withApiTitle('Yearless Title')
+            .withImdbRating(8.0)
+            .build();
+        expect(titleObj.hasRating).toBe(true);
+        expect(titleObj.year).toBeUndefined();
+        const getInt = vi.spyOn(config, 'getInt');
+
+        await cacheManager.write('Yearless Title', titleObj);
+
+        expect(getInt).toHaveBeenCalledWith('cacheTtlRatedNewYear');
+        expect(getInt).not.toHaveBeenCalledWith('cacheTtlNoRating');
+        expect(getInt).not.toHaveBeenCalledWith('cacheTtlRatedOldYear');
+
+        // cacheTtlRatedNewYear is 30 days, so the entry expires rather than being indefinite.
+        const setCall = adapter.storageSet.mock.calls.find(call => call[0] === 'fmc:yearless_title');
+        const entry = JSON.parse(setCall![1] as string);
+        expect(entry.expires).toBeGreaterThan(Date.now());
+    });
+
+    it('should apply the rated-old-year TTL to a rated title released long ago', async () => {
+        const titleObj = buildTitle()
+            .withDisplayTitle('Old Title')
+            .withApiTitle('Old Title')
+            .withYear(1990)
+            .withImdbRating(8.0)
+            .build();
+        const getInt = vi.spyOn(config, 'getInt');
+
+        await cacheManager.write('Old Title', titleObj);
+
+        expect(getInt).toHaveBeenCalledWith('cacheTtlRatedOldYear');
+        expect(getInt).not.toHaveBeenCalledWith('cacheTtlNoRating');
+
+        // cacheTtlRatedOldYear is -1 (indefinite), so no expiry is persisted.
+        const setCall = adapter.storageSet.mock.calls.find(call => call[0] === 'fmc:old_title');
+        const entry = JSON.parse(setCall![1] as string);
+        expect(entry.expires).toBeUndefined();
+    });
+
     it('should return valid entry for indefinite cache expiration (undefined)', async () => {
         const titleObj = buildTitle()
             .withDisplayTitle('Indefinite Title')

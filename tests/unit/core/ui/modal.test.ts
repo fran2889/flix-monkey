@@ -30,6 +30,13 @@ describe('Modal', () => {
         expect(container.className).toBe('fm-modal-body');
     });
 
+    it('should throw when the body container is missing from the overlay', () => {
+        const modal = new Modal('Test Modal');
+        modal.overlay.querySelector('.fm-modal-body')?.remove();
+
+        expect(() => modal.getContentContainer()).toThrow('Modal body container not found');
+    });
+
     it('should show the modal when open() is called', () => {
         const modal = new Modal('Test Modal');
         modal.open();
@@ -61,6 +68,13 @@ describe('Modal', () => {
         modal.open();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
+    });
+
+    it('should stay open when another key is pressed', () => {
+        const modal = new Modal('Other Key Modal');
+        modal.open();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        expect(document.querySelector('.fm-modal-overlay')).not.toBeNull();
     });
 
     it('should not register duplicate Escape listeners when opened twice', () => {

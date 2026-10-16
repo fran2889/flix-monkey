@@ -55,6 +55,14 @@ describe('UserscriptAdapter', () => {
         expect(result).toEqual({ key1: 'val-key1', key2: 'val-key2' });
     });
 
+    it('storageGetAll should omit keys whose stored value is undefined', async () => {
+        GM_listValues.mockReturnValue(['key1', 'missing', 'key2']);
+        GM_getValue.mockImplementation((key: string) => (key === 'missing' ? undefined : `val-${key}`));
+        const result = await adapter.storageGetAll();
+        expect(result).toEqual({ key1: 'val-key1', key2: 'val-key2' });
+        expect(result).not.toHaveProperty('missing');
+    });
+
     it('storageSet should call GM_setValue', async () => {
         await adapter.storageSet('key', 'value');
         expect(GM_setValue).toHaveBeenCalledWith('key', 'value');
@@ -147,6 +155,15 @@ describe('UserscriptAdapter', () => {
 
         const result = await adapter.httpFetch('http://example.com');
         expect(result).toEqual({ data: 'parsed' });
+    });
+
+    it('httpFetch should reject when a JSON response has neither response nor responseText', async () => {
+        GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
+            onload?.({ status: 200, response: null, responseText: null });
+        });
+
+        // response and responseText are both absent, so the fallback parses an empty string.
+        await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(SyntaxError);
     });
 
     it('httpFetch should include url on HTTP error', async () => {
