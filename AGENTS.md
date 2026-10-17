@@ -37,19 +37,19 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Build Scripts
 
-| Command                    | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| `npm run build`            | Build all three targets and run `scripts/package.js`           |
-| `npm run build:userscript` | Build only the userscript                                      |
-| `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`           |
-| `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`            |
-| `npm run dev`              | Watch mode: rebuild on file changes                            |
-| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.*`            |
-| `npm run lint:fix`         | Lint with auto-fix                                             |
-| `npm run format`           | Format `src/`, `tests/` JS, `src/` HTML, root JSON/MD/YML/HTML |
-| `npm run format:check`     | Check formatting without writing                               |
-| `npm run audit`            | Run `npm audit` at high severity level                         |
-| `npm run clean`            | Remove `dist/` and `coverage/`                                 |
+| Command                    | Description                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `npm run build`            | Build all three targets and run `scripts/package.js`                                                |
+| `npm run build:userscript` | Build only the userscript                                                                           |
+| `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`                                                |
+| `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`                                                 |
+| `npm run dev`              | Watch mode: rebuild on file changes                                                                 |
+| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.*`                                                 |
+| `npm run lint:fix`         | Lint with auto-fix                                                                                  |
+| `npm run format`           | Format `{src,tests,scripts}/**` JS/TS, `src/**` HTML and JSON, root `*.config.js`, `*.json`, `*.md` |
+| `npm run format:check`     | Check formatting without writing                                                                    |
+| `npm run audit`            | Run `npm audit --audit-level=moderate`                                                              |
+| `npm run clean`            | Remove `dist/` and `coverage/`                                                                      |
 
 ### Developer Scripts
 
@@ -93,7 +93,7 @@ Reuse this persistent profile. Do not use temporary or fresh user-data directori
 
 - **jsdom** is the global test environment (configured in `vitest.config.js`).
 - **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.ts`.
-- **Coverage thresholds**: 90% lines and 90% functions (enforced by Vitest).
+- **Coverage thresholds**: 90% branches, 90% statements, and 90% functions over `src/**` (enforced by Vitest in `vitest.config.js`). There is no `lines` threshold. Branches is usually the tightest of the three.
 
 ### Test Layout
 
@@ -366,6 +366,35 @@ ordinary accessors, and self-evident primitive signatures.
 
 Use the GitHub CLI (`gh`) for managing GitHub pull requests and issues.
 
+**The shape of an issue or PR body is defined by the templates, not by this
+file.** Read the relevant template and follow the instructions in it:
+
+| Template                                | Use for          |
+| --------------------------------------- | ---------------- |
+| `.github/ISSUE_TEMPLATE/bug-report.md`  | Bug reports      |
+| `.github/ISSUE_TEMPLATE/enhancement.md` | Feature requests |
+| `.github/PULL_REQUEST_TEMPLATE.md`      | Pull requests    |
+
+Each template opens with an HTML comment carrying its rules: which sections to
+delete when they do not apply, what each section is for, how the test plan
+checkboxes work, and the inline `Resolves #123` form. That comment is the
+authoritative guidance. It is visible in the editor textarea and invisible in
+the rendered body.
+
+`gh` does not apply templates for you. `gh pr create --template <file>` and
+`gh issue create --template <name>` only pre-fill the interactive editor, and
+`gh pr create` still needs an explicit `--body` or `--body-file` when run
+non-interactively. When you script a PR or issue, read the template file and use
+it as the body:
+
+```bash
+gh pr create --title "fix(cache): prevent TTL overflow on negative values" --body-file .github/PULL_REQUEST_TEMPLATE.md
+```
+
+The rules below are the ones a template cannot carry: what the title and branch
+must be, what CI gates on, how releases work, and how to label. Body formatting
+belongs in the templates; do not restate it here.
+
 ### Branches & Pull Requests
 
 #### Branch Naming
@@ -380,6 +409,11 @@ test/expand-api-client-coverage
 chore/npm-audit-fix-undici
 ```
 
+The branch prefix must match the type in the PR title. The title type is
+authoritative, because squash-merge makes it the commit message that commitlint
+and release-please read, while the branch is deleted on merge. A `refactor:` PR
+therefore lives on `refactor/`, not `feat/`.
+
 #### PR Titles
 
 PRs are squash-merged. The title becomes the merge commit and is parsed by release-please. Use Conventional Commits format:
@@ -390,66 +424,65 @@ type(scope)?: description
 
 - Imperative mood, lowercase, no trailing period.
 - Include scope when targeting a specific module: `fix(cache): prevent TTL overflow on negative values`.
-
-#### PR Descriptions
-
-Use imperative mood. Skip sections that don't apply:
-
-```
-## Summary
-- <What this PR does, 1-3 bullets>
-
-## Test Plan
-- [x] <Automated: e.g., 335 unit tests pass, 5 integration tests pass, all targets build>
-- [ ] <Manual: e.g., load extension, verify feature X is default, ratings appear on browse pages>
-- [ ] <Manual: e.g., verify non-ASCII titles resolve correctly>
-
-## Breaking Changes
-- <Only if applicable: describe what breaks and migration steps>
-
-## Resolves
-- <Issue numbers this PR closes, e.g., Resolves #123 or Resolves #123, #456>
-```
-
-**Test Plan rules**: use `[x]` for automated tests that have passed and `[ ]` for manual verification steps requiring human testing.
+- Match the scope to the directory you changed, in the plural: `tests/` becomes `tests`, `src/core/services/` becomes `services`, `src/core/cache/` becomes `cache`. Pick one spelling per module and keep it.
 
 #### Pre-submission Checklist
 
-Run before opening a PR:
+Run all six before opening a PR. These cover the six CI `merge-gate` jobs
+(`test:coverage` runs the same `tests/unit` and `tests/ui` suites as the separate
+`test-unit` and `test-ui` jobs, and additionally enforces the thresholds):
 
 ```bash
-npm run build && npm test
+npm run format:check && npm run lint && npm run type-check && npm run audit && npm run build && npm run test:coverage
 ```
+
+The template's Test Plan section lists the same six commands, one per checkbox.
+Report what each produced rather than only ticking it.
+
+`npm run audit` runs `npm audit --audit-level=moderate` over all dependencies,
+dev included (there is no `--omit=dev`), so it fails on `moderate` or higher.
+If a finding is real and unfixable now, fix the dependency rather than lowering
+the level.
+
+### Releases
+
+release-please is configured with `"draft": true` and
+`"include-component-in-tag": false`, so a release cut creates a **draft** GitHub
+Release rather than a published one. This is deliberate: `publish-stores.yml` is
+`workflow_dispatch` only and reuses the assets attached to that draft, so a
+release stays unpublished until a human dispatches the publish workflow against
+it. Do not assume a version bump has shipped.
 
 ### Issue Rules
 
-**Title Format**: Imperative mood, descriptive, no trailing period. Examples:
+**Title Format**: imperative mood, descriptive, no trailing period. The templates
+cover the body. Examples:
 
 - Add HBO Max support
 - Add TMDB as a rating provider
 - Fetch missing ratings for cached titles when current provider supports them
 
-**Description Template**:
-
-- Description of the feature or bug
-- Requirements (for enhancements)
-- Open questions (optional for discussion)
-
-**Labels Usage**:
+**Labels Usage**: the templates pre-apply `bug` and `enhancement` from their
+frontmatter. Add others deliberately:
 
 - `enhancement`: for feature requests
 - `bug`: for bug reports
 - `documentation`: for docs-related issues
 - `good first issue`: for beginner-friendly tasks
 - `help wanted`: for issues needing community assistance
+- `dependencies`, `javascript`, `github_actions`: automation labels, applied by
+  Dependabot to its PRs. Do not apply them by hand, and do not apply
+  `github_actions` to an issue: it is scoped to changes to workflow code.
 
 ## Git Hooks (Husky)
 
-| Hook         | What it does                                                            |
-| ------------ | ----------------------------------------------------------------------- |
-| `pre-commit` | Runs `lint-staged`: Prettier + ESLint `--fix` on staged JS/JSON/MD/HTML |
-| `commit-msg` | Runs `commitlint` to enforce Conventional Commits format                |
-| `pre-push`   | Runs `npm run type-check`                                               |
+| Hook         | What it does                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | Runs `lint-staged`: Prettier + ESLint `--fix` on staged `{src,tests,scripts}/**` JS/TS and `*.config.js`; Prettier only on staged JSON, MD, and `src/**` HTML |
+| `commit-msg` | Runs `commitlint` to enforce Conventional Commits format                                                                                                      |
+| `pre-push`   | Runs `npm run type-check`                                                                                                                                     |
+
+Each hook first delegates to a global hook of the same name when `core.hooksPath` points at one that is executable, then runs the project-specific command. See the `lint-staged` map in `package.json` for the authoritative glob list.
 
 **Note**: `Generated by Mistral Vibe.` and `Co-Authored-By:` footers are automatically stripped from commit messages by a global git hook. Do not include these in commit messages.
 
