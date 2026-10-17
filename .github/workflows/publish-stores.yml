@@ -18,6 +18,15 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
+            - name: Validate release tag format
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      echo "Invalid tag: '$TAG'." >&2
+                      echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
+                      exit 1
+                  fi
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ inputs.tag }}
@@ -43,8 +52,17 @@ jobs:
 
     publish-firefox:
         runs-on: ubuntu-latest
-        timeout-minutes: 10
+        timeout-minutes: 15
         steps:
+            - name: Validate release tag format
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      echo "Invalid tag: '$TAG'." >&2
+                      echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
+                      exit 1
+                  fi
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ inputs.tag }}
@@ -64,6 +82,12 @@ jobs:
               run: |
                   mkdir -p dist/firefox
                   unzip -o "dist/FlixMonkey-$TAG-firefox.xpi" -d dist/firefox
+            # web-ext is intentionally not a devDependency: every published version
+            # pulls in node-forge and shell-quote advisories, which would make the
+            # 'npm run audit' CI gate permanently red. It is not bundled into the
+            # extension, so pinning it here keeps the release path working.
+            - name: Install web-ext
+              run: npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0
             - name: Publish to Firefox Add-ons
               env:
                   TAG: ${{ inputs.tag }}
