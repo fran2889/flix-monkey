@@ -14,9 +14,9 @@ permissions:
     contents: read
 
 jobs:
-    validate-tag:
+    publish-chrome:
         runs-on: ubuntu-latest
-        timeout-minutes: 5
+        timeout-minutes: 10
         steps:
             - name: Validate release tag format
               env:
@@ -27,12 +27,6 @@ jobs:
                       echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
                       exit 1
                   fi
-
-    publish-chrome:
-        needs: validate-tag
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ inputs.tag }}
@@ -57,10 +51,18 @@ jobs:
               run: npx --no-install chrome-webstore-upload --source "dist/FlixMonkey-$TAG-chrome.zip"
 
     publish-firefox:
-        needs: validate-tag
         runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:
+            - name: Validate release tag format
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      echo "Invalid tag: '$TAG'." >&2
+                      echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
+                      exit 1
+                  fi
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ inputs.tag }}
