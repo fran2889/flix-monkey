@@ -14,7 +14,22 @@ permissions:
     contents: read
 
 jobs:
+    validate-tag:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - name: Validate release tag format
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      echo "Invalid tag: '$TAG'." >&2
+                      echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
+                      exit 1
+                  fi
+
     publish-chrome:
+        needs: validate-tag
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
@@ -42,6 +57,7 @@ jobs:
               run: npx --no-install chrome-webstore-upload --source "dist/FlixMonkey-$TAG-chrome.zip"
 
     publish-firefox:
+        needs: validate-tag
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
