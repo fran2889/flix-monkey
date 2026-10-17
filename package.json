@@ -18,7 +18,7 @@
         "lint": "eslint \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "lint:fix": "eslint --fix \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "type-check": "tsc --noEmit",
-        "clean": "npx rimraf dist coverage",
+        "clean": "node -e \"const fs=require('node:fs');for(const d of ['dist','coverage'])fs.rmSync(d,{recursive:true,force:true})\"",
         "prebuild": "npm run clean",
         "build:userscript": "rollup -c --environment TARGET:userscript",
         "build:firefox": "rollup -c --environment TARGET:firefox && node scripts/package.js",
