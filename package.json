@@ -67,7 +67,7 @@
         "rollup-plugin-esbuild": "^6.2.1",
         "sharp": "^0.35.5",
         "tslib": "^2.6.0",
-        "typescript": "^6.0.3",
+        "typescript": "^7.0.2",
         "vitest": "^5.0.0",
         "webextension-polyfill": "^0.12.0"
     },
