@@ -360,11 +360,15 @@ file.** Read the relevant template and follow the instructions in it:
 | `.github/PULL_REQUEST_TEMPLATE.md`      | Pull requests    |
 
 Issue templates start with YAML frontmatter that sets the chooser name and
-applies the default label. Each template carries its body rules in an HTML
-comment: which sections to delete when they do not apply, what each section is
-for, how the test plan checkboxes work, and the inline `Resolves #123` form.
-That comment is the authoritative guidance. It is visible in the editor textarea
-and invisible in the rendered body.
+applies the default label. Pull request templates do not support frontmatter;
+GitHub inserts their contents verbatim, so frontmatter would render as body
+text. Each template carries its body rules in an HTML comment: which sections to
+delete when they do not apply, what each section is for, how the test plan works,
+and the inline `Resolves #123` form. That comment is the authoritative guidance.
+It is visible in the editor textarea and invisible in the rendered body.
+
+`gh pr create` does not apply the template. Fill a copy and pass it with
+`--body-file`.
 
 The rules below are the ones a template cannot carry: the title and branch
 format, the CI job layout, how releases work, and which extra labels to apply.
@@ -403,9 +407,9 @@ type(scope)?: description
 
 #### Pre-submission Checklist
 
-Run every command in the PR template's Test Plan before opening a PR. Together
-they cover all six CI `merge-gate` jobs: type-check, lint-and-audit, build,
-test-unit, test-ui, and test-coverage.
+CI enforces six `merge-gate` jobs: type-check, lint-and-audit, build, test-unit,
+test-ui, and test-coverage. Run the same checks locally before opening a PR; the
+PR template carries the manual check.
 
 ### Releases
 

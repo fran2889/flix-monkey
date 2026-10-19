@@ -59,19 +59,18 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     Ensure your changes are covered by unit or UI tests.
 
 4.  **Run the checks:**
-    The PR template's Test Plan lists the commands CI gates merges on. Run them all
-    locally before you push.
+    CI enforces formatting, lint, type-check, audit, build, and tests with coverage.
+    Run those checks locally before you push.
 
 5.  **Submit PR:**
     Push your branch and open a Pull Request against the `main` branch. The
-    [body template](.github/PULL_REQUEST_TEMPLATE.md) defines the body shape, including
-    the test plan, the inline `Resolves #123` form, and the `gh` usage note for
-    terminal users.
+    [body template](.github/PULL_REQUEST_TEMPLATE.md) defines the body shape,
+    including the test plan and the inline `Resolves #123` form.
 
 Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
 [feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
-The bug template asks for the service, the UI location, and the target, because
-behavior differs per service and per build target.
+The bug template asks for the service, the UI location, the target, and console
+and network errors, because behavior differs per service and per build target.
 
 ## AI Agents
 

@@ -1,5 +1,5 @@
 ---
-name: Enhancement request
+name: Enhancement Request
 about: Suggest a new feature or improvement
 labels: enhancement
 ---
@@ -11,6 +11,8 @@ How to use this template
   than leaving it empty or writing "None" under it.
 - Description is prose: say what is missing or wrong today, and why it matters.
   Do not restate the title.
+- Scope is optional: name the service(s) and target(s) when the request is
+  specific to them. Delete the section otherwise.
 - Requirements are acceptance criteria, one per bullet, phrased so each can be
   checked. Keep them implementation-agnostic: say what must be true, not which
   file changes.
@@ -21,6 +23,10 @@ How to use this template
 -->
 
 ## Description
+
+## Scope
+
+<!-- Optional: service(s) and target(s) this applies to. -->
 
 ## Requirements
 

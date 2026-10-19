@@ -1,10 +1,11 @@
 <!--
 How to use this template
 
-- Tick a box only after running that command, and put the result next to it.
-  `test:coverage` supersedes `npm test`: it runs the same unit and UI suites and
-  enforces the coverage thresholds. Tick a manual check only if you performed it;
-  if someone else did, say who.
+- Automated checks are enforced by CI: formatting, lint, type-check, audit,
+  all-target build, and the unit/UI suites with coverage. Run them locally for
+  faster feedback.
+- Tick the manual box only after performing the check. If someone else did, say
+  who.
 - Delete a heading that does not apply. Do not leave one empty or write "None"
   under it.
 - Summary is 1-3 bullets, one sentence each, naming one behavior change and,
@@ -14,10 +15,8 @@ How to use this template
   fit belongs in the issue or a linked note.
 - Replace the "Manual:" line with the checks this PR needs, or delete it. Never
   leave a generic "manual testing" placeholder.
-- `npm run audit` fails on moderate or higher, dev dependencies included. Fix the
-  dependency rather than lowering the level.
-- If you use `gh`, templates are not applied automatically. Copy this file, fill
-  it in, and pass the copy with `--body-file <path>`.
+- `npm run audit` must pass at moderate or higher. Fix the dependency rather than
+  lowering the level.
 
 Issue links are inline, not under a heading. Use `Resolves #123` or
 `Resolves #123, #456` for closing links. If nobody filed the work, omit the line
@@ -35,13 +34,7 @@ most 3 bullets; omit analysis process and rejected alternatives.
 
 ## Test Plan
 
-- [ ] Format check passes (`npm run format:check`)
-- [ ] Lint passes (`npm run lint`)
-- [ ] Type check passes (`npm run type-check`)
-- [ ] Dependency audit passes (`npm run audit`)
-- [ ] All targets build successfully (`npm run build`)
-- [ ] Tests and coverage gate pass (`npm run test:coverage`): record the test count and the coverage percentages
-- [ ] Manual: load the affected target and confirm ratings appear on the affected service
+- [ ] Manual: `<target>` on `<service>`: ratings for a known title match the selected provider, and the console shows no errors
 
 ## Breaking Changes
 
