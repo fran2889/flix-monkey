@@ -17,25 +17,30 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     npm install
     ```
 
-    Note: Requires Node.js >= 24.
+    Use the Node.js version in [`.nvmrc`](.nvmrc). `npm install` rejects
+    unsupported versions.
 
-3.  **Local Testing:**
-    Run the test suite to ensure everything is working correctly:
-
-    ```bash
-    npm test
-    ```
-
-    To run tests with coverage:
+3.  **Run the tests:**
 
     ```bash
-    npm run test:coverage
+    npm test               # unit and UI tests
+    npm run test:coverage  # same tests with a coverage report
     ```
 
-4.  **Linting and Formatting:**
-    The project uses ESLint and Prettier. You can run them manually:
+4.  **Lint and format:**
+
+    The project uses ESLint and Prettier. Run the read-only checks first:
+
     ```bash
     npm run lint
+    npm run format:check
+    ```
+
+    Apply fixes with:
+
+    ```bash
+    npm run lint:fix
+    npm run format
     ```
 
 ## Pull Request Process
@@ -55,22 +60,32 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     the commit message.
     Example commit message: `feat: add support for new streaming service`
 
-3.  **Write Tests:**
-    Ensure your changes are covered by unit or UI tests.
+3.  **Write tests:**
+    Add or update tests for behavior changes. New tests go in
+    [`tests/unit/`](tests/unit/) or [`tests/ui/`](tests/ui/); use the UI suite
+    when a test needs real streaming-service markup. Live-API integration tests
+    live in [`tests/integration/`](tests/integration/).
 
 4.  **Run the checks:**
-    CI enforces formatting, lint, type-check, audit, build, and tests with coverage.
-    Run those checks locally before you push.
+    Run the local equivalents of the [CI checks](.github/workflows/ci.yml) before
+    you push:
 
-5.  **Submit PR:**
-    Push your branch and open a Pull Request against the `main` branch. The
-    [body template](.github/PULL_REQUEST_TEMPLATE.md) defines the body shape,
-    including the test plan and the inline `Resolves #123` form.
+    ```bash
+    npm run type-check \
+      && npm run lint \
+      && npm run format:check \
+      && npm run audit \
+      && npm run build \
+      && npm run test:coverage
+    ```
 
-Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
-[feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
-The bug template asks for the service, the UI location, the target, and console
-and network errors, because behavior differs per service and per build target.
+5.  **Submit your PR:**
+    Push your branch and open a Pull Request against the `main` branch. Follow the
+    [body template](.github/PULL_REQUEST_TEMPLATE.md) and its inline guidance.
+
+    Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
+    [feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
+    Choose the template that matches your report and fill in the requested details.
 
 ## AI Agents
 
@@ -78,11 +93,9 @@ If you are an AI agent, please refer to [AGENTS.md](./AGENTS.md) for specialized
 
 ## Store publishing
 
-Releases are published to the Chrome Web Store and Firefox Add-ons by manually
-running the `Publish to Stores` workflow for a chosen release tag; it reuses the
-artifacts attached to that GitHub Release. For the required repository secrets
-and the AMO source-build instructions, see
-[docs/STORE_PUBLISHING.md](docs/STORE_PUBLISHING.md).
+Store publishing is a separate manual deployment from the GitHub release. See
+[docs/STORE_PUBLISHING.md](docs/STORE_PUBLISHING.md) for the workflow, required
+secrets, and AMO source-build instructions.
 
 ## License
 
