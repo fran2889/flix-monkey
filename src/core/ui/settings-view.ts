@@ -64,36 +64,21 @@ export class SettingsView {
         label: string;
         icon: string;
         fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        isUngrouped?: boolean;
     }> {
         const groups: Array<{
             id: string;
             label: string;
             icon: string;
             fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-            isUngrouped?: boolean;
         }> = [];
         const fieldsByGroup: Record<string, ConfigField[]> = {};
-        const ungroupedFields: ConfigField[] = [];
 
-        // TODO: remove the ungrouped-fields fallback. `ConfigField.group` is a required
-        // GroupKey, so GROUPS[field.group] is always defined, hasValidGroup is always
-        // truthy and ungroupedFields is always empty. The fallback only existed to
-        // tolerate a weaker duplicate of ConfigField. Deleting it also makes the
-        // isUngrouped flag, #addUngroupedFields and the isUngrouped branch in
-        // #createGroupElement unreachable; note that branch currently assigns
-        // container.className = 'settings-group' in both arms and only skips the header.
+        // ConfigField.group is a required GroupKey, so every field belongs to a group.
         for (const field of this.#fields) {
-            const hasValidGroup = field.group && GROUPS[field.group];
-            if (hasValidGroup) {
-                this.#addFieldToGroup(field, fieldsByGroup);
-            } else if (field.type !== 'action') {
-                ungroupedFields.push(field);
-            }
+            this.#addFieldToGroup(field, fieldsByGroup);
         }
 
         this.#buildGroupElements(groups, fieldsByGroup);
-        this.#addUngroupedFields(groups, ungroupedFields);
 
         return groups;
     }
@@ -126,27 +111,6 @@ export class SettingsView {
         }
     }
 
-    #addUngroupedFields(
-        groups: Array<{
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-            isUngrouped?: boolean;
-        }>,
-        ungroupedFields: ConfigField[]
-    ): void {
-        if (ungroupedFields.length > 0) {
-            groups.push({
-                id: 'ungrouped',
-                label: '',
-                icon: '',
-                fields: this.#groupFieldsByRow(ungroupedFields),
-                isUngrouped: true,
-            });
-        }
-    }
-
     #groupFieldsByRow(fields: ConfigField[]): Array<{ id: string; fields: ConfigField[] }> {
         const rows: Record<string, { id: string; fields: ConfigField[] }> = {};
         for (const field of fields) {
@@ -165,31 +129,25 @@ export class SettingsView {
             label: string;
             icon: string;
             fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-            isUngrouped?: boolean;
         },
         settings: Record<string, unknown>
     ): HTMLElement {
         const container = document.createElement('div');
+        container.className = 'settings-group';
 
-        if (group.isUngrouped) {
-            container.className = 'settings-group';
-        } else {
-            container.className = 'settings-group';
+        const header = document.createElement('div');
+        header.className = 'settings-group-header';
 
-            const header = document.createElement('div');
-            header.className = 'settings-group-header';
+        const icon = document.createElement('span');
+        icon.className = 'settings-group-icon';
+        icon.textContent = group.icon;
 
-            const icon = document.createElement('span');
-            icon.className = 'settings-group-icon';
-            icon.textContent = group.icon;
+        const title = document.createElement('span');
+        title.className = 'settings-group-title';
+        title.textContent = group.label;
 
-            const title = document.createElement('span');
-            title.className = 'settings-group-title';
-            title.textContent = group.label;
-
-            header.append(icon, title);
-            container.appendChild(header);
-        }
+        header.append(icon, title);
+        container.appendChild(header);
 
         for (const row of group.fields) {
             const fieldElement = this.#createFieldRow(row, settings);
