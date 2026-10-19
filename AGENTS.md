@@ -35,7 +35,7 @@ Reuse that profile. Do not use fresh or temporary user-data directories.
 - In extensions, config changes arrive asynchronously via `browser.storage.onChanged`. Do not assume a config value read at init stays current.
 - `PlatformAdapter.configGet()` has no no-op default. Unlike `registerMenuCommand` and `setConfigData`, every adapter must implement it.
 - Manifest `__PLACEHOLDER__` fields are injected at build time from `package.json`. Do not hardcode them in `manifest.json`.
-- A release cut creates a draft; do not assume a version bump has shipped (see Releases).
+- Do not claim a change has shipped. Releases are cut and published automatically from `main` (see Releases).
 - Do not edit generated output under `dist/` or `coverage/`.
 - Preserve unrelated working-tree changes in any file you edit.
 
@@ -76,7 +76,7 @@ Issue and PR body shape is defined by the templates in `.github/`, not by this f
 
 ### Releases
 
-release-please is configured with `"draft": true` and `"include-component-in-tag": false`, so a release cut creates a draft GitHub Release. `publish-stores.yml` is `workflow_dispatch` only and reuses the assets attached to that draft, so nothing is published until a human dispatches it.
+release-please runs on pushes to `main`. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `publish-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
 
 ## Where to look
 
