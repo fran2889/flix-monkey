@@ -10,7 +10,8 @@ Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest
 
 - Install: `npm install`
 - Build: `npm run build` (all three targets)
-- Lint and format: `npm run lint && npm run format`
+- Lint and format (report): `npm run lint && npm run format:check`
+- Lint and format (auto-fix): `npm run lint:fix && npm run format`
 - Type check: `npm run type-check`
 - Test: `npm test`
 - Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
@@ -46,7 +47,9 @@ Stored data carries an `fm_data_version`. When changing a persisted shape, appen
 ## Conventions
 
 - License header: every `{src,tests}/**/*.ts` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
-- JSDoc is enforced by ESLint on exports. See `eslint.config.js` for the required tags.
+- JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See `eslint.config.js` for the exact tags.
+- Document the boundaries a caller needs in order to consume them correctly: abstract and cross-platform contracts, injected collaborators, and persistence, messaging, HTTP, and external-data boundaries. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
+- Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
 - Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in `eslint.config.js`.
 - Use `logger.ts` for application logging in `src/`; raw `console` is limited to the logger itself and platform bootstrap error paths.
