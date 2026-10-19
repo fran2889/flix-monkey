@@ -1,7 +1,5 @@
 name: Release Please
 
-description: Auto-generate releases and changelogs
-
 on:
     push:
         branches:

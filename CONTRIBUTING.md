@@ -41,21 +41,36 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 ## Pull Request Process
 
 1.  **Create a feature branch:**
-    Always create a new branch for your changes:
+    Name branches `type/kebab-case-slug`, where `type` is a Conventional Commits type
+    (for example `feat`, `fix`, `docs`, or `test`). Match the branch prefix to the
+    type in your PR title.
 
     ```bash
-    git checkout -b feature/my-new-feature
+    git checkout -b feat/add-metacritic-fallback
     ```
 
 2.  **Conventional Commits:**
     We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Husky hooks are in place to enforce this.
+    PR titles follow the same format, since PRs are squash-merged and the title becomes
+    the commit message.
     Example commit message: `feat: add support for new streaming service`
 
 3.  **Write Tests:**
     Ensure your changes are covered by unit or UI tests.
 
-4.  **Submit PR:**
-    Push your branch and open a Pull Request against the `main` branch.
+4.  **Run the checks:**
+    CI enforces formatting, lint, type-check, audit, build, and tests with coverage.
+    Run those checks locally before you push.
+
+5.  **Submit PR:**
+    Push your branch and open a Pull Request against the `main` branch. The
+    [body template](.github/PULL_REQUEST_TEMPLATE.md) defines the body shape,
+    including the test plan and the inline `Resolves #123` form.
+
+Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
+[feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
+The bug template asks for the service, the UI location, the target, and console
+and network errors, because behavior differs per service and per build target.
 
 ## AI Agents
 
