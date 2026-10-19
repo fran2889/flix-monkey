@@ -281,8 +281,8 @@ reuse a released migration version.
 ## Settings (`config/config-fields.ts`)
 
 `CONFIG_FIELDS` in `src/core/config/config-fields.ts` is the single source of
-truth for all user-configurable settings. Do not maintain a second list here:
-read that file before adding or changing a setting.
+truth for all user-configurable settings. Read that file before adding or
+changing a setting.
 
 Each entry defines the required `key`, `label`, `type` (`text`, `checkbox`,
 `select`, or `action`), `default`, and `group`, plus optional `row`, `title`,
@@ -360,12 +360,11 @@ file.** Read the relevant template and follow the instructions in it:
 | `.github/PULL_REQUEST_TEMPLATE.md`      | Pull requests    |
 
 Issue templates start with YAML frontmatter that sets the chooser name and
-applies the default label. Pull request templates do not support frontmatter;
-GitHub inserts their contents verbatim, so frontmatter would render as body
-text. Each template carries its body rules in an HTML comment: which sections to
-delete when they do not apply, what each section is for, how the test plan works,
-and the inline `Resolves #123` form. That comment is the authoritative guidance.
-It is visible in the editor textarea and invisible in the rendered body.
+applies the default label. Each template carries its body rules in an HTML
+comment: which sections to delete when they do not apply, what each section is
+for, how the test plan works, and the inline `Resolves #123` form. That comment
+is the authoritative guidance. It is visible in the editor textarea and
+invisible in the rendered body.
 
 `gh pr create` does not apply the template. Fill a copy and pass it with
 `--body-file`.
