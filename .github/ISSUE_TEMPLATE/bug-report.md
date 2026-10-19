@@ -1,20 +1,24 @@
+---
+name: Bug report
+about: Report a bug or unexpected behavior
+labels: bug
+---
+
 <!--
 How to use this template
 
-- Fill in every section. Delete any section that does not apply rather than
-  leaving it empty or writing "None" under it.
+- Fill in every applicable section. Delete a section that does not apply rather
+  than leaving it empty or writing "None" under it.
 - Steps to Reproduce must start from a fresh page load and be something someone
   else can follow without seeing your screen. Number the smallest set of steps
   that reproduces it every time.
-- Environment: the service and the build target are the two fields that localise
-  a bug fastest, because behaviour differs per service and per target. Fill both
-  in even when the bug looks unrelated to them.
+- Environment: the service and the build target are the two fields that localize
+  a bug fastest, because behavior differs per service and per target. Fill in
+  both even when the bug looks unrelated to them.
 - Version is the extension version, or the userscript version for the userscript
   target. If the bug reproduces on more than one target, say so.
 - Cite related issues inline in the prose, for example "Duplicate of #74". Do not
-  put issue numbers in a heading.
-
-The enhancement template lives at .github/ISSUE_TEMPLATE/enhancement.md
+  add a "Related Issues" heading.
 -->
 
 ## Description
@@ -32,12 +36,10 @@ The enhancement template lives at .github/ISSUE_TEMPLATE/enhancement.md
 ## Environment
 
 - Service: <!-- Netflix, HBO Max, or Disney+ -->
-- Where on the page: <!-- browse row, Top 10 row, hover preview, search grid, settings, or other -->
+- Where in the UI: <!-- browse row, Top 10 row, hover preview, search grid, settings panel, or other -->
 - Target: <!-- userscript, Firefox extension, or Chrome extension -->
 - Version:
 - Browser and version:
 - Operating System:
 
 ## Additional Context
-
-## Related Issues

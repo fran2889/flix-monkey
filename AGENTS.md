@@ -26,8 +26,6 @@ The project uses a **Platform Adapter** pattern to abstract differences between 
 npm install
 ```
 
-Husky git hooks are installed automatically via the `prepare` script.
-
 ## Development & Build Workflow
 
 1. Edit source files in `src/`.
@@ -37,19 +35,19 @@ Husky git hooks are installed automatically via the `prepare` script.
 
 ### Build Scripts
 
-| Command                    | Description                                                                                         |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `npm run build`            | Build all three targets and run `scripts/package.js`                                                |
-| `npm run build:userscript` | Build only the userscript                                                                           |
-| `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`                                                |
-| `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`                                                 |
-| `npm run dev`              | Watch mode: rebuild on file changes                                                                 |
-| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.*`                                                 |
-| `npm run lint:fix`         | Lint with auto-fix                                                                                  |
-| `npm run format`           | Format `{src,tests,scripts}/**` JS/TS, `src/**` HTML and JSON, root `*.config.js`, `*.json`, `*.md` |
-| `npm run format:check`     | Check formatting without writing                                                                    |
-| `npm run audit`            | Run `npm audit --audit-level=moderate`                                                              |
-| `npm run clean`            | Remove `dist/` and `coverage/`                                                                      |
+| Command                    | Description                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`            | Build all three targets and run `scripts/package.js`                                                                       |
+| `npm run build:userscript` | Build only the userscript                                                                                                  |
+| `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`                                                                       |
+| `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`                                                                        |
+| `npm run dev`              | Watch mode: rebuild on file changes                                                                                        |
+| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.js`                                                                       |
+| `npm run lint:fix`         | Lint with auto-fix                                                                                                         |
+| `npm run format`           | Format `{src,tests,scripts}/**` JS/TS, `src/**` HTML and JSON, root `*.config.js`, `*.json`, `*.md`, and `.github/**/*.md` |
+| `npm run format:check`     | Check formatting without writing                                                                                           |
+| `npm run audit`            | Run `npm audit --audit-level=moderate`                                                                                     |
+| `npm run clean`            | Remove `dist/` and `coverage/`                                                                                             |
 
 ### Developer Scripts
 
@@ -195,9 +193,6 @@ Platform-agnostic business logic. All modules are pure ES modules.
 | `title.ts`               | Pure title data class; IMDb scores use the `imdbRating` field                           |
 | `constants.ts`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum                     |
 
-Directory modules are imported through their `index.ts` barrel using an explicit
-path (for example `../core/config/index.ts`), never as a bare directory.
-
 **`src/core/ui/`**: Shared UI components
 
 | Module                | Responsibility                                                   |
@@ -285,23 +280,16 @@ reuse a released migration version.
 
 ## Settings (`config/config-fields.ts`)
 
-`CONFIG_FIELDS` is the single source of truth for all user-configurable settings. Each entry defines `key`, `label`, `type` (`text`, `checkbox`, `select`), `default`, `title`, and optionally a `validate` function. `CONFIG_DEFAULTS` is a derived object of `{ key: default }` pairs.
+`CONFIG_FIELDS` in `src/core/config/config-fields.ts` is the single source of
+truth for all user-configurable settings. Do not maintain a second list here:
+read that file before adding or changing a setting.
 
-| Key                     | Type     | Default    | Description                                                    |
-| ----------------------- | -------- | ---------- | -------------------------------------------------------------- |
-| `apiClient`             | select   | `agregarr` | Primary API provider (`agregarr`, `imdbapi`, `omdb`, `xmdb`)   |
-| `xmdbApiKey`            | text     | `''`       | API key for XMDb (required if provider is `xmdb`)              |
-| `omdbApiKey`            | text     | `''`       | API key for OMDb (required if provider is `omdb`)              |
-| `overlayCorner`         | select   | `top-left` | Badge position on thumbnails                                   |
-| `showRtRating`          | checkbox | `false`    | Show Rotten Tomatoes score                                     |
-| `showMcRating`          | checkbox | `false`    | Show Metacritic score                                          |
-| `cacheTtlRatedOldYear`  | text     | `'-1'`     | Cache TTL (days) for rated titles > 1 year old; `-1` = forever |
-| `cacheTtlRatedNewYear`  | text     | `'30'`     | Cache TTL (days) for rated titles < 1 year old                 |
-| `cacheTtlNoRating`      | text     | `'1'`      | Cache TTL (days) for unrated/not-found titles                  |
-| `enableFadeUnderRating` | checkbox | `false`    | Fade thumbnails below the IMDb threshold                       |
-| `fadeRatingThreshold`   | text     | `'6.0'`    | IMDb rating threshold for fading                               |
-| `enableFadeToggle`      | checkbox | `false`    | Show fade override button in hover preview                     |
-| `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
+Each entry defines the required `key`, `label`, `type` (`text`, `checkbox`,
+`select`, or `action`), `default`, and `group`, plus optional `row`, `title`,
+`options`, `validate`, `suffix`, `disabled`, `actionLabel`, and `labelUrl`.
+`action` entries are UI buttons, not persisted settings. `CONFIG_DEFAULTS` is
+derived from the same array, and the settings UI is built from these entries, so
+`label` and `title` are the user-facing copy.
 
 ## Constants (`constants.ts`)
 
@@ -357,14 +345,10 @@ ordinary accessors, and self-evident primitive signatures.
 - **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).
 - **Testing**: Business logic changes must add or update tests covering the new logic.
 - **README**: Update if the change is user-facing or affects documented functionality.
-- **Protocol**: Always print a suggested commit message at the end of a task if files were modified and changes were not committed.
-- **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
-- **Prose style**: Use the Oxford comma: "A, B, and C".
+- **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two. Use the Oxford comma: "A, B, and C".
 - **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
 
 ## GitHub
-
-Use the GitHub CLI (`gh`) for managing GitHub pull requests and issues.
 
 **The shape of an issue or PR body is defined by the templates, not by this
 file.** Read the relevant template and follow the instructions in it:
@@ -375,25 +359,16 @@ file.** Read the relevant template and follow the instructions in it:
 | `.github/ISSUE_TEMPLATE/enhancement.md` | Feature requests |
 | `.github/PULL_REQUEST_TEMPLATE.md`      | Pull requests    |
 
-Each template opens with an HTML comment carrying its rules: which sections to
-delete when they do not apply, what each section is for, how the test plan
-checkboxes work, and the inline `Resolves #123` form. That comment is the
-authoritative guidance. It is visible in the editor textarea and invisible in
-the rendered body.
+Issue templates start with YAML frontmatter that sets the chooser name and
+applies the default label. Each template carries its body rules in an HTML
+comment: which sections to delete when they do not apply, what each section is
+for, how the test plan checkboxes work, and the inline `Resolves #123` form.
+That comment is the authoritative guidance. It is visible in the editor textarea
+and invisible in the rendered body.
 
-`gh` does not apply templates for you. `gh pr create --template <file>` and
-`gh issue create --template <name>` only pre-fill the interactive editor, and
-`gh pr create` still needs an explicit `--body` or `--body-file` when run
-non-interactively. When you script a PR or issue, read the template file and use
-it as the body:
-
-```bash
-gh pr create --title "fix(cache): prevent TTL overflow on negative values" --body-file .github/PULL_REQUEST_TEMPLATE.md
-```
-
-The rules below are the ones a template cannot carry: what the title and branch
-must be, what CI gates on, how releases work, and how to label. Body formatting
-belongs in the templates; do not restate it here.
+The rules below are the ones a template cannot carry: the title and branch
+format, the CI job layout, how releases work, and which extra labels to apply.
+Body formatting belongs in the templates; do not restate it here.
 
 ### Branches & Pull Requests
 
@@ -428,21 +403,9 @@ type(scope)?: description
 
 #### Pre-submission Checklist
 
-Run all six before opening a PR. These cover the six CI `merge-gate` jobs
-(`test:coverage` runs the same `tests/unit` and `tests/ui` suites as the separate
-`test-unit` and `test-ui` jobs, and additionally enforces the thresholds):
-
-```bash
-npm run format:check && npm run lint && npm run type-check && npm run audit && npm run build && npm run test:coverage
-```
-
-The template's Test Plan section lists the same six commands, one per checkbox.
-Report what each produced rather than only ticking it.
-
-`npm run audit` runs `npm audit --audit-level=moderate` over all dependencies,
-dev included (there is no `--omit=dev`), so it fails on `moderate` or higher.
-If a finding is real and unfixable now, fix the dependency rather than lowering
-the level.
+Run every command in the PR template's Test Plan before opening a PR. Together
+they cover all six CI `merge-gate` jobs: type-check, lint-and-audit, build,
+test-unit, test-ui, and test-coverage.
 
 ### Releases
 
@@ -462,11 +425,9 @@ cover the body. Examples:
 - Add TMDB as a rating provider
 - Fetch missing ratings for cached titles when current provider supports them
 
-**Labels Usage**: the templates pre-apply `bug` and `enhancement` from their
+**Labels Usage**: the issue templates apply `bug` and `enhancement` from their
 frontmatter. Add others deliberately:
 
-- `enhancement`: for feature requests
-- `bug`: for bug reports
 - `documentation`: for docs-related issues
 - `good first issue`: for beginner-friendly tasks
 - `help wanted`: for issues needing community assistance
@@ -491,8 +452,8 @@ Each hook first delegates to a global hook of the same name when `core.hooksPath
 - **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.ts` / `service-worker.ts`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
 - **Domain allowlist**: `domains.ts` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
 - **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
-- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.ts`.
-- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
+- **Rate limiting**: see `Architecture > Rate Limits` and `core/request-queue.ts` (cross-tab sync via `fm_last_req`).
+- **Manifest metadata**: see `Build Notes > Manifest injection`. Do not hardcode placeholder fields.
 - **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.ts` for application logging, not raw `console` calls in `src/`.
 - **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract: it throws if not implemented. Every adapter must implement it.
-- **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment: a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
+- **Integration test credentials**: see `Testing > Integration Tests`.

@@ -1,7 +1,5 @@
 name: Update Store Description
 
-description: Sync Firefox AMO description from docs
-
 on:
     workflow_dispatch:
     push:

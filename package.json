@@ -13,8 +13,8 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\"",
-        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\"",
+        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.md\"",
+        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.md\"",
         "lint": "eslint \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "lint:fix": "eslint --fix \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "type-check": "tsc --noEmit",

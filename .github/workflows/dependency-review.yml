@@ -1,7 +1,5 @@
 name: Dependency Review
 
-description: Scan PR dependencies for vulnerabilities
-
 on:
     pull_request:
 

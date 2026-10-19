@@ -42,8 +42,8 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 
 1.  **Create a feature branch:**
     Name branches `type/kebab-case-slug`, where `type` is a Conventional Commits type
-    (`feat`, `fix`, `docs`, `test`, `chore`, `refactor`, `ci`, `build`). Match the
-    branch prefix to the type in your PR title.
+    (for example `feat`, `fix`, `docs`, or `test`). Match the branch prefix to the
+    type in your PR title.
 
     ```bash
     git checkout -b feat/add-metacritic-fallback
@@ -59,29 +59,19 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     Ensure your changes are covered by unit or UI tests.
 
 4.  **Run the checks:**
-    CI gates merges on six commands. Run them all locally before you push:
-
-    ```bash
-    npm run format:check && npm run lint && npm run type-check && npm run audit && npm run build && npm run test:coverage
-    ```
+    The PR template's Test Plan lists the commands CI gates merges on. Run them all
+    locally before you push.
 
 5.  **Submit PR:**
-    Push your branch and open a Pull Request against the `main` branch. The body template
-    in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) asks for a
-    summary, a test plan, and breaking changes. To close an issue, end the body with a
-    line such as `Resolves #123`.
-
-    If you create the PR from a terminal with `gh` rather than the web form, note that
-    `gh pr create` does not apply the template for you. Pass it explicitly:
-
-    ```bash
-    gh pr create --title "fix(cache): prevent TTL overflow on negative values" --body-file .github/PULL_REQUEST_TEMPLATE.md
-    ```
+    Push your branch and open a Pull Request against the `main` branch. The
+    [body template](.github/PULL_REQUEST_TEMPLATE.md) defines the body shape, including
+    the test plan, the inline `Resolves #123` form, and the `gh` usage note for
+    terminal users.
 
 Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
-[feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`. Bug reports
-need the service, the page location, and the target (userscript, Firefox, or Chrome),
-because behaviour differs per service and per build target.
+[feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
+The bug template asks for the service, the UI location, and the target, because
+behavior differs per service and per build target.
 
 ## AI Agents
 

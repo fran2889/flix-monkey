@@ -1,7 +1,5 @@
 name: Publish to Stores
 
-description: Publish extensions to Chrome and Firefox stores
-
 on:
     workflow_dispatch:
         inputs:
