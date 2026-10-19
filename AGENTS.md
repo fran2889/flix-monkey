@@ -1,498 +1,100 @@
 # AGENTS.md
 
-This file is for AI agents. For human contributor guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+Instructions for AI agents working in this repository. Human contributor guidance lives in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Project Overview
+**FlixMonkey** is a browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix, HBO Max, and Disney+ thumbnails and banners. A shared TypeScript codebase in `src/` is bundled by Rollup into three targets: a userscript (`dist/FlixMonkey.user.js`), a Firefox MV3 extension (`dist/firefox/`), and a Chrome MV3 extension (`dist/chrome/`). Platform differences are hidden behind a `PlatformAdapter` abstraction.
 
-**FlixMonkey** is a multi-target browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix thumbnails and banners. A shared ES module codebase in `src/` is bundled by Rollup into three distribution targets:
+Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest + jsdom.
 
-1. **Userscript**: Tampermonkey/Violentmonkey/Greasemonkey (`dist/FlixMonkey.user.js`)
-2. **Firefox Extension**: MV3 WebExtension (`dist/firefox/`)
-3. **Chrome Extension**: MV3 WebExtension (`dist/chrome/`)
+## Commands
 
-The project uses a **Platform Adapter** pattern to abstract differences between `GM_*` (userscript) and `browser.*` (WebExtension) APIs.
+- Install: `npm install`
+- Build: `npm run build` (all three targets)
+- Lint and format (report): `npm run lint && npm run format:check`
+- Lint and format (auto-fix): `npm run lint:fix && npm run format`
+- Type check: `npm run type-check`
+- Test: `npm test`
+- Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
 
-- **Language**: TypeScript (ES2022), `"type": "module"` throughout
-- **Runtime**: Node.js >= 24
-- **Bundler**: Rollup
-- **Linter**: ESLint (flat config, `eslint.config.js`)
-- **Formatter**: Prettier
-- **Test runner**: Vitest + jsdom
-- **External APIs**: XMDb (`xmdbapi.com`), OMDb (`omdbapi.com`), Agregarr (`api.agregarr.org`), IMDb Suggestions (`v3.sg.media-imdb.com`)
+Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 
-## Setup
+### Chromium debugging
 
-```bash
-npm install
-```
-
-Husky git hooks are installed automatically via the `prepare` script.
-
-## Development & Build Workflow
-
-1. Edit source files in `src/`.
-2. Build: `npm run build`
-3. Lint + format: `npm run lint && npm run format`
-4. Test: `npm test`
-
-### Build Scripts
-
-| Command                    | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| `npm run build`            | Build all three targets and run `scripts/package.js`           |
-| `npm run build:userscript` | Build only the userscript                                      |
-| `npm run build:firefox`    | Build Firefox extension and run `scripts/package.js`           |
-| `npm run build:chrome`     | Build Chrome extension and run `scripts/package.js`            |
-| `npm run dev`              | Watch mode: rebuild on file changes                            |
-| `npm run lint`             | Lint `src/`, `tests/`, `scripts/`, and `*.config.*`            |
-| `npm run lint:fix`         | Lint with auto-fix                                             |
-| `npm run format`           | Format `src/`, `tests/` JS, `src/` HTML, root JSON/MD/YML/HTML |
-| `npm run format:check`     | Check formatting without writing                               |
-| `npm run audit`            | Run `npm audit` at high severity level                         |
-| `npm run clean`            | Remove `dist/` and `coverage/`                                 |
-
-### Developer Scripts
-
-| Script                                  | Description                                                                                                                 |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/package.js`                    | Builds ZIP/XPI archives of the extension output; run by `npm run build`                                                     |
-| `scripts/update-firefox-description.js` | Pushes `docs/store-description.txt` to the Firefox AMO listing. Requires `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`, `AMO_ADDON_ID` |
-
-### Chromium Debugging
-
-Chrome DevTools CLI debugging must attach to Chromium launched from the repository root with this command:
+Attach Chrome DevTools CLI to Chromium launched from the repository root with a persistent profile:
 
 ```bash
 chromium --remote-debugging-port=9222 --user-data-dir="$PWD/.chromium-debug-profile"
 ```
 
-Reuse this persistent profile. Do not use temporary or fresh user-data directories.
+Reuse that profile. Do not use fresh or temporary user-data directories.
 
-### Build Notes
+## Hard constraints
 
-- `rollup.config.js` is the single build configuration. It reads `process.env.TARGET` (`userscript`, `firefox`, `chrome`) to select which configs to export.
-- **Manifest injection**: `name`, `version`, `description`, `homepage_url`, and `icons` fields in `manifest.json` source files use placeholder strings (`__NAME__`, `__VERSION__`, `__DESCRIPTION__`, `__HOMEPAGE_URL__`, etc.) and are populated at build time from `package.json` by the `injectManifestMetadata` Rollup plugin.
-- **Icon resizing**: `src/assets/icons/icon.png` is the single source icon; `sharp` resizes it to 16/32/48/128px at build time into `dist/<target>/icons/`.
-- **Packaging**: `scripts/package.js` creates ZIP archives of the built extension directories for distribution.
-- **Userscript**: Bundled as IIFE with a `==UserScript==` banner generated at build time. Non-ASCII characters are unicode-escaped. License headers are stripped from the output (they're already in the banner).
+- All platform-specific I/O goes through the `adapter` (`adapter.httpFetch()`, `adapter.storage*`, `adapter.configGet()`). Never call `fetch`, `GM_*`, or `browser.*` from platform-agnostic code.
+- Streaming-service pages block direct `fetch()` to external APIs. Extensions proxy through the background page or service worker via `browser.runtime.sendMessage`; userscripts use `GM_xmlhttpRequest`.
+- `src/targets/extension/domains.ts` (`ALLOWED_DOMAINS`, `validateDomain()`) gates every proxied request. Adding an API endpoint requires adding its host there.
+- In extensions, config changes arrive asynchronously via `browser.storage.onChanged`. Do not assume a config value read at init stays current.
+- `PlatformAdapter.configGet()` has no no-op default. Unlike `registerMenuCommand` and `setConfigData`, every adapter must implement it.
+- Manifest fields with `__...__` placeholders (for example `__NAME__`, `__VERSION__`) are injected at build time from `package.json`. Do not hardcode them in `manifest.json`.
+- Do not claim a change has shipped. GitHub releases are cut automatically from `main`; store publishing is a separate manual step (see Releases).
+- Do not edit generated output under `dist/` or `coverage/`.
+- Preserve unrelated working-tree changes in any file you edit.
+
+### Persistent storage migrations
+
+Stored data carries an `fm_data_version`. When changing a persisted shape, append a new migration to `MIGRATIONS` (`src/core/migrations.ts`) with the next integer version, and add tests for transformed, already-current, and malformed data. Never edit or reuse a released version. `runMigrations()` advances the stored version even when a migration fails, on purpose, so a broken migration cannot trap startup.
+
+## Conventions
+
+- License header: every `{src,tests}/**/*.ts` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
+- JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See `eslint.config.js` for the exact tags.
+- Document the boundaries a caller needs in order to consume them correctly: abstract and cross-platform contracts, injected collaborators, and persistence, messaging, HTTP, and external-data boundaries. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
+- Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
+- Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
+- Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in `eslint.config.js`.
+- Use `logger.ts` for application logging in `src/`; raw `console` is limited to the logger itself and platform bootstrap error paths.
+- ASCII only, unless a test case or user-facing string needs otherwise.
+- Prose: no em-dashes; use a colon, a semicolon, or two sentences. Use the Oxford comma.
+- Conventional Commits (`type(scope)?: description`, imperative, lowercase, no trailing period). Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert. Enforced by commitlint via a Husky `commit-msg` hook.
+- Update `README.md` when a change is user-facing.
+- Do not include `Generated by ...` or `Co-Authored-By:` footers in commit messages. A configured global hook may strip them; do not rely on it.
 
 ## Testing
 
-### Test Suites
-
-| Command                    | What it runs                          |
-| -------------------------- | ------------------------------------- |
-| `npm test`                 | `tests/unit/**` + `tests/ui/**`       |
-| `npm run test:unit`        | `tests/unit/**`                       |
-| `npm run test:ui`          | `tests/ui/**`                         |
-| `npm run test:integration` | `tests/integration/**` (nightly only) |
-| `npm run test:coverage`    | unit + ui with V8 coverage report     |
-| `npx vitest -t "name"`     | Filter by test name                   |
-
-### Test Environment
-
-- **jsdom** is the global test environment (configured in `vitest.config.js`).
-- **`@testing-library/jest-dom`** matchers are registered globally in `tests/setup.ts`.
-- **Coverage thresholds**: 90% for branches, statements, and functions (enforced by Vitest in
-  `vitest.config.js`). All four metrics are gated, so `npm run test:coverage` must stay clean
-  locally and in CI. Branch coverage is the strictest in practice: a change that adds
-  nullish-coalescing or type-guard branches without a matching test will fail the gate even when
-  statements and functions look healthy.
-
-### Test Layout
-
-```
-tests/
-  setup.ts              # Global: jest-dom matchers
-  fixtures/             # Netflix surface snippets for UI tests, one file per service
-    netflix-surfaces.ts     # Array of {name, html, expected} objects
-    hbomax-surfaces.ts
-    disneyplus-surfaces.ts
-  helpers/
-    surface-tests.ts    # Shared testSurfaceFixtures() driver for UI tests
-  mocks/                # Shared mock factories
-    adapter.ts          # Mock PlatformAdapter
-    browser.ts          # browser.* API stubs
-    cache.ts            # Mock CacheManager
-    chrome.ts           # chrome.* API stubs
-    config.ts           # Mock ConfigManager
-    logger.ts           # Mock Logger
-    platform.ts         # Platform-level helpers
-    title.ts            # Mock Title
-    userscript.ts       # GM_* API stubs
-    webextension.ts     # browser.* API stubs
-  unit/                 # Unit tests mirroring src/ structure
-    core/               # Mirrors src/core/
-    platform/
-    targets/
-  ui/                   # Per-service surface discovery and injection tests
-    netflix.ui.test.ts
-    hbomax.ui.test.ts
-    disneyplus.ui.test.ts
-  integration/
-    setup.ts              # Loads .env + fails if required API keys are missing
-    api-clients.test.ts
-```
-
-Fixtures are TypeScript modules exporting an array of `{name, html, expected}` objects, not HTML
-files. Each entry must represent exactly one surface so `testSurfaceFixtures()` can assert on
-`surfaces[0]` unambiguously. `tests/helpers/surface-tests.ts` owns the shared assertions.
-
-### Test Taxonomy
-
-These rules determine where a test lives and what it asserts. Apply them to all new tests.
-
-**Location rule (sole determinant):** A test lives in `tests/ui/` if it loads a Netflix surface snippet from `tests/fixtures/`. It lives in `tests/unit/` if it does not.
-
-**UI tests** (`tests/ui/`) assert two things against real Netflix surface markup:
-
-- _Surface discovery_: `SurfaceManager.discover()` returns the expected surfaces (count, title, container, fadeable).
-- _Injection_: overlay or style elements are created and attached to the surface container. Minimal content checks (e.g., the rating value appears in the overlay) are acceptable as injection sanity checks, not for testing rendering logic.
-
-**Unit tests** (`tests/unit/`) assert:
-
-- _OverlayRenderer rendering logic_: tooltip text, CSS string content, conditional sub-elements (🔍, N/A, RT/MC badges), pointer events, click propagation, config-driven output.
-- _SurfaceManager edge cases_ that no fixture represents: empty or null titles, deduplication, `parentElement` fallback, `querySelectorAll` throwing.
-- _UI component logic_ (`Modal`, `SettingsUI`, etc.) that does not depend on Netflix surface markup.
-
-**No duplication across layers:** if a surface type's basic discovery is covered by a fixture test, unit tests do not repeat that case with synthetic markup. If rendering logic is covered in unit, UI tests do not re-assert it.
-
-**Fixture preference:** when adding a new surfaces or overlay test, check existing fixtures first. Use synthetic DOM only if no fixture represents the case.
-
-**The deciding question for any new test:** does this assertion require Netflix markup to be meaningful? If yes, it is a UI test. If it would pass equally against a synthetic `<div>`, it is a unit test.
-
-### Integration Tests
-
-Integration tests in `tests/integration/` make live HTTP requests to external
-APIs. They run only via `npm run test:integration` (the dedicated
-`vitest.integration.config.js`) and on the nightly `Nightly Integration`
-workflow: never in per-PR CI. They require `XMDB_API_KEY` and `OMDB_API_KEY`
-in the environment: locally via a `.env` file (loaded by
-`tests/integration/setup.ts` through `dotenv`), and in CI via repository Actions
-secrets. If either key is missing the suite **fails fast** with a clear error
-rather than skipping. Do not mock HTTP in integration tests.
-
-## Architecture
-
-### 1. Core (`src/core/`)
-
-Platform-agnostic business logic. All modules are pure ES modules.
-
-| Module                   | Responsibility                                                                          |
-| ------------------------ | --------------------------------------------------------------------------------------- |
-| `app.ts`                 | Main `FlixMonkeyApp` class and `startApp` factory function                              |
-| `api-manager.ts`         | Orchestrates API clients, handles provider selection and fallbacks                      |
-| `api/`                   | API clients: `BaseApiClient`, XMDb, OMDb, Agregarr, title-type mappers                  |
-| `cache/`                 | Async cache with per-entry TTL logic backed by the platform adapter                     |
-| `config/`                | `ConfigManager` reactive config object and `config-fields.ts` settings                  |
-| `disabled-clients.ts`    | Tracks failing API clients to avoid redundant requests (1-hour lockout)                 |
-| `id-override-manager.ts` | User-supplied IMDb ID overrides for individual titles                                   |
-| `request-queue.ts`       | Rate limiting and cross-tab synchronization via `fm_last_req` in storage                |
-| `overlay.ts`             | DOM rendering of rating badges on Netflix thumbnails and banners                        |
-| `services/`              | Streaming services: base class, Netflix, Disney+, HBO Max, registry                     |
-| `surfaces/`              | DOM discovery: `SurfaceManager` plus per-service surface definitions                    |
-| `fade-manager.ts`        | Manages fade state overrides for individual titles                                      |
-| `logger.ts`              | Centralized logging; honours the `debug` config flag                                    |
-| `migrations.ts`          | Versioned persistent-storage migrations tracked by `fm_data_version`                    |
-| `rate-limits.ts`         | Per-client rate limit intervals                                                         |
-| `utils/`                 | Shared helpers: `general-utils.ts`, `color-utils.ts`, `string-utils.ts`, `url-utils.ts` |
-| `title.ts`               | Pure title data class; IMDb scores use the `imdbRating` field                           |
-| `constants.ts`           | Shared constants: timing values, `ApiSource` enum, `TitleType` enum                     |
-
-Directory modules are imported through their `index.ts` barrel using an explicit
-path (for example `../core/config/index.ts`), never as a bare directory.
-
-**Nullability**: use `undefined`, never `null`, for "no value" across `src/` and
-`tests/`. Omit the property rather than assigning `undefined`. The only `null`s
-allowed are the ones the platform dictates (`prompt()`, `getAttribute()`,
-`querySelector()`, `browser.storage.local.get(null)`).
-
-**Rating normalization**: each API client owns the wire format of its provider
-and converts it to a number before constructing a `Title`. `Title` accepts
-`number | undefined` for `year`, `imdbRating`, `imdbVotes`, `rtRating`, and
-`mcRating` and collapses anything else to `undefined`; it must not parse
-strings. Note that a provider's declared response type can be optimistic:
-OMDb sends ratings and years as strings (`"8.5"`, `"90%"`, `"2020-"`), so each
-client converts rather than trusting its interface.
-
-**Untrusted payloads**: `Title.fromCacheJSON` is the single validation boundary
-for decoded storage JSON. Pass the parsed value through unchanged and let it
-reject malformed input; do not cast untrusted data to a trusted shape upstream.
-
-**`src/core/ui/`**: Shared UI components
-
-| Module                | Responsibility                                                   |
-| --------------------- | ---------------------------------------------------------------- |
-| `modal.ts`            | Accessible modal dialog component                                |
-| `settings-ui.ts`      | Wires `SettingsView` to the adapter, cache, and disabled clients |
-| `settings-view.ts`    | Settings panel built dynamically from `config-fields`            |
-| `overlay-elements.ts` | Rating badge, fade toggle, and action element factories          |
-| `overlay-styles.ts`   | CSS string builder for the rating overlay                        |
-| `styles.ts`           | Shared CSS injected into the streaming-service page              |
-
-### 2. Platform (`src/platform/`)
-
-Implementations of the `PlatformAdapter` abstract interface.
-
-| Module            | Responsibility                                                                                     |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| `adapter.ts`      | Abstract base class; all methods throw `FlixMonkeyError` if not overridden                         |
-| `userscript.ts`   | `UserscriptAdapter`: implements all methods using `GM_*` APIs                                      |
-| `webextension.ts` | `WebExtensionAdapter`: implements all methods using `browser.*` APIs (via `webextension-polyfill`) |
-
-### 3. Targets (`src/targets/`)
-
-Entry points and platform-specific files.
-
-**`src/targets/extension/`**: Shared between Firefox and Chrome
-
-| File             | Role                                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `content.ts`     | Content script entry point; bootstraps the app                                         |
-| `options.ts`     | Options page entry point                                                               |
-| `options.html`   | Options page HTML (copied verbatim to `dist/<target>/`)                                |
-| `fetch-proxy.ts` | Background fetch handler shared by both Firefox and Chrome                             |
-| `domains.ts`     | Domain allowlist (`ALLOWED_DOMAINS`) and `validateDomain()` used by background scripts |
-
-**`src/targets/firefox/`**:
-
-- `manifest.json`: Firefox MV3 manifest (uses `"background": { "scripts": [...] }`)
-- `background.ts`: Background page that imports `fetch-proxy.ts`
-
-**`src/targets/chrome/`**:
-
-- `manifest.json`: Chrome MV3 manifest (uses `"background": { "service_worker": ... }`)
-- `service-worker.ts`: Service worker that imports `fetch-proxy.ts`
-
-**`src/targets/userscript/`**:
-
-- `entry.ts`: Userscript entry; wires GM_config and starts the app
-- `metadata.ts`: Userscript metadata banner template with placeholders
-
-## Platform Adapter Interface
-
-All platform-specific I/O must go through the `adapter` instance. All abstract methods throw `FlixMonkeyError` if the subclass does not implement them.
-
-```js
-class PlatformAdapter {
-    // All abstract; must be implemented:
-    async storageGet(key)           // Returns stored value or undefined when the key is absent
-    async storageGetAll()           // Returns all key/value pairs as object
-    async storageSet(key, value)    // Stores a single key/value
-    async storageSetMany(obj)       // Stores multiple key/values atomically
-    async storageDelete(key)        // Removes a key
-    async storageGetKeys(prefix)    // Returns keys matching the given prefix
-    async httpFetch(url, options)   // Makes an HTTP request via the platform mechanism
-    configGet(key)                  // Synchronous config read (must be implemented)
-
-    // Optional; no-op defaults provided:
-    registerMenuCommand(label, fn)  // Registers a UI menu entry (userscript only)
-    setConfigData(data)             // Pre-loads config data (WebExtensionAdapter overrides this)
-}
-```
-
-## Storage Migrations (`migrations.ts`)
-
-`MIGRATIONS` contains persistent-storage upgrades in strictly increasing
-integer version order. `runMigrations()` compares this registry with the
-stored `fm_data_version`, runs newer migrations before application startup,
-and advances the stored version even when a migration or its recovery handler
-fails.
-
-Released migrations:
-
-| Version | Description                                                                                                             |
-| ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 1       | Renames cached `Title.rating` data to `Title.imdbRating` in `fmc:*` entries while preserving each entry's expiry.       |
-| 2       | Hoists `displayTitle` and `imdbId` out of the nested `data` payload to the cache entry top level, preserving `expires`. |
-
-When changing a persisted shape, append a new migration version and add unit
-tests for transformed, already-current, and malformed data. Do not edit or
-reuse a released migration version.
-
-Absent fields are written as _omitted keys_, not as `null`: `JSON.stringify`
-drops `undefined`, so a missing key and an explicit `undefined` are
-indistinguishable on read. Code reading `fmc:*` entries must therefore treat a
-missing key as "no value" and stay compatible with entries written by older
-versions that stored `null`.
-
-## Settings (`config/config-fields.ts`)
-
-`CONFIG_FIELDS` is the single source of truth for all user-configurable settings. Each entry defines `key`, `label`, `type` (`text`, `checkbox`, `select`), `default`, `title`, and optionally a `validate` function. `CONFIG_DEFAULTS` is a derived object of `{ key: default }` pairs.
-
-| Key                     | Type     | Default    | Description                                                    |
-| ----------------------- | -------- | ---------- | -------------------------------------------------------------- |
-| `apiClient`             | select   | `agregarr` | Primary API provider (`agregarr`, `imdbapi`, `omdb`, `xmdb`)   |
-| `xmdbApiKey`            | text     | `''`       | API key for XMDb (required if provider is `xmdb`)              |
-| `omdbApiKey`            | text     | `''`       | API key for OMDb (required if provider is `omdb`)              |
-| `overlayCorner`         | select   | `top-left` | Badge position on thumbnails                                   |
-| `showRtRating`          | checkbox | `false`    | Show Rotten Tomatoes score                                     |
-| `showMcRating`          | checkbox | `false`    | Show Metacritic score                                          |
-| `cacheTtlRatedOldYear`  | text     | `'-1'`     | Cache TTL (days) for rated titles > 1 year old; `-1` = forever |
-| `cacheTtlRatedNewYear`  | text     | `'30'`     | Cache TTL (days) for rated titles < 1 year old                 |
-| `cacheTtlNoRating`      | text     | `'1'`      | Cache TTL (days) for unrated/not-found titles                  |
-| `enableFadeUnderRating` | checkbox | `false`    | Fade thumbnails below the IMDb threshold                       |
-| `fadeRatingThreshold`   | text     | `'6.0'`    | IMDb rating threshold for fading                               |
-| `enableFadeToggle`      | checkbox | `false`    | Show fade override button in hover preview                     |
-| `debug`                 | checkbox | `true`     | Enable verbose console logging                                 |
-
-## Constants (`constants.ts`)
-
-| Export                     | Value / Type  | Notes                                              |
-| -------------------------- | ------------- | -------------------------------------------------- |
-| `DAYS_TO_MS`               | `86400000`    | Milliseconds per day                               |
-| `CACHE_TTL_INFINITE`       | `-1`          | Constant for infinite cache TTL                    |
-| `DECORATION_DEBOUNCE_MS`   | `250`         | DOM observer debounce                              |
-| `AUTOSAVE_DEBOUNCE_MS`     | `1000`        | Settings autosave debounce                         |
-| `HOVER_ACTION_DELAY_MS`    | `1000`        | Hover delay before overlay actions appear          |
-| `IDLE_CALLBACK_TIMEOUT_MS` | `2000`        | `requestIdleCallback` timeout for decoration       |
-| `INFLIGHT_TIMEOUT_MS`      | `30000`       | Max time to wait for in-flight request             |
-| `CLIENT_DISABLE_DURATION`  | `3600000`     | How long a failing client is disabled (1 hr)       |
-| `DEFAULT_FETCH_TIMEOUT`    | `8000`        | HTTP request timeout                               |
-| `ApiSource`                | frozen object | `{ XMDB, OMDB, AGREGARR }`: canonical client names |
-| `TitleType`                | frozen object | `{ MOVIE, SERIES }`: title type enum               |
-
-## Rate Limits (`rate-limits.ts`)
-
-| Export        | Value / Type | Notes                                                                |
-| ------------- | ------------ | -------------------------------------------------------------------- |
-| `RATE_LIMITS` | object       | Per-client minimum interval in ms: XMDb 1500, OMDb 250, AGREGARR 250 |
-
-## Code Style & Conventions
-
-- **ES modules**: `import`/`export` everywhere in `src/` and `tests/`.
-- **Async/Await**: Mandatory for storage and network operations.
-- **Private fields**: Use `#field` syntax for class-private state.
-- **Naming**: PascalCase for classes, camelCase for methods/variables.
-- **Explicit file paths**: every relative import names a file. Directory modules go through their
-  `index.ts` barrel with an explicit path (for example `../core/config/index.ts`), never as a bare
-  directory (`../core/config`).
-
-### JSDoc
-
-Use JSDoc for boundaries whose callers need documented semantics to consume
-correctly, not for every method. Document abstract and cross-platform
-contracts; non-obvious exported APIs and injected collaborators; persistence,
-messaging, HTTP, and external-data boundaries; and reused shapes, unions,
-constrained values, and serialization formats.
-
-Document shared contracts at their defining interface or exported boundary.
-Implementations document only meaningful deviations. Use named `@typedef`s for
-reused shapes, `unknown` for untrusted input, and `import('./path.ts').Type`
-for cross-module types. Explain only constraints, fallbacks, side effects, and
-lifecycle requirements that types do not convey.
-
-Omit JSDoc for private helpers, simple pure utilities, routine DOM or UI glue,
-ordinary accessors, and self-evident primitive signatures.
-
-- **License headers**: Every file in `src/` and `tests/` must begin with the GPL-3.0 license block matching `LICENSE_HEADER.template`. ESLint (`eslint-plugin-headers`) enforces this: a missing or malformed header is a lint error.
-- **Conventional Commits**: Enforced by `commitlint` via a Husky `commit-msg` hook. Format: `type(scope)?: description` (imperative mood). Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
-- **Pre-commit**: Husky runs `lint-staged` on staged files before every commit (Prettier + ESLint auto-fix).
-- **Testing**: Business logic changes must add or update tests covering the new logic.
-- **README**: Update if the change is user-facing or affects documented functionality.
-- **Protocol**: Always print a suggested commit message at the end of a task if files were modified and changes were not committed.
-- **Prose style**: Do not use em-dashes. Use a colon, a semicolon, or break the sentence in two.
-- **Prose style**: Use the Oxford comma: "A, B, and C".
-- **Character encoding**: Use ASCII characters only unless specifically required for a test case or user-facing content. Replace en dashes (–), em dashes (—), ellipsis (…) and arrows (→) with their ASCII equivalents (-, -, ..., ->).
+- Add or update tests for every business-logic change.
+- Location rule: a test belongs in `tests/ui/` if it loads a streaming-service surface fixture from `tests/fixtures/`; otherwise `tests/unit/`. Integration tests are separate (see below). The deciding question is whether the assertion needs real service markup. If it would pass against a synthetic `<div>`, it is a unit test.
+- Fixtures are TypeScript modules exporting `{name, html, expected}` entries, one surface per entry. Shared assertions live in `tests/helpers/surface-tests.ts`; mock factories live in `tests/mocks/`.
+- Do not duplicate coverage across layers.
+- `tests/integration/` hits live APIs. It runs only via `npm run test:integration` and the Nightly Integration workflow, needs `XMDB_API_KEY` and `OMDB_API_KEY`, and fails fast when a key is missing. Do not mock HTTP there.
+- Coverage thresholds and the jsdom environment are configured in `vitest.config.js`.
 
 ## GitHub
 
-Use the GitHub CLI (`gh`) for managing GitHub pull requests and issues.
+Issue and PR body shape is defined by the templates in `.github/`, not by this file. Read the relevant template and follow its HTML comment. `gh pr create` does not apply the template; pass a filled copy with `--body-file`.
 
-### Branches & Pull Requests
+- Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
+- PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
+- CI enforces six merge-gate jobs: type-check, lint-and-audit, build, test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
+- Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
-#### Branch Naming
+### Releases
 
-`type/kebab-case-slug`: `type` matches a Conventional Commits type (see above), slug is 2-4 words.
+release-please runs on pushes to `main`. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `publish-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
 
-```
-feat/add-metacritic-fallback
-fix/cache-ttl-overflow
-docs/update-readme-setup
-test/expand-api-client-coverage
-chore/npm-audit-fix-undici
-```
+## Where to look
 
-#### PR Titles
+Read these instead of a copy in this file:
 
-PRs are squash-merged. The title becomes the merge commit and is parsed by release-please. Use Conventional Commits format:
-
-```
-type(scope)?: description
-```
-
-- Imperative mood, lowercase, no trailing period.
-- Include scope when targeting a specific module: `fix(cache): prevent TTL overflow on negative values`.
-
-#### PR Descriptions
-
-Use imperative mood. Skip sections that don't apply:
-
-```
-## Summary
-- <What this PR does, 1-3 bullets>
-
-## Test Plan
-- [x] <Automated: e.g., 335 unit tests pass, 5 integration tests pass, all targets build>
-- [ ] <Manual: e.g., load extension, verify feature X is default, ratings appear on browse pages>
-- [ ] <Manual: e.g., verify non-ASCII titles resolve correctly>
-
-## Breaking Changes
-- <Only if applicable: describe what breaks and migration steps>
-
-## Resolves
-- <Issue numbers this PR closes, e.g., Resolves #123 or Resolves #123, #456>
-```
-
-**Test Plan rules**: use `[x]` for automated tests that have passed and `[ ]` for manual verification steps requiring human testing.
-
-#### Pre-submission Checklist
-
-Run before opening a PR:
-
-```bash
-npm run build && npm test
-```
-
-### Issue Rules
-
-**Title Format**: Imperative mood, descriptive, no trailing period. Examples:
-
-- Add HBO Max support
-- Add TMDB as a rating provider
-- Fetch missing ratings for cached titles when current provider supports them
-
-**Description Template**:
-
-- Description of the feature or bug
-- Requirements (for enhancements)
-- Open questions (optional for discussion)
-
-**Labels Usage**:
-
-- `enhancement`: for feature requests
-- `bug`: for bug reports
-- `documentation`: for docs-related issues
-- `good first issue`: for beginner-friendly tasks
-- `help wanted`: for issues needing community assistance
-
-## Git Hooks (Husky)
-
-| Hook         | What it does                                                            |
-| ------------ | ----------------------------------------------------------------------- |
-| `pre-commit` | Runs `lint-staged`: Prettier + ESLint `--fix` on staged JS/JSON/MD/HTML |
-| `commit-msg` | Runs `commitlint` to enforce Conventional Commits format                |
-| `pre-push`   | Runs `npm run type-check`                                               |
-
-**Note**: `Generated by Mistral Vibe.` and `Co-Authored-By:` footers are automatically stripped from commit messages by a global git hook. Do not include these in commit messages.
-
-## Common Gotchas
-
-- **CORS/CSP**: The Netflix page blocks direct `fetch()` to external APIs. Extensions route API calls through a background page/service worker (`background.ts` / `service-worker.ts`) via `browser.runtime.sendMessage`. Userscripts use `GM_xmlhttpRequest` which bypasses CORS. All fetches must go through `adapter.httpFetch()`.
-- **Domain allowlist**: `domains.ts` defines `ALLOWED_DOMAINS` for all supported API endpoints (OMDb, XMDb, Agregarr, and IMDb Suggestions). Background scripts call `validateDomain()` before proxying any request. Adding a new API endpoint requires updating this list.
-- **Config sync**: In extensions, `browser.storage.onChanged` pushes config changes to the content script without a page reload. Do not assume config values are static after init.
-- **Rate limiting**: `RequestQueue` uses `fm_last_req` in storage to synchronize rate limits across multiple Netflix tabs. Per-client delays are defined in `RATE_LIMITS` in `rate-limits.ts`.
-- **Manifest metadata**: `manifest.json` source files contain placeholder strings for `name`, `version`, `description`, and `homepage_url`. Do not hardcode these: they are injected from `package.json` at build time.
-- **No `console.log` ban**: ESLint allows all `console.*` methods (debug, info, warn, error, log). Use `logger.ts` for application logging, not raw `console` calls in `src/`.
-- **No `configGet` default**: Unlike `registerMenuCommand` and `setConfigData`, `configGet` is fully abstract: it throws if not implemented. Every adapter must implement it.
-- **Integration test credentials**: Tests in `tests/integration/` need real API keys (`XMDB_API_KEY`, `OMDB_API_KEY`) in the environment: a local `.env` or CI Actions secrets. Without them the suite fails fast (it does not skip). These tests run nightly, not in per-PR CI. Do not mock HTTP in integration tests.
+- `package.json`: scripts and `lint-staged` globs.
+- `eslint.config.js`: lint, TypeScript, JSDoc, and header rules.
+- `vitest.config.js`, `vitest.integration.config.js`: test environment and coverage.
+- `rollup.config.js`: build targets, manifest injection, icon generation.
+- `src/core/`: business logic (`app.ts`, `api-manager.ts`, `overlay.ts`, `services/`, `surfaces/`, `ui/`).
+- `src/platform/`: the `adapter.ts` contract plus the userscript and WebExtension implementations.
+- `src/targets/`: entry points, the fetch proxy, and per-browser manifests and background scripts.
+- `tests/`: `unit/`, `ui/`, `fixtures/`, `helpers/`, `mocks/`, `integration/`.
+- `src/core/constants.ts`, `src/core/rate-limits.ts`: timing and rate-limit values.
+- `src/core/config/config-fields.ts`: the single source of truth for settings.
+- `src/targets/extension/domains.ts`: allowed external hosts.
+- `.github/`: templates and workflows.
+- `CONTRIBUTING.md`, `docs/STORE_PUBLISHING.md`: human and store-publishing guidance.

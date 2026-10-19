@@ -1,7 +1,5 @@
 name: Dependabot Auto-Merge
 
-description: Auto-merge Dependabot patch updates
-
 on:
     pull_request_target:
         branches: [main]
