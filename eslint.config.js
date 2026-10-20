@@ -43,16 +43,7 @@ const typescriptRules = {
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/await-thenable': 'error',
-    '@typescript-eslint/ban-ts-comment': [
-        'error',
-        {
-            'ts-expect-error': 'allow-with-description',
-            'ts-ignore': true,
-            'ts-nocheck': true,
-            'ts-check': false,
-            minimumDescriptionLength: 10,
-        },
-    ],
+    '@typescript-eslint/ban-ts-comment': 'error',
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
@@ -124,11 +115,7 @@ export default [
             '@typescript-eslint/ban-ts-comment': [
                 'error',
                 {
-                    'ts-expect-error': 'allow-with-description',
-                    'ts-ignore': true,
                     'ts-nocheck': 'allow-with-description',
-                    'ts-check': false,
-                    minimumDescriptionLength: 10,
                 },
             ],
         },
