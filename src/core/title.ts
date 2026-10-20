@@ -78,8 +78,7 @@ export class Title {
      * @returns Title fields without displayTitle
      */
     toCacheJSON(): TitleData {
-        const rest = { ...this };
-        delete (rest as { displayTitle?: string }).displayTitle;
+        const { displayTitle: _displayTitle, ...rest } = this;
         return rest;
     }
 
