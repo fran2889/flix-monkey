@@ -31,16 +31,16 @@ export interface TitleOptions {
  * that is not a finite number is collapsed to `undefined`.
  */
 export class Title {
-    displayTitle: string | undefined;
-    apiTitle: string | undefined;
-    imdbId: string | undefined;
-    year: number | undefined;
-    imdbRating: number | undefined;
-    imdbVotes: number | undefined;
-    rtRating: number | undefined;
-    mcRating: number | undefined;
-    source: string | undefined;
-    type: string | undefined;
+    readonly displayTitle: string | undefined;
+    readonly apiTitle: string | undefined;
+    readonly imdbId: string | undefined;
+    readonly year: number | undefined;
+    readonly imdbRating: number | undefined;
+    readonly imdbVotes: number | undefined;
+    readonly rtRating: number | undefined;
+    readonly mcRating: number | undefined;
+    readonly source: string | undefined;
+    readonly type: string | undefined;
 
     /**
      * @param [options] - Title fields to initialize.

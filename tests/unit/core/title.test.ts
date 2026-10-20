@@ -241,13 +241,17 @@ describe('Title', () => {
     describe('immutability', () => {
         it('should not allow mutation of fields after construction', () => {
             const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
+            const mutableTitle = title as {
+                displayTitle: string | undefined;
+                imdbRating: number | undefined;
+            };
             try {
-                title.displayTitle = 'Mutated';
+                mutableTitle.displayTitle = 'Mutated';
             } catch {
                 /* frozen in strict mode */
             }
             try {
-                title.imdbRating = 0;
+                mutableTitle.imdbRating = 0;
             } catch {
                 /* frozen in strict mode */
             }
