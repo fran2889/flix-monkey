@@ -12,6 +12,8 @@
         "noUnusedParameters": true,
         "noImplicitReturns": true,
         "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false,
         "exactOptionalPropertyTypes": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
