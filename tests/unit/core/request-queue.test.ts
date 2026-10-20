@@ -14,7 +14,7 @@ describe('RequestQueue', () => {
         // remains queued because the large interval (999999ms) causes #process to wait.
         // clear() therefore finds exactly 1 item to abort.
         // If #process() ever defers its first dequeue past an await, this count changes.
-        const queue = new RequestQueue(null, 999999, null);
+        const queue = new RequestQueue(undefined, 999999);
         void queue.enqueue('url1', 1, () => new Promise(() => {})).catch(() => {});
         void queue.enqueue('url2', 1, () => new Promise(() => {})).catch(() => {});
 
@@ -48,7 +48,7 @@ describe('RequestQueue', () => {
 
     it('should respect priority and jump the queue', async () => {
         const interval = 50;
-        const queue = new RequestQueue(null, interval, null);
+        const queue = new RequestQueue(undefined, interval);
         const results: string[] = [];
         const fetchFn = async (url: string) => {
             results.push(url);
@@ -94,7 +94,7 @@ describe('RequestQueue', () => {
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
             .build();
-        const queue = new RequestQueue(mockAdapter, 100, null);
+        const queue = new RequestQueue(mockAdapter, 100);
         const mockFetch = async () => ({ status: 200 });
 
         const results = await Promise.all([

@@ -41,7 +41,7 @@ export class AgregarrApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR], null),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR]),
             ApiSource.AGREGARR
         );
     }
@@ -50,9 +50,9 @@ export class AgregarrApiClient extends BaseApiClient {
      * Searches for a title using IMDb Suggestions API.
      *
      * @param displayTitle - The title to search for.
-     * @returns Title object or null if not found.
+     * @returns Title object or undefined if not found.
      */
-    async search(displayTitle: string): Promise<Title | null> {
+    async search(displayTitle: string): Promise<Title | undefined> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
         const data = (await this.queuedFetch(
@@ -62,24 +62,24 @@ export class AgregarrApiClient extends BaseApiClient {
         const results = data?.d;
         if (!results?.length) {
             this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
-            return null;
+            return undefined;
         }
         const match = results.find(result => AGREGARR_TITLE_TYPES.has(result.qid));
         if (!match) {
             this.logger.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
-            return null;
+            return undefined;
         }
         return new Title({
             displayTitle,
-            apiTitle: match.l ?? null,
-            imdbId: match.id ?? null,
-            year: match.y ?? null,
-            imdbRating: null,
-            imdbVotes: null,
-            rtRating: null,
-            mcRating: null,
-            type: mapAgregarrTitleType(match.qid ?? null),
-            source: null,
+            apiTitle: match.l ?? undefined,
+            imdbId: match.id ?? undefined,
+            year: match.y ?? undefined,
+            imdbRating: undefined,
+            imdbVotes: undefined,
+            rtRating: undefined,
+            mcRating: undefined,
+            type: mapAgregarrTitleType(match.qid ?? undefined),
+            source: undefined,
         });
     }
 
@@ -87,9 +87,9 @@ export class AgregarrApiClient extends BaseApiClient {
      * Fetches detailed ratings from Agregarr API using the cached IMDb ID.
      *
      * @param searchTitle - Title from search results with IMDb ID.
-     * @returns Title with ratings or null on failure.
+     * @returns Title with ratings or undefined on failure.
      */
-    async getDetails(searchTitle: Title): Promise<Title | null> {
+    async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const encodedId = encodeURIComponent(String(id ?? ''));
@@ -100,9 +100,9 @@ export class AgregarrApiClient extends BaseApiClient {
         const entry = ratings?.[0];
         if (!entry) {
             this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: ratings ?? null,
+                response: ratings ?? undefined,
             });
-            return null;
+            return undefined;
         }
         // Agregarr supplies ratings only in the details response; every identity
         // field comes from the search result that produced `id`.
@@ -111,12 +111,12 @@ export class AgregarrApiClient extends BaseApiClient {
             apiTitle: searchTitle.apiTitle,
             imdbId: id,
             year: searchTitle.year,
-            imdbRating: entry.rating ?? null,
-            imdbVotes: entry.votes ?? null,
-            rtRating: null,
-            mcRating: null,
+            imdbRating: entry.rating ?? undefined,
+            imdbVotes: entry.votes ?? undefined,
+            rtRating: undefined,
+            mcRating: undefined,
             type: searchTitle.type,
-            source: null,
+            source: undefined,
         });
     }
 }

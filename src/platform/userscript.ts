@@ -14,10 +14,10 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Retrieves a value from GM storage.
      *
      * @param key - Storage key.
-     * @returns {Promise<StorageValue | null>} The stored value, or `null` if the key does not exist.
+     * @returns {Promise<StorageValue | undefined>} The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(key: string): Promise<StorageValue | null> {
-        return GM_getValue(key) ?? null;
+    async storageGet(key: string): Promise<StorageValue | undefined> {
+        return GM_getValue(key) ?? undefined;
     }
 
     /**
@@ -111,7 +111,7 @@ export class UserscriptAdapter extends PlatformAdapter {
                             resolve(responseText);
                         }
                     } else {
-                        const body = responseText ? responseText.slice(0, 200) : null;
+                        const body = responseText ? responseText.slice(0, 200) : undefined;
                         reject(new FlixMonkeyError(`HTTP ${status}`, url, status, body));
                         return;
                     }

@@ -12,15 +12,16 @@ export class RequestQueue {
     #isProcessing = false;
     #lastLocalReqTime = 0;
     readonly #minInterval: number;
-    readonly #globalSyncKey: string | null;
-    readonly #adapter: PlatformAdapter | null;
+    readonly #globalSyncKey: string | undefined;
+    readonly #adapter: PlatformAdapter | undefined;
 
     /**
      * @param adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
      * @param minInterval - Minimum delay between dispatched requests.
-     * @param globalSyncKey - Storage key used to coordinate the delay across tabs, or null to rate-limit within this context only.
+     * @param globalSyncKey - Storage key used to coordinate the delay across tabs; omit to rate-limit within this
+     * context only.
      */
-    constructor(adapter: PlatformAdapter | null, minInterval: number, globalSyncKey: string | null = null) {
+    constructor(adapter: PlatformAdapter | undefined, minInterval: number, globalSyncKey?: string) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;

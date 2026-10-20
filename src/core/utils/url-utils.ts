@@ -7,8 +7,8 @@
  * Options for building an IMDb URL.
  */
 export interface BuildImdbUrlOptions {
-    imdbId?: string | null;
-    displayTitle: string | null;
+    imdbId?: string | undefined;
+    displayTitle: string | undefined;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface BuildImdbUrlOptions {
  * @param {BuildImdbUrlOptions} params - URL building options
  * @returns {string} IMDb title URL, or an IMDb search URL.
  */
-export function buildImdbUrl({ imdbId = null, displayTitle }: BuildImdbUrlOptions): string {
+export function buildImdbUrl({ imdbId, displayTitle }: BuildImdbUrlOptions): string {
     return imdbId
         ? `https://www.imdb.com/title/${imdbId}/`
         : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle ?? '')}`;

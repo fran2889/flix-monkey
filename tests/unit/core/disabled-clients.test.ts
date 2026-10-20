@@ -17,7 +17,7 @@ describe('core/disabled-clients', () => {
     });
 
     it('should initially not be disabled', async () => {
-        mockAdapter.storageGet.mockResolvedValue(null);
+        mockAdapter.storageGet.mockResolvedValue(undefined);
         expect(await manager.isDisabled('xmdb')).toBe(false);
     });
 

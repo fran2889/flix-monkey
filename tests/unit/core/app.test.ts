@@ -19,13 +19,13 @@ import { buildTitle } from '../../mocks/title';
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 
 describe('App', () => {
-    let mockMutationObserverInstance: (MutationObserver & { trigger: (_mutations: MutationRecord[]) => void }) | null =
-        null;
-    let appRef: FlixMonkeyApp | null = null;
+    let mockMutationObserverInstance:
+        (MutationObserver & { trigger: (_mutations: MutationRecord[]) => void }) | undefined;
+    let appRef: FlixMonkeyApp | undefined;
     const ActualMutationObserver = global.MutationObserver;
 
     beforeEach(async () => {
-        appRef = null;
+        appRef = undefined;
         vi.useFakeTimers();
         document.body.innerHTML = '';
 
@@ -240,7 +240,7 @@ describe('App', () => {
     });
 
     it('should inject loading overlay while fetching', async () => {
-        const mockAdapter = buildMockAdapter().withConfigGetReturning(null).build();
+        const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -276,7 +276,7 @@ describe('App', () => {
     });
 
     it('should remove the loading overlay when getData rejects', async () => {
-        const mockAdapter = buildMockAdapter().withConfigGetReturning(null).build();
+        const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
 
         document.body.innerHTML = `
         <div class="title-card">
@@ -333,7 +333,7 @@ describe('App', () => {
         };
         const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
         const mockFadeManager = {
-            getOverride: vi.fn().mockResolvedValue(null),
+            getOverride: vi.fn().mockResolvedValue(undefined),
             shouldFade: vi.fn().mockReturnValue(false),
         };
         const app = new FlixMonkeyApp(
@@ -358,24 +358,24 @@ describe('App', () => {
         expect(typeof appRef?.disabledManager.resetAll).toBe('function');
     });
 
-    it('should return null when Netflix is disabled via enableNetflix config', async () => {
+    it('should return undefined when Netflix is disabled via enableNetflix config', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : null))
+            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : undefined))
             .build();
         const result = startApp(adapter);
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
         const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : null))
+            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : undefined))
             .build();
         const result = startApp(adapter);
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         if (result) {
             expect(result).toBeInstanceOf(FlixMonkeyApp);
             expect(typeof result.redecorate).toBe('function');
@@ -614,8 +614,8 @@ describe('App', () => {
             </div>
         `;
         const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : null))
-            .withStorageGetResolvingTo(null)
+            .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : undefined))
+            .withStorageGetResolvingTo(undefined)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
@@ -638,10 +638,10 @@ describe('App', () => {
         const storageGet = vi
             .fn()
             .mockImplementation((key: string) =>
-                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(null)
+                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(undefined)
             );
         const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : null))
+            .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : undefined))
             .withStorageGetResolvingTo(storageGet)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
@@ -666,13 +666,13 @@ describe('App', () => {
                 </div>
             </div>
         `;
-        const storageGet = vi.fn().mockResolvedValue(null);
+        const storageGet = vi.fn().mockResolvedValue(undefined);
         const storageSet = vi.fn().mockResolvedValue(undefined);
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => {
                 if (key === 'enableFadeToggle') return true;
                 if (key === 'enableFadeUnderRating') return false;
-                return null;
+                return undefined;
             })
             .withStorageGetResolvingTo(storageGet)
             .withStorageSetResolvingTo(storageSet)
@@ -697,22 +697,15 @@ describe('App', () => {
         expect(card?.classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should return null when ServiceRegistry.detect returns null', async () => {
+    it('should return undefined when ServiceRegistry.detect finds no service', async () => {
         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
+        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
         const result = startApp(buildMockAdapter().build());
-        expect(result).toBeNull();
-    });
-
-    it('should return null when ServiceRegistry.detect returns undefined', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(null);
-        const result = startApp(buildMockAdapter().build());
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
     describe('IMDb ID override handlers', () => {
-        let mockOverrideManager: { getImdbId: () => Promise<string | null>; setImdbId: () => Promise<void> };
+        let mockOverrideManager: { getImdbId: () => Promise<string | undefined>; setImdbId: () => Promise<void> };
         let mockCache: { delete: () => Promise<void> };
         let mockRenderer: Record<string, { mock: { calls: unknown[][] } }>;
 
@@ -755,7 +748,7 @@ describe('App', () => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
             const calls = mockRenderer.injectOverlay.mock.calls[0] as unknown[];
-            const [, , , , onEditClick, onRefreshClick] = calls;
+            const [, , onEditClick, onRefreshClick] = calls;
             return {
                 onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
@@ -780,7 +773,7 @@ describe('App', () => {
         beforeEach(() => {
             mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
             mockOverrideManager = {
-                getImdbId: vi.fn().mockResolvedValue(null),
+                getImdbId: vi.fn().mockResolvedValue(undefined),
                 setImdbId: vi.fn().mockResolvedValue(undefined),
             };
         });

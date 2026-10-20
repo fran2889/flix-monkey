@@ -16,7 +16,7 @@ import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -74,7 +74,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe(type);
     });
 
-    it('should return null if no results found', async () => {
+    it('should return undefined if no results found', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const client = new AgregarrApiClient(
             mockAdapter,
@@ -83,7 +83,7 @@ describe('AgregarrApiClient', () => {
             buildLogger().build(),
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
     });
 
     it('should log info when no results found', async () => {
@@ -100,7 +100,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null if IMDb Suggestions response has no d array', async () => {
+    it('should return undefined if IMDb Suggestions response has no d array', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const client = new AgregarrApiClient(
             mockAdapter,
@@ -109,7 +109,7 @@ describe('AgregarrApiClient', () => {
             buildLogger().build(),
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
     });
 
     it('should log info when IMDb Suggestions response has no d array', async () => {
@@ -126,7 +126,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
-    it('should return null when IMDb Suggestions has no supported title types', async () => {
+    it('should return undefined when IMDb Suggestions has no supported title types', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
             .build();
@@ -138,7 +138,7 @@ describe('AgregarrApiClient', () => {
             mockLogger,
             mockOverrideManager
         );
-        expect(await client.search('Unknown')).toBeNull();
+        expect(await client.search('Unknown')).toBeUndefined();
         expect(mockLogger.info).toHaveBeenCalledWith(
             'No supported title-type results found in IMDb Suggestions for "Unknown"'
         );
@@ -183,8 +183,8 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbId).toBe('tt1');
         expect(result!.year).toBe(2020);
         expect(result!.imdbRating).toBe(8.8);
-        expect(result!.rtRating).toBeNull();
-        expect(result!.mcRating).toBeNull();
+        expect(result!.rtRating).toBeUndefined();
+        expect(result!.mcRating).toBeUndefined();
         expect(result!.type).toBe('movie');
     });
 
@@ -207,7 +207,7 @@ describe('AgregarrApiClient', () => {
             .withType('series')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
         expect(result!.type).toBe('series');
     });
 
@@ -289,7 +289,43 @@ describe('AgregarrApiClient', () => {
             .withDisplayTitle('Test')
             .build();
         const result = await client.getDetails(searchResult);
-        expect(result!.imdbVotes).toBeNull();
+        expect(result!.imdbVotes).toBeUndefined();
+    });
+
+    it('should return undefined when the Agregarr ratings array is empty', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Agregarr details request failed for "Movie 1"'),
+            { response: [] }
+        );
+    });
+
+    it('should return undefined when the Agregarr response carries no ratings array', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(undefined).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient(
+            mockAdapter,
+            mockConfig,
+            mockDisabledManager,
+            mockLogger,
+            mockOverrideManager
+        );
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        // The logged response collapses an absent payload to undefined rather than null.
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { response: undefined });
     });
 
     it('should skip search when imdbId is provided', async () => {
@@ -312,12 +348,12 @@ describe('AgregarrApiClient', () => {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | null> {
+            async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
                     .withImdbId(searchTitle.imdbId)
-                    .withImdbRating('8.0')
+                    .withImdbRating(8.0)
                     .build();
             }
         }
@@ -348,12 +384,12 @@ describe('AgregarrApiClient', () => {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | null> {
+            async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
                     .withImdbId(searchTitle.imdbId)
-                    .withImdbRating('8.0')
+                    .withImdbRating(8.0)
                     .build();
             }
         }
@@ -370,7 +406,7 @@ describe('AgregarrApiClient', () => {
 
         beforeEach(() => {
             mockOverrideManagerForTests = {
-                getImdbId: vi.fn().mockResolvedValue(null),
+                getImdbId: vi.fn().mockResolvedValue(undefined),
                 setImdbId: vi.fn().mockResolvedValue(undefined),
             } as unknown as IdOverrideManager;
             mockLoggerForTests = buildLogger().build();
@@ -434,7 +470,7 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManagerForTests
             );
 
-            vi.spyOn(client, 'getDetails').mockResolvedValue(null);
+            vi.spyOn(client, 'getDetails').mockResolvedValue(undefined);
 
             const result = await client.fetch('Test Movie');
 
@@ -455,7 +491,7 @@ describe('AgregarrApiClient', () => {
                 resetAll: vi.fn().mockResolvedValue([]),
             } as unknown as DisabledClientsManager;
 
-            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue(null);
+            mockOverrideManagerForTests.getImdbId = vi.fn().mockResolvedValue(undefined);
 
             const client = new AgregarrApiClient(
                 mockAdapter,
@@ -471,7 +507,7 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(result).not.toBeNull();
+            expect(result).not.toBeUndefined();
             expect(result!.imdbId).toBe('tt1234567');
             expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
         });
@@ -494,16 +530,16 @@ describe('AgregarrApiClient', () => {
                 mockOverrideManagerForTests
             );
 
-            vi.spyOn(client, 'getDetails').mockResolvedValue(null);
+            vi.spyOn(client, 'getDetails').mockResolvedValue(undefined);
 
             const result = await client.fetch('Test Movie');
 
-            // Current behavior: returns a Title with the override ID when getDetails returns null
+            // Current behavior: returns a Title with the override ID when getDetails returns undefined
             expect(result).toBeInstanceOf(Title);
             expect(result!.imdbId).toBe('tt9999999');
             expect(result!.displayTitle).toBe('Test Movie');
             expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
-            // Note: markDisabled is NOT called when getDetails returns null (only when it throws)
+            // Note: markDisabled is NOT called when getDetails returns undefined (only when it throws)
             expect(mockDisabledManagerForTest.disable).not.toHaveBeenCalled();
         });
 
@@ -530,7 +566,7 @@ describe('AgregarrApiClient', () => {
 
             const result = await client.fetch('Test Movie');
 
-            expect(result).toBeNull();
+            expect(result).toBeUndefined();
             expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled();
         });
 

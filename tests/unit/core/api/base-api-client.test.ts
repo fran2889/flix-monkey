@@ -4,17 +4,20 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { BaseApiClient } from '../../../../src/core/api/base-api-client';
 import { XmdbApiClient } from '../../../../src/core/api/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
+import type { RequestQueue } from '../../../../src/core/request-queue';
+import { Title } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
 
 const mockOverrideManager: IdOverrideManager = {
-    getImdbId: vi.fn().mockResolvedValue(null),
+    getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
 } as unknown as IdOverrideManager;
 
@@ -67,7 +70,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         await expect(client.fetch('Some Title')).rejects.toThrow('Network error');
     });
 
-    it('should return null if search returns no match', async () => {
+    it('should return undefined if search returns no match', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const client = new XmdbApiClient(
             mockAdapterForTest,
@@ -77,10 +80,10 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             mockOverrideManager
         );
         const result = await client.fetch('Unknown');
-        expect(result).toBeNull();
+        expect(result).toBeUndefined();
     });
 
-    it('should return Title with override ID when override exists but getDetails returns null', async () => {
+    it('should return Title with override ID when override exists but getDetails returns undefined', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(null).build();
         const mockOverrideManagerForTest: IdOverrideManager = {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
@@ -93,15 +96,59 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             mockLogger,
             mockOverrideManagerForTest
         );
-        client.getDetails = vi.fn().mockResolvedValue(null);
+        client.getDetails = vi.fn().mockResolvedValue(undefined);
 
         const result = await client.fetch('Some Title');
 
-        expect(result).not.toBeNull();
+        expect(result).not.toBeUndefined();
         expect(result!.imdbId).toBe('tt1234567');
         expect(result!.displayTitle).toBe('Some Title');
-        expect(result!.imdbRating).toBeNull();
+        expect(result!.imdbRating).toBeUndefined();
         expect(result!.source).toBe('xmdb');
         expect(mockOverrideManagerForTest.getImdbId).toHaveBeenCalledWith('Some Title');
+    });
+
+    describe('BaseApiClient surface', () => {
+        class StubClient extends BaseApiClient {
+            constructor(queue: RequestQueue, source: 'xmdb' | 'omdb' | 'agregarr', logger: Logger) {
+                super(mockAdapter, mockConfig, mockDisabledManager, logger, mockOverrideManager, queue, source);
+            }
+            async search(): Promise<Title | undefined> {
+                return undefined;
+            }
+            async getDetails(): Promise<Title | undefined> {
+                return undefined;
+            }
+        }
+
+        function buildQueue(clearedCount: number): RequestQueue {
+            return { clear: vi.fn().mockReturnValue(clearedCount) } as unknown as RequestQueue;
+        }
+
+        it('exposes its ApiSource identifier', () => {
+            const queue = buildQueue(0);
+            const logger: Logger = buildLogger().build();
+            expect(new StubClient(queue, 'omdb', logger).source).toBe('omdb');
+            expect(new StubClient(queue, 'agregarr', logger).source).toBe('agregarr');
+        });
+
+        it('clears the queue on disable()', async () => {
+            const queue = buildQueue(0);
+            const logger: Logger = buildLogger().build();
+            await new StubClient(queue, 'xmdb', logger).disable();
+            expect(queue.clear).toHaveBeenCalledOnce();
+        });
+
+        it('reports a single purged request without a plural suffix', async () => {
+            const logger: Logger = buildLogger().build();
+            await new StubClient(buildQueue(1), 'xmdb', logger).disable();
+            expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 1 queued request');
+        });
+
+        it('reports multiple purged requests with a plural suffix', async () => {
+            const logger: Logger = buildLogger().build();
+            await new StubClient(buildQueue(3), 'xmdb', logger).disable();
+            expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 3 queued requests');
+        });
     });
 });

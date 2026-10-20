@@ -10,10 +10,10 @@ import { buildConfig } from '../../mocks/config';
 
 describe('FadeManager', () => {
     describe('getOverride', () => {
-        it('returns null when key is absent', async () => {
-            const adapter = buildMockAdapter().withStorageGetResolvingTo(null).build();
+        it('returns undefined when key is absent', async () => {
+            const adapter = buildMockAdapter().withStorageGetResolvingTo(undefined).build();
             const fm = new FadeManager(adapter, buildConfig().build());
-            expect(await fm.getOverride('tt1234567')).toBeNull();
+            expect(await fm.getOverride('tt1234567')).toBeUndefined();
             expect(adapter.storageGet).toHaveBeenCalledWith('fm-fade:tt1234567');
         });
 
@@ -27,9 +27,9 @@ describe('FadeManager', () => {
             expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBe('never');
         });
 
-        it('returns null for an unknown stored value', async () => {
+        it('returns undefined for an unknown stored value', async () => {
             const adapter = buildMockAdapter().withStorageGetResolvingTo('bad-value').build();
-            expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBeNull();
+            expect(await new FadeManager(adapter, buildConfig().build()).getOverride('k')).toBeUndefined();
         });
     });
 
@@ -46,9 +46,9 @@ describe('FadeManager', () => {
             expect(adapter.storageSet).toHaveBeenCalledWith('fm-fade:tt1', 'never');
         });
 
-        it('deletes key when state is null', async () => {
+        it('deletes key when state is undefined', async () => {
             const adapter = buildMockAdapter().build();
-            await new FadeManager(adapter, buildConfig().build()).setOverride('tt1', null);
+            await new FadeManager(adapter, buildConfig().build()).setOverride('tt1', undefined);
             expect(adapter.storageDelete).toHaveBeenCalledWith('fm-fade:tt1');
             expect(adapter.storageSet).not.toHaveBeenCalled();
         });
@@ -69,38 +69,38 @@ describe('FadeManager', () => {
             expect(fm(true, 6.0).shouldFade('never', 1.0)).toBe(false);
         });
 
-        it('returns false for null override when enableFadeUnderRating is false', () => {
-            expect(fm(false, 6.0).shouldFade(null, 4.0)).toBe(false);
+        it('returns false for undefined override when enableFadeUnderRating is false', () => {
+            expect(fm(false, 6.0).shouldFade(undefined, 4.0)).toBe(false);
         });
 
-        it('returns true for null override when rating is below threshold', () => {
-            expect(fm(true, 6.0).shouldFade(null, 5.9)).toBe(true);
+        it('returns true for undefined override when rating is below threshold', () => {
+            expect(fm(true, 6.0).shouldFade(undefined, 5.9)).toBe(true);
         });
 
-        it('returns false for null override when rating equals threshold', () => {
-            expect(fm(true, 6.0).shouldFade(null, 6.0)).toBe(false);
+        it('returns false for undefined override when rating equals threshold', () => {
+            expect(fm(true, 6.0).shouldFade(undefined, 6.0)).toBe(false);
         });
 
-        it('returns false for null override when rating is above threshold', () => {
-            expect(fm(true, 6.0).shouldFade(null, 7.5)).toBe(false);
+        it('returns false for undefined override when rating is above threshold', () => {
+            expect(fm(true, 6.0).shouldFade(undefined, 7.5)).toBe(false);
         });
 
-        it('returns false for null override when rating is not a number', () => {
-            expect(fm(true, 6.0).shouldFade(null, null)).toBe(false);
+        it('returns false for undefined override when rating is not a number', () => {
+            expect(fm(true, 6.0).shouldFade(undefined, undefined)).toBe(false);
         });
     });
 
     describe('nextFadeState', () => {
-        it('cycles null -> "always"', () => {
-            expect(nextFadeState(null)).toBe('always');
+        it('cycles undefined -> "always"', () => {
+            expect(nextFadeState(undefined)).toBe('always');
         });
 
         it('cycles "always" -> "never"', () => {
             expect(nextFadeState('always')).toBe('never');
         });
 
-        it('cycles "never" -> null', () => {
-            expect(nextFadeState('never')).toBeNull();
+        it('cycles "never" -> undefined', () => {
+            expect(nextFadeState('never')).toBeUndefined();
         });
     });
 });

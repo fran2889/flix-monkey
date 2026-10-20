@@ -61,11 +61,11 @@ export abstract class BaseApiClient {
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param imdbId - Optional IMDb ID for short-circuiting search.
-     * @returns Hydrated Title with ratings, or null if not found.
+     * @returns Hydrated Title with ratings, or undefined if not found.
      */
-    async fetch(displayTitle: string, imdbId: string | null = null): Promise<Title | null> {
+    async fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined> {
         if (await this.#isDisabled()) {
-            return null;
+            return undefined;
         }
 
         const overrideId = await this.#overrideManager.getImdbId(displayTitle);
@@ -85,15 +85,15 @@ export abstract class BaseApiClient {
         if (imdbId) {
             const minimalTitle = new Title({ displayTitle, imdbId });
             const detailedTitle = await this.getDetails(minimalTitle);
-            if (!detailedTitle) return null;
+            if (!detailedTitle) return undefined;
             return detailedTitle.withSource(this.#source);
         }
 
         const searchTitle = await this.search(displayTitle);
-        if (!searchTitle) return null;
+        if (!searchTitle) return undefined;
         if (!searchTitle.imdbId) return searchTitle.withSource(this.#source);
         const detailedTitle = await this.getDetails(searchTitle);
-        if (!detailedTitle) return null;
+        if (!detailedTitle) return undefined;
         return detailedTitle.withSource(this.#source);
     }
 
@@ -140,22 +140,22 @@ export abstract class BaseApiClient {
      * Subclasses must override this method.
      *
      * @param _displayTitle - Title to search for.
-     * @returns A Title with available metadata from search results, or null.
+     * @returns A Title with available metadata from search results, or undefined.
      */
-    abstract search(_displayTitle: string): Promise<Title | null>;
+    abstract search(_displayTitle: string): Promise<Title | undefined>;
 
     /**
      * Fetches ratings and additional details for a title returned by search().
      * Subclasses must override this method.
      *
      * Implementations should merge searchTitle values as fallbacks:
-     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns null/undefined
+     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns undefined
      * - Override with details fetch values when available
      *
      * @param _searchTitle - Title returned by search().
-     * @returns A Title with ratings and details populated, or null.
+     * @returns A Title with ratings and details populated, or undefined.
      */
-    abstract getDetails(_searchTitle: Title): Promise<Title | null>;
+    abstract getDetails(_searchTitle: Title): Promise<Title | undefined>;
 
     /** ApiSource identifier for this client. */
     get source(): ApiSourceType {

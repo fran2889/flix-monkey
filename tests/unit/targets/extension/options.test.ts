@@ -48,7 +48,7 @@ vi.mock('webextension-polyfill', () => ({
 vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
         configGet() {
-            return null;
+            return undefined;
         }
     },
 }));

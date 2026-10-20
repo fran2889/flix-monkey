@@ -80,6 +80,41 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).toHaveBeenCalledWith({});
     });
 
+    it('responds with the migration error message when the run rejects', async () => {
+        executeMigrations.mockRejectedValue(new Error('migration boom'));
+        const sendResponse = vi.fn();
+
+        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+        expect(result).toBe(true);
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(sendResponse).toHaveBeenCalledWith({ error: 'migration boom' });
+    });
+
+    it('stringifies a non-Error migration rejection', async () => {
+        executeMigrations.mockRejectedValue('plain failure');
+        const sendResponse = vi.fn();
+
+        messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(sendResponse).toHaveBeenCalledWith({ error: 'plain failure' });
+    });
+
+    it('logs an error when the install-time migration run rejects', async () => {
+        executeMigrations.mockRejectedValue(new Error('migration boom'));
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        installedListener({ reason: 'install' });
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
+        consoleError.mockRestore();
+    });
+
     it('ignores migration messages from a foreign sender', () => {
         const sendResponse = vi.fn();
         const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' }, sendResponse);

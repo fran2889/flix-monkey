@@ -19,11 +19,11 @@ const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
  * Extracts and normalizes aria-label from HBO Max tile.
  *
  * @param element - HBO Max content tile element.
- * @returns Normalized aria-label text or null.
+ * @returns Normalized aria-label text or undefined.
  */
-function getNormalizedHboMaxAriaLabel(element: Element): string | null {
-    const label = element.getAttribute('aria-label');
-    if (label === null) return null;
+function getNormalizedHboMaxAriaLabel(element: Element): string | undefined {
+    const label = element.getAttribute('aria-label') ?? undefined;
+    if (label === undefined) return undefined;
     return label.replace(/[\u2066-\u2069]/g, '').trim();
 }
 
@@ -31,11 +31,11 @@ function getNormalizedHboMaxAriaLabel(element: Element): string | null {
  * Extracts title from HBO Max tile element using pattern matching on aria-label.
  *
  * @param element - DOM element representing an HBO Max content tile.
- * @returns Extracted title or null if not found.
+ * @returns Extracted title or undefined if not found.
  */
-export function extractHboMaxTitle(element: Element): string | null {
+export function extractHboMaxTitle(element: Element): string | undefined {
     const label = getNormalizedHboMaxAriaLabel(element);
-    if (!label) return null;
+    if (!label) return undefined;
 
     const tile = element as HTMLElement;
     if (tile.dataset.sonicType === 'video') {
@@ -43,16 +43,16 @@ export function extractHboMaxTitle(element: Element): string | null {
             const title = label.match(pattern)?.[1]?.trim();
             if (title) return title;
         }
-        return null;
+        return undefined;
     }
 
-    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType ?? '')) return null;
+    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType ?? '')) return undefined;
 
     for (const pattern of HBO_MAX_TITLE_PATTERNS) {
         const title = label.match(pattern)?.[1]?.trim();
         if (title) return title;
     }
-    return null;
+    return undefined;
 }
 
 /**

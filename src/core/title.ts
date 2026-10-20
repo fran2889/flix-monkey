@@ -6,105 +6,103 @@ import { buildImdbUrl } from './utils/index';
 
 /**
  * Options for creating a Title instance.
- * String values for numeric fields are accepted and normalized to numbers.
+ *
+ * Numeric fields are strictly numeric: each API client owns the wire format of
+ * its provider and converts it to a number before constructing a Title. Anything
+ * that is not a finite number is collapsed to `undefined`.
  */
 export interface TitleOptions {
-    displayTitle?: string | null;
-    apiTitle?: string | null;
-    imdbId?: string | null;
-    year?: string | number | null;
-    imdbRating?: string | number | null;
-    imdbVotes?: string | number | null;
-    rtRating?: string | number | null;
-    mcRating?: string | number | null;
-    source?: string | null;
-    type?: string | null;
+    displayTitle?: string | undefined;
+    apiTitle?: string | undefined;
+    imdbId?: string | undefined;
+    year?: number | undefined;
+    imdbRating?: number | undefined;
+    imdbVotes?: number | undefined;
+    rtRating?: number | undefined;
+    mcRating?: number | undefined;
+    source?: string | undefined;
+    type?: string | undefined;
 }
 
 /**
  * Immutable data class representing a movie or show with its ratings.
  *
- * Rating values are normalised during construction: `null`, empty
- * strings, and `"N/A"` are all collapsed to `null`; numeric strings are parsed
- * to the appropriate number type per field.
+ * `year` and the rating fields are normalised during construction: every field
+ * that is not a finite number is collapsed to `undefined`.
  */
 export class Title {
-    displayTitle: string | null;
-    apiTitle: string | null;
-    imdbId: string | null;
-    year: number | null;
-    imdbRating: number | null;
-    imdbVotes: number | null;
-    rtRating: number | null;
-    mcRating: number | null;
-    source: string | null;
-    type: string | null;
+    displayTitle: string | undefined;
+    apiTitle: string | undefined;
+    imdbId: string | undefined;
+    year: number | undefined;
+    imdbRating: number | undefined;
+    imdbVotes: number | undefined;
+    rtRating: number | undefined;
+    mcRating: number | undefined;
+    source: string | undefined;
+    type: string | undefined;
 
     /**
      * @param {TitleOptions} [options]
      */
     constructor({
-        displayTitle = null,
-        apiTitle = null,
-        imdbId = null,
-        year = null,
-        imdbRating = null,
-        imdbVotes = null,
-        rtRating = null,
-        mcRating = null,
-        source = null,
-        type = null,
+        displayTitle,
+        apiTitle,
+        imdbId,
+        year,
+        imdbRating,
+        imdbVotes,
+        rtRating,
+        mcRating,
+        source,
+        type,
     }: TitleOptions = {}) {
-        this.displayTitle = displayTitle;
-        this.apiTitle = apiTitle;
-        this.imdbId = imdbId;
-        this.year = year !== null ? Number.parseInt(year as string, 10) : null;
-        this.imdbRating = this.#normalizeRating(imdbRating, (v: unknown) => {
-            const num = Number.parseFloat(v as string);
-            return Number.isNaN(num) ? null : num;
-        });
-        this.imdbVotes = this.#normalizeRating(imdbVotes, (v: unknown) => {
-            const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? null : num;
-        });
-        this.rtRating = this.#normalizeRating(rtRating, (v: unknown) => {
-            const num = Number.parseInt(v as string, 10);
-            return Number.isNaN(num) ? null : num;
-        });
-        this.mcRating = this.#normalizeRating(mcRating, (v: unknown) => {
-            const m = /^(\d+)/.exec(String(v));
-            return m ? Number.parseInt(m[1], 10) : null;
-        });
-        this.source = source;
-        this.type = type;
+        // JSON-decoded input (legacy cache entries, untyped callers) can carry literal
+        // nulls; collapse them here so no instance ever holds a null field.
+        this.displayTitle = displayTitle ?? undefined;
+        this.apiTitle = apiTitle ?? undefined;
+        this.imdbId = imdbId ?? undefined;
+        this.year = this.#toFiniteNumber(year);
+        this.imdbRating = this.#toFiniteNumber(imdbRating);
+        this.imdbVotes = this.#toFiniteNumber(imdbVotes);
+        this.rtRating = this.#toFiniteNumber(rtRating);
+        this.mcRating = this.#toFiniteNumber(mcRating);
+        this.source = source ?? undefined;
+        this.type = type ?? undefined;
         Object.freeze(this);
     }
 
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {Omit<Title, 'displayTitle'>} Title fields without displayTitle
+     * @returns {TitleData} Title fields without displayTitle
      */
-    toCacheJSON(): Omit<Title, 'displayTitle'> {
+    toCacheJSON(): TitleData {
         const rest = { ...this };
-        delete (rest as { displayTitle?: string | null }).displayTitle;
+        delete (rest as { displayTitle?: string }).displayTitle;
         return rest;
     }
 
     /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
-     * @param {object} obj - Cache data object without displayTitle
-     * @param {string | null} displayTitle - Display title from cache entry
-     * @returns {Title | null} New Title instance or null if invalid
+     * This is the single validation boundary for untrusted Title payloads, so
+     * callers holding decoded storage JSON hand the value over unchecked.
+     *
+     * @param {unknown} obj - Untrusted cache data object without displayTitle
+     * @param {string} displayTitle - Display title from cache entry
+     * @returns {Title | undefined} New Title instance, or undefined if obj is not a title object
      */
-    static fromCacheJSON(obj: unknown, displayTitle: string | null): Title | null {
-        if (!obj || typeof obj !== 'object') return null;
-        return new Title({ ...obj, displayTitle });
+    static fromCacheJSON(obj: unknown, displayTitle: string): Title | undefined {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+        return new Title({ ...(obj as TitleData), displayTitle });
     }
 
-    #normalizeRating(val: unknown, converter: (_v: unknown) => number | null): number | null {
-        if (val === null || val === undefined || val === '' || val === 'N/A') return null;
-        return converter(val);
+    /**
+     * Enforces the numeric contract: anything that is not a finite number (null,
+     * undefined, NaN, Infinity, or a raw wire-format string) carries no value.
+     */
+    #toFiniteNumber(val: unknown): number | undefined {
+        return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
     }
 
     /**
@@ -113,7 +111,7 @@ export class Title {
      * @returns {boolean}
      */
     get hasRating(): boolean {
-        return this.imdbRating !== null || this.rtRating !== null || this.mcRating !== null;
+        return this.imdbRating !== undefined || this.rtRating !== undefined || this.mcRating !== undefined;
     }
 
     /**
@@ -125,10 +123,10 @@ export class Title {
     }
 
     /**
-     * @param {string | null} source - API source that produced this title.
+     * @param {string} source - API source that produced this title.
      * @returns {Title} A new immutable Title with this source.
      */
-    withSource(source: string | null): Title {
+    withSource(source: string): Title {
         return new Title({ ...this, source });
     }
 
@@ -136,10 +134,19 @@ export class Title {
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
      * @param {string} displayTitle - The streaming-service title that was searched.
-     * @param {string | null} [source=null] - API source that produced the miss.
+     * @param {string} [source] - API source that produced the miss.
      * @returns {Title}
      */
-    static notFound(displayTitle: string, source: string | null = null): Title {
+    static notFound(displayTitle: string, source?: string): Title {
         return new Title({ displayTitle, source });
     }
 }
+
+/**
+ * Plain data shape for a serialized Title: the normalized field values
+ * without displayTitle (stored separately at the cache entry level).
+ */
+export type TitleData = Pick<
+    Title,
+    'apiTitle' | 'imdbId' | 'year' | 'imdbRating' | 'imdbVotes' | 'rtRating' | 'mcRating' | 'source' | 'type'
+>;

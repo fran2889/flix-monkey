@@ -20,8 +20,8 @@ export interface OverlayOptions {
     showRtRating: boolean;
     showMcRating: boolean;
     showFadeToggle: boolean;
-    fadeToggleState: 'auto' | 'always' | 'never' | null;
-    onFadeToggleClick: ((_element: HTMLElement) => void) | null;
+    fadeToggleState: 'auto' | 'always' | 'never' | undefined;
+    onFadeToggleClick: ((_element: HTMLElement) => void) | undefined;
     corner: string;
     onEditClick: (_displayTitle: string) => void;
     onRefreshClick: (_displayTitle: string) => void;
@@ -67,7 +67,7 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
 }
 
 function createFadeToggle(
-    state: 'auto' | 'always' | 'never' | null | undefined,
+    state: 'auto' | 'always' | 'never' | undefined,
     onClick: (_el: HTMLElement) => void
 ): HTMLElement {
     const el = document.createElement('div');
@@ -79,7 +79,7 @@ function createFadeToggle(
     label.textContent = 'Fade ';
     const icon = document.createElement('span');
     icon.className = 'fm-fade-toggle-icon';
-    icon.textContent = state === null ? '⭐' : '👁️';
+    icon.textContent = state === undefined ? '⭐' : '👁️';
     if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
     el.appendChild(icon);
@@ -101,30 +101,26 @@ function calculateRatingColor(rating: number, isPercentage: boolean): string {
     return interpolateColor(progress, RATING_COLOR_RED, RATING_COLOR_GREEN);
 }
 
-function formatImdbRating(rating: number | string | null): string {
-    if (typeof rating !== 'number') return String(rating);
+function formatImdbRating(rating: number): string {
     return rating.toFixed(1);
 }
 
-function formatPercentRating(rating: number | string | null): string {
-    if (typeof rating !== 'number') return String(rating);
+function formatPercentRating(rating: number): string {
     return `${rating}%`;
 }
 
-function formatVoteCount(count: number | null | undefined): string {
-    if (count === null || count === undefined) return '';
-    const num = Number(count);
-    if (Number.isNaN(num) || num < 0) return '';
-    if (num >= 1000000) return `${Math.round(num / 1000000)}M`;
-    if (num >= 1000) return `${Math.round(num / 1000)}k`;
-    return String(Math.round(num));
+function formatVoteCount(count: number | undefined): string {
+    if (count === undefined || count < 0) return '';
+    if (count >= 1000000) return `${Math.round(count / 1000000)}M`;
+    if (count >= 1000) return `${Math.round(count / 1000)}k`;
+    return String(Math.round(count));
 }
 
 function buildTooltip(
     titleParts: string[],
-    imdbId: string | null,
-    apiTitle: string | null,
-    year: number | null
+    imdbId: string | undefined,
+    apiTitle: string | undefined,
+    year: number | undefined
 ): string {
     let tooltipContent = 'IMDb: Not found · Search IMDb';
     if (titleParts.length) {
@@ -143,7 +139,7 @@ function buildTooltip(
 function appendImdbRating(imdbLink: HTMLAnchorElement, title: Title): string[] {
     const { imdbRating, imdbId, imdbVotes } = title;
     const titleParts: string[] = [];
-    if (imdbRating !== null && imdbRating !== undefined) {
+    if (imdbRating !== undefined) {
         const formatted = formatImdbRating(imdbRating);
         const votesStr = formatVoteCount(imdbVotes);
         const voteText = votesStr ? ` (${votesStr} votes)` : '';
@@ -159,11 +155,11 @@ function appendImdbRating(imdbLink: HTMLAnchorElement, title: Title): string[] {
 
 function createOptionalRatingBadge(
     label: string,
-    rating: number | null | undefined,
+    rating: number | undefined,
     className: string,
     showRating: boolean
-): HTMLElement | null {
-    if (!showRating || rating === null || rating === undefined) return null;
+): HTMLElement | undefined {
+    if (!showRating || rating === undefined) return undefined;
     const formatted = formatPercentRating(rating);
     const badge = createRatingElement(label, formatted, className);
     badge.classList.add('fm-rating-badge');
@@ -172,11 +168,11 @@ function createOptionalRatingBadge(
 }
 
 function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLElement): void {
-    let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
     const clearHover = (): void => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
-            hoverTimeout = null;
+            hoverTimeout = undefined;
         }
         actionsContainer.classList.remove('fm-actions-visible');
     };
@@ -192,8 +188,8 @@ function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLEl
 function appendFadeToggle(
     container: HTMLElement,
     showFadeToggle: boolean,
-    fadeToggleState: 'auto' | 'always' | 'never' | null,
-    onFadeToggleClick: ((_element: HTMLElement) => void) | null
+    fadeToggleState: 'auto' | 'always' | 'never' | undefined,
+    onFadeToggleClick: ((_element: HTMLElement) => void) | undefined
 ): void {
     if (showFadeToggle && onFadeToggleClick) {
         container.appendChild(createFadeToggle(fadeToggleState, onFadeToggleClick));

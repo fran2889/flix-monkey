@@ -28,9 +28,9 @@ function canonicalizeDisneyPlusTitle(title: string): string {
  * Extracts the canonical title from a Disney+ tile element using various selectors.
  *
  * @param element - DOM element representing a Disney+ content tile.
- * @returns Extracted title or null if not found.
+ * @returns Extracted title or undefined if not found.
  */
-export function extractDisneyPlusTitle(element: Element): string | null {
+export function extractDisneyPlusTitle(element: Element): string | undefined {
     const tile = element as HTMLElement;
     const imageTitle = [...tile.querySelectorAll<HTMLImageElement>('img[alt]:not([data-testid="set-item-rating"] img)')]
         .map(image => image.alt.trim())
@@ -42,7 +42,7 @@ export function extractDisneyPlusTitle(element: Element): string | null {
         ?.replace(/[\u2066-\u2069]/g, '')
         .trim();
     const detailsSuffix = 'Select for details on this title.';
-    if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return null;
+    if (!label || /^(?:LIVE|Upcoming)\b/iu.test(label) || !label.endsWith(detailsSuffix)) return undefined;
 
     const title = label
         .slice(0, -detailsSuffix.length)
@@ -50,7 +50,7 @@ export function extractDisneyPlusTitle(element: Element): string | null {
         .replace(DISNEY_PLUS_PREFIX_BLOCK, '')
         .split(DISNEY_PLUS_TITLE_END)[0]
         .trim();
-    return title ? canonicalizeDisneyPlusTitle(title) : null;
+    return title ? canonicalizeDisneyPlusTitle(title) : undefined;
 }
 
 const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
@@ -64,9 +64,9 @@ const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
     CONTINUE_WATCHING: Object.freeze({
         titleSelector:
             '[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]',
-        getTitle: (wrapper: Element): string | null => {
+        getTitle: (wrapper: Element): string | undefined => {
             const metadataEl = wrapper.querySelector('[data-testid="cw-set-item-metadata"]');
-            return metadataEl?.children[1]?.textContent ?? null;
+            return metadataEl?.children[1]?.textContent ?? undefined;
         },
         getContainer: containerFromClosest(
             '[data-testid="set-shelf-item"], [data-testid="set-shelf-item-shelf-pagination-spy"]'

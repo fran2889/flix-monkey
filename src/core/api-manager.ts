@@ -39,10 +39,10 @@ export class ApiClientManager {
      */
     async getData(displayTitle: string): Promise<Title> {
         const source: string = this.#client.source;
-        const entry: CacheEntry | null = await this.#cache.read(displayTitle);
+        const entry: CacheEntry | undefined = await this.#cache.read(displayTitle);
 
         if (entry && !entry.isExpired) {
-            const titleObj: Title | null = entry.getTitle();
+            const titleObj: Title | undefined = entry.getTitle();
             if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
                 this.#logger.debug(`Cache hit for "${displayTitle}" from ${titleObj.source}`);
                 return titleObj;
@@ -57,14 +57,14 @@ export class ApiClientManager {
         return this.#fetch(displayTitle);
     }
 
-    async #fetch(displayTitle: string, imdbId: string | null = null): Promise<Title> {
+    async #fetch(displayTitle: string, imdbId?: string): Promise<Title> {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
             return Title.notFound(displayTitle, this.#client.source);
         }
 
         try {
-            const data: Title | null = await this.#client.fetch(displayTitle, imdbId);
+            const data: Title | undefined = await this.#client.fetch(displayTitle, imdbId);
             if (!data) {
                 const notFound: Title = Title.notFound(displayTitle, this.#client.source);
                 await this.#cache.write(displayTitle, notFound);
@@ -76,18 +76,18 @@ export class ApiClientManager {
         } catch (err: unknown) {
             const error = err as {
                 message?: string;
-                url?: string | null;
-                status?: number | null;
-                body?: string | null;
+                url?: string | undefined;
+                status?: number | undefined;
+                body?: string | undefined;
             };
             const status = error.status;
-            const isHttpError = status !== undefined && status !== null && Number.isInteger(status) && status >= 400;
+            const isHttpError = status !== undefined && Number.isInteger(status) && status >= 400;
             if (isHttpError && status < 500) {
                 await this.#client.disable();
             }
             this.#logger[isHttpError ? 'error' : 'warn'](
                 `Failed to fetch ratings for "${displayTitle}": ${error.message ?? ''}`,
-                { url: error.url ?? null, status: error.status ?? null, body: error.body ?? null }
+                { url: error.url, status: error.status, body: error.body }
             );
             return Title.notFound(displayTitle, this.#client.source);
         }

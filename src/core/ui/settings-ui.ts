@@ -4,10 +4,10 @@
  */
 import type { PlatformAdapter } from '../../platform/adapter';
 import type { CacheManager } from '../cache/index';
-import { CONFIG_FIELDS } from '../config/index';
+import { CONFIG_FIELDS, type ConfigField } from '../config/index';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { Logger } from '../logger';
-import { type ConfigField, SettingsView } from './settings-view';
+import { SettingsView } from './settings-view';
 
 /**
  * Manages the settings UI, handling rendering, saving, and interactions.
@@ -33,7 +33,7 @@ export class SettingsUI {
         logger: Logger,
         cacheManager: CacheManager,
         disabledClientsManager: DisabledClientsManager,
-        fields: readonly ConfigField[] = CONFIG_FIELDS as unknown as readonly ConfigField[]
+        fields: readonly ConfigField[] = CONFIG_FIELDS
     ) {
         this.#adapter = adapter;
         this.#cacheManager = cacheManager;
@@ -68,7 +68,7 @@ export class SettingsUI {
                 return;
             }
 
-            await this.#adapter.storageSetMany(values as Record<string, string | boolean>);
+            await this.#adapter.storageSetMany(values);
         } catch (err) {
             this.#logger.error('Settings save error:', err);
         }

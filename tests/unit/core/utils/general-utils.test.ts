@@ -110,11 +110,11 @@ describe('core/utils/general-utils', () => {
             expect(err.body).toBe('Unauthorized');
         });
 
-        it('should default optional params to null', () => {
+        it('should default optional params to undefined', () => {
             const err = new FlixMonkeyError('test error');
-            expect(err.url).toBeNull();
-            expect(err.status).toBeNull();
-            expect(err.body).toBeNull();
+            expect(err.url).toBeUndefined();
+            expect(err.status).toBeUndefined();
+            expect(err.body).toBeUndefined();
         });
     });
 });
