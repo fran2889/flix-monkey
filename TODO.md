@@ -26,7 +26,7 @@ Completed in this pass:
 - Removal of unused type stubs.
 - JSDoc type removal and required parameter/return descriptions.
 - `noImplicitOverride`, shadowing, fallthrough, and unreachable-code checks.
-- `Title` immutability and `ServiceSurfaceManager` typing.
+- `Title` immutability, required `displayTitle`, and `ServiceSurfaceManager` typing.
 - Typed config select allowlist and `RequestQueue` guards.
 - Warnings promoted to errors.
 

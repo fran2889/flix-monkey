@@ -8,7 +8,7 @@
  */
 export interface BuildImdbUrlOptions {
     imdbId?: string | undefined;
-    displayTitle: string | undefined;
+    displayTitle: string;
 }
 
 /**
@@ -21,5 +21,5 @@ export interface BuildImdbUrlOptions {
 export function buildImdbUrl({ imdbId, displayTitle }: BuildImdbUrlOptions): string {
     return imdbId
         ? `https://www.imdb.com/title/${imdbId}/`
-        : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle ?? '')}`;
+        : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle)}`;
 }

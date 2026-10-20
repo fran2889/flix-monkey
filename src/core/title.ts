@@ -12,7 +12,7 @@ import { buildImdbUrl } from './utils/index';
  * that is not a finite number is collapsed to `undefined`.
  */
 export interface TitleOptions {
-    displayTitle?: string | undefined;
+    displayTitle: string;
     apiTitle?: string | undefined;
     imdbId?: string | undefined;
     year?: number | undefined;
@@ -31,7 +31,7 @@ export interface TitleOptions {
  * that is not a finite number is collapsed to `undefined`.
  */
 export class Title {
-    readonly displayTitle: string | undefined;
+    readonly displayTitle: string;
     readonly apiTitle: string | undefined;
     readonly imdbId: string | undefined;
     readonly year: number | undefined;
@@ -43,7 +43,7 @@ export class Title {
     readonly type: string | undefined;
 
     /**
-     * @param [options] - Title fields to initialize.
+     * @param options - Title fields to initialize.
      */
     constructor({
         displayTitle,
@@ -56,10 +56,10 @@ export class Title {
         mcRating,
         source,
         type,
-    }: TitleOptions = {}) {
+    }: TitleOptions) {
         // JSON-decoded input (legacy cache entries, untyped callers) can carry literal
         // nulls; collapse them here so no instance ever holds a null field.
-        this.displayTitle = displayTitle ?? undefined;
+        this.displayTitle = displayTitle;
         this.apiTitle = apiTitle ?? undefined;
         this.imdbId = imdbId ?? undefined;
         this.year = this.#toFiniteNumber(year);

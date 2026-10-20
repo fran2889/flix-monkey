@@ -22,19 +22,14 @@ describe('Title', () => {
     describe('imdbUrl generation', () => {
         it.each([
             {
-                props: { imdbId: 'tt123' },
+                props: { displayTitle: 'Movie Name', imdbId: 'tt123' },
                 expected: 'https://www.imdb.com/title/tt123/',
                 description: 'imdbId is provided',
             },
             {
                 props: { displayTitle: 'Movie Name' },
                 expected: 'https://www.imdb.com/find/?q=Movie%20Name',
-                description: 'displayTitle is provided',
-            },
-            {
-                props: { displayTitle: undefined },
-                expected: 'https://www.imdb.com/find/?q=',
-                description: 'displayTitle is undefined',
+                description: 'imdbId is not provided',
             },
         ])('should generate correct URL when $description', ({ props, expected }) => {
             const title = new Title(props);
@@ -115,16 +110,16 @@ describe('Title', () => {
 
     describe('hasRating', () => {
         it('should be true when imdbRating is 0', () => {
-            expect(new Title({ imdbRating: 0 }).hasRating).toBe(true);
+            expect(new Title({ displayTitle: 'Test', imdbRating: 0 }).hasRating).toBe(true);
         });
         it('should be true when rtRating is 0', () => {
-            expect(new Title({ rtRating: 0 }).hasRating).toBe(true);
+            expect(new Title({ displayTitle: 'Test', rtRating: 0 }).hasRating).toBe(true);
         });
         it('should be true when mcRating is 0', () => {
-            expect(new Title({ mcRating: 0 }).hasRating).toBe(true);
+            expect(new Title({ displayTitle: 'Test', mcRating: 0 }).hasRating).toBe(true);
         });
         it('should be false when all ratings are undefined', () => {
-            expect(new Title({}).hasRating).toBe(false);
+            expect(new Title({ displayTitle: 'Test' }).hasRating).toBe(false);
         });
     });
 
@@ -135,7 +130,13 @@ describe('Title', () => {
         it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['8.5'], ['90%'], ['N/A'], ['']])(
             'collapses non-numeric input %s to undefined',
             (input: unknown) => {
-                const options = { imdbRating: input, imdbVotes: input, rtRating: input, mcRating: input };
+                const options = {
+                    displayTitle: 'Test',
+                    imdbRating: input,
+                    imdbVotes: input,
+                    rtRating: input,
+                    mcRating: input,
+                };
                 const title = new Title(options as unknown as TitleOptions);
                 expect(title.imdbRating).toBeUndefined();
                 expect(title.imdbVotes).toBeUndefined();
@@ -150,7 +151,13 @@ describe('Title', () => {
             [8.5, 8.5],
             [90, 90],
         ])('keeps the numeric rating %s -> %s', (input, expected) => {
-            const title = new Title({ imdbRating: input, rtRating: input, mcRating: input, imdbVotes: input });
+            const title = new Title({
+                displayTitle: 'Test',
+                imdbRating: input,
+                rtRating: input,
+                mcRating: input,
+                imdbVotes: input,
+            });
             expect(title.imdbRating).toBe(expected);
             expect(title.rtRating).toBe(expected);
             expect(title.mcRating).toBe(expected);
@@ -158,7 +165,7 @@ describe('Title', () => {
         });
 
         it('keeps a numeric year', () => {
-            expect(new Title({ year: 2020 }).year).toBe(2020);
+            expect(new Title({ displayTitle: 'Test', year: 2020 }).year).toBe(2020);
         });
 
         // Providers report years as partial strings such as "2020-"; extracting the
@@ -166,12 +173,15 @@ describe('Title', () => {
         it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['2020-'], ['2020']])(
             'collapses non-numeric year %s to undefined',
             (input: unknown) => {
-                expect(new Title({ year: input } as unknown as TitleOptions).year).toBeUndefined();
+                expect(
+                    new Title({ displayTitle: 'Test', year: input } as unknown as TitleOptions).year
+                ).toBeUndefined();
             }
         );
 
         it('normalizes untyped null inputs to undefined', () => {
             const title = new Title({
+                displayTitle: 'Test',
                 year: null,
                 imdbRating: null,
                 imdbVotes: null,
@@ -187,13 +197,12 @@ describe('Title', () => {
 
         it('normalizes untyped null identity fields to undefined', () => {
             const title = new Title({
-                displayTitle: null,
+                displayTitle: 'Test',
                 apiTitle: null,
                 imdbId: null,
                 source: null,
                 type: null,
             } as unknown as TitleOptions);
-            expect(title.displayTitle).toBeUndefined();
             expect(title.apiTitle).toBeUndefined();
             expect(title.imdbId).toBeUndefined();
             expect(title.source).toBeUndefined();
@@ -203,15 +212,15 @@ describe('Title', () => {
 
     describe('type field', () => {
         it('should default to undefined', () => {
-            expect(new Title({}).type).toBeUndefined();
+            expect(new Title({ displayTitle: 'Test' }).type).toBeUndefined();
         });
 
         it('should accept a type value', () => {
-            expect(new Title({ type: 'movie' }).type).toBe('movie');
+            expect(new Title({ displayTitle: 'Test', type: 'movie' }).type).toBe('movie');
         });
 
         it('should normalize undefined to undefined', () => {
-            expect(new Title({ type: undefined }).type).toBeUndefined();
+            expect(new Title({ displayTitle: 'Test', type: undefined }).type).toBeUndefined();
         });
 
         it('should round-trip through fromCacheJSON', () => {
@@ -234,7 +243,7 @@ describe('Title', () => {
             [1000, 1000],
             [2500000, 2500000],
         ])('keeps numeric imdbVotes %s -> %s', (input, expected) => {
-            expect(new Title({ imdbVotes: input }).imdbVotes).toBe(expected);
+            expect(new Title({ displayTitle: 'Test', imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });
 
@@ -242,7 +251,7 @@ describe('Title', () => {
         it('should not allow mutation of fields after construction', () => {
             const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
             const mutableTitle = title as {
-                displayTitle: string | undefined;
+                displayTitle: string;
                 imdbRating: number | undefined;
             };
             try {

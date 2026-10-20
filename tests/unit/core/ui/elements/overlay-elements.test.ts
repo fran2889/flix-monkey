@@ -25,12 +25,12 @@ const defaultOptions: OverlayOptions = {
 };
 
 function createOverlay(title: Partial<Title>, options: Partial<Parameters<typeof createOverlayElement>[1]> = {}) {
-    return createOverlayElement(new Title(title), { ...defaultOptions, ...options });
+    return createOverlayElement(new Title({ displayTitle: 'Test', ...title }), { ...defaultOptions, ...options });
 }
 
 describe('createOverlayElement', () => {
     it('builds the IMDb rating link', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 7.5 }));
+        const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
 
         expect(element.className).toBe('fm-rating-overlay fm-top-left');
         expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('/title/tt1234567/');
@@ -38,17 +38,20 @@ describe('createOverlayElement', () => {
     });
 
     it('renders IMDb badge for a zero rating', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 0 }));
+        const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 0 });
 
         expect(element.querySelector('.fm-value')).not.toBeNull();
         expect(element.textContent).toContain('0.0');
     });
 
     it('renders RT and MC badges for zero percent ratings when enabled', () => {
-        const element = createOverlay(new Title({ imdbId: 'tt1234567', imdbRating: 5, rtRating: 0, mcRating: 0 }), {
-            showRtRating: true,
-            showMcRating: true,
-        });
+        const element = createOverlay(
+            { imdbId: 'tt1234567', imdbRating: 5, rtRating: 0, mcRating: 0 },
+            {
+                showRtRating: true,
+                showMcRating: true,
+            }
+        );
 
         const percentBadges = [...element.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
         expect(percentBadges).toHaveLength(2);
@@ -258,29 +261,25 @@ describe('createOverlayElement', () => {
             [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
         ])('formats tooltip for vote data %o', (titleData: Partial<Title>, expectedTitle: string) => {
-            const element = createOverlay(new Title({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData }));
+            const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
         });
 
         it('formats a small vote count', () => {
-            const element = createOverlay(
-                new Title({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 })
-            );
+            const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
         });
 
         it('formats apiTitle and year', () => {
-            const element = createOverlay(
-                new Title({
-                    apiTitle: 'The Shawshank Redemption',
-                    imdbId: 'tt0111161',
-                    imdbRating: 9.3,
-                    imdbVotes: 2700000,
-                    year: 1994,
-                })
-            );
+            const element = createOverlay({
+                apiTitle: 'The Shawshank Redemption',
+                imdbId: 'tt0111161',
+                imdbRating: 9.3,
+                imdbVotes: 2700000,
+                year: 1994,
+            });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe(
                 'The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb'
@@ -288,9 +287,12 @@ describe('createOverlayElement', () => {
         });
 
         it('formats apiTitle without a year', () => {
-            const element = createOverlay(
-                new Title({ apiTitle: 'Inception', imdbId: 'tt1375666', imdbRating: 8.8, imdbVotes: 2400000 })
-            );
+            const element = createOverlay({
+                apiTitle: 'Inception',
+                imdbId: 'tt1375666',
+                imdbRating: 8.8,
+                imdbVotes: 2400000,
+            });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe(
                 'Inception\nIMDb: 8.8 (2M votes) · Open IMDb'

@@ -75,7 +75,7 @@ buildCacheEntry.withExpiry = (ms: number): CacheEntry => {
 
 buildCacheEntry.fromTitle = (title: Title, expiryMs: number = 86400000): CacheEntry => {
     return buildCacheEntry()
-        .withDisplayTitle(title.displayTitle ?? title.apiTitle ?? '')
+        .withDisplayTitle(title.displayTitle)
         .withImdbId(title.imdbId ?? undefined)
         .withData(title.toCacheJSON())
         .withExpiry(Date.now() + expiryMs)
