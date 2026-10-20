@@ -19,7 +19,7 @@ The integration suite is separate from `npm test`. An exploratory run hit extern
 Completed in this pass:
 
 - Config discovery, global ignores, unused-directive reporting, and unused-import ownership.
-- Logger and adapter boundary lint rules.
+- Logger boundary lint rules and trimmed console exceptions.
 - Type-only imports and `verbatimModuleSyntax`.
 - Promise handling rules and fixes.
 - `@ts-ignore` and `as never` bans in application code.

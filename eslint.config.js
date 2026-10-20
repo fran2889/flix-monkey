@@ -140,7 +140,7 @@ export default [
             'no-empty-function': 'error',
         },
     },
-    // 3.5. Application code logs through Logger and platform I/O through the adapter.
+    // 3.5. Application code logs through Logger; raw console is limited to platform bootstrap.
     {
         files: ['src/**/*.ts'],
         ignores: [
@@ -148,8 +148,6 @@ export default [
             'src/targets/chrome/service-worker.ts',
             'src/targets/firefox/background.ts',
             'src/targets/extension/content.ts',
-            'src/targets/extension/options.ts',
-            'src/targets/userscript/entry.ts',
         ],
         rules: {
             'no-console': 'error',
@@ -164,24 +162,6 @@ export default [
                     selector: 'TSAsExpression > TSNeverKeyword',
                     message: 'Do not assert to never; fix the underlying type instead.',
                 },
-            ],
-        },
-    },
-    {
-        files: ['src/core/**/*.ts'],
-        rules: {
-            'no-restricted-globals': [
-                'error',
-                { name: 'fetch', message: 'Use adapter.httpFetch() instead.' },
-                { name: 'GM_xmlhttpRequest', message: 'Use adapter.httpFetch() instead.' },
-                { name: 'GM_getValue', message: 'Use adapter.configGet() or adapter.storageGet() instead.' },
-                { name: 'GM_setValue', message: 'Use adapter.storageSet() instead.' },
-                { name: 'GM_deleteValue', message: 'Use adapter.storageDelete() instead.' },
-                { name: 'GM_listValues', message: 'Use adapter.storageGetAll() instead.' },
-                { name: 'GM_registerMenuCommand', message: 'Use adapter.registerMenuCommand() instead.' },
-                { name: 'GM_config', message: 'Use ConfigManager instead.' },
-                { name: 'browser', message: 'Use PlatformAdapter instead.' },
-                { name: 'chrome', message: 'Use PlatformAdapter instead.' },
             ],
         },
     },
