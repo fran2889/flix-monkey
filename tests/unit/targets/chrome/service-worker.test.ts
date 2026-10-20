@@ -36,7 +36,7 @@ describe('Chrome Service Worker', () => {
                 installedListener = fn;
             }
         );
-        chrome.runtime.openOptionsPage = vi.fn();
+        chrome.runtime.openOptionsPage = vi.fn().mockResolvedValue(undefined);
         chrome.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
             actionListener = fn;
         });
@@ -64,7 +64,7 @@ describe('Chrome Service Worker', () => {
     it.each([{ reason: 'install' }, { reason: 'update' }])(
         'runs migrations when the extension is $reason',
         async details => {
-            installedListener(details);
+            await installedListener(details);
             await Promise.resolve();
             expect(executeMigrations).toHaveBeenCalledOnce();
         }
@@ -96,7 +96,7 @@ describe('Chrome Service Worker', () => {
         executeMigrations.mockRejectedValue('plain failure');
         const sendResponse = vi.fn();
 
-        messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+        await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
 
         await Promise.resolve();
         await Promise.resolve();
@@ -107,7 +107,7 @@ describe('Chrome Service Worker', () => {
         executeMigrations.mockRejectedValue(new Error('migration boom'));
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        installedListener({ reason: 'install' });
+        await installedListener({ reason: 'install' });
         await Promise.resolve();
         await Promise.resolve();
 
@@ -154,7 +154,7 @@ describe('Chrome Service Worker', () => {
         const sendResponse = vi.fn();
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
-        messageListener(
+        await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } },
             { id: 'test-ext' },
             sendResponse
@@ -166,14 +166,18 @@ describe('Chrome Service Worker', () => {
 
     it('should fall back to DEFAULT_FETCH_TIMEOUT (8000ms)', async () => {
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} }, { id: 'test-ext' }, vi.fn());
+        await messageListener(
+            { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} },
+            { id: 'test-ext' },
+            vi.fn()
+        );
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);
         setTimeoutSpy.mockRestore();
     });
 
     it('should actually abort fetch when timer fires', async () => {
         const customTimeout = 500;
-        messageListener(
+        await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } },
             { id: 'test-ext' },
             vi.fn()
@@ -197,7 +201,7 @@ describe('Chrome Service Worker', () => {
             json: async () => mockData,
         });
 
-        messageListener(
+        await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'json' } },
             { id: 'test-ext' },
             sendResponse
@@ -220,7 +224,7 @@ describe('Chrome Service Worker', () => {
             text: async () => mockData,
         });
 
-        messageListener(
+        await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'text' } },
             { id: 'test-ext' },
             sendResponse
@@ -242,7 +246,7 @@ describe('Chrome Service Worker', () => {
             text: () => Promise.resolve('Not Found'),
         });
 
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
+        await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 
         await vi.runAllTimersAsync();
         await Promise.resolve();
@@ -257,7 +261,7 @@ describe('Chrome Service Worker', () => {
             new Error('Network error')
         );
 
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
+        await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' }, { id: 'test-ext' }, sendResponse);
 
         await vi.runAllTimersAsync();
         await Promise.resolve();
@@ -266,8 +270,8 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Network error' });
     });
 
-    it('should open options page when action icon is clicked', () => {
-        actionListener();
+    it('should open options page when action icon is clicked', async () => {
+        await actionListener();
         expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
     });
 

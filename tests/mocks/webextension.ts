@@ -10,7 +10,7 @@ export const browser = {
         getManifest: vi.fn(),
         onMessage: { addListener: vi.fn() },
         onInstalled: { addListener: vi.fn() },
-        openOptionsPage: vi.fn(),
+        openOptionsPage: vi.fn().mockResolvedValue(undefined),
     },
     action: {
         onClicked: { addListener: vi.fn() },

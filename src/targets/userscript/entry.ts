@@ -47,13 +47,15 @@ function openSettings(): void {
     const modal = new Modal('FlixMonkey Settings');
     const container = modal.getContentContainer();
     const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
-    ui.render(container).then(() => {
-        modal.open();
-    });
+    ui.render(container)
+        .then(() => {
+            modal.open();
+        })
+        .catch(err => logger.error('Failed to render settings', err));
 }
 
 void (async (): Promise<void> => {
     await runMigrations(adapter, logger);
     app = startApp(adapter);
     adapter.registerMenuCommand('FlixMonkey Settings', openSettings);
-})();
+})().catch(err => logger.error('FlixMonkey startup failed', err));

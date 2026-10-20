@@ -18,7 +18,8 @@ interface MigrationResponse {
     error?: string;
 }
 
-/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async (): Promise<void> => {
+/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */
+void (async (): Promise<void> => {
     const adapter = new WebExtensionAdapter();
     const migrationResponse: MigrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
     if (migrationResponse?.error) {
@@ -32,4 +33,6 @@ interface MigrationResponse {
 
     const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
     await ui.render(document.body);
-})();
+})().catch((error: unknown) => {
+    console.error('FlixMonkey options page failed to start', error);
+});

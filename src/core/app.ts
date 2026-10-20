@@ -239,10 +239,14 @@ export class FlixMonkeyApp {
             container as HTMLElement,
             data,
             (dt: string) => {
-                this.#handleEditClick(dt, data.imdbId);
+                this.#handleEditClick(dt, data.imdbId).catch(err =>
+                    this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
+                );
             },
             (dt: string) => {
-                this.#handleRefreshClick(dt);
+                this.#handleRefreshClick(dt).catch(err =>
+                    this.#logger.error(`Failed to refresh ratings for "${dt}"`, err)
+                );
             },
             displayTitle,
             showFadeToggle ? fadeOverride : undefined,

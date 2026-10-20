@@ -73,5 +73,7 @@ browser.runtime.onMessage.addListener(
  * Open options page when extension action is clicked.
  */
 browser.action.onClicked.addListener((): void => {
-    browser.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage().catch((error: unknown) => {
+        console.error('Failed to open options page', error);
+    });
 });

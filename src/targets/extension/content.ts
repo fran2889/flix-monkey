@@ -32,7 +32,8 @@ interface MigrationResponse {
     error?: string;
 }
 
-/* NOSONAR: MV3 content scripts are classic IIFE bundles, so top-level await is unavailable. */ (async (): Promise<void> => {
+/* NOSONAR: MV3 content scripts are classic IIFE bundles, so top-level await is unavailable. */
+void (async (): Promise<void> => {
     const migrationResponse: MigrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
     if (migrationResponse?.error) {
         throw new Error(migrationResponse.error);
@@ -65,4 +66,6 @@ interface MigrationResponse {
     });
 
     appRef.app = startApp(adapter);
-})();
+})().catch((error: unknown) => {
+    console.error('FlixMonkey content script failed to start', error);
+});

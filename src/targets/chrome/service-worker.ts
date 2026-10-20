@@ -73,7 +73,11 @@ chrome.runtime.onMessage.addListener(
         }
 
         const { url, options } = message;
-        handleFetchMessage(url, options ?? {}).then(sendResponse);
+        handleFetchMessage(url, options ?? {})
+            .then(sendResponse)
+            .catch((error: unknown) => {
+                sendResponse({ error: error instanceof Error ? error.message : String(error) });
+            });
         return true; // keep message channel open for async sendResponse
     }
 );
@@ -82,5 +86,7 @@ chrome.runtime.onMessage.addListener(
  * Open options page when extension action is clicked.
  */
 chrome.action.onClicked.addListener((): void => {
-    chrome.runtime.openOptionsPage();
+    chrome.runtime.openOptionsPage().catch((error: unknown) => {
+        console.error('Failed to open options page', error);
+    });
 });
