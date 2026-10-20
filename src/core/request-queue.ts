@@ -83,9 +83,9 @@ export class RequestQueue {
 
     /** Only reached once globalSyncKey and adapter are both set. */
     async #getLastGlobalRequestTime(): Promise<number> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const storedTime = await this.#adapter!.storageGet(this.#globalSyncKey!);
-        const parsedTime = Number.parseInt(storedTime as string, 10);
+        if (!this.#adapter || !this.#globalSyncKey) return 0;
+        const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
+        const parsedTime = Number.parseInt(String(storedTime), 10);
 
         return Number.isNaN(parsedTime) ? 0 : parsedTime;
     }
@@ -96,12 +96,13 @@ export class RequestQueue {
     }
 
     async #syncClaimedRequestSlot(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        await this.#adapter!.storageSet(this.#globalSyncKey!, this.#lastLocalReqTime.toString());
+        if (!this.#adapter || !this.#globalSyncKey) return;
+        await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
     async #dispatchNextRequest<T>(): Promise<void> {
-        const item = this.#queue.shift() as QueueItem<unknown>;
+        const item = this.#queue.shift();
+        if (!item) return;
         try {
             const result = await (item.fetchFn as (_url: string) => Promise<T>)(item.url);
             (item.resolve as (_value: T | PromiseLike<T>) => void)(result);
@@ -118,8 +119,8 @@ export class RequestQueue {
     clear(): number {
         const count = this.#queue.length;
         while (this.#queue.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const item = this.#queue.shift()!;
+            const item = this.#queue.shift();
+            if (!item) break;
             item.reject(new Error('Client Disabled'));
         }
         return count;
