@@ -9,8 +9,8 @@ import { ApiSource } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
-import { RATE_LIMITS } from '../rate-limits';
-import { GLOBAL_SYNC_KEY, RequestQueue } from '../request-queue';
+import { RATE_LIMIT_SYNC_KEYS, RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
@@ -70,7 +70,7 @@ export class OmdbApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB], GLOBAL_SYNC_KEY),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB], RATE_LIMIT_SYNC_KEYS[ApiSource.OMDB]),
             ApiSource.OMDB
         );
     }

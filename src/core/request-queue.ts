@@ -4,9 +4,6 @@
  */
 import type { PlatformAdapter } from '../platform/adapter';
 
-/** Storage key used to coordinate request timing across browser tabs. */
-export const GLOBAL_SYNC_KEY = 'fm_last_req';
-
 /**
  * Rate-limited request queue with priority-based execution and cross-tab synchronization.
  */
