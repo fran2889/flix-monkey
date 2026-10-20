@@ -9,7 +9,7 @@ import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import { RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
+import { GLOBAL_SYNC_KEY, RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
 import { mapAgregarrTitleType } from './title-type-mappers';
@@ -41,7 +41,7 @@ export class AgregarrApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR]),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR], GLOBAL_SYNC_KEY),
             ApiSource.AGREGARR
         );
     }

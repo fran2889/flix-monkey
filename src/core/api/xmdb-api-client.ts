@@ -10,7 +10,7 @@ import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import { RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
+import { GLOBAL_SYNC_KEY, RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
 import { mapXmdbTitleType } from './title-type-mappers';
@@ -39,7 +39,7 @@ export class XmdbApiClient extends BaseApiClient {
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.XMDB], 'fm_last_req'),
+            new RequestQueue(adapter, RATE_LIMITS[ApiSource.XMDB], GLOBAL_SYNC_KEY),
             ApiSource.XMDB
         );
     }

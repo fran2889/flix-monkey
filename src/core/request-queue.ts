@@ -4,24 +4,26 @@
  */
 import type { PlatformAdapter } from '../platform/adapter';
 
+/** Storage key used to coordinate request timing across browser tabs. */
+export const GLOBAL_SYNC_KEY = 'fm_last_req';
+
 /**
- * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.
+ * Rate-limited request queue with priority-based execution and cross-tab synchronization.
  */
 export class RequestQueue {
     readonly #queue: Array<QueueItem> = [];
     #isProcessing = false;
     #lastLocalReqTime = 0;
     readonly #minInterval: number;
-    readonly #globalSyncKey: string | undefined;
-    readonly #adapter: PlatformAdapter | undefined;
+    readonly #globalSyncKey: string;
+    readonly #adapter: PlatformAdapter;
 
     /**
-     * @param adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
+     * @param adapter - Storage adapter used for cross-tab coordination.
      * @param minInterval - Minimum delay between dispatched requests.
-     * @param globalSyncKey - Storage key used to coordinate the delay across tabs; omit to rate-limit within this
-     * context only.
+     * @param globalSyncKey - Storage key used to coordinate the delay across tabs.
      */
-    constructor(adapter: PlatformAdapter | undefined, minInterval: number, globalSyncKey?: string) {
+    constructor(adapter: PlatformAdapter, minInterval: number, globalSyncKey: string) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
@@ -58,7 +60,7 @@ export class RequestQueue {
 
         while (this.#queue.length > 0) {
             const now = Date.now();
-            const lastGlobal = this.#globalSyncKey && this.#adapter ? await this.#getLastGlobalRequestTime() : 0;
+            const lastGlobal = await this.#getLastGlobalRequestTime();
 
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
@@ -69,34 +71,24 @@ export class RequestQueue {
             }
 
             // Re-read storage before claiming the timeslot to reduce cross-tab races
-            if (this.#globalSyncKey && this.#adapter) {
-                const freshGlobal = await this.#getLastGlobalRequestTime();
-                if (Date.now() - freshGlobal < this.#minInterval) continue;
-            }
+            const freshGlobal = await this.#getLastGlobalRequestTime();
+            if (Date.now() - freshGlobal < this.#minInterval) continue;
 
-            const needsGlobalSync = this.#claimNextRequestSlot();
-            if (needsGlobalSync) await this.#syncClaimedRequestSlot();
+            this.#lastLocalReqTime = Date.now();
+            await this.#syncClaimedRequestSlot();
             await this.#dispatchNextRequest<T>();
         }
         this.#isProcessing = false;
     }
 
-    /** Only reached once globalSyncKey and adapter are both set. */
     async #getLastGlobalRequestTime(): Promise<number> {
-        if (!this.#adapter || !this.#globalSyncKey) return 0;
         const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
         const parsedTime = Number.parseInt(String(storedTime), 10);
 
         return Number.isNaN(parsedTime) ? 0 : parsedTime;
     }
 
-    #claimNextRequestSlot(): boolean {
-        this.#lastLocalReqTime = Date.now();
-        return Boolean(this.#globalSyncKey && this.#adapter);
-    }
-
     async #syncClaimedRequestSlot(): Promise<void> {
-        if (!this.#adapter || !this.#globalSyncKey) return;
         await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
