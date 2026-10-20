@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
+import { globalIgnores } from 'eslint/config';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -16,7 +17,7 @@ const commonRules = {
     complexity: ['error', 16],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
-    'no-duplicate-imports': 'error',
+    'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
@@ -36,8 +37,11 @@ const typescriptRules = {
     '@typescript-eslint/return-await': 'error',
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': 'off',
+    'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    // TypeScript already checks undefined identifiers.
+    'no-undef': 'off',
 };
 
 const userscriptGlobals = {
@@ -51,6 +55,13 @@ const userscriptGlobals = {
 };
 
 export default [
+    globalIgnores(['dist/**', 'coverage/**']),
+    {
+        linterOptions: {
+            reportUnusedDisableDirectives: 'error',
+            reportUnusedInlineConfigs: 'error',
+        },
+    },
     js.configs.recommended,
     // 1. Base configuration for JS files
     {
@@ -74,6 +85,7 @@ export default [
             parser: typescriptParser,
             parserOptions: {
                 project: true,
+                tsconfigRootDir: import.meta.dirname,
             },
         },
         plugins: {
