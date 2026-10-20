@@ -27,13 +27,13 @@ const typescriptRules = {
     ...commonRules,
     // TypeScript-specific strict rules
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/no-non-null-assertion': 'error',
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off', // Too many false positives for internal modules
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
     '@typescript-eslint/prefer-nullish-coalescing': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/prefer-readonly': 'warn', // Start with warn to ease migration
+    '@typescript-eslint/prefer-readonly': 'error',
     '@typescript-eslint/return-await': 'error',
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
