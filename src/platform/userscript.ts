@@ -4,7 +4,8 @@
  */
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
 import { FlixMonkeyError } from '../core/utils/index';
-import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter';
+import type { HttpFetchOptions, StorageValue } from './adapter';
+import { PlatformAdapter } from './adapter';
 
 /**
  * Userscript platform adapter using GM_* APIs.

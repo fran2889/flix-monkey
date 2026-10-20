@@ -37,6 +37,8 @@ const typescriptRules = {
     '@typescript-eslint/return-await': 'error',
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
+    '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
+    '@typescript-eslint/no-import-type-side-effects': 'error',
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',

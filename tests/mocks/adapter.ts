@@ -2,7 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { vi } from 'vitest';
 
 import { type HttpFetchOptions, PlatformAdapter, type StorageValue } from '../../src/platform/adapter';
 

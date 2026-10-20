@@ -6,7 +6,7 @@ import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
 import type { Logger } from '../logger';
-import { Title } from '../title';
+import type { Title } from '../title';
 import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
 

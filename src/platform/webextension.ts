@@ -6,7 +6,8 @@ import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
 import { FlixMonkeyError } from '../core/utils/index';
-import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter';
+import type { HttpFetchOptions, StorageValue } from './adapter';
+import { PlatformAdapter } from './adapter';
 
 /**
  * Type for the fetch response from the background service worker.

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
+import type { Logger } from '../../logger';
 import { containerFromClosest, SurfaceManager, titleFromAttribute } from '../surface-manager';
 
 export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
@@ -63,7 +64,7 @@ export class NetflixSurfaceManager extends SurfaceManager {
     /**
      * @param logger - For logging surface discovery issues.
      */
-    constructor(logger: import('../../logger').Logger) {
+    constructor(logger: Logger) {
         super(logger, NETFLIX_SURFACES);
     }
 }

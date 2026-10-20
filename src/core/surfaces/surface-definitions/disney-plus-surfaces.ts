@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
+import type { Logger } from '../../logger';
 import { containerFromClosest, containerFromParent, SurfaceManager } from '../surface-manager';
 
 const DISNEY_PLUS_PREFIX_BLOCK =
@@ -85,7 +86,7 @@ export class DisneyPlusSurfaceManager extends SurfaceManager {
      *
      * @param logger - For logging surface discovery issues.
      */
-    constructor(logger: import('../../logger').Logger) {
+    constructor(logger: Logger) {
         super(logger, DISNEY_PLUS_SURFACES);
     }
 }

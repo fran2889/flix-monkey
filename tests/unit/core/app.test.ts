@@ -249,7 +249,7 @@ describe('App', () => {
     `;
 
         let resolveApi: (_value: Title) => void = () => {};
-        const apiPromise = new Promise<import('../../../src/core/title.js').Title>(resolve => {
+        const apiPromise = new Promise<Title>(resolve => {
             resolveApi = resolve;
         });
 
@@ -533,7 +533,7 @@ describe('App', () => {
 
         let resolveData: (_value: Title) => void = () => {};
         vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(
-            new Promise<import('../../../src/core/title.js').Title>(resolve => {
+            new Promise<Title>(resolve => {
                 resolveData = resolve;
             })
         );

@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { FlixMonkeyApp } from '../../core/app';
 import { startApp } from '../../core/app';
 import { CacheManager } from '../../core/cache/index';
 import { ConfigManager } from '../../core/config/index';
@@ -14,7 +15,7 @@ import { UserscriptAdapter } from '../../platform/userscript';
 
 const adapter = new UserscriptAdapter();
 const logger = new Logger(adapter);
-let app: import('../../core/app.js').FlixMonkeyApp | undefined;
+let app: FlixMonkeyApp | undefined;
 
 /**
  * Gets the cache and disabled clients managers, either from the existing app or by creating new instances.
