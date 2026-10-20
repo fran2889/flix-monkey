@@ -12,7 +12,7 @@ export class Logger {
     readonly #adapter: PlatformAdapter;
 
     /**
-     * @param adapter
+     * @param adapter - Platform adapter used to read the debug setting.
      */
     constructor(adapter: PlatformAdapter) {
         this.#adapter = adapter;
@@ -21,8 +21,8 @@ export class Logger {
     /**
      * Logs debug message when debug mode is enabled in configuration.
      *
-     * @param message
-     * @param args
+     * @param message - Primary message or value to log.
+     * @param args - Additional values appended to the log entry.
      */
     debug(message: unknown, ...args: unknown[]): void {
         if (String(this.#adapter.configGet('debug') ?? CONFIG_DEFAULTS['debug']) === 'true') {
@@ -33,8 +33,8 @@ export class Logger {
     /**
      * Logs informational message to console.
      *
-     * @param message
-     * @param args
+     * @param message - Primary message or value to log.
+     * @param args - Additional values appended to the log entry.
      */
     info(message: unknown, ...args: unknown[]): void {
         console.info(`${this.#prefix} ${message}`, ...args);
@@ -43,8 +43,8 @@ export class Logger {
     /**
      * Logs warning message to console.
      *
-     * @param message
-     * @param args
+     * @param message - Primary message or value to log.
+     * @param args - Additional values appended to the log entry.
      */
     warn(message: unknown, ...args: unknown[]): void {
         console.warn(`${this.#prefix} ${message}`, ...args);
@@ -53,8 +53,8 @@ export class Logger {
     /**
      * Logs error message to console.
      *
-     * @param message
-     * @param args
+     * @param message - Primary message or value to log.
+     * @param args - Additional values appended to the log entry.
      */
     error(message: unknown, ...args: unknown[]): void {
         console.error(`${this.#prefix} ${message}`, ...args);

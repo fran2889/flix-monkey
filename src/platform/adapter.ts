@@ -47,7 +47,7 @@ export class PlatformAdapter {
      *
      * @param _key - Storage key.
      * @param _value - Value to store.
-     * @returns
+     * @returns Resolves when the value is stored.
      */
     async storageSet(_key: string, _value: StorageValue): Promise<void> {
         throw new FlixMonkeyError('PlatformAdapter: storageSet() must be implemented by subclass');
@@ -57,7 +57,7 @@ export class PlatformAdapter {
      * Stores multiple key/value pairs atomically in platform storage.
      *
      * @param _values - Object of key/value pairs to store.
-     * @returns
+     * @returns Resolves when all values are stored.
      */
     async storageSetMany(_values: Record<string, StorageValue>): Promise<void> {
         throw new FlixMonkeyError('PlatformAdapter: storageSetMany() must be implemented by subclass');
@@ -67,7 +67,7 @@ export class PlatformAdapter {
      * Removes a single key from platform storage.
      *
      * @param _key - Storage key to delete.
-     * @returns
+     * @returns Resolves when the value is removed.
      */
     async storageDelete(_key: string): Promise<void> {
         throw new FlixMonkeyError('PlatformAdapter: storageDelete() must be implemented by subclass');

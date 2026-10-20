@@ -74,7 +74,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @override
      * @param key - Storage key.
      * @param value - Value to store.
-     * @returns
+     * @returns Resolves when the value is stored.
      */
     async storageSet(key: string, value: StorageValue): Promise<void> {
         await browser.storage.local.set({ [key]: value });
@@ -85,7 +85,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param values - Object of key/value pairs to store.
-     * @returns
+     * @returns Resolves when all values are stored.
      */
     async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
         await browser.storage.local.set(values);
@@ -96,7 +96,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Storage key to delete.
-     * @returns
+     * @returns Resolves when the value is removed.
      */
     async storageDelete(key: string): Promise<void> {
         await browser.storage.local.remove(key);

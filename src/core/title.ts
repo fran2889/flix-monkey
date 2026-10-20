@@ -43,7 +43,7 @@ export class Title {
     type: string | undefined;
 
     /**
-     * @param [options]
+     * @param [options] - Title fields to initialize.
      */
     constructor({
         displayTitle,
@@ -108,7 +108,7 @@ export class Title {
     /**
      * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
      *
-     * @returns
+     * @returns True when at least one rating is present.
      */
     get hasRating(): boolean {
         return this.imdbRating !== undefined || this.rtRating !== undefined || this.mcRating !== undefined;
@@ -135,7 +135,7 @@ export class Title {
      *
      * @param displayTitle - The streaming-service title that was searched.
      * @param [source] - API source that produced the miss.
-     * @returns
+     * @returns A Title marked with no ratings or metadata.
      */
     static notFound(displayTitle: string, source?: string): Title {
         return new Title({ displayTitle, source });

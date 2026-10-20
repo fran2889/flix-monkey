@@ -43,7 +43,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      *
      * @param key - Storage key.
      * @param value - Value to store.
-     * @returns
+     * @returns Resolves when the value is stored.
      */
     async storageSet(key: string, value: StorageValue): Promise<void> {
         GM_setValue(key, value);
@@ -53,7 +53,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Stores multiple key-value pairs in GM storage.
      *
      * @param values - Object of key/value pairs to store.
-     * @returns
+     * @returns Resolves when all values are stored.
      */
     async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
         for (const [key, value] of Object.entries(values)) {
@@ -65,7 +65,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Removes a value from GM storage.
      *
      * @param key - Storage key to delete.
-     * @returns
+     * @returns Resolves when the value is removed.
      */
     async storageDelete(key: string): Promise<void> {
         GM_deleteValue(key);

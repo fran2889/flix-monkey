@@ -18,7 +18,7 @@ export class ConfigManager {
     readonly #logger: Logger;
 
     /**
-     * @param adapter
+     * @param adapter - Platform adapter used for configuration reads.
      * @param logger - Required; configuration reads can fail and are logged.
      */
     constructor(adapter: PlatformAdapter, logger: Logger) {
@@ -56,8 +56,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as an integer.
      *
-     * @param key
-     * @returns
+     * @param key - Configuration key to read as an integer.
+     * @returns Parsed integer value, or the default when the value is invalid.
      */
     getInt(key: ConfigKey): number {
         const val = this.get(key);
@@ -68,8 +68,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as a float.
      *
-     * @param key
-     * @returns
+     * @param key - Configuration key to read as a float.
+     * @returns Parsed float value, or the default when the value is invalid.
      */
     getFloat(key: ConfigKey): number {
         const val = this.get(key);
@@ -80,8 +80,8 @@ export class ConfigManager {
     /**
      * Returns the configured value as a boolean.
      *
-     * @param key
-     * @returns
+     * @param key - Configuration key to read as a boolean.
+     * @returns True when the configured value is the string "true".
      */
     getBool(key: ConfigKey): boolean {
         return this.get(key) === 'true';
