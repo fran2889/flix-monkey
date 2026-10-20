@@ -113,6 +113,39 @@ export default [
             'no-empty-function': 'error',
         },
     },
+    // 3.5. Application code logs through Logger and platform I/O through the adapter.
+    {
+        files: ['src/**/*.ts'],
+        ignores: [
+            'src/core/logger.ts',
+            'src/targets/chrome/service-worker.ts',
+            'src/targets/firefox/background.ts',
+            'src/targets/extension/content.ts',
+            'src/targets/extension/options.ts',
+            'src/targets/userscript/entry.ts',
+        ],
+        rules: {
+            'no-console': 'error',
+        },
+    },
+    {
+        files: ['src/core/**/*.ts'],
+        rules: {
+            'no-restricted-globals': [
+                'error',
+                { name: 'fetch', message: 'Use adapter.httpFetch() instead.' },
+                { name: 'GM_xmlhttpRequest', message: 'Use adapter.httpFetch() instead.' },
+                { name: 'GM_getValue', message: 'Use adapter.configGet() or adapter.storageGet() instead.' },
+                { name: 'GM_setValue', message: 'Use adapter.storageSet() instead.' },
+                { name: 'GM_deleteValue', message: 'Use adapter.storageDelete() instead.' },
+                { name: 'GM_listValues', message: 'Use adapter.storageGetAll() instead.' },
+                { name: 'GM_registerMenuCommand', message: 'Use adapter.registerMenuCommand() instead.' },
+                { name: 'GM_config', message: 'Use ConfigManager instead.' },
+                { name: 'browser', message: 'Use PlatformAdapter instead.' },
+                { name: 'chrome', message: 'Use PlatformAdapter instead.' },
+            ],
+        },
+    },
     // 4. Browser & WebExtension globals (src, tests)
     {
         files: ['src/**/*.ts', 'tests/**/*.ts'],
