@@ -13,21 +13,21 @@ export class DisneyPlusService extends StreamingService {
      * @param _configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */
-    isEnabled(_configManager: ConfigManager): boolean {
+    override isEnabled(_configManager: ConfigManager): boolean {
         return _configManager.getBool('enableDisneyPlus');
     }
 
     /**
      * @returns Root domains or exact hostnames without a protocol, port, or path.
      */
-    get domains(): readonly string[] {
+    override get domains(): readonly string[] {
         return Object.freeze(['disneyplus.com']);
     }
 
     /**
      * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
      */
-    get SurfaceManager(): ServiceSurfaceManager {
+    override get SurfaceManager(): ServiceSurfaceManager {
         return DisneyPlusSurfaceManager;
     }
 }

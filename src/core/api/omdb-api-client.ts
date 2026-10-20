@@ -80,7 +80,7 @@ export class OmdbApiClient extends BaseApiClient {
      *
      * @returns A health result suitable for provider selection.
      */
-    async getStatus(): Promise<ClientStatus> {
+    override async getStatus(): Promise<ClientStatus> {
         const apiKey = this.config.get('omdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();

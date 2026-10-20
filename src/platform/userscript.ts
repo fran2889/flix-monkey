@@ -17,7 +17,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param key - Storage key.
      * @returns The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(key: string): Promise<StorageValue | undefined> {
+    override async storageGet(key: string): Promise<StorageValue | undefined> {
         return GM_getValue(key) ?? undefined;
     }
 
@@ -26,7 +26,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      *
      * @returns All stored entries.
      */
-    async storageGetAll(): Promise<Record<string, StorageValue>> {
+    override async storageGetAll(): Promise<Record<string, StorageValue>> {
         const keys = GM_listValues();
         const all: Record<string, StorageValue> = {};
         for (const key of keys) {
@@ -45,7 +45,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param value - Value to store.
      * @returns Resolves when the value is stored.
      */
-    async storageSet(key: string, value: StorageValue): Promise<void> {
+    override async storageSet(key: string, value: StorageValue): Promise<void> {
         GM_setValue(key, value);
     }
 
@@ -55,7 +55,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param values - Object of key/value pairs to store.
      * @returns Resolves when all values are stored.
      */
-    async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
+    override async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
         for (const [key, value] of Object.entries(values)) {
             GM_setValue(key, value);
         }
@@ -67,7 +67,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param key - Storage key to delete.
      * @returns Resolves when the value is removed.
      */
-    async storageDelete(key: string): Promise<void> {
+    override async storageDelete(key: string): Promise<void> {
         GM_deleteValue(key);
     }
 
@@ -77,7 +77,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param prefix - Key prefix to match.
      * @returns Matching keys.
      */
-    async storageGetKeys(prefix: string): Promise<string[]> {
+    override async storageGetKeys(prefix: string): Promise<string[]> {
         const keys = GM_listValues();
         return keys.filter((key: string) => key.startsWith(prefix));
     }
@@ -91,7 +91,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param options - Fetch options.
      * @returns Parsed response body (JSON object or string).
      */
-    async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
+    override async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
         const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
 
         return new Promise((resolve, reject) => {
@@ -137,7 +137,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param key - Config key.
      * @returns The current config value, or `undefined` if absent.
      */
-    configGet(key: string): string | boolean | undefined {
+    override configGet(key: string): string | boolean | undefined {
         return GM_getValue<string | boolean | undefined>(key);
     }
 
@@ -147,7 +147,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param label - Menu label.
      * @param fn - Function to call when menu command is clicked.
      */
-    registerMenuCommand(label: string, fn: () => void): void {
+    override registerMenuCommand(label: string, fn: () => void): void {
         GM_registerMenuCommand(label, fn);
     }
 }

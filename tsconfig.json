@@ -11,6 +11,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
+        "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
