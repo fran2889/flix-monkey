@@ -44,7 +44,7 @@ export class ConfigManager {
             const defaultValue = String(CONFIG_DEFAULTS[key]);
             if (val === undefined || val === null) return defaultValue;
             const normalizedVal = String(val);
-            const allowed = CONFIG_SELECT_ALLOWED[key] as string[] | undefined;
+            const allowed = CONFIG_SELECT_ALLOWED[key];
             if (allowed && !allowed.includes(normalizedVal)) return defaultValue;
             return normalizedVal;
         } catch (err) {

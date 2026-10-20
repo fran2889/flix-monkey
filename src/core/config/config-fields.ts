@@ -242,9 +242,12 @@ export const CONFIG_DEFAULTS = Object.fromEntries(
 ) as Record<SettingKey, string | boolean>;
 
 /** Allowed values for select-type config fields. */
-export const CONFIG_SELECT_ALLOWED = Object.fromEntries(
-    CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [f.key, f.options.map(o => (Array.isArray(o) ? o[0] : o))])
-) as Record<SettingKey, string[]>;
+export const CONFIG_SELECT_ALLOWED: Partial<Record<SettingKey, readonly string[]>> = Object.fromEntries(
+    CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [
+        f.key,
+        f.options.map(o => (typeof o === 'string' ? o : o[0])),
+    ])
+);
 
 // Type for row label keys - includes all possible row values used in config
 export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
