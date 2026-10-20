@@ -33,7 +33,7 @@ vi.mock('../../../../src/platform/userscript', () => ({
 vi.mock('../../../../src/core/cache/cache-manager', () => ({
     CacheManager: class {
         constructor(..._args: any[]) {
-            // @ts-ignore - constructor returns mock object, not actual CacheManager
+            // @ts-expect-error - constructor returns mock object, not actual CacheManager
             return cacheConstructor(..._args);
         }
     },
@@ -42,7 +42,7 @@ vi.mock('../../../../src/core/cache/cache-manager', () => ({
 vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
         constructor(..._args: any[]) {
-            // @ts-ignore - constructor returns mock object, not actual ConfigManager
+            // @ts-expect-error - constructor returns mock object, not actual ConfigManager
             return configConstructor(..._args);
         }
     },
@@ -51,7 +51,7 @@ vi.mock('../../../../src/core/config/config-manager', () => ({
 vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {
         constructor(..._args: any[]) {
-            // @ts-ignore - constructor returns mock object, not actual DisabledClientsManager
+            // @ts-expect-error - constructor returns mock object, not actual DisabledClientsManager
             return disabledConstructor(..._args);
         }
     },
@@ -60,7 +60,7 @@ vi.mock('../../../../src/core/disabled-clients', () => ({
 vi.mock('../../../../src/core/logger', () => ({
     Logger: class {
         constructor(..._args: any[]) {
-            // @ts-ignore - constructor returns mock object, not actual Logger
+            // @ts-expect-error - constructor returns mock object, not actual Logger
             return loggerConstructor(..._args);
         }
     },
@@ -125,23 +125,18 @@ describe('userscript entry point', () => {
         expect(appModule.startApp).not.toHaveBeenCalled();
         expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
 
-        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => {
             expect(appModule.startApp).toHaveBeenCalledWith(adapter);
             expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
         });
 
-        // @ts-ignore - accessing .mock on vi.mock'd function
         expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(loggerConstructor.mock.results[0].value);
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        // @ts-ignore - accessing .mock on vi.mock'd function
         expect((appModule.startApp as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
-            // @ts-ignore - accessing .mock on vi.mock'd function
             (migrationsModule.runMigrations as Mock).mock.invocationCallOrder[0]
         );
         expect((adapter.registerMenuCommand as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
-            // @ts-ignore - accessing .mock on vi.mock'd function
             (appModule.startApp as Mock).mock.invocationCallOrder[0]
         );
     });
@@ -151,7 +146,6 @@ describe('userscript entry point', () => {
         const migrationsModule = await import('../../../../src/core/migrations');
 
         await import('../../../../src/targets/userscript/entry');
-        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
 
@@ -162,12 +156,10 @@ describe('userscript entry point', () => {
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
 
-        // @ts-ignore - accessing .mock on vi.mock'd function
         const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0][1];
         menuCallback();
 
         const logger = loggerConstructor.mock.results[0].value;
-        // @ts-ignore - accessing .mock on vi.mock'd function
         expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(logger);
         const config = configConstructor.mock.results[0].value;
         const cacheManager = cacheConstructor.mock.results[0].value;
@@ -185,7 +177,6 @@ describe('userscript entry point', () => {
         appHandle = { cacheManager, disabledManager };
 
         await import('../../../../src/targets/userscript/entry');
-        // @ts-ignore - resolveMigrations expects a value but we're resolving without one
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
         const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];

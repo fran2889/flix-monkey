@@ -42,6 +42,16 @@ const typescriptRules = {
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/await-thenable': 'error',
+    '@typescript-eslint/ban-ts-comment': [
+        'error',
+        {
+            'ts-expect-error': 'allow-with-description',
+            'ts-ignore': true,
+            'ts-nocheck': true,
+            'ts-check': false,
+            minimumDescriptionLength: 10,
+        },
+    ],
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
@@ -109,6 +119,17 @@ export default [
             '@typescript-eslint/no-unnecessary-type-assertion': 'off',
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
+            // Tests use @ts-nocheck for partial mocks; keep @ts-ignore banned.
+            '@typescript-eslint/ban-ts-comment': [
+                'error',
+                {
+                    'ts-expect-error': 'allow-with-description',
+                    'ts-ignore': true,
+                    'ts-nocheck': 'allow-with-description',
+                    'ts-check': false,
+                    minimumDescriptionLength: 10,
+                },
+            ],
         },
     },
     // 3. Production code must document intentional no-op functions.
@@ -131,6 +152,18 @@ export default [
         ],
         rules: {
             'no-console': 'error',
+        },
+    },
+    {
+        files: ['src/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: 'TSAsExpression > TSNeverKeyword',
+                    message: 'Do not assert to never; fix the underlying type instead.',
+                },
+            ],
         },
     },
     {

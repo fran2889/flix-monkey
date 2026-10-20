@@ -405,7 +405,7 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const overrideManager = new IdOverrideManager(adapter);
     const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
-    const surfaces = new currentService.SurfaceManager(logger as never);
+    const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter, configManager);
     const app = new FlixMonkeyApp(logger, cache, fadeManager, overrideManager, renderer, surfaces, api);

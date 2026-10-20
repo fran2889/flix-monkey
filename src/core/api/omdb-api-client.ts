@@ -122,7 +122,6 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
-            // @ts-ignore - TypeScript incorrectly infers parameter type due to exactOptionalPropertyTypes
             return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
         }
         return searchTitle;
@@ -136,7 +135,11 @@ export class OmdbApiClient extends BaseApiClient {
      * @param fallbackImdbId - Fallback IMDb ID from search results
      * @returns Title instance
      */
-    #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | undefined): Title {
+    #parseOmdbResponse(
+        json: OmdbResponse,
+        displayTitle: string | undefined,
+        fallbackImdbId: string | undefined
+    ): Title {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
