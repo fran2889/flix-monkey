@@ -57,7 +57,7 @@ export class ConfigManager {
      * Returns the configured value as an integer.
      *
      * @param key
-     * @returns {number}
+     * @returns
      */
     getInt(key: ConfigKey): number {
         const val = this.get(key);
@@ -69,7 +69,7 @@ export class ConfigManager {
      * Returns the configured value as a float.
      *
      * @param key
-     * @returns {number}
+     * @returns
      */
     getFloat(key: ConfigKey): number {
         const val = this.get(key);
@@ -81,7 +81,7 @@ export class ConfigManager {
      * Returns the configured value as a boolean.
      *
      * @param key
-     * @returns {boolean}
+     * @returns
      */
     getBool(key: ConfigKey): boolean {
         return this.get(key) === 'true';

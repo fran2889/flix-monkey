@@ -62,7 +62,7 @@ export class CacheManager {
      *
      * @param displayTitle - Streaming-service title used to derive the cache key.
      * @param titleObj - Title to serialize.
-     * @returns {Promise<void>}
+     * @returns
      */
     async write(displayTitle: string, titleObj: Title): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
@@ -96,7 +96,7 @@ export class CacheManager {
     /**
      * Removes all cached title entries from storage.
      *
-     * @returns {Promise<void>}
+     * @returns
      */
     async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
@@ -109,7 +109,7 @@ export class CacheManager {
      * Removes a cached title entry by its display title.
      *
      * @param displayTitle - Streaming-service title used to derive the cache key.
-     * @returns {Promise<void>}
+     * @returns
      */
     async delete(displayTitle: string): Promise<void> {
         const key = this.#getCacheKey(displayTitle);

@@ -233,6 +233,7 @@ export default [
             'jsdoc/require-description': ['error', { contexts: ['export'] }],
             'jsdoc/require-param': ['error', { contexts: ['export'] }],
             'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',
             'jsdoc/no-undefined-types': 'error',
         },

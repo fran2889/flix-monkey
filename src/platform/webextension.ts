@@ -51,7 +51,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Storage key.
-     * @returns {Promise<StorageValue | undefined>} The stored value, or `undefined` if the key does not exist.
+     * @returns The stored value, or `undefined` if the key does not exist.
      */
     async storageGet(key: string): Promise<StorageValue | undefined> {
         const result = await browser.storage.local.get(key);
@@ -62,7 +62,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * Retrieves all key/value pairs from browser storage.
      *
      * @override
-     * @returns {Promise<Record<string, StorageValue>>} All stored entries.
+     * @returns All stored entries.
      */
     async storageGetAll(): Promise<Record<string, StorageValue>> {
         return (await browser.storage.local.get(null)) as Record<string, StorageValue>;
@@ -74,7 +74,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @override
      * @param key - Storage key.
      * @param value - Value to store.
-     * @returns {Promise<void>}
+     * @returns
      */
     async storageSet(key: string, value: StorageValue): Promise<void> {
         await browser.storage.local.set({ [key]: value });
@@ -85,7 +85,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param values - Object of key/value pairs to store.
-     * @returns {Promise<void>}
+     * @returns
      */
     async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
         await browser.storage.local.set(values);
@@ -96,7 +96,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Storage key to delete.
-     * @returns {Promise<void>}
+     * @returns
      */
     async storageDelete(key: string): Promise<void> {
         await browser.storage.local.remove(key);
@@ -107,7 +107,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param prefix - Key prefix to match.
-     * @returns {Promise<string[]>} Matching keys.
+     * @returns Matching keys.
      */
     async storageGetKeys(prefix: string): Promise<string[]> {
         const all = await browser.storage.local.get(null);
@@ -122,7 +122,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @override
      * @param url - Request URL.
      * @param options - Fetch options.
-     * @returns {Promise<unknown>} Parsed response body (JSON object or string).
+     * @returns Parsed response body (JSON object or string).
      */
     async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
         const timeout = options.timeout ?? DEFAULT_FETCH_TIMEOUT;
@@ -155,7 +155,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      *
      * @override
      * @param key - Config key.
-     * @returns {StorageValue | undefined} The current config value, or `undefined` if absent.
+     * @returns The current config value, or `undefined` if absent.
      */
     configGet(key: string): StorageValue | undefined {
         if (!this.#configLoaded) {

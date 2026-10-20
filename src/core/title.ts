@@ -43,7 +43,7 @@ export class Title {
     type: string | undefined;
 
     /**
-     * @param {TitleOptions} [options]
+     * @param [options]
      */
     constructor({
         displayTitle,
@@ -75,7 +75,7 @@ export class Title {
     /**
      * Returns a plain object representation suitable for cache serialization,
      * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns {TitleData} Title fields without displayTitle
+     * @returns Title fields without displayTitle
      */
     toCacheJSON(): TitleData {
         const rest = { ...this };
@@ -88,9 +88,9 @@ export class Title {
      * This is the single validation boundary for untrusted Title payloads, so
      * callers holding decoded storage JSON hand the value over unchecked.
      *
-     * @param {unknown} obj - Untrusted cache data object without displayTitle
-     * @param {string} displayTitle - Display title from cache entry
-     * @returns {Title | undefined} New Title instance, or undefined if obj is not a title object
+     * @param obj - Untrusted cache data object without displayTitle
+     * @param displayTitle - Display title from cache entry
+     * @returns New Title instance, or undefined if obj is not a title object
      */
     static fromCacheJSON(obj: unknown, displayTitle: string): Title | undefined {
         if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
@@ -108,14 +108,14 @@ export class Title {
     /**
      * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
      *
-     * @returns {boolean}
+     * @returns
      */
     get hasRating(): boolean {
         return this.imdbRating !== undefined || this.rtRating !== undefined || this.mcRating !== undefined;
     }
 
     /**
-     * @returns {string} IMDb URL for this title. Falls back to an IMDb search
+     * @returns IMDb URL for this title. Falls back to an IMDb search
      *   URL when `imdbId` is not available.
      */
     get imdbUrl(): string {
@@ -123,8 +123,8 @@ export class Title {
     }
 
     /**
-     * @param {string} source - API source that produced this title.
-     * @returns {Title} A new immutable Title with this source.
+     * @param source - API source that produced this title.
+     * @returns A new immutable Title with this source.
      */
     withSource(source: string): Title {
         return new Title({ ...this, source });
@@ -133,9 +133,9 @@ export class Title {
     /**
      * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
      *
-     * @param {string} displayTitle - The streaming-service title that was searched.
-     * @param {string} [source] - API source that produced the miss.
-     * @returns {Title}
+     * @param displayTitle - The streaming-service title that was searched.
+     * @param [source] - API source that produced the miss.
+     * @returns
      */
     static notFound(displayTitle: string, source?: string): Title {
         return new Title({ displayTitle, source });
