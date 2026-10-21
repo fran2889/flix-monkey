@@ -4,6 +4,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { ApiSource } from '../../../src/core/constants';
+import { RATE_LIMIT_SYNC_KEYS } from '../../../src/core/rate-limits';
 import { RequestQueue } from '../../../src/core/request-queue';
 import { buildMockAdapter } from '../../mocks/adapter';
 
@@ -49,6 +51,40 @@ describe('RequestQueue', () => {
         const end = Date.now();
         expect(end - start).toBeGreaterThanOrEqual(interval);
         expect(fetchFn).toHaveBeenCalledTimes(2);
+    });
+
+    it('paces requests per provider key', async () => {
+        vi.useFakeTimers({ now: Date.now() });
+        try {
+            const storage = new Map<string, string>();
+            const adapter = buildMockAdapter().build();
+            adapter.storageGet = vi.fn(async (key: string) => storage.get(key));
+            adapter.storageSet = vi.fn(async (key: string, value: string | boolean) => {
+                storage.set(key, String(value));
+            });
+            const interval = 1000;
+            const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+            const xmdbKey = RATE_LIMIT_SYNC_KEYS[ApiSource.XMDB];
+            const omdbKey = RATE_LIMIT_SYNC_KEYS[ApiSource.OMDB];
+
+            await new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-1', 0, fetchFn);
+            expect(fetchFn).toHaveBeenCalledTimes(1);
+
+            const otherProvider = new RequestQueue(adapter, interval, omdbKey).enqueue('omdb-1', 0, fetchFn);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
+            await otherProvider;
+
+            const sameProvider = new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-2', 0, fetchFn);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
+
+            await vi.advanceTimersByTimeAsync(interval);
+            await sameProvider;
+            expect(fetchFn).toHaveBeenCalledTimes(3);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('should respect priority and jump the queue', async () => {
