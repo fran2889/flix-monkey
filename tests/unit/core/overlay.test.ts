@@ -22,7 +22,7 @@ describe('OverlayRenderer', () => {
             title,
             () => {},
             () => {},
-            title.displayTitle ?? 'Test Title'
+            title.displayTitle
         );
 
     describe('style injection', () => {

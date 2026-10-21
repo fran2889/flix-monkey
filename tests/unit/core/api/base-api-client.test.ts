@@ -11,7 +11,7 @@ import type { DisabledClientsManager } from '../../../../src/core/disabled-clien
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
 import type { RequestQueue } from '../../../../src/core/request-queue';
-import { Title } from '../../../../src/core/title';
+import type { Title } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';

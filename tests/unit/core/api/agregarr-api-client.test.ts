@@ -344,11 +344,11 @@ describe('AgregarrApiClient', () => {
                     mockOverrideManager
                 );
             }
-            async search(): Promise<Title> {
+            override async search(): Promise<Title> {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | undefined> {
+            override async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)
@@ -380,11 +380,11 @@ describe('AgregarrApiClient', () => {
                     mockOverrideManager
                 );
             }
-            async search(displayTitle: string): Promise<Title> {
+            override async search(displayTitle: string): Promise<Title> {
                 this.searchCalled = true;
                 return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
             }
-            async getDetails(searchTitle: Title): Promise<Title | undefined> {
+            override async getDetails(searchTitle: Title): Promise<Title | undefined> {
                 this.getDetailsCalled = true;
                 return buildTitle()
                     .withDisplayTitle(searchTitle.displayTitle)

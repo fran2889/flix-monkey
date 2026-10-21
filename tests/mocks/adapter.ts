@@ -2,7 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { vi } from 'vitest';
 
 import { type HttpFetchOptions, PlatformAdapter, type StorageValue } from '../../src/platform/adapter';
 
@@ -23,14 +24,14 @@ interface MockStorageMethods {
 
 class MockPlatformAdapter extends PlatformAdapter {
     // Override abstract methods with mockable implementations
-    storageGet: MockableFn<(_key: string) => Promise<StorageValue | undefined>>;
-    storageGetAll: MockableFn<() => Promise<Record<string, StorageValue>>>;
-    storageSet: MockableFn<(_key: string, _value: StorageValue) => Promise<void>>;
-    storageSetMany: MockableFn<(_values: Record<string, StorageValue>) => Promise<void>>;
-    storageDelete: MockableFn<(_key: string) => Promise<void>>;
-    storageGetKeys: MockableFn<(_prefix: string) => Promise<string[]>>;
-    httpFetch: MockableFn<(_url: string, _options?: HttpFetchOptions) => Promise<unknown>>;
-    configGet: MockableFn<(_key: string) => string | boolean | undefined>;
+    override storageGet: MockableFn<(_key: string) => Promise<StorageValue | undefined>>;
+    override storageGetAll: MockableFn<() => Promise<Record<string, StorageValue>>>;
+    override storageSet: MockableFn<(_key: string, _value: StorageValue) => Promise<void>>;
+    override storageSetMany: MockableFn<(_values: Record<string, StorageValue>) => Promise<void>>;
+    override storageDelete: MockableFn<(_key: string) => Promise<void>>;
+    override storageGetKeys: MockableFn<(_prefix: string) => Promise<string[]>>;
+    override httpFetch: MockableFn<(_url: string, _options?: HttpFetchOptions) => Promise<unknown>>;
+    override configGet: MockableFn<(_key: string) => string | boolean | undefined>;
 
     constructor({ ...rest }: Partial<MockStorageMethods> = {}) {
         super();

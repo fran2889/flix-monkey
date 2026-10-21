@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
+import { globalIgnores } from 'eslint/config';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -16,7 +17,7 @@ const commonRules = {
     complexity: ['error', 16],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
-    'no-duplicate-imports': 'error',
+    'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
@@ -26,18 +27,28 @@ const typescriptRules = {
     ...commonRules,
     // TypeScript-specific strict rules
     '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/no-non-null-assertion': 'error',
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off', // Too many false positives for internal modules
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
     '@typescript-eslint/prefer-nullish-coalescing': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/prefer-readonly': 'warn', // Start with warn to ease migration
+    '@typescript-eslint/prefer-readonly': 'error',
     '@typescript-eslint/return-await': 'error',
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-shadow': 'error',
+    '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
+    '@typescript-eslint/no-import-type-side-effects': 'error',
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/await-thenable': 'error',
+    '@typescript-eslint/ban-ts-comment': 'error',
+    '@typescript-eslint/no-unused-vars': 'off',
+    'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    // TypeScript already checks undefined identifiers.
+    'no-undef': 'off',
 };
 
 const userscriptGlobals = {
@@ -51,6 +62,13 @@ const userscriptGlobals = {
 };
 
 export default [
+    globalIgnores(['dist/**', 'coverage/**']),
+    {
+        linterOptions: {
+            reportUnusedDisableDirectives: 'error',
+            reportUnusedInlineConfigs: 'error',
+        },
+    },
     js.configs.recommended,
     // 1. Base configuration for JS files
     {
@@ -74,6 +92,7 @@ export default [
             parser: typescriptParser,
             parserOptions: {
                 project: true,
+                tsconfigRootDir: import.meta.dirname,
             },
         },
         plugins: {
@@ -99,6 +118,31 @@ export default [
         files: ['src/**/*.ts', 'scripts/**/*.js'],
         rules: {
             'no-empty-function': 'error',
+        },
+    },
+    // 3.5. Application code logs through Logger; raw console is limited to platform bootstrap.
+    {
+        files: ['src/**/*.ts'],
+        ignores: [
+            'src/core/logger.ts',
+            'src/targets/chrome/service-worker.ts',
+            'src/targets/firefox/background.ts',
+            'src/targets/extension/content.ts',
+        ],
+        rules: {
+            'no-console': 'error',
+        },
+    },
+    {
+        files: ['src/**/*.ts'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: 'TSAsExpression > TSNeverKeyword',
+                    message: 'Do not assert to never; fix the underlying type instead.',
+                },
+            ],
         },
     },
     // 4. Browser & WebExtension globals (src, tests)
@@ -149,7 +193,10 @@ export default [
             ],
             'jsdoc/require-description': ['error', { contexts: ['export'] }],
             'jsdoc/require-param': ['error', { contexts: ['export'] }],
+            'jsdoc/require-param-description': 'error',
             'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/require-returns-description': 'error',
+            'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',
             'jsdoc/no-undefined-types': 'error',
         },

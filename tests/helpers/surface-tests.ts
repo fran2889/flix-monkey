@@ -47,7 +47,7 @@ export function testSurfaceFixtures(
         // In practice, all discovered containers are HTMLElements.
         overlayRenderer.injectOverlay(
             surface.container as unknown as HTMLElement,
-            new Title({ imdbRating: 8.5, imdbId: 'tt1234567' }),
+            new Title({ displayTitle: surface.title, imdbRating: 8.5, imdbId: 'tt1234567' }),
             () => {},
             () => {},
             surface.title

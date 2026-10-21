@@ -4,20 +4,27 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { ApiSource } from '../../../src/core/constants';
+import { PROVIDER_RATE_LIMITS } from '../../../src/core/rate-limits';
 import { RequestQueue } from '../../../src/core/request-queue';
 import { buildMockAdapter } from '../../mocks/adapter';
 
+const SYNC_KEY = 'sync-key';
+
+function buildQueue(interval: number, adapter = buildMockAdapter().build()): RequestQueue {
+    return new RequestQueue(adapter, interval, SYNC_KEY);
+}
+
 describe('RequestQueue', () => {
     it('should clear queue', async () => {
-        // Timing assumption: the first enqueued item enters #process() synchronously
-        // before the first `await`, which removes it from the queue. The second item
-        // remains queued because the large interval (999999ms) causes #process to wait.
-        // clear() therefore finds exactly 1 item to abort.
-        // If #process() ever defers its first dequeue past an await, this count changes.
-        const queue = new RequestQueue(undefined, 999999);
-        void queue.enqueue('url1', 1, () => new Promise(() => {})).catch(() => {});
+        const firstFetch = vi.fn(() => new Promise(() => {}));
+        const queue = buildQueue(999999);
+        void queue.enqueue('url1', 1, firstFetch).catch(() => {});
         void queue.enqueue('url2', 1, () => new Promise(() => {})).catch(() => {});
 
+        // Cross-tab sync reads storage before the first dequeue, so wait for the
+        // active request to start before clearing the remaining queued item.
+        await vi.waitFor(() => expect(firstFetch).toHaveBeenCalledOnce());
         const count = queue.clear();
         expect(count).toBe(1);
     });
@@ -31,8 +38,8 @@ describe('RequestQueue', () => {
         });
 
         const interval = 100;
-        const queue1 = new RequestQueue(mockAdapter, interval, 'sync-key');
-        const queue2 = new RequestQueue(mockAdapter, interval, 'sync-key');
+        const queue1 = buildQueue(interval, mockAdapter);
+        const queue2 = buildQueue(interval, mockAdapter);
 
         const start = Date.now();
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
@@ -46,9 +53,43 @@ describe('RequestQueue', () => {
         expect(fetchFn).toHaveBeenCalledTimes(2);
     });
 
+    it('paces requests per provider key', async () => {
+        vi.useFakeTimers({ now: Date.now() });
+        try {
+            const storage = new Map<string, string>();
+            const adapter = buildMockAdapter().build();
+            adapter.storageGet = vi.fn(async (key: string) => storage.get(key));
+            adapter.storageSet = vi.fn(async (key: string, value: string | boolean) => {
+                storage.set(key, String(value));
+            });
+            const interval = 1000;
+            const fetchFn = vi.fn().mockResolvedValue({ ok: true });
+            const xmdbKey = PROVIDER_RATE_LIMITS[ApiSource.XMDB].syncKey;
+            const omdbKey = PROVIDER_RATE_LIMITS[ApiSource.OMDB].syncKey;
+
+            await new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-1', 0, fetchFn);
+            expect(fetchFn).toHaveBeenCalledTimes(1);
+
+            const otherProvider = new RequestQueue(adapter, interval, omdbKey).enqueue('omdb-1', 0, fetchFn);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
+            await otherProvider;
+
+            const sameProvider = new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-2', 0, fetchFn);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
+
+            await vi.advanceTimersByTimeAsync(interval);
+            await sameProvider;
+            expect(fetchFn).toHaveBeenCalledTimes(3);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('should respect priority and jump the queue', async () => {
         const interval = 50;
-        const queue = new RequestQueue(undefined, interval);
+        const queue = buildQueue(interval);
         const results: string[] = [];
         const fetchFn = async (url: string) => {
             results.push(url);
@@ -63,12 +104,14 @@ describe('RequestQueue', () => {
 
         await Promise.all([p1, p2, p3]);
 
-        expect(results).toEqual(['first', 'high', 'low']);
+        // The storage read keeps the queue from dequeuing until all three requests
+        // are enqueued, so priority decides the first dispatch.
+        expect(results).toEqual(['high', 'first', 'low']);
     });
 
     it('should fall back to 0 when stored timestamp is not a valid number', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo('corrupted').build();
-        const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
+        const queue = buildQueue(100, mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn);
         expect(fetchFn).toHaveBeenCalledOnce();
@@ -79,7 +122,7 @@ describe('RequestQueue', () => {
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
             .build();
-        const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
+        const queue = buildQueue(0, mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
 
         await queue.enqueue('url1', 0, fetchFn);
@@ -94,7 +137,7 @@ describe('RequestQueue', () => {
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
             .build();
-        const queue = new RequestQueue(mockAdapter, 100);
+        const queue = buildQueue(100, mockAdapter);
         const mockFetch = async () => ({ status: 200 });
 
         const results = await Promise.all([
@@ -112,7 +155,7 @@ describe('RequestQueue', () => {
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
             .build();
-        const queue = new RequestQueue(mockAdapter, 0, 'sync-key');
+        const queue = buildQueue(0, mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn);
         // Two reads per request: one at loop start, one pre-claim
@@ -130,7 +173,7 @@ describe('RequestQueue', () => {
             // 2nd call is the pre-claim re-read - simulate another tab just fired
             return callCount === 2 ? recentTime.toString() : staleTime;
         });
-        const queue = new RequestQueue(mockAdapter, 100, 'sync-key');
+        const queue = buildQueue(100, mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
         await queue.enqueue('url', 0, fetchFn);
         // loop1-start -> stale (wait=0), pre-claim -> recent (re-loop),

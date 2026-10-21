@@ -280,9 +280,9 @@ export class SettingsView {
         btn.textContent = field.actionLabel ?? '';
         btn.addEventListener('click', () => {
             if (field.key === 'clearCache') {
-                this.#actions.onClearCache();
+                void this.#actions.onClearCache();
             } else if (field.key === 'resetClients') {
-                this.#actions.onResetClients();
+                void this.#actions.onResetClients();
             }
         });
         return btn;
@@ -366,8 +366,8 @@ export class SettingsView {
             const eventType = (input as HTMLInputElement).type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, () => {
                 if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
-                this.#debounceTimer = setTimeout(async () => {
-                    await this.#actions.onSave();
+                this.#debounceTimer = setTimeout(() => {
+                    void this.#actions.onSave();
                 }, AUTOSAVE_DEBOUNCE_MS);
             });
         }

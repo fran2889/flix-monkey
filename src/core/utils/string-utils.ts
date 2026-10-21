@@ -6,8 +6,8 @@
 /**
  * Converts a string to a URL-friendly slug.
  *
- * @param {string} str - Input string to slugify
- * @returns {string} URL-friendly slug string
+ * @param str - Input string to slugify
+ * @returns URL-friendly slug string
  */
 export function slugify(str: string): string {
     let slug = '';

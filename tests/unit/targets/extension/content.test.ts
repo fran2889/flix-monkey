@@ -96,6 +96,18 @@ describe('content.js entry point', () => {
         expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
     });
 
+    it('logs a startup failure when migrations reject', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        migrationPromise = Promise.reject(new Error('migration boom'));
+
+        await import('../../../../src/targets/extension/content');
+
+        await vi.waitFor(() => {
+            expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));
+        });
+        errorSpy.mockRestore();
+    });
+
     it('should call startApp once', async () => {
         await startAfterMigrations();
         expect(startAppSpy).toHaveBeenCalledOnce();

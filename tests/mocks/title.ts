@@ -5,9 +5,9 @@
 import { Title } from '../../src/core/title';
 
 function buildTitle() {
-    // Default all Title fields to undefined for consistency
+    // Default all optional Title fields to undefined for consistency
     const props: {
-        displayTitle: string | undefined;
+        displayTitle: string;
         apiTitle: string | undefined;
         imdbId: string | undefined;
         imdbRating: number | undefined;
@@ -18,7 +18,7 @@ function buildTitle() {
         source: string | undefined;
         type: string | undefined;
     } = {
-        displayTitle: undefined,
+        displayTitle: 'Test Title',
         apiTitle: undefined,
         imdbId: undefined,
         imdbRating: undefined,
@@ -30,7 +30,7 @@ function buildTitle() {
         type: undefined,
     };
     return {
-        withDisplayTitle(value: string | undefined) {
+        withDisplayTitle(value: string) {
             props.displayTitle = value;
             return this;
         },
@@ -131,7 +131,7 @@ buildTitle.fromCacheJSON = (json: unknown) => {
     if (!obj) return undefined;
     return new Title({
         apiTitle: (extractFromObj(obj, 'apiTitle') as string | undefined) ?? undefined,
-        displayTitle: (extractFromObj(obj, 'displayTitle') as string | undefined) ?? undefined,
+        displayTitle: (extractFromObj(obj, 'displayTitle') as string | undefined) ?? 'Test Title',
         imdbId: (extractFromObj(obj, 'imdbId') as string | undefined) ?? undefined,
         imdbRating: (extractFromObj(obj, 'imdbRating') as number | undefined) ?? undefined,
         imdbVotes: (extractFromObj(obj, 'imdbVotes') as number | undefined) ?? undefined,

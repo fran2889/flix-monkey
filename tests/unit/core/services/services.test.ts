@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-// @ts-nocheck - Test file with mock objects that don't fully implement types
 import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -17,12 +16,13 @@ import {
     HboMaxSurfaceManager,
     NetflixSurfaceManager,
 } from '../../../../src/core/surfaces/index';
+import { buildConfig } from '../../../mocks/config';
 
 describe('StreamingService', () => {
     it.each([
-        ['domains', service => service.domains],
-        ['SurfaceManager', service => service.SurfaceManager],
-        ['isEnabled', service => service.isEnabled({ getBool: () => true })],
+        ['domains', (service: StreamingService) => service.domains],
+        ['SurfaceManager', (service: StreamingService) => service.SurfaceManager],
+        ['isEnabled', (service: StreamingService) => service.isEnabled(buildConfig().build())],
     ])('throws on unimplemented %s', (_member, access) => {
         const service = new StreamingService();
         assert.throws(() => access(service), /Not implemented/);
@@ -36,7 +36,8 @@ describe.each([
 ])('%s service', (_name, Service, SurfaceManager, configKey) => {
     it('selects its surface manager and enablement setting', () => {
         const service = new Service();
-        const config = { getBool: vi.fn().mockReturnValue(false) };
+        const config = buildConfig().build();
+        vi.spyOn(config, 'getBool').mockReturnValue(false);
 
         expect(service.SurfaceManager).toBe(SurfaceManager);
         expect(service.isEnabled(config)).toBe(false);

@@ -18,18 +18,21 @@ interface MigrationResponse {
     error?: string;
 }
 
-/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ (async (): Promise<void> => {
-    const adapter = new WebExtensionAdapter();
+const adapter = new WebExtensionAdapter();
+const logger = new Logger(adapter);
+
+/* NOSONAR: MV3 options bundles are classic IIFE bundles, so top-level await is unavailable. */ void (async (): Promise<void> => {
     const migrationResponse: MigrationResponse = await browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' });
     if (migrationResponse?.error) {
         throw new Error(migrationResponse.error);
     }
 
-    const logger = new Logger(adapter);
     const config = new ConfigManager(adapter, logger);
     const cacheManager = new CacheManager(adapter, config, logger);
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
     const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
     await ui.render(document.body);
-})();
+})().catch((error: unknown) => {
+    logger.error('FlixMonkey options page failed to start', error);
+});

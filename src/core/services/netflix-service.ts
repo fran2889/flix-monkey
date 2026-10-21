@@ -11,31 +11,31 @@ import { StreamingService } from './base-streaming-service';
 /** Netflix streaming service implementation. */
 export class NetflixService extends StreamingService {
     /**
-     * @param _configManager - Current application configuration.
+     * @param configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */
-    isEnabled(_configManager: ConfigManager): boolean {
-        return _configManager.getBool('enableNetflix');
+    override isEnabled(configManager: ConfigManager): boolean {
+        return configManager.getBool('enableNetflix');
     }
 
     /**
      * @returns Root domains or exact hostnames without a protocol, port, or path.
      */
-    get domains(): readonly string[] {
+    override get domains(): readonly string[] {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
     }
 
     /**
      * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
      */
-    get SurfaceManager(): ServiceSurfaceManager {
+    override get SurfaceManager(): ServiceSurfaceManager {
         return NetflixSurfaceManager;
     }
 
     /**
      * @returns Optional presentation values consumed by OverlayRenderer.
      */
-    get constants(): ServicePresentation {
+    override get constants(): ServicePresentation {
         return Object.freeze({
             TOP_10_SELECTORS: Object.freeze(['.title-card-top-10', '[data-uia="ranked-card"]']),
         });

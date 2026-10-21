@@ -2,13 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
 import { CONFIG_FIELDS, ConfigManager, type ConfigValueType } from '../../../../src/core/config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
-import { Logger } from '../../../../src/core/logger';
+import type { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
@@ -206,7 +207,7 @@ describe('SettingsUI', () => {
         });
 
         it('shows an error when clearing fails', async () => {
-            (mockCacheManager.clear as import('vitest').Mock).mockRejectedValue(new Error('disk full'));
+            (mockCacheManager.clear as Mock).mockRejectedValue(new Error('disk full'));
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
@@ -234,7 +235,7 @@ describe('SettingsUI', () => {
 
     describe('Disabled provider reset', () => {
         it('resets clients and shows re-enabled names', async () => {
-            (mockDisabledClientsManager.resetAll as import('vitest').Mock).mockResolvedValue(['omdb', 'tmdb']);
+            (mockDisabledClientsManager.resetAll as Mock).mockResolvedValue(['omdb', 'tmdb']);
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
@@ -258,9 +259,7 @@ describe('SettingsUI', () => {
         });
 
         it('shows an error when reset fails', async () => {
-            (mockDisabledClientsManager.resetAll as import('vitest').Mock).mockRejectedValue(
-                new Error('storage unavailable')
-            );
+            (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue(new Error('storage unavailable'));
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();

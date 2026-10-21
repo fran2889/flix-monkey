@@ -4,7 +4,8 @@
  */
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
 import { FlixMonkeyError } from '../core/utils/index';
-import { HttpFetchOptions, PlatformAdapter, StorageValue } from './adapter';
+import type { HttpFetchOptions, StorageValue } from './adapter';
+import { PlatformAdapter } from './adapter';
 
 /**
  * Userscript platform adapter using GM_* APIs.
@@ -14,18 +15,18 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Retrieves a value from GM storage.
      *
      * @param key - Storage key.
-     * @returns {Promise<StorageValue | undefined>} The stored value, or `undefined` if the key does not exist.
+     * @returns The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(key: string): Promise<StorageValue | undefined> {
+    override async storageGet(key: string): Promise<StorageValue | undefined> {
         return GM_getValue(key) ?? undefined;
     }
 
     /**
      * Retrieves all key-value pairs from GM storage.
      *
-     * @returns {Promise<Record<string, StorageValue>>} All stored entries.
+     * @returns All stored entries.
      */
-    async storageGetAll(): Promise<Record<string, StorageValue>> {
+    override async storageGetAll(): Promise<Record<string, StorageValue>> {
         const keys = GM_listValues();
         const all: Record<string, StorageValue> = {};
         for (const key of keys) {
@@ -42,9 +43,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      *
      * @param key - Storage key.
      * @param value - Value to store.
-     * @returns {Promise<void>}
+     * @returns Resolves when the value is stored.
      */
-    async storageSet(key: string, value: StorageValue): Promise<void> {
+    override async storageSet(key: string, value: StorageValue): Promise<void> {
         GM_setValue(key, value);
     }
 
@@ -52,9 +53,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Stores multiple key-value pairs in GM storage.
      *
      * @param values - Object of key/value pairs to store.
-     * @returns {Promise<void>}
+     * @returns Resolves when all values are stored.
      */
-    async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
+    override async storageSetMany(values: Record<string, StorageValue>): Promise<void> {
         for (const [key, value] of Object.entries(values)) {
             GM_setValue(key, value);
         }
@@ -64,9 +65,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Removes a value from GM storage.
      *
      * @param key - Storage key to delete.
-     * @returns {Promise<void>}
+     * @returns Resolves when the value is removed.
      */
-    async storageDelete(key: string): Promise<void> {
+    override async storageDelete(key: string): Promise<void> {
         GM_deleteValue(key);
     }
 
@@ -74,9 +75,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Retrieves all storage keys matching the given prefix.
      *
      * @param prefix - Key prefix to match.
-     * @returns {Promise<string[]>} Matching keys.
+     * @returns Matching keys.
      */
-    async storageGetKeys(prefix: string): Promise<string[]> {
+    override async storageGetKeys(prefix: string): Promise<string[]> {
         const keys = GM_listValues();
         return keys.filter((key: string) => key.startsWith(prefix));
     }
@@ -88,9 +89,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      *
      * @param url - Request URL.
      * @param options - Fetch options.
-     * @returns {Promise<unknown>} Parsed response body (JSON object or string).
+     * @returns Parsed response body (JSON object or string).
      */
-    async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
+    override async httpFetch(url: string, options: HttpFetchOptions = {}): Promise<unknown> {
         const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
 
         return new Promise((resolve, reject) => {
@@ -134,9 +135,9 @@ export class UserscriptAdapter extends PlatformAdapter {
      * Retrieves configuration value (live-read from GM storage).
      *
      * @param key - Config key.
-     * @returns {string | boolean | undefined} The current config value, or `undefined` if absent.
+     * @returns The current config value, or `undefined` if absent.
      */
-    configGet(key: string): string | boolean | undefined {
+    override configGet(key: string): string | boolean | undefined {
         return GM_getValue<string | boolean | undefined>(key);
     }
 
@@ -146,7 +147,7 @@ export class UserscriptAdapter extends PlatformAdapter {
      * @param label - Menu label.
      * @param fn - Function to call when menu command is clicked.
      */
-    registerMenuCommand(label: string, fn: () => void): void {
+    override registerMenuCommand(label: string, fn: () => void): void {
         GM_registerMenuCommand(label, fn);
     }
 }

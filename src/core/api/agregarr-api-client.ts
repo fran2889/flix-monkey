@@ -8,7 +8,7 @@ import { ApiSource } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
-import { RATE_LIMITS } from '../rate-limits';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
@@ -35,13 +35,14 @@ export class AgregarrApiClient extends BaseApiClient {
         logger: Logger,
         overrideManager: IdOverrideManager
     ) {
+        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.AGREGARR];
         super(
             adapter,
             config,
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.AGREGARR]),
+            new RequestQueue(adapter, minIntervalMs, syncKey),
             ApiSource.AGREGARR
         );
     }

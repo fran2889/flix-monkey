@@ -9,7 +9,7 @@ import { ApiSource } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
-import { RATE_LIMITS } from '../rate-limits';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
@@ -64,13 +64,14 @@ export class OmdbApiClient extends BaseApiClient {
         logger: Logger,
         overrideManager: IdOverrideManager
     ) {
+        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
         super(
             adapter,
             config,
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB]),
+            new RequestQueue(adapter, minIntervalMs, syncKey),
             ApiSource.OMDB
         );
     }
@@ -80,7 +81,7 @@ export class OmdbApiClient extends BaseApiClient {
      *
      * @returns A health result suitable for provider selection.
      */
-    async getStatus(): Promise<ClientStatus> {
+    override async getStatus(): Promise<ClientStatus> {
         const apiKey = this.config.get('omdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
@@ -122,7 +123,6 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
-            // @ts-ignore - TypeScript incorrectly infers parameter type due to exactOptionalPropertyTypes
             return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
         }
         return searchTitle;

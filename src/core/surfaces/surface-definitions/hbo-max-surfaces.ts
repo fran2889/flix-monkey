@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
+import type { Logger } from '../../logger';
 import { containerFromParent, SurfaceManager } from '../surface-manager';
 
 const HBO_MAX_TITLE_PATTERNS = Object.freeze([
@@ -88,7 +89,7 @@ export class HboMaxSurfaceManager extends SurfaceManager {
      *
      * @param logger - For logging surface discovery issues.
      */
-    constructor(logger: import('../../logger').Logger) {
+    constructor(logger: Logger) {
         super(logger, HBO_MAX_SURFACES);
     }
 }

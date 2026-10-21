@@ -121,4 +121,23 @@ describe('options.js entry point', () => {
         expect(capturedInstance).not.toBeNull();
         expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
+
+    it('logs startup failures through the logger', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        let rejectMigrations!: (_reason: unknown) => void;
+        migrationPromise = new Promise((_resolve, reject) => {
+            rejectMigrations = reject;
+        });
+
+        await import('../../../../src/targets/extension/options');
+        rejectMigrations(new Error('migration boom'));
+
+        await vi.waitFor(() => {
+            expect(errorSpy).toHaveBeenCalledWith(
+                '[FlixMonkey] FlixMonkey options page failed to start',
+                expect.any(Error)
+            );
+        });
+        errorSpy.mockRestore();
+    });
 });

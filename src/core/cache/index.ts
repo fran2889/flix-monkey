@@ -4,4 +4,5 @@
  */
 
 export { CacheEntry } from './cache-entry';
+export type { CacheStore } from './cache-manager';
 export { CacheManager } from './cache-manager';

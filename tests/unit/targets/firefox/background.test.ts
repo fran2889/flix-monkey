@@ -34,7 +34,7 @@ describe('Firefox Background Script', () => {
                 installedListener = fn;
             }
         );
-        browser.runtime.openOptionsPage = vi.fn();
+        browser.runtime.openOptionsPage = vi.fn().mockResolvedValue(undefined);
         browser.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
             actionListener = fn;
         });
@@ -62,7 +62,7 @@ describe('Firefox Background Script', () => {
     it.each([{ reason: 'install' }, { reason: 'update' }])(
         'runs migrations when the extension is $reason',
         async details => {
-            installedListener(details);
+            await installedListener(details);
             await Promise.resolve();
             expect(executeMigrations).toHaveBeenCalledOnce();
         }
@@ -101,7 +101,7 @@ describe('Firefox Background Script', () => {
         const customTimeout = 1234;
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
+        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
 
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), customTimeout);
         setTimeoutSpy.mockRestore();
@@ -109,14 +109,14 @@ describe('Firefox Background Script', () => {
 
     it('should fall back to DEFAULT_FETCH_TIMEOUT (8000ms)', async () => {
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} });
+        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} });
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);
         setTimeoutSpy.mockRestore();
     });
 
     it('should actually abort fetch when timer fires', async () => {
         const customTimeout = 500;
-        messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
+        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
 
         const fetchMock = global.fetch as unknown as {
             mock: { calls: Array<[string, { signal: { aborted: boolean } }]> };
@@ -191,8 +191,8 @@ describe('Firefox Background Script', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should open options page when action icon is clicked', () => {
-        actionListener();
+    it('should open options page when action icon is clicked', async () => {
+        await actionListener();
         expect(browser.runtime.openOptionsPage).toHaveBeenCalled();
     });
 });

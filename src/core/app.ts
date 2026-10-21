@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { PlatformAdapter } from '../platform/adapter';
+import type { BaseApiClient } from './api/base-api-client';
 import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index';
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
 import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants';
 import { DisabledClientsManager, type DisabledClientsManager as DisabledClientsManagerType } from './disabled-clients';
-import { FadeManager, type FadeManager as FadeManagerType, nextFadeState } from './fade-manager';
+import {
+    FadeManager,
+    type FadeManager as FadeManagerType,
+    type FadeOverrideState,
+    nextFadeState,
+} from './fade-manager';
 import { IdOverrideManager, type IdOverrideManager as IdOverrideManagerType } from './id-override-manager';
 import { Logger } from './logger';
 import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './overlay';
@@ -122,12 +128,12 @@ export class FlixMonkeyApp {
         this.#originalPushState = history.pushState as (..._args: unknown[]) => void;
         this.#originalReplaceState = history.replaceState as (..._args: unknown[]) => void;
 
-        history.pushState = (..._args: unknown[]): void => {
-            this.#originalPushState?.apply(history, _args);
+        history.pushState = (...args: unknown[]): void => {
+            this.#originalPushState?.apply(history, args);
             this.#debouncedDecorate();
         };
-        history.replaceState = (..._args: unknown[]): void => {
-            this.#originalReplaceState?.apply(history, _args);
+        history.replaceState = (...args: unknown[]): void => {
+            this.#originalReplaceState?.apply(history, args);
             this.#debouncedDecorate();
         };
 
@@ -220,7 +226,7 @@ export class FlixMonkeyApp {
             dedupKey: string;
             fadeable: boolean;
             showFadeToggle: boolean;
-            fadeOverride: import('./fade-manager').FadeOverrideState;
+            fadeOverride: FadeOverrideState;
         }
     ): void {
         if (this.#renderer.hasOverlay(container as HTMLElement) || !document.contains(container)) return;
@@ -228,15 +234,19 @@ export class FlixMonkeyApp {
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
         this.#renderer.applyFade(container as HTMLElement, shouldFade);
         (container as HTMLElement).dataset.fmKey = dedupKey;
-        const displayTitle = data.displayTitle ?? 'Unknown';
+        const displayTitle = data.displayTitle;
         this.#renderer.injectOverlay(
             container as HTMLElement,
             data,
             (dt: string) => {
-                this.#handleEditClick(dt, data.imdbId);
+                this.#handleEditClick(dt, data.imdbId).catch(err =>
+                    this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
+                );
             },
             (dt: string) => {
-                this.#handleRefreshClick(dt);
+                this.#handleRefreshClick(dt).catch(err =>
+                    this.#logger.error(`Failed to refresh ratings for "${dt}"`, err)
+                );
             },
             displayTitle,
             showFadeToggle ? fadeOverride : undefined,
@@ -256,8 +266,7 @@ export class FlixMonkeyApp {
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
-        const currentState: import('./fade-manager').FadeOverrideState =
-            domState === 'auto' ? undefined : (domState as 'always' | 'never');
+        const currentState: FadeOverrideState = domState === 'auto' ? undefined : (domState as 'always' | 'never');
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
@@ -365,7 +374,7 @@ function createApiClient(
     disabledManager: DisabledClientsManagerType,
     logger: Logger,
     overrideManager: IdOverrideManagerType
-): import('./api/base-api-client').BaseApiClient {
+): BaseApiClient {
     const provider = config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
@@ -396,7 +405,7 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const overrideManager = new IdOverrideManager(adapter);
     const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
-    const surfaces = new currentService.SurfaceManager(logger as never);
+    const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter, configManager);
     const app = new FlixMonkeyApp(logger, cache, fadeManager, overrideManager, renderer, surfaces, api);

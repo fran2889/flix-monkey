@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { Mock } from 'vitest';
-// eslint-disable-next-line no-duplicate-imports
 import { vi } from 'vitest';
 
 /**

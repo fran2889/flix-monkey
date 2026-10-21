@@ -8,18 +8,18 @@
  */
 export interface BuildImdbUrlOptions {
     imdbId?: string | undefined;
-    displayTitle: string | undefined;
+    displayTitle: string;
 }
 
 /**
  * Builds the IMDb URL for a title, falling back to an IMDb search when no
  * IMDb ID is known.
  *
- * @param {BuildImdbUrlOptions} params - URL building options
- * @returns {string} IMDb title URL, or an IMDb search URL.
+ * @param params - URL building options
+ * @returns IMDb title URL, or an IMDb search URL.
  */
 export function buildImdbUrl({ imdbId, displayTitle }: BuildImdbUrlOptions): string {
     return imdbId
         ? `https://www.imdb.com/title/${imdbId}/`
-        : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle ?? '')}`;
+        : `https://www.imdb.com/find/?q=${encodeURIComponent(displayTitle)}`;
 }

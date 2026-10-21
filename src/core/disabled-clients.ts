@@ -12,7 +12,7 @@ export class DisabledClientsManager {
     readonly #adapter: PlatformAdapter;
 
     /**
-     * @param adapter
+     * @param adapter - Platform storage adapter.
      */
     constructor(adapter: PlatformAdapter) {
         this.#adapter = adapter;

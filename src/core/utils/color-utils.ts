@@ -87,10 +87,10 @@ function hueToRgb(p: number, q: number, t: number): number {
 /**
  * Interpolates between two colors by progress amount, converting through HSL space for smooth transitions.
  *
- * @param {number} progress - Interpolation factor (0-1), where 0 = startHex, 1 = endHex.
- * @param {string} startHex - Starting hex color (e.g., '#ff0000').
- * @param {string} endHex - Ending hex color (e.g., '#00ff00').
- * @returns {string} Interpolated RGB color string in 'rgb(R, G, B)' format.
+ * @param progress - Interpolation factor (0-1), where 0 = startHex, 1 = endHex.
+ * @param startHex - Starting hex color (e.g., '#ff0000').
+ * @param endHex - Ending hex color (e.g., '#00ff00').
+ * @returns Interpolated RGB color string in 'rgb(R, G, B)' format.
  */
 export function interpolateColor(progress: number, startHex: string, endHex: string): string {
     const startRgb = parseHex(startHex);

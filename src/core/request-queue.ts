@@ -5,23 +5,22 @@
 import type { PlatformAdapter } from '../platform/adapter';
 
 /**
- * Rate-limited request queue with priority-based execution and optional cross-tab synchronization.
+ * Rate-limited request queue with priority-based execution and cross-tab synchronization.
  */
 export class RequestQueue {
     readonly #queue: Array<QueueItem> = [];
     #isProcessing = false;
     #lastLocalReqTime = 0;
     readonly #minInterval: number;
-    readonly #globalSyncKey: string | undefined;
-    readonly #adapter: PlatformAdapter | undefined;
+    readonly #globalSyncKey: string;
+    readonly #adapter: PlatformAdapter;
 
     /**
-     * @param adapter - Storage adapter used for cross-tab coordination when `globalSyncKey` is set.
+     * @param adapter - Storage adapter used for cross-tab coordination.
      * @param minInterval - Minimum delay between dispatched requests.
-     * @param globalSyncKey - Storage key used to coordinate the delay across tabs; omit to rate-limit within this
-     * context only.
+     * @param globalSyncKey - Storage key used to coordinate the delay across tabs.
      */
-    constructor(adapter: PlatformAdapter | undefined, minInterval: number, globalSyncKey?: string) {
+    constructor(adapter: PlatformAdapter, minInterval: number, globalSyncKey: string) {
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
         this.#adapter = adapter;
@@ -36,11 +35,11 @@ export class RequestQueue {
      * @param fetchFn - Request operation.
      * @returns Result returned by fetchFn.
      */
-    async enqueue<T>(_url: string, _priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
+    async enqueue<T>(url: string, priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
         return new Promise((resolve: (_value: T | PromiseLike<T>) => void, reject) => {
             this.#queue.push({
-                url: _url,
-                priority: _priority,
+                url,
+                priority,
                 resolve: resolve as (_value2: unknown) => void,
                 reject,
                 fetchFn: fetchFn,
@@ -58,7 +57,7 @@ export class RequestQueue {
 
         while (this.#queue.length > 0) {
             const now = Date.now();
-            const lastGlobal = this.#globalSyncKey && this.#adapter ? await this.#getLastGlobalRequestTime() : 0;
+            const lastGlobal = await this.#getLastGlobalRequestTime();
 
             const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
             if (wait > 0) {
@@ -69,39 +68,30 @@ export class RequestQueue {
             }
 
             // Re-read storage before claiming the timeslot to reduce cross-tab races
-            if (this.#globalSyncKey && this.#adapter) {
-                const freshGlobal = await this.#getLastGlobalRequestTime();
-                if (Date.now() - freshGlobal < this.#minInterval) continue;
-            }
+            const freshGlobal = await this.#getLastGlobalRequestTime();
+            if (Date.now() - freshGlobal < this.#minInterval) continue;
 
-            const needsGlobalSync = this.#claimNextRequestSlot();
-            if (needsGlobalSync) await this.#syncClaimedRequestSlot();
+            this.#lastLocalReqTime = Date.now();
+            await this.#syncClaimedRequestSlot();
             await this.#dispatchNextRequest<T>();
         }
         this.#isProcessing = false;
     }
 
-    /** Only reached once globalSyncKey and adapter are both set. */
     async #getLastGlobalRequestTime(): Promise<number> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const storedTime = await this.#adapter!.storageGet(this.#globalSyncKey!);
-        const parsedTime = Number.parseInt(storedTime as string, 10);
+        const storedTime = await this.#adapter.storageGet(this.#globalSyncKey);
+        const parsedTime = Number.parseInt(String(storedTime), 10);
 
         return Number.isNaN(parsedTime) ? 0 : parsedTime;
     }
 
-    #claimNextRequestSlot(): boolean {
-        this.#lastLocalReqTime = Date.now();
-        return Boolean(this.#globalSyncKey && this.#adapter);
-    }
-
     async #syncClaimedRequestSlot(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        await this.#adapter!.storageSet(this.#globalSyncKey!, this.#lastLocalReqTime.toString());
+        await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
     async #dispatchNextRequest<T>(): Promise<void> {
-        const item = this.#queue.shift() as QueueItem<unknown>;
+        const item = this.#queue.shift();
+        if (!item) return;
         try {
             const result = await (item.fetchFn as (_url: string) => Promise<T>)(item.url);
             (item.resolve as (_value: T | PromiseLike<T>) => void)(result);
@@ -118,8 +108,8 @@ export class RequestQueue {
     clear(): number {
         const count = this.#queue.length;
         while (this.#queue.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const item = this.#queue.shift()!;
+            const item = this.#queue.shift();
+            if (!item) break;
             item.reject(new Error('Client Disabled'));
         }
         return count;

@@ -6,14 +6,22 @@ import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
 import type { Logger } from '../logger';
-import { Title } from '../title';
+import type { Title } from '../title';
 import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
 
 /**
+ * Cache read and write operations required by consumers such as ApiClientManager.
+ */
+export interface CacheStore {
+    read(displayTitle: string): Promise<CacheEntry | undefined>;
+    write(displayTitle: string, titleObj: Title): Promise<void>;
+}
+
+/**
  * Manages cached title data with configurable TTL based on rating and release year.
  */
-export class CacheManager {
+export class CacheManager implements CacheStore {
     readonly #prefix = 'fmc:';
     readonly #adapter: PlatformAdapter;
     readonly #config: ConfigManager;
@@ -62,7 +70,7 @@ export class CacheManager {
      *
      * @param displayTitle - Streaming-service title used to derive the cache key.
      * @param titleObj - Title to serialize.
-     * @returns {Promise<void>}
+     * @returns Resolves when the entry has been stored.
      */
     async write(displayTitle: string, titleObj: Title): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
@@ -96,7 +104,7 @@ export class CacheManager {
     /**
      * Removes all cached title entries from storage.
      *
-     * @returns {Promise<void>}
+     * @returns Resolves when every cached entry has been removed.
      */
     async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
@@ -109,7 +117,7 @@ export class CacheManager {
      * Removes a cached title entry by its display title.
      *
      * @param displayTitle - Streaming-service title used to derive the cache key.
-     * @returns {Promise<void>}
+     * @returns Resolves when the entry has been removed.
      */
     async delete(displayTitle: string): Promise<void> {
         const key = this.#getCacheKey(displayTitle);

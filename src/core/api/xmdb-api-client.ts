@@ -9,7 +9,7 @@ import { ApiSource } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
-import { RATE_LIMITS } from '../rate-limits';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
@@ -33,13 +33,14 @@ export class XmdbApiClient extends BaseApiClient {
         logger: Logger,
         overrideManager: IdOverrideManager
     ) {
+        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.XMDB];
         super(
             adapter,
             config,
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.XMDB], 'fm_last_req'),
+            new RequestQueue(adapter, minIntervalMs, syncKey),
             ApiSource.XMDB
         );
     }
@@ -49,7 +50,7 @@ export class XmdbApiClient extends BaseApiClient {
      *
      * @returns A health result suitable for provider selection.
      */
-    async getStatus(): Promise<ClientStatus> {
+    override async getStatus(): Promise<ClientStatus> {
         const apiKey = this.config.get('xmdbApiKey');
         if (!apiKey) return { healthy: false, reason: 'No API key configured' };
         return super.getStatus();
