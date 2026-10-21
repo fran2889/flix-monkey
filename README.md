@@ -63,7 +63,7 @@ Access settings via:
 
 - **Chrome**: Click the FlixMonkey icon in your browser toolbar, or open it from the extensions menu
 - **Firefox**: Click the FlixMonkey icon in your browser toolbar, or go to `about:addons`, select FlixMonkey and go to the **Preferences** tab
-- **Userscript**: On a supported streaming site, open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and click the **FlixMonkey Settings** menu item
+- **Userscript**: On a supported streaming service, open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and click the **FlixMonkey Settings** menu item
 
 Settings save automatically after a short delay. In the extension, badge position, visible ratings, and the fade threshold apply to open tabs without a reload. A rating provider change takes effect after you reload the page. In the userscript, reload the page after changing settings.
 
@@ -71,9 +71,9 @@ Settings save automatically after a short delay. In the extension, badge positio
 
 ### Streaming Services
 
-| Option  | Default     | Description                                                                 |
-| ------- | ----------- | --------------------------------------------------------------------------- |
-| Show on | All enabled | Enable or disable FlixMonkey individually for Netflix, HBO Max, and Disney+ |
+| Option  | Default     | Description                                                                    |
+| ------- | ----------- | ------------------------------------------------------------------------------ |
+| Show on | All enabled | Enable or disable FlixMonkey individually for each supported streaming service |
 
 ### Display Settings
 
@@ -130,7 +130,7 @@ Loading placeholder badges should appear immediately, before ratings are retriev
 1. Verify the extension is enabled in your browser toolbar.
 2. Verify FlixMonkey is enabled for this service under **Streaming Services > Show on**.
 3. For the userscript version, confirm your userscript manager is active and the FlixMonkey script is loaded.
-4. Refresh the Netflix, HBO Max, or Disney+ page.
+4. Refresh the streaming service page.
 5. Open browser developer tools (F12) and check the Console tab for errors.
 
 **Badges are showing but there are no ratings**
@@ -146,7 +146,7 @@ Ratings can be missing because the provider failed or was disabled, or because i
 
 FlixMonkey looks up titles by display name only, even when a service exposes additional card metadata. A mismatch can occur when multiple titles share the same name.
 
-1. Hover the rating badge. The tooltip shows the title and year returned by the rating provider. Verify they match the title on Netflix, HBO Max, or Disney+.
+1. Hover the rating badge. The tooltip shows the title and year returned by the rating provider. Verify they match the title shown on the streaming service.
 2. If the tooltip confirms a match, the provider rating may be outdated because it is not read directly from IMDb. Recent releases have shorter cache times so ratings update sooner.
 3. If the tooltip shows a different title, hover the badge and click the pencil button to set the correct IMDb ID. You can also select a different provider and clear the cache, because providers order search results differently.
 
@@ -154,9 +154,8 @@ FlixMonkey looks up titles by display name only, even when a service exposes add
 
 Most often, an MC/RT score is missing because the provider did not return one. Provider support does not guarantee a score for every title.
 
-1. If MC/RT scores are missing on all titles, check your settings.
-2. Check whether your provider supports these scores: OMDb supports both, and XMDb supports Metacritic only.
-3. Make sure Metacritic and Rotten Tomatoes are enabled under **Display Settings > Show**.
+1. If MC/RT scores are missing on all titles, check whether your provider supports them. The **Display Settings** section notes which providers supply these scores.
+2. Make sure Metacritic and Rotten Tomatoes are enabled under **Display Settings > Show**.
 
 **Ratings are loading slowly**
 
@@ -167,11 +166,11 @@ Rating providers are rate-limited, so FlixMonkey spreads requests over time. Cac
 
 **Still need help?**
 
-Netflix, HBO Max, or Disney+ may change their layouts, breaking title discovery or badge positioning. A new FlixMonkey version may also have introduced a bug.
+Streaming services may change their layouts, breaking title discovery or badge positioning. A new FlixMonkey version may also have introduced a bug.
 
 Please report these issues with as much detail as possible.
 
-1. If you use OMDb or XMDb, verify your API key is configured correctly.
+1. If your selected provider requires an API key, verify it is configured correctly.
 2. Open browser developer tools (F12) and check the Console and Network tabs for errors or relevant logs.
 3. Open a [GitHub issue](https://github.com/fran2889/flix-monkey/issues) with details about the problem and steps to reproduce it.
 
@@ -206,7 +205,7 @@ FlixMonkey does not collect, store, or transmit any personal data about you.
 
 **What it does:**
 
-- **Title lookups**: When you browse Netflix, HBO Max, or Disney+, the title names visible on the page, or any IMDb ID you set as an override, are sent to third-party rating APIs (IMDb Suggestions, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or streaming-service credentials are included in these requests.
+- **Title lookups**: When you browse a supported streaming service, the title names visible on the page, or any IMDb ID you set as an override, are sent to third-party rating APIs (IMDb Suggestions, Agregarr, OMDb, and XMDb) solely to retrieve ratings. No account information, viewing history, or streaming-service credentials are included in these requests.
 - **Local storage only**: Cached ratings, settings, and API keys stay in your browser's extension storage (or userscript storage). Apart from the API requests described above, this data never leaves your device. An OMDb or XMDb API key is sent only to the provider it belongs to.
 - **No telemetry**: FlixMonkey does not include any analytics, crash reporting, or usage tracking of any kind.
 - **No developer servers**: All network requests go directly from your browser to the third-party rating APIs. There is no intermediary server operated by this project.
