@@ -7,7 +7,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=CI)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=Nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
 
-See IMDb ratings on Netflix, HBO Max, and Disney+, with Metacritic and Rotten Tomatoes scores when enabled.
+See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix, HBO Max, and Disney+.
 
 ---
 
@@ -46,20 +46,18 @@ Use the links below to install FlixMonkey for your browser.
 
 ## Features
 
-- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them; OMDb supplies both, and XMDb supplies Metacritic only
+- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
 - **Color-Coded Ratings**: Rating badges use a gradient from red (IMDb 5.0 or below; RT/MC 50% or below) to green (IMDb 8.5 or above; RT/MC 85% or above)
 - **Click to Open**: Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
 - **Fade Low-Rated Titles**: Fade titles rated below your chosen IMDb threshold
 - **IMDb ID Overrides**: Hover a rating badge and click the pencil button to correct a mismatched IMDb ID
-- **Smart Caching**: Cached ratings make repeat lookups instant, including across tabs
-- **Auto-Disable**: A provider that returns a client error, such as an invalid API key or rate limit, is disabled for 1 hour to avoid repeated failing requests
+- **Smart Caching**: Cached ratings make repeat lookups instant
+- **Auto-Disable**: A rating provider that returns a client error, such as an invalid API key or rate limit, is disabled for 1 hour to avoid repeated failing requests
 - **Customizable**: Change badge position, choose rating provider, and more
 
 ---
 
 ## Settings
-
-> FlixMonkey supports three rating providers. Agregarr is the default: it requires no API key and returns IMDb ratings only. OMDb and XMDb require free API keys; OMDb returns IMDb, Rotten Tomatoes, and Metacritic scores, while XMDb returns IMDb and Metacritic scores.
 
 Access settings via:
 
@@ -67,7 +65,9 @@ Access settings via:
 - **Firefox**: Click the FlixMonkey icon in your browser toolbar, or go to `about:addons`, select FlixMonkey and go to the **Preferences** tab
 - **Userscript**: On a supported streaming site, open your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) and click the **FlixMonkey Settings** menu item
 
-![FlixMonkey settings panel in Firefox](screenshots/firefox-settings.png)
+Settings save automatically after a short delay. In the extension, badge position, visible ratings, and the fade threshold apply to open tabs without a reload. A rating provider change takes effect after you reload the page. In the userscript, reload the page after changing settings.
+
+![FlixMonkey settings in Firefox](screenshots/firefox-settings.png)
 
 ### Streaming Services
 
@@ -116,8 +116,6 @@ Access settings via:
 
 ### Settings Actions
 
-Settings save automatically after a short delay. In the extension, badge position, visible ratings, and the fade threshold apply to open tabs without a reload. A rating provider change takes effect after you reload the page. In the userscript, reload the page after changing settings.
-
 - **Clear Cache**: Remove all cached ratings, forcing fresh lookups for every title
 - **Reset Providers**: Re-enable rating providers that were automatically disabled after errors
 
@@ -129,8 +127,8 @@ Settings save automatically after a short delay. In the extension, badge positio
 
 Loading placeholder badges should appear immediately, before ratings are retrieved. If they do not, FlixMonkey is inactive or failed to load, or it is disabled for that service.
 
-1. Verify FlixMonkey is enabled for this service under **Streaming Services > Show on**.
-2. Verify the extension is enabled in your browser toolbar.
+1. Verify the extension is enabled in your browser toolbar.
+2. Verify FlixMonkey is enabled for this service under **Streaming Services > Show on**.
 3. For the userscript version, confirm your userscript manager is active and the FlixMonkey script is loaded.
 4. Refresh the Netflix, HBO Max, or Disney+ page.
 5. Open browser developer tools (F12) and check the Console tab for errors.
@@ -188,8 +186,7 @@ This project requires Node.js 24 or newer.
 ```bash
 npm install
 npm run build       # Build all targets
-npm run dev         # Watch mode with auto-rebuild
-npm run type-check  # Type-check without emitting files
+npm run dev      # Watch mode with auto-rebuild
 npm test            # Run unit and UI tests
 ```
 
