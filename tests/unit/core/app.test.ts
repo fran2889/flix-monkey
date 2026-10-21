@@ -2,11 +2,17 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
+import { AgregarrApiClient } from '../../../src/core/api/index';
 import { ApiClientManager } from '../../../src/core/api-manager';
 import { FlixMonkeyApp, startApp } from '../../../src/core/app';
+import { CacheManager } from '../../../src/core/cache/index';
+import { ConfigManager } from '../../../src/core/config/index';
 import { DECORATION_DEBOUNCE_MS } from '../../../src/core/constants';
+import { DisabledClientsManager } from '../../../src/core/disabled-clients';
+import { FadeManager } from '../../../src/core/fade-manager';
+import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
 import { OverlayRenderer } from '../../../src/core/overlay';
 import { NetflixService } from '../../../src/core/services/index';
@@ -326,28 +332,10 @@ describe('App', () => {
     });
 
     it('should throw if init() is called twice on the same instance', () => {
-        const mockRenderer = {
-            injectStyles: vi.fn(),
-            hasOverlay: vi.fn().mockReturnValue(false),
-            isLoading: vi.fn().mockReturnValue(false),
-        };
-        const mockSurfaces = { discover: vi.fn().mockReturnValue([]) };
-        const mockFadeManager = {
-            getOverride: vi.fn().mockResolvedValue(undefined),
-            shouldFade: vi.fn().mockReturnValue(false),
-        };
-        const app = new FlixMonkeyApp(
-            buildLogger().build(),
-            {} as never,
-            mockFadeManager as never,
-            {} as never,
-            mockRenderer as never,
-            mockSurfaces as never,
-            {} as never
-        );
-        app.init();
-        expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
-        window.dispatchEvent(new Event('beforeunload'));
+        appRef = startApp(buildMockAdapter().build());
+        if (!appRef) throw new Error('App did not start');
+
+        expect(() => appRef?.init()).toThrow('FlixMonkeyApp already initialised');
     });
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
@@ -705,9 +693,16 @@ describe('App', () => {
     });
 
     describe('IMDb ID override handlers', () => {
-        let mockOverrideManager: { getImdbId: () => Promise<string | undefined>; setImdbId: () => Promise<void> };
-        let mockCache: { delete: () => Promise<void> };
+        let mockOverrideManager: { getImdbId: Mock; setImdbId: Mock };
+        let mockCache: { delete: Mock };
         let mockRenderer: Record<string, { mock: { calls: unknown[][] } }>;
+        let appLogger: Logger;
+        let cache: CacheManager;
+        let fadeManager: FadeManager;
+        let overrideManager: IdOverrideManager;
+        let renderer: OverlayRenderer;
+        let surfaces: NetflixSurfaceManager;
+        let api: ApiClientManager;
 
         /**
          * Decorates `container` and resolves with the click callbacks the app wires into
@@ -721,40 +716,32 @@ describe('App', () => {
             logger: Logger;
         }> => {
             mockRenderer = {
-                hasOverlay: vi.fn().mockReturnValue(false),
-                isLoading: vi.fn().mockReturnValue(false),
-                ensureRelative: vi.fn(),
-                injectLoadingOverlay: vi.fn(),
-                injectOverlay: vi.fn(),
-                injectStyles: vi.fn(),
-                removeLoadingOverlay: vi.fn(),
-                applyFade: vi.fn(),
+                hasOverlay: vi.spyOn(renderer, 'hasOverlay').mockReturnValue(false),
+                isLoading: vi.spyOn(renderer, 'isLoading').mockReturnValue(false),
+                ensureRelative: vi.spyOn(renderer, 'ensureRelative').mockImplementation(() => undefined),
+                injectLoadingOverlay: vi.spyOn(renderer, 'injectLoadingOverlay').mockImplementation(() => undefined),
+                injectOverlay: vi.spyOn(renderer, 'injectOverlay').mockImplementation(() => undefined),
+                injectStyles: vi.spyOn(renderer, 'injectStyles').mockImplementation(() => undefined),
+                removeLoadingOverlay: vi.spyOn(renderer, 'removeLoadingOverlay').mockImplementation(() => undefined),
+                applyFade: vi.spyOn(renderer, 'applyFade').mockImplementation(() => undefined),
             };
-            const logger = buildLogger().build();
-            const app = new FlixMonkeyApp(
-                logger,
-                mockCache as never,
-                {} as never,
-                mockOverrideManager as never,
-                mockRenderer as never,
-                {
-                    discover: vi
-                        .fn()
-                        .mockReturnValue([{ container, title: 'Test Movie', fadeable: false, showFadeToggle: false }]),
-                } as never,
-                { getData: vi.fn().mockResolvedValue({ imdbRating: 7.0, displayTitle: 'Test Movie' }) } as never
-            );
+            vi.spyOn(surfaces, 'discover').mockReturnValue([
+                { container, title: 'Test Movie', fadeable: false, showFadeToggle: false },
+            ]);
+            vi.spyOn(api, 'getData').mockResolvedValue(buildTitle.ratedMovie());
+
+            const app = new FlixMonkeyApp(appLogger, cache, fadeManager, overrideManager, renderer, surfaces, api);
             app.init();
 
             await vi.waitFor(() => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const calls = mockRenderer.injectOverlay.mock.calls[0] as unknown[];
+            const calls = mockRenderer.injectOverlay.mock.calls[0];
             const [, , onEditClick, onRefreshClick] = calls;
             return {
                 onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
-                logger,
+                logger: appLogger,
             };
         };
 
@@ -774,10 +761,22 @@ describe('App', () => {
         };
 
         beforeEach(() => {
-            mockCache = { delete: vi.fn().mockResolvedValue(undefined) };
+            const adapter = buildMockAdapter().build();
+            appLogger = buildLogger().build();
+            const config = new ConfigManager(adapter, appLogger);
+            cache = new CacheManager(adapter, config, appLogger);
+            fadeManager = new FadeManager(adapter, config);
+            overrideManager = new IdOverrideManager(adapter);
+            const disabledManager = new DisabledClientsManager(adapter);
+            const client = new AgregarrApiClient(adapter, config, disabledManager, appLogger, overrideManager);
+            api = new ApiClientManager(appLogger, cache, disabledManager, client);
+            surfaces = new NetflixSurfaceManager(appLogger);
+            renderer = new OverlayRenderer(config);
+
+            mockCache = { delete: vi.spyOn(cache, 'delete').mockResolvedValue(undefined) };
             mockOverrideManager = {
-                getImdbId: vi.fn().mockResolvedValue(undefined),
-                setImdbId: vi.fn().mockResolvedValue(undefined),
+                getImdbId: vi.spyOn(overrideManager, 'getImdbId').mockResolvedValue(undefined),
+                setImdbId: vi.spyOn(overrideManager, 'setImdbId').mockResolvedValue(undefined),
             };
         });
 
@@ -836,7 +835,7 @@ describe('App', () => {
         it('should prefill the prompt with the current override before the API IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
-            mockOverrideManager.getImdbId = vi.fn().mockResolvedValue('tt0000001');
+            mockOverrideManager.getImdbId.mockResolvedValue('tt0000001');
             const { onEditClick } = await decorateAndCaptureActions(container);
 
             const promptMock = await withPromptResult(null, () => onEditClick('Test Movie'));
@@ -857,7 +856,7 @@ describe('App', () => {
         });
 
         it('logs a failure from the edit handler', async () => {
-            mockOverrideManager.getImdbId = vi.fn().mockRejectedValue(new Error('storage failure'));
+            mockOverrideManager.getImdbId.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick, logger } = await decorateAndCaptureActions(container);
@@ -870,7 +869,7 @@ describe('App', () => {
         });
 
         it('logs a failure from the refresh handler', async () => {
-            mockCache.delete = vi.fn().mockRejectedValue(new Error('storage failure'));
+            mockCache.delete.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onRefreshClick, logger } = await decorateAndCaptureActions(container);
