@@ -9,7 +9,7 @@ import { ApiSource } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
-import { RATE_LIMIT_SYNC_KEYS, RATE_LIMITS } from '../rate-limits';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { BaseApiClient } from './base-api-client';
@@ -64,13 +64,14 @@ export class OmdbApiClient extends BaseApiClient {
         logger: Logger,
         overrideManager: IdOverrideManager
     ) {
+        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
         super(
             adapter,
             config,
             disabledManager,
             logger,
             overrideManager,
-            new RequestQueue(adapter, RATE_LIMITS[ApiSource.OMDB], RATE_LIMIT_SYNC_KEYS[ApiSource.OMDB]),
+            new RequestQueue(adapter, minIntervalMs, syncKey),
             ApiSource.OMDB
         );
     }

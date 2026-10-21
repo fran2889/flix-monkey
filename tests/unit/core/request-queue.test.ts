@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiSource } from '../../../src/core/constants';
-import { RATE_LIMIT_SYNC_KEYS } from '../../../src/core/rate-limits';
+import { PROVIDER_RATE_LIMITS } from '../../../src/core/rate-limits';
 import { RequestQueue } from '../../../src/core/request-queue';
 import { buildMockAdapter } from '../../mocks/adapter';
 
@@ -64,8 +64,8 @@ describe('RequestQueue', () => {
             });
             const interval = 1000;
             const fetchFn = vi.fn().mockResolvedValue({ ok: true });
-            const xmdbKey = RATE_LIMIT_SYNC_KEYS[ApiSource.XMDB];
-            const omdbKey = RATE_LIMIT_SYNC_KEYS[ApiSource.OMDB];
+            const xmdbKey = PROVIDER_RATE_LIMITS[ApiSource.XMDB].syncKey;
+            const omdbKey = PROVIDER_RATE_LIMITS[ApiSource.OMDB].syncKey;
 
             await new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-1', 0, fetchFn);
             expect(fetchFn).toHaveBeenCalledTimes(1);
