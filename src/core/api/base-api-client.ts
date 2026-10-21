@@ -13,13 +13,23 @@ import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
 /**
+ * API client operations required by consumers such as ApiClientManager.
+ */
+export interface ApiClient {
+    readonly source: ApiSourceType;
+    getStatus(): Promise<ClientStatus>;
+    fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined>;
+    disable(): Promise<void>;
+}
+
+/**
  * Abstract base class for API clients.
  *
  * Implements the template-method pattern: fetch orchestrates the
  * lookup by calling search (find a candidate) then getDetails
  * (hydrate ratings). Subclasses override those two methods for each provider.
  */
-export abstract class BaseApiClient {
+export abstract class BaseApiClient implements ApiClient {
     readonly #queue: RequestQueue;
     readonly #source: ApiSourceType;
     readonly #disabledManager: DisabledClientsManager;

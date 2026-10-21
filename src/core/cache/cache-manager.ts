@@ -11,9 +11,17 @@ import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
 
 /**
+ * Cache read and write operations required by consumers such as ApiClientManager.
+ */
+export interface CacheStore {
+    read(displayTitle: string): Promise<CacheEntry | undefined>;
+    write(displayTitle: string, titleObj: Title): Promise<void>;
+}
+
+/**
  * Manages cached title data with configurable TTL based on rating and release year.
  */
-export class CacheManager {
+export class CacheManager implements CacheStore {
     readonly #prefix = 'fmc:';
     readonly #adapter: PlatformAdapter;
     readonly #config: ConfigManager;

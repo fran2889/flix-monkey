@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { BaseApiClient } from './api/base-api-client';
-import type { CacheEntry, CacheManager } from './cache/index';
+import type { ApiClient } from './api/base-api-client';
+import type { CacheEntry, CacheStore } from './cache/index';
 import type { DisabledClientsManager } from './disabled-clients';
 import type { Logger } from './logger';
 import { Title } from './title';
@@ -12,8 +12,8 @@ import { Title } from './title';
  * Manages API clients, caching, and coordinates fetching rating data.
  */
 export class ApiClientManager {
-    readonly #cache: CacheManager;
-    readonly #client: BaseApiClient;
+    readonly #cache: CacheStore;
+    readonly #client: ApiClient;
     readonly #disabledManager: DisabledClientsManager;
     readonly #logger: Logger;
 
@@ -23,7 +23,7 @@ export class ApiClientManager {
      * @param disabledManager - Manager for tracking disabled API clients
      * @param client - API client instance for fetching data
      */
-    constructor(logger: Logger, cache: CacheManager, disabledManager: DisabledClientsManager, client: BaseApiClient) {
+    constructor(logger: Logger, cache: CacheStore, disabledManager: DisabledClientsManager, client: ApiClient) {
         this.#cache = cache;
         this.#disabledManager = disabledManager;
         this.#client = client;

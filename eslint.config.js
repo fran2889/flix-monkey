@@ -111,13 +111,6 @@ export default [
             '@typescript-eslint/no-unnecessary-type-assertion': 'off',
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
-            // Tests use @ts-nocheck for partial mocks; keep @ts-ignore banned.
-            '@typescript-eslint/ban-ts-comment': [
-                'error',
-                {
-                    'ts-nocheck': 'allow-with-description',
-                },
-            ],
         },
     },
     // 3. Production code must document intentional no-op functions.
