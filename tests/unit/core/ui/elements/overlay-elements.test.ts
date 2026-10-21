@@ -4,14 +4,16 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { Title } from '../../../../../src/core/title';
+import { Title, type TitleOptions } from '../../../../../src/core/title';
 import {
     createLoadingOverlayElement,
     createOverlayElement,
     type OverlayOptions,
 } from '../../../../../src/core/ui/overlay-elements';
 
-const defaultOptions: OverlayOptions = {
+const DEFAULT_DISPLAY_TITLE = 'Test';
+
+const defaultOverlayOptions = {
     overlayClass: 'fm-rating-overlay',
     showRtRating: false,
     showMcRating: false,
@@ -20,12 +22,16 @@ const defaultOptions: OverlayOptions = {
     onFadeToggleClick: undefined,
     onEditClick: (_displayTitle: string) => {},
     onRefreshClick: (_displayTitle: string) => {},
-    displayTitle: '',
+    displayTitle: DEFAULT_DISPLAY_TITLE,
     corner: 'top-left',
-};
+} satisfies OverlayOptions;
 
-function createOverlay(title: Partial<Title>, options: Partial<Parameters<typeof createOverlayElement>[1]> = {}) {
-    return createOverlayElement(new Title({ displayTitle: 'Test', ...title }), { ...defaultOptions, ...options });
+function createTitle(overrides: Partial<TitleOptions> = {}): Title {
+    return new Title({ displayTitle: DEFAULT_DISPLAY_TITLE, ...overrides });
+}
+
+function createOverlay(title: Partial<TitleOptions> = {}, options: Partial<OverlayOptions> = {}): HTMLElement {
+    return createOverlayElement(createTitle(title), { ...defaultOverlayOptions, ...options });
 }
 
 describe('createOverlayElement', () => {
@@ -58,7 +64,7 @@ describe('createOverlayElement', () => {
     });
 
     it('does not render optional ratings when disabled', () => {
-        const element = createOverlay({ imdbRating: 7, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com' });
+        const element = createOverlay({ imdbRating: 7, rtRating: 90, mcRating: 80 });
 
         expect(element.textContent).toContain('7.0');
         expect(element.textContent).not.toContain('RT');
@@ -71,7 +77,6 @@ describe('createOverlayElement', () => {
                 imdbRating: 8.5,
                 rtRating: 90,
                 mcRating: 80,
-                imdbUrl: 'https://imdb.com/title/tt1234567/',
                 imdbId: 'tt1234567',
             },
             { showRtRating: true, showMcRating: true }
@@ -96,7 +101,6 @@ describe('createOverlayElement', () => {
     it('shows N/A when imdbId is present but rating is missing', () => {
         const element = createOverlay({
             imdbId: 'tt1234567',
-            imdbUrl: 'https://imdb.com/title/tt1234567/',
             imdbRating: undefined,
         });
 
@@ -108,7 +112,7 @@ describe('createOverlayElement', () => {
         ['normal ratings', { imdbRating: 8.5, imdbVotes: 250000 }, 'IMDb: 8.5 (250k votes) · Open IMDb'],
         ['no ratings but IMDb ID present', { imdbRating: undefined, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
         ['missing IMDb ID', { imdbRating: undefined, imdbId: undefined }, 'IMDb: Not found · Search IMDb'],
-    ])('builds the tooltip title for %s', (_: string, title: Partial<Title>, expectedTitle: string) => {
+    ])('builds the tooltip title for %s', (_: string, title: Partial<TitleOptions>, expectedTitle: string) => {
         const element = createOverlay(title, { showRtRating: true });
 
         expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
@@ -145,7 +149,7 @@ describe('createOverlayElement', () => {
     });
 
     describe('fade toggle', () => {
-        const title = { imdbRating: 7, imdbUrl: 'http://imdb.com' };
+        const title = { imdbRating: 7 };
 
         it('does not render the toggle when the click callback is absent', () => {
             const element = createOverlay(title, { showFadeToggle: true });
@@ -214,14 +218,14 @@ describe('createOverlayElement', () => {
 
     describe('IMDb link', () => {
         it('opens in a new tab without leaking the referrer', () => {
-            const link = createOverlay({ imdbUrl: 'http://imdb.com' }).querySelector('a') as HTMLAnchorElement;
+            const link = createOverlay({ imdbId: 'tt1' }).querySelector('a') as HTMLAnchorElement;
 
             expect(link?.target).toBe('_blank');
             expect(link?.rel).toBe('noopener noreferrer');
         });
 
         it('stops propagation so the card does not navigate', () => {
-            const element = createOverlay({ imdbUrl: 'http://imdb.com' });
+            const element = createOverlay({ imdbId: 'tt1' });
             const link = element.querySelector('a') as HTMLElement;
             const event = new MouseEvent('click', { bubbles: true });
             const spy = vi.spyOn(event, 'stopPropagation');
@@ -235,7 +239,7 @@ describe('createOverlayElement', () => {
     describe('click propagation', () => {
         it('stops propagation on enabled MC and RT rating clicks', () => {
             const element = createOverlay(
-                { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbUrl: 'http://imdb.com', imdbId: 'tt1' },
+                { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbId: 'tt1' },
                 { showRtRating: true, showMcRating: true }
             );
 
@@ -260,7 +264,7 @@ describe('createOverlayElement', () => {
             [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
-        ])('formats tooltip for vote data %o', (titleData: Partial<Title>, expectedTitle: string) => {
+        ])('formats tooltip for vote data %o', (titleData: Partial<TitleOptions>, expectedTitle: string) => {
             const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
@@ -312,11 +316,8 @@ describe('createOverlayElement', () => {
             'uses the threshold color for %s',
             (_: string, rating: number, isPercentage: boolean, expectedColor: string) => {
                 const element = isPercentage
-                    ? createOverlay(
-                          { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
-                          { showRtRating: true }
-                      )
-                    : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+                    ? createOverlay({ imdbRating: 7, imdbId: 'tt1', rtRating: rating }, { showRtRating: true })
+                    : createOverlay({ imdbRating: rating, imdbId: 'tt1' });
                 const valueSpans = element.querySelectorAll('.fm-value');
                 const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
@@ -329,11 +330,8 @@ describe('createOverlayElement', () => {
             ['percentage rating', 70, true],
         ])('uses a gradient color for %s', (_: string, rating: number, isPercentage: boolean) => {
             const element = isPercentage
-                ? createOverlay(
-                      { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', rtRating: rating },
-                      { showRtRating: true }
-                  )
-                : createOverlay({ imdbRating: rating, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+                ? createOverlay({ imdbRating: 7, imdbId: 'tt1', rtRating: rating }, { showRtRating: true })
+                : createOverlay({ imdbRating: rating, imdbId: 'tt1' });
             const valueSpans = element.querySelectorAll('.fm-value');
             const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
@@ -341,16 +339,13 @@ describe('createOverlayElement', () => {
         });
 
         it('does not apply color to N/A', () => {
-            const element = createOverlay({ imdbRating: undefined, imdbId: 'tt1', imdbUrl: 'http://imdb.com' });
+            const element = createOverlay({ imdbRating: undefined, imdbId: 'tt1' });
 
             expect((element.querySelector('.fm-na') as HTMLElement)?.style.color).toBe('');
         });
 
         it('applies a gradient color to MC ratings', () => {
-            const element = createOverlay(
-                { imdbRating: 7, imdbId: 'tt1', imdbUrl: 'http://imdb.com', mcRating: 74 },
-                { showMcRating: true }
-            );
+            const element = createOverlay({ imdbRating: 7, imdbId: 'tt1', mcRating: 74 }, { showMcRating: true });
 
             expect((element.querySelectorAll('.fm-value')[1] as HTMLElement).style.color).toMatch(
                 /^rgb\(\d+, \d+, \d+\)$/
