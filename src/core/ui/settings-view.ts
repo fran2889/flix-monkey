@@ -7,6 +7,18 @@ import { type ConfigField, type ConfigValueType, GROUPS, ROW_LABELS } from '../c
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
 
+interface SettingsFieldRow {
+    id: string;
+    fields: ConfigField[];
+}
+
+interface SettingsGroup {
+    id: string;
+    label: string;
+    icon: string;
+    fields: SettingsFieldRow[];
+}
+
 /**
  * UI component that renders and manages the settings panel with grouped configuration fields.
  */
@@ -59,18 +71,8 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByGroup(): Array<{
-        id: string;
-        label: string;
-        icon: string;
-        fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-    }> {
-        const groups: Array<{
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        }> = [];
+    #groupFieldsByGroup(): SettingsGroup[] {
+        const groups: SettingsGroup[] = [];
         const fieldsByGroup: Record<string, ConfigField[]> = {};
 
         // ConfigField.group is a required GroupKey, so every field belongs to a group.
@@ -91,15 +93,7 @@ export class SettingsView {
         fieldsByGroup[groupId].push(field);
     }
 
-    #buildGroupElements(
-        groups: Array<{
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        }>,
-        fieldsByGroup: Record<string, ConfigField[]>
-    ): void {
+    #buildGroupElements(groups: SettingsGroup[], fieldsByGroup: Record<string, ConfigField[]>): void {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
             const groupInfo = GROUPS[groupId as keyof typeof GROUPS];
             groups.push({
@@ -111,8 +105,8 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByRow(fields: ConfigField[]): Array<{ id: string; fields: ConfigField[] }> {
-        const rows: Record<string, { id: string; fields: ConfigField[] }> = {};
+    #groupFieldsByRow(fields: ConfigField[]): SettingsFieldRow[] {
+        const rows: Record<string, SettingsFieldRow> = {};
         for (const field of fields) {
             const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
             if (!rows[rowId]) {
@@ -123,15 +117,7 @@ export class SettingsView {
         return Object.values(rows);
     }
 
-    #createGroupElement(
-        group: {
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createGroupElement(group: SettingsGroup, settings: Record<string, unknown>): HTMLElement {
         const container = document.createElement('div');
         container.className = 'settings-group';
 
@@ -165,7 +151,7 @@ export class SettingsView {
         return container;
     }
 
-    #getFieldClassName(row: { id: string; fields: readonly ConfigField[] }): string {
+    #getFieldClassName(row: SettingsFieldRow): string {
         const hasActions = row.fields.every((f): boolean => f.type === 'action');
         const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
 
@@ -174,7 +160,7 @@ export class SettingsView {
         return 'field';
     }
 
-    #createFieldLabel(row: { id: string; fields: readonly ConfigField[] }): HTMLLabelElement {
+    #createFieldLabel(row: SettingsFieldRow): HTMLLabelElement {
         const label = document.createElement('label');
         label.className = 'field-label';
 
@@ -209,10 +195,7 @@ export class SettingsView {
         return label;
     }
 
-    #createFieldValueContainer(
-        row: { id: string; fields: readonly ConfigField[] },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createFieldValueContainer(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
@@ -257,10 +240,7 @@ export class SettingsView {
         return valueContainer;
     }
 
-    #createFieldRow(
-        row: { id: string; fields: readonly ConfigField[] },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createFieldRow(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
         const fieldElement = document.createElement('div');
         fieldElement.className = this.#getFieldClassName(row);
 
