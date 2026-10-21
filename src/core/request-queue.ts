@@ -35,11 +35,11 @@ export class RequestQueue {
      * @param fetchFn - Request operation.
      * @returns Result returned by fetchFn.
      */
-    async enqueue<T>(_url: string, _priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
+    async enqueue<T>(url: string, priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
         return new Promise((resolve: (_value: T | PromiseLike<T>) => void, reject) => {
             this.#queue.push({
-                url: _url,
-                priority: _priority,
+                url,
+                priority,
                 resolve: resolve as (_value2: unknown) => void,
                 reject,
                 fetchFn: fetchFn,

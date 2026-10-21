@@ -11,11 +11,11 @@ import { StreamingService } from './base-streaming-service';
 /** Netflix streaming service implementation. */
 export class NetflixService extends StreamingService {
     /**
-     * @param _configManager - Current application configuration.
+     * @param configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */
-    override isEnabled(_configManager: ConfigManager): boolean {
-        return _configManager.getBool('enableNetflix');
+    override isEnabled(configManager: ConfigManager): boolean {
+        return configManager.getBool('enableNetflix');
     }
 
     /**

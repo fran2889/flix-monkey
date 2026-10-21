@@ -128,12 +128,12 @@ export class FlixMonkeyApp {
         this.#originalPushState = history.pushState as (..._args: unknown[]) => void;
         this.#originalReplaceState = history.replaceState as (..._args: unknown[]) => void;
 
-        history.pushState = (..._args: unknown[]): void => {
-            this.#originalPushState?.apply(history, _args);
+        history.pushState = (...args: unknown[]): void => {
+            this.#originalPushState?.apply(history, args);
             this.#debouncedDecorate();
         };
-        history.replaceState = (..._args: unknown[]): void => {
-            this.#originalReplaceState?.apply(history, _args);
+        history.replaceState = (...args: unknown[]): void => {
+            this.#originalReplaceState?.apply(history, args);
             this.#debouncedDecorate();
         };
 

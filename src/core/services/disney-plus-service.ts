@@ -10,11 +10,11 @@ import { StreamingService } from './base-streaming-service';
 /** Disney+ streaming service implementation. */
 export class DisneyPlusService extends StreamingService {
     /**
-     * @param _configManager - Current application configuration.
+     * @param configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */
-    override isEnabled(_configManager: ConfigManager): boolean {
-        return _configManager.getBool('enableDisneyPlus');
+    override isEnabled(configManager: ConfigManager): boolean {
+        return configManager.getBool('enableDisneyPlus');
     }
 
     /**
