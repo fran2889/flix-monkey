@@ -11,6 +11,8 @@ let configConstructor: Mock<(..._args: unknown[]) => object>;
 let disabledConstructor: Mock<(..._args: unknown[]) => object>;
 let loggerConstructor: Mock<(..._args: unknown[]) => object>;
 let settingsConstructor: Mock<(..._args: unknown[]) => void>;
+let renderSettings: Mock<() => Promise<void>>;
+let loggerError: Mock;
 let migrationRunner: Mock<(..._args: unknown[]) => Promise<unknown>>;
 let resolveMigrations: (_value?: unknown) => void;
 
@@ -84,7 +86,7 @@ vi.mock('../../../../src/core/ui/settings-ui', () => ({
         }
 
         render() {
-            return Promise.resolve();
+            return renderSettings();
         }
     },
 }));
@@ -100,7 +102,9 @@ describe('userscript entry point', () => {
         cacheConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-cache' }));
         configConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-config' }));
         disabledConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-disabled' }));
-        loggerConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-logger' }));
+        loggerError = vi.fn();
+        renderSettings = vi.fn().mockResolvedValue(undefined);
+        loggerConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-logger', error: loggerError }));
         settingsConstructor = vi.fn();
         migrationRunner = vi.fn(
             (..._: unknown[]) =>
@@ -181,5 +185,30 @@ describe('userscript entry point', () => {
         expect(settingsConstructor).toHaveBeenCalledWith(adapter, logger, cacheManager, disabledManager);
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
+    });
+
+    it('logs a startup failure when migrations reject', async () => {
+        migrationRunner = vi.fn().mockRejectedValue(new Error('migration boom'));
+
+        await import('../../../../src/targets/userscript/entry');
+
+        await vi.waitFor(() => {
+            expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
+        });
+    });
+
+    it('logs a settings render failure', async () => {
+        renderSettings.mockRejectedValue(new Error('render boom'));
+
+        await import('../../../../src/targets/userscript/entry');
+        resolveMigrations();
+        await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+
+        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0][1];
+        menuCallback();
+
+        await vi.waitFor(() => {
+            expect(loggerError).toHaveBeenCalledWith('Failed to render settings', expect.any(Error));
+        });
     });
 });

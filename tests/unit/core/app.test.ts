@@ -718,6 +718,7 @@ describe('App', () => {
         ): Promise<{
             onEditClick: (_displayTitle: string) => Promise<void>;
             onRefreshClick: (_displayTitle: string) => Promise<void>;
+            logger: Logger;
         }> => {
             mockRenderer = {
                 hasOverlay: vi.fn().mockReturnValue(false),
@@ -729,8 +730,9 @@ describe('App', () => {
                 removeLoadingOverlay: vi.fn(),
                 applyFade: vi.fn(),
             };
+            const logger = buildLogger().build();
             const app = new FlixMonkeyApp(
-                buildLogger().build(),
+                logger,
                 mockCache as never,
                 {} as never,
                 mockOverrideManager as never,
@@ -752,6 +754,7 @@ describe('App', () => {
             return {
                 onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
+                logger,
             };
         };
 
@@ -851,6 +854,35 @@ describe('App', () => {
 
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
+        });
+
+        it('logs a failure from the edit handler', async () => {
+            mockOverrideManager.getImdbId = vi.fn().mockRejectedValue(new Error('storage failure'));
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onEditClick, logger } = await decorateAndCaptureActions(container);
+
+            void onEditClick('Test Movie');
+
+            await vi.waitFor(() => {
+                expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
+            });
+        });
+
+        it('logs a failure from the refresh handler', async () => {
+            mockCache.delete = vi.fn().mockRejectedValue(new Error('storage failure'));
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            const { onRefreshClick, logger } = await decorateAndCaptureActions(container);
+
+            void onRefreshClick('Test Movie');
+
+            await vi.waitFor(() => {
+                expect(logger.error).toHaveBeenCalledWith(
+                    'Failed to refresh ratings for "Test Movie"',
+                    expect.any(Error)
+                );
+            });
         });
     });
 });
