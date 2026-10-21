@@ -270,7 +270,7 @@ export interface ConfigField {
     suffix?: string;
     actionLabel?: string;
     options?: readonly (string | SelectOption)[];
-    validate?: (_val: ConfigValueType, _allValues?: Record<string, unknown>) => string | undefined;
+    validate?: (val: ConfigValueType, allValues?: Record<string, unknown>) => string | undefined;
 }
 
 // Type for config field keys
