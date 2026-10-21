@@ -185,7 +185,7 @@ This project requires Node.js 24 or newer.
 ```bash
 npm install
 npm run build       # Build all targets
-npm run dev      # Watch mode with auto-rebuild
+npm run dev         # Watch mode with auto-rebuild
 npm test            # Run unit and UI tests
 ```
 
