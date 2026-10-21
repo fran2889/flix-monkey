@@ -2,15 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 let adapter: { registerMenuCommand: Mock };
 let appHandle: { cacheManager: unknown; disabledManager: unknown } | undefined;
-let cacheConstructor: Mock<(..._args: unknown[]) => unknown>;
-let configConstructor: Mock<(..._args: unknown[]) => unknown>;
-let disabledConstructor: Mock<(..._args: unknown[]) => unknown>;
-let loggerConstructor: Mock<(..._args: unknown[]) => unknown>;
+let cacheConstructor: Mock<(..._args: unknown[]) => object>;
+let configConstructor: Mock<(..._args: unknown[]) => object>;
+let disabledConstructor: Mock<(..._args: unknown[]) => object>;
+let loggerConstructor: Mock<(..._args: unknown[]) => object>;
 let settingsConstructor: Mock<(..._args: unknown[]) => void>;
 let migrationRunner: Mock<(..._args: unknown[]) => Promise<unknown>>;
 let resolveMigrations: (_value?: unknown) => void;
@@ -32,8 +31,7 @@ vi.mock('../../../../src/platform/userscript', () => ({
 
 vi.mock('../../../../src/core/cache/cache-manager', () => ({
     CacheManager: class {
-        constructor(..._args: any[]) {
-            // @ts-expect-error - constructor returns mock object, not actual CacheManager
+        constructor(..._args: unknown[]) {
             return cacheConstructor(..._args);
         }
     },
@@ -41,8 +39,7 @@ vi.mock('../../../../src/core/cache/cache-manager', () => ({
 
 vi.mock('../../../../src/core/config/config-manager', () => ({
     ConfigManager: class {
-        constructor(..._args: any[]) {
-            // @ts-expect-error - constructor returns mock object, not actual ConfigManager
+        constructor(..._args: unknown[]) {
             return configConstructor(..._args);
         }
     },
@@ -50,8 +47,7 @@ vi.mock('../../../../src/core/config/config-manager', () => ({
 
 vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {
-        constructor(..._args: any[]) {
-            // @ts-expect-error - constructor returns mock object, not actual DisabledClientsManager
+        constructor(..._args: unknown[]) {
             return disabledConstructor(..._args);
         }
     },
@@ -59,15 +55,14 @@ vi.mock('../../../../src/core/disabled-clients', () => ({
 
 vi.mock('../../../../src/core/logger', () => ({
     Logger: class {
-        constructor(..._args: any[]) {
-            // @ts-expect-error - constructor returns mock object, not actual Logger
+        constructor(..._args: unknown[]) {
             return loggerConstructor(..._args);
         }
     },
 }));
 
 vi.mock('../../../../src/core/migrations', () => ({
-    runMigrations: vi.fn((..._args: any[]) => migrationRunner(..._args)),
+    runMigrations: vi.fn((..._args: unknown[]) => migrationRunner(..._args)),
 }));
 
 vi.mock('../../../../src/core/ui/modal', () => ({
@@ -84,7 +79,7 @@ vi.mock('../../../../src/core/ui/modal', () => ({
 
 vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
-        constructor(..._args: any[]) {
+        constructor(..._args: unknown[]) {
             settingsConstructor(..._args);
         }
 
@@ -102,13 +97,13 @@ describe('userscript entry point', () => {
             registerMenuCommand: vi.fn(),
         };
         appHandle = undefined;
-        cacheConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-cache' }));
-        configConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-config' }));
-        disabledConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-disabled' }));
-        loggerConstructor = vi.fn((..._: any[]) => ({ source: 'fallback-logger' }));
+        cacheConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-cache' }));
+        configConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-config' }));
+        disabledConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-disabled' }));
+        loggerConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-logger' }));
         settingsConstructor = vi.fn();
         migrationRunner = vi.fn(
-            (..._: any[]) =>
+            (..._: unknown[]) =>
                 new Promise((resolve: (_value: unknown) => void) => {
                     resolveMigrations = resolve;
                 })
