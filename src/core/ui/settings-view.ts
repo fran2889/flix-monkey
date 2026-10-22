@@ -147,14 +147,6 @@ export class SettingsView {
         for (const row of group.fields) {
             const fieldElement = this.#createFieldRow(row, settings);
             container.appendChild(fieldElement);
-
-            const actionFields = this.#fields.filter(
-                (f): f is ActionConfigField => isActionField(f) && f.group === group.id && f.row === row.id
-            );
-            for (const actionField of actionFields) {
-                const actionElement = this.#createActionField(actionField);
-                container.appendChild(actionElement);
-            }
         }
 
         return container;
