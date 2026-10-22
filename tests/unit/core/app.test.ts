@@ -24,6 +24,48 @@ import { buildTitle } from '../../mocks/title';
 
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 
+/** Real collaborators for a FlixMonkeyApp, kept in one place so tests share the wiring. */
+function buildAppDependencies(): {
+    logger: Logger;
+    cache: CacheManager;
+    fadeManager: FadeManager;
+    overrideManager: IdOverrideManager;
+    renderer: OverlayRenderer;
+    surfaces: NetflixSurfaceManager;
+    api: ApiClientManager;
+} {
+    const adapter = buildMockAdapter().build();
+    const logger = buildLogger().build();
+    const config = new ConfigManager(adapter, logger);
+    const cache = new CacheManager(adapter, config, logger);
+    const disabledManager = new DisabledClientsManager(adapter);
+    const overrideManager = new IdOverrideManager(adapter);
+    const client = new AgregarrApiClient(adapter, config, disabledManager, logger, overrideManager);
+    return {
+        logger,
+        cache,
+        fadeManager: new FadeManager(adapter, config),
+        overrideManager,
+        renderer: new OverlayRenderer(config),
+        surfaces: new NetflixSurfaceManager(logger),
+        api: new ApiClientManager(logger, cache, disabledManager, client),
+    };
+}
+
+/** Builds an app from real collaborators without starting it. */
+function buildApp(): FlixMonkeyApp {
+    const dependencies = buildAppDependencies();
+    return new FlixMonkeyApp(
+        dependencies.logger,
+        dependencies.cache,
+        dependencies.fadeManager,
+        dependencies.overrideManager,
+        dependencies.renderer,
+        dependencies.surfaces,
+        dependencies.api
+    );
+}
+
 describe('App', () => {
     let mockMutationObserverInstance:
         (MutationObserver & { trigger: (_mutations: MutationRecord[]) => void }) | undefined;
@@ -332,10 +374,12 @@ describe('App', () => {
     });
 
     it('should throw if init() is called twice on the same instance', () => {
-        appRef = startApp(buildMockAdapter().build());
-        if (!appRef) throw new Error('App did not start');
+        const app = buildApp();
+        appRef = app;
 
-        expect(() => appRef?.init()).toThrow('FlixMonkeyApp already initialised');
+        app.init();
+
+        expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
     });
 
     it('should expose cacheManager and disabledManager on the startApp return value', () => {
@@ -761,17 +805,15 @@ describe('App', () => {
         };
 
         beforeEach(() => {
-            const adapter = buildMockAdapter().build();
-            appLogger = buildLogger().build();
-            const config = new ConfigManager(adapter, appLogger);
-            cache = new CacheManager(adapter, config, appLogger);
-            fadeManager = new FadeManager(adapter, config);
-            overrideManager = new IdOverrideManager(adapter);
-            const disabledManager = new DisabledClientsManager(adapter);
-            const client = new AgregarrApiClient(adapter, config, disabledManager, appLogger, overrideManager);
-            api = new ApiClientManager(appLogger, cache, disabledManager, client);
-            surfaces = new NetflixSurfaceManager(appLogger);
-            renderer = new OverlayRenderer(config);
+            ({
+                logger: appLogger,
+                cache,
+                fadeManager,
+                overrideManager,
+                renderer,
+                surfaces,
+                api,
+            } = buildAppDependencies());
 
             mockCache = { delete: vi.spyOn(cache, 'delete').mockResolvedValue(undefined) };
             mockOverrideManager = {
