@@ -7,17 +7,13 @@
 export type {
     ActionConfigField,
     ActionKey,
-    CheckboxConfigField,
     ConfigField,
     ConfigFieldKey,
-    ConfigFieldType,
     ConfigValueType,
     GroupKey,
-    SelectConfigField,
     SelectOption,
     SettingConfigField,
     SettingKey,
-    TextConfigField,
 } from './config-fields';
 export {
     CONFIG_DEFAULTS,

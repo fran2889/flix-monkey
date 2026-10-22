@@ -55,19 +55,19 @@ interface SettingFieldBase extends ConfigFieldBase {
 }
 
 /** Checkbox field storing a boolean. */
-export interface CheckboxConfigField extends SettingFieldBase {
+interface CheckboxConfigField extends SettingFieldBase {
     type: 'checkbox';
     default: boolean;
 }
 
 /** Free-text field storing a string. */
-export interface TextConfigField extends SettingFieldBase {
+interface TextConfigField extends SettingFieldBase {
     type: 'text';
     default: string;
 }
 
 /** Select field storing one of its required options. */
-export interface SelectConfigField extends SettingFieldBase {
+interface SelectConfigField extends SettingFieldBase {
     type: 'select';
     default: string;
     options: readonly (string | SelectOption)[];
@@ -84,9 +84,6 @@ export type SettingConfigField = CheckboxConfigField | TextConfigField | SelectC
 
 /** Discriminated union of every config field shape. */
 export type ConfigField = SettingConfigField | ActionConfigField;
-
-/** Type for config field types */
-export type ConfigFieldType = ConfigField['type'];
 
 /** Type for config values based on their field type */
 export type ConfigValueType = string | boolean;
