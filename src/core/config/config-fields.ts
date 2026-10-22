@@ -92,16 +92,6 @@ export type ConfigFieldType = ConfigField['type'];
 export type ConfigValueType = string | boolean;
 
 /**
- * Narrows a field to one that stores a value.
- *
- * @param field - Field to inspect.
- * @returns True when the field is not an action field.
- */
-export function isSettingField(field: ConfigField): field is SettingConfigField {
-    return field.type !== 'action';
-}
-
-/**
  * Narrows a field to an action field.
  *
  * @param field - Field to inspect.
@@ -109,6 +99,16 @@ export function isSettingField(field: ConfigField): field is SettingConfigField 
  */
 export function isActionField(field: ConfigField): field is ActionConfigField {
     return field.type === 'action';
+}
+
+/**
+ * Narrows a field to one that stores a value.
+ *
+ * @param field - Field to inspect.
+ * @returns True when the field is not an action field.
+ */
+export function isSettingField(field: ConfigField): field is SettingConfigField {
+    return !isActionField(field);
 }
 
 /** All configurable field definitions. */
@@ -320,7 +320,7 @@ export type SettingKey = Exclude<ConfigFieldKey, ActionKey>;
 
 const configDefaults: Partial<Record<ConfigFieldKey, ConfigValueType>> = {};
 for (const field of CONFIG_FIELDS) {
-    if (field.type === 'action') continue;
+    if (!isSettingField(field)) continue;
     configDefaults[field.key] = field.default;
 }
 

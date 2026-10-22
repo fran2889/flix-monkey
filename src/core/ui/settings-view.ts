@@ -149,7 +149,7 @@ export class SettingsView {
             container.appendChild(fieldElement);
 
             const actionFields = this.#fields.filter(
-                (f): f is ActionConfigField => f.type === 'action' && f.group === group.id && f.row === row.id
+                (f): f is ActionConfigField => isActionField(f) && f.group === group.id && f.row === row.id
             );
             for (const actionField of actionFields) {
                 const actionElement = this.#createActionField(actionField);
@@ -161,7 +161,7 @@ export class SettingsView {
     }
 
     #getFieldClassName(row: SettingsFieldRow): string {
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
+        const hasActions = row.fields.every((f): boolean => isActionField(f));
         const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
 
         if (hasActions) return 'field field--actions';
@@ -176,7 +176,7 @@ export class SettingsView {
         const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
         const rowLabel = rowLabelObj?.label ?? row.fields[0].label;
         const onlyField = row.fields[0];
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
+        const hasActions = row.fields.every((f): boolean => isActionField(f));
         const tooltip = hasActions ? '' : (rowLabelObj?.title ?? row.fields[0].title ?? '');
 
         if (hasActions) {
@@ -208,7 +208,7 @@ export class SettingsView {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
+        const hasActions = row.fields.every((f): boolean => isActionField(f));
         const isCheckboxGroup = row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox');
 
         if (hasActions) {
@@ -238,7 +238,7 @@ export class SettingsView {
             valueContainer.appendChild(checkboxes);
         } else {
             for (const field of row.fields) {
-                if (field.type === 'action') {
+                if (isActionField(field)) {
                     const btn = this.#createActionField(field);
                     valueContainer.appendChild(btn);
                 } else if (field.suffix) {
@@ -373,7 +373,7 @@ export class SettingsView {
     readValues(): Record<string, ConfigValueType> {
         const values: Record<string, ConfigValueType> = {};
         for (const field of this.#fields) {
-            if (field.type === 'action') continue;
+            if (isActionField(field)) continue;
             if (field.disabled) continue;
             const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
             if (input) {
@@ -397,7 +397,7 @@ export class SettingsView {
         const errors: string[] = [];
         if (this.#container === undefined) return errors;
         for (const field of this.#fields) {
-            if (field.type === 'action') continue;
+            if (isActionField(field)) continue;
             if (field.disabled) continue;
             const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
             if (!input) continue;

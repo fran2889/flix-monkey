@@ -4,7 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS, type ConfigField } from '../../../../src/core/config/index';
+import { CONFIG_FIELDS, type ConfigField, isActionField, isSettingField } from '../../../../src/core/config/index';
 import { SettingsView } from '../../../../src/core/ui/settings-view';
 
 const configFields: readonly ConfigField[] = CONFIG_FIELDS;
@@ -54,7 +54,7 @@ describe('SettingsView', () => {
 
             configFields.forEach(field => {
                 // Skip action fields - they are rendered as buttons, not inputs
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
 
                 const label = Array.from(container.querySelectorAll('label')).find(
                     element => element.textContent === field.label
@@ -203,7 +203,7 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             configFields.forEach(field => {
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
                 const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
                 const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(field.default);
@@ -212,24 +212,20 @@ describe('SettingsView', () => {
 
         it('populates every field with its stored value', () => {
             const storedSettings = Object.fromEntries(
-                configFields
-                    .filter(f => f.type !== 'action')
-                    .map(field => {
-                        if (field.type === 'checkbox') return [field.key, !field.default];
-                        if (field.type === 'select') {
-                            const optionValues = field.options.map(option =>
-                                Array.isArray(option) ? option[0] : option
-                            );
-                            return [field.key, optionValues.find(option => option !== field.default)];
-                        }
-                        return [field.key, `stored-${field.key}`];
-                    })
+                configFields.filter(isSettingField).map(field => {
+                    if (field.type === 'checkbox') return [field.key, !field.default];
+                    if (field.type === 'select') {
+                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
+                        return [field.key, optionValues.find(option => option !== field.default)];
+                    }
+                    return [field.key, `stored-${field.key}`];
+                })
             );
 
             view.render(container, storedSettings);
 
             configFields.forEach(field => {
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
                 const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
                 const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(storedSettings[field.key]);

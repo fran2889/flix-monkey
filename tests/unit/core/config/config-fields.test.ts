@@ -5,7 +5,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { ConfigField, SettingConfigField } from '../../../../src/core/config/index';
-import { CONFIG_DEFAULTS, CONFIG_FIELDS, GROUPS, isSettingField, ROW_LABELS } from '../../../../src/core/config/index';
+import {
+    CONFIG_DEFAULTS,
+    CONFIG_FIELDS,
+    GROUPS,
+    isActionField,
+    isSettingField,
+    ROW_LABELS,
+} from '../../../../src/core/config/index';
 
 function findSettingField(key: string): SettingConfigField {
     const field = CONFIG_FIELDS.find(f => f.key === key);
@@ -18,13 +25,13 @@ describe('core/config-fields', () => {
         // Action fields carry no stored value. If they leaked into CONFIG_DEFAULTS,
         // ConfigManager.get would accept them as keys and stringify the missing value.
         it('should exclude action fields', () => {
-            const actionKeys = CONFIG_FIELDS.filter(f => f.type === 'action').map(f => f.key);
+            const actionKeys = CONFIG_FIELDS.filter(isActionField).map(f => f.key);
             expect(actionKeys.length).toBeGreaterThan(0);
             expect(actionKeys.every(key => !(key in CONFIG_DEFAULTS))).toBe(true);
         });
 
         it('should hold a concrete value for every settings key', () => {
-            const settingKeys = CONFIG_FIELDS.filter(f => f.type !== 'action').map(f => f.key);
+            const settingKeys = CONFIG_FIELDS.filter(isSettingField).map(f => f.key);
             expect(Object.keys(CONFIG_DEFAULTS).sort()).toEqual([...settingKeys].sort());
             for (const value of Object.values(CONFIG_DEFAULTS)) {
                 expect(['string', 'boolean']).toContain(typeof value);
@@ -38,7 +45,7 @@ describe('core/config-fields', () => {
             expect(field).toHaveProperty('key');
             expect(field).toHaveProperty('label');
             expect(field).toHaveProperty('type');
-            if (field.type === 'action') {
+            if (isActionField(field)) {
                 // Action rows trigger handlers and never render a value, so they carry no default.
                 expect(field).toHaveProperty('actionLabel');
             } else {

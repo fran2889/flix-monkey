@@ -11,6 +11,7 @@ import {
     type ConfigField,
     ConfigManager,
     type ConfigValueType,
+    isSettingField,
 } from '../../../../src/core/config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
@@ -76,7 +77,7 @@ describe('SettingsUI', () => {
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
             const saved = mockAdapter.storageSetMany.mock.calls[0][0];
             CONFIG_FIELDS.forEach((field: ConfigField) => {
-                if (field.type !== 'action' && !field.disabled) {
+                if (isSettingField(field) && !field.disabled) {
                     expect(Object.hasOwn(saved, field.key)).toBe(true);
                 }
             });
