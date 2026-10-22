@@ -140,10 +140,10 @@ export function getMigrationByVersion(version: number): StorageMigration | undef
 /**
  * Logger type for migration progress and error reporting.
  */
-type MigrationLogger = {
+interface MigrationLogger {
     info: (_message: string, ..._args: unknown[]) => void;
     error: (_message: string, _error: unknown) => void;
-};
+}
 
 /**
  * Runs each migration newer than the stored data version, applying upgrades sequentially.

@@ -30,6 +30,84 @@ export const ROW_LABELS = {
 export type GroupKey = keyof typeof GROUPS;
 export type RowLabelKey = keyof typeof ROW_LABELS;
 
+// Type for row label keys - includes all possible row values used in config
+export type AllRowKeys = RowLabelKey | 'debug-settings';
+
+/** Select option as a named tuple with value and label */
+export type SelectOption = readonly [value: string, label: string];
+
+/** Display metadata shared by every config field. */
+interface ConfigFieldBase {
+    key: string;
+    label: string;
+    group: GroupKey;
+    row?: AllRowKeys;
+    title?: string;
+    short?: boolean;
+    disabled?: boolean;
+    labelUrl?: string;
+    suffix?: string;
+}
+
+/** Metadata shared by fields that store a user-configurable value. */
+interface SettingFieldBase extends ConfigFieldBase {
+    validate?: (val: ConfigValueType, allValues?: Record<string, unknown>) => string | undefined;
+}
+
+/** Checkbox field storing a boolean. */
+interface CheckboxConfigField extends SettingFieldBase {
+    type: 'checkbox';
+    default: boolean;
+}
+
+/** Free-text field storing a string. */
+interface TextConfigField extends SettingFieldBase {
+    type: 'text';
+    default: string;
+}
+
+/** Select field storing one of its required options. */
+interface SelectConfigField extends SettingFieldBase {
+    type: 'select';
+    default: string;
+    options: readonly (string | SelectOption)[];
+}
+
+/** Button field that triggers a handler and stores no value. */
+export interface ActionConfigField extends ConfigFieldBase {
+    type: 'action';
+    actionLabel: string;
+}
+
+/** Union of fields that store a user-configurable value. */
+export type SettingConfigField = CheckboxConfigField | TextConfigField | SelectConfigField;
+
+/** Discriminated union of every config field shape. */
+export type ConfigField = SettingConfigField | ActionConfigField;
+
+/** Type for config values based on their field type */
+export type ConfigValueType = string | boolean;
+
+/**
+ * Narrows a field to an action field.
+ *
+ * @param field - Field to inspect.
+ * @returns True when the field renders an action button.
+ */
+export function isActionField(field: ConfigField): field is ActionConfigField {
+    return field.type === 'action';
+}
+
+/**
+ * Narrows a field to one that stores a value.
+ *
+ * @param field - Field to inspect.
+ * @returns True when the field is not an action field.
+ */
+export function isSettingField(field: ConfigField): field is SettingConfigField {
+    return !isActionField(field);
+}
+
 /** All configurable field definitions. */
 export const CONFIG_FIELDS = [
     {
@@ -62,11 +140,11 @@ export const CONFIG_FIELDS = [
         group: 'display',
         type: 'select',
         options: [
-            ['top-left' as const, 'Top Left' as const],
-            ['top-right' as const, 'Top Right' as const],
-            ['bottom-left' as const, 'Bottom Left' as const],
-            ['bottom-right' as const, 'Bottom Right' as const],
-        ] as const,
+            ['top-left', 'Top Left'],
+            ['top-right', 'Top Right'],
+            ['bottom-left', 'Bottom Left'],
+            ['bottom-right', 'Bottom Right'],
+        ],
         default: 'top-left',
         title: 'Position of the rating badge on thumbnails',
     },
@@ -85,9 +163,9 @@ export const CONFIG_FIELDS = [
         group: 'providers',
         type: 'select',
         options: [
-            ['agregarr' as const, 'Agregarr' as const],
-            ['omdb' as const, 'OMDb' as const],
-            ['xmdb' as const, 'XMDb' as const],
+            ['agregarr', 'Agregarr'],
+            ['omdb', 'OMDb'],
+            ['xmdb', 'XMDb'],
         ],
         default: 'agregarr',
         title: 'Active rating provider. Agregarr requires no API key',
@@ -213,7 +291,6 @@ export const CONFIG_FIELDS = [
         key: 'clearCache',
         type: 'action',
         group: 'debug',
-        row: 'action-clearCache',
         label: '',
         actionLabel: 'Clear Cache',
     },
@@ -221,63 +298,37 @@ export const CONFIG_FIELDS = [
         key: 'resetClients',
         type: 'action',
         group: 'debug',
-        row: 'action-resetClients',
         label: '',
         actionLabel: 'Reset Providers',
     },
-] satisfies readonly ConfigField[];
+] as const satisfies readonly ConfigField[];
+
+// Type for config field keys
+export type ConfigFieldKey = (typeof CONFIG_FIELDS)[number]['key'];
 
 /**
  * Key of an action-type field. Action fields carry no stored value, so they
  * have no default and are excluded from {@link CONFIG_DEFAULTS}.
  */
-export type ActionKey = 'clearCache' | 'resetClients';
+export type ActionKey = Extract<(typeof CONFIG_FIELDS)[number], { type: 'action' }>['key'];
 
 /** Key of a field that stores a user-configurable value. */
 export type SettingKey = Exclude<ConfigFieldKey, ActionKey>;
 
-/** Default values for all settings-bearing config fields. */
-export const CONFIG_DEFAULTS = Object.fromEntries(
-    CONFIG_FIELDS.filter(f => f.type !== 'action').map(f => [f.key, f.default])
-) as Record<SettingKey, string | boolean>;
-
-/** Allowed values for select-type config fields. */
-export const CONFIG_SELECT_ALLOWED: Partial<Record<SettingKey, readonly string[]>> = Object.fromEntries(
-    CONFIG_FIELDS.filter(f => f.type === 'select').map(f => [
-        f.key,
-        f.options.map(o => (typeof o === 'string' ? o : o[0])),
-    ])
-);
-
-// Type for row label keys - includes all possible row values used in config
-export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
-
-// Type for a single config field
-/** Select option as a named tuple with value and label */
-export type SelectOption = readonly [value: string, label: string];
-
-export interface ConfigField {
-    key: string;
-    label: string;
-    group: GroupKey;
-    type: ConfigFieldType;
-    default?: ConfigValueType;
-    row?: AllRowKeys;
-    title?: string;
-    short?: boolean;
-    disabled?: boolean;
-    labelUrl?: string;
-    suffix?: string;
-    actionLabel?: string;
-    options?: readonly (string | SelectOption)[];
-    validate?: (_val: ConfigValueType, _allValues?: Record<string, unknown>) => string | undefined;
+const configDefaults: Partial<Record<ConfigFieldKey, ConfigValueType>> = {};
+for (const field of CONFIG_FIELDS) {
+    if (!isSettingField(field)) continue;
+    configDefaults[field.key] = field.default;
 }
 
-// Type for config field keys
-export type ConfigFieldKey = (typeof CONFIG_FIELDS)[number]['key'];
+/** Default values for all settings-bearing config fields. */
+export const CONFIG_DEFAULTS = configDefaults as Record<SettingKey, string | boolean>;
 
-// Type for config field types
-export type ConfigFieldType = 'checkbox' | 'select' | 'text' | 'action';
+const configSelectAllowed: Partial<Record<ConfigFieldKey, readonly string[]>> = {};
+for (const field of CONFIG_FIELDS) {
+    if (field.type !== 'select') continue;
+    configSelectAllowed[field.key] = field.options.map(o => (typeof o === 'string' ? o : o[0]));
+}
 
-// Type for config values based on their field type
-export type ConfigValueType = string | boolean;
+/** Allowed values for select-type config fields. */
+export const CONFIG_SELECT_ALLOWED: Partial<Record<SettingKey, readonly string[]>> = configSelectAllowed;

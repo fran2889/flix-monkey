@@ -38,6 +38,7 @@ const typescriptRules = {
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
     '@typescript-eslint/no-shadow': 'error',
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
     '@typescript-eslint/no-import-type-side-effects': 'error',
     '@typescript-eslint/no-floating-promises': 'error',
@@ -201,11 +202,11 @@ export default [
             'jsdoc/no-undefined-types': 'error',
         },
     },
-    // 8. License header enforcement - src and tests only (isolated block)
+    // 8. License header enforcement - src, tests, and scripts (isolated block)
     // metadata.ts is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
-        files: ['{src,tests}/**/*.ts'],
+        files: ['{src,tests}/**/*.ts', 'scripts/**/*.{js,ts}'],
         ignores: ['src/targets/userscript/metadata.ts'],
         plugins: { headers },
         rules: {

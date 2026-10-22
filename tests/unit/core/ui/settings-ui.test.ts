@@ -6,7 +6,13 @@ import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
-import { CONFIG_FIELDS, ConfigManager, type ConfigValueType } from '../../../../src/core/config/index';
+import {
+    CONFIG_FIELDS,
+    type ConfigField,
+    ConfigManager,
+    type ConfigValueType,
+    isSettingField,
+} from '../../../../src/core/config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { Logger } from '../../../../src/core/logger';
@@ -70,8 +76,8 @@ describe('SettingsUI', () => {
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
             const saved = mockAdapter.storageSetMany.mock.calls[0][0];
-            CONFIG_FIELDS.forEach(field => {
-                if (field.type !== 'action' && !(field as { disabled?: boolean }).disabled) {
+            CONFIG_FIELDS.forEach((field: ConfigField) => {
+                if (isSettingField(field) && !field.disabled) {
                     expect(Object.hasOwn(saved, field.key)).toBe(true);
                 }
             });

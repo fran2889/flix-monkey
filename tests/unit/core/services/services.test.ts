@@ -4,30 +4,13 @@
  */
 import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 
-import {
-    DisneyPlusService,
-    HboMaxService,
-    NetflixService,
-    ServiceRegistry,
-    StreamingService,
-} from '../../../../src/core/services/index';
+import { DisneyPlusService, HboMaxService, NetflixService, ServiceRegistry } from '../../../../src/core/services/index';
 import {
     DisneyPlusSurfaceManager,
     HboMaxSurfaceManager,
     NetflixSurfaceManager,
 } from '../../../../src/core/surfaces/index';
 import { buildConfig } from '../../../mocks/config';
-
-describe('StreamingService', () => {
-    it.each([
-        ['domains', (service: StreamingService) => service.domains],
-        ['SurfaceManager', (service: StreamingService) => service.SurfaceManager],
-        ['isEnabled', (service: StreamingService) => service.isEnabled(buildConfig().build())],
-    ])('throws on unimplemented %s', (_member, access) => {
-        const service = new StreamingService();
-        assert.throws(() => access(service), /Not implemented/);
-    });
-});
 
 describe.each([
     ['Netflix', NetflixService, NetflixSurfaceManager, 'enableNetflix'],

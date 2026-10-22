@@ -46,7 +46,7 @@ Stored data carries an `fm_data_version`. When changing a persisted shape, appen
 
 ## Conventions
 
-- License header: every `{src,tests}/**/*.ts` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
+- License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
 - JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See `eslint.config.js` for the exact tags.
 - Document the boundaries a caller needs in order to consume them correctly: abstract and cross-platform contracts, injected collaborators, and persistence, messaging, HTTP, and external-data boundaries. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
 - Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.

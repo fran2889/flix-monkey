@@ -28,8 +28,14 @@ declare const browser: {
 /**
  * Message types for browser.runtime.onMessage communication.
  */
-type FMRunMigrationsMessage = { type: 'FM_RUN_MIGRATIONS' };
-type FMFetchMessage = { type: 'FM_FETCH'; url: string; options?: HttpFetchOptions };
+interface FMRunMigrationsMessage {
+    type: 'FM_RUN_MIGRATIONS';
+}
+interface FMFetchMessage {
+    type: 'FM_FETCH';
+    url: string;
+    options?: HttpFetchOptions;
+}
 type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
 
 const executeMigrations = createExtensionMigrationExecutor();
