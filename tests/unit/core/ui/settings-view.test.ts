@@ -72,16 +72,16 @@ describe('SettingsView', () => {
                     expect((input as HTMLInputElement).type).toBe('text');
                 }
 
-                if (field.type === 'select' && field.options) {
+                if (field.type === 'select') {
                     expect(
                         [...(input as HTMLSelectElement).options].map(option => [option.value, option.textContent])
                     ).toEqual(field.options.map(option => (Array.isArray(option) ? option : [option, option])));
                 }
 
-                if ((field as { labelUrl?: string }).labelUrl) {
+                if (field.labelUrl) {
                     const link = label?.querySelector('a');
                     expect(link).not.toBeNull();
-                    expect((link as HTMLAnchorElement)?.href).toBe((field as { labelUrl: string }).labelUrl);
+                    expect((link as HTMLAnchorElement)?.href).toBe(field.labelUrl);
                     expect((link as HTMLAnchorElement)?.target).toBe('_blank');
                 } else {
                     const link = label?.querySelector('a');
@@ -218,7 +218,7 @@ describe('SettingsView', () => {
                     .filter(f => f.type !== 'action')
                     .map(field => {
                         if (field.type === 'checkbox') return [field.key, !field.default];
-                        if (field.type === 'select' && field.options) {
+                        if (field.type === 'select') {
                             const optionValues = field.options.map(option =>
                                 Array.isArray(option) ? option[0] : option
                             );

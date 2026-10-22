@@ -4,8 +4,14 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConfigField } from '../../../../src/core/config/index';
-import { CONFIG_DEFAULTS, CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../../../../src/core/config/index';
+import type { ConfigField, SettingConfigField } from '../../../../src/core/config/index';
+import { CONFIG_DEFAULTS, CONFIG_FIELDS, GROUPS, isSettingField, ROW_LABELS } from '../../../../src/core/config/index';
+
+function findSettingField(key: string): SettingConfigField {
+    const field = CONFIG_FIELDS.find(f => f.key === key);
+    if (!field || !isSettingField(field)) throw new Error(`Missing setting field: ${key}`);
+    return field;
+}
 
 describe('core/config-fields', () => {
     describe('CONFIG_DEFAULTS', () => {
@@ -47,11 +53,10 @@ describe('core/config-fields', () => {
                 expect(field).toHaveProperty('options');
                 expect(Array.isArray(field.options)).toBe(true);
 
-                // Handle readonly options by casting
-                (field.options as Array<string | [string, string]>).forEach((option: string | [string, string]) => {
+                for (const option of field.options) {
                     const isValidString = typeof option === 'string';
                     const isValidArray =
-                        Array.isArray(option) &&
+                        typeof option !== 'string' &&
                         option.length === 2 &&
                         typeof option[0] === 'string' &&
                         typeof option[1] === 'string';
@@ -61,7 +66,7 @@ describe('core/config-fields', () => {
                         `Field "${field.key}" has invalid option format: ${JSON.stringify(option)}. ` +
                             `Options must be strings or [value, label] arrays.`
                     ).toBe(true);
-                });
+                }
             }
         });
     });
@@ -71,9 +76,9 @@ describe('core/config-fields', () => {
             ['xmdbApiKey', 'xmdb'],
             ['omdbApiKey', 'omdb'],
         ])('%s validation', (key, provider) => {
-            let field: ConfigField;
+            let field: SettingConfigField;
             beforeEach(() => {
-                field = CONFIG_FIELDS.find(f => f.key === key) as ConfigField;
+                field = findSettingField(key);
             });
 
             it('should accept valid key when provider is selected', () => {
@@ -90,9 +95,9 @@ describe('core/config-fields', () => {
         });
 
         describe('fadeRatingThreshold validation', () => {
-            let field: ConfigField;
+            let field: SettingConfigField;
             beforeEach(() => {
-                field = CONFIG_FIELDS.find(f => f.key === 'fadeRatingThreshold') as ConfigField;
+                field = findSettingField('fadeRatingThreshold');
             });
 
             it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
@@ -106,9 +111,9 @@ describe('core/config-fields', () => {
         });
 
         describe.each(['cacheTtlRatedOldYear', 'cacheTtlRatedNewYear', 'cacheTtlNoRating'])('%s validation', key => {
-            let field: ConfigField;
+            let field: SettingConfigField;
             beforeEach(() => {
-                field = CONFIG_FIELDS.find(f => f.key === key) as ConfigField;
+                field = findSettingField(key);
             });
 
             it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {

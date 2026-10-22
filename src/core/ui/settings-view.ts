@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SettingsActions } from '../../types/extension';
-import { type ConfigField, type ConfigValueType, GROUPS, ROW_LABELS } from '../config/index';
+import type {
+    ActionConfigField,
+    ConfigField,
+    ConfigValueType,
+    SelectOption,
+    SettingConfigField,
+} from '../config/index';
+import { GROUPS, isActionField, isSettingField, ROW_LABELS } from '../config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
 
@@ -140,7 +147,7 @@ export class SettingsView {
             container.appendChild(fieldElement);
 
             const actionFields = this.#fields.filter(
-                (f): boolean => f.type === 'action' && f.group === group.id && f.row === row.id
+                (f): f is ActionConfigField => f.type === 'action' && f.group === group.id && f.row === row.id
             );
             for (const actionField of actionFields) {
                 const actionElement = this.#createActionField(actionField);
@@ -204,14 +211,17 @@ export class SettingsView {
 
         if (hasActions) {
             for (const field of row.fields) {
-                const btn = this.#createActionField(field);
-                valueContainer.appendChild(btn);
+                if (isActionField(field)) {
+                    const btn = this.#createActionField(field);
+                    valueContainer.appendChild(btn);
+                }
             }
         } else if (isCheckboxGroup) {
             const checkboxes = document.createElement('div');
             checkboxes.className = 'checkboxes';
 
             for (const field of row.fields) {
+                if (!isSettingField(field)) continue;
                 const item = document.createElement('div');
                 item.className = 'service-item';
                 const input = this.#createInput(field, settings);
@@ -253,11 +263,11 @@ export class SettingsView {
         return fieldElement;
     }
 
-    #createActionField(field: ConfigField): HTMLButtonElement {
+    #createActionField(field: ActionConfigField): HTMLButtonElement {
         const btn = document.createElement('button');
         btn.className = 'action-btn';
         btn.id = `fm-${field.key}`;
-        btn.textContent = field.actionLabel ?? '';
+        btn.textContent = field.actionLabel;
         btn.addEventListener('click', () => {
             if (field.key === 'clearCache') {
                 void this.#actions.onClearCache();
@@ -268,7 +278,7 @@ export class SettingsView {
         return btn;
     }
 
-    #createInputWithSuffix(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
+    #createInputWithSuffix(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
         const container = document.createElement('div');
         container.className = 'input-with-suffix';
 
@@ -285,7 +295,7 @@ export class SettingsView {
         return container;
     }
 
-    #createInput(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
+    #createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
         input.className = 'field-input';
         input.name = field.key;
@@ -293,7 +303,7 @@ export class SettingsView {
 
         if (field.type === 'select') {
             const selectInput = input as HTMLSelectElement;
-            this.#addOptions(selectInput, field.options ?? []);
+            this.#addOptions(selectInput, field.options);
             selectInput.value = String(this.#settingValue(field.key, settings, field.default));
         } else if (field.type === 'checkbox') {
             const checkboxInput = input as HTMLInputElement;
@@ -316,7 +326,7 @@ export class SettingsView {
         return input;
     }
 
-    #addOptions(select: HTMLSelectElement, options: ReadonlyArray<string | readonly [string, string]>): void {
+    #addOptions(select: HTMLSelectElement, options: readonly (string | SelectOption)[]): void {
         for (const configuredOption of options) {
             const option = document.createElement('option');
             const [value, text] = Array.isArray(configuredOption)
