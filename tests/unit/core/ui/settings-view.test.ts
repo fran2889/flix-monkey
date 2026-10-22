@@ -137,7 +137,6 @@ describe('SettingsView', () => {
                     type: 'action',
                     label: '',
                     group: 'debug',
-                    row: 'action-clearCache',
                     actionLabel: 'Clear',
                 },
             ];
@@ -178,7 +177,6 @@ describe('SettingsView', () => {
                     type: 'action',
                     label: '',
                     group: 'debug',
-                    row: 'debug-settings',
                     actionLabel: 'Run It',
                 },
             ];
@@ -187,7 +185,7 @@ describe('SettingsView', () => {
 
             const row = container.querySelector('.field-value');
             expect(row?.querySelector('#fm-debug')).not.toBeNull();
-            expect(row?.querySelector('#fm-debug-settings')).not.toBeNull();
+            expect(row?.querySelectorAll('#fm-debug-settings')).toHaveLength(1);
         });
 
         it('renders the fixed IMDb rating control', () => {

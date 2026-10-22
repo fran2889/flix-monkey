@@ -31,7 +31,7 @@ export type GroupKey = keyof typeof GROUPS;
 export type RowLabelKey = keyof typeof ROW_LABELS;
 
 // Type for row label keys - includes all possible row values used in config
-export type AllRowKeys = RowLabelKey | 'debug-settings' | 'action-clearCache' | 'action-resetClients';
+export type AllRowKeys = RowLabelKey | 'debug-settings';
 
 /** Select option as a named tuple with value and label */
 export type SelectOption = readonly [value: string, label: string];
@@ -294,7 +294,6 @@ export const CONFIG_FIELDS = [
         key: 'clearCache',
         type: 'action',
         group: 'debug',
-        row: 'action-clearCache',
         label: '',
         actionLabel: 'Clear Cache',
     },
@@ -302,7 +301,6 @@ export const CONFIG_FIELDS = [
         key: 'resetClients',
         type: 'action',
         group: 'debug',
-        row: 'action-resetClients',
         label: '',
         actionLabel: 'Reset Providers',
     },
