@@ -15,15 +15,15 @@ import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
 
 interface SettingsFieldRow {
-    id: string;
-    fields: ConfigField[];
+    readonly id: string;
+    readonly fields: readonly ConfigField[];
 }
 
 interface SettingsGroup {
-    id: string;
-    label: string;
-    icon: string;
-    fields: SettingsFieldRow[];
+    readonly id: string;
+    readonly label: string;
+    readonly icon: string;
+    readonly fields: readonly SettingsFieldRow[];
 }
 
 /**
@@ -112,16 +112,18 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByRow(fields: ConfigField[]): SettingsFieldRow[] {
-        const rows: Record<string, SettingsFieldRow> = {};
+    #groupFieldsByRow(fields: readonly ConfigField[]): SettingsFieldRow[] {
+        const rows = new Map<string, ConfigField[]>();
         for (const field of fields) {
             const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
-            if (!rows[rowId]) {
-                rows[rowId] = { id: rowId, fields: [] };
+            const rowFields = rows.get(rowId);
+            if (rowFields) {
+                rowFields.push(field);
+            } else {
+                rows.set(rowId, [field]);
             }
-            rows[rowId].fields.push(field);
         }
-        return Object.values(rows);
+        return [...rows].map(([id, rowFields]) => ({ id, fields: rowFields }));
     }
 
     #createGroupElement(group: SettingsGroup, settings: Record<string, unknown>): HTMLElement {
