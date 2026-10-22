@@ -12,10 +12,9 @@ import { WebExtensionAdapter } from '../../platform/webextension';
  * Settings that can be hot-applied without a page reload: they only affect overlay
  * appearance, so calling redecorate() (clear + re-render) is sufficient to reflect the
  * change immediately. All other storage changes still update the snapshot (so configGet
- * stays accurate), but functional settings - apiClient, cacheTtl*, debug - require a
- * page reload because they affect stateful objects (ApiClientManager, CacheManager,
- * logger) that are not reinitialized by redecorate(). The options page handles this by
- * reloading all open Netflix tabs on save.
+ * stays accurate) but do not trigger redecorate(). A provider change (apiClient) needs a
+ * page reload because ApiClientManager is constructed at startup; cacheTtl* and debug
+ * are read on demand and need no re-render.
  */
 const VISUAL_SETTINGS = new Set<string>([
     'overlayCorner',
