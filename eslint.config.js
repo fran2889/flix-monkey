@@ -38,6 +38,7 @@ const typescriptRules = {
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
     '@typescript-eslint/no-shadow': 'error',
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
     '@typescript-eslint/no-import-type-side-effects': 'error',
     '@typescript-eslint/no-floating-promises': 'error',

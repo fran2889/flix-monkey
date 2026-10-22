@@ -18,11 +18,11 @@ declare const GM_registerMenuCommand: Mock;
 declare const GM_xmlhttpRequest: Mock;
 
 // Type for XHR callback parameters
-type XHRCallbacks = {
+interface XHRCallbacks {
     onload?: (_response: unknown) => void;
     onerror?: () => void;
     ontimeout?: () => void;
-};
+}
 
 describe('UserscriptAdapter', () => {
     let adapter: UserscriptAdapter;

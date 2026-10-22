@@ -10,7 +10,9 @@ import { createExtensionMigrationExecutor } from '../extension/migrations';
  * Chrome service worker global: chrome API is available as a bare global.
  * This declaration provides minimal typing for the chrome namespace used in this module.
  */
-type ChromeMessageSender = { id?: string };
+interface ChromeMessageSender {
+    id?: string;
+}
 type ChromeSendResponse = (_response?: unknown) => void;
 
 declare const chrome: {
@@ -36,8 +38,14 @@ declare const chrome: {
 /**
  * Message types for chrome.runtime.onMessage communication.
  */
-type FMRunMigrationsMessage = { type: 'FM_RUN_MIGRATIONS' };
-type FMFetchMessage = { type: 'FM_FETCH'; url: string; options?: HttpFetchOptions };
+interface FMRunMigrationsMessage {
+    type: 'FM_RUN_MIGRATIONS';
+}
+interface FMFetchMessage {
+    type: 'FM_FETCH';
+    url: string;
+    options?: HttpFetchOptions;
+}
 type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
 
 const executeMigrations = createExtensionMigrationExecutor();

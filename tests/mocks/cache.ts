@@ -5,13 +5,13 @@
 import { CacheEntry } from '../../src/core/cache/index';
 import type { Title, TitleData } from '../../src/core/title';
 
-type CacheEntryBuilder = {
+interface CacheEntryBuilder {
     withDisplayTitle(_value: string): CacheEntryBuilder;
     withImdbId(_value: string | undefined): CacheEntryBuilder;
     withData(_value: TitleData | undefined): CacheEntryBuilder;
     withExpiry(_value: number | undefined): CacheEntryBuilder;
     build(): CacheEntry;
-};
+}
 
 function buildCacheEntry(): CacheEntryBuilder {
     // Default all CacheEntry fields
