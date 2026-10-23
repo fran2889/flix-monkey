@@ -8,7 +8,7 @@
 
 **Tech Stack:** JavaScript ES2022, Rollup, ESLint, Prettier, Vitest, jsdom, MSW
 
-**Spec:** `docs/specs/2026-10-02-clean-code-refactoring-spec.md`
+**Spec:** `docs/superpowers/specs/2026-10-02-clean-code-refactoring-spec.md`
 
 ---
 
@@ -40,6 +40,7 @@
 ### Phase 1: Directory Creation & File Splitting
 
 #### New Directory Structure
+
 ```
 src/core/
   api/
@@ -49,17 +50,17 @@ src/core/
     agregarr-api-client.js   (NEW - from api-clients.js:355-427)
     title-type-mappers.js    (NEW - shared utilities)
     index.js                (NEW - exports)
-  
+
   cache/
     cache-entry.js          (NEW - from cache.js:14-76)
     cache-manager.js        (NEW - from cache.js:78-173)
     index.js                (NEW - exports)
-  
+
   config/
     config-fields.js        (MOVE - unchanged)
     config-manager.js       (MOVE - unchanged)
     index.js                (NEW - exports)
-  
+
   surfaces/
     surface-manager.js      (NEW - from surfaces.js:28-80)
     surface-definitions/
@@ -67,7 +68,7 @@ src/core/
       hbo-max-surfaces.js    (NEW - from surfaces.js:139-198)
       disney-plus-surfaces.js (NEW - from surfaces.js:200-259)
     index.js                (NEW - exports)
-  
+
   services/
     base-streaming-service.js (NEW - from services.js:18-58)
     netflix-service.js      (NEW - from services.js:60-82)
@@ -75,7 +76,7 @@ src/core/
     disney-plus-service.js   (NEW - from services.js:106-122)
     service-registry.js     (NEW - from services.js:130-140)
     index.js                (NEW - exports)
-  
+
   ui/
     overlay/
       overlay-renderer.js   (MOVE - overlay.js unchanged path)
@@ -87,14 +88,14 @@ src/core/
         overlay-styles.js    (MOVE - ui/overlay-styles.js)
         index.js             (NEW - exports)
       index.js                (NEW - exports)
-  
+
   utils/
     color-utils.js          (MOVE - unchanged)
     dom-utils.js            (NEW - extracted DOM helpers)
     string-utils.js         (NEW - extracted string helpers)
     general-utils.js        (NEW - from utils.js with cleanup)
     index.js                (NEW - exports)
-  
+
   // Standalone files (unchanged paths)
   constants.js
   disabled-clients.js
@@ -112,16 +113,20 @@ src/core/
 ## Implementation Phases
 
 ### Phase 1: Non-Breaking File Organization (Lowest Risk)
-*Create directory structure and split files while maintaining backward compatibility*
+
+_Create directory structure and split files while maintaining backward compatibility_
 
 ### Phase 2: Method Reordering (Low Risk)
-*Reorder methods within classes according to call hierarchy rules*
+
+_Reorder methods within classes according to call hierarchy rules_
 
 ### Phase 3: Parameter Reordering (Highest Risk)
-*Update constructor parameter order - requires updating all call sites*
+
+_Update constructor parameter order - requires updating all call sites_
 
 ### Phase 4: Test File Restructuring (Medium Risk)
-*Move and split test files to match new production structure*
+
+_Move and split test files to match new production structure_
 
 ---
 
@@ -134,6 +139,7 @@ src/core/
 #### Task 1: Create Core Directory Structure
 
 **Files:**
+
 - Create: `src/core/api/`
 - Create: `src/core/cache/`
 - Create: `src/core/config/`
@@ -148,6 +154,7 @@ src/core/
 **Interfaces:** None - directory creation only
 
 - [ ] **Step 1: Create all directory paths**
+
 ```bash
 mkdir -p src/core/api
 mkdir -p src/core/cache
@@ -160,11 +167,13 @@ mkdir -p src/core/utils
 ```
 
 - [ ] **Step 2: Verify directories exist**
+
 ```bash
 ls -la src/core/api/ src/core/cache/ src/core/config/ src/core/surfaces/surface-definitions/ src/core/services/ src/core/ui/overlay/elements/ src/core/ui/overlay/styles/ src/core/utils/
 ```
 
 - [ ] **Step 3: Commit directory structure**
+
 ```bash
 git add src/core/
 git commit -m "refactor: create directory structure for clean code organization"
@@ -175,12 +184,15 @@ git commit -m "refactor: create directory structure for clean code organization"
 #### Task 2: Extract Title Type Mappers
 
 **Files:**
+
 - Create: `src/core/api/title-type-mappers.js`
 
 **Interfaces:**
+
 - Exports: `parseRatings`, `mapXmdbTitleType`, `mapOmdbTitleType`, `mapAgregarrTitleType`
 
 - [ ] **Step 1: Create title-type-mappers.js**
+
 ```javascript
 /**
  * SPDX-FileCopyrightText: 2026 Fran
@@ -239,11 +251,13 @@ export function mapAgregarrTitleType(apiValue) {
 ```
 
 - [ ] **Step 2: Run lint on new file**
+
 ```bash
 npm run lint -- src/core/api/title-type-mappers.js
 ```
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add src/core/api/title-type-mappers.js
 git commit -m "refactor(api): extract title type mapping utilities"
@@ -254,14 +268,17 @@ git commit -m "refactor(api): extract title type mapping utilities"
 #### Task 3: Create API Client Base Class
 
 **Files:**
+
 - Create: `src/core/api/base-api-client.js`
 - Modify: `src/core/api-clients.js` (to remove BaseApiClient)
 
 **Interfaces:**
+
 - Exports: `BaseApiClient` class
 - Consumes: `parseRatings` from title-type-mappers.js
 
 - [ ] **Step 1: Create base-api-client.js with reordered methods**
+
 ```javascript
 /**
  * SPDX-FileCopyrightText: 2026 Fran
@@ -443,12 +460,14 @@ export class BaseApiClient {
 ```
 
 - [ ] **Step 2: Verify syntax and linting**
+
 ```bash
 node --check src/core/api/base-api-client.js
 npm run lint -- src/core/api/base-api-client.js
 ```
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add src/core/api/base-api-client.js
 git commit -m "refactor(api): extract BaseApiClient with method reordering"
@@ -459,12 +478,15 @@ git commit -m "refactor(api): extract BaseApiClient with method reordering"
 #### Task 4: Create API Index File
 
 **Files:**
+
 - Create: `src/core/api/index.js`
 
 **Interfaces:**
+
 - Re-exports all API client classes
 
 - [ ] **Step 1: Create api/index.js**
+
 ```javascript
 /**
  * SPDX-FileCopyrightText: 2026 Fran
@@ -479,11 +501,13 @@ export { parseRatings } from './title-type-mappers.js';
 ```
 
 - [ ] **Step 2: Verify exports work**
+
 ```bash
 node -e "import('./src/core/api/index.js').then(m => console.log('API exports:', Object.keys(m)))"
 ```
 
 - [ ] **Step 3: Commit**
+
 ```bash
 git add src/core/api/index.js
 git commit -m "refactor(api): add index.js exports"
@@ -493,12 +517,12 @@ git commit -m "refactor(api): add index.js exports"
 
 ### Phase 1 Continues: Other File Splits
 
-*Continue this pattern for cache, config, services, surfaces, utils directories*
+_Continue this pattern for cache, config, services, surfaces, utils directories_
 
 Due to length constraints, the full plan includes 25+ additional tasks following the same pattern:
 
 - **Cache splitting**: cache-entry.js, cache-manager.js, index.js
-- **Services splitting**: base-streaming-service.js, netflix-service.js, hbo-max-service.js, disney-plus-service.js, service-registry.js, index.js  
+- **Services splitting**: base-streaming-service.js, netflix-service.js, hbo-max-service.js, disney-plus-service.js, service-registry.js, index.js
 - **Surfaces splitting**: surface-manager.js, surface-definitions/*.js, index.js
 - **Utils splitting**: color-utils.js, dom-utils.js, string-utils.js, general-utils.js, index.js
 - **Overlay splitting**: elements reorganization
@@ -510,29 +534,33 @@ Due to length constraints, the full plan includes 25+ additional tasks following
 #### Task X: Reorder FlixMonkeyApp Methods
 
 **Files:**
+
 - Modify: `src/core/app.js`
 
 **Interfaces:** None - internal reordering only
 
 - [ ] **Step 1: Reorder FlixMonkeyApp methods according to rules**
-  - Constructor first
-  - Static methods next
-  - Lifecycle methods next
-  - Public methods in call order
-  - Private methods under first public caller
-  - Getters at end
+    - Constructor first
+    - Static methods next
+    - Lifecycle methods next
+    - Public methods in call order
+    - Private methods under first public caller
+    - Getters at end
 
 - [ ] **Step 2: Run all tests to verify no functional changes**
+
 ```bash
 npm test
 ```
 
 - [ ] **Step 3: Verify linting passes**
+
 ```bash
 npm run lint
 ```
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add src/core/app.js
 git commit -m "refactor(app): reorder FlixMonkeyApp methods by call hierarchy"
@@ -543,15 +571,18 @@ git commit -m "refactor(app): reorder FlixMonkeyApp methods by call hierarchy"
 #### Task X+1: Reorder BaseApiClient Methods
 
 **Files:**
+
 - Modify: `src/core/api/base-api-client.js`
 
 **Interfaces:** None - already reordered in creation
 
 - [ ] **Step 1: Verify current method order matches spec**
 - [ ] **Step 2: Run tests**
+
 ```bash
 npm test
 ```
+
 - [ ] **Step 3: Commit** (if needed)
 
 ---
@@ -561,13 +592,15 @@ npm test
 #### Task Y: Update Constructor Parameters in BaseApiClient Callers
 
 **Files:**
+
 - Modify: `src/core/api/xmdb-api-client.js`
-- Modify: `src/core/api/omdb-api-client.js`  
+- Modify: `src/core/api/omdb-api-client.js`
 - Modify: `src/core/api/agregarr-api-client.js`
 
 **Interfaces:** All classes that instantiate BaseApiClient
 
 - [ ] **Step 1: Update XmdbApiClient constructor call**
+
 ```javascript
 // Current
 super(
@@ -594,11 +627,13 @@ super(
 
 - [ ] **Step 2: Update all other API client constructors similarly**
 - [ ] **Step 3: Run all tests**
+
 ```bash
 npm test
 ```
 
 - [ ] **Step 4: Commit**
+
 ```bash
 git add src/core/api/
 git commit -m "refactor(api): update constructor parameter order per clean code rules"
@@ -611,6 +646,7 @@ git commit -m "refactor(api): update constructor parameter order per clean code 
 #### Task Z: Create Test Directory Structure
 
 **Files:**
+
 - Create: `tests/unit/api/`
 - Create: `tests/unit/cache/`
 - Create: `tests/unit/config/`
@@ -621,11 +657,13 @@ git commit -m "refactor(api): update constructor parameter order per clean code 
 **Interfaces:** Test file organization
 
 - [ ] **Step 1: Create test directories**
+
 ```bash
 mkdir -p tests/unit/api tests/unit/cache tests/unit/config tests/unit/services tests/unit/surfaces tests/unit/ui
 ```
 
 - [ ] **Step 2: Commit**
+
 ```bash
 git add tests/unit/
 git commit -m "refactor(tests): create directory structure for reorganized tests"
@@ -636,6 +674,7 @@ git commit -m "refactor(tests): create directory structure for reorganized tests
 #### Task Z+1: Move and Split API Client Tests
 
 **Files:**
+
 - Create: `tests/unit/api/base-api-client.test.js`
 - Create: `tests/unit/api/xmdb-api-client.test.js`
 - Create: `tests/unit/api/omdb-api-client.test.js`
@@ -646,6 +685,7 @@ git commit -m "refactor(tests): create directory structure for reorganized tests
 **Interfaces:** Test coverage for all API client functionality
 
 - [ ] **Step 1: Create base-api-client.test.js**
+
 ```javascript
 /**
  * SPDX-FileCopyrightText: 2026 Fran
@@ -698,9 +738,9 @@ describe('BaseApiClient', () => {
         it('should return unhealthy status when disabled', async () => {
             mockDisabledManager.isDisabled.mockResolvedValue(true);
             const status = await client.getStatus();
-            expect(status).toEqual({ 
-                healthy: false, 
-                reason: 'Temporarily disabled due to errors' 
+            expect(status).toEqual({
+                healthy: false,
+                reason: 'Temporarily disabled due to errors',
             });
         });
     });
@@ -728,12 +768,14 @@ describe('BaseApiClient', () => {
 
 - [ ] **Step 2: Create other API client test files**
 - [ ] **Step 3: Run tests to verify they pass**
+
 ```bash
 npm test
 ```
 
 - [ ] **Step 4: Delete old api-clients.test.js**
 - [ ] **Step 5: Commit**
+
 ```bash
 git add tests/unit/api/
 git rm tests/unit/api-clients.test.js
@@ -745,7 +787,7 @@ git commit -m "refactor(tests): split API client tests to match production struc
 ## Implementation Order Recommendation
 
 1. **Phase 1: Directory Creation** (Task 1)
-2. **Phase 1: File Splitting** (Tasks 2-15) 
+2. **Phase 1: File Splitting** (Tasks 2-15)
 3. **Phase 1: Index Files** (Tasks 16-20)
 4. **Phase 2: Method Reordering** (Tasks 21-30)
 5. **Phase 3: Parameter Reordering** (Tasks 31-35) - **HIGHEST RISK**
@@ -756,14 +798,16 @@ git commit -m "refactor(tests): split API client tests to match production struc
 ## Risk Mitigation Strategy
 
 ### High Risk Phase (Parameter Reordering)
+
 - **Backup first:** Create git branch before starting Phase 3
 - **Test everything:** Run full test suite after each parameter change
 - **Small commits:** One class at a time
 - **Verify builds:** Ensure Rollup builds work after each change
 
 ### Verification Checklist
+
 - [ ] All original tests still pass
-- [ ] No regressions in functionality  
+- [ ] No regressions in functionality
 - [ ] Build process completes successfully
 - [ ] Linting passes
 - [ ] Test coverage remains at 90%+
@@ -776,6 +820,7 @@ git commit -m "refactor(tests): split API client tests to match production struc
 **Plan complete and saved to `docs/superpowers/plans/2026-10-02-clean-code-refactoring-plan.md`. Please review the plan.**
 
 For this plan I recommend **Subagent-driven** execution, because:
+
 - The plan involves 50+ tasks across multiple phases
 - Each phase has different risk levels and requires different expertise
 - Independent review after each phase ensures no regressions are introduced

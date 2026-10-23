@@ -8,9 +8,7 @@
 
 **Tech Stack:** TypeScript 5.3+, Rollup, ESLint, Vitest, Prettier
 
-**Spec:** docs/superpowers/specs/2026-10-08-typescript-migration-design.md
-
-**Tracking:** docs/typescript-migration.md
+**Spec:** `docs/superpowers/specs/2026-10-08-typescript-migration-design.md`
 
 ---
 

@@ -8,7 +8,7 @@ Six independent commits, each self-contained. Tests ship in the same commit as t
 
 ## Context
 
-This spec covers the remaining `[fix]` items from `docs/code-review.md` that were not addressed by the first quick-fixes batch (see `docs/superpowers/specs/2026-06-05-quick-fixes-design.md`). Many items from the code review were already fixed in the quick-fixes implementation; only the six items below remain open.
+This spec covers the remaining `[fix]` items from the 2026-06-05 codebase review that were not addressed by the first quick-fixes batch (see `docs/superpowers/specs/2026-06-05-quick-fixes-design.md`). Many items from the code review were already fixed in the quick-fixes implementation; only the six items below remain open.
 
 ---
 

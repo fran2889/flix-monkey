@@ -3,7 +3,7 @@
 **Date**: 2026-10-08  
 **Author**: fran  
 **Status**: Draft  
-**Related**: docs/typescript-migration.md (tracking)
+**Related**: `docs/superpowers/plans/2026-10-08-typescript-migration.md` (tracking)
 
 ---
 
@@ -285,14 +285,14 @@ After any rollback:
 
 ## Migration Tracking
 
-A tracking document at `docs/typescript-migration.md` contains:
+The implementation plan at `docs/superpowers/plans/2026-10-08-typescript-migration.md` tracks the migration and contains:
 
 - Phase-by-phase checklist of all files to migrate
 - Current status of each file
 - Migration instructions
 - TypeScript configuration reference
 
-This document is updated with each migration commit.
+The plan is updated with each migration commit.
 
 ---
 
@@ -361,4 +361,4 @@ npx tsc --noEmit
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
 - [Rollup TypeScript Plugin](https://github.com/rollup/plugins/tree/master/packages/typescript)
 - [ESLint TypeScript Support](https://typescript-eslint.io/)
-- [Migration Tracking Document](../typescript-migration.md)
+- `docs/superpowers/plans/2026-10-08-typescript-migration.md` (implementation plan)
