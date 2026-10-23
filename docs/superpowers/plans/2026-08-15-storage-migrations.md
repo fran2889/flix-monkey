@@ -42,7 +42,7 @@
 - Produces: `DATA_VERSION_KEY`, `MIGRATIONS`, and `runMigrations(adapter, logger, migrations = MIGRATIONS)`.
 - `runMigrations()` returns `Promise<void>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create the test file with the GPL header. Import `createMockAdapter`, `DATA_VERSION_KEY`, and `runMigrations`; use `{ info: vi.fn(), error: vi.fn() }` as logger.
 
@@ -96,13 +96,13 @@ it('runs recovery, logs it, and advances after upgrade failure', async () => {
 
 Also test: current version produces no writes, missing `onFailure` still advances, failing recovery is logged and a later migration still runs, and duplicate, unordered, zero, non-integer, missing-`upgrade`, and non-function-`onFailure` registries reject.
 
-- [ ] **Step 2: Run the test to prove it fails**
+- [x] **Step 2: Run the test to prove it fails**
 
 Run: `npx vitest run tests/unit/core/migrations.test.js`
 
 Expected: FAIL because the migration module does not exist.
 
-- [ ] **Step 3: Implement the public runner**
+- [x] **Step 3: Implement the public runner**
 
 Create `src/core/migrations.js` with typedefs for `MigrationSummary` and `StorageMigration`. Start the registry empty:
 
@@ -136,13 +136,13 @@ export async function runMigrations(adapter, logger, migrations = MIGRATIONS) {
 
 Implement `parseStoredVersion` so only safe integer numbers greater than or equal to zero survive. Implement `validateMigrations` so versions are positive safe integers in strictly increasing order, `upgrade` is a function, and an included `onFailure` is a function. Document that runner failure handling deliberately advances data version to avoid startup loops. Do not create a speculative real migration.
 
-- [ ] **Step 4: Verify focused behavior**
+- [x] **Step 4: Verify focused behavior**
 
 Run: `npx vitest run tests/unit/core/migrations.test.js && npm run lint`
 
 Expected: PASS and exit code `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/migrations.js tests/unit/core/migrations.test.js
@@ -166,7 +166,7 @@ git commit -m "feat(storage): add migration runner"
 - Produces: `createExtensionMigrationExecutor(): () => Promise<void>`.
 - Both background scripts accept authenticated `{ type: 'FM_RUN_MIGRATIONS' }` requests.
 
-- [ ] **Step 1: Write failing executor and background tests**
+- [x] **Step 1: Write failing executor and background tests**
 
 Mock the new shared module in both background tests so `createExtensionMigrationExecutor` returns `executeMigrations`. Extend the runtime stub to capture `runtime.onInstalled.addListener`.
 
@@ -174,13 +174,13 @@ Test that both `{ reason: 'install' }` and `{ reason: 'update' }` invoke the exe
 
 In the new executor test, mock `runMigrations`, `Logger`, and `WebExtensionAdapter`. Make `runMigrations` deferred, call `executeMigrations()` twice before resolving, and assert both callers receive the same completion while `runMigrations` is called once.
 
-- [ ] **Step 2: Run tests to prove they fail**
+- [x] **Step 2: Run tests to prove they fail**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.js tests/unit/targets/firefox/background.test.js tests/unit/targets/extension-migrations.test.js`
 
 Expected: FAIL because no shared executor or installed listeners exist.
 
-- [ ] **Step 3: Implement executor and hooks**
+- [x] **Step 3: Implement executor and hooks**
 
 Create the shared module:
 
@@ -203,13 +203,13 @@ export function createExtensionMigrationExecutor() {
 
 Each background entry creates one executor. Add `runtime.onInstalled` that calls it and logs unexpected rejection with `console.error`. In Chrome, handle the migration message after the same-extension sender check, call `executeMigrations().then(() => sendResponse({}), error => sendResponse({ error: error.message }))`, and return `true`. In Firefox's async listener, await execution and return `{}`; let an unexpected rejection reject the message. Preserve current `FM_FETCH` behavior and the sender check.
 
-- [ ] **Step 4: Verify focused behavior**
+- [x] **Step 4: Verify focused behavior**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.js tests/unit/targets/firefox/background.test.js tests/unit/targets/extension-migrations.test.js`
 
 Expected: PASS, including every pre-existing fetch test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/extension/migrations.js src/targets/chrome/service-worker.js src/targets/firefox/background.js \
@@ -232,7 +232,7 @@ git commit -m "feat(storage): run migrations on extension updates"
 - Consumes: `browser.runtime.sendMessage({ type: 'FM_RUN_MIGRATIONS' })`.
 - Produces: no extension storage read, configuration snapshot, app creation, or options UI rendering before that promise resolves.
 
-- [ ] **Step 1: Write failing ordering tests**
+- [x] **Step 1: Write failing ordering tests**
 
 In each webextension-polyfill mock, make `sendMessage` return a deferred promise. Import the entry, assert initial storage access and UI/app creation have not happened, resolve the deferred promise, then await its asynchronous bootstrap.
 
@@ -246,13 +246,13 @@ expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
 
 For options, assert `SettingsUI.render(document.body)` waits for migration completion and retain the existing tab reload test.
 
-- [ ] **Step 2: Run tests to prove they fail**
+- [x] **Step 2: Run tests to prove they fail**
 
 Run: `npx vitest run tests/unit/targets/content.test.js tests/unit/targets/options.test.js`
 
 Expected: FAIL because content reads first and options constructs immediately.
 
-- [ ] **Step 3: Add startup gates**
+- [x] **Step 3: Add startup gates**
 
 At the start of the existing content async IIFE, reject an error response before any storage read:
 
@@ -266,13 +266,13 @@ Keep the remaining snapshot/listener/app sequence unchanged.
 
 Refactor options into an async IIFE. Construct the adapter, await the same message, and throw if the response contains `error`; then construct `Logger`, `ConfigManager`, `CacheManager`, `DisabledClientsManager`, and `SettingsUI`. Keep the exact save/reload URL patterns and call `ui.render(document.body)` last.
 
-- [ ] **Step 4: Verify focused behavior**
+- [x] **Step 4: Verify focused behavior**
 
 Run: `npx vitest run tests/unit/targets/content.test.js tests/unit/targets/options.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/extension/content.js src/targets/extension/options.js \
@@ -292,17 +292,17 @@ git commit -m "feat(storage): gate extension startup on migrations"
 - Consumes: `runMigrations(adapter, logger)`.
 - Produces: application startup and menu registration only after migrations resolve.
 
-- [ ] **Step 1: Write the failing bootstrap test**
+- [x] **Step 1: Write the failing bootstrap test**
 
 Mock `src/core/migrations.js` to return a deferred promise. Import `entry.js` without resolving it and assert neither `startApp` nor `registerMenuCommand` has run. Resolve, await bootstrap, then assert the runner received the adapter and logger, followed by `startApp`, then menu registration. Update existing menu tests to await bootstrap before retrieving the callback.
 
-- [ ] **Step 2: Run test to prove it fails**
+- [x] **Step 2: Run test to prove it fails**
 
 Run: `npx vitest run tests/unit/targets/userscript/entry.test.js`
 
 Expected: FAIL because startup is currently synchronous and does not invoke migrations.
 
-- [ ] **Step 3: Implement asynchronous bootstrap**
+- [x] **Step 3: Implement asynchronous bootstrap**
 
 Import `runMigrations`. Keep one adapter and one bootstrap logger, make `app` mutable, and use:
 
@@ -320,13 +320,13 @@ void (async () => {
 
 Extract the existing callback to `openSettings()`. In the fallback dependency path, reuse the bootstrap logger rather than constructing another one. Retain use of `app.cacheManager` and `app.disabledManager` when an app exists.
 
-- [ ] **Step 4: Verify focused behavior**
+- [x] **Step 4: Verify focused behavior**
 
 Run: `npx vitest run tests/unit/targets/userscript/entry.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/userscript/entry.js tests/unit/targets/userscript/entry.test.js
@@ -339,19 +339,19 @@ git commit -m "feat(storage): migrate userscript data before startup"
 
 - Verify: all Task 1-4 files.
 
-- [ ] **Step 1: Run the complete quality suite**
+- [x] **Step 1: Run the complete quality suite**
 
 Run: `npm run lint && npm run format:check && npm test && npm run build`
 
 Expected: every command exits `0`; all three distributable targets build and extension ZIP packaging completes.
 
-- [ ] **Step 2: Inspect final state**
+- [x] **Step 2: Inspect final state**
 
 Run: `git status --short && git log -4 --oneline`
 
 Expected: a clean worktree and the four implementation commits described above.
 
-- [ ] **Step 3: Commit verification-only formatting if needed**
+- [x] **Step 3: Commit verification-only formatting if needed**
 
 If formatter or lint tools changed files:
 

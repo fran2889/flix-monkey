@@ -45,21 +45,21 @@
 
 - Create: (branch) `pre-typescript-migration`
 
-- [ ] **Step 1: Create rollback branch**
+- [x] **Step 1: Create rollback branch**
 
 Run: `git checkout -b pre-typescript-migration`
 Expected: New branch created from current HEAD
 
-- [ ] **Step 2: Push branch to remote**
+- [x] **Step 2: Push branch to remote**
 
 Run: `git push origin pre-typescript-migration`
 Expected: Branch available on remote
 
-- [ ] **Step 3: Commit message verification**
+- [x] **Step 3: Commit message verification**
 
 Verify branch contains all pre-migration state (MSW removed, etc.)
 
-- [ ] **Step 4: Return to main branch**
+- [x] **Step 4: Return to main branch**
 
 Run: `git checkout main`
 Expected: Back on main branch
@@ -79,7 +79,7 @@ Expected: Back on main branch
 
 - Produces: TypeScript compiler available for `.ts` files
 
-- [ ] **Step 1: Add devDependencies to package.json**
+- [x] **Step 1: Add devDependencies to package.json**
 
 Add to package.json devDependencies:
 
@@ -92,12 +92,12 @@ Add to package.json devDependencies:
 "@typescript-eslint/parser": "^7.0.0"
 ```
 
-- [ ] **Step 2: Run npm install**
+- [x] **Step 2: Run npm install**
 
 Run: `npm install`
 Expected: All dependencies installed successfully
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add package.json package-lock.json
@@ -116,7 +116,7 @@ git commit -m "chore: add TypeScript dependencies"
 
 - Produces: Strict TypeScript configuration for src/ and tests/
 
-- [ ] **Step 1: Create tsconfig.json**
+- [x] **Step 1: Create tsconfig.json**
 
 Create file with content:
 
@@ -145,12 +145,12 @@ Create file with content:
 }
 ```
 
-- [ ] **Step 2: Verify tsconfig syntax**
+- [x] **Step 2: Verify tsconfig syntax**
 
 Run: `npx tsc --noEmit`
 Expected: No errors (though will fail on JS files, that's OK for now)
 
-- [ ] **Step 3: Add type-check script to package.json**
+- [x] **Step 3: Add type-check script to package.json**
 
 Add to package.json scripts:
 
@@ -158,7 +158,7 @@ Add to package.json scripts:
 "type-check": "tsc --noEmit"
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tsconfig.json package.json
@@ -178,7 +178,7 @@ git commit -m "chore: add TypeScript configuration"
 - Consumes: `@rollup/plugin-typescript` from Task 1.1
 - Produces: Rollup can compile `.ts` files
 
-- [ ] **Step 1: Import typescript plugin**
+- [x] **Step 1: Import typescript plugin**
 
 Add to imports at top of rollup.config.js:
 
@@ -186,7 +186,7 @@ Add to imports at top of rollup.config.js:
 import typescript from '@rollup/plugin-typescript';
 ```
 
-- [ ] **Step 2: Add typescript plugin to sharedPlugins**
+- [x] **Step 2: Add typescript plugin to sharedPlugins**
 
 Update sharedPlugins function to include typescript():
 
@@ -194,12 +194,12 @@ Update sharedPlugins function to include typescript():
 const sharedPlugins = () => [resolve(), commonjs(), typescript()];
 ```
 
-- [ ] **Step 3: Verify Rollup handles TypeScript**
+- [x] **Step 3: Verify Rollup handles TypeScript**
 
 Run: `npm run build:userscript`
 Expected: Build succeeds (no TS files yet, but no errors)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add rollup.config.js
@@ -219,7 +219,7 @@ git commit -m "chore: add TypeScript support to Rollup"
 - Consumes: `@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin` from Task 1.1
 - Produces: ESLint can lint TypeScript files
 
-- [ ] **Step 1: Update ESLint config**
+- [x] **Step 1: Update ESLint config**
 
 Replace @eslint/js import with @typescript-eslint/parser and add plugin:
 
@@ -240,16 +240,16 @@ plugins: {
 }
 ```
 
-- [ ] **Step 2: Update file patterns**
+- [x] **Step 2: Update file patterns**
 
 Add `**/*.ts` to file patterns in the config
 
-- [ ] **Step 3: Run ESLint to verify**
+- [x] **Step 3: Run ESLint to verify**
 
 Run: `npm run lint`
 Expected: Passes (no TS files yet, but no errors)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add eslint.config.js
@@ -272,11 +272,11 @@ git commit -m "chore: add TypeScript support to ESLint"
 - Produces: Typed constants module
 - Consumes: No dependencies (leaf module)
 
-- [ ] **Step 1: Rename file**
+- [x] **Step 1: Rename file**
 
 Run: `mv src/core/constants.js src/core/constants.ts`
 
-- [ ] **Step 2: Add TypeScript types**
+- [x] **Step 2: Add TypeScript types**
 
 Convert JSDoc types to TypeScript types. Example:
 
@@ -295,7 +295,7 @@ export const ApiSource = {
 export type ApiSourceType = (typeof ApiSource)[keyof typeof ApiSource];
 ```
 
-- [ ] **Step 3: Migrate test file**
+- [x] **Step 3: Migrate test file**
 
 Rename and update imports:
 
@@ -305,22 +305,22 @@ import { ApiSource, DAYS_TO_MS } from '../../../src/core/constants.js';
 import { ApiSource, DAYS_TO_MS } from '../../../src/core/constants';
 ```
 
-- [ ] **Step 4: Run type-check**
+- [x] **Step 4: Run type-check**
 
 Run: `npm run type-check`
 Expected: No errors for constants.ts
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 6: Run build**
+- [x] **Step 6: Run build**
 
 Run: `npm run build`
 Expected: Build succeeds
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/constants.ts tests/unit/core/constants.test.ts
@@ -455,19 +455,19 @@ git commit -m "feat: migrate utility functions to TypeScript (Task 2.3)"
 - Produces: Typed cache modules
 - Consumes: May depend on constants from Phase 1
 
-- [ ] **Step 1: Migrate cache-entry.ts**
+- [x] **Step 1: Migrate cache-entry.ts**
 
 Rename and add types for cache entry data structure
 
-- [ ] **Step 2: Migrate cache-manager.ts**
+- [x] **Step 2: Migrate cache-manager.ts**
 
 Add types for CacheManager class methods
 
-- [ ] **Step 3: Update barrel index**
+- [x] **Step 3: Update barrel index**
 
-- [ ] **Step 4: Run type-check, tests, build**
+- [x] **Step 4: Run type-check, tests, build**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/cache/*.ts tests/unit/core/cache/*.test.ts
@@ -490,19 +490,19 @@ git commit -m "feat(ts-migration): migrate cache to TypeScript"
 - Produces: Typed config modules
 - Consumes: May use constants from Phase 1
 
-- [ ] **Step 1: Migrate config-fields.ts**
+- [x] **Step 1: Migrate config-fields.ts**
 
 Add proper types for CONFIG_FIELDS array
 
-- [ ] **Step 2: Migrate config-manager.ts**
+- [x] **Step 2: Migrate config-manager.ts**
 
 Add types for ConfigManager class and reactive config object
 
-- [ ] **Step 3: Update barrel index**
+- [x] **Step 3: Update barrel index**
 
-- [ ] **Step 4: Run type-check, tests, build**
+- [x] **Step 4: Run type-check, tests, build**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/config/*.ts tests/unit/core/config/*.test.ts
@@ -523,15 +523,15 @@ git commit -m "feat(ts-migration): migrate config to TypeScript"
 - Produces: Typed API manager
 - Consumes: Depends on config from Task 3.2
 
-- [ ] **Step 1: Migrate api-manager.ts**
+- [x] **Step 1: Migrate api-manager.ts**
 
 Add types for ApiClientManager class
 
-- [ ] **Step 2: Migrate test file**
+- [x] **Step 2: Migrate test file**
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/api-manager.ts tests/unit/core/api-manager.test.ts
@@ -557,17 +557,17 @@ git commit -m "feat(ts-migration): migrate API manager to TypeScript"
 - Produces: Typed service classes
 - Consumes: Depends on config from Task 3.2, constants from Phase 1
 
-- [ ] **Step 1: Migrate base class first**
+- [x] **Step 1: Migrate base class first**
 
-- [ ] **Step 2: Migrate each service implementation**
+- [x] **Step 2: Migrate each service implementation**
 
-- [ ] **Step 3: Update service-registry.ts**
+- [x] **Step 3: Update service-registry.ts**
 
-- [ ] **Step 4: Update barrel index**
+- [x] **Step 4: Update barrel index**
 
-- [ ] **Step 5: Run type-check, tests, build**
+- [x] **Step 5: Run type-check, tests, build**
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/services/*.ts tests/unit/core/services/*.test.ts
@@ -595,11 +595,11 @@ git commit -m "feat(ts-migration): migrate services to TypeScript"
 - Produces: Typed manager classes
 - Consumes: May depend on config, cache, constants
 
-- [ ] **Step 1: Migrate each manager file**
+- [x] **Step 1: Migrate each manager file**
 
-- [ ] **Step 2: Run type-check, tests, build after each**
+- [x] **Step 2: Run type-check, tests, build after each**
 
-- [ ] **Step 3: Commit all together**
+- [x] **Step 3: Commit all together**
 
 ```bash
 git add src/core/disabled-clients.ts src/core/fade-manager.ts src/core/id-override-manager.ts src/core/request-queue.ts src/core/logger.ts src/core/migrations.ts tests/unit/core/*-manager.test.ts tests/unit/core/request-queue.test.ts tests/unit/core/logger.test.js tests/unit/core/migrations.test.js
@@ -622,13 +622,13 @@ git commit -m "feat(ts-migration): migrate managers to TypeScript"
 - Produces: Typed surface discovery modules
 - Consumes: Depends on config, utils from earlier phases
 
-- [ ] **Step 1: Migrate surface-manager.ts first**
+- [x] **Step 1: Migrate surface-manager.ts first**
 
-- [ ] **Step 2: Migrate each surface definition**
+- [x] **Step 2: Migrate each surface definition**
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/surfaces/*.ts tests/unit/core/surfaces/*.test.ts
@@ -649,15 +649,15 @@ git commit -m "feat(ts-migration): migrate surfaces to TypeScript"
 - Produces: Typed overlay renderer
 - Consumes: Depends on surfaces, config, utils
 
-- [ ] **Step 1: Migrate overlay.ts**
+- [x] **Step 1: Migrate overlay.ts**
 
 Add types for OverlayRenderer class and DOM manipulation
 
-- [ ] **Step 2: Migrate test file**
+- [x] **Step 2: Migrate test file**
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/overlay.ts tests/unit/core/overlay.test.ts
@@ -678,15 +678,15 @@ git commit -m "feat(ts-migration): migrate overlay to TypeScript"
 - Produces: Typed main application class
 - Consumes: Depends on all previous phases
 
-- [ ] **Step 1: Migrate app.ts**
+- [x] **Step 1: Migrate app.ts**
 
 This is a critical file - take extra care with types
 
-- [ ] **Step 2: Migrate test file**
+- [x] **Step 2: Migrate test file**
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/app.ts tests/unit/core/app.test.ts
@@ -709,17 +709,17 @@ git commit -m "feat(ts-migration): migrate app to TypeScript"
 - Produces: Typed PlatformAdapter base class
 - Consumes: No dependencies on other src files
 
-- [ ] **Step 1: Migrate adapter.ts**
+- [x] **Step 1: Migrate adapter.ts**
 
 Abstract class with typed abstract methods
 
-- [ ] **Step 2: Migrate mock adapter**
+- [x] **Step 2: Migrate mock adapter**
 
 Mock must extend real adapter with proper types
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/platform/adapter.ts tests/mocks/adapter.ts
@@ -742,13 +742,13 @@ git commit -m "feat(ts-migration): migrate platform adapter base to TypeScript"
 - Produces: Typed platform implementations
 - Consumes: Extends adapter from Task 5.1
 
-- [ ] **Step 1: Migrate each implementation**
+- [x] **Step 1: Migrate each implementation**
 
-- [ ] **Step 2: Migrate corresponding mocks**
+- [x] **Step 2: Migrate corresponding mocks**
 
-- [ ] **Step 3: Run type-check, tests, build**
+- [x] **Step 3: Run type-check, tests, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/platform/*.ts tests/mocks/userscript.ts tests/mocks/webextension.ts
@@ -776,11 +776,11 @@ git commit -m "feat(ts-migration): migrate platform implementations to TypeScrip
 - Produces: Typed UI components
 - Consumes: May depend on config, constants
 
-- [ ] **Step 1: Migrate each UI file**
+- [x] **Step 1: Migrate each UI file**
 
-- [ ] **Step 2: Run type-check, tests, build**
+- [x] **Step 2: Run type-check, tests, build**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/ui/*.ts tests/unit/core/ui/*.test.ts
@@ -803,15 +803,15 @@ git commit -m "feat(ts-migration): migrate UI components to TypeScript"
 - Produces: Typed API client classes
 - Consumes: Depends on services, config
 
-- [ ] **Step 1: Migrate base-api-client.ts first**
+- [x] **Step 1: Migrate base-api-client.ts first**
 
-- [ ] **Step 2: Migrate each API client**
+- [x] **Step 2: Migrate each API client**
 
-- [ ] **Step 3: Update barrel index**
+- [x] **Step 3: Update barrel index**
 
-- [ ] **Step 4: Run type-check, tests, build**
+- [x] **Step 4: Run type-check, tests, build**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/*.ts tests/unit/core/api/*.test.ts
@@ -836,11 +836,11 @@ git commit -m "feat(ts-migration): migrate API clients to TypeScript"
 - Produces: Typed entry points
 - Consumes: Depends on all core modules
 
-- [ ] **Step 1: Migrate each extension file**
+- [x] **Step 1: Migrate each extension file**
 
-- [ ] **Step 2: Run type-check, tests, build**
+- [x] **Step 2: Run type-check, tests, build**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/extension/*.ts
@@ -859,11 +859,11 @@ git commit -m "feat(ts-migration): migrate extension entry points to TypeScript"
 
 - Produces: Typed Firefox background script
 
-- [ ] **Step 1: Migrate background.ts**
+- [x] **Step 1: Migrate background.ts**
 
-- [ ] **Step 2: Run type-check, build**
+- [x] **Step 2: Run type-check, build**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/firefox/background.ts
@@ -882,11 +882,11 @@ git commit -m "feat(ts-migration): migrate Firefox target to TypeScript"
 
 - Produces: Typed Chrome service worker
 
-- [ ] **Step 1: Migrate service-worker.ts**
+- [x] **Step 1: Migrate service-worker.ts**
 
-- [ ] **Step 2: Run type-check, build**
+- [x] **Step 2: Run type-check, build**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/targets/chrome/service-worker.ts
@@ -906,13 +906,13 @@ git commit -m "feat(ts-migration): migrate Chrome target to TypeScript"
 
 - Produces: Typed userscript entry
 
-- [ ] **Step 1: Migrate entry.ts**
+- [x] **Step 1: Migrate entry.ts**
 
-- [ ] **Step 2: Migrate metadata.ts**
+- [x] **Step 2: Migrate metadata.ts**
 
-- [ ] **Step 3: Run type-check, build**
+- [x] **Step 3: Run type-check, build**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/targets/userscript/*.ts
@@ -938,15 +938,15 @@ git commit -m "feat(ts-migration): migrate userscript target to TypeScript"
 - Produces: Typed mock factories
 - Consumes: Depends on all real classes being typed
 
-- [ ] **Step 1: Migrate each mock file**
+- [x] **Step 1: Migrate each mock file**
 
 Ensure mocks have same type signatures as real classes
 
-- [ ] **Step 2: Migrate setup.ts**
+- [x] **Step 2: Migrate setup.ts**
 
-- [ ] **Step 3: Run type-check, tests**
+- [x] **Step 3: Run type-check, tests**
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/mocks/*.ts tests/setup.ts
@@ -970,11 +970,11 @@ git commit -m "feat(ts-migration): migrate test infrastructure to TypeScript"
 - Produces: Typed UI tests
 - Consumes: Depends on all core and UI modules being typed
 
-- [ ] **Step 1: Migrate each UI test file**
+- [x] **Step 1: Migrate each UI test file**
 
-- [ ] **Step 2: Run type-check, tests**
+- [x] **Step 2: Run type-check, tests**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/ui/*.test.ts
@@ -989,35 +989,35 @@ git commit -m "feat(ts-migration): migrate UI tests to TypeScript"
 
 **Files:** All TypeScript files
 
-- [ ] **Step 1: Run type-check**
+- [x] **Step 1: Run type-check**
 
 Run: `npm run type-check`
 Expected: No errors
 
-- [ ] **Step 2: Run full test suite**
+- [x] **Step 2: Run full test suite**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 3: Run lint**
+- [x] **Step 3: Run lint**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 4: Build all targets**
+- [x] **Step 4: Build all targets**
 
 Run: `npm run build`
 Expected: All three targets build successfully
 
-- [ ] **Step 5: Verify no JS files remain in src/ and tests/**
+- [x] **Step 5: Verify no JS files remain in src/ and tests/**
 
 Run: `find src tests -name "*.js" | grep -v node_modules`
 Expected: No results (all files are .ts)
 
-- [ ] **Step 6: Create migration complete tag**
+- [x] **Step 6: Create migration complete tag**
 
 Run: `git tag typescript-migration-complete`
 
-- [ ] **Step 7: Push all changes**
+- [x] **Step 7: Push all changes**
 
 Run: `git push origin typescript-migration-prep --tags`

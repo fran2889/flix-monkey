@@ -43,7 +43,7 @@
 - Consumes: an authenticated Netflix page exposed through CDP at `http://localhost:9222`.
 - Produces: `require_capture(name: str, html: str) -> str`, which returns non-empty HTML or raises `RuntimeError`; surface fixtures containing stable card attributes for Task 2.
 
-- [ ] **Step 1: Add explicit capture validation**
+- [x] **Step 1: Add explicit capture validation**
 
 Add this helper after `capture_row_html`:
 
@@ -55,7 +55,7 @@ def require_capture(name, html):
     return html
 ```
 
-- [ ] **Step 2: Capture all browse card variants using stable selectors**
+- [x] **Step 2: Capture all browse card variants using stable selectors**
 
 Replace the legacy browse-row extraction with explicit surface captures:
 
@@ -83,7 +83,7 @@ Replace the legacy browse-row extraction with explicit surface captures:
 
 Do not remove Continue Watching from the aggregate browse fixture. Keep Top 10 rows so Task 2 can assert both new surface variants against real Netflix markup.
 
-- [ ] **Step 3: Validate every remaining capture before saving**
+- [x] **Step 3: Validate every remaining capture before saving**
 
 Wrap search, mini-preview, and detail-preview values with descriptive validation:
 
@@ -102,7 +102,7 @@ Wrap search, mini-preview, and detail-preview values with descriptive validation
 
 Keep the existing anonymization calls and aggregate fixture writes after validation.
 
-- [ ] **Step 4: Run the live capture**
+- [x] **Step 4: Run the live capture**
 
 Run:
 
@@ -112,7 +112,7 @@ python3 scripts/capture-surface-fixtures.py
 
 Expected: exit code 0, a non-zero character count for every fixture, and final output `Done.`. If Netflix has moved the hover target, update `hover_card()` to choose a visible `.title-card` with a non-zero bounding rectangle while retaining `.title-card` as the stable legacy surface selector.
 
-- [ ] **Step 5: Check anonymization and fixture completeness**
+- [x] **Step 5: Check anonymization and fixture completeness**
 
 Run:
 
@@ -124,7 +124,7 @@ rg -n 'data-auth|authorization|eyJ[A-Za-z0-9_-]*\.' tests/fixtures
 
 Expected: the first two commands find the new surfaces. The final command prints no authorization data or JWT-shaped value. Search separately for the profile name printed by the capture script and confirm that it does not appear in any fixture.
 
-- [ ] **Step 6: Commit the capture workflow and fixtures**
+- [x] **Step 6: Commit the capture workflow and fixtures**
 
 ```bash
 git add scripts/capture-surface-fixtures.py tests/fixtures
@@ -147,7 +147,7 @@ Expected: the commit includes only the capture script and Netflix fixture files.
 - Consumes: `NetflixSurfaceManager.discover(root)` and the refreshed `tests/fixtures/netflix-browse.html` from Task 1.
 - Produces: `NETFLIX_SURFACES.PROGRESS_CARD` and `NETFLIX_SURFACES.RANKED_CARD`, each compatible with the existing generic `SurfaceManager` discovery contract.
 
-- [ ] **Step 1: Write failing fixture-backed discovery tests**
+- [x] **Step 1: Write failing fixture-backed discovery tests**
 
 Add these tests to `tests/ui/netflix-browse.ui.test.js`:
 
@@ -172,7 +172,7 @@ it.each([
 });
 ```
 
-- [ ] **Step 2: Run the focused test to verify it fails**
+- [x] **Step 2: Run the focused test to verify it fails**
 
 Run:
 
@@ -182,7 +182,7 @@ npx vitest run tests/ui/netflix-browse.ui.test.js
 
 Expected: FAIL because discovery returns no surface whose container is the progress or ranked card.
 
-- [ ] **Step 3: Add minimal declarative surface definitions**
+- [x] **Step 3: Add minimal declarative surface definitions**
 
 Add these frozen entries to `NETFLIX_SURFACES` in `src/core/surfaces.js`, after `SEARCH_CARD` and before preview surfaces:
 
@@ -205,7 +205,7 @@ RANKED_CARD: Object.freeze({
 
 Document each entry as a browse-page surface and note that generated Netflix CSS classes are intentionally avoided.
 
-- [ ] **Step 4: Run focused UI and surface tests**
+- [x] **Step 4: Run focused UI and surface tests**
 
 Run:
 
@@ -215,7 +215,7 @@ npx vitest run tests/ui/netflix-browse.ui.test.js tests/unit/core/surfaces.test.
 
 Expected: both test files pass. Existing title, search, and preview discovery remains green.
 
-- [ ] **Step 5: Confirm selectors against the live DOM**
+- [x] **Step 5: Confirm selectors against the live DOM**
 
 Run through the Chrome DevTools CLI:
 
@@ -225,7 +225,7 @@ chrome-devtools evaluate_script "() => ({ progress: document.querySelectorAll('[
 
 Expected: both counts are greater than zero on the logged-in browse page.
 
-- [ ] **Step 6: Commit surface support and tests**
+- [x] **Step 6: Commit surface support and tests**
 
 ```bash
 git add src/core/surfaces.js tests/ui/netflix-browse.ui.test.js
@@ -248,7 +248,7 @@ Expected: the commit contains the surface registry and fixture-backed UI tests o
 - Consumes: the refreshed fixtures and new Netflix surface definitions.
 - Produces: verified userscript, Firefox, and Chrome builds with passing unit and UI suites.
 
-- [ ] **Step 1: Run formatting without changing files**
+- [x] **Step 1: Run formatting without changing files**
 
 Run:
 
@@ -258,7 +258,7 @@ npm run format:check
 
 Expected: exit code 0. If it fails, run `npx prettier --write` only on files modified by this implementation, inspect the diff, and commit the formatting with the relevant task files.
 
-- [ ] **Step 2: Run lint**
+- [x] **Step 2: Run lint**
 
 Run:
 
@@ -268,7 +268,7 @@ npm run lint
 
 Expected: exit code 0 with no ESLint errors.
 
-- [ ] **Step 3: Run unit and UI tests**
+- [x] **Step 3: Run unit and UI tests**
 
 Run:
 
@@ -278,7 +278,7 @@ npm test
 
 Expected: exit code 0 and every unit and UI test passes. Do not run integration tests because they require live API credentials and are outside per-PR verification.
 
-- [ ] **Step 4: Build every distribution target**
+- [x] **Step 4: Build every distribution target**
 
 Run:
 
@@ -288,7 +288,7 @@ npm run build
 
 Expected: exit code 0, with userscript, Firefox, and Chrome artifacts produced successfully.
 
-- [ ] **Step 5: Inspect the final diff and repository state**
+- [x] **Step 5: Inspect the final diff and repository state**
 
 Run:
 
@@ -300,7 +300,7 @@ git diff --check HEAD~2..HEAD
 
 Expected: no whitespace errors. Any pre-existing unrelated modified files remain unstaged and unchanged. The two implementation commits appear after the design commit.
 
-- [ ] **Step 6: Report manual verification**
+- [x] **Step 6: Report manual verification**
 
 Report automated checks as complete. Leave this manual check open for the user:
 

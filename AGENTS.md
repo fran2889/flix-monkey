@@ -44,6 +44,10 @@ Reuse that profile. Do not use fresh or temporary user-data directories.
 
 Stored data carries an `fm_data_version`. When changing a persisted shape, append a new migration to `MIGRATIONS` ([`src/core/migrations.ts`](src/core/migrations.ts)) with the next integer version, and add tests for transformed, already-current, and malformed data. Never edit or reuse a released version. `runMigrations()` advances the stored version even when a migration fails, on purpose, so a broken migration cannot trap startup.
 
+## Superpowers plans
+
+Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track work with `- [ ]` checkboxes. When implementing a plan, tick each task and step (change `- [ ]` to `- [x]`) as soon as it is complete, including verification steps once they have been run. Do not leave finished work unchecked or batch the updates at the end.
+
 ## Conventions
 
 - License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching [`LICENSE_HEADER.template`](LICENSE_HEADER.template). ESLint enforces this; [`src/targets/userscript/metadata.ts`](src/targets/userscript/metadata.ts) is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.

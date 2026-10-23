@@ -153,7 +153,7 @@ _Move and split test files to match new production structure_
 
 **Interfaces:** None - directory creation only
 
-- [ ] **Step 1: Create all directory paths**
+- [x] **Step 1: Create all directory paths**
 
 ```bash
 mkdir -p src/core/api
@@ -166,13 +166,13 @@ mkdir -p src/core/ui/overlay/styles
 mkdir -p src/core/utils
 ```
 
-- [ ] **Step 2: Verify directories exist**
+- [x] **Step 2: Verify directories exist**
 
 ```bash
 ls -la src/core/api/ src/core/cache/ src/core/config/ src/core/surfaces/surface-definitions/ src/core/services/ src/core/ui/overlay/elements/ src/core/ui/overlay/styles/ src/core/utils/
 ```
 
-- [ ] **Step 3: Commit directory structure**
+- [x] **Step 3: Commit directory structure**
 
 ```bash
 git add src/core/
@@ -191,7 +191,7 @@ git commit -m "refactor: create directory structure for clean code organization"
 
 - Exports: `parseRatings`, `mapXmdbTitleType`, `mapOmdbTitleType`, `mapAgregarrTitleType`
 
-- [ ] **Step 1: Create title-type-mappers.js**
+- [x] **Step 1: Create title-type-mappers.js**
 
 ```javascript
 /**
@@ -250,13 +250,13 @@ export function mapAgregarrTitleType(apiValue) {
 }
 ```
 
-- [ ] **Step 2: Run lint on new file**
+- [x] **Step 2: Run lint on new file**
 
 ```bash
 npm run lint -- src/core/api/title-type-mappers.js
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api/title-type-mappers.js
@@ -277,7 +277,7 @@ git commit -m "refactor(api): extract title type mapping utilities"
 - Exports: `BaseApiClient` class
 - Consumes: `parseRatings` from title-type-mappers.js
 
-- [ ] **Step 1: Create base-api-client.js with reordered methods**
+- [x] **Step 1: Create base-api-client.js with reordered methods**
 
 ```javascript
 /**
@@ -459,14 +459,14 @@ export class BaseApiClient {
 }
 ```
 
-- [ ] **Step 2: Verify syntax and linting**
+- [x] **Step 2: Verify syntax and linting**
 
 ```bash
 node --check src/core/api/base-api-client.js
 npm run lint -- src/core/api/base-api-client.js
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api/base-api-client.js
@@ -485,7 +485,7 @@ git commit -m "refactor(api): extract BaseApiClient with method reordering"
 
 - Re-exports all API client classes
 
-- [ ] **Step 1: Create api/index.js**
+- [x] **Step 1: Create api/index.js**
 
 ```javascript
 /**
@@ -500,13 +500,13 @@ export { AgregarrApiClient } from './agregarr-api-client.js';
 export { parseRatings } from './title-type-mappers.js';
 ```
 
-- [ ] **Step 2: Verify exports work**
+- [x] **Step 2: Verify exports work**
 
 ```bash
 node -e "import('./src/core/api/index.js').then(m => console.log('API exports:', Object.keys(m)))"
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/core/api/index.js
@@ -539,7 +539,7 @@ Due to length constraints, the full plan includes 25+ additional tasks following
 
 **Interfaces:** None - internal reordering only
 
-- [ ] **Step 1: Reorder FlixMonkeyApp methods according to rules**
+- [x] **Step 1: Reorder FlixMonkeyApp methods according to rules**
     - Constructor first
     - Static methods next
     - Lifecycle methods next
@@ -547,19 +547,19 @@ Due to length constraints, the full plan includes 25+ additional tasks following
     - Private methods under first public caller
     - Getters at end
 
-- [ ] **Step 2: Run all tests to verify no functional changes**
+- [x] **Step 2: Run all tests to verify no functional changes**
 
 ```bash
 npm test
 ```
 
-- [ ] **Step 3: Verify linting passes**
+- [x] **Step 3: Verify linting passes**
 
 ```bash
 npm run lint
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/app.js
@@ -576,14 +576,14 @@ git commit -m "refactor(app): reorder FlixMonkeyApp methods by call hierarchy"
 
 **Interfaces:** None - already reordered in creation
 
-- [ ] **Step 1: Verify current method order matches spec**
-- [ ] **Step 2: Run tests**
+- [x] **Step 1: Verify current method order matches spec**
+- [x] **Step 2: Run tests**
 
 ```bash
 npm test
 ```
 
-- [ ] **Step 3: Commit** (if needed)
+- [x] **Step 3: Commit** (if needed)
 
 ---
 
@@ -599,7 +599,7 @@ npm test
 
 **Interfaces:** All classes that instantiate BaseApiClient
 
-- [ ] **Step 1: Update XmdbApiClient constructor call**
+- [x] **Step 1: Update XmdbApiClient constructor call**
 
 ```javascript
 // Current
@@ -625,14 +625,14 @@ super(
 );
 ```
 
-- [ ] **Step 2: Update all other API client constructors similarly**
-- [ ] **Step 3: Run all tests**
+- [x] **Step 2: Update all other API client constructors similarly**
+- [x] **Step 3: Run all tests**
 
 ```bash
 npm test
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/api/
@@ -656,13 +656,13 @@ git commit -m "refactor(api): update constructor parameter order per clean code 
 
 **Interfaces:** Test file organization
 
-- [ ] **Step 1: Create test directories**
+- [x] **Step 1: Create test directories**
 
 ```bash
 mkdir -p tests/unit/api tests/unit/cache tests/unit/config tests/unit/services tests/unit/surfaces tests/unit/ui
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add tests/unit/
@@ -684,7 +684,7 @@ git commit -m "refactor(tests): create directory structure for reorganized tests
 
 **Interfaces:** Test coverage for all API client functionality
 
-- [ ] **Step 1: Create base-api-client.test.js**
+- [x] **Step 1: Create base-api-client.test.js**
 
 ```javascript
 /**
@@ -766,15 +766,15 @@ describe('BaseApiClient', () => {
 });
 ```
 
-- [ ] **Step 2: Create other API client test files**
-- [ ] **Step 3: Run tests to verify they pass**
+- [x] **Step 2: Create other API client test files**
+- [x] **Step 3: Run tests to verify they pass**
 
 ```bash
 npm test
 ```
 
-- [ ] **Step 4: Delete old api-clients.test.js**
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Delete old api-clients.test.js**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/api/
@@ -806,12 +806,12 @@ git commit -m "refactor(tests): split API client tests to match production struc
 
 ### Verification Checklist
 
-- [ ] All original tests still pass
-- [ ] No regressions in functionality
-- [ ] Build process completes successfully
-- [ ] Linting passes
-- [ ] Test coverage remains at 90%+
-- [ ] No circular dependencies introduced
+- [x] All original tests still pass
+- [x] No regressions in functionality
+- [x] Build process completes successfully
+- [x] Linting passes
+- [x] Test coverage remains at 90%+
+- [x] No circular dependencies introduced
 
 ---
 
