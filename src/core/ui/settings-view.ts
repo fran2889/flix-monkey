@@ -390,18 +390,21 @@ export class SettingsView {
     readValues(): Record<string, ConfigValueType> {
         const values: Record<string, ConfigValueType> = {};
         for (const field of this.#fields) {
-            if (isActionField(field)) continue;
-            if (field.disabled) continue;
-            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+            const input = this.#fieldInput(field);
             if (input) {
-                if (field.type === 'checkbox') {
-                    values[field.key] = (input as HTMLInputElement).checked;
-                } else {
-                    values[field.key] = (input as HTMLInputElement).value;
-                }
+                values[field.key] = this.#readInputValue(field, input);
             }
         }
         return values;
+    }
+
+    #fieldInput(field: ConfigField): HTMLInputElement | undefined {
+        if (isActionField(field) || field.disabled) return undefined;
+        return this.#container?.querySelector<HTMLInputElement>(`[id="fm-${field.key}"]`) ?? undefined;
+    }
+
+    #readInputValue(field: SettingConfigField, input: HTMLInputElement): ConfigValueType {
+        return field.type === 'checkbox' ? input.checked : input.value;
     }
 
     /**
@@ -414,15 +417,18 @@ export class SettingsView {
         const errors: string[] = [];
         if (this.#container === undefined) return errors;
         for (const field of this.#fields) {
-            if (isActionField(field)) continue;
-            if (field.disabled) continue;
-            const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
-            if (!input) continue;
-            const error = field.validate ? field.validate(values[field.key], values) : undefined;
-            input.classList.toggle('error', Boolean(error));
+            const error = this.#validateField(field, values);
             if (error) errors.push(error);
         }
         return errors;
+    }
+
+    #validateField(field: ConfigField, values: Record<string, ConfigValueType>): string | undefined {
+        const input = this.#fieldInput(field);
+        if (!isSettingField(field) || !input) return undefined;
+        const error = field.validate ? field.validate(values[field.key], values) : undefined;
+        input.classList.toggle('error', Boolean(error));
+        return error;
     }
 
     /**
