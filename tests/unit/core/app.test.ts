@@ -4,7 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import { AgregarrApiClient } from '../../../src/core/api/index';
+import { AgregarrApiClient, type ApiClientDeps } from '../../../src/core/api/index';
 import { ApiClientManager } from '../../../src/core/api-manager';
 import { FlixMonkeyApp, startApp } from '../../../src/core/app';
 import { CacheManager } from '../../../src/core/cache/index';
@@ -14,7 +14,7 @@ import { DisabledClientsManager } from '../../../src/core/disabled-clients';
 import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
-import { OverlayRenderer } from '../../../src/core/overlay';
+import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
 import { NetflixService } from '../../../src/core/services/index';
 import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
@@ -24,7 +24,7 @@ import { buildTitle } from '../../mocks/title';
 
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 
-/** Real collaborators for a FlixMonkeyApp, kept in one place so tests share the wiring. */
+/** Real dependencies for a FlixMonkeyApp, kept in one place so tests share the wiring. */
 function buildAppDependencies(): {
     logger: Logger;
     cache: CacheManager;
@@ -40,7 +40,8 @@ function buildAppDependencies(): {
     const cache = new CacheManager(adapter, config, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = new AgregarrApiClient(adapter, config, disabledManager, logger, overrideManager);
+    const deps: ApiClientDeps = { adapter, config, disabledManager, logger, overrideManager };
+    const client = new AgregarrApiClient(deps);
     return {
         logger,
         cache,
@@ -52,7 +53,7 @@ function buildAppDependencies(): {
     };
 }
 
-/** Builds an app from real collaborators without starting it. */
+/** Builds an app from real dependencies without starting it. */
 function buildApp(): FlixMonkeyApp {
     const dependencies = buildAppDependencies();
     return new FlixMonkeyApp(
@@ -780,10 +781,10 @@ describe('App', () => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
             const calls = mockRenderer.injectOverlay.mock.calls[0];
-            const [, , onEditClick, onRefreshClick] = calls;
+            const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
             return {
-                onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
-                onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
+                onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
+                onRefreshClick: interaction.onRefreshClick as (_displayTitle: string) => Promise<void>,
                 logger: appLogger,
             };
         };

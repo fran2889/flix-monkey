@@ -9,7 +9,6 @@ import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 const commonRules = {
-    indent: 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
@@ -21,6 +20,11 @@ const commonRules = {
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
+};
+
+const javascriptRules = {
+    ...commonRules,
+    'max-params': ['error', 4],
 };
 
 const typescriptRules = {
@@ -48,6 +52,7 @@ const typescriptRules = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    '@typescript-eslint/max-params': ['error', { max: 4 }],
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
 };
@@ -82,7 +87,7 @@ export default [
             'simple-import-sort': simpleImportSort,
             'unused-imports': eslintPluginUnusedImports,
         },
-        rules: commonRules,
+        rules: javascriptRules,
     },
     // 2. TypeScript files - strict TypeScript rules
     {
