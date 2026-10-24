@@ -20,7 +20,7 @@ export interface OverlayOptions {
     showRtRating: boolean;
     showMcRating: boolean;
     showFadeToggle: boolean;
-    fadeToggleState: 'auto' | 'always' | 'never' | undefined;
+    fadeToggleState: 'always' | 'never' | undefined;
     onFadeToggleClick: ((_element: HTMLElement) => void) | undefined;
     corner: string;
     onEditClick: (_displayTitle: string) => void;
@@ -66,10 +66,7 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
-function createFadeToggle(
-    state: 'auto' | 'always' | 'never' | undefined,
-    onClick: (_el: HTMLElement) => void
-): HTMLElement {
+function createFadeToggle(state: 'always' | 'never' | undefined, onClick: (_el: HTMLElement) => void): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
     el.dataset.state = state ?? 'auto';
@@ -188,7 +185,7 @@ function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLEl
 function appendFadeToggle(
     container: HTMLElement,
     showFadeToggle: boolean,
-    fadeToggleState: 'auto' | 'always' | 'never' | undefined,
+    fadeToggleState: 'always' | 'never' | undefined,
     onFadeToggleClick: ((_element: HTMLElement) => void) | undefined
 ): void {
     if (showFadeToggle && onFadeToggleClick) {
