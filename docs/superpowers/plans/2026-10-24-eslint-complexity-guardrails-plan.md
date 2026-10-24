@@ -15,7 +15,7 @@
 - Node.js >= 24. Do not add runtime dependencies. The only new dev dependency is `eslint-plugin-sonarjs` at `^4.2.2`, and only `sonarjs/cognitive-complexity` is enabled from it.
 - Limits: `max-params` 4, cyclomatic `complexity` 10, `sonarjs/cognitive-complexity` 10, for `src/` and `tests/`.
 - Every change is behavior-preserving. Existing assertions must pass unchanged; only constructor and call-site signatures may be edited in tests.
-- No disable comments except the single documented one on the `FlixMonkeyApp` constructor.
+- No new disable comments except the single documented one on the `FlixMonkeyApp` constructor.
 - No reference to any local or transient tracking file in code, comments, commits, or docs. The design document is the tracking anchor.
 - Conventional Commits, lowercase imperative, no trailing period. Branch names: `refactor/lint-max-params` and `refactor/lint-complexity`.
 - ASCII only. Prose: no em-dashes, Oxford comma.
@@ -584,5 +584,5 @@ Push and open the PR with `.github/pull_request_template.md` filled in. Title: `
 
 - [ ] `npm run type-check && npm run lint && npm run format:check && npm test && npm run test:coverage && npm run build` all pass
 - [ ] `npx eslint src tests --rule '{"@typescript-eslint/max-params":["error",{"max":4}],"sonarjs/cognitive-complexity":["error",10],"complexity":["error",10]}'` reports only the excluded file
-- [ ] Exactly one disable directive exists in `src/`: the `FlixMonkeyApp` constructor
+- [ ] Exactly one `max-params` disable directive exists in `src/`: the `FlixMonkeyApp` constructor
 - [ ] `git ls-files | grep -i "todo"` returns nothing, and no committed document references a local tracking file
