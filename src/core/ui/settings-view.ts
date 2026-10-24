@@ -162,37 +162,63 @@ export class SettingsView {
     }
 
     #createFieldLabel(row: SettingsFieldRow): HTMLLabelElement {
-        const label = document.createElement('label');
-        label.className = 'field-label';
-
         const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
         const rowLabel = rowLabelObj?.label ?? row.fields[0].label;
-        const onlyField = row.fields[0];
-        const hasActions = row.fields.every((f): boolean => isActionField(f));
-        const tooltip = hasActions ? '' : (rowLabelObj?.title ?? row.fields[0].title ?? '');
 
-        if (hasActions) {
-            label.textContent = '\u00A0';
-            label.style.visibility = 'hidden';
-        } else if (row.fields.length === 1 && onlyField.labelUrl) {
-            const link = document.createElement('a');
-            link.href = onlyField.labelUrl;
-            link.target = '_blank';
-            link.textContent = rowLabel;
-            if (tooltip) {
-                link.title = tooltip;
-            }
-            label.appendChild(link);
-        } else {
-            label.textContent = rowLabel;
-            if (row.fields.length === 1 && !onlyField.labelUrl) {
-                label.htmlFor = `fm-${onlyField.key}`;
-            }
-            if (tooltip) {
-                label.title = tooltip;
-            }
+        if (row.fields.every(isActionField)) {
+            return this.#createSpacerLabel();
         }
 
+        const tooltip = rowLabelObj?.title ?? row.fields[0].title ?? '';
+        const onlyField = this.#singleSettingField(row);
+
+        if (onlyField?.labelUrl) {
+            return this.#createLinkedLabel(rowLabel, onlyField.labelUrl, tooltip);
+        }
+        return this.#createPlainLabel(rowLabel, onlyField, tooltip);
+    }
+
+    #singleSettingField(row: SettingsFieldRow): SettingConfigField | undefined {
+        if (row.fields.length !== 1) return undefined;
+        const [field] = row.fields;
+        return isSettingField(field) ? field : undefined;
+    }
+
+    #createSpacerLabel(): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        label.textContent = '\u00A0';
+        label.style.visibility = 'hidden';
+        return label;
+    }
+
+    #createLinkedLabel(text: string, labelUrl: string, tooltip: string): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        const link = document.createElement('a');
+        link.href = labelUrl;
+        link.target = '_blank';
+        link.textContent = text;
+        if (tooltip) {
+            link.title = tooltip;
+        }
+        label.appendChild(link);
+        return label;
+    }
+
+    #createPlainLabel(text: string, field: SettingConfigField | undefined, tooltip: string): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        label.textContent = text;
+        if (field) {
+            label.htmlFor = `fm-${field.key}`;
+        }
+        if (tooltip) {
+            label.title = tooltip;
+        }
+        return label;
+    }
+
+    #createLabelElement(): HTMLLabelElement {
+        const label = document.createElement('label');
+        label.className = 'field-label';
         return label;
     }
 
