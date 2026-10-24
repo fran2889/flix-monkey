@@ -200,48 +200,47 @@ export class SettingsView {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
-        const hasActions = row.fields.every((f): boolean => isActionField(f));
-        const isCheckboxGroup = row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox');
-
-        if (hasActions) {
-            for (const field of row.fields) {
-                if (isActionField(field)) {
-                    const btn = this.#createActionField(field);
-                    valueContainer.appendChild(btn);
-                }
-            }
-        } else if (isCheckboxGroup) {
-            const checkboxes = document.createElement('div');
-            checkboxes.className = 'checkboxes';
-
-            for (const field of row.fields) {
-                if (!isSettingField(field)) continue;
-                const item = document.createElement('div');
-                item.className = 'service-item';
-                const input = this.#createInput(field, settings);
-                const cbLabel = document.createElement('label');
-                cbLabel.className = 'field-label';
-                cbLabel.textContent = field.label;
-                cbLabel.htmlFor = `fm-${field.key}`;
-                item.append(input, cbLabel);
-                checkboxes.appendChild(item);
-            }
-
-            valueContainer.appendChild(checkboxes);
+        if (row.fields.every(isActionField)) {
+            valueContainer.append(...this.#createActionFields(row.fields));
+        } else if (row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox')) {
+            valueContainer.appendChild(this.#createCheckboxGroup(row.fields, settings));
         } else {
-            for (const field of row.fields) {
-                if (isActionField(field)) {
-                    const btn = this.#createActionField(field);
-                    valueContainer.appendChild(btn);
-                } else if (field.suffix) {
-                    valueContainer.appendChild(this.#createInputWithSuffix(field, settings));
-                } else {
-                    valueContainer.appendChild(this.#createInput(field, settings));
-                }
-            }
+            valueContainer.append(...this.#createSettingFields(row.fields, settings));
         }
 
         return valueContainer;
+    }
+
+    #createActionFields(fields: readonly ConfigField[]): HTMLElement[] {
+        return fields.filter(isActionField).map(field => this.#createActionField(field));
+    }
+
+    #createCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement {
+        const checkboxes = document.createElement('div');
+        checkboxes.className = 'checkboxes';
+
+        for (const field of fields) {
+            if (!isSettingField(field)) continue;
+            const item = document.createElement('div');
+            item.className = 'service-item';
+            const input = this.#createInput(field, settings);
+            const cbLabel = document.createElement('label');
+            cbLabel.className = 'field-label';
+            cbLabel.textContent = field.label;
+            cbLabel.htmlFor = `fm-${field.key}`;
+            item.append(input, cbLabel);
+            checkboxes.appendChild(item);
+        }
+
+        return checkboxes;
+    }
+
+    #createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[] {
+        return fields.map(field => {
+            if (isActionField(field)) return this.#createActionField(field);
+            if (field.suffix) return this.#createInputWithSuffix(field, settings);
+            return this.#createInput(field, settings);
+        });
     }
 
     #createFieldRow(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
