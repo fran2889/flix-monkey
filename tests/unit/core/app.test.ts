@@ -14,7 +14,7 @@ import { DisabledClientsManager } from '../../../src/core/disabled-clients';
 import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
-import { OverlayRenderer } from '../../../src/core/overlay';
+import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
 import { NetflixService } from '../../../src/core/services/index';
 import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
@@ -781,10 +781,10 @@ describe('App', () => {
                 if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
             const calls = mockRenderer.injectOverlay.mock.calls[0];
-            const [, , onEditClick, onRefreshClick] = calls;
+            const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
             return {
-                onEditClick: onEditClick as (_displayTitle: string) => Promise<void>,
-                onRefreshClick: onRefreshClick as (_displayTitle: string) => Promise<void>,
+                onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
+                onRefreshClick: interaction.onRefreshClick as (_displayTitle: string) => Promise<void>,
                 logger: appLogger,
             };
         };
