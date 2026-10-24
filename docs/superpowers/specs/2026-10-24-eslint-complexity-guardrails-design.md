@@ -91,7 +91,7 @@ These were decided in conversation and are not open:
   adds a bag.
 - **`SettingsUI`** takes `(deps, fields = CONFIG_FIELDS)` (2). `deps` holds `adapter`,
   `logger`, `cacheManager`, `disabledClientsManager`. `fields` stays a separate second
-  argument because it is a test seam, not a collaborator.
+  argument because it is a test seam, not a dependency.
 - **`FlixMonkeyApp`** gets one inline disable with a reason, not a file-wide override.
   `reportUnusedDisableDirectives` keeps it honest if the constructor later shrinks.
 - **Two PRs**, config plus fixes in each so CI is green on both:

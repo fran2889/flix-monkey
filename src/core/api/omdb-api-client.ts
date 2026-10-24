@@ -46,7 +46,7 @@ function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefin
  */
 export class OmdbApiClient extends BaseApiClient {
     /**
-     * @param deps - Collaborators shared by every API client.
+     * @param deps - Dependencies shared by every API client.
      */
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];

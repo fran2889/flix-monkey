@@ -360,7 +360,7 @@ export class FlixMonkeyApp {
 /**
  * Builds the API client for the provider selected in config.
  *
- * @param deps - Collaborators shared by every API client.
+ * @param deps - Dependencies shared by every API client.
  * @returns Client for the configured provider, defaulting to Agregarr.
  */
 function createApiClient(deps: ApiClientDeps): BaseApiClient {

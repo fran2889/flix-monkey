@@ -88,7 +88,7 @@ Expected: 6 errors at the five constructors and `createApiClient`.
 
 - [ ] **Step 2: Add `ApiClientDeps` and change `BaseApiClient`**
 
-Export the interface from `base-api-client.ts`. Replace the seven constructor parameters with `(deps, queue, source)` and assign fields from `deps`. Update the JSDoc to `@param deps - Collaborators shared by every API client.`
+Export the interface from `base-api-client.ts`. Replace the seven constructor parameters with `(deps, queue, source)` and assign fields from `deps`. Update the JSDoc to `@param deps - Dependencies shared by every API client.`
 
 - [ ] **Step 3: Change the three subclass constructors**
 
@@ -131,7 +131,7 @@ Expected: PASS.
 
 ```bash
 git add src/core/api src/core/app.ts tests/unit/core/api tests/unit/core/app.test.ts tests/integration/api-clients.test.ts
-git commit -m "refactor: pass api client collaborators as one object"
+git commit -m "refactor: pass api client dependencies as one object"
 ```
 
 ---
@@ -220,7 +220,7 @@ Expected: PASS.
 
 ```bash
 git add src/core/ui/settings-ui.ts src/targets/extension/options.ts src/targets/userscript/entry.ts tests/unit/core/ui/settings-ui.test.ts
-git commit -m "refactor: pass settings ui collaborators as one object"
+git commit -m "refactor: pass settings ui dependencies as one object"
 ```
 
 ---

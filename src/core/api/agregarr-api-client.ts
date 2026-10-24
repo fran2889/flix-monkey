@@ -17,7 +17,7 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
  */
 export class AgregarrApiClient extends BaseApiClient {
     /**
-     * @param deps - Collaborators shared by every API client.
+     * @param deps - Dependencies shared by every API client.
      */
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.AGREGARR];

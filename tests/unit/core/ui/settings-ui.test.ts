@@ -237,7 +237,7 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('Collaborator wiring', () => {
+    describe('Dependency wiring', () => {
         it('gives the cache manager a working config logger', async () => {
             mockAdapter.configGet = vi.fn(() => {
                 throw new Error('config read failed');

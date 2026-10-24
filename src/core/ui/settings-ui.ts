@@ -10,7 +10,7 @@ import type { Logger } from '../logger';
 import { SettingsView } from './settings-view';
 
 /**
- * Collaborators required by the settings UI.
+ * Dependencies required by the settings UI.
  */
 export interface SettingsUIDeps {
     adapter: PlatformAdapter;
@@ -32,7 +32,7 @@ export class SettingsUI {
     /**
      * Creates a new SettingsUI instance.
      *
-     * @param deps - Collaborators for the settings UI.
+     * @param deps - Dependencies for the settings UI.
      * @param fields - Configuration field definitions.
      */
     constructor(deps: SettingsUIDeps, fields: readonly ConfigField[] = CONFIG_FIELDS) {

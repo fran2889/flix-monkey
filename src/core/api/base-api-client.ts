@@ -13,7 +13,7 @@ import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
 /**
- * Collaborators shared by every API client.
+ * Dependencies shared by every API client.
  */
 export interface ApiClientDeps {
     adapter: PlatformAdapter;
@@ -50,7 +50,7 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #overrideManager: IdOverrideManager;
 
     /**
-     * @param deps - Collaborators shared by every API client.
+     * @param deps - Dependencies shared by every API client.
      * @param queue - Rate-limited request queue for this client.
      * @param source - ApiSource identifier.
      */
