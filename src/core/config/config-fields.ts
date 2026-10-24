@@ -57,7 +57,10 @@ interface SettingFieldBase extends ConfigFieldBase {
 interface CheckboxConfigField extends SettingFieldBase {
     type: 'checkbox';
     default: boolean;
-    /** Optional shared row id that groups sibling checkboxes under one label. */
+    /**
+     * Optional row id. Checkboxes sharing it render under one label; setting it
+     * on a single checkbox also opts it out of the compact checkbox layout.
+     */
     row?: AllRowKeys;
 }
 
