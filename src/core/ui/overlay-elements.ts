@@ -9,6 +9,7 @@ import {
     RATING_COLOR_LOW_THRESHOLD,
     RATING_COLOR_RED,
 } from '../constants';
+import type { FadeOverrideState } from '../fade-manager';
 import type { Title } from '../title';
 import { buildImdbUrl, interpolateColor } from '../utils/index';
 
@@ -20,7 +21,7 @@ export interface OverlayOptions {
     showRtRating: boolean;
     showMcRating: boolean;
     showFadeToggle: boolean;
-    fadeToggleState: 'always' | 'never' | undefined;
+    fadeToggleState: FadeOverrideState;
     onFadeToggleClick: ((_element: HTMLElement) => void) | undefined;
     corner: string;
     onEditClick: (_displayTitle: string) => void;
@@ -66,7 +67,7 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
-function createFadeToggle(state: 'always' | 'never' | undefined, onClick: (_el: HTMLElement) => void): HTMLElement {
+function createFadeToggle(state: FadeOverrideState, onClick: (_el: HTMLElement) => void): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
     el.dataset.state = state ?? 'auto';
@@ -185,7 +186,7 @@ function setupHoverActions(ratingsWrapper: HTMLElement, actionsContainer: HTMLEl
 function appendFadeToggle(
     container: HTMLElement,
     showFadeToggle: boolean,
-    fadeToggleState: 'always' | 'never' | undefined,
+    fadeToggleState: FadeOverrideState,
     onFadeToggleClick: ((_element: HTMLElement) => void) | undefined
 ): void {
     if (showFadeToggle && onFadeToggleClick) {
