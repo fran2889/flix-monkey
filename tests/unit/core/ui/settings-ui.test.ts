@@ -37,7 +37,12 @@ describe('SettingsUI', () => {
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager);
+        settingsUI = new SettingsUI({
+            adapter: mockAdapter,
+            logger: mockLogger,
+            cacheManager: mockCacheManager,
+            disabledClientsManager: mockDisabledClientsManager,
+        });
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -107,7 +112,15 @@ describe('SettingsUI', () => {
                     return undefined;
                 },
             };
-            settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);
+            settingsUI = new SettingsUI(
+                {
+                    adapter: mockAdapter,
+                    logger: mockLogger,
+                    cacheManager: mockCacheManager,
+                    disabledClientsManager: mockDisabledClientsManager,
+                },
+                [field]
+            );
             await settingsUI.render(container);
 
             await settingsUI.save();

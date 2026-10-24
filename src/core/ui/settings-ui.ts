@@ -10,6 +10,16 @@ import type { Logger } from '../logger';
 import { SettingsView } from './settings-view';
 
 /**
+ * Collaborators required by the settings UI.
+ */
+export interface SettingsUIDeps {
+    adapter: PlatformAdapter;
+    logger: Logger;
+    cacheManager: CacheManager;
+    disabledClientsManager: DisabledClientsManager;
+}
+
+/**
  * Manages the settings UI, handling rendering, saving, and interactions.
  */
 export class SettingsUI {
@@ -22,23 +32,14 @@ export class SettingsUI {
     /**
      * Creates a new SettingsUI instance.
      *
-     * @param adapter - Platform storage adapter.
-     * @param logger - Logger for error reporting.
-     * @param cacheManager - Cache manager for clearing data.
-     * @param disabledClientsManager - Manager for disabled API clients.
+     * @param deps - Collaborators for the settings UI.
      * @param fields - Configuration field definitions.
      */
-    constructor(
-        adapter: PlatformAdapter,
-        logger: Logger,
-        cacheManager: CacheManager,
-        disabledClientsManager: DisabledClientsManager,
-        fields: readonly ConfigField[] = CONFIG_FIELDS
-    ) {
-        this.#adapter = adapter;
-        this.#cacheManager = cacheManager;
-        this.#disabledClientsManager = disabledClientsManager;
-        this.#logger = logger;
+    constructor(deps: SettingsUIDeps, fields: readonly ConfigField[] = CONFIG_FIELDS) {
+        this.#adapter = deps.adapter;
+        this.#cacheManager = deps.cacheManager;
+        this.#disabledClientsManager = deps.disabledClientsManager;
+        this.#logger = deps.logger;
         this.#view = new SettingsView(fields, {
             onSave: async (): Promise<void> => this.save(),
             onClearCache: async (): Promise<void> => this.#clearCache(),
