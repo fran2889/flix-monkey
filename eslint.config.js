@@ -5,6 +5,7 @@ import { globalIgnores } from 'eslint/config';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
@@ -13,7 +14,9 @@ const commonRules = {
     'no-var': 'error',
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
-    complexity: ['error', 16],
+    complexity: ['error', 10],
+    'sonarjs/cognitive-complexity': ['error', 10],
+    'max-params': ['error', 4],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
     'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
@@ -52,6 +55,7 @@ const typescriptRules = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    'max-params': 'off',
     '@typescript-eslint/max-params': ['error', { max: 4 }],
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
@@ -85,6 +89,7 @@ export default [
         },
         plugins: {
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
         rules: javascriptRules,
@@ -104,6 +109,7 @@ export default [
         plugins: {
             '@typescript-eslint': typescriptPlugin,
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
         rules: typescriptRules,
@@ -118,6 +124,13 @@ export default [
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
         },
+    },
+    // 2.6. Cache migrations are replaced by a cache schema version; see
+    // docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md.
+    {
+        files: ['src/core/migrations.ts'],
+        plugins: { sonarjs },
+        rules: { complexity: 'off', 'sonarjs/cognitive-complexity': 'off' },
     },
     // 3. Production code must document intentional no-op functions.
     {
