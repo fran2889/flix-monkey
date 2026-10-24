@@ -37,7 +37,7 @@
 - Consumes: ESLint's `headers/header-format` rule, which reads `LICENSE_HEADER.template` with the `year` placeholder.
 - Produces: a consistent JavaScript header and `package.json` license string used by userscript build metadata.
 
-- [ ] **Step 1: Replace the canonical header template**
+- [x] **Step 1: Replace the canonical header template**
 
 Replace the long GPL notice in `LICENSE_HEADER.template` with:
 
@@ -47,7 +47,7 @@ SPDX-FileCopyrightText: (year) Fran
 SPDX-License-Identifier: GPL-3.0-only
 ```
 
-- [ ] **Step 2: Migrate all JavaScript headers and remove fixture notices**
+- [x] **Step 2: Migrate all JavaScript headers and remove fixture notices**
 
 Replace each existing top-of-file long GPL comment in the 75 JavaScript files
 under `src/` and `tests/` with:
@@ -62,14 +62,14 @@ under `src/` and `tests/` with:
 Delete only the opening license comment from all eight `tests/fixtures/*.html`
 files, leaving fixture markup unchanged.
 
-- [ ] **Step 3: Change project metadata and public copy**
+- [x] **Step 3: Change project metadata and public copy**
 
 Set the root package license in both package manifests to `GPL-3.0-only`.
 Update the README badge image, its badge label, and the License-section link
 text to `GPL-3.0-only`. Replace the contributing and store-description license
 sentences with explicit `GPL-3.0-only` wording.
 
-- [ ] **Step 4: Format changed text files**
+- [x] **Step 4: Format changed text files**
 
 Run:
 
@@ -79,7 +79,7 @@ npm run format
 
 Expected: Prettier writes only repository formatting adjustments.
 
-- [ ] **Step 5: Commit the migration**
+- [x] **Step 5: Commit the migration**
 
 ```bash
 git add LICENSE_HEADER.template src tests package.json package-lock.json README.md CONTRIBUTING.md docs/store-description.txt
@@ -97,7 +97,7 @@ git commit -m "chore: standardize GPL v3 license notices"
 - Consumes: the migrated files from Task 1.
 - Produces: verified lint and formatting compliance with no old FlixMonkey GPL designation.
 
-- [ ] **Step 1: Run format and lint checks**
+- [x] **Step 1: Run format and lint checks**
 
 Run:
 
@@ -108,7 +108,7 @@ npm run format:check && npm run lint
 Expected: both commands exit successfully. ESLint confirms every enforced
 JavaScript header matches `LICENSE_HEADER.template`.
 
-- [ ] **Step 2: Search for obsolete FlixMonkey license wording**
+- [x] **Step 2: Search for obsolete FlixMonkey license wording**
 
 Run:
 
@@ -120,7 +120,7 @@ rg -n 'GPL-3\\.0-or-later|either version 3|GPLv3|GNU General Public License v3\\
 Expected: no matches. Dependency license records outside the package-lock root
 entry are not part of this check.
 
-- [ ] **Step 3: Confirm fixture headers are absent**
+- [x] **Step 3: Confirm fixture headers are absent**
 
 Run:
 

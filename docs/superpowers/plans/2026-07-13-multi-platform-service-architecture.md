@@ -46,11 +46,11 @@
 
 - Produces: `StreamingService` (abstract base class), `NetflixService` (concrete), `ServiceRegistry` (detection utility), `SERVICES` (registry object)
 
-- [ ] **Step 1: Write the service module**
+- [x] **Step 1: Write the service module**
 
-- [ ] **Step 2: Write the service tests**
+- [x] **Step 2: Write the service tests**
 
-- [ ] **Step 3: Run linting on new files**
+- [x] **Step 3: Run linting on new files**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -59,7 +59,7 @@ npm run lint
 
 Expected: No errors in new files
 
-- [ ] **Step 4: Run tests for new module**
+- [x] **Step 4: Run tests for new module**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -68,7 +68,7 @@ npx vitest run tests/unit/core/services.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/services.js tests/unit/core/services.test.js
@@ -98,22 +98,22 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Nothing from other tasks (self-contained refactor)
 - Produces: `SurfaceManager` (base class accepting surfaceDefs), `NetflixSurfaceManager` (subclass), `NETFLIX_SURFACE_DEFS` (constant)
 
-- [ ] **Step 1: Update surfaces.js to new structure**
+- [x] **Step 1: Update surfaces.js to new structure**
 
-- [ ] **Step 2: Update existing surfaces tests to work with new structure**
+- [x] **Step 2: Update existing surfaces tests to work with new structure**
 
-- [ ] **Step 3: Run existing surface tests to check what breaks**
+- [x] **Step 3: Run existing surface tests to check what breaks**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
 npx vitest run tests/unit/core/surfaces.test.js
 ```
 
-- [ ] **Step 4: Update tests based on failures**
+- [x] **Step 4: Update tests based on failures**
 
 The tests need to instantiate `NetflixSurfaceManager` or pass surface definitions to `SurfaceManager`.
 
-- [ ] **Step 5: Run linting**
+- [x] **Step 5: Run linting**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -122,7 +122,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 6: Run all surface tests**
+- [x] **Step 6: Run all surface tests**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -131,7 +131,7 @@ npx vitest run tests/unit/core/surfaces.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/surfaces.js tests/unit/core/surfaces.test.js
@@ -160,9 +160,9 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Nothing
 - Produces: Removed `TOP_10_BADGE` constant (now in NetflixService)
 
-- [ ] **Step 1: Remove Netflix-specific constant**
+- [x] **Step 1: Remove Netflix-specific constant**
 
-- [ ] **Step 2: Check for references to TOP_10_BADGE in codebase**
+- [x] **Step 2: Check for references to TOP_10_BADGE in codebase**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -171,7 +171,7 @@ grep -r "TOP_10_BADGE" src/ --include="*.js"
 
 Expected: Only in overlay.js (which we'll handle in Task 4)
 
-- [ ] **Step 3: Run linting**
+- [x] **Step 3: Run linting**
 
 ```bash
 npm run lint
@@ -179,7 +179,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 npx vitest run
@@ -187,7 +187,7 @@ npx vitest run
 
 Expected: All tests pass (overlay tests might fail but that's expected for next task)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/constants.js
@@ -213,9 +213,9 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `serviceConstants` object from services
 - Produces: `OverlayRenderer` constructor accepts optional `serviceConstants` parameter
 
-- [ ] **Step 1: Update OverlayRenderer constructor and injectStyles**
+- [x] **Step 1: Update OverlayRenderer constructor and injectStyles**
 
-- [ ] **Step 2: Run linting**
+- [x] **Step 2: Run linting**
 
 ```bash
 npm run lint
@@ -223,7 +223,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 3: Run overlay tests**
+- [x] **Step 3: Run overlay tests**
 
 ```bash
 npx vitest run tests/unit/core/overlay.test.js
@@ -231,7 +231,7 @@ npx vitest run tests/unit/core/overlay.test.js
 
 Expected: Tests may fail if they don't pass serviceConstants - we'll fix in Task 6
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/overlay.js
@@ -258,9 +258,9 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Nothing
 - Produces: `enabledServices` config field added to `CONFIG_FIELDS`
 
-- [ ] **Step 1: Add enabledServices to config fields**
+- [x] **Step 1: Add enabledServices to config fields**
 
-- [ ] **Step 2: Run linting**
+- [x] **Step 2: Run linting**
 
 ```bash
 npm run lint
@@ -268,7 +268,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 3: Run config tests if they exist**
+- [x] **Step 3: Run config tests if they exist**
 
 ```bash
 npx vitest run tests/unit/core/config-manager.test.js
@@ -276,7 +276,7 @@ npx vitest run tests/unit/core/config-manager.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/config-fields.js
@@ -304,9 +304,9 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `ServiceRegistry` from services.js, `NetflixSurfaceManager` from surfaces.js
 - Produces: `startApp()` returns `null` if no service detected, uses service-specific SurfaceManager and constants
 
-- [ ] **Step 1: Update app.js imports and startApp function**
+- [x] **Step 1: Update app.js imports and startApp function**
 
-- [ ] **Step 2: Run linting**
+- [x] **Step 2: Run linting**
 
 ```bash
 npm run lint
@@ -314,7 +314,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 3: Run app tests**
+- [x] **Step 3: Run app tests**
 
 ```bash
 npx vitest run tests/unit/core/app.test.js
@@ -322,11 +322,11 @@ npx vitest run tests/unit/core/app.test.js
 
 Expected: Tests may fail if they don't mock ServiceRegistry
 
-- [ ] **Step 4: Update app tests to mock ServiceRegistry**
+- [x] **Step 4: Update app tests to mock ServiceRegistry**
 
 Need to check existing tests and add mocking for `ServiceRegistry.detect()`.
 
-- [ ] **Step 5: Run all unit tests**
+- [x] **Step 5: Run all unit tests**
 
 ```bash
 npx vitest run tests/unit/
@@ -334,7 +334,7 @@ npx vitest run tests/unit/
 
 Expected: All tests pass after updates
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -362,26 +362,26 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: All previous changes
 - Produces: All tests passing
 
-- [ ] **Step 1: Run full test suite to identify failures**
+- [x] **Step 1: Run full test suite to identify failures**
 
 ```bash
 npm test
 ```
 
-- [ ] **Step 2: Fix any remaining test failures**
+- [x] **Step 2: Fix any remaining test failures**
 
 Check which tests fail and update them:
 
 - UI tests may need to use `NetflixSurfaceManager` explicitly
 - Any tests that import from surfaces.js or overlay.js may need parameter updates
 
-- [ ] **Step 3: Run lint:fix**
+- [x] **Step 3: Run lint:fix**
 
 ```bash
 npm run lint:fix
 ```
 
-- [ ] **Step 4: Run full test suite again**
+- [x] **Step 4: Run full test suite again**
 
 ```bash
 npm test
@@ -389,7 +389,7 @@ npm test
 
 Expected: All tests pass (unit + UI)
 
-- [ ] **Step 5: Commit final test updates**
+- [x] **Step 5: Commit final test updates**
 
 ```bash
 git add .
@@ -410,7 +410,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - All files modified in previous tasks
 
-- [ ] **Step 1: Run build to verify all targets build correctly**
+- [x] **Step 1: Run build to verify all targets build correctly**
 
 ```bash
 npm run build
@@ -418,7 +418,7 @@ npm run build
 
 Expected: All three targets (userscript, firefox, chrome) build without errors
 
-- [ ] **Step 2: Run full lint**
+- [x] **Step 2: Run full lint**
 
 ```bash
 npm run lint
@@ -426,7 +426,7 @@ npm run lint
 
 Expected: No errors
 
-- [ ] **Step 3: Run full test suite**
+- [x] **Step 3: Run full test suite**
 
 ```bash
 npm test
@@ -434,7 +434,7 @@ npm test
 
 Expected: All tests pass
 
-- [ ] **Step 4: Verify git status is clean except for our changes**
+- [x] **Step 4: Verify git status is clean except for our changes**
 
 ```bash
 git status
@@ -442,7 +442,7 @@ git status
 
 Expected: Only our new and modified files shown
 
-- [ ] **Step 5: Final commit with comprehensive message**
+- [x] **Step 5: Final commit with comprehensive message**
 
 ```bash
 git add .

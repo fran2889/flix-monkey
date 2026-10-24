@@ -3,7 +3,7 @@ B# Design Spec: Disney+ Support
 
 **Date:** 2026-08-04
 
-**Status:** Approved
+**Status:** Implemented
 
 ## Summary
 
