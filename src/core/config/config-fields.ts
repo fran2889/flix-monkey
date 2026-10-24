@@ -41,7 +41,6 @@ interface ConfigFieldBase {
     key: string;
     label: string;
     group: GroupKey;
-    row?: AllRowKeys;
     title?: string;
     short?: boolean;
     disabled?: boolean;
@@ -58,6 +57,11 @@ interface SettingFieldBase extends ConfigFieldBase {
 interface CheckboxConfigField extends SettingFieldBase {
     type: 'checkbox';
     default: boolean;
+    /**
+     * Optional row id. Checkboxes sharing it render under one label; setting it
+     * on a single checkbox also opts it out of the compact checkbox layout.
+     */
+    row?: AllRowKeys;
 }
 
 /** Free-text field storing a string. */

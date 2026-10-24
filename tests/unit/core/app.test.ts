@@ -375,7 +375,6 @@ describe('App', () => {
 
     it('should throw if init() is called twice on the same instance', () => {
         const app = buildApp();
-        appRef = app;
 
         app.init();
 

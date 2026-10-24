@@ -3,7 +3,7 @@ How to use this template
 
 - Automated checks are enforced by CI: formatting, lint, type-check, audit,
   all-target build, and the unit/UI suites with coverage. Run them locally for
-  faster feedback.
+  faster feedback, but do not list them in the PR body.
 - Tick the manual box only after performing the check. If someone else did, say
   who.
 - Delete a heading that does not apply rather than leaving it empty.
