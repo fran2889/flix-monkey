@@ -10,7 +10,6 @@ import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 const commonRules = {
-    indent: 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
@@ -24,6 +23,11 @@ const commonRules = {
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
+};
+
+const javascriptRules = {
+    ...commonRules,
+    'max-params': ['error', 4],
 };
 
 const typescriptRules = {
@@ -88,7 +92,7 @@ export default [
             sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
-        rules: commonRules,
+        rules: javascriptRules,
     },
     // 2. TypeScript files - strict TypeScript rules
     {

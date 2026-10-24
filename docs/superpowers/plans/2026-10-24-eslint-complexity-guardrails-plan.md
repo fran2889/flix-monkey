@@ -34,26 +34,28 @@
 ## Task 0: Commit the design and plan
 
 **Files:**
+
 - Create: `docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md` (already written)
 - Create: `docs/superpowers/plans/2026-10-24-eslint-complexity-guardrails-plan.md` (this file)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: the spec and plan files that later tasks cite.
 
-- [ ] **Step 1: Create the branch**
+- [x] **Step 1: Create the branch**
 
 ```bash
 git switch -c refactor/lint-max-params
 ```
 
-- [ ] **Step 2: Stage only the two documents**
+- [x] **Step 2: Stage only the two documents**
 
 ```bash
 git add docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md docs/superpowers/plans/2026-10-24-eslint-complexity-guardrails-plan.md
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "docs: add complexity guardrail design and plan"
@@ -64,6 +66,7 @@ git commit -m "docs: add complexity guardrail design and plan"
 ## Task 1: Shared `ApiClientDeps`
 
 **Files:**
+
 - Modify: `src/core/api/base-api-client.ts:50` (constructor), export `ApiClientDeps`
 - Modify: `src/core/api/agregarr-api-client.ts:31`
 - Modify: `src/core/api/omdb-api-client.ts:60`
@@ -73,29 +76,30 @@ git commit -m "docs: add complexity guardrail design and plan"
 - Test: `tests/unit/core/api/base-api-client.test.ts`, `tests/unit/core/api/agregarr-api-client.test.ts`, `tests/unit/core/api/omdb-api-client.test.ts`, `tests/unit/core/api/xmdb-api-client.test.ts`, `tests/unit/core/app.test.ts`, `tests/integration/api-clients.test.ts`
 
 **Interfaces:**
+
 - Consumes: existing `PlatformAdapter`, `ConfigManager`, `DisabledClientsManager`, `Logger`, `IdOverrideManager`, `RequestQueue`, `ApiSourceType`.
 - Produces:
-  - `export interface ApiClientDeps { adapter: PlatformAdapter; config: ConfigManager; disabledManager: DisabledClientsManager; logger: Logger; overrideManager: IdOverrideManager; }`
-  - `BaseApiClient` constructor: `(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType)`
-  - Each concrete client: `constructor(deps: ApiClientDeps)`
-  - `createApiClient(deps: ApiClientDeps): BaseApiClient` (still module-private in `app.ts`)
-  - `export type { ApiClientDeps } from './base-api-client';` in `src/core/api/index.ts`
+    - `export interface ApiClientDeps { adapter: PlatformAdapter; config: ConfigManager; disabledManager: DisabledClientsManager; logger: Logger; overrideManager: IdOverrideManager; }`
+    - `BaseApiClient` constructor: `(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType)`
+    - Each concrete client: `constructor(deps: ApiClientDeps)`
+    - `createApiClient(deps: ApiClientDeps): BaseApiClient` (still module-private in `app.ts`)
+    - `export type { ApiClientDeps } from './base-api-client';` in `src/core/api/index.ts`
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/api src/core/app.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: 6 errors at the five constructors and `createApiClient`.
 
-- [ ] **Step 2: Add `ApiClientDeps` and change `BaseApiClient`**
+- [x] **Step 2: Add `ApiClientDeps` and change `BaseApiClient`**
 
 Export the interface from `base-api-client.ts`. Replace the seven constructor parameters with `(deps, queue, source)` and assign fields from `deps`. Update the JSDoc to `@param deps - Dependencies shared by every API client.`
 
-- [ ] **Step 3: Change the three subclass constructors**
+- [x] **Step 3: Change the three subclass constructors**
 
 Each becomes `constructor(deps: ApiClientDeps)`. Keep the existing rate-limit lookup and pass
 `super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.<PROVIDER>)`.
 
-- [ ] **Step 4: Change `createApiClient` and `startApp`**
+- [x] **Step 4: Change `createApiClient` and `startApp`**
 
 `createApiClient(deps: ApiClientDeps)` reads the provider from `deps.config` and returns
 `new ClientClass(deps)`. In `startApp`, build the object once after `overrideManager`:
@@ -111,7 +115,7 @@ const clientDeps: ApiClientDeps = {
 const client = createApiClient(clientDeps);
 ```
 
-- [ ] **Step 5: Update the tests**
+- [x] **Step 5: Update the tests**
 
 Import the type with `import type { ApiClientDeps } from '../../../../src/core/api/index';` (adjust the depth per file). In each API client unit test and `tests/unit/core/app.test.ts`, build a local
 `const deps: ApiClientDeps = { adapter: mockAdapter, config: mockConfig, disabledManager: mockDisabledManager, logger: mockLogger, overrideManager: mockOverrideManager };`
@@ -119,7 +123,7 @@ and pass it. `StubClient` in `base-api-client.test.ts` becomes `constructor(deps
 `const clientDeps = (): ApiClientDeps => ({ adapter: adapter as PlatformAdapter, config: configManager, disabledManager, logger, overrideManager });`
 and replace every five-argument construction with `new <Client>(clientDeps())`.
 
-- [ ] **Step 6: Verify green and behavior**
+- [x] **Step 6: Verify green and behavior**
 
 Run: `npx eslint src/core/api src/core/app.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: one error left, the `FlixMonkeyApp` constructor in `src/core/app.ts`, which Task 4 handles.
@@ -127,7 +131,7 @@ Expected: one error left, the `FlixMonkeyApp` constructor in `src/core/app.ts`, 
 Run: `npm run type-check && npx vitest run tests/unit/core/api tests/unit/core/app.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/api src/core/app.ts tests/unit/core/api tests/unit/core/app.test.ts tests/integration/api-clients.test.ts
@@ -139,32 +143,34 @@ git commit -m "refactor: pass api client dependencies as one object"
 ## Task 2: `injectOverlay` interaction object
 
 **Files:**
+
 - Modify: `src/core/overlay.ts:105`
 - Modify: `src/core/app.ts` (`#decorateContainer`, the `injectOverlay` call near line 238)
 - Test: `tests/helpers/surface-tests.ts:48`, `tests/unit/core/overlay.test.ts:20`
 
 **Interfaces:**
+
 - Consumes: `OverlayOptions` from `src/core/ui/overlay-elements.ts`.
 - Produces:
-  - `export type OverlayInteraction = Pick<OverlayOptions, 'displayTitle' | 'onEditClick' | 'onRefreshClick' | 'fadeToggleState' | 'onFadeToggleClick'>;`
-  - `injectOverlay(container: HTMLElement, titleObj: Title, interaction: OverlayInteraction): void`
+    - `export type OverlayInteraction = Pick<OverlayOptions, 'displayTitle' | 'onEditClick' | 'onRefreshClick' | 'fadeToggleState' | 'onFadeToggleClick'>;`
+    - `injectOverlay(container: HTMLElement, titleObj: Title, interaction: OverlayInteraction): void`
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/overlay.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: one error, `injectOverlay` has 7 parameters.
 
-- [ ] **Step 2: Add `OverlayInteraction`**
+- [x] **Step 2: Add `OverlayInteraction`**
 
 Declare it in `overlay.ts` next to `OverlayCorner`. Change the method to take `interaction` and
 spread it into the object passed to `createOverlayElement`, keeping the config-derived keys as
 they are.
 
-- [ ] **Step 3: Update the call sites**
+- [x] **Step 3: Update the call sites**
 
 In `app.ts`, pass `{ displayTitle, onEditClick, onRefreshClick, fadeToggleState: showFadeToggle ? fadeOverride : undefined, onFadeToggleClick: ... }` as the third argument. In `tests/helpers/surface-tests.ts` and `tests/unit/core/overlay.test.ts`, pass the same five keys as an object literal.
 
-- [ ] **Step 4: Verify green and behavior**
+- [x] **Step 4: Verify green and behavior**
 
 Run: `npx eslint src/core/overlay.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: no output.
@@ -172,7 +178,7 @@ Expected: no output.
 Run: `npm run type-check && npx vitest run tests/unit/core/overlay.test.ts tests/ui`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/overlay.ts src/core/app.ts tests/helpers/surface-tests.ts tests/unit/core/overlay.test.ts
@@ -184,31 +190,33 @@ git commit -m "refactor: group overlay interaction options"
 ## Task 3: `SettingsUI` dependency object
 
 **Files:**
+
 - Modify: `src/core/ui/settings-ui.ts:31`
 - Modify: `src/targets/extension/options.ts:34`
 - Modify: `src/targets/userscript/entry.ts:49`
 - Test: `tests/unit/core/ui/settings-ui.test.ts:40,110`
 
 **Interfaces:**
+
 - Consumes: `PlatformAdapter`, `Logger`, `CacheManager`, `DisabledClientsManager`, `ConfigField`, `CONFIG_FIELDS`.
 - Produces:
-  - `export interface SettingsUIDeps { adapter: PlatformAdapter; logger: Logger; cacheManager: CacheManager; disabledClientsManager: DisabledClientsManager; }`
-  - `constructor(deps: SettingsUIDeps, fields: readonly ConfigField[] = CONFIG_FIELDS)`
+    - `export interface SettingsUIDeps { adapter: PlatformAdapter; logger: Logger; cacheManager: CacheManager; disabledClientsManager: DisabledClientsManager; }`
+    - `constructor(deps: SettingsUIDeps, fields: readonly ConfigField[] = CONFIG_FIELDS)`
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/ui/settings-ui.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: one error, constructor has 5 parameters.
 
-- [ ] **Step 2: Add `SettingsUIDeps` and update the constructor**
+- [x] **Step 2: Add `SettingsUIDeps` and update the constructor**
 
 Export the interface, change the constructor to `(deps, fields = CONFIG_FIELDS)`, and assign the four fields from `deps`.
 
-- [ ] **Step 3: Update the two production call sites and two test call sites**
+- [x] **Step 3: Update the two production call sites and two test call sites**
 
 Both targets pass `{ adapter, logger, cacheManager, disabledClientsManager }` as the first argument. The test at line 110 keeps its field array as the second argument.
 
-- [ ] **Step 4: Verify green and behavior**
+- [x] **Step 4: Verify green and behavior**
 
 Run: `npx eslint src/core/ui/settings-ui.ts --rule '{"@typescript-eslint/max-params":["error",{"max":4}]}'`
 Expected: no output.
@@ -216,7 +224,7 @@ Expected: no output.
 Run: `npm run type-check && npx vitest run tests/unit/core/ui/settings-ui.test.ts tests/unit/targets`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/settings-ui.ts src/targets/extension/options.ts src/targets/userscript/entry.ts tests/unit/core/ui/settings-ui.test.ts
@@ -228,19 +236,21 @@ git commit -m "refactor: pass settings ui dependencies as one object"
 ## Task 4: Enable `max-params` 4
 
 **Files:**
+
 - Modify: `eslint.config.js:11-53`
 - Modify: `src/core/app.ts:57` (one disable comment)
 - Modify: `AGENTS.md` (Conventions)
 
 **Interfaces:**
+
 - Consumes: the fixes from Tasks 1 to 3.
 - Produces: the rule pair `max-params` (JS) and `@typescript-eslint/max-params` (TS), both at 4.
 
-- [ ] **Step 1: Add the rules**
+- [x] **Step 1: Add the rules**
 
 In `commonRules`: `'max-params': ['error', 4]`. In `typescriptRules`, next to the existing `no-unused-vars` split: `'max-params': 'off'` and `'@typescript-eslint/max-params': ['error', { max: 4 }]`.
 
-- [ ] **Step 2: Add the one documented exception**
+- [x] **Step 2: Add the one documented exception**
 
 Above the `FlixMonkeyApp` constructor:
 
@@ -248,11 +258,11 @@ Above the `FlixMonkeyApp` constructor:
 // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point; see AGENTS.md
 ```
 
-- [ ] **Step 3: Document it**
+- [x] **Step 3: Document it**
 
 Under Conventions in `AGENTS.md`, add: parameter lists stay at four or fewer; the `FlixMonkeyApp` constructor is the only exception because it is the single wiring point and `startApp()` is its only caller.
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run: `npm run lint`
 Expected: exit 0, no output.
@@ -260,7 +270,7 @@ Expected: exit 0, no output.
 Run: `npm run type-check && npm test && npm run format:check && npm run build`
 Expected: PASS.
 
-- [ ] **Step 5: Commit and open the PR**
+- [x] **Step 5: Commit and open the PR**
 
 ```bash
 git add eslint.config.js src/core/app.ts AGENTS.md
@@ -274,10 +284,12 @@ Then push and open the PR with `.github/pull_request_template.md` filled in. Tit
 ## Task 5: Add `eslint-plugin-sonarjs` and register it
 
 **Files:**
+
 - Modify: `package.json`, `package-lock.json`
 - Modify: `eslint.config.js` (imports and both `plugins` blocks)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: the `sonarjs` plugin registered for JS and TS, with no rules enabled yet, so `--rule '{"sonarjs/cognitive-complexity":["error",10]}'` works in later tasks.
 
@@ -315,10 +327,12 @@ git commit -m "build: add eslint-plugin-sonarjs"
 ## Task 6: `SettingsView.#createFieldValueContainer`
 
 **Files:**
+
 - Modify: `src/core/ui/settings-view.ts:199`
 - Test: `tests/unit/core/ui/settings-view.test.ts` (no edits expected)
 
 **Interfaces:**
+
 - Consumes: `SettingsFieldRow`, `isActionField()`, `isSettingField()`, `#createActionField()`, `#createInput()`, `#createInputWithSuffix()`.
 - Produces: private helpers `#renderActionFields(fields: readonly ConfigField[]): HTMLElement[]`, `#renderCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement`, `#renderSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[]`.
 
@@ -351,10 +365,12 @@ git commit -m "refactor: split settings field value rendering"
 ## Task 7: `SettingsView.#createFieldLabel`
 
 **Files:**
+
 - Modify: `src/core/ui/settings-view.ts:164`
 - Test: `tests/unit/core/ui/settings-view.test.ts` (no edits expected)
 
 **Interfaces:**
+
 - Consumes: `ROW_LABELS`, `SettingsFieldRow`, `isActionField()`.
 - Produces: private helpers `#createSpacerLabel(): HTMLLabelElement`, `#createLinkedLabel(field: SettingConfigField, text: string, tooltip: string): HTMLLabelElement`, `#createPlainLabel(field: SettingConfigField, text: string, tooltip: string): HTMLLabelElement`.
 
@@ -387,10 +403,12 @@ git commit -m "refactor: split settings field labels"
 ## Task 8: `SettingsView.readValues` and `validate`
 
 **Files:**
+
 - Modify: `src/core/ui/settings-view.ts:365` (`readValues`), `src/core/ui/settings-view.ts:388` (`validate`)
 - Test: `tests/unit/core/ui/settings-view.test.ts` (no edits expected)
 
 **Interfaces:**
+
 - Consumes: `ConfigValueType`, `isActionField()`.
 - Produces: private helpers `#fieldInput(field: SettingConfigField): HTMLInputElement | undefined` and `#readInputValue(field: SettingConfigField, input: HTMLInputElement): ConfigValueType`, plus `#validateField(field: SettingConfigField, values: Record<string, ConfigValueType>): string | undefined`.
 
@@ -423,10 +441,12 @@ git commit -m "refactor: simplify settings reading and validation"
 ## Task 9: HBO Max title extraction
 
 **Files:**
+
 - Modify: `src/core/surfaces/surface-definitions/hbo-max-surfaces.ts:37`
 - Test: `tests/unit/core/surfaces/surfaces.test.ts` (no edits expected)
 
 **Interfaces:**
+
 - Consumes: `getNormalizedHboMaxAriaLabel()`, `HBO_MAX_WATCH_TITLE_PATTERNS`, `HBO_MAX_TITLE_PATTERNS`.
 - Produces: `function firstMatchingPattern(label: string, patterns: readonly RegExp[]): string | undefined`.
 
@@ -459,10 +479,12 @@ git commit -m "refactor: simplify hbo max title extraction"
 ## Task 10: XMDb details mapping
 
 **Files:**
+
 - Modify: `src/core/api/xmdb-api-client.ts:104` (`getDetails`)
 - Test: `tests/unit/core/api/xmdb-api-client.test.ts` (no edits expected)
 
 **Interfaces:**
+
 - Consumes: `Title`, `XmdbDetailsResponse`, `mapXmdbTitleType()`.
 - Produces: `function titleFromDetails(searchTitle: Title, id: string, details: XmdbDetailsResponse): Title`.
 
@@ -495,10 +517,12 @@ git commit -m "refactor: extract xmdb details mapping"
 ## Task 11: Delete the unused mock parser
 
 **Files:**
+
 - Modify: `tests/mocks/title.ts:124-144`
 - Test: `tests/unit/core/title.test.ts` (unchanged)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: nothing. Removes `extractFromObj` and `buildTitle.fromCacheJSON`.
 
@@ -531,10 +555,12 @@ git commit -m "test: drop unused cache json mock parser"
 ## Task 12: Enable the complexity limits
 
 **Files:**
+
 - Modify: `eslint.config.js:11-53`, plus a new exclusion block after the TS block
 - Modify: `AGENTS.md` (Conventions)
 
 **Interfaces:**
+
 - Consumes: Tasks 5 to 11.
 - Produces: `complexity: ['error', 10]` and `'sonarjs/cognitive-complexity': ['error', 10]` in `commonRules`, and the `src/core/migrations.ts` exclusion.
 

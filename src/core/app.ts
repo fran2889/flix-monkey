@@ -54,7 +54,7 @@ export class FlixMonkeyApp {
      * @param surfaces - Surface manager instance
      * @param api - API client manager instance
      */
-    // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point; see AGENTS.md
+    // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point, and startApp() is its only caller
     constructor(
         logger: Logger,
         cache: CacheManagerType,
@@ -235,9 +235,8 @@ export class FlixMonkeyApp {
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
         this.#renderer.applyFade(container as HTMLElement, shouldFade);
         (container as HTMLElement).dataset.fmKey = dedupKey;
-        const displayTitle = data.displayTitle;
         this.#renderer.injectOverlay(container as HTMLElement, data, {
-            displayTitle,
+            displayTitle: data.displayTitle,
             onEditClick: (dt: string): void => {
                 this.#handleEditClick(dt, data.imdbId).catch(err =>
                     this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
@@ -265,7 +264,7 @@ export class FlixMonkeyApp {
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
-        const currentState: FadeOverrideState = domState === 'auto' ? undefined : (domState as 'always' | 'never');
+        const currentState: FadeOverrideState = domState === 'always' || domState === 'never' ? domState : undefined;
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
