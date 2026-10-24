@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-08  
 **Author**: fran  
-**Status**: Draft  
+**Status:** Implemented  
 **Related**: `docs/superpowers/plans/2026-10-08-typescript-migration.md` (tracking)
 
 ---
@@ -361,4 +361,4 @@ npx tsc --noEmit
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
 - [Rollup TypeScript Plugin](https://github.com/rollup/plugins/tree/master/packages/typescript)
 - [ESLint TypeScript Support](https://typescript-eslint.io/)
-- `docs/superpowers/plans/2026-10-08-typescript-migration.md` (implementation plan)
+- [Implementation plan](../plans/2026-10-08-typescript-migration.md)

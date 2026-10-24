@@ -300,7 +300,7 @@ git diff --check HEAD~2..HEAD
 
 Expected: no whitespace errors. Any pre-existing unrelated modified files remain unstaged and unchanged. The two implementation commits appear after the design commit.
 
-- [x] **Step 6: Report manual verification**
+- [ ] **Step 6: Report manual verification**
 
 Report automated checks as complete. Leave this manual check open for the user:
 

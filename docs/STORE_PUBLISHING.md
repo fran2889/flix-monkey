@@ -2,10 +2,11 @@
 
 FlixMonkey is published to the Chrome Web Store and Firefox Add-ons (AMO) by the
 `Publish to Stores` GitHub Actions workflow
-([`.github/workflows/publish-stores.yml`](../.github/workflows/publish-stores.yml)). Publishing is a **manual deployment**:
-a maintainer runs the workflow for a chosen release tag, and it reuses the
-artifacts already attached to that GitHub Release (no rebuild). A release must
-therefore exist, with its artifacts attached, before it can be published.
+([`.github/workflows/publish-stores.yml`](../.github/workflows/publish-stores.yml)).
+Publishing is a **manual deployment**: a maintainer runs the workflow for a
+chosen release tag, and it reuses the artifacts already attached to that GitHub
+Release (no rebuild). A release must therefore exist, with its artifacts
+attached, before it can be published.
 
 The published artifacts are:
 
@@ -59,7 +60,8 @@ npx chrome-webstore-upload-keys
 
 Generate `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` at
 <https://addons.mozilla.org/developers/addon/api/key/> (Manage API Keys).
-The add-on's stable ID is set in [`src/targets/firefox/manifest.json`](../src/targets/firefox/manifest.json) as
+The add-on's stable ID is set in
+[`src/targets/firefox/manifest.json`](../src/targets/firefox/manifest.json) as
 `browser_specific_settings.gecko.id` (`flixmonkey@fran`); AMO uses it to
 match version updates to the listing.
 
@@ -111,15 +113,16 @@ stores. Both uploads run in parallel.
 ### Firefox Add-ons (AMO)
 
 The Firefox AMO store listing description can be updated automatically using the
-`Update Store Description` GitHub Actions workflow ([`update-store-description.yml`](../.github/workflows/update-store-description.yml)).
+`Update Store Description` GitHub Actions workflow
+([`update-store-description.yml`](../.github/workflows/update-store-description.yml)).
 
 **Description File:** Store descriptions are maintained in
-[`docs/store-description.txt`](store-description.txt). This file contains the rich, formatted text
-that appears in the Firefox AMO listing.
+[`docs/store-description.txt`](store-description.txt). This file contains the
+rich, formatted text that appears in the Firefox AMO listing.
 
 **Automatic Updates:** The workflow runs automatically whenever
-[`docs/store-description.txt`](store-description.txt) is modified and merged to the `main` branch.
-This ensures store listings stay in sync with the repository.
+[`docs/store-description.txt`](store-description.txt) is modified and merged to
+the `main` branch. This ensures store listings stay in sync with the repository.
 
 **Manual Updates:** To manually trigger a description update:
 

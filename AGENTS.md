@@ -46,7 +46,7 @@ Stored data carries an `fm_data_version`. When changing a persisted shape, appen
 
 ## Superpowers plans
 
-Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track work with `- [ ]` checkboxes. When implementing a plan, tick each task and step (change `- [ ]` to `- [x]`) as soon as it is complete, including verification steps once they have been run. Do not leave finished work unchecked or batch the updates at the end.
+Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track work with `- [ ]` checkboxes. Tick a step only when it is complete: verification steps once they pass, and artifact steps once the file, commit, branch, or tag exists. Do not leave finished work unchecked or batch the updates at the end.
 
 ## Conventions
 
@@ -56,7 +56,7 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 - Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
 - Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in [`eslint.config.js`](eslint.config.js).
-- Use [`logger.ts`](src/core/logger.ts) for application logging in [`src/`](src/); raw `console` is limited to the logger itself and platform bootstrap error paths.
+- Use [`src/core/logger.ts`](src/core/logger.ts) for application logging in [`src/`](src/); raw `console` is limited to the logger itself and platform bootstrap error paths.
 - ASCII only, unless a test case or user-facing string needs otherwise.
 - Prose: no em-dashes; use a colon, a semicolon, or two sentences. Use the Oxford comma.
 - Conventional Commits (`type(scope)?: description`, imperative, lowercase, no trailing period). Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert. Enforced by commitlint via a Husky `commit-msg` hook.
