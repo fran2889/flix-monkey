@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/fran2889/flix-monkey/compare/v1.7.0...v1.8.0) (2026-10-24)
+
+
+### Features
+
+* **core:** normalize absent values to undefined and fix rating and expiry fallbacks ([#217](https://github.com/fran2889/flix-monkey/issues/217)) ([c9adb03](https://github.com/fran2889/flix-monkey/commit/c9adb038da3e032364032a3bfe97992d37e99cac))
+
 ## [1.7.0](https://github.com/fran2889/flix-monkey/compare/v1.6.1...v1.7.0) (2026-10-08)
 
 
