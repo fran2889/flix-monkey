@@ -2,7 +2,7 @@
 
 Instructions for AI agents working in this repository. Human contributor guidance lives in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-**FlixMonkey** is a browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix, HBO Max, and Disney+ thumbnails and banners. A shared TypeScript codebase in [`src/`](src/) is bundled by Rollup into three targets: a userscript (`dist/FlixMonkey.user.js`), a Firefox MV3 extension (`dist/firefox/`), and a Chrome MV3 extension (`dist/chrome/`). Platform differences are hidden behind a `PlatformAdapter` abstraction.
+**FlixMonkey** is a browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix, HBO Max, and Disney+ thumbnails and banners. A shared TypeScript codebase in `src/` is bundled by Rollup into three targets: a userscript (`dist/FlixMonkey.user.js`), a Firefox MV3 extension (`dist/firefox/`), and a Chrome MV3 extension (`dist/chrome/`). Platform differences are hidden behind a `PlatformAdapter` abstraction.
 
 Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest + jsdom.
 
@@ -16,7 +16,7 @@ Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest
 - Test: `npm test`
 - Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
 
-Other npm scripts and their exact definitions live in [`package.json`](package.json). Read it rather than trusting a copy.
+Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 
 ### Chromium debugging
 
@@ -32,17 +32,17 @@ Reuse that profile. Do not use fresh or temporary user-data directories.
 
 - All platform-specific I/O goes through the `adapter` (`adapter.httpFetch()`, `adapter.storage*`, `adapter.configGet()`). Never call `fetch`, `GM_*`, or `browser.*` from platform-agnostic code.
 - Streaming-service pages block direct `fetch()` to external APIs. Extensions proxy through the background page or service worker via `browser.runtime.sendMessage`; userscripts use `GM_xmlhttpRequest`.
-- [`src/targets/extension/domains.ts`](src/targets/extension/domains.ts) (`ALLOWED_DOMAINS`, `validateDomain()`) gates every proxied request. Adding an API endpoint requires adding its host there.
+- `src/targets/extension/domains.ts` (`ALLOWED_DOMAINS`, `validateDomain()`) gates every proxied request. Adding an API endpoint requires adding its host there.
 - In extensions, config changes arrive asynchronously via `browser.storage.onChanged`. Do not assume a config value read at init stays current.
 - `PlatformAdapter.configGet()` has no no-op default. Unlike `registerMenuCommand` and `setConfigData`, every adapter must implement it.
-- Manifest fields with `__...__` placeholders (for example `__NAME__`, `__VERSION__`) are injected at build time from [`package.json`](package.json). Do not hardcode them in `manifest.json`.
+- Manifest fields with `__...__` placeholders (for example `__NAME__`, `__VERSION__`) are injected at build time from `package.json`. Do not hardcode them in `manifest.json`.
 - Do not claim a change has shipped. GitHub releases are cut automatically from `main`; store publishing is a separate manual step (see Releases).
 - Do not edit generated output under `dist/` or `coverage/`.
 - Preserve unrelated working-tree changes in any file you edit.
 
 ### Persistent storage migrations
 
-Stored data carries an `fm_data_version`. When changing a persisted shape, append a new migration to `MIGRATIONS` ([`src/core/migrations.ts`](src/core/migrations.ts)) with the next integer version, and add tests for transformed, already-current, and malformed data. Never edit or reuse a released version. `runMigrations()` advances the stored version even when a migration fails, on purpose, so a broken migration cannot trap startup.
+Stored data carries an `fm_data_version`. When changing a persisted shape, append a new migration to `MIGRATIONS` (`src/core/migrations.ts`) with the next integer version, and add tests for transformed, already-current, and malformed data. Never edit or reuse a released version. `runMigrations()` advances the stored version even when a migration fails, on purpose, so a broken migration cannot trap startup.
 
 ## Superpowers plans
 
@@ -50,13 +50,13 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 
 ## Conventions
 
-- License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching [`LICENSE_HEADER.template`](LICENSE_HEADER.template). ESLint enforces this; [`src/targets/userscript/metadata.ts`](src/targets/userscript/metadata.ts) is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
-- JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See [`eslint.config.js`](eslint.config.js) for the exact tags.
+- License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
+- JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See `eslint.config.js` for the exact tags.
 - Document the boundaries a caller needs in order to consume them correctly: abstract and cross-platform contracts, injected collaborators, and persistence, messaging, HTTP, and external-data boundaries. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
 - Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
-- Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in [`eslint.config.js`](eslint.config.js).
-- Use [`src/core/logger.ts`](src/core/logger.ts) for application logging in [`src/`](src/); raw `console` is limited to the logger itself and platform bootstrap error paths.
+- Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in `eslint.config.js`.
+- Use `src/core/logger.ts` for application logging in `src/`; raw `console` is limited to the logger itself and platform bootstrap error paths.
 - ASCII only, unless a test case or user-facing string needs otherwise.
 - Prose: no em-dashes; use a colon, a semicolon, or two sentences. Use the Oxford comma.
 - Conventional Commits (`type(scope)?: description`, imperative, lowercase, no trailing period). Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert. Enforced by commitlint via a Husky `commit-msg` hook.
@@ -66,39 +66,39 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 ## Testing
 
 - Add or update tests for every business-logic change.
-- Location rule: a test belongs in [`tests/ui/`](tests/ui/) if it loads a streaming-service surface fixture from [`tests/fixtures/`](tests/fixtures/); otherwise [`tests/unit/`](tests/unit/). Integration tests are separate (see below). The deciding question is whether the assertion needs real service markup. If it would pass against a synthetic `<div>`, it is a unit test.
-- Fixtures are TypeScript modules exporting `{name, html, expected}` entries, one surface per entry. Shared assertions live in [`tests/helpers/surface-tests.ts`](tests/helpers/surface-tests.ts); mock factories live in [`tests/mocks/`](tests/mocks/).
+- Location rule: a test belongs in `tests/ui/` if it loads a streaming-service surface fixture from `tests/fixtures/`; otherwise `tests/unit/`. Integration tests are separate (see below). The deciding question is whether the assertion needs real service markup. If it would pass against a synthetic `<div>`, it is a unit test.
+- Fixtures are TypeScript modules exporting `{name, html, expected}` entries, one surface per entry. Shared assertions live in `tests/helpers/surface-tests.ts`; mock factories live in `tests/mocks/`.
 - Do not duplicate coverage across layers.
-- [`tests/integration/`](tests/integration/) hits live APIs. It runs only via `npm run test:integration` and the Nightly Integration workflow, needs `XMDB_API_KEY` and `OMDB_API_KEY`, and fails fast when a key is missing. Do not mock HTTP there.
-- Coverage thresholds and the jsdom environment are configured in [`vitest.config.js`](vitest.config.js).
+- `tests/integration/` hits live APIs. It runs only via `npm run test:integration` and the Nightly Integration workflow, needs `XMDB_API_KEY` and `OMDB_API_KEY`, and fails fast when a key is missing. Do not mock HTTP there.
+- Coverage thresholds and the jsdom environment are configured in `vitest.config.js`.
 
 ## GitHub
 
 Issue and PR body shape is defined by the templates in [`.github/`](.github/), not by this file. Read the relevant template and follow its HTML comment. `gh pr create` does not apply the template; pass a filled copy with `--body-file`.
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
-- PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name ([`src/core/cache/`](src/core/cache/) becomes `cache`, [`src/core/services/`](src/core/services/) becomes `services`).
+- PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
 - CI enforces six merge-gate jobs: type-check, lint-and-audit, build, test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
 ### Releases
 
-release-please runs on pushes to `main`. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: [`publish-stores.yml`](.github/workflows/publish-stores.yml) is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
+release-please runs on pushes to `main`. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `.github/workflows/publish-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
 
 ## Where to look
 
 Read these instead of a copy in this file:
 
-- [`package.json`](package.json): scripts and `lint-staged` globs.
-- [`eslint.config.js`](eslint.config.js): lint, TypeScript, JSDoc, and header rules.
-- [`vitest.config.js`](vitest.config.js), [`vitest.integration.config.js`](vitest.integration.config.js): test environment and coverage.
-- [`rollup.config.js`](rollup.config.js): build targets, manifest injection, icon generation.
-- [`src/core/`](src/core/): business logic (`app.ts`, `api-manager.ts`, `overlay.ts`, `services/`, `surfaces/`, `ui/`).
-- [`src/platform/`](src/platform/): the `adapter.ts` contract plus the userscript and WebExtension implementations.
-- [`src/targets/`](src/targets/): entry points, the fetch proxy, and per-browser manifests and background scripts.
-- [`tests/`](tests/): `unit/`, `ui/`, `fixtures/`, `helpers/`, `mocks/`, `integration/`.
-- [`src/core/constants.ts`](src/core/constants.ts), [`src/core/rate-limits.ts`](src/core/rate-limits.ts): timing and rate-limit values.
-- [`src/core/config/config-fields.ts`](src/core/config/config-fields.ts): the single source of truth for settings.
-- [`src/targets/extension/domains.ts`](src/targets/extension/domains.ts): allowed external hosts.
+- `package.json`: scripts and `lint-staged` globs.
+- `eslint.config.js`: lint, TypeScript, JSDoc, and header rules.
+- `vitest.config.js`, `vitest.integration.config.js`: test environment and coverage.
+- `rollup.config.js`: build targets, manifest injection, icon generation.
+- `src/core/`: business logic (`app.ts`, `api-manager.ts`, `overlay.ts`, `services/`, `surfaces/`, `ui/`).
+- `src/platform/`: the `adapter.ts` contract plus the userscript and WebExtension implementations.
+- `src/targets/`: entry points, the fetch proxy, and per-browser manifests and background scripts.
+- `tests/`: `unit/`, `ui/`, `fixtures/`, `helpers/`, `mocks/`, `integration/`.
+- `src/core/constants.ts`, `src/core/rate-limits.ts`: timing and rate-limit values.
+- `src/core/config/config-fields.ts`: the single source of truth for settings.
+- `src/targets/extension/domains.ts`: allowed external hosts.
 - [`.github/`](.github/): templates and workflows.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md), [`docs/STORE_PUBLISHING.md`](docs/STORE_PUBLISHING.md): human and store-publishing guidance.
