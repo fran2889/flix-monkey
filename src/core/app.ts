@@ -264,7 +264,7 @@ export class FlixMonkeyApp {
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
-        const currentState: FadeOverrideState = domState === 'auto' ? undefined : (domState as 'always' | 'never');
+        const currentState: FadeOverrideState = domState === 'always' || domState === 'never' ? domState : undefined;
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
