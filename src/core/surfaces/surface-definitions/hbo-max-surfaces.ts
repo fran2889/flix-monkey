@@ -15,6 +15,15 @@ const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
 ]) as RegExp[];
+const HBO_MAX_TITLE_TYPES = new Set(['movie', 'show', 'mini-series']);
+
+function firstMatchingPattern(label: string, patterns: readonly RegExp[]): string | undefined {
+    for (const pattern of patterns) {
+        const title = label.match(pattern)?.[1]?.trim();
+        if (title) return title;
+    }
+    return undefined;
+}
 
 /**
  * Extracts and normalizes aria-label from HBO Max tile.
@@ -38,22 +47,12 @@ export function extractHboMaxTitle(element: Element): string | undefined {
     const label = getNormalizedHboMaxAriaLabel(element);
     if (!label) return undefined;
 
-    const tile = element as HTMLElement;
-    if (tile.dataset.sonicType === 'video') {
-        for (const pattern of HBO_MAX_WATCH_TITLE_PATTERNS) {
-            const title = label.match(pattern)?.[1]?.trim();
-            if (title) return title;
-        }
-        return undefined;
+    const sonicType = (element as HTMLElement).dataset.sonicType;
+    if (sonicType === 'video') {
+        return firstMatchingPattern(label, HBO_MAX_WATCH_TITLE_PATTERNS);
     }
-
-    if (!['movie', 'show', 'mini-series'].includes(tile.dataset.sonicType ?? '')) return undefined;
-
-    for (const pattern of HBO_MAX_TITLE_PATTERNS) {
-        const title = label.match(pattern)?.[1]?.trim();
-        if (title) return title;
-    }
-    return undefined;
+    if (!HBO_MAX_TITLE_TYPES.has(sonicType ?? '')) return undefined;
+    return firstMatchingPattern(label, HBO_MAX_TITLE_PATTERNS);
 }
 
 /**
