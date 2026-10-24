@@ -7,6 +7,7 @@
 ---
 
 ### Task 1: Update Configuration and Manager
+
 - Modify `src/core/config-fields.js`: Change `apiClients` to `apiClient` as a dropdown.
 - Modify `src/core/api-manager.js`: Change `#clients` (array) to `#client` (instance).
 - Modify `tests/unit/core/api-manager.test.js`: Update tests to reflect single client behavior.

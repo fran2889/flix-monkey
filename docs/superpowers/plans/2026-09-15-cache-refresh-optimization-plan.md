@@ -52,7 +52,7 @@
 - Produces: `Title.toCacheJSON()` - returns plain object without `displayTitle`
 - Produces: `Title.fromCacheJSON(obj, displayTitle)` - static, returns Title instance
 
-- [ ] **Step 1: Write the failing tests for toCacheJSON**
+- [x] **Step 1: Write the failing tests for toCacheJSON**
 
 ```javascript
 // tests/unit/core/title.test.js - add to existing file
@@ -110,12 +110,12 @@ describe('Title serialization', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest tests/unit/core/title.test.js -t "serialization" -v`
 Expected: FAIL with "toCacheJSON is not a function"
 
-- [ ] **Step 3: Implement toCacheJSON and fromCacheJSON in Title**
+- [x] **Step 3: Implement toCacheJSON and fromCacheJSON in Title**
 
 ```javascript
 // src/core/title.js - add after existing methods, before Object.freeze line
@@ -142,12 +142,12 @@ Expected: FAIL with "toCacheJSON is not a function"
     }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/title.test.js -t "serialization" -v`
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/title.js tests/unit/core/title.test.js
@@ -173,7 +173,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Produces: `CacheManager.read()` returns `CacheEntry | null`
 - Produces: `CacheManager.write()` accepts `Title` and stores in new format
 
-- [ ] **Step 1: Write the failing tests for CacheEntry**
+- [x] **Step 1: Write the failing tests for CacheEntry**
 
 ```javascript
 // tests/unit/core/cache.test.js - add to existing file
@@ -252,12 +252,12 @@ describe('CacheEntry class', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest tests/unit/core/cache.test.js -t "CacheEntry" -v`
 Expected: FAIL with type errors (CacheEntry not defined)
 
-- [ ] **Step 3: Implement CacheEntry class and update CacheManager**
+- [x] **Step 3: Implement CacheEntry class and update CacheManager**
 
 ```javascript
 // src/core/cache.js - replace existing file content
@@ -431,12 +431,12 @@ export class CacheManager {
 export { CacheEntry };
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/cache.test.js -t "CacheEntry" -v`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Update existing cache tests to work with new return type**
+- [x] **Step 5: Update existing cache tests to work with new return type**
 
 Some existing tests in `cache.test.js` expect `read()` to return a `Title` directly. Update these to work with `CacheEntry`:
 
@@ -485,12 +485,12 @@ it('should store indefinite TTL as null in storage', async () => {
 });
 ```
 
-- [ ] **Step 6: Run all cache tests to verify they pass**
+- [x] **Step 6: Run all cache tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/cache.test.js -v`
 Expected: PASS (all tests)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/cache.js tests/unit/core/cache.test.js
@@ -515,7 +515,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `client.fetch(displayTitle, imdbId?)` - will be added in Task 4
 - Produces: Short-circuit path for expired entries with imdbId
 
-- [ ] **Step 1: Write the failing tests for short-circuit behavior**
+- [x] **Step 1: Write the failing tests for short-circuit behavior**
 
 ```javascript
 // tests/unit/core/api-manager.test.js - add to existing file
@@ -585,12 +585,12 @@ describe('ApiClientManager cache refresh optimization', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest tests/unit/core/api-manager.test.js -t "cache refresh" -v`
 Expected: FAIL - ApiClientManager doesn't handle CacheEntry yet
 
-- [ ] **Step 3: Update ApiClientManager to handle CacheEntry**
+- [x] **Step 3: Update ApiClientManager to handle CacheEntry**
 
 ```javascript
 // src/core/api-manager.js - update getData method
@@ -719,12 +719,12 @@ export class ApiClientManager {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/api-manager.test.js -v`
 Expected: PASS (all tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-manager.js tests/unit/core/api-manager.test.js
@@ -748,7 +748,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Produces: `BaseApiClient.fetch(displayTitle, imdbId?)` - optional imdbId parameter
 - Produces: `OMDbApiClient.getDetails()` - handles minimal Title with only imdbId
 
-- [ ] **Step 1: Write the failing tests for short-circuit fetch**
+- [x] **Step 1: Write the failing tests for short-circuit fetch**
 
 ```javascript
 // tests/unit/core/api-clients.test.js - add to existing file or create new
@@ -850,12 +850,12 @@ describe('OMDbApiClient getDetails with minimal Title', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest tests/unit/core/api-clients.test.js -t "short-circuit" -v`
 Expected: FAIL - fetch doesn't accept imdbId parameter yet
 
-- [ ] **Step 3: Update BaseApiClient.fetch() to accept optional imdbId**
+- [x] **Step 3: Update BaseApiClient.fetch() to accept optional imdbId**
 
 ```javascript
 // src/core/api-clients.js - update BaseApiClient.fetch method
@@ -891,7 +891,7 @@ Expected: FAIL - fetch doesn't accept imdbId parameter yet
     }
 ```
 
-- [ ] **Step 4: Update OMDbApiClient.getDetails() to handle minimal Title**
+- [x] **Step 4: Update OMDbApiClient.getDetails() to handle minimal Title**
 
 ```javascript
 // src/core/api-clients.js - update OMDbApiClient.getDetails method
@@ -930,12 +930,12 @@ Expected: FAIL - fetch doesn't accept imdbId parameter yet
     }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/api-clients.test.js -v`
 Expected: PASS (all tests including new ones)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api-clients.js tests/unit/core/api-clients.test.js
@@ -959,7 +959,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: Existing migration infrastructure
 - Produces: New migration version for cache format change
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 ```javascript
 // src/core/migrations.js - add new migration at the end of MIGRATIONS array
@@ -1036,7 +1036,7 @@ const MIGRATIONS = [
 ];
 ```
 
-- [ ] **Step 2: Write tests for the migration**
+- [x] **Step 2: Write tests for the migration**
 
 ```javascript
 // tests/unit/core/migrations.test.js - add to existing file or create new
@@ -1149,12 +1149,12 @@ describe('Cache format migration (version 2)', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests to verify they pass**
+- [x] **Step 3: Run tests to verify they pass**
 
 Run: `npx vitest tests/unit/core/migrations.test.js -v`
 Expected: PASS (all migration tests)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/migrations.js tests/unit/core/migrations.test.js
@@ -1176,27 +1176,27 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Consumes: All previous tasks
 
-- [ ] **Step 1: Run full unit test suite**
+- [x] **Step 1: Run full unit test suite**
 
 Run: `npm test`
 Expected: PASS (all existing and new tests)
 
-- [ ] **Step 2: Run linting**
+- [x] **Step 2: Run linting**
 
 Run: `npm run lint`
 Expected: PASS (no lint errors)
 
-- [ ] **Step 3: Run formatting check**
+- [x] **Step 3: Run formatting check**
 
 Run: `npm run format:check`
 Expected: PASS
 
-- [ ] **Step 4: Build all targets**
+- [x] **Step 4: Build all targets**
 
 Run: `npm run build`
 Expected: All three targets (userscript, firefox, chrome) build successfully
 
-- [ ] **Step 5: Commit final integration**
+- [x] **Step 5: Commit final integration**
 
 ```bash
 git add package-lock.json  # if lockfile changed from new test deps

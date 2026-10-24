@@ -1,7 +1,7 @@
 # Multi-Target Build: Userscript + Firefox Addon + Chrome Extension
 
 **Date:** 2026-05-01
-**Status:** Approved
+**Status:** Implemented
 
 ## Goal
 

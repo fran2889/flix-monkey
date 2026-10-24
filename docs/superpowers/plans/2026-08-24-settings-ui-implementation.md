@@ -42,7 +42,7 @@
 
 - Produces: `GROUPS` object (exported), `ROW_LABELS` object (exported), new field properties: `suffix` (string), `disabled` (boolean)
 
-- [ ] **Step 1: Add GROUPS export**
+- [x] **Step 1: Add GROUPS export**
 
 Add after CONFIG_FIELDS definition:
 
@@ -57,7 +57,7 @@ export const GROUPS = {
 };
 ```
 
-- [ ] **Step 2: Add ROW_LABELS export**
+- [x] **Step 2: Add ROW_LABELS export**
 
 Add after GROUPS:
 
@@ -68,7 +68,7 @@ export const ROW_LABELS = {
 };
 ```
 
-- [ ] **Step 3: Add suffix property to cache TTL fields**
+- [x] **Step 3: Add suffix property to cache TTL fields**
 
 Modify the three cache TTL field definitions in CONFIG_FIELDS:
 
@@ -108,7 +108,7 @@ Modify the three cache TTL field definitions in CONFIG_FIELDS:
 },
 ```
 
-- [ ] **Step 4: Add disabled property to showImdbRating field**
+- [x] **Step 4: Add disabled property to showImdbRating field**
 
 Modify the showImdbRating field definition:
 
@@ -125,7 +125,7 @@ Modify the showImdbRating field definition:
 },
 ```
 
-- [ ] **Step 5: Write tests for new exports**
+- [x] **Step 5: Write tests for new exports**
 
 Create or update test file:
 
@@ -164,17 +164,17 @@ describe('config-fields UI metadata', () => {
 });
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npm run test:unit -- tests/unit/core/config-fields.test.js`
 Expected: All tests PASS
 
-- [ ] **Step 7: Run lint**
+- [x] **Step 7: Run lint**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/config-fields.js tests/unit/core/config-fields.test.js
@@ -197,23 +197,23 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: None (standalone CSS update)
 - Produces: Updated `SETTINGS_STYLES` string constant
 
-- [ ] **Step 1: Replace SETTINGS_STYLES**
+- [x] **Step 1: Replace SETTINGS_STYLES**
 
 Replace the entire `SETTINGS_STYLES` string in `src/core/ui/styles.js` with the CSS from the design spec, ensuring it is scoped under `.fm-settings-container`. The CSS should include all sections: Custom Properties, Base Styles, Layout Components, Settings Groups, Field System, Field Labels, Field Values & Inputs, Checkbox Groups & Service Items, Action Buttons, Responsive Layout, Status & Notifications, and Utility classes.
 
 The complete CSS is available in the design specification document at `docs/superpowers/specs/2026-08-23-settings-ui-design.md` section 3.3.1.
 
-- [ ] **Step 2: Verify CSS syntax**
+- [x] **Step 2: Verify CSS syntax**
 
 Run: `npm run build`
 Expected: Build completes without CSS errors
 
-- [ ] **Step 3: Run lint**
+- [x] **Step 3: Run lint**
 
 Run: `npm run lint`
 Expected: No errors
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/styles.js
@@ -237,7 +237,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `GROUPS` from config-fields.js, `ROW_LABELS` from config-fields.js
 - Produces: Updated DOM with .field classes, modifiers, suffix support, disabled handling
 
-- [ ] **Step 1: Update imports**
+- [x] **Step 1: Update imports**
 
 Change from:
 
@@ -251,11 +251,11 @@ To:
 import { CONFIG_FIELDS, GROUPS, ROW_LABELS } from '../config-fields.js';
 ```
 
-- [ ] **Step 2: Remove hardcoded GROUPS and ROW_LABELS**
+- [x] **Step 2: Remove hardcoded GROUPS and ROW_LABELS**
 
 Delete any local definitions of `GROUPS` or `ROW_LABELS` constants in the file.
 
-- [ ] **Step 3: Update #createGroupElement to use GROUPS**
+- [x] **Step 3: Update #createGroupElement to use GROUPS**
 
 Modify to use imported GROUPS:
 
@@ -278,7 +278,7 @@ Modify to use imported GROUPS:
 }
 ```
 
-- [ ] **Step 4: Update #groupFieldsByRow**
+- [x] **Step 4: Update #groupFieldsByRow**
 
 Replace with:
 
@@ -296,7 +296,7 @@ Replace with:
 }
 ```
 
-- [ ] **Step 5: Add #createInputWithSuffix helper**
+- [x] **Step 5: Add #createInputWithSuffix helper**
 
 Add new method:
 
@@ -319,7 +319,7 @@ Add new method:
 }
 ```
 
-- [ ] **Step 6: Update #createFieldRow to use .field and modifiers**
+- [x] **Step 6: Update #createFieldRow to use .field and modifiers**
 
 Refactor to create `.field` elements instead of `.field-row`, add modifiers:
 
@@ -398,7 +398,7 @@ Refactor to create `.field` elements instead of `.field-row`, add modifiers:
 }
 ```
 
-- [ ] **Step 7: Update #createInput to handle disabled fields**
+- [x] **Step 7: Update #createInput to handle disabled fields**
 
 Add at the end of the method:
 
@@ -408,7 +408,7 @@ if (field.disabled) {
 }
 ```
 
-- [ ] **Step 8: Update readValues to skip disabled fields**
+- [x] **Step 8: Update readValues to skip disabled fields**
 
 Modify to:
 
@@ -431,7 +431,7 @@ readValues() {
 }
 ```
 
-- [ ] **Step 9: Update validate to skip disabled fields**
+- [x] **Step 9: Update validate to skip disabled fields**
 
 Modify to:
 
@@ -451,7 +451,7 @@ validate(values) {
 }
 ```
 
-- [ ] **Step 10: Update showStatus to use new class names**
+- [x] **Step 10: Update showStatus to use new class names**
 
 Modify to:
 
@@ -465,7 +465,7 @@ showStatus(message, type) {
 }
 ```
 
-- [ ] **Step 11: Update render to add status class**
+- [x] **Step 11: Update render to add status class**
 
 Ensure the status element has both the ID and class:
 
@@ -475,17 +475,17 @@ statusEl.id = 'fm-status';
 statusEl.className = 'status';
 ```
 
-- [ ] **Step 12: Run build**
+- [x] **Step 12: Run build**
 
 Run: `npm run build`
 Expected: Build completes without errors
 
-- [ ] **Step 13: Run existing tests**
+- [x] **Step 13: Run existing tests**
 
 Run: `npm run test:unit -- tests/unit/core/ui/settings-view.test.js`
 Expected: Tests may fail due to selector changes - note failures for Task 4
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 
 ```bash
 git add src/core/ui/settings-view.js
@@ -507,15 +507,15 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Consumes: Updated class names from Task 3
 
-- [ ] **Step 1: Update selectors for .field instead of .field-row**
+- [x] **Step 1: Update selectors for .field instead of .field-row**
 
 Replace all instances of `.field-row` with `.field` in selectors.
 
-- [ ] **Step 2: Update selectors for action rows**
+- [x] **Step 2: Update selectors for action rows**
 
 Replace `.field-row.action-row` with `.field.field--actions`.
 
-- [ ] **Step 3: Add tests for disabled field handling**
+- [x] **Step 3: Add tests for disabled field handling**
 
 Add test:
 
@@ -535,7 +535,7 @@ it('should skip disabled fields in readValues', () => {
 });
 ```
 
-- [ ] **Step 4: Add tests for suffix rendering**
+- [x] **Step 4: Add tests for suffix rendering**
 
 Add test:
 
@@ -552,7 +552,7 @@ it('should render suffix text for fields with suffix property', () => {
 });
 ```
 
-- [ ] **Step 5: Add tests for field--checkbox modifier**
+- [x] **Step 5: Add tests for field--checkbox modifier**
 
 Add test:
 
@@ -568,7 +568,7 @@ it('should add field--checkbox modifier for single checkbox fields', () => {
 });
 ```
 
-- [ ] **Step 6: Add tests for field--actions modifier**
+- [x] **Step 6: Add tests for field--actions modifier**
 
 Add test:
 
@@ -587,12 +587,12 @@ it('should add field--actions modifier and hide label for action rows', () => {
 });
 ```
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run: `npm run test:unit -- tests/unit/core/ui/settings-view.test.js`
 Expected: All tests PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add tests/unit/core/ui/settings-view.test.js
@@ -614,22 +614,22 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Consumes: All previous task outputs
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run: `npm test`
 Expected: All tests PASS
 
-- [ ] **Step 2: Run lint and format**
+- [x] **Step 2: Run lint and format**
 
 Run: `npm run lint && npm run format`
 Expected: No errors, formatting applied
 
-- [ ] **Step 3: Run build**
+- [x] **Step 3: Run build**
 
 Run: `npm run build`
 Expected: All targets build successfully
 
-- [ ] **Step 4: Manual verification**
+- [x] **Step 4: Manual verification**
 
 Open the options page in a browser and verify:
 
@@ -641,7 +641,7 @@ Open the options page in a browser and verify:
 - Action buttons have outline styling
 - Responsive layout works at < 40rem viewport
 
-- [ ] **Step 5: Commit final verification**
+- [x] **Step 5: Commit final verification**
 
 ```bash
 git add .
@@ -657,23 +657,23 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 **1. Spec coverage:**
 
-- [ ] Task 1 covers config-fields.js changes (GROUPS, ROW_LABELS, suffix, disabled)
-- [ ] Task 2 covers styles.js CSS replacement
-- [ ] Task 3 covers settings-view.js DOM refactoring
-- [ ] Task 4 covers test updates
-- [ ] Task 5 covers integration and verification
+- [x] Task 1 covers config-fields.js changes (GROUPS, ROW_LABELS, suffix, disabled)
+- [x] Task 2 covers styles.js CSS replacement
+- [x] Task 3 covers settings-view.js DOM refactoring
+- [x] Task 4 covers test updates
+- [x] Task 5 covers integration and verification
 
 **2. Placeholder scan:**
 
-- [ ] No TBD, TODO, or placeholder text in any task
-- [ ] All code blocks contain complete, runnable code
-- [ ] All test code is complete and specific
+- [x] No TBD, TODO, or placeholder text in any task
+- [x] All code blocks contain complete, runnable code
+- [x] All test code is complete and specific
 
 **3. Type consistency:**
 
-- [ ] GROUPS and ROW_LABELS used consistently across Tasks 1 and 3
-- [ ] suffix and disabled properties referenced consistently
-- [ ] Class names match between implementation and tests
+- [x] GROUPS and ROW_LABELS used consistently across Tasks 1 and 3
+- [x] suffix and disabled properties referenced consistently
+- [x] Class names match between implementation and tests
 
 ---
 

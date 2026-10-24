@@ -1,9 +1,11 @@
 # Source Code Refinement Plan
 
 ## Overview
+
 Address critical architectural leaks, global state issues, and technical debt in the source code.
 
 ## Tasks
+
 1. **Double Cache Read**: Refactor `src/core/app.js:#decorateContainer` to avoid redundant `#cache.read()` calls.
 2. **Global Namespace Protection**:
     - Remove `window.fmApi` leak or guard it behind a `process.env.NODE_ENV !== 'production'` check.
@@ -16,6 +18,7 @@ Address critical architectural leaks, global state issues, and technical debt in
     - Extract client mapping in `api-manager.js` to a factory function.
 
 ## Verification
+
 - Manual verification of Netflix title decorations to ensure speed/no duplicate network requests.
 - Verify no global leaks in `window` or `history` objects.
 - Run all unit tests to ensure no regressions in config or decoration logic.

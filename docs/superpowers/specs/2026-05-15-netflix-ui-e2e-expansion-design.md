@@ -13,6 +13,7 @@ The testing infrastructure leverages Playwright connecting via CDP to a real, au
 Each surface object represents a distinct Netflix UI context and manages the lifecycle of triggering and locating that context.
 
 #### `BrowseSurface`
+
 - **Context:** Main grid views (`/browse`, `/genre/*`).
 - **Target:** `.title-card` elements.
 - **Key Methods:**
@@ -20,6 +21,7 @@ Each surface object represents a distinct Netflix UI context and manages the lif
     - `getOverlay(card)`: Returns an `OverlayComponent` scoped to the card.
 
 #### `SearchSurface`
+
 - **Context:** Search results page (`/search?q=...`).
 - **Target:** `[data-uia="search-gallery-video-card"]`.
 - **Key Methods:**
@@ -27,12 +29,14 @@ Each surface object represents a distinct Netflix UI context and manages the lif
     - `getResults()`: Locates gallery cards in the search grid.
 
 #### `BobSurface`
+
 - **Context:** The dynamic "Bob" hover card that appears over title cards.
 - **Target:** `.bob-container`.
 - **Key Methods:**
     - `triggerHover(card)`: Hovers a card and waits for the Bob container to be attached to the DOM and stable.
 
 #### `PreviewModalSurface`
+
 - **Context:** The full-screen "More Info" modal.
 - **Target:** `.previewModal`.
 - **Key Methods:**
@@ -54,11 +58,14 @@ A unified component used by all surfaces to verify FlixMonkey's injected rating 
 ## Testing Strategy
 
 ### Data Determinism
+
 To avoid flaky tests and API quota exhaustion:
+
 - Tests will pre-seed `chrome.storage.local` with mock rating data for specific Netflix titles.
 - The `SettingsUIAdapter` will be used to ensure specific features (like Fading) are enabled.
 
 ### Verification Scenarios
+
 1. **Browse Injection:** Verify overlays appear on the standard grid.
 2. **Search Results:** Verify overlays appear in search galleries.
 3. **Hover Lifecycle:** Verify that hovering a card correctly injects the overlay into the Bob container.
@@ -66,6 +73,7 @@ To avoid flaky tests and API quota exhaustion:
 5. **Configuration Reflectivity:** Verify that changing the `overlayCorner` in Settings moves the overlay position on Netflix (Visual check via bounding box).
 
 ## Success Criteria
+
 - All 4 Netflix surfaces have dedicated E2E test coverage.
 - Tests use real interactions (hover/click) rather than manual URL navigation where appropriate.
 - Selectors are abstracted into Surface objects to minimize maintenance.

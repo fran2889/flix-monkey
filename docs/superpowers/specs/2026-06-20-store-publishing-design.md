@@ -1,7 +1,7 @@
 # Automated Store Publishing: Design
 
 **Date:** 2026-06-20
-**Status:** Approved, pending implementation
+**Status:** Implemented
 **Branch:** `ci/publish-to-stores`
 
 ## Goal
