@@ -235,9 +235,8 @@ export class FlixMonkeyApp {
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
         this.#renderer.applyFade(container as HTMLElement, shouldFade);
         (container as HTMLElement).dataset.fmKey = dedupKey;
-        const displayTitle = data.displayTitle;
         this.#renderer.injectOverlay(container as HTMLElement, data, {
-            displayTitle,
+            displayTitle: data.displayTitle,
             onEditClick: (dt: string): void => {
                 this.#handleEditClick(dt, data.imdbId).catch(err =>
                     this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
