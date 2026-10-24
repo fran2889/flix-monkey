@@ -17,13 +17,13 @@ describe('OverlayRenderer', () => {
 
     /** Injects an overlay with the action handlers and display title the signature requires. */
     const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title) =>
-        renderer.injectOverlay(
-            container,
-            title,
-            () => {},
-            () => {},
-            title.displayTitle
-        );
+        renderer.injectOverlay(container, title, {
+            displayTitle: title.displayTitle,
+            onEditClick: () => {},
+            onRefreshClick: () => {},
+            fadeToggleState: undefined,
+            onFadeToggleClick: undefined,
+        });
 
     describe('style injection', () => {
         it('injects styles into document head', () => {

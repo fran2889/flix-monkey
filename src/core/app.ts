@@ -235,29 +235,27 @@ export class FlixMonkeyApp {
         this.#renderer.applyFade(container as HTMLElement, shouldFade);
         (container as HTMLElement).dataset.fmKey = dedupKey;
         const displayTitle = data.displayTitle;
-        this.#renderer.injectOverlay(
-            container as HTMLElement,
-            data,
-            (dt: string) => {
+        this.#renderer.injectOverlay(container as HTMLElement, data, {
+            displayTitle,
+            onEditClick: (dt: string): void => {
                 this.#handleEditClick(dt, data.imdbId).catch(err =>
                     this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
                 );
             },
-            (dt: string) => {
+            onRefreshClick: (dt: string): void => {
                 this.#handleRefreshClick(dt).catch(err =>
                     this.#logger.error(`Failed to refresh ratings for "${dt}"`, err)
                 );
             },
-            displayTitle,
-            showFadeToggle ? fadeOverride : undefined,
-            showFadeToggle
+            fadeToggleState: showFadeToggle ? fadeOverride : undefined,
+            onFadeToggleClick: showFadeToggle
                 ? (el: HTMLElement): void => {
                       this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
                           /* istanbul ignore next */ () => undefined
                       );
                   }
-                : undefined
-        );
+                : undefined,
+        });
     }
 
     async #handleFadeToggleClick(

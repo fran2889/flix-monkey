@@ -5,11 +5,17 @@
 import type { ServicePresentation } from '../types/overlay';
 import type { ConfigManager } from './config/config-manager';
 import type { Title } from './title';
-import { createLoadingOverlayElement, createOverlayElement } from './ui/overlay-elements';
+import { createLoadingOverlayElement, createOverlayElement, type OverlayOptions } from './ui/overlay-elements';
 import { buildOverlayStyles } from './ui/overlay-styles';
 
 /** Valid overlay corner positions. */
 type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/** Interaction-driven overlay options passed to `injectOverlay`. */
+export type OverlayInteraction = Pick<
+    OverlayOptions,
+    'displayTitle' | 'onEditClick' | 'onRefreshClick' | 'fadeToggleState' | 'onFadeToggleClick'
+>;
 
 /**
  * Handles creation and management of rating overlay DOM elements.
@@ -96,33 +102,17 @@ export class OverlayRenderer {
      *
      * @param container - Surface container to inject into.
      * @param titleObj - Resolved title data to render.
-     * @param onEditClick - Edit icon handler.
-     * @param onRefreshClick - Refresh icon handler.
-     * @param displayTitle - Title as shown by the streaming service; also the IMDb search term.
-     * @param fadeToggleState - Stored fade override; omit for auto.
-     * @param onFadeToggleClick - Fade toggle handler; omit when the toggle is hidden.
+     * @param interaction - Interaction handlers and display state for the overlay.
      */
-    injectOverlay(
-        container: HTMLElement,
-        titleObj: Title,
-        onEditClick: (_displayTitle: string) => void,
-        onRefreshClick: (_displayTitle: string) => void,
-        displayTitle: string,
-        fadeToggleState?: 'always' | 'never',
-        onFadeToggleClick?: (_element: HTMLElement) => void
-    ): void {
+    injectOverlay(container: HTMLElement, titleObj: Title, interaction: OverlayInteraction): void {
         container.querySelector(`.${this.#OVERLAY_CLASS}`)?.remove();
         const overlay = createOverlayElement(titleObj, {
             overlayClass: this.#OVERLAY_CLASS,
             showRtRating: this.#config.getBool('showRtRating'),
             showMcRating: this.#config.getBool('showMcRating'),
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
-            fadeToggleState,
-            onFadeToggleClick,
-            onEditClick,
-            onRefreshClick,
-            displayTitle,
             corner: this.#config.get('overlayCorner'),
+            ...interaction,
         });
         container.appendChild(overlay);
         container.setAttribute(this.#OVERLAY_ATTR, '1');
