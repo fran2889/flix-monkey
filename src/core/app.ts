@@ -54,6 +54,7 @@ export class FlixMonkeyApp {
      * @param surfaces - Surface manager instance
      * @param api - API client manager instance
      */
+    // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point; see AGENTS.md
     constructor(
         logger: Logger,
         cache: CacheManagerType,

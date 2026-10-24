@@ -15,6 +15,7 @@ const commonRules = {
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
     complexity: ['error', 16],
+    'max-params': ['error', 4],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
     'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
@@ -48,6 +49,8 @@ const typescriptRules = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    'max-params': 'off',
+    '@typescript-eslint/max-params': ['error', { max: 4 }],
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
 };
