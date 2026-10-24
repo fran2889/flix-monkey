@@ -15,7 +15,8 @@ const commonRules = {
     'no-var': 'error',
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
-    complexity: ['error', 16],
+    complexity: ['error', 10],
+    'sonarjs/cognitive-complexity': ['error', 10],
     'max-params': ['error', 4],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
@@ -119,6 +120,13 @@ export default [
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
         },
+    },
+    // 2.6. Cache migrations are replaced by a cache schema version; see
+    // docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md.
+    {
+        files: ['src/core/migrations.ts'],
+        plugins: { sonarjs },
+        rules: { complexity: 'off', 'sonarjs/cognitive-complexity': 'off' },
     },
     // 3. Production code must document intentional no-op functions.
     {
