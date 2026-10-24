@@ -585,4 +585,4 @@ Push and open the PR with `.github/pull_request_template.md` filled in. Title: `
 - [ ] `npm run type-check && npm run lint && npm run format:check && npm test && npm run test:coverage && npm run build` all pass
 - [ ] `npx eslint src tests --rule '{"@typescript-eslint/max-params":["error",{"max":4}],"sonarjs/cognitive-complexity":["error",10],"complexity":["error",10]}'` reports only the excluded file
 - [ ] Exactly one disable directive exists in `src/`: the `FlixMonkeyApp` constructor
-- [ ] `git grep -n "TODO.md"` returns nothing
+- [ ] `git ls-files | grep -i "todo"` returns nothing, and no committed document references a local tracking file
