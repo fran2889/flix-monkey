@@ -5,6 +5,7 @@ import { globalIgnores } from 'eslint/config';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
@@ -83,6 +84,7 @@ export default [
         },
         plugins: {
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
         rules: commonRules,
@@ -102,6 +104,7 @@ export default [
         plugins: {
             '@typescript-eslint': typescriptPlugin,
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
         rules: typescriptRules,
