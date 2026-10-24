@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { BaseApiClient } from '../../../../src/core/api/base-api-client';
-import { XmdbApiClient } from '../../../../src/core/api/index';
+import { type ApiClientDeps, XmdbApiClient } from '../../../../src/core/api/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
@@ -32,9 +32,17 @@ const mockDisabledManager: DisabledClientsManager = {
 } as unknown as DisabledClientsManager;
 const mockLogger: Logger = buildLogger().build();
 
+const deps: ApiClientDeps = {
+    adapter: mockAdapter,
+    config: mockConfig,
+    disabledManager: mockDisabledManager,
+    logger: mockLogger,
+    overrideManager: mockOverrideManager,
+};
+
 describe('BaseApiClient (via XmdbApiClient)', () => {
     it('should return healthy status when not disabled', async () => {
-        const client = new XmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        const client = new XmdbApiClient(deps);
         const status = await client.getStatus();
         expect(status).toEqual({ healthy: true });
     });
@@ -45,13 +53,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             disable: vi.fn().mockResolvedValue(undefined),
             resetAll: vi.fn().mockResolvedValue([]),
         } as unknown as DisabledClientsManager;
-        const client = new XmdbApiClient(
-            mockAdapter,
-            mockConfig,
-            mockDisabledManagerForTest,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new XmdbApiClient({ ...deps, disabledManager: mockDisabledManagerForTest });
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
         expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
@@ -59,26 +61,14 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
 
     it('should throw when fetch encounters an error', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchRejectingWith(new Error('Network error')).build();
-        const client = new XmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
         await expect(client.fetch('Some Title')).rejects.toThrow('Network error');
     });
 
     it('should return undefined if search returns no match', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
-        const client = new XmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.fetch('Unknown');
         expect(result).toBeUndefined();
     });
@@ -89,13 +79,11 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             getImdbId: vi.fn().mockResolvedValue('tt1234567'),
             setImdbId: vi.fn().mockResolvedValue(undefined),
         } as unknown as IdOverrideManager;
-        const client = new XmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManagerForTest
-        );
+        const client = new XmdbApiClient({
+            ...deps,
+            adapter: mockAdapterForTest,
+            overrideManager: mockOverrideManagerForTest,
+        });
         client.getDetails = vi.fn().mockResolvedValue(undefined);
 
         const result = await client.fetch('Some Title');
@@ -111,7 +99,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
     describe('BaseApiClient surface', () => {
         class StubClient extends BaseApiClient {
             constructor(queue: RequestQueue, source: 'xmdb' | 'omdb' | 'agregarr', logger: Logger) {
-                super(mockAdapter, mockConfig, mockDisabledManager, logger, mockOverrideManager, queue, source);
+                super({ ...deps, logger }, queue, source);
             }
             async search(): Promise<Title | undefined> {
                 return undefined;

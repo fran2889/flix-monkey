@@ -13,6 +13,17 @@ import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
 /**
+ * Collaborators shared by every API client.
+ */
+export interface ApiClientDeps {
+    adapter: PlatformAdapter;
+    config: ConfigManager;
+    disabledManager: DisabledClientsManager;
+    logger: Logger;
+    overrideManager: IdOverrideManager;
+}
+
+/**
  * API client operations required by consumers such as ApiClientManager.
  */
 export interface ApiClient {
@@ -39,28 +50,16 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #overrideManager: IdOverrideManager;
 
     /**
-     * @param adapter - Platform adapter for HTTP and storage.
-     * @param config - Application configuration.
-     * @param disabledManager - Tracks temporarily disabled clients.
-     * @param logger - Required; every lookup and failure path logs.
-     * @param overrideManager - Manager for ID overrides.
+     * @param deps - Collaborators shared by every API client.
      * @param queue - Rate-limited request queue for this client.
      * @param source - ApiSource identifier.
      */
-    constructor(
-        adapter: PlatformAdapter,
-        config: ConfigManager,
-        disabledManager: DisabledClientsManager,
-        logger: Logger,
-        overrideManager: IdOverrideManager,
-        queue: RequestQueue,
-        source: ApiSourceType
-    ) {
-        this.#adapter = adapter;
-        this.#config = config;
-        this.#disabledManager = disabledManager;
-        this.#logger = logger;
-        this.#overrideManager = overrideManager;
+    constructor(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType) {
+        this.#adapter = deps.adapter;
+        this.#config = deps.config;
+        this.#disabledManager = deps.disabledManager;
+        this.#logger = deps.logger;
+        this.#overrideManager = deps.overrideManager;
         this.#queue = queue;
         this.#source = source;
     }

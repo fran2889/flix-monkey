@@ -4,7 +4,7 @@
  */
 import type { PlatformAdapter } from '../platform/adapter';
 import type { BaseApiClient } from './api/base-api-client';
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index';
+import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } from './api/index';
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
@@ -361,28 +361,18 @@ export class FlixMonkeyApp {
 /**
  * Builds the API client for the provider selected in config.
  *
- * @param adapter - Platform adapter for HTTP and storage.
- * @param config - Application configuration.
- * @param disabledManager - Tracks temporarily disabled clients.
- * @param logger - Required; client construction and fallback paths log.
- * @param overrideManager - Manager for ID overrides.
+ * @param deps - Collaborators shared by every API client.
  * @returns Client for the configured provider, defaulting to Agregarr.
  */
-function createApiClient(
-    adapter: PlatformAdapter,
-    config: ConfigManager,
-    disabledManager: DisabledClientsManagerType,
-    logger: Logger,
-    overrideManager: IdOverrideManagerType
-): BaseApiClient {
-    const provider = config.get('apiClient').trim().toLowerCase();
+function createApiClient(deps: ApiClientDeps): BaseApiClient {
+    const provider = deps.config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
     };
     const ClientClass = clientMap[provider as keyof typeof clientMap] ?? AgregarrApiClient;
-    return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
+    return new ClientClass(deps);
 }
 
 /**
@@ -403,7 +393,14 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
+    const clientDeps: ApiClientDeps = {
+        adapter,
+        config: configManager,
+        disabledManager,
+        logger,
+        overrideManager,
+    };
+    const client = createApiClient(clientDeps);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);

@@ -4,7 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import { AgregarrApiClient } from '../../../src/core/api/index';
+import { AgregarrApiClient, type ApiClientDeps } from '../../../src/core/api/index';
 import { ApiClientManager } from '../../../src/core/api-manager';
 import { FlixMonkeyApp, startApp } from '../../../src/core/app';
 import { CacheManager } from '../../../src/core/cache/index';
@@ -40,7 +40,8 @@ function buildAppDependencies(): {
     const cache = new CacheManager(adapter, config, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = new AgregarrApiClient(adapter, config, disabledManager, logger, overrideManager);
+    const deps: ApiClientDeps = { adapter, config, disabledManager, logger, overrideManager };
+    const client = new AgregarrApiClient(deps);
     return {
         logger,
         cache,

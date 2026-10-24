@@ -4,7 +4,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { OmdbApiClient } from '../../../../src/core/api/index';
+import { type ApiClientDeps, OmdbApiClient } from '../../../../src/core/api/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
@@ -31,6 +31,14 @@ const mockDisabledManager: DisabledClientsManager = {
 } as unknown as DisabledClientsManager;
 const mockLogger: Logger = buildLogger().build();
 
+const deps: ApiClientDeps = {
+    adapter: mockAdapter,
+    config: mockConfig,
+    disabledManager: mockDisabledManager,
+    logger: mockLogger,
+    overrideManager: mockOverrideManager,
+};
+
 describe('OmdbApiClient', () => {
     it('should fetch details correctly', async () => {
         const mockAdapterForTest = buildMockAdapter()
@@ -42,13 +50,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Movie 1',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.imdbRating).toBe(8.0);
@@ -59,13 +61,7 @@ describe('OmdbApiClient', () => {
         const mockConfigForTest: ConfigManager = {
             get: () => '',
         } as unknown as ConfigManager;
-        const client = new OmdbApiClient(
-            mockAdapter,
-            mockConfigForTest,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, config: mockConfigForTest });
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
     });
@@ -73,7 +69,7 @@ describe('OmdbApiClient', () => {
     it('should defer to the base health check when an API key is configured', async () => {
         // mockConfig.get() returns a non-empty key, so the client falls through to
         // BaseApiClient.getStatus(), which gates on the disabled manager.
-        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        const client = new OmdbApiClient(deps);
         expect(await client.getStatus()).toEqual({ healthy: true });
     });
 
@@ -83,13 +79,7 @@ describe('OmdbApiClient', () => {
             disable: vi.fn().mockResolvedValue(undefined),
             resetAll: vi.fn().mockResolvedValue([]),
         } as unknown as DisabledClientsManager;
-        const client = new OmdbApiClient(
-            mockAdapter,
-            mockConfig,
-            mockDisabledManagerForTest,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, disabledManager: mockDisabledManagerForTest });
         const status = await client.getStatus();
         expect(status.healthy).toBe(false);
         expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
@@ -103,13 +93,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Movie 1',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
         expect(result!.year).toBeUndefined();
     });
@@ -125,13 +109,7 @@ describe('OmdbApiClient', () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.year).toBe(expected);
@@ -150,13 +128,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Movie 1',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.rtRating).toBe(90);
@@ -167,13 +139,7 @@ describe('OmdbApiClient', () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.imdbRating).toBeUndefined();
@@ -190,13 +156,7 @@ describe('OmdbApiClient', () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.imdbRating).toBe(expected);
@@ -219,13 +179,7 @@ describe('OmdbApiClient', () => {
                 Ratings: [entry],
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         const rating = entry as { Source?: string; source?: string };
@@ -241,13 +195,7 @@ describe('OmdbApiClient', () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: '8.0', imdbVotes: raw, imdbID: 'tt1' })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.imdbVotes).toBe(expected);
@@ -264,13 +212,7 @@ describe('OmdbApiClient', () => {
                 Type: 'movie',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
         expect(result!.type).toBe('movie');
     });
@@ -286,13 +228,7 @@ describe('OmdbApiClient', () => {
                 Type: 'series',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Show 1');
         expect(result!.type).toBe('series');
     });
@@ -302,26 +238,14 @@ describe('OmdbApiClient', () => {
             .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
             .build();
         const mockLoggerForTest = buildLogger().build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLoggerForTest,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
         await client.search('Unknown');
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
     });
 
     it('should return undefined on OMDB False response', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Unknown');
         expect(result).toBeUndefined();
     });
@@ -335,13 +259,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Test',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Test');
         expect(result!.imdbVotes).toBe(2500000);
     });
@@ -354,13 +272,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Test',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Test');
         expect(result!.imdbVotes).toBeUndefined();
     });
@@ -382,13 +294,11 @@ describe('OmdbApiClient', () => {
             disable: vi.fn().mockResolvedValue(undefined),
             resetAll: vi.fn().mockResolvedValue([]),
         } as unknown as DisabledClientsManager;
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManagerForTest,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({
+            ...deps,
+            adapter: mockAdapterForTest,
+            disabledManager: mockDisabledManagerForTest,
+        });
         const result = await client.fetch('Some Title');
         expect(result).not.toBeUndefined();
         expect(result!.mcRating).toBe(80);
@@ -405,7 +315,7 @@ describe('OmdbApiClient', () => {
             Ratings: [],
             Type: 'movie',
         };
-        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        const client = new OmdbApiClient(deps);
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
         const result = await client.getDetails(minimalTitle);
@@ -420,13 +330,7 @@ describe('OmdbApiClient', () => {
     it('should return searchTitle directly when it has apiTitle', async () => {
         const mockAdapterForTest = buildMockAdapter().build();
         mockAdapterForTest.httpFetch = vi.fn();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const searchTitle = buildTitle()
             .withDisplayTitle('Test Movie')
             .withApiTitle('Test Movie')
@@ -445,7 +349,7 @@ describe('OmdbApiClient', () => {
             Title: 'Updated Title',
             Type: 'movie',
         };
-        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        const client = new OmdbApiClient(deps);
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(undefined).build();
         const result = await client.getDetails(minimalTitle);
@@ -463,13 +367,7 @@ describe('OmdbApiClient', () => {
                 Title: 'Movie 1',
             })
             .build();
-        const client = new OmdbApiClient(
-            mockAdapterForTest,
-            mockConfig,
-            mockDisabledManager,
-            mockLogger,
-            mockOverrideManager
-        );
+        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
         expect(result!.imdbRating).toBeUndefined();
@@ -484,7 +382,7 @@ describe('OmdbApiClient', () => {
             imdbRating: '8.5',
             Type: 'movie',
         };
-        const client = new OmdbApiClient(mockAdapter, mockConfig, mockDisabledManager, mockLogger, mockOverrideManager);
+        const client = new OmdbApiClient(deps);
         client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
         // A cache entry written before the null to undefined migration carries a literal null.
         const legacyCachedTitle = Title.fromCacheJSON(
