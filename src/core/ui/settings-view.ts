@@ -390,6 +390,7 @@ export class SettingsView {
     readValues(): Record<string, ConfigValueType> {
         const values: Record<string, ConfigValueType> = {};
         for (const field of this.#fields) {
+            if (!isSettingField(field)) continue;
             const input = this.#fieldInput(field);
             if (input) {
                 values[field.key] = this.#readInputValue(field, input);
@@ -398,8 +399,8 @@ export class SettingsView {
         return values;
     }
 
-    #fieldInput(field: ConfigField): HTMLInputElement | undefined {
-        if (isActionField(field) || field.disabled) return undefined;
+    #fieldInput(field: SettingConfigField): HTMLInputElement | undefined {
+        if (field.disabled) return undefined;
         return this.#container?.querySelector<HTMLInputElement>(`[id="fm-${field.key}"]`) ?? undefined;
     }
 
@@ -417,15 +418,16 @@ export class SettingsView {
         const errors: string[] = [];
         if (this.#container === undefined) return errors;
         for (const field of this.#fields) {
+            if (!isSettingField(field)) continue;
             const error = this.#validateField(field, values);
             if (error) errors.push(error);
         }
         return errors;
     }
 
-    #validateField(field: ConfigField, values: Record<string, ConfigValueType>): string | undefined {
+    #validateField(field: SettingConfigField, values: Record<string, ConfigValueType>): string | undefined {
         const input = this.#fieldInput(field);
-        if (!isSettingField(field) || !input) return undefined;
+        if (!input) return undefined;
         const error = field.validate ? field.validate(values[field.key], values) : undefined;
         input.classList.toggle('error', Boolean(error));
         return error;
