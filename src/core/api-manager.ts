@@ -93,9 +93,6 @@ export class ApiClientManager {
         }
     }
 
-    /**
-     * @returns DisabledClientsManager instance
-     */
     get disabledManager(): DisabledClientsManager {
         return this.#disabledManager;
     }

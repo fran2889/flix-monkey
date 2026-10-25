@@ -345,12 +345,10 @@ export class FlixMonkeyApp {
         });
     }
 
-    /** @returns CacheManager */
     get cacheManager(): CacheManagerType {
         return this.#cache;
     }
 
-    /** @returns DisabledClientsManager */
     get disabledManager(): DisabledClientsManagerType {
         return this.#api.disabledManager;
     }
@@ -374,6 +372,8 @@ function createApiClient(deps: ApiClientDeps): BaseApiClient {
 }
 
 /**
+ * Starts the application for the detected streaming service.
+ *
  * @param adapter - Platform adapter
  * @returns FlixMonkeyApp or undefined if service not detected or not enabled
  */

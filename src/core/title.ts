@@ -122,6 +122,8 @@ export class Title {
     }
 
     /**
+     * Returns a copy of this title with the given API source.
+     *
      * @param source - API source that produced this title.
      * @returns A new immutable Title with this source.
      */

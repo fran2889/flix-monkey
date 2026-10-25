@@ -51,9 +51,9 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 ## Conventions
 
 - License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
-- JSDoc is enforced by ESLint on exports (a description plus `@param` and `@returns`, where applicable). See `eslint.config.js` for the exact tags.
-- Document the boundaries a caller needs in order to consume them correctly: abstract and cross-platform contracts, injected dependencies, and persistence, messaging, HTTP, and external-data boundaries. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
-- Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
+- Exports are the boundary: every function, class, and public method a caller can import is part of the API. ESLint requires a description plus `@param` and `@returns` where applicable. Abstract members count, constructors document their `@param`s, and destructured options are documented as one root object. See `eslint.config.js` for the exact rules.
+- Document what a caller must understand to use the export safely: abstract and cross-platform contracts, injected dependencies, and persistence, messaging, HTTP, and external-data behavior. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
+- Omit JSDoc for private helpers, non-exported DOM and UI glue, concrete getters and setters, and self-evident signatures. Keep an accessor comment only when it explains behavior a caller cannot see, such as a fallback. The lint rule checks exports, and it checks that documentation exists rather than that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
 - Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in `eslint.config.js`.
 - Use `src/core/logger.ts` for application logging in `src/`; raw `console` is limited to the logger itself and platform bootstrap error paths.

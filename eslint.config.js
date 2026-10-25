@@ -29,6 +29,38 @@ const javascriptRules = {
     'max-params': ['error', 4],
 };
 
+// The `export` keyword is the module boundary: anything a caller can import is
+// part of a contract, regardless of where the file lives. Concrete accessors are
+// excluded because they only restate a field; abstract members stay included
+// because TypeScript represents them as TSAbstractMethodDefinition.
+const publicMethod =
+    'MethodDefinition:not([kind="get"]):not([kind="set"]):not([key.type="PrivateIdentifier"]):not([accessibility="private"])';
+
+const describedMethod = `${publicMethod}:not([kind="constructor"])`;
+
+const classMembers = method => [
+    `ExportNamedDeclaration > ClassDeclaration ${method}`,
+    `ExportDefaultDeclaration > ClassDeclaration ${method}`,
+];
+
+const apiContexts = method => [
+    'ExportNamedDeclaration > FunctionDeclaration',
+    'ExportDefaultDeclaration > FunctionDeclaration',
+    'ExportNamedDeclaration > ClassDeclaration',
+    'ExportDefaultDeclaration > ClassDeclaration',
+    ...classMembers(method),
+    'ExportNamedDeclaration > ClassDeclaration TSAbstractMethodDefinition',
+    'ExportDefaultDeclaration > ClassDeclaration TSAbstractMethodDefinition',
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+    'ExportDefaultDeclaration > ArrowFunctionExpression',
+];
+
+const exportedContexts = apiContexts(publicMethod);
+
+// Constructors carry their contract in @param tags; a separate description would
+// only restate the class name.
+const describedContexts = apiContexts(describedMethod);
+
 const typescriptRules = {
     ...commonRules,
     // TypeScript-specific strict rules
@@ -191,7 +223,7 @@ export default [
             },
         },
     },
-    // 7. JSDoc validation for exported functions
+    // 7. JSDoc validation for the exported API surface
     {
         files: ['src/**/*.ts'],
         plugins: { jsdoc },
@@ -200,17 +232,17 @@ export default [
                 'error',
                 {
                     require: {
-                        MethodDefinition: true,
-                        ClassDeclaration: true,
+                        FunctionDeclaration: false,
+                        MethodDefinition: false,
+                        ClassDeclaration: false,
                     },
-                    contexts: ['export'],
-                    publicOnly: true,
+                    contexts: exportedContexts,
                 },
             ],
-            'jsdoc/require-description': ['error', { contexts: ['export'] }],
-            'jsdoc/require-param': ['error', { contexts: ['export'] }],
+            'jsdoc/require-description': ['error', { contexts: describedContexts }],
+            'jsdoc/require-param': ['error', { contexts: exportedContexts, checkDestructured: false }],
             'jsdoc/require-param-description': 'error',
-            'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/require-returns': ['error', { contexts: describedContexts }],
             'jsdoc/require-returns-description': 'error',
             'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',

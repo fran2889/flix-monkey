@@ -40,6 +40,8 @@ export class FadeManager {
     }
 
     /**
+     * Reads the stored fade override for a title.
+     *
      * @param dedupKey - Slugified display title.
      * @returns Promise resolving to the override state, or undefined when auto.
      */
@@ -50,6 +52,8 @@ export class FadeManager {
     }
 
     /**
+     * Stores or clears the fade override for a title.
+     *
      * @param dedupKey - Slugified display title.
      * @param state - Override state, or undefined to clear.
      * @returns Promise that resolves when the operation is complete.

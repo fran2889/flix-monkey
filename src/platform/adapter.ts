@@ -94,7 +94,12 @@ export abstract class PlatformAdapter {
      */
     abstract configGet(key: string): string | boolean | undefined;
 
-    /** Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing. */
+    /**
+     * Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing.
+     *
+     * @param _label - Menu label shown to the user.
+     * @param _fn - Callback invoked when the command is selected.
+     */
     registerMenuCommand(_label: string, _fn: () => void): void {
         // No-op by default
     }

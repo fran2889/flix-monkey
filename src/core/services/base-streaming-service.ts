@@ -14,23 +14,32 @@ import type { ConfigManager } from '../config/config-manager';
  */
 export abstract class StreamingService {
     /**
-     * @returns Root domains or exact hostnames without a protocol, port, or path. ServiceRegistry accepts an exact match or a subdomain of an entry.
+     * Root domains or exact hostnames without a protocol, port, or path.
+     * ServiceRegistry accepts an exact match or a subdomain of an entry.
+     *
+     * @returns Root domains or exact hostnames.
      */
     abstract get domains(): readonly string[];
 
     /**
-     * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
+     * Constructor that accepts a Logger and creates this service's SurfaceManager.
+     *
+     * @returns Surface manager constructor for this service.
      */
     abstract get SurfaceManager(): ServiceSurfaceManager;
 
     /**
-     * @returns Optional presentation values consumed by OverlayRenderer.
+     * Optional presentation values consumed by OverlayRenderer.
+     *
+     * @returns Optional presentation values.
      */
     get constants(): ServicePresentation {
         return Object.freeze({});
     }
 
     /**
+     * Whether decoration is enabled for this service.
+     *
      * @param configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */

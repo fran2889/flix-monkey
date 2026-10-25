@@ -84,16 +84,10 @@ export class CacheEntry {
         };
     }
 
-    /**
-     * @returns The IMDb ID for this cache entry
-     */
     get imdbId(): string | undefined {
         return this.#imdbId;
     }
 
-    /**
-     * @returns Whether this cache entry has expired
-     */
     get isExpired(): boolean {
         return this.#expires !== undefined && Date.now() > this.#expires;
     }

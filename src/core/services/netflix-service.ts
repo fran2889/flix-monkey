@@ -11,6 +11,8 @@ import { StreamingService } from './base-streaming-service';
 /** Netflix streaming service implementation. */
 export class NetflixService extends StreamingService {
     /**
+     * Whether Netflix decoration is enabled in config.
+     *
      * @param configManager - Current application configuration.
      * @returns Whether decoration is enabled for this service.
      */
@@ -18,23 +20,14 @@ export class NetflixService extends StreamingService {
         return configManager.getBool('enableNetflix');
     }
 
-    /**
-     * @returns Root domains or exact hostnames without a protocol, port, or path.
-     */
     override get domains(): readonly string[] {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
     }
 
-    /**
-     * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
-     */
     override get SurfaceManager(): ServiceSurfaceManager {
         return NetflixSurfaceManager;
     }
 
-    /**
-     * @returns Optional presentation values consumed by OverlayRenderer.
-     */
     override get constants(): ServicePresentation {
         return Object.freeze({
             TOP_10_SELECTORS: Object.freeze(['.title-card-top-10', '[data-uia="ranked-card"]']),

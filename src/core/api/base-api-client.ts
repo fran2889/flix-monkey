@@ -106,7 +106,11 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /** A health result suitable for provider selection. */
+    /**
+     * Reports whether this client is healthy enough for provider selection.
+     *
+     * @returns Health result; unhealthy while the client is temporarily disabled.
+     */
     async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
