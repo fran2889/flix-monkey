@@ -93,11 +93,15 @@ export class XmdbApiClient extends BaseApiClient {
             });
             return undefined;
         }
-        const { rating, release_year, title, metascore, title_type, vote_count } = detailsJson;
+        return this.#titleFromDetails(searchTitle, detailsJson);
+    }
+
+    #titleFromDetails(searchTitle: Title, details: XmdbDetailsResponse): Title {
+        const { rating, release_year, title, metascore, title_type, vote_count } = details;
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: title ?? searchTitle.apiTitle,
-            imdbId: id,
+            imdbId: searchTitle.imdbId,
             year: release_year ?? searchTitle.year,
             imdbRating: rating ?? undefined,
             imdbVotes: vote_count ?? undefined,

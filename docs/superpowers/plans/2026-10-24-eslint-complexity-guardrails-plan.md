@@ -239,7 +239,6 @@ git commit -m "refactor: pass settings ui dependencies as one object"
 
 - Modify: `eslint.config.js:11-53`
 - Modify: `src/core/app.ts:57` (one disable comment)
-- Modify: `AGENTS.md` (Conventions)
 
 **Interfaces:**
 
@@ -248,19 +247,19 @@ git commit -m "refactor: pass settings ui dependencies as one object"
 
 - [x] **Step 1: Add the rules**
 
-In `commonRules`: `'max-params': ['error', 4]`. In `typescriptRules`, next to the existing `no-unused-vars` split: `'max-params': 'off'` and `'@typescript-eslint/max-params': ['error', { max: 4 }]`.
+In `javascriptRules`: `'max-params': ['error', 4]`. In `typescriptRules`: `'@typescript-eslint/max-params': ['error', { max: 4 }]`. The core rule stays out of `commonRules` so it is not enabled for TypeScript files.
 
 - [x] **Step 2: Add the one documented exception**
 
 Above the `FlixMonkeyApp` constructor:
 
 ```ts
-// eslint-disable-next-line @typescript-eslint/max-params -- single wiring point; see AGENTS.md
+// eslint-disable-next-line @typescript-eslint/max-params -- single wiring point, and startApp() is its only caller
 ```
 
-- [x] **Step 3: Document it**
+- [x] **Step 3: Record where the limit lives**
 
-Under Conventions in `AGENTS.md`, add: parameter lists stay at four or fewer; the `FlixMonkeyApp` constructor is the only exception because it is the single wiring point and `startApp()` is its only caller.
+Keep the limit documented in `eslint.config.js` only. `AGENTS.md` already points there for the full rule set, so do not duplicate the value. The `FlixMonkeyApp` exception stays inline with its reason because `startApp()` is its only caller.
 
 - [x] **Step 4: Verify**
 
@@ -273,7 +272,7 @@ Expected: PASS.
 - [x] **Step 5: Commit and open the PR**
 
 ```bash
-git add eslint.config.js src/core/app.ts AGENTS.md
+git add eslint.config.js src/core/app.ts
 git commit -m "build: enforce a four-parameter limit"
 ```
 
@@ -293,13 +292,13 @@ Then push and open the PR with `.github/pull_request_template.md` filled in. Tit
 - Consumes: nothing.
 - Produces: the `sonarjs` plugin registered for JS and TS, with no rules enabled yet, so `--rule '{"sonarjs/cognitive-complexity":["error",10]}'` works in later tasks.
 
-- [ ] **Step 1: Create the branch**
+- [x] **Step 1: Create the branch**
 
 ```bash
 git switch main && git pull && git switch -c refactor/lint-complexity
 ```
 
-- [ ] **Step 2: Install and register**
+- [x] **Step 2: Install and register**
 
 ```bash
 npm install --save-dev eslint-plugin-sonarjs@^4.2.2
@@ -307,7 +306,7 @@ npm install --save-dev eslint-plugin-sonarjs@^4.2.2
 
 Add `import sonarjs from 'eslint-plugin-sonarjs';` and register `sonarjs` in the `plugins` object of both the JS and TS config blocks.
 
-- [ ] **Step 3: Verify the plugin loads**
+- [x] **Step 3: Verify the plugin loads**
 
 Run: `npx eslint src/core/app.ts --rule '{"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no output (the app root is below 10), and no configuration error.
@@ -315,7 +314,7 @@ Expected: no output (the app root is below 10), and no configuration error.
 Run: `npm run lint`
 Expected: exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add package.json package-lock.json eslint.config.js
@@ -334,18 +333,18 @@ git commit -m "build: add eslint-plugin-sonarjs"
 **Interfaces:**
 
 - Consumes: `SettingsFieldRow`, `isActionField()`, `isSettingField()`, `#createActionField()`, `#createInput()`, `#createInputWithSuffix()`.
-- Produces: private helpers `#renderActionFields(fields: readonly ConfigField[]): HTMLElement[]`, `#renderCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement`, `#renderSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[]`.
+- Produces: private helpers `#createActionFields(fields: readonly ConfigField[]): HTMLElement[]`, `#createCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement`, `#createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[]`.
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"sonarjs/cognitive-complexity":["error",10],"complexity":["error",10]}'`
 Expected: errors for `#createFieldValueContainer` (21 cognitive, 11 cyclomatic) and the functions handled in Task 7.
 
-- [ ] **Step 2: Extract the three row shapes**
+- [x] **Step 2: Extract the three row shapes**
 
 Move the action branch, the checkbox-group branch, and the default branch each into their own helper, returning the elements to append. `#createFieldValueContainer` becomes: create the container, pick the helper, append, return.
 
-- [ ] **Step 3: Verify green and behavior**
+- [x] **Step 3: Verify green and behavior**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no error for `#createFieldValueContainer`.
@@ -353,7 +352,7 @@ Expected: no error for `#createFieldValueContainer`.
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts`
 Expected: PASS with no test edits.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/settings-view.ts
@@ -372,18 +371,18 @@ git commit -m "refactor: split settings field value rendering"
 **Interfaces:**
 
 - Consumes: `ROW_LABELS`, `SettingsFieldRow`, `isActionField()`.
-- Produces: private helpers `#createSpacerLabel(): HTMLLabelElement`, `#createLinkedLabel(field: SettingConfigField, text: string, tooltip: string): HTMLLabelElement`, `#createPlainLabel(field: SettingConfigField, text: string, tooltip: string): HTMLLabelElement`.
+- Produces: private helpers `#createSpacerLabel(): HTMLLabelElement`, `#createLinkedLabel(text: string, labelUrl: string, tooltip: string): HTMLLabelElement`, `#createPlainLabel(text: string, field: SettingConfigField | undefined, tooltip: string): HTMLLabelElement`, plus `#rowLabel(row: SettingsFieldRow): SettingsRowLabel` and `#singleSettingField(row: SettingsFieldRow): SettingConfigField | undefined`.
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"complexity":["error",10]}'`
 Expected: an error for `#createFieldLabel` (14).
 
-- [ ] **Step 2: Extract the three label variants**
+- [x] **Step 2: Extract the three label variants**
 
-Keep the resolved row label and tooltip in the main method; each helper builds one variant. The linked variant sets `href`, `target`, `textContent`, and the tooltip. The plain variant sets `textContent`, `htmlFor` for a single field without `labelUrl`, and the tooltip.
+`#rowLabel` resolves the row label and tooltip; each helper builds one variant. The linked variant sets `href`, `target`, `textContent`, and the tooltip. The plain variant sets `textContent`, `htmlFor` for a single field without `labelUrl`, and the tooltip.
 
-- [ ] **Step 3: Verify green and behavior**
+- [x] **Step 3: Verify green and behavior**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"complexity":["error",10],"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no error for `#createFieldLabel`.
@@ -391,7 +390,7 @@ Expected: no error for `#createFieldLabel`.
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts`
 Expected: PASS with no test edits.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/settings-view.ts
@@ -410,18 +409,18 @@ git commit -m "refactor: split settings field labels"
 **Interfaces:**
 
 - Consumes: `ConfigValueType`, `isActionField()`.
-- Produces: private helpers `#fieldInput(field: SettingConfigField): HTMLInputElement | undefined` and `#readInputValue(field: SettingConfigField, input: HTMLInputElement): ConfigValueType`, plus `#validateField(field: SettingConfigField, values: Record<string, ConfigValueType>): string | undefined`.
+- Produces: private helpers `#fieldInput(field: SettingConfigField): HTMLInputElement | HTMLSelectElement | undefined` and `#readInputValue(field: SettingConfigField, input: HTMLInputElement | HTMLSelectElement): ConfigValueType`, plus `#validateField(field: SettingConfigField, values: Record<string, ConfigValueType>): string | undefined`.
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: errors for `readValues` (11) and `validate` (12).
 
-- [ ] **Step 2: Extract**
+- [x] **Step 2: Extract**
 
-`#fieldInput` returns `undefined` for action fields, disabled fields, and fields with no rendered input, so both loops reduce to an early-continue plus one call. `#readInputValue` owns the checkbox/text split. `#validateField` runs the validator, toggles the `error` class, and returns the message.
+`#fieldInput` returns `undefined` for disabled fields and fields with no rendered input; callers skip action fields first, so both loops reduce to an early-continue plus one call. `#readInputValue` owns the checkbox/text split. `#validateField` runs the validator, toggles the `error` class, and returns the message.
 
-- [ ] **Step 3: Verify green and behavior**
+- [x] **Step 3: Verify green and behavior**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no output.
@@ -429,7 +428,7 @@ Expected: no output.
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts`
 Expected: PASS with no test edits.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/settings-view.ts
@@ -450,16 +449,16 @@ git commit -m "refactor: simplify settings reading and validation"
 - Consumes: `getNormalizedHboMaxAriaLabel()`, `HBO_MAX_WATCH_TITLE_PATTERNS`, `HBO_MAX_TITLE_PATTERNS`.
 - Produces: `function firstMatchingPattern(label: string, patterns: readonly RegExp[]): string | undefined`.
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/surfaces/surface-definitions/hbo-max-surfaces.ts --rule '{"complexity":["error",10],"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: an error for `extractHboMaxTitle` (13 cyclomatic, 11 cognitive).
 
-- [ ] **Step 2: Extract the pattern loop**
+- [x] **Step 2: Extract the pattern loop**
 
 `extractHboMaxTitle` keeps: read the label, return `undefined` when empty, dispatch on `dataset.sonicType` (`'video'` uses the watch patterns; movie, show, and mini-series use the title patterns; anything else returns `undefined`).
 
-- [ ] **Step 3: Verify green and behavior**
+- [x] **Step 3: Verify green and behavior**
 
 Run: `npx eslint src/core/surfaces/surface-definitions/hbo-max-surfaces.ts --rule '{"complexity":["error",10],"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no output.
@@ -467,7 +466,7 @@ Expected: no output.
 Run: `npx vitest run tests/unit/core/surfaces tests/ui/hbomax.ui.test.ts`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/surfaces/surface-definitions/hbo-max-surfaces.ts
@@ -486,18 +485,18 @@ git commit -m "refactor: simplify hbo max title extraction"
 **Interfaces:**
 
 - Consumes: `Title`, `XmdbDetailsResponse`, `mapXmdbTitleType()`.
-- Produces: `function titleFromDetails(searchTitle: Title, id: string, details: XmdbDetailsResponse): Title`.
+- Produces: `function titleFromDetails(searchTitle: Title, details: XmdbDetailsResponse): Title`.
 
-- [ ] **Step 1: Confirm the red state**
+- [x] **Step 1: Confirm the red state**
 
 Run: `npx eslint src/core/api/xmdb-api-client.ts --rule '{"complexity":["error",10]}'`
 Expected: an error for `getDetails` (11).
 
-- [ ] **Step 2: Extract the mapping**
+- [x] **Step 2: Extract the mapping**
 
-`getDetails` keeps the fetch, the failure guard, and the log. `titleFromDetails` destructures the response and builds the `Title` with the same `??` fallbacks to `searchTitle`.
+`getDetails` keeps the fetch, the failure guard, and the log. `titleFromDetails` destructures the response and builds the `Title` with the same `??` fallbacks to `searchTitle`; `imdbId` comes from `searchTitle.imdbId`, the same value `getDetails` already reads into `id`.
 
-- [ ] **Step 3: Verify green and behavior**
+- [x] **Step 3: Verify green and behavior**
 
 Run: `npx eslint src/core/api/xmdb-api-client.ts --rule '{"complexity":["error",10],"sonarjs/cognitive-complexity":["error",10]}'`
 Expected: no output.
@@ -505,7 +504,7 @@ Expected: no output.
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/api/xmdb-api-client.ts
@@ -526,16 +525,16 @@ git commit -m "refactor: extract xmdb details mapping"
 - Consumes: nothing.
 - Produces: nothing. Removes `extractFromObj` and `buildTitle.fromCacheJSON`.
 
-- [ ] **Step 1: Confirm there is no caller**
+- [x] **Step 1: Confirm there is no caller**
 
 Run: `grep -rn "buildTitle.fromCacheJSON" src tests scripts`
 Expected: only the definition in `tests/mocks/title.ts`.
 
-- [ ] **Step 2: Delete both**
+- [x] **Step 2: Delete both**
 
 Remove the `extractFromObj` function and the `buildTitle.fromCacheJSON` assignment.
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `npx eslint tests/mocks/title.ts --rule '{"complexity":["error",10]}'`
 Expected: no output.
@@ -543,7 +542,7 @@ Expected: no output.
 Run: `npm run type-check && npx vitest run tests/unit/core/title.test.ts`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/mocks/title.ts
@@ -557,22 +556,20 @@ git commit -m "test: drop unused cache json mock parser"
 **Files:**
 
 - Modify: `eslint.config.js:11-53`, plus a new exclusion block after the TS block
-- Modify: `AGENTS.md` (Conventions)
 
 **Interfaces:**
 
 - Consumes: Tasks 5 to 11.
 - Produces: `complexity: ['error', 10]` and `'sonarjs/cognitive-complexity': ['error', 10]` in `commonRules`, and the `src/core/migrations.ts` exclusion.
 
-- [ ] **Step 1: Change the limits**
+- [x] **Step 1: Change the limits**
 
 Set `complexity` to `['error', 10]` and add `'sonarjs/cognitive-complexity': ['error', 10]` in `commonRules`.
 
-- [ ] **Step 2: Add the exclusion**
+- [x] **Step 2: Add the exclusion**
 
 ```js
-// Cache migrations are replaced by a cache schema version; see
-// docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md.
+// Cache migrations will be replaced by a cache schema version.
 {
     files: ['src/core/migrations.ts'],
     plugins: { sonarjs },
@@ -580,11 +577,11 @@ Set `complexity` to `['error', 10]` and add `'sonarjs/cognitive-complexity': ['e
 }
 ```
 
-- [ ] **Step 3: Document the limits**
+- [x] **Step 3: Record where the limits live**
 
-In `AGENTS.md` Conventions, add: cyclomatic complexity and cognitive complexity stay at 10 or below; `src/core/migrations.ts` is exempt from both until the cache schema version replaces the framework.
+Keep the limits documented in `eslint.config.js` only. `AGENTS.md` already points at that file for the full rule set, and the exemption comment names its reason. Do not duplicate the values in `AGENTS.md`.
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run: `npm run lint`
 Expected: exit 0, no output.
@@ -595,10 +592,10 @@ Expected: PASS.
 Run: `npm run test:coverage`
 Expected: PASS, thresholds unchanged.
 
-- [ ] **Step 5: Commit and open the PR**
+- [x] **Step 5: Commit and open the PR**
 
 ```bash
-git add eslint.config.js AGENTS.md
+git add eslint.config.js
 git commit -m "build: enforce complexity limits"
 ```
 
@@ -608,7 +605,7 @@ Push and open the PR with `.github/pull_request_template.md` filled in. Title: `
 
 ## Final check before the second PR merges
 
-- [ ] `npm run type-check && npm run lint && npm run format:check && npm test && npm run test:coverage && npm run build` all pass
-- [ ] `npx eslint src tests --rule '{"@typescript-eslint/max-params":["error",{"max":4}],"sonarjs/cognitive-complexity":["error",10],"complexity":["error",10]}'` reports only the excluded file
-- [ ] Exactly one `max-params` disable directive exists in `src/`: the `FlixMonkeyApp` constructor
-- [ ] `git ls-files | grep -i "todo"` returns nothing, and no committed document references a local tracking file
+- [x] `npm run type-check && npm run lint && npm run format:check && npm test && npm run test:coverage && npm run build` all pass
+- [x] `npx eslint src tests --rule '{"@typescript-eslint/max-params":["error",{"max":4}],"sonarjs/cognitive-complexity":["error",10],"complexity":["error",10]}'` reports only the excluded file
+- [x] Exactly one `max-params` disable directive exists in `src/`: the `FlixMonkeyApp` constructor
+- [x] `git ls-files | grep -i "todo"` returns nothing, and no committed document references a local tracking file

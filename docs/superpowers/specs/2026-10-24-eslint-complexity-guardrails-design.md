@@ -14,11 +14,11 @@ missing, and tightening the one it has:
 
 Measured on 2026-10-24 against `main`:
 
-| Metric | Worst value | Sites over the chosen limit |
-| --- | --- | --- |
-| Parameters | 7 (`BaseApiClient`, `FlixMonkeyApp`, `injectOverlay`) | 8, all in `src/` |
-| Cognitive complexity | 21 (`SettingsView.#createFieldValueContainer`) | 9 in `src/`, 0 in tests |
-| Cyclomatic complexity | 14 (`SettingsView.#createFieldLabel`) | 7 in `src/`, 1 in tests |
+| Metric                | Worst value                                           | Sites over the chosen limit |
+| --------------------- | ----------------------------------------------------- | --------------------------- |
+| Parameters            | 7 (`BaseApiClient`, `FlixMonkeyApp`, `injectOverlay`) | 8, all in `src/`            |
+| Cognitive complexity  | 21 (`SettingsView.#createFieldValueContainer`)        | 9 in `src/`, 0 in tests     |
+| Cyclomatic complexity | 14 (`SettingsView.#createFieldLabel`)                 | 7 in `src/`, 1 in tests     |
 
 The goal is a durable guardrail: the rules should catch real size problems and stay
 quiet on code that is simply wide by nature.
@@ -74,9 +74,10 @@ These were decided in conversation and are not open:
 
 ## Decisions made by the builder (check these while reading)
 
-- **Two rules for parameters.** `max-params` (core) applies to JS, and
-  `@typescript-eslint/max-params` applies to TS with the core rule off in that block. This
-  mirrors how the config already splits `no-unused-vars` and `unused-imports/no-unused-vars`.
+- **Two rules for parameters.** `max-params` (core) lives in `javascriptRules`, and
+  `@typescript-eslint/max-params` lives in `typescriptRules`. The core rule stays out of
+  `commonRules`, so it is never enabled for TypeScript files. This mirrors how the config
+  already splits `no-unused-vars` and `unused-imports/no-unused-vars`.
 - **`eslint-plugin-sonarjs`** is the cognitive-complexity implementation. Only
   `sonarjs/cognitive-complexity` is enabled; no other sonarjs rules. Version 4.2.2 was
   verified against ESLint 10 in a scratch project.
@@ -101,16 +102,16 @@ These were decided in conversation and are not open:
 
 ### `max-params: 4` (8 sites, all `src/`)
 
-| Site | Params | Fix |
-| --- | --- | --- |
-| `core/api/base-api-client.ts:50` | 7 | `(deps, queue, source)` |
-| `core/api/agregarr-api-client.ts:31` | 5 | `(deps)` |
-| `core/api/omdb-api-client.ts:60` | 5 | `(deps)` |
-| `core/api/xmdb-api-client.ts:29` | 5 | `(deps)` |
-| `core/app.ts:371` `createApiClient` | 5 | `(deps)` |
-| `core/app.ts:57` `FlixMonkeyApp` | 7 | inline disable |
-| `core/overlay.ts:105` `injectOverlay` | 7 | `(container, title, interaction)` |
-| `core/ui/settings-ui.ts:31` `SettingsUI` | 5 | `(deps, fields?)` |
+| Site                                     | Params | Fix                               |
+| ---------------------------------------- | ------ | --------------------------------- |
+| `core/api/base-api-client.ts:50`         | 7      | `(deps, queue, source)`           |
+| `core/api/agregarr-api-client.ts:31`     | 5      | `(deps)`                          |
+| `core/api/omdb-api-client.ts:60`         | 5      | `(deps)`                          |
+| `core/api/xmdb-api-client.ts:29`         | 5      | `(deps)`                          |
+| `core/app.ts:371` `createApiClient`      | 5      | `(deps)`                          |
+| `core/app.ts:57` `FlixMonkeyApp`         | 7      | inline disable                    |
+| `core/overlay.ts:105` `injectOverlay`    | 7      | `(container, title, interaction)` |
+| `core/ui/settings-ui.ts:31` `SettingsUI` | 5      | `(deps, fields?)`                 |
 
 `CacheEntry`, `FlixMonkeyError`, `ApiClientManager`, and `#decorateContainer` sit at
 exactly 4 and are left alone. Call sites to update: `startApp()` in `app.ts`, both
@@ -123,15 +124,15 @@ the `injectOverlay` calls in `app.ts`, `tests/helpers/surface-tests.ts`, and
 Excluded: `src/core/migrations.ts` (`21`, `67`, `160`, `207` cognitive; `21`, `67`, `207`
 cyclomatic).
 
-| Site | Cognitive | Cyclomatic | Fix |
-| --- | --- | --- | --- |
-| `core/ui/settings-view.ts:199` `#createFieldValueContainer` | 21 | 11 | Extract action-row, checkbox-group, and setting-row renderers |
-| `core/ui/settings-view.ts:164` `#createFieldLabel` | 12 | 14 | Extract linked-label and plain-label variants |
-| `core/ui/settings-view.ts:365` `readValues` | 11 | - | Extract per-field input read |
-| `core/ui/settings-view.ts:388` `validate` | 12 | - | Extract per-field validation and error toggle |
-| `core/surfaces/surface-definitions/hbo-max-surfaces.ts:37` | 11 | 13 | Extract first-pattern match and tile-kind check |
-| `core/api/xmdb-api-client.ts:104` `getDetails` | 6 | 11 | Extract response-to-`Title` mapping |
-| `tests/mocks/title.ts:129` `fromCacheJSON` | - | 12 | Delete: no caller in the suite |
+| Site                                                        | Cognitive | Cyclomatic | Fix                                                           |
+| ----------------------------------------------------------- | --------- | ---------- | ------------------------------------------------------------- |
+| `core/ui/settings-view.ts:199` `#createFieldValueContainer` | 21        | 11         | Extract action-row, checkbox-group, and setting-row renderers |
+| `core/ui/settings-view.ts:164` `#createFieldLabel`          | 12        | 14         | Extract linked-label and plain-label variants                 |
+| `core/ui/settings-view.ts:365` `readValues`                 | 11        | -          | Extract per-field input read                                  |
+| `core/ui/settings-view.ts:388` `validate`                   | 12        | -          | Extract per-field validation and error toggle                 |
+| `core/surfaces/surface-definitions/hbo-max-surfaces.ts:37`  | 11        | 13         | Extract first-pattern match and tile-kind check               |
+| `core/api/xmdb-api-client.ts:104` `getDetails`              | 6         | 11         | Extract response-to-`Title` mapping                           |
+| `tests/mocks/title.ts:129` `fromCacheJSON`                  | -         | 12         | Delete: no caller in the suite                                |
 
 `buildTitle.fromCacheJSON` in `tests/mocks/title.ts` has no callers; the suite uses
 `Title.fromCacheJSON` directly. Deleting it removes the only complexity finding under
@@ -143,13 +144,16 @@ cyclomatic).
 const commonRules = {
     // ...
     complexity: ['error', 10],
-    'max-params': ['error', 4],
     'sonarjs/cognitive-complexity': ['error', 10],
+};
+
+const javascriptRules = {
+    ...commonRules,
+    'max-params': ['error', 4],
 };
 
 const typescriptRules = {
     ...commonRules,
-    'max-params': 'off',
     '@typescript-eslint/max-params': ['error', { max: 4 }],
     // ...
 };
@@ -160,8 +164,7 @@ block after them, with a comment naming this document and the reason:
 
 ```js
 {
-    // Cache migrations are scheduled for replacement by a cache schema version.
-    // See docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md.
+    // Cache migrations will be replaced by a cache schema version.
     files: ['src/core/migrations.ts'],
     plugins: { sonarjs },
     rules: { complexity: 'off', 'sonarjs/cognitive-complexity': 'off' },
@@ -172,10 +175,11 @@ block after them, with a comment naming this document and the reason:
 
 ## Documentation
 
-- `AGENTS.md`: state the three limits in Conventions, and the single sanctioned
-  `max-params` exception at the app root.
-- This design document records the chosen values and the exclusion. No other tracking
-  file is referenced.
+- `eslint.config.js` is the single source of truth for the three limits. `AGENTS.md`
+  points there for the rule set instead of repeating the values.
+- This design document records the chosen values and the exclusion. The exemption
+  comment states the condition for removal without referring to this document. No other
+  tracking file is referenced.
 - No README change: nothing here is user-facing.
 
 ## Verification

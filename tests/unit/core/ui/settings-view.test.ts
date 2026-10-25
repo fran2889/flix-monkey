@@ -4,7 +4,13 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS, type ConfigField, isActionField, isSettingField } from '../../../../src/core/config/index';
+import {
+    CONFIG_FIELDS,
+    type ConfigField,
+    isActionField,
+    isSettingField,
+    ROW_LABELS,
+} from '../../../../src/core/config/index';
 import { SettingsView } from '../../../../src/core/ui/settings-view';
 
 const configFields: readonly ConfigField[] = CONFIG_FIELDS;
@@ -83,11 +89,24 @@ describe('SettingsView', () => {
                     expect(link).not.toBeNull();
                     expect((link as HTMLAnchorElement)?.href).toBe(field.labelUrl);
                     expect((link as HTMLAnchorElement)?.target).toBe('_blank');
+                    expect(label!.hasAttribute('for')).toBe(false);
                 } else {
                     const link = label?.querySelector('a');
                     expect(link).toBeNull();
                 }
             });
+        });
+
+        it('associates a lone field label and leaves grouped row labels unassociated', () => {
+            view.render(container, {});
+
+            expect(container.querySelector('label[for="fm-debug"]')).not.toBeNull();
+
+            const groupedLabel = Array.from(container.querySelectorAll('label')).find(
+                element => element.textContent === ROW_LABELS.services.label
+            );
+            expect(groupedLabel).toBeDefined();
+            expect(groupedLabel?.hasAttribute('for')).toBe(false);
         });
 
         it('injects styles and applies the settings container class', () => {
