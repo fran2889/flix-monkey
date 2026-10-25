@@ -56,8 +56,6 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 - Omit JSDoc for private helpers, routine DOM and UI glue, ordinary accessors, and self-evident signatures. The lint rule checks that documentation exists, not that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
 - Strict TypeScript: no `any`, explicit return types, sorted imports. Full rule set in `eslint.config.js`.
-- Parameter lists stay at four or fewer; the `FlixMonkeyApp` constructor is the only exception because it is the single wiring point and `startApp()` is its only caller.
-- Cyclomatic complexity and cognitive complexity stay at 10 or below. `src/core/migrations.ts` is exempt from both until the cache schema version replaces the framework.
 - Use `src/core/logger.ts` for application logging in `src/`; raw `console` is limited to the logger itself and platform bootstrap error paths.
 - ASCII only, unless a test case or user-facing string needs otherwise.
 - Prose: no em-dashes; use a colon, a semicolon, or two sentences. Use the Oxford comma.
