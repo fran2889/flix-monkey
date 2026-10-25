@@ -143,9 +143,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
             }
             return response.data;
         } finally {
-            if (timerId !== undefined) {
-                clearTimeout(timerId);
-            }
+            clearTimeout(timerId);
         }
     }
 
