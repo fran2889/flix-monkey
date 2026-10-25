@@ -474,6 +474,29 @@ describe('App', () => {
         logSpy.mockRestore();
     });
 
+    it.each([
+        ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
+        ['rejects', { error: new Error('API failure') }],
+    ])('should clear the inflight timeout when a lookup %s', async (_outcome, settled) => {
+        document.body.innerHTML = `
+            <div class="title-card">
+                <a aria-label="Settled Movie"></a>
+            </div>
+        `;
+        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData');
+        if ('error' in settled) {
+            getDataSpy.mockRejectedValue(settled.error);
+        } else {
+            getDataSpy.mockResolvedValue(settled.title);
+        }
+
+        buildApp().redecorate();
+        await vi.advanceTimersByTimeAsync(1);
+
+        expect(getDataSpy).toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
     it('should disconnect the MutationObserver on unload', () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
