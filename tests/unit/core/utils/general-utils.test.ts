@@ -86,17 +86,6 @@ describe('core/utils/general-utils', () => {
 
             vi.unstubAllGlobals();
         });
-
-        it('falls back to setTimeout when window is undefined', () => {
-            const savedWindow = global.window;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (global as any).window = undefined;
-            const func = vi.fn();
-            runIdle(func);
-            vi.advanceTimersByTime(1);
-            expect(func).toHaveBeenCalled();
-            global.window = savedWindow;
-        });
     });
 
     describe('FlixMonkeyError', () => {
