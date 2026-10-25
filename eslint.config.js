@@ -16,7 +16,6 @@ const commonRules = {
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
     complexity: ['error', 10],
     'sonarjs/cognitive-complexity': ['error', 10],
-    'max-params': ['error', 4],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
     'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
@@ -55,7 +54,6 @@ const typescriptRules = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
-    'max-params': 'off',
     '@typescript-eslint/max-params': ['error', { max: 4 }],
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
@@ -125,8 +123,7 @@ export default [
             '@typescript-eslint/prefer-readonly': 'off',
         },
     },
-    // 2.6. Cache migrations are replaced by a cache schema version; see
-    // docs/superpowers/specs/2026-10-24-eslint-complexity-guardrails-design.md.
+    // 2.6. Cache migrations will be replaced by a cache schema version.
     {
         files: ['src/core/migrations.ts'],
         plugins: { sonarjs },
