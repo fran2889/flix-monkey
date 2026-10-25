@@ -9,6 +9,8 @@ export default mergeConfig(
     baseConfig,
     defineConfig({
         test: {
+            // Live API tests keep the default pool; vmThreads targets the jsdom suites.
+            pool: 'forks',
             include: ['tests/integration/**/*.test.ts'],
             setupFiles: ['./tests/integration/setup.ts'],
         },

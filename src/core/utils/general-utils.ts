@@ -59,7 +59,7 @@ export function debounce<T extends (..._args: unknown[]) => unknown>(func: T, wa
  * @param func - Function to execute when idle
  */
 export function runIdle(func: () => void): void {
-    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+    if (typeof window.requestIdleCallback === 'function') {
         window.requestIdleCallback(func, { timeout: IDLE_CALLBACK_TIMEOUT_MS });
     } else {
         setTimeout(func, 1);
