@@ -10,7 +10,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { displayName, homepage, version, description, author, license } = pkg;
 
 const ICON_SIZES = [16, 32, 48, 128];
-const LICENSE_BLOCK_RE = /^\/\*\*[\s\S]*?SPDX-License-Identifier:[\s\S]*?\*\//u;
+const LICENSE_BLOCK_RE = /^\/\*\*[\s\S]*?SPDX-License-Identifier:[\s\S]*?\*\/(?:\r?\n)*/u;
 const VALID_TARGETS = ['userscript', 'firefox', 'chrome'];
 
 /**
