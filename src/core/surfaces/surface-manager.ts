@@ -6,20 +6,38 @@
 import type { DiscoveredSurface, SurfaceDefinition } from '../../types/surfaces';
 import type { Logger } from '../logger';
 
-const titleFromAttribute =
+/**
+ * Creates a resolver that reads a title from the given attribute.
+ *
+ * @param attribute - Attribute containing the title.
+ * @returns Resolver returning the attribute value, or undefined when absent.
+ */
+export const titleFromAttribute =
     (attribute: string) =>
     (element: Element): string | undefined => {
         const value = element.getAttribute(attribute);
         return value ?? undefined;
     };
 
-const containerFromClosest =
+/**
+ * Creates a resolver that finds the closest ancestor matching a selector.
+ *
+ * @param selector - Selector for the surface container.
+ * @returns Resolver returning the closest matching element, or undefined.
+ */
+export const containerFromClosest =
     (selector: string) =>
     (element: Element): Element | undefined => {
         return element.closest(selector) ?? undefined;
     };
 
-const containerFromParent = (element: Element): Element | undefined => {
+/**
+ * Resolves the parent element of a title element.
+ *
+ * @param element - Title element.
+ * @returns Parent element, or undefined when the element has no parent.
+ */
+export const containerFromParent = (element: Element): Element | undefined => {
     return element.parentElement ?? undefined;
 };
 
@@ -79,5 +97,3 @@ export class SurfaceManager {
         return results;
     }
 }
-
-export { containerFromClosest, containerFromParent, titleFromAttribute };

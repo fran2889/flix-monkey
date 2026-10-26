@@ -30,8 +30,10 @@ const javascriptRules = {
 };
 
 // The `export` keyword is the module boundary: anything a caller can import is
-// part of a contract, regardless of where the file lives. Concrete accessors are
-// excluded because they only restate a field. Abstract members use their own
+// part of a contract, regardless of where the file lives. Examined nodes are
+// inline export declarations, because local `export { ... }` lists are rejected
+// below where the rule cannot see the exported declaration. Concrete accessors
+// are excluded because they only restate a field. Abstract members use their own
 // TSAbstractMethodDefinition contexts.
 const nonPrivateMethod =
     'MethodDefinition:not([kind="get"]):not([kind="set"]):not([key.type="PrivateIdentifier"]):not([accessibility="private"])';
@@ -212,6 +214,11 @@ export default [
                 {
                     selector: 'TSAsExpression > TSNeverKeyword',
                     message: 'Do not assert to never; fix the underlying type instead.',
+                },
+                {
+                    selector: 'ExportNamedDeclaration[declaration=null][source=null][exportKind="value"]',
+                    message:
+                        'Export declarations at their declaration site; local value `export { ... }` lists hide the declaration from the JSDoc rule.',
                 },
             ],
         },
