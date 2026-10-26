@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebExtensionAdapter } from '../../../src/platform/webextension';
 
@@ -28,6 +28,10 @@ describe('WebExtensionAdapter', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         adapter = new WebExtensionAdapter();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('storageGet should call storage.local.get', async () => {
@@ -159,11 +163,23 @@ describe('WebExtensionAdapter', () => {
         }
     });
 
-    it('httpFetch clears the timeout after a successful fetch', async () => {
-        const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
-        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
-        await adapter.httpFetch('https://api.example.com');
-        expect(clearSpy).toHaveBeenCalled();
-        clearSpy.mockRestore();
+    it.each(['resolves', 'rejects'])('httpFetch clears the timeout when the request %s', async outcome => {
+        vi.useFakeTimers();
+        if (outcome === 'rejects') {
+            mockedBrowser.runtime.sendMessage.mockRejectedValue(new Error('network failure'));
+        } else {
+            mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
+        }
+
+        const request = adapter.httpFetch('https://api.example.com');
+
+        if (outcome === 'rejects') {
+            await expect(request).rejects.toThrow('network failure');
+        } else {
+            await expect(request).resolves.toEqual({ ok: true });
+        }
+
+        expect(mockedBrowser.runtime.sendMessage).toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
     });
 });

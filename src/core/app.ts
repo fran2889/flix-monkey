@@ -205,10 +205,12 @@ export class FlixMonkeyApp {
         const existing = this.#inFlight.get(dedupKey);
         if (existing) return existing;
 
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
         const timeout = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+            timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
         });
         const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+            clearTimeout(timeoutId);
             this.#inFlight.delete(dedupKey);
         });
         this.#inFlight.set(dedupKey, request);
