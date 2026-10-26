@@ -38,9 +38,27 @@ const nonPrivateMethod =
 
 const describedMethod = `${nonPrivateMethod}:not([kind="constructor"])`;
 
-const classMembers = method => [
-    `ExportNamedDeclaration > ClassDeclaration > ClassBody > ${method}`,
-    `ExportDefaultDeclaration > ClassDeclaration > ClassBody > ${method}`,
+const exportedClassBodies = [
+    'ExportNamedDeclaration > ClassDeclaration > ClassBody',
+    'ExportDefaultDeclaration > ClassDeclaration > ClassBody',
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ClassExpression > ClassBody',
+    'ExportDefaultDeclaration > ClassExpression > ClassBody',
+];
+
+const exportedClassMembers = method => exportedClassBodies.map(body => `${body} > ${method}`);
+
+// Public function-valued fields are methods to a caller. Their value node
+// carries the signature, while the JSDoc block sits above the field.
+const exportedFunctionFields = exportedClassBodies.flatMap(body => [
+    `${body} > PropertyDefinition:not([key.type="PrivateIdentifier"]):not([accessibility="private"]) > ArrowFunctionExpression`,
+    `${body} > PropertyDefinition:not([key.type="PrivateIdentifier"]):not([accessibility="private"]) > FunctionExpression`,
+]);
+
+const exportedObjectMembers = [
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > FunctionExpression',
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > ArrowFunctionExpression',
+    'ExportDefaultDeclaration > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > FunctionExpression',
+    'ExportDefaultDeclaration > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > ArrowFunctionExpression',
 ];
 
 const apiContexts = method => [
@@ -48,11 +66,16 @@ const apiContexts = method => [
     'ExportDefaultDeclaration > FunctionDeclaration',
     'ExportNamedDeclaration > ClassDeclaration',
     'ExportDefaultDeclaration > ClassDeclaration',
-    ...classMembers(method),
-    'ExportNamedDeclaration > ClassDeclaration > ClassBody > TSAbstractMethodDefinition',
-    'ExportDefaultDeclaration > ClassDeclaration > ClassBody > TSAbstractMethodDefinition',
+    ...exportedClassMembers(method),
+    ...exportedFunctionFields,
+    ...exportedObjectMembers,
+    ...exportedClassBodies.map(body => `${body} > TSAbstractMethodDefinition`),
     'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
+    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ClassExpression',
     'ExportDefaultDeclaration > ArrowFunctionExpression',
+    'ExportDefaultDeclaration > FunctionExpression',
+    'ExportDefaultDeclaration > ClassExpression',
 ];
 
 const exportedContexts = apiContexts(nonPrivateMethod);
