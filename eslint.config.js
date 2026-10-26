@@ -31,8 +31,8 @@ const javascriptRules = {
 
 // The `export` keyword is the module boundary: anything a caller can import is
 // part of a contract, regardless of where the file lives. Concrete accessors are
-// excluded because they only restate a field; abstract members stay included
-// because TypeScript represents them as TSAbstractMethodDefinition.
+// excluded because they only restate a field. Abstract members use their own
+// TSAbstractMethodDefinition contexts.
 const nonPrivateMethod =
     'MethodDefinition:not([kind="get"]):not([kind="set"]):not([key.type="PrivateIdentifier"]):not([accessibility="private"])';
 
