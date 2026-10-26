@@ -39,8 +39,8 @@ const publicMethod =
 const describedMethod = `${publicMethod}:not([kind="constructor"])`;
 
 const classMembers = method => [
-    `ExportNamedDeclaration > ClassDeclaration ${method}`,
-    `ExportDefaultDeclaration > ClassDeclaration ${method}`,
+    `ExportNamedDeclaration > ClassDeclaration > ClassBody > ${method}`,
+    `ExportDefaultDeclaration > ClassDeclaration > ClassBody > ${method}`,
 ];
 
 const apiContexts = method => [
@@ -49,8 +49,8 @@ const apiContexts = method => [
     'ExportNamedDeclaration > ClassDeclaration',
     'ExportDefaultDeclaration > ClassDeclaration',
     ...classMembers(method),
-    'ExportNamedDeclaration > ClassDeclaration TSAbstractMethodDefinition',
-    'ExportDefaultDeclaration > ClassDeclaration TSAbstractMethodDefinition',
+    'ExportNamedDeclaration > ClassDeclaration > ClassBody > TSAbstractMethodDefinition',
+    'ExportDefaultDeclaration > ClassDeclaration > ClassBody > TSAbstractMethodDefinition',
     'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
     'ExportDefaultDeclaration > ArrowFunctionExpression',
 ];
