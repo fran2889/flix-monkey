@@ -5,6 +5,7 @@
 
 export type StorageValue = string | boolean;
 
+/** Options for a platform HTTP fetch. */
 export interface HttpFetchOptions {
     responseType?: 'json' | 'text';
     timeout?: number;

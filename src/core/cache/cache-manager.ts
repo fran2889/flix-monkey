@@ -14,7 +14,21 @@ import { CacheEntry } from './cache-entry';
  * Cache read and write operations required by consumers such as ApiClientManager.
  */
 export interface CacheStore {
+    /**
+     * Reads a cache entry by display title.
+     *
+     * @param displayTitle - Title as shown by the streaming service.
+     * @returns Cache entry, including expired entries, or undefined on a miss.
+     */
     read(displayTitle: string): Promise<CacheEntry | undefined>;
+
+    /**
+     * Persists a title using the TTL selected from its rating and release year.
+     *
+     * @param displayTitle - Title as shown by the streaming service.
+     * @param titleObj - Title data to serialize.
+     * @returns Promise that resolves when the entry has been stored.
+     */
     write(displayTitle: string, titleObj: Title): Promise<void>;
 }
 

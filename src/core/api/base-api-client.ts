@@ -28,8 +28,28 @@ export interface ApiClientDeps {
  */
 export interface ApiClient {
     readonly source: ApiSourceType;
+
+    /**
+     * Reports whether this client can be selected for requests.
+     *
+     * @returns Health result used for provider selection.
+     */
     getStatus(): Promise<ClientStatus>;
+
+    /**
+     * Fetches a hydrated title, optionally short-circuiting search with an IMDb ID.
+     *
+     * @param displayTitle - Title as shown by the streaming service.
+     * @param imdbId - Optional IMDb ID.
+     * @returns Hydrated title, or undefined when no match is found.
+     */
     fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined>;
+
+    /**
+     * Disables this client for the configured cooldown.
+     *
+     * @returns Promise that resolves when the client is disabled.
+     */
     disable(): Promise<void>;
 }
 
