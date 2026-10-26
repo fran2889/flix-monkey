@@ -33,10 +33,10 @@ const javascriptRules = {
 // part of a contract, regardless of where the file lives. Concrete accessors are
 // excluded because they only restate a field; abstract members stay included
 // because TypeScript represents them as TSAbstractMethodDefinition.
-const publicMethod =
+const nonPrivateMethod =
     'MethodDefinition:not([kind="get"]):not([kind="set"]):not([key.type="PrivateIdentifier"]):not([accessibility="private"])';
 
-const describedMethod = `${publicMethod}:not([kind="constructor"])`;
+const describedMethod = `${nonPrivateMethod}:not([kind="constructor"])`;
 
 const classMembers = method => [
     `ExportNamedDeclaration > ClassDeclaration > ClassBody > ${method}`,
@@ -55,7 +55,7 @@ const apiContexts = method => [
     'ExportDefaultDeclaration > ArrowFunctionExpression',
 ];
 
-const exportedContexts = apiContexts(publicMethod);
+const exportedContexts = apiContexts(nonPrivateMethod);
 
 // Constructors carry their contract in @param tags; a separate description would
 // only restate the class name.
