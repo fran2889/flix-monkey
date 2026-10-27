@@ -37,16 +37,19 @@ export interface ApiClient {
     getStatus(): Promise<ClientStatus>;
 
     /**
-     * Fetches a hydrated title, optionally short-circuiting search with an IMDb ID.
+     * Fetches a hydrated title through the search then details pipeline.
+     *
+     * Callers must gate through `getStatus` before invoking. A supplied IMDb ID
+     * or a stored ID override skips the search step.
      *
      * @param displayTitle - Title as shown by the streaming service.
-     * @param imdbId - Optional IMDb ID.
+     * @param imdbId - Optional IMDb ID that skips search.
      * @returns Hydrated title, or undefined when no match is found.
      */
     fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined>;
 
     /**
-     * Disables this client for the configured cooldown.
+     * Disables this client for the cooldown defined by `CLIENT_DISABLE_DURATION`.
      *
      * @returns Promise that resolves when the client is disabled.
      */
@@ -80,12 +83,12 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Fetches ratings for a streaming-service title through the search -> details pipeline.
-     * Callers must gate through getStatus before invoking.
+     * Applies the ID override and disabled-client short circuits around the
+     * search then details pipeline described by `ApiClient.fetch`.
      *
      * @param displayTitle - Title as shown by the streaming service.
-     * @param imdbId - Optional IMDb ID for short-circuiting search.
-     * @returns Hydrated Title with ratings, or undefined if not found.
+     * @param imdbId - Optional IMDb ID that skips search.
+     * @returns Hydrated title, or undefined when no match is found.
      */
     async fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined> {
         if (await this.#isDisabled()) {
@@ -121,11 +124,6 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /**
-     * Reports whether this client is healthy enough for provider selection.
-     *
-     * @returns Health result; unhealthy while the client is temporarily disabled.
-     */
     async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -134,9 +132,9 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Disables this client for CLIENT_DISABLE_DURATION, purges its queued
-     * requests, and logs a warning.
+     * Purges queued requests and logs a warning before the cooldown starts.
      *
+     * @returns Promise that resolves when the client is disabled.
      * @note Requests still waiting in this client's queue are removed. An HTTP request already
      *   executing at the network level cannot be aborted and may still resolve after disable().
      */
