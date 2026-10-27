@@ -121,6 +121,10 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
+    async #isDisabled(): Promise<boolean> {
+        return this.#disabledManager.isDisabled(this.#source);
+    }
+
     /**
      * Reports whether this client is healthy enough for provider selection.
      *
@@ -157,10 +161,6 @@ export abstract class BaseApiClient implements ApiClient {
      */
     async queuedFetch(url: string, priority: number): Promise<unknown> {
         return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
-    }
-
-    async #isDisabled(): Promise<boolean> {
-        return this.#disabledManager.isDisabled(this.#source);
     }
 
     /**

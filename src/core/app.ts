@@ -81,38 +81,6 @@ export class FlixMonkeyApp {
         window.addEventListener('beforeunload', this.#boundDisconnect);
     }
 
-    /**
-     * Sets or updates the IMDb ID override for a title from user input.
-     * @param displayTitle - The title to set override for
-     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists.
-     */
-    async #handleEditClick(displayTitle: string, imdbId?: string): Promise<void> {
-        const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
-        const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride ?? imdbId ?? '');
-        if (userInput === null) return;
-
-        const extracted = this.#extractImdbId(userInput);
-        if (!extracted) {
-            alert('Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)');
-            return;
-        }
-
-        const dedupKey = slugify(displayTitle);
-        await this.#overrideManager.setImdbId(displayTitle, extracted);
-        await this.#cache.delete(dedupKey);
-        this.#redecorateTitle(dedupKey, displayTitle);
-    }
-
-    /**
-     * Clears the single cache entry for a title and re-decorates it.
-     * @param displayTitle - The title to refresh
-     */
-    async #handleRefreshClick(displayTitle: string): Promise<void> {
-        const dedupKey = slugify(displayTitle);
-        await this.#cache.delete(dedupKey);
-        this.#redecorateTitle(dedupKey, displayTitle);
-    }
-
     #initNavigationObservers(): void {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
@@ -251,6 +219,73 @@ export class FlixMonkeyApp {
         });
     }
 
+    /**
+     * Sets or updates the IMDb ID override for a title from user input.
+     * @param displayTitle - The title to set override for
+     * @param imdbId - Current IMDb ID from API, used as the prompt default when no override exists.
+     */
+    async #handleEditClick(displayTitle: string, imdbId?: string): Promise<void> {
+        const currentOverride = await this.#overrideManager.getImdbId(displayTitle);
+        const userInput = prompt(`IMDb ID for ${displayTitle}:`, currentOverride ?? imdbId ?? '');
+        if (userInput === null) return;
+
+        const extracted = this.#extractImdbId(userInput);
+        if (!extracted) {
+            alert('Invalid IMDb ID. Must be tt followed by numbers (e.g., tt0133093)');
+            return;
+        }
+
+        const dedupKey = slugify(displayTitle);
+        await this.#overrideManager.setImdbId(displayTitle, extracted);
+        await this.#cache.delete(dedupKey);
+        this.#redecorateTitle(dedupKey, displayTitle);
+    }
+
+    /**
+     * Extract IMDb ID from user input (direct ID or URL).
+     * @param input - User input
+     * @returns Extracted IMDb ID or undefined if invalid
+     */
+    #extractImdbId(input: string): string | undefined {
+        if (!input) return undefined;
+        const trimmed = input.trim();
+        if (/^tt\d+$/.test(trimmed)) {
+            return trimmed;
+        }
+        const imdbUrlRegex = /(?:www\.)?imdb\.com\/title\/tt(\d+)/;
+        const match = imdbUrlRegex.exec(trimmed);
+        if (match) {
+            return `tt${match[1]}`;
+        }
+        return undefined;
+    }
+
+    /**
+     * Re-decorate all containers for a specific title.
+     * @param dedupKey - The slugified title key
+     * @param displayTitle - The original display title (used for consistent API calls)
+     */
+    #redecorateTitle(dedupKey: string, displayTitle: string): void {
+        // querySelectorAll only yields nodes inside the document, so no containment check is needed.
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+            delete (container as HTMLElement).dataset.fmInjected;
+            this.#renderer.removeLoadingOverlay(container as HTMLElement);
+            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
+                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
+            );
+        });
+    }
+
+    /**
+     * Clears the single cache entry for a title and re-decorates it.
+     * @param displayTitle - The title to refresh
+     */
+    async #handleRefreshClick(displayTitle: string): Promise<void> {
+        const dedupKey = slugify(displayTitle);
+        await this.#cache.delete(dedupKey);
+        this.#redecorateTitle(dedupKey, displayTitle);
+    }
+
     async #handleFadeToggleClick(
         dedupKey: string,
         imdbRating: number | undefined,
@@ -301,41 +336,6 @@ export class FlixMonkeyApp {
             }
             this.#navigationPatched = false;
         }
-    }
-
-    /**
-     * Extract IMDb ID from user input (direct ID or URL).
-     * @param input - User input
-     * @returns Extracted IMDb ID or undefined if invalid
-     */
-    #extractImdbId(input: string): string | undefined {
-        if (!input) return undefined;
-        const trimmed = input.trim();
-        if (/^tt\d+$/.test(trimmed)) {
-            return trimmed;
-        }
-        const imdbUrlRegex = /(?:www\.)?imdb\.com\/title\/tt(\d+)/;
-        const match = imdbUrlRegex.exec(trimmed);
-        if (match) {
-            return `tt${match[1]}`;
-        }
-        return undefined;
-    }
-
-    /**
-     * Re-decorate all containers for a specific title.
-     * @param dedupKey - The slugified title key
-     * @param displayTitle - The original display title (used for consistent API calls)
-     */
-    #redecorateTitle(dedupKey: string, displayTitle: string): void {
-        // querySelectorAll only yields nodes inside the document, so no containment check is needed.
-        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            delete (container as HTMLElement).dataset.fmInjected;
-            this.#renderer.removeLoadingOverlay(container as HTMLElement);
-            this.#decorateContainer(container, displayTitle, false, false).catch(err =>
-                this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
-            );
-        });
     }
 
     get cacheManager(): CacheManagerType {
