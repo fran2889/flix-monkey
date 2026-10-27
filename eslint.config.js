@@ -29,6 +29,20 @@ const javascriptRules = {
     'max-params': ['error', 4],
 };
 
+// JSDoc is enforced on exported declarations, abstract members, and interface
+// signatures. Class members are optional.
+const exported = ':is(ExportNamedDeclaration, ExportDefaultDeclaration)';
+
+const exportedContracts = [
+    `${exported} > FunctionDeclaration`,
+    `${exported} > ClassDeclaration`,
+    `${exported} > ClassDeclaration > ClassBody > TSAbstractMethodDefinition`,
+    `${exported} > TSInterfaceDeclaration`,
+    `${exported} > TSInterfaceDeclaration > TSInterfaceBody > TSMethodSignature`,
+    `${exported} > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression`,
+    `${exported} > VariableDeclaration > VariableDeclarator > FunctionExpression`,
+];
+
 const typescriptRules = {
     ...commonRules,
     // TypeScript-specific strict rules
@@ -158,6 +172,11 @@ export default [
                     selector: 'TSAsExpression > TSNeverKeyword',
                     message: 'Do not assert to never; fix the underlying type instead.',
                 },
+                {
+                    selector: 'ExportNamedDeclaration[declaration=null][source=null]',
+                    message:
+                        'Export declarations at their declaration site; local export lists hide the declaration from the JSDoc rule.',
+                },
             ],
         },
     },
@@ -191,7 +210,7 @@ export default [
             },
         },
     },
-    // 7. JSDoc validation for exported functions
+    // 7. JSDoc validation for the exported API surface
     {
         files: ['src/**/*.ts'],
         plugins: { jsdoc },
@@ -200,17 +219,17 @@ export default [
                 'error',
                 {
                     require: {
-                        MethodDefinition: true,
-                        ClassDeclaration: true,
+                        FunctionDeclaration: false,
+                        MethodDefinition: false,
+                        ClassDeclaration: false,
                     },
-                    contexts: ['export'],
-                    publicOnly: true,
+                    contexts: exportedContracts,
                 },
             ],
-            'jsdoc/require-description': ['error', { contexts: ['export'] }],
-            'jsdoc/require-param': ['error', { contexts: ['export'] }],
+            'jsdoc/require-description': ['error', { contexts: exportedContracts }],
+            'jsdoc/require-param': ['error', { contexts: exportedContracts, checkDestructured: false }],
             'jsdoc/require-param-description': 'error',
-            'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/require-returns': ['error', { contexts: exportedContracts }],
             'jsdoc/require-returns-description': 'error',
             'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',

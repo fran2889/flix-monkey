@@ -30,16 +30,14 @@ export class FadeManager {
     readonly #config: ConfigManager;
     readonly #prefix = 'fm-fade:';
 
-    /**
-     * @param adapter - Storage adapter for per-title overrides.
-     * @param config - Application configuration, read when no override applies.
-     */
     constructor(adapter: PlatformAdapter, config: ConfigManager) {
         this.#adapter = adapter;
         this.#config = config;
     }
 
     /**
+     * Reads the stored fade override for a title.
+     *
      * @param dedupKey - Slugified display title.
      * @returns Promise resolving to the override state, or undefined when auto.
      */
@@ -50,6 +48,8 @@ export class FadeManager {
     }
 
     /**
+     * Stores or clears the fade override for a title.
+     *
      * @param dedupKey - Slugified display title.
      * @param state - Override state, or undefined to clear.
      * @returns Promise that resolves when the operation is complete.

@@ -45,15 +45,6 @@ export class FlixMonkeyApp {
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
 
-    /**
-     * @param logger - Logger instance
-     * @param cache - Cache manager instance
-     * @param fadeManager - Fade manager instance
-     * @param overrideManager - ID override manager instance
-     * @param renderer - Overlay renderer instance
-     * @param surfaces - Surface manager instance
-     * @param api - API client manager instance
-     */
     // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point, and startApp() is its only caller
     constructor(
         logger: Logger,
@@ -347,12 +338,10 @@ export class FlixMonkeyApp {
         });
     }
 
-    /** @returns CacheManager */
     get cacheManager(): CacheManagerType {
         return this.#cache;
     }
 
-    /** @returns DisabledClientsManager */
     get disabledManager(): DisabledClientsManagerType {
         return this.#api.disabledManager;
     }
@@ -376,6 +365,8 @@ function createApiClient(deps: ApiClientDeps): BaseApiClient {
 }
 
 /**
+ * Starts the application for the detected streaming service.
+ *
  * @param adapter - Platform adapter
  * @returns FlixMonkeyApp or undefined if service not detected or not enabled
  */

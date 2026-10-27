@@ -15,7 +15,6 @@ describe('OverlayRenderer', () => {
         document.body.innerHTML = '';
     });
 
-    /** Injects an overlay with the action handlers and display title the signature requires. */
     const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title) =>
         renderer.injectOverlay(container, title, {
             displayTitle: title.displayTitle,

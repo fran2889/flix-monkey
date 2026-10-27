@@ -27,10 +27,6 @@ export class OverlayRenderer {
     readonly #config: ConfigManager;
     readonly #serviceConstants: ServicePresentation;
 
-    /**
-     * @param config - Application configuration
-     * @param serviceConstants - Service-specific presentation constants. Default: empty object.
-     */
     constructor(config: ConfigManager, serviceConstants: ServicePresentation = {}) {
         this.#config = config;
         this.#serviceConstants = serviceConstants;

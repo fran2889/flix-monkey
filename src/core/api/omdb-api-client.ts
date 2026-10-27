@@ -45,9 +45,6 @@ function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefin
  * API client for OMDb service that provides movie and series information with ratings.
  */
 export class OmdbApiClient extends BaseApiClient {
-    /**
-     * @param deps - Dependencies shared by every API client.
-     */
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
         super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.OMDB);
