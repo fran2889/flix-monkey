@@ -15,6 +15,8 @@ import { mapXmdbTitleType } from './title-type-mappers';
  */
 export class XmdbApiClient extends BaseApiClient {
     /**
+     * Configures the XMDb rate limit and request queue.
+     *
      * @param deps - Dependencies shared by every API client.
      */
     constructor(deps: ApiClientDeps) {

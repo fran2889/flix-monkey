@@ -49,6 +49,8 @@ export class SurfaceManager {
     readonly #logger: Logger;
 
     /**
+     * Stores the logger and the given surface definitions.
+     *
      * @param logger - Receives selector and container-resolution failures.
      * @param surfaceDefs - Definitions used for DOM discovery.
      */

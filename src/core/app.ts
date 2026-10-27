@@ -46,6 +46,8 @@ export class FlixMonkeyApp {
     readonly #overrideManager: IdOverrideManagerType;
 
     /**
+     * Wires the managers and renderer used by the application.
+     *
      * @param logger - Logger instance
      * @param cache - Cache manager instance
      * @param fadeManager - Fade manager instance

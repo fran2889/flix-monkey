@@ -43,6 +43,8 @@ export class Title {
     readonly type: string | undefined;
 
     /**
+     * Creates a title from the given fields, normalizing nullish and non-finite values.
+     *
      * @param options - Title fields to initialize.
      */
     constructor({
@@ -99,6 +101,9 @@ export class Title {
     /**
      * Enforces the numeric contract: anything that is not a finite number (null,
      * undefined, NaN, Infinity, or a raw wire-format string) carries no value.
+     *
+     * @param val - Untrusted numeric value from options or cache data.
+     * @returns The finite number, or undefined.
      */
     #toFiniteNumber(val: unknown): number | undefined {
         return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
@@ -114,19 +119,14 @@ export class Title {
     }
 
     /**
-     * @returns IMDb URL for this title. Falls back to an IMDb search
-     *   URL when `imdbId` is not available.
+     * Returns the IMDb URL, falling back to a search URL when no IMDb ID is available.
+     *
+     * @returns IMDb URL for this title.
      */
     get imdbUrl(): string {
         return buildImdbUrl({ imdbId: this.imdbId, displayTitle: this.displayTitle });
     }
 
-    /**
-     * Returns a copy of this title with the given API source.
-     *
-     * @param source - API source that produced this title.
-     * @returns A new immutable Title with this source.
-     */
     withSource(source: string): Title {
         return new Title({ ...this, source });
     }

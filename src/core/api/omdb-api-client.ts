@@ -46,6 +46,8 @@ function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefin
  */
 export class OmdbApiClient extends BaseApiClient {
     /**
+     * Configures the OMDb rate limit and request queue.
+     *
      * @param deps - Dependencies shared by every API client.
      */
     constructor(deps: ApiClientDeps) {

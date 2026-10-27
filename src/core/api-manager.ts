@@ -18,6 +18,8 @@ export class ApiClientManager {
     readonly #logger: Logger;
 
     /**
+     * Creates a manager that coordinates the cache, API client, disabled-client tracker, and logger.
+     *
      * @param logger - Logger instance for debug/error messages
      * @param cache - Cache manager for reading/writing cache entries
      * @param disabledManager - Manager for tracking disabled API clients

@@ -24,7 +24,11 @@ import { buildTitle } from '../../mocks/title';
 
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 
-/** Real dependencies for a FlixMonkeyApp, kept in one place so tests share the wiring. */
+/**
+ * Real dependencies for a FlixMonkeyApp, kept in one place so tests share the wiring.
+ *
+ * @returns Wired dependencies for a test app.
+ */
 function buildAppDependencies(): {
     logger: Logger;
     cache: CacheManager;
@@ -53,7 +57,11 @@ function buildAppDependencies(): {
     };
 }
 
-/** Builds an app from real dependencies without starting it. */
+/**
+ * Builds an app from real dependencies without starting it.
+ *
+ * @returns An unstarted FlixMonkeyApp.
+ */
 function buildApp(): FlixMonkeyApp {
     const dependencies = buildAppDependencies();
     return new FlixMonkeyApp(
@@ -774,6 +782,9 @@ describe('App', () => {
         /**
          * Decorates `container` and resolves with the click callbacks the app wires into
          * the overlay. That wiring is the only production path to the private handlers.
+         *
+         * @param container - Element to decorate.
+         * @returns Captured click callbacks and the app logger.
          */
         const decorateAndCaptureActions = async (
             container: Element

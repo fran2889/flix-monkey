@@ -10,12 +10,6 @@ import { StreamingService } from './base-streaming-service';
 
 /** HBO Max streaming service implementation. */
 export class HboMaxService extends StreamingService {
-    /**
-     * Whether HBO Max decoration is enabled in config.
-     *
-     * @param configManager - Current application configuration.
-     * @returns Whether decoration is enabled for this service.
-     */
     override isEnabled(configManager: ConfigManager): boolean {
         return configManager.getBool('enableHboMax');
     }

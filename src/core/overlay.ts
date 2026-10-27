@@ -28,6 +28,8 @@ export class OverlayRenderer {
     readonly #serviceConstants: ServicePresentation;
 
     /**
+     * Creates a renderer for the given configuration and presentation values.
+     *
      * @param config - Application configuration
      * @param serviceConstants - Service-specific presentation constants. Default: empty object.
      */

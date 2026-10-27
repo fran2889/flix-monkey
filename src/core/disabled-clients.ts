@@ -12,6 +12,8 @@ export class DisabledClientsManager {
     readonly #adapter: PlatformAdapter;
 
     /**
+     * Creates a tracker bound to platform storage.
+     *
      * @param adapter - Platform storage adapter.
      */
     constructor(adapter: PlatformAdapter) {

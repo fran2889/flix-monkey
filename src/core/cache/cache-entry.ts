@@ -16,6 +16,8 @@ export class CacheEntry {
     readonly #expires: number | undefined;
 
     /**
+     * Creates an entry from its search keys, serialized data, and expiry.
+     *
      * @param displayTitle - Netflix display title (search key)
      * @param imdbId - IMDb ID for short-circuit optimization
      * @param data - Title data without displayTitle. `CacheManager.write` stores

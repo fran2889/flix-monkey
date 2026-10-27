@@ -70,6 +70,8 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #overrideManager: IdOverrideManager;
 
     /**
+     * Initializes the shared state for a provider client.
+     *
      * @param deps - Dependencies shared by every API client.
      * @param queue - Rate-limited request queue for this client.
      * @param source - ApiSource identifier.
@@ -190,17 +192,14 @@ export abstract class BaseApiClient implements ApiClient {
      */
     abstract getDetails(_searchTitle: Title): Promise<Title | undefined>;
 
-    /** ApiSource identifier for this client. */
     get source(): ApiSourceType {
         return this.#source;
     }
 
-    /** Application configuration. */
     get config(): ConfigManager {
         return this.#config;
     }
 
-    /** Logger instance. */
     get logger(): Logger {
         return this.#logger;
     }

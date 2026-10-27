@@ -12,6 +12,8 @@ export class Logger {
     readonly #adapter: PlatformAdapter;
 
     /**
+     * Creates a logger that reads the debug setting through the adapter.
+     *
      * @param adapter - Platform adapter used to read the debug setting.
      */
     constructor(adapter: PlatformAdapter) {

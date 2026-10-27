@@ -62,6 +62,8 @@ export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze
  */
 export class NetflixSurfaceManager extends SurfaceManager {
     /**
+     * Binds the Netflix surface definitions to the logger.
+     *
      * @param logger - For logging surface discovery issues.
      */
     constructor(logger: Logger) {
