@@ -29,66 +29,22 @@ const javascriptRules = {
     'max-params': ['error', 4],
 };
 
-// The `export` keyword is the module boundary: anything a caller can import is
-// part of a contract, regardless of where the file lives. Examined nodes are
-// inline export declarations, because local `export { ... }` lists are rejected
-// below where the rule cannot see the exported declaration. Concrete accessors
-// are excluded because they only restate a field. Abstract members use their own
-// TSAbstractMethodDefinition contexts.
-const nonPrivateMethod =
-    'MethodDefinition:not([kind="get"]):not([kind="set"]):not([key.type="PrivateIdentifier"]):not([accessibility="private"])';
+// The `export` keyword is the module boundary. Document the exported
+// declaration and the members a caller must implement or call (abstract
+// methods and interface signatures). Class members, constructors, and
+// function-valued fields are documented only when they add information a
+// caller cannot infer; the class or interface contract carries the rest.
+const exported = ':is(ExportNamedDeclaration, ExportDefaultDeclaration)';
 
-const describedMethod = `${nonPrivateMethod}:not([kind="constructor"])`;
-
-const exportedClassBodies = [
-    'ExportNamedDeclaration > ClassDeclaration > ClassBody',
-    'ExportDefaultDeclaration > ClassDeclaration > ClassBody',
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ClassExpression > ClassBody',
-    'ExportDefaultDeclaration > ClassExpression > ClassBody',
+const exportedContracts = [
+    `${exported} > FunctionDeclaration`,
+    `${exported} > ClassDeclaration`,
+    `${exported} > ClassDeclaration > ClassBody > TSAbstractMethodDefinition`,
+    `${exported} > TSInterfaceDeclaration`,
+    `${exported} > TSInterfaceDeclaration > TSInterfaceBody > TSMethodSignature`,
+    `${exported} > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression`,
+    `${exported} > VariableDeclaration > VariableDeclarator > FunctionExpression`,
 ];
-
-const exportedClassMembers = method => exportedClassBodies.map(body => `${body} > ${method}`);
-
-// Public function-valued fields are methods to a caller. Their value node
-// carries the signature, while the JSDoc block sits above the field.
-const exportedFunctionFields = exportedClassBodies.flatMap(body => [
-    `${body} > PropertyDefinition:not([key.type="PrivateIdentifier"]):not([accessibility="private"]) > ArrowFunctionExpression`,
-    `${body} > PropertyDefinition:not([key.type="PrivateIdentifier"]):not([accessibility="private"]) > FunctionExpression`,
-]);
-
-const exportedObjectMembers = [
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > FunctionExpression',
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > ArrowFunctionExpression',
-    'ExportDefaultDeclaration > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > FunctionExpression',
-    'ExportDefaultDeclaration > ObjectExpression > Property:not([kind="get"]):not([kind="set"]) > ArrowFunctionExpression',
-];
-
-const apiContexts = method => [
-    'ExportNamedDeclaration > FunctionDeclaration',
-    'ExportDefaultDeclaration > FunctionDeclaration',
-    'ExportNamedDeclaration > ClassDeclaration',
-    'ExportDefaultDeclaration > ClassDeclaration',
-    ...exportedClassMembers(method),
-    ...exportedFunctionFields,
-    ...exportedObjectMembers,
-    ...exportedClassBodies.map(body => `${body} > TSAbstractMethodDefinition`),
-    'ExportNamedDeclaration > TSInterfaceDeclaration',
-    'ExportDefaultDeclaration > TSInterfaceDeclaration',
-    'ExportNamedDeclaration > TSInterfaceDeclaration > TSInterfaceBody > TSMethodSignature',
-    'ExportDefaultDeclaration > TSInterfaceDeclaration > TSInterfaceBody > TSMethodSignature',
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
-    'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ClassExpression',
-    'ExportDefaultDeclaration > ArrowFunctionExpression',
-    'ExportDefaultDeclaration > FunctionExpression',
-    'ExportDefaultDeclaration > ClassExpression',
-];
-
-const exportedContexts = apiContexts(nonPrivateMethod);
-
-// Constructors carry their contract in @param tags; a separate description would
-// only restate the class name.
-const describedContexts = apiContexts(describedMethod);
 
 const typescriptRules = {
     ...commonRules,
@@ -220,9 +176,9 @@ export default [
                     message: 'Do not assert to never; fix the underlying type instead.',
                 },
                 {
-                    selector: 'ExportNamedDeclaration[declaration=null][source=null][exportKind="value"]',
+                    selector: 'ExportNamedDeclaration[declaration=null][source=null]',
                     message:
-                        'Export declarations at their declaration site; local value `export { ... }` lists hide the declaration from the JSDoc rule.',
+                        'Export declarations at their declaration site; local export lists hide the declaration from the JSDoc rule.',
                 },
             ],
         },
@@ -270,13 +226,13 @@ export default [
                         MethodDefinition: false,
                         ClassDeclaration: false,
                     },
-                    contexts: exportedContexts,
+                    contexts: exportedContracts,
                 },
             ],
-            'jsdoc/require-description': ['error', { contexts: describedContexts }],
-            'jsdoc/require-param': ['error', { contexts: exportedContexts, checkDestructured: false }],
+            'jsdoc/require-description': ['error', { contexts: exportedContracts }],
+            'jsdoc/require-param': ['error', { contexts: exportedContracts, checkDestructured: false }],
             'jsdoc/require-param-description': 'error',
-            'jsdoc/require-returns': ['error', { contexts: describedContexts }],
+            'jsdoc/require-returns': ['error', { contexts: exportedContracts }],
             'jsdoc/require-returns-description': 'error',
             'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',
