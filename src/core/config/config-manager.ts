@@ -17,12 +17,6 @@ export class ConfigManager {
     readonly #adapter: PlatformAdapter;
     readonly #logger: Logger;
 
-    /**
-     * Creates a manager bound to the platform adapter and logger.
-     *
-     * @param adapter - Platform adapter used for configuration reads.
-     * @param logger - Required; configuration reads can fail and are logged.
-     */
     constructor(adapter: PlatformAdapter, logger: Logger) {
         this.#adapter = adapter;
         this.#logger = logger;

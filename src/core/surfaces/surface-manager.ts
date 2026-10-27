@@ -48,12 +48,6 @@ export class SurfaceManager {
     readonly #SURFACES: SurfaceDefinition[];
     readonly #logger: Logger;
 
-    /**
-     * Stores the logger and the given surface definitions.
-     *
-     * @param logger - Receives selector and container-resolution failures.
-     * @param surfaceDefs - Definitions used for DOM discovery.
-     */
     constructor(logger: Logger, surfaceDefs: Record<string, SurfaceDefinition>) {
         this.#SURFACES = Object.values(surfaceDefs);
         this.#logger = logger;

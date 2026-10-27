@@ -45,17 +45,6 @@ export class FlixMonkeyApp {
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
 
-    /**
-     * Wires the managers and renderer used by the application.
-     *
-     * @param logger - Logger instance
-     * @param cache - Cache manager instance
-     * @param fadeManager - Fade manager instance
-     * @param overrideManager - ID override manager instance
-     * @param renderer - Overlay renderer instance
-     * @param surfaces - Surface manager instance
-     * @param api - API client manager instance
-     */
     // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point, and startApp() is its only caller
     constructor(
         logger: Logger,

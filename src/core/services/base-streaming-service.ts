@@ -28,11 +28,6 @@ export abstract class StreamingService {
      */
     abstract get SurfaceManager(): ServiceSurfaceManager;
 
-    /**
-     * Presentation values consumed by OverlayRenderer.
-     *
-     * @returns Empty defaults for services without custom values.
-     */
     get constants(): ServicePresentation {
         return Object.freeze({});
     }

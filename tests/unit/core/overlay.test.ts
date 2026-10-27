@@ -15,14 +15,7 @@ describe('OverlayRenderer', () => {
         document.body.innerHTML = '';
     });
 
-    /**
-     * Injects an overlay with the action handlers and display title the signature requires.
-     *
-     * @param renderer - Renderer under test.
-     * @param container - Container to inject into.
-     * @param title - Title to render.
-     */
-    const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title): void => {
+    const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title) =>
         renderer.injectOverlay(container, title, {
             displayTitle: title.displayTitle,
             onEditClick: () => {},
@@ -30,7 +23,6 @@ describe('OverlayRenderer', () => {
             fadeToggleState: undefined,
             onFadeToggleClick: undefined,
         });
-    };
 
     describe('style injection', () => {
         it('injects styles into document head', () => {

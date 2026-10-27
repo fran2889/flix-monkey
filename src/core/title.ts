@@ -42,11 +42,6 @@ export class Title {
     readonly source: string | undefined;
     readonly type: string | undefined;
 
-    /**
-     * Creates a title from the given fields, normalizing nullish and non-finite values.
-     *
-     * @param options - Title fields to initialize.
-     */
     constructor({
         displayTitle,
         apiTitle,
@@ -98,13 +93,6 @@ export class Title {
         return new Title({ ...(obj as TitleData), displayTitle });
     }
 
-    /**
-     * Enforces the numeric contract: anything that is not a finite number (null,
-     * undefined, NaN, Infinity, or a raw wire-format string) carries no value.
-     *
-     * @param val - Untrusted numeric value from options or cache data.
-     * @returns The finite number, or undefined.
-     */
     #toFiniteNumber(val: unknown): number | undefined {
         return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
     }

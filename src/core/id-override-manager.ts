@@ -14,11 +14,6 @@ export class IdOverrideManager {
     readonly #adapter: PlatformAdapter;
     readonly #prefix = 'fm-idoverride:';
 
-    /**
-     * Creates a manager bound to platform storage.
-     *
-     * @param adapter - Platform adapter for storage.
-     */
     constructor(adapter: PlatformAdapter) {
         this.#adapter = adapter;
     }

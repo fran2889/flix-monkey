@@ -24,11 +24,6 @@ import { buildTitle } from '../../mocks/title';
 
 type MockMutationCallback = (_mutations: MutationRecord[], _observer: MutationObserver) => void;
 
-/**
- * Real dependencies for a FlixMonkeyApp, kept in one place so tests share the wiring.
- *
- * @returns Wired dependencies for a test app.
- */
 function buildAppDependencies(): {
     logger: Logger;
     cache: CacheManager;

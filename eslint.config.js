@@ -29,11 +29,8 @@ const javascriptRules = {
     'max-params': ['error', 4],
 };
 
-// The `export` keyword is the module boundary. Document the exported
-// declaration and the members a caller must implement or call (abstract
-// methods and interface signatures). Class members, constructors, and
-// function-valued fields are documented only when they add information a
-// caller cannot infer; the class or interface contract carries the rest.
+// JSDoc is enforced on exported declarations, abstract members, and interface
+// signatures. Class members are optional.
 const exported = ':is(ExportNamedDeclaration, ExportDefaultDeclaration)';
 
 const exportedContracts = [

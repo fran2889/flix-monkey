@@ -14,11 +14,6 @@ import { mapXmdbTitleType } from './title-type-mappers';
  * API client for XMDb service that provides comprehensive movie and series data with ratings.
  */
 export class XmdbApiClient extends BaseApiClient {
-    /**
-     * Configures the XMDb rate limit and request queue.
-     *
-     * @param deps - Dependencies shared by every API client.
-     */
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.XMDB];
         super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.XMDB);

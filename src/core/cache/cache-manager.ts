@@ -41,13 +41,6 @@ export class CacheManager implements CacheStore {
     readonly #config: ConfigManager;
     readonly #logger: Logger;
 
-    /**
-     * Creates a cache bound to the storage adapter and TTL configuration.
-     *
-     * @param adapter - Persistent storage provider.
-     * @param config - TTL configuration provider.
-     * @param logger - Corrupt-entry diagnostics sink.
-     */
     constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger) {
         this.#adapter = adapter;
         this.#config = config;

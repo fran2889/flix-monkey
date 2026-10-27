@@ -16,11 +16,6 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
  * API client for Agregarr service that fetches ratings from IMDb Suggestions and Agregarr API.
  */
 export class AgregarrApiClient extends BaseApiClient {
-    /**
-     * Configures the Agregarr rate limit and request queue.
-     *
-     * @param deps - Dependencies shared by every API client.
-     */
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.AGREGARR];
         super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.AGREGARR);

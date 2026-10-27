@@ -69,13 +69,6 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #logger: Logger;
     readonly #overrideManager: IdOverrideManager;
 
-    /**
-     * Initializes the shared state for a provider client.
-     *
-     * @param deps - Dependencies shared by every API client.
-     * @param queue - Rate-limited request queue for this client.
-     * @param source - ApiSource identifier.
-     */
     constructor(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType) {
         this.#adapter = deps.adapter;
         this.#config = deps.config;

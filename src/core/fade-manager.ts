@@ -30,12 +30,6 @@ export class FadeManager {
     readonly #config: ConfigManager;
     readonly #prefix = 'fm-fade:';
 
-    /**
-     * Creates a manager bound to the storage adapter and configuration.
-     *
-     * @param adapter - Storage adapter for per-title overrides.
-     * @param config - Application configuration, read when no override applies.
-     */
     constructor(adapter: PlatformAdapter, config: ConfigManager) {
         this.#adapter = adapter;
         this.#config = config;
