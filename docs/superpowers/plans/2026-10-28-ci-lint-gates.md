@@ -4,9 +4,9 @@
 
 **Goal:** Add actionlint and web-ext lint to the existing CI jobs so both block merges through `merge-gate`.
 
-**Architecture:** actionlint runs from a digest-pinned Docker image in `lint-and-audit`. web-ext lint runs in `build` after the all-target build, installing `web-ext` ad hoc. The Firefox manifest declares Android 142 so `--warnings-as-errors` passes. No new workflows or required check contexts.
+**Architecture:** actionlint runs through the SHA-pinned `raven-actions/actionlint` action in `lint-and-audit`, with the tool version pinned by its `version` input. web-ext lint runs in `build` after the all-target build, installing `web-ext` ad hoc. The Firefox manifest declares Android 142 so `--warnings-as-errors` passes. No new workflows or required check contexts.
 
-**Tech Stack:** GitHub Actions, Docker, actionlint 1.7.12, web-ext 10.7.0, Node 24, Prettier.
+**Tech Stack:** GitHub Actions, raven-actions/actionlint 2.2.0, actionlint 1.7.12, web-ext 10.7.0, Node 24, Prettier.
 
 **Spec:** `docs/superpowers/specs/2026-10-28-ci-lint-gates-design.md`
 
@@ -19,7 +19,7 @@
 ## Global Constraints
 
 - `web-ext` must not enter `package.json` or `package-lock.json`; `npm run audit` must stay green.
-- actionlint must use `rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667`.
+- `raven-actions/actionlint` must be pinned to `3d39aea434753780c3b3d4a1a31c854b4dbf49d7` (v2.2.0) with `version: '1.7.12'`.
 - `web-ext` version is `10.7.0`, matching the store publish workflow.
 - Desktop Firefox minimum stays `140.0`; only `gecko_android` gets `142.0`.
 - No new workflows, jobs, or required status check contexts.
@@ -46,18 +46,22 @@
 - Consumes: nothing from earlier tasks.
 - Produces: a `Lint workflows` step inside `lint-and-audit`, which `merge-gate` already requires.
 
-- [ ] **Step 1: Add the actionlint step after checkout**
+- [ ] **Step 1: Add the actionlint action step after checkout**
 
 Insert this step between `actions/checkout` and `actions/setup-node` in the `lint-and-audit` job:
 
 ```yaml
 - name: Lint workflows
-  run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+  uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+  with:
+      version: '1.7.12'
 ```
 
-- [ ] **Step 2: Verify actionlint passes on the repository**
+The action downloads the pinned actionlint release, caches it, and fails the step on errors. Keep `version` explicit because its default is `latest`.
 
-Run:
+- [ ] **Step 2: Verify actionlint passes on the repository locally**
+
+Run a local actionlint 1.7.12, for example:
 
 ```bash
 docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
@@ -67,7 +71,7 @@ Expected: exit 0 and no output.
 
 - [ ] **Step 3: Verify the gate detects a malformed workflow expression**
 
-Run:
+Run the same probe through the local actionlint 1.7.12:
 
 ```bash
 printf 'name: Bad\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ${{ github.event.pull_request.title\n' | docker run --rm -i -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -stdin-filename .github/workflows/bad.yml -

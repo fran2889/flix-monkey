@@ -14,8 +14,9 @@ new status check contexts or ruleset changes.
 
 ## Goals
 
-- Run `actionlint` 1.7.12 in the existing `lint-and-audit` job, pinned by Docker
-  image digest.
+- Run `actionlint` 1.7.12 in the existing `lint-and-audit` job through the
+  SHA-pinned `raven-actions/actionlint` action, pinning the tool version with its
+  `version` input.
 - Run `web-ext lint` 10.7.0 against `dist/firefox` in the existing `build` job
   with `--warnings-as-errors`.
 - Clear the current web-ext warning by declaring Firefox for Android 142 as the
@@ -35,8 +36,13 @@ new status check contexts or ruleset changes.
 
 - `web-ext` must stay out of `devDependencies`; its advisories would keep
   `npm run audit` red. Install it ad hoc, as the publish workflow already does.
-- GitHub Actions are SHA-pinned. The actionlint Docker image is pinned by digest
-  instead, which is the equivalent supply-chain control.
+- GitHub Actions are SHA-pinned, including `raven-actions/actionlint` v2.2.0.
+  The action downloads the actionlint release named by its `version` input, so
+  pinning the action SHA and the input together fixes both the runner and the
+  tool. No Docker image is involved.
+- The action ensures `shellcheck` and `pyflakes` are on `PATH` for actionlint's
+  embedded script checks. On `ubuntu-latest` it uses the preinstalled
+  `shellcheck` and installs `pyflakes` with `pipx`.
 - `merge-gate` runs on pushes to `main` and on pull requests. Do not add
   PR-only jobs to `ci.yml`.
 - Preserve the untracked review documents and the current branch state.
@@ -56,8 +62,21 @@ Option 1 is chosen for speed and the smallest surface change.
 ## Decisions
 
 - **actionlint step.** Place it in `lint-and-audit` after checkout and before
-  `npm ci`, so broken workflows fail fast. Command:
-  `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667`.
+  `npm ci`, so broken workflows fail fast. Use the Marketplace action rather than
+  a Docker image or a hand-rolled binary download:
+
+    ```yaml
+    - name: Lint workflows
+      uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+      with:
+          version: '1.7.12'
+    ```
+
+    The action downloads the pinned actionlint release, caches it under
+    `$RUNNER_TEMP`, and fails the step on errors. This removes the Docker Hub pull,
+    the image cache, and the Docker dependency from CI, at the cost of one
+    third-party action pinned by SHA.
+
 - **web-ext lint step.** Place it in `build` after `npm run build`. Install with
   `npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0`,
   then run
@@ -67,14 +86,16 @@ Option 1 is chosen for speed and the smallest surface change.
 - **Manifest fix.** Add `browser_specific_settings.gecko_android.strict_min_version`
   as `"142.0"` in `src/targets/firefox/manifest.json`. The
   `data_collection_permissions` key needs 142 on Android; desktop remains at 140.
-- **No new npm scripts.** Keep the Docker dependency and the ad hoc web-ext
-  install out of `package.json`. Document the local commands instead.
+- **No new npm scripts.** Keep the ad hoc web-ext install out of `package.json`.
+  Document the local commands instead.
 - **Documentation.** Update `AGENTS.md` and `CONTRIBUTING.md` so the described
   CI gates and local equivalents match the workflows.
 
 ## Verification
 
-- `docker run` actionlint command passes on the repository.
+- actionlint 1.7.12 passes on the repository when run locally.
+- A PR run shows the `Lint workflows` step green on a clean tree and red on a
+  deliberately broken workflow expression.
 - `npm run build:firefox` followed by the web-ext lint command passes with
   `--warnings-as-errors`.
 - `npm run format:check` and `npm run lint` pass after the manifest edit.
@@ -83,9 +104,19 @@ Option 1 is chosen for speed and the smallest surface change.
 
 ## Risks and maintenance
 
-- Android 140 and 141 are no longer declared as supported. Those versions cannot
-  honor `data_collection_permissions` anyway, so the declaration matches reality.
-- Dependabot does not update Docker references inside workflow `run` steps.
-  Actionlint image updates are manual.
+- FlixMonkey does not support Firefox for Android. The `gecko_android` floor is a
+  linter accommodation only, because `data_collection_permissions` triggers the
+  Android warning and `--warnings-as-errors` turns it into a failure.
+- `raven-actions/actionlint` is a third-party action. It runs with the workflow's
+  `contents: read` token, and its SHA pin covers the composite steps and the
+  internal actions it calls. Dependabot updates the action pin like any other
+  `uses:` reference, but not the `version` input, so actionlint tool upgrades are
+  manual.
+- The action's `version` input defaults to `latest`, so an omitted input would
+  float. Keep `version: '1.7.12'` explicit.
+- The action installs the actionlint release from GitHub on a cold cache, so the
+  first run depends on GitHub release availability and npm registry access for
+  its tool-cache helper. Its internal `actions/cache` entry makes later runs
+  fast.
 - The web-ext version now appears in four places: the CI workflow, the store
   publish workflow, `AGENTS.md`, and `CONTRIBUTING.md`. Bump them together.
