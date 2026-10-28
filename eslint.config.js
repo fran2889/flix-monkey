@@ -29,6 +29,20 @@ const javascriptRules = {
     'max-params': ['error', 4],
 };
 
+// Group order only. Step-down order inside each group is a review convention;
+// never add public/private groups here.
+const classMemberOrder = [
+    'signature',
+    ['static-field', 'static-initialization'],
+    ['instance-field', 'abstract-field'],
+    'constructor',
+    'static-method',
+    'method',
+    ['get', 'set', 'accessor'],
+];
+
+const typeMemberOrder = ['signature', 'field', 'constructor', 'method'];
+
 // JSDoc is enforced on exported declarations, abstract members, and interface
 // signatures. Class members are optional.
 const exported = ':is(ExportNamedDeclaration, ExportDefaultDeclaration)';
@@ -69,6 +83,15 @@ const typescriptRules = {
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
     '@typescript-eslint/max-params': ['error', { max: 4 }],
+    '@typescript-eslint/member-ordering': [
+        'error',
+        {
+            default: { memberTypes: classMemberOrder, order: 'as-written' },
+            interfaces: { memberTypes: typeMemberOrder, order: 'as-written' },
+            typeLiterals: { memberTypes: typeMemberOrder, order: 'as-written' },
+        },
+    ],
+    '@typescript-eslint/adjacent-overload-signatures': 'error',
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
 };

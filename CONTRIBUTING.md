@@ -43,6 +43,10 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     npm run format
     ```
 
+    Code ordering for classes, interfaces, and module-level declarations follows
+    the [code ordering rules](./AGENTS.md#code-ordering); ESLint enforces the
+    group order, and step-down order is reviewed by hand.
+
 ## Pull Request Process
 
 1.  **Create a feature branch:**

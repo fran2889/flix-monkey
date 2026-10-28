@@ -23,7 +23,6 @@ async function userscriptBanner() {
         const iconBuffer = await sharp('src/assets/icons/icon.png').resize(48, 48).png().toBuffer();
         const iconBase64 = iconBuffer.toString('base64');
         let template = readFileSync('src/targets/userscript/metadata.ts', 'utf8');
-        // Strip license header from template
         template = template.replace(LICENSE_BLOCK_RE, '');
         return template
             .replace('__NAME__', displayName)

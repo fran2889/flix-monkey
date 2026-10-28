@@ -14,6 +14,14 @@ import type { ConfigManager } from '../config/config-manager';
  */
 export abstract class StreamingService {
     /**
+     * Whether decoration is enabled for this service.
+     *
+     * @param configManager - Current application configuration.
+     * @returns Whether decoration is enabled for this service.
+     */
+    abstract isEnabled(configManager: ConfigManager): boolean;
+
+    /**
      * Root domains or exact hostnames without a protocol, port, or path.
      * ServiceRegistry accepts an exact match or a subdomain of an entry.
      *
@@ -31,12 +39,4 @@ export abstract class StreamingService {
     get constants(): ServicePresentation {
         return Object.freeze({});
     }
-
-    /**
-     * Whether decoration is enabled for this service.
-     *
-     * @param configManager - Current application configuration.
-     * @returns Whether decoration is enabled for this service.
-     */
-    abstract isEnabled(configManager: ConfigManager): boolean;
 }

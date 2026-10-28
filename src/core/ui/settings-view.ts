@@ -157,6 +157,19 @@ export class SettingsView {
         return container;
     }
 
+    #createFieldRow(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
+        const fieldElement = document.createElement('div');
+        fieldElement.className = this.#getFieldClassName(row);
+
+        const label = this.#createFieldLabel(row);
+        fieldElement.appendChild(label);
+
+        const valueContainer = this.#createFieldValueContainer(row, settings);
+        fieldElement.appendChild(valueContainer);
+
+        return fieldElement;
+    }
+
     #getFieldClassName(row: SettingsFieldRow): string {
         if (this.#isActionRow(row)) return 'field field--actions';
 
@@ -181,6 +194,19 @@ export class SettingsView {
         return this.#createPlainLabel(text, onlyField, tooltip);
     }
 
+    #createSpacerLabel(): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        label.textContent = '\u00A0';
+        label.style.visibility = 'hidden';
+        return label;
+    }
+
+    #createLabelElement(): HTMLLabelElement {
+        const label = document.createElement('label');
+        label.className = 'field-label';
+        return label;
+    }
+
     #rowLabel(row: SettingsFieldRow): SettingsRowLabel {
         const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
         return {
@@ -193,13 +219,6 @@ export class SettingsView {
         if (row.fields.length !== 1) return undefined;
         const [field] = row.fields;
         return isSettingField(field) ? field : undefined;
-    }
-
-    #createSpacerLabel(): HTMLLabelElement {
-        const label = this.#createLabelElement();
-        label.textContent = '\u00A0';
-        label.style.visibility = 'hidden';
-        return label;
     }
 
     #createLinkedLabel(text: string, labelUrl: string, tooltip: string): HTMLLabelElement {
@@ -227,12 +246,6 @@ export class SettingsView {
         return label;
     }
 
-    #createLabelElement(): HTMLLabelElement {
-        const label = document.createElement('label');
-        label.className = 'field-label';
-        return label;
-    }
-
     #createFieldValueContainer(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
@@ -250,6 +263,21 @@ export class SettingsView {
 
     #createActionFields(fields: readonly ConfigField[]): HTMLElement[] {
         return fields.filter(isActionField).map(field => this.#createActionField(field));
+    }
+
+    #createActionField(field: ActionConfigField): HTMLButtonElement {
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.id = `fm-${field.key}`;
+        btn.textContent = field.actionLabel;
+        btn.addEventListener('click', () => {
+            if (field.key === 'clearCache') {
+                void this.#actions.onClearCache();
+            } else if (field.key === 'resetClients') {
+                void this.#actions.onResetClients();
+            }
+        });
+        return btn;
     }
 
     #createCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement {
@@ -270,59 +298,6 @@ export class SettingsView {
         }
 
         return checkboxes;
-    }
-
-    #createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[] {
-        return fields.map(field => {
-            if (isActionField(field)) return this.#createActionField(field);
-            if (field.suffix) return this.#createInputWithSuffix(field, settings);
-            return this.#createInput(field, settings);
-        });
-    }
-
-    #createFieldRow(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
-        const fieldElement = document.createElement('div');
-        fieldElement.className = this.#getFieldClassName(row);
-
-        const label = this.#createFieldLabel(row);
-        fieldElement.appendChild(label);
-
-        const valueContainer = this.#createFieldValueContainer(row, settings);
-        fieldElement.appendChild(valueContainer);
-
-        return fieldElement;
-    }
-
-    #createActionField(field: ActionConfigField): HTMLButtonElement {
-        const btn = document.createElement('button');
-        btn.className = 'action-btn';
-        btn.id = `fm-${field.key}`;
-        btn.textContent = field.actionLabel;
-        btn.addEventListener('click', () => {
-            if (field.key === 'clearCache') {
-                void this.#actions.onClearCache();
-            } else if (field.key === 'resetClients') {
-                void this.#actions.onResetClients();
-            }
-        });
-        return btn;
-    }
-
-    #createInputWithSuffix(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
-        const container = document.createElement('div');
-        container.className = 'input-with-suffix';
-
-        const input = this.#createInput(field, settings);
-        container.appendChild(input);
-
-        if (field.suffix) {
-            const suffix = document.createElement('span');
-            suffix.className = 'field-suffix';
-            suffix.textContent = field.suffix;
-            container.appendChild(suffix);
-        }
-
-        return container;
     }
 
     #createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
@@ -370,6 +345,31 @@ export class SettingsView {
 
     #settingValue(key: string, settings: Record<string, unknown>, defaultValue: unknown): unknown {
         return settings[key] !== undefined ? settings[key] : defaultValue;
+    }
+
+    #createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[] {
+        return fields.map(field => {
+            if (isActionField(field)) return this.#createActionField(field);
+            if (field.suffix) return this.#createInputWithSuffix(field, settings);
+            return this.#createInput(field, settings);
+        });
+    }
+
+    #createInputWithSuffix(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
+        const container = document.createElement('div');
+        container.className = 'input-with-suffix';
+
+        const input = this.#createInput(field, settings);
+        container.appendChild(input);
+
+        if (field.suffix) {
+            const suffix = document.createElement('span');
+            suffix.className = 'field-suffix';
+            suffix.textContent = field.suffix;
+            container.appendChild(suffix);
+        }
+
+        return container;
     }
 
     #createStatus(): HTMLElement {

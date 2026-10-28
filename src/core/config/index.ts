@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-// Re-export from the TypeScript files
 export type {
     ActionConfigField,
     ActionKey,
