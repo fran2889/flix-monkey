@@ -41,8 +41,6 @@ const classMemberOrder = [
     ['get', 'set', 'accessor'],
 ];
 
-// Construct signatures get their own rank after fields, mirroring the class
-// group order. The rule names this member type 'constructor'.
 const typeMemberOrder = ['signature', 'field', 'constructor', 'method'];
 
 // JSDoc is enforced on exported declarations, abstract members, and interface

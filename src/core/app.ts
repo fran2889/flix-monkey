@@ -71,7 +71,7 @@ export class FlixMonkeyApp {
 
     /** Bootstraps styling, navigation observers, initial decoration, and teardown wiring. */
     init(): void {
-        // Guards against duplicate observers and unload listeners; never reset.
+        // Never reset: a second init must fail, not stack observers and listeners.
         if (this.#initialised) throw new Error('FlixMonkeyApp already initialised');
         this.#initialised = true;
         this.#renderer.injectStyles();

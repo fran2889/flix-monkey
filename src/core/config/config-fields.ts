@@ -30,7 +30,6 @@ export const ROW_LABELS = {
 export type GroupKey = keyof typeof GROUPS;
 export type RowLabelKey = keyof typeof ROW_LABELS;
 
-// Type for row label keys - includes all possible row values used in config
 export type AllRowKeys = RowLabelKey | 'debug-settings';
 
 /** Select option as a named tuple with value and label */
@@ -307,7 +306,6 @@ export const CONFIG_FIELDS = [
     },
 ] as const satisfies readonly ConfigField[];
 
-// Type for config field keys
 export type ConfigFieldKey = (typeof CONFIG_FIELDS)[number]['key'];
 
 /**

@@ -112,6 +112,6 @@ export abstract class PlatformAdapter {
      * @param _data - Config key/value pairs.
      */
     setConfigData(_data: Record<string, StorageValue>): void {
-        // overridden in webextension.ts
+        // No-op by default
     }
 }
