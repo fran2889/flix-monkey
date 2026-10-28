@@ -15,6 +15,8 @@ Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest
 - Type check: `npm run type-check`
 - Test: `npm test`
 - Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
+- Lint workflows: `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667`
+- Lint the Firefox extension: `npm run build:firefox && npx --yes web-ext@10.7.0 lint --source-dir dist/firefox --warnings-as-errors`
 
 Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 
@@ -79,7 +81,7 @@ Issue and PR body shape is defined by the templates in [`.github/`](.github/), n
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
-- CI enforces six merge-gate jobs: type-check, lint-and-audit, build, test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
+- CI enforces six merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, and actionlint), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
 ### Releases

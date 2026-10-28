@@ -79,6 +79,14 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
       && npm run test:coverage
     ```
 
+    If you changed workflows or the Firefox manifest, also run:
+
+    ```bash
+    docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+    npm run build:firefox
+    npx --yes web-ext@10.7.0 lint --source-dir dist/firefox --warnings-as-errors
+    ```
+
 5.  **Submit your PR:**
     Push your branch and open a Pull Request against the `main` branch. Follow the
     [body template](.github/PULL_REQUEST_TEMPLATE.md) and its inline guidance.
