@@ -39,7 +39,6 @@ export class Title {
     readonly imdbVotes: number | undefined;
     readonly rtRating: number | undefined;
     readonly mcRating: number | undefined;
-    /** API source that produced this title, when known. */
     readonly source: string | undefined;
     readonly type: string | undefined;
 
