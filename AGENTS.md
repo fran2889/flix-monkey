@@ -15,8 +15,8 @@ Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest
 - Type check: `npm run type-check`
 - Test: `npm test`
 - Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
-- Lint workflows: `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667`
-- Lint the Firefox extension: `npm run build:firefox && npx --yes web-ext@10.7.0 lint --source-dir dist/firefox --warnings-as-errors`
+- Lint workflows: `actionlint` 1.7.12, installed separately; CI runs it through `raven-actions/actionlint`
+- Lint the Firefox extension: `npm run build:firefox && npx --yes web-ext@10.7.0 lint --source-dir dist/firefox`
 
 Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 

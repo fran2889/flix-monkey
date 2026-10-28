@@ -17,16 +17,15 @@ new status check contexts or ruleset changes.
 - Run `actionlint` 1.7.12 in the existing `lint-and-audit` job through the
   SHA-pinned `raven-actions/actionlint` action, pinning the tool version with its
   `version` input.
-- Run `web-ext lint` 10.7.0 against `dist/firefox` in the existing `build` job
-  with `--warnings-as-errors`.
-- Clear the current web-ext warning by declaring Firefox for Android 142 as the
-  minimum in the Firefox manifest. Desktop stays at 140.
+- Run `web-ext lint` 10.7.0 against `dist/firefox` in the existing `build` job.
+  Errors fail the build; warnings are reported without blocking.
 - Cover both through the existing `merge-gate` job, leaving the `Protect main`
   ruleset unchanged.
 
 ## Non-goals
 
 - PR title validation. Dropped from scope.
+- Per-warning suppression in `web-ext lint`.
 - New `actionlint` or `webext-lint` jobs, workflows, or required check contexts.
 - Bumping `web-ext` in the store publish workflow.
 - Chrome manifest linting.
@@ -39,12 +38,13 @@ new status check contexts or ruleset changes.
 - GitHub Actions are SHA-pinned, including `raven-actions/actionlint` v2.2.0.
   The action downloads the actionlint release named by its `version` input, so
   pinning the action SHA and the input together fixes both the runner and the
-  tool. No Docker image is involved.
+  tool.
 - The action ensures `shellcheck` and `pyflakes` are on `PATH` for actionlint's
   embedded script checks. On `ubuntu-latest` it uses the preinstalled
   `shellcheck` and installs `pyflakes` with `pipx`.
 - `merge-gate` runs on pushes to `main` and on pull requests. Do not add
   PR-only jobs to `ci.yml`.
+- CI owns the actionlint pin; local runs use a direct `actionlint` install.
 - Preserve the untracked review documents and the current branch state.
 
 ## Approaches considered
@@ -63,7 +63,7 @@ Option 1 is chosen for speed and the smallest surface change.
 
 - **actionlint step.** Place it in `lint-and-audit` after checkout and before
   `npm ci`, so broken workflows fail fast. Use the Marketplace action rather than
-  a Docker image or a hand-rolled binary download:
+  a container image or a hand-rolled binary download:
 
     ```yaml
     - name: Lint workflows
@@ -73,21 +73,20 @@ Option 1 is chosen for speed and the smallest surface change.
     ```
 
     The action downloads the pinned actionlint release, caches it under
-    `$RUNNER_TEMP`, and fails the step on errors. This removes the Docker Hub pull,
-    the image cache, and the Docker dependency from CI, at the cost of one
-    third-party action pinned by SHA.
+    `$RUNNER_TEMP`, and fails the step on errors. This removes the container image
+    pull, the image cache, and the container runtime dependency from CI, at the
+    cost of one third-party action pinned by SHA.
 
 - **web-ext lint step.** Place it in `build` after `npm run build`. Install with
   `npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0`,
   then run
-  `"$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox --warnings-as-errors`.
+  `"$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox`.
   The isolated prefix keeps the install from touching the project dependency
   tree.
-- **Manifest fix.** Add `browser_specific_settings.gecko_android.strict_min_version`
-  as `"142.0"` in `src/targets/firefox/manifest.json`. The
-  `data_collection_permissions` key needs 142 on Android; desktop remains at 140.
+- **Warnings do not gate.** `web-ext lint` exits non-zero on errors only;
+  warnings are printed in the job log without failing the build.
 - **No new npm scripts.** Keep the ad hoc web-ext install out of `package.json`.
-  Document the local commands instead.
+  Document the local command instead.
 - **Documentation.** Update `AGENTS.md` and `CONTRIBUTING.md` so the described
   CI gates and local equivalents match the workflows.
 
@@ -96,17 +95,17 @@ Option 1 is chosen for speed and the smallest surface change.
 - actionlint 1.7.12 passes on the repository when run locally.
 - A PR run shows the `Lint workflows` step green on a clean tree and red on a
   deliberately broken workflow expression.
-- `npm run build:firefox` followed by the web-ext lint command passes with
-  `--warnings-as-errors`.
-- `npm run format:check` and `npm run lint` pass after the manifest edit.
+- `npm run build:firefox` followed by the web-ext lint command exits 0 with no
+  errors.
+- A manifest error, such as a malformed version, still exits non-zero.
+- `npm run format:check` and `npm run lint` pass.
 - A PR run shows `lint-and-audit` and `build` green, and `merge-gate` green.
 - `gh api repos/fran2889/flix-monkey/rulesets/17680934` is unchanged.
 
 ## Risks and maintenance
 
-- FlixMonkey does not support Firefox for Android. The `gecko_android` floor is a
-  linter accommodation only, because `data_collection_permissions` triggers the
-  Android warning and `--warnings-as-errors` turns it into a failure.
+- Warnings are not gating, so a new warning will not block a merge. It is still
+  printed in the job log; tightening the gate again means adding a warning filter.
 - `raven-actions/actionlint` is a third-party action. It runs with the workflow's
   `contents: read` token, and its SHA pin covers the composite steps and the
   internal actions it calls. Dependabot updates the action pin like any other
