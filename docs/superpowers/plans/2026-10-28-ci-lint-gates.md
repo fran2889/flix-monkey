@@ -14,7 +14,7 @@
 
 - Start from `origin/main` (`5c5161c`) on a new branch named `ci/add-lint-gates`.
 - Do not commit `docs/ci-cd-review.md` or `docs/code-simplification-review.md`; they are unrelated untracked files.
-- The spec file and this plan are currently untracked and are committed in Task 3.
+- The spec file and this plan are committed with Task 3.
 
 ## Global Constraints
 
@@ -133,9 +133,13 @@ Append these steps after `- run: npm run build` in the `build` job:
 
 ```yaml
 - name: Install web-ext
-  run: npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0
+  # web-ext is not a devDependency because its advisories would keep the audit
+  # gate red. Install it outside the project tree so it cannot disturb the
+  # locked dependency tree.
+  run: npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0
 - name: Lint Firefox extension
-  run: npx --no-install web-ext lint --source-dir dist/firefox --warnings-as-errors
+  run: |
+      "$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox --warnings-as-errors
 ```
 
 - [ ] **Step 4: Rebuild and verify the strict lint passes**

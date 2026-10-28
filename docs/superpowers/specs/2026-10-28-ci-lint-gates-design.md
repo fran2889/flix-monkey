@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-28
 
-**Status:** proposed
+**Status:** accepted
 
 **Size:** small change
 
@@ -59,8 +59,11 @@ Option 1 is chosen for speed and the smallest surface change.
   `npm ci`, so broken workflows fail fast. Command:
   `docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667`.
 - **web-ext lint step.** Place it in `build` after `npm run build`. Install with
-  `npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0`,
-  then run `npx --no-install web-ext lint --source-dir dist/firefox --warnings-as-errors`.
+  `npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0`,
+  then run
+  `"$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox --warnings-as-errors`.
+  The isolated prefix keeps the install from touching the project dependency
+  tree.
 - **Manifest fix.** Add `browser_specific_settings.gecko_android.strict_min_version`
   as `"142.0"` in `src/targets/firefox/manifest.json`. The
   `data_collection_permissions` key needs 142 on Android; desktop remains at 140.
@@ -84,5 +87,5 @@ Option 1 is chosen for speed and the smallest surface change.
   honor `data_collection_permissions` anyway, so the declaration matches reality.
 - Dependabot does not update Docker references inside workflow `run` steps.
   Actionlint image updates are manual.
-- The web-ext version now appears in three places: this workflow, the publish
-  workflow, and the docs. Bump them together.
+- The web-ext version now appears in four places: the CI workflow, the store
+  publish workflow, `AGENTS.md`, and `CONTRIBUTING.md`. Bump them together.
