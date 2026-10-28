@@ -6,7 +6,7 @@
 /**
  * Service-specific presentation constants for overlay rendering.
  */
-export type ServicePresentation = {
+export interface ServicePresentation {
     TOP_10_SELECTORS?: readonly string[];
     TOP_10_OFFSET?: string;
-};
+}

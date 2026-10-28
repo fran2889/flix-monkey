@@ -2,17 +2,12 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { PlatformAdapter } from '../../platform/adapter';
 import type { ClientStatus } from '../../types/api';
-import type { ConfigManager } from '../config/config-manager';
 import { ApiSource } from '../constants';
-import type { DisabledClientsManager } from '../disabled-clients';
-import type { IdOverrideManager } from '../id-override-manager';
-import type { Logger } from '../logger';
 import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
-import { BaseApiClient } from './base-api-client';
+import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /**
@@ -50,30 +45,9 @@ function parseRatings(ratings: unknown, sourcePattern: RegExp): number | undefin
  * API client for OMDb service that provides movie and series information with ratings.
  */
 export class OmdbApiClient extends BaseApiClient {
-    /**
-     * @param adapter - Platform adapter for HTTP and storage.
-     * @param config - Application configuration.
-     * @param disabledManager - Tracks temporarily disabled clients.
-     * @param logger - Required; every lookup and failure path logs.
-     * @param overrideManager - Manager for ID overrides.
-     */
-    constructor(
-        adapter: PlatformAdapter,
-        config: ConfigManager,
-        disabledManager: DisabledClientsManager,
-        logger: Logger,
-        overrideManager: IdOverrideManager
-    ) {
+    constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
-        super(
-            adapter,
-            config,
-            disabledManager,
-            logger,
-            overrideManager,
-            new RequestQueue(adapter, minIntervalMs, syncKey),
-            ApiSource.OMDB
-        );
+        super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.OMDB);
     }
 
     /**

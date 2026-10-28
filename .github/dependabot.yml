@@ -36,3 +36,9 @@ updates:
           semver-patch-days: 5
           semver-minor-days: 10
           semver-major-days: 20
+      ignore:
+          # @typescript-eslint/parser requires typescript >=4.8.4 <6.1.0.
+          # Lift this cap only after that range allows a newer TypeScript.
+          - dependency-name: typescript
+            versions:
+                - ">=6.1.0"

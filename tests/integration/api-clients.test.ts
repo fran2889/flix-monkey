@@ -4,7 +4,7 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from '../../src/core/api/index';
+import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } from '../../src/core/api/index';
 import { ConfigManager } from '../../src/core/config/index';
 import type { ApiSourceType, TitleTypeType } from '../../src/core/constants';
 import { ApiSource, TitleType } from '../../src/core/constants';
@@ -105,6 +105,14 @@ describe('api-clients integration', () => {
         );
     });
 
+    const clientDeps = (): ApiClientDeps => ({
+        adapter: adapter as PlatformAdapter,
+        config: configManager,
+        disabledManager,
+        logger,
+        overrideManager,
+    });
+
     describe('movie with all ratings', () => {
         const TITLE = 'The Godfather';
         const common = {
@@ -122,13 +130,7 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             assertNonNullTitle(result);
@@ -138,13 +140,7 @@ describe('api-clients integration', () => {
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             assertNonNullTitle(result);
@@ -154,13 +150,7 @@ describe('api-clients integration', () => {
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             assertNonNullTitle(result);
@@ -187,39 +177,21 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
@@ -230,36 +202,18 @@ describe('api-clients integration', () => {
         const TITLE = 'xyznonexistenttitle12345';
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             expect(await client.search(TITLE)).toBeUndefined();
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.search(TITLE);
             expect(result).toBeUndefined();
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             expect(await client.search(TITLE)).toBeUndefined();
         });
     });
@@ -268,13 +222,7 @@ describe('api-clients integration', () => {
         const INVALID_ID = 'tt0000000';
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const searchResult = new Title({ imdbId: INVALID_ID, displayTitle: 'nonexistent' });
             const result = await client.getDetails(searchResult);
             expect(result).toBeUndefined();
@@ -283,24 +231,12 @@ describe('api-clients integration', () => {
 
     describe('invalid API key', () => {
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                badKeyConfigManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient({ ...clientDeps(), config: badKeyConfigManager });
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                badKeyConfigManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient({ ...clientDeps(), config: badKeyConfigManager });
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
     });
@@ -318,39 +254,21 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
         it('OMDB', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
@@ -373,13 +291,7 @@ describe('api-clients integration', () => {
         };
 
         it('XMDB', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
@@ -389,13 +301,7 @@ describe('api-clients integration', () => {
         // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
         // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
         it('OMDB: does not resolve to expected ID', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expect(result).toBeInstanceOf(Title);
@@ -403,13 +309,7 @@ describe('api-clients integration', () => {
         });
 
         it('Agregarr', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.AGREGARR, commonAgregarr);
@@ -418,39 +318,21 @@ describe('api-clients integration', () => {
 
     describe('imdbVotes verification', () => {
         it('XMDB returns imdbVotes', async () => {
-            const client = new XmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch('The Godfather');
             assertNonNullTitle(result);
             _expectImdbVotes(result.imdbVotes);
         });
 
         it('OMDB returns imdbVotes', async () => {
-            const client = new OmdbApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch('The Godfather');
             assertNonNullTitle(result);
             _expectImdbVotes(result.imdbVotes);
         });
 
         it('Agregarr returns imdbVotes', async () => {
-            const client = new AgregarrApiClient(
-                adapter as PlatformAdapter,
-                configManager,
-                disabledManager,
-                logger,
-                overrideManager
-            );
+            const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch('The Godfather');
             assertNonNullTitle(result);
             _expectImdbVotes(result.imdbVotes);

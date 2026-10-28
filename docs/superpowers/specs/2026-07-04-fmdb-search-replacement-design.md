@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-04
 **Author:** Mistral Vibe (with user input)
-**Status:** Draft
+**Status:** Implemented
 **Related Issue:** Replace IMDb suggestions API with FM-DB API
 
 ---

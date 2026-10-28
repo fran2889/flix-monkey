@@ -13,12 +13,43 @@ import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
 /**
+ * Dependencies shared by every API client.
+ */
+export interface ApiClientDeps {
+    adapter: PlatformAdapter;
+    config: ConfigManager;
+    disabledManager: DisabledClientsManager;
+    logger: Logger;
+    overrideManager: IdOverrideManager;
+}
+
+/**
  * API client operations required by consumers such as ApiClientManager.
  */
 export interface ApiClient {
     readonly source: ApiSourceType;
+
+    /**
+     * Reports whether this client can be selected for requests.
+     *
+     * @returns Health result used for provider selection.
+     */
     getStatus(): Promise<ClientStatus>;
+
+    /**
+     * Fetches a hydrated title, optionally short-circuiting search with an IMDb ID.
+     *
+     * @param displayTitle - Title as shown by the streaming service.
+     * @param imdbId - Optional IMDb ID.
+     * @returns Hydrated title, or undefined when no match is found.
+     */
     fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined>;
+
+    /**
+     * Disables this client for the configured cooldown.
+     *
+     * @returns Promise that resolves when the client is disabled.
+     */
     disable(): Promise<void>;
 }
 
@@ -38,29 +69,12 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #logger: Logger;
     readonly #overrideManager: IdOverrideManager;
 
-    /**
-     * @param adapter - Platform adapter for HTTP and storage.
-     * @param config - Application configuration.
-     * @param disabledManager - Tracks temporarily disabled clients.
-     * @param logger - Required; every lookup and failure path logs.
-     * @param overrideManager - Manager for ID overrides.
-     * @param queue - Rate-limited request queue for this client.
-     * @param source - ApiSource identifier.
-     */
-    constructor(
-        adapter: PlatformAdapter,
-        config: ConfigManager,
-        disabledManager: DisabledClientsManager,
-        logger: Logger,
-        overrideManager: IdOverrideManager,
-        queue: RequestQueue,
-        source: ApiSourceType
-    ) {
-        this.#adapter = adapter;
-        this.#config = config;
-        this.#disabledManager = disabledManager;
-        this.#logger = logger;
-        this.#overrideManager = overrideManager;
+    constructor(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType) {
+        this.#adapter = deps.adapter;
+        this.#config = deps.config;
+        this.#disabledManager = deps.disabledManager;
+        this.#logger = deps.logger;
+        this.#overrideManager = deps.overrideManager;
         this.#queue = queue;
         this.#source = source;
     }
@@ -107,7 +121,11 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    /** A health result suitable for provider selection. */
+    /**
+     * Reports whether this client is healthy enough for provider selection.
+     *
+     * @returns Health result; unhealthy while the client is temporarily disabled.
+     */
     async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -167,17 +185,14 @@ export abstract class BaseApiClient implements ApiClient {
      */
     abstract getDetails(_searchTitle: Title): Promise<Title | undefined>;
 
-    /** ApiSource identifier for this client. */
     get source(): ApiSourceType {
         return this.#source;
     }
 
-    /** Application configuration. */
     get config(): ConfigManager {
         return this.#config;
     }
 
-    /** Logger instance. */
     get logger(): Logger {
         return this.#logger;
     }

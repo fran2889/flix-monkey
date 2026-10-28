@@ -38,7 +38,7 @@
 - Consumes: `extractDisneyPlusTitle(tile: Element): string|null`
 - Produces: The first non-empty descendant image `alt`, or `null` when absent.
 
-- [ ] **Step 1: Write the failing unit tests**
+- [x] **Step 1: Write the failing unit tests**
 
 Replace the aria-label-only extraction cases with:
 
@@ -64,13 +64,13 @@ it('rejects a Disney+ card without a clean title image', () => {
 });
 ```
 
-- [ ] **Step 2: Run the unit tests to verify they fail**
+- [x] **Step 2: Run the unit tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js -t "Disney+"`
 
 Expected: FAIL because `extractDisneyPlusTitle` still derives its value from the aria-label.
 
-- [ ] **Step 3: Implement the minimal clean-title extractor**
+- [x] **Step 3: Implement the minimal clean-title extractor**
 
 Replace the aria-label cleanup body with:
 
@@ -82,13 +82,13 @@ export function extractDisneyPlusTitle(tile) {
 
 Keep the `SHELF_CARD` selector and shelf-item parent container unchanged.
 
-- [ ] **Step 4: Run the focused unit tests to verify they pass**
+- [x] **Step 4: Run the focused unit tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js -t "Disney+"`
 
 Expected: PASS, including all five badge patterns and the missing-title case.
 
-- [ ] **Step 5: Commit the extraction change**
+- [x] **Step 5: Commit the extraction change**
 
 ```bash
 git add src/core/surfaces.js tests/unit/core/surfaces.test.js
@@ -109,7 +109,7 @@ git commit -m "fix(surfaces): use disney plus image title metadata"
 - Consumes: a wrapper matching `[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]`.
 - Produces: a surface whose title is the second child text of `[data-testid="cw-set-item-metadata"]` and whose container is the enclosing `[data-testid="set-shelf-item"]`.
 
-- [ ] **Step 1: Write the failing Continue Watching unit test**
+- [x] **Step 1: Write the failing Continue Watching unit test**
 
 ```js
 it('discovers a Continue Watching title from its metadata', () => {
@@ -131,13 +131,13 @@ it('discovers a Continue Watching title from its metadata', () => {
 });
 ```
 
-- [ ] **Step 2: Run the Continue Watching test to verify it fails**
+- [x] **Step 2: Run the Continue Watching test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js -t "Continue Watching title"`
 
 Expected: FAIL because `DISNEY_PLUS_SURFACES` has no Continue Watching definition.
 
-- [ ] **Step 3: Add the Continue Watching surface definition**
+- [x] **Step 3: Add the Continue Watching surface definition**
 
 Add this definition beside `SHELF_CARD`:
 
@@ -152,23 +152,23 @@ CONTINUE_WATCHING: Object.freeze({
 }),
 ```
 
-- [ ] **Step 4: Run the Continue Watching test to verify it passes**
+- [x] **Step 4: Run the Continue Watching test to verify it passes**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js -t "Continue Watching title"`
 
 Expected: PASS with the metadata title and the shelf-item container.
 
-- [ ] **Step 5: Extend the fixture and UI expectation**
+- [x] **Step 5: Extend the fixture and UI expectation**
 
 Update standard cards with title-art image `alt` values. Add a `continue_watching` section with a `cw-set-item-wrapper`, a playback link, and a metadata link whose second child is `How I Met Your Mother`. Update the UI expected title list to include that title, and increase both overlay counts from `3` to `4`.
 
-- [ ] **Step 6: Run the focused UI test to verify it passes**
+- [x] **Step 6: Run the focused UI test to verify it passes**
 
 Run: `npx vitest run tests/ui/disneyplus-browse.ui.test.js`
 
 Expected: PASS with four discovered titles and four shelf-item child overlays.
 
-- [ ] **Step 7: Commit the Continue Watching support**
+- [x] **Step 7: Commit the Continue Watching support**
 
 ```bash
 git add src/core/surfaces.js tests/unit/core/surfaces.test.js tests/fixtures/disneyplus-browse.html tests/ui/disneyplus-browse.ui.test.js
@@ -189,25 +189,25 @@ git commit -m "fix(surfaces): support disney plus continue watching"
 - Consumes: completed clean standard-card extraction and Continue Watching discovery.
 - Produces: evidence that the project remains formatted, lint-clean, tested, and buildable.
 
-- [ ] **Step 1: Run focused Disney+ tests**
+- [x] **Step 1: Run focused Disney+ tests**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js tests/ui/disneyplus-browse.ui.test.js`
 
 Expected: PASS with no failed Disney+ surface tests.
 
-- [ ] **Step 2: Run static checks**
+- [x] **Step 2: Run static checks**
 
 Run: `npm run lint && npm run format:check`
 
 Expected: Both commands exit with status 0.
 
-- [ ] **Step 3: Run the complete test suite and build**
+- [x] **Step 3: Run the complete test suite and build**
 
 Run: `npm test && npm run build`
 
 Expected: Both commands exit with status 0, and the build produces all three distribution targets.
 
-- [ ] **Step 4: Commit formatter-only changes if they exist**
+- [x] **Step 4: Commit formatter-only changes if they exist**
 
 ```bash
 git status --short

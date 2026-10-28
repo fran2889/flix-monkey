@@ -12,7 +12,7 @@ import { vi } from 'vitest';
  * Use this type when casting the imported browser from 'webextension-polyfill'
  * after setting up vi.mock('webextension-polyfill', ...).
  */
-export type MockedBrowser = {
+export interface MockedBrowser {
     storage: {
         local: {
             get: Mock<(_keys?: null | string | string[] | Record<string, unknown>) => Promise<Record<string, unknown>>>;
@@ -24,7 +24,7 @@ export type MockedBrowser = {
         sendMessage: Mock<(_message: unknown) => Promise<unknown>>;
         id: string;
     };
-};
+}
 
 /**
  * Create a mock webextension-polyfill module with basic browser APIs.

@@ -1,9 +1,11 @@
 # Testing Infrastructure Expansion Plan
 
 ## Overview
+
 Significantly expand test coverage, particularly for critical logic, and enforce quality through thresholds.
 
 ## Tasks
+
 1. **Title Class**: Expand `tests/unit/core/title.test.js` to cover rating normalization, `isBetterThan` logic, and `fromJSON` serialization.
 2. **Coverage Enforcement**: Add `thresholds` to `vitest.config.js`.
 3. **Concurrency/Critical Path**:
@@ -14,6 +16,7 @@ Significantly expand test coverage, particularly for critical logic, and enforce
     - Consolidate redundant mocks in `tests/mocks/`.
 
 ## Verification
+
 - Run `npm run test:coverage` and confirm coverage meets the new thresholds.
 - Verify title unit tests cover all logic branches.
 - Verify concurrency and navigation tests pass.

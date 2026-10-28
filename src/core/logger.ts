@@ -11,9 +11,6 @@ export class Logger {
     readonly #prefix = '[FlixMonkey]';
     readonly #adapter: PlatformAdapter;
 
-    /**
-     * @param adapter - Platform adapter used to read the debug setting.
-     */
     constructor(adapter: PlatformAdapter) {
         this.#adapter = adapter;
     }

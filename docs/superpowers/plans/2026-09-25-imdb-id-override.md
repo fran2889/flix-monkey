@@ -71,7 +71,7 @@
     - `getImdbId(displayTitle: string): Promise<string \| null>`
     - `setImdbId(displayTitle: string, imdbId: string): Promise<void>`
 
-- [ ] **Step 1: Write the failing test for getImdbId with no override**
+- [x] **Step 1: Write the failing test for getImdbId with no override**
 
 ```javascript
 /**
@@ -108,12 +108,12 @@ describe('IdOverrideManager', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: FAIL with "Cannot find module"/"IdOverrideManager is not defined"
 
-- [ ] **Step 3: Write minimal implementation of IdOverrideManager**
+- [x] **Step 3: Write minimal implementation of IdOverrideManager**
 
 ```javascript
 /**
@@ -174,7 +174,7 @@ export class IdOverrideManager {
 }
 ```
 
-- [ ] **Step 4: Fix the slugify import**
+- [x] **Step 4: Fix the slugify import**
 
 Check `src/core/utils.js` for `slugify` export. If it's a pure function, import it. If it has dependencies, either:
 
@@ -195,12 +195,12 @@ export class IdOverrideManager {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
 
-- [ ] **Step 6: Add test for setImdbId**
+- [x] **Step 6: Add test for setImdbId**
 
 Add to `tests/unit/id-override-manager.test.js`:
 
@@ -216,12 +216,12 @@ describe('setImdbId', () => {
 });
 ```
 
-- [ ] **Step 7: Run tests again**
+- [x] **Step 7: Run tests again**
 
 Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
 
-- [ ] **Step 8: Add test for special characters in title**
+- [x] **Step 8: Add test for special characters in title**
 
 Add test for Unicode/special chars:
 
@@ -235,7 +235,7 @@ it('handles titles with special characters', async () => {
 });
 ```
 
-- [ ] **Step 9: Run tests and commit**
+- [x] **Step 9: Run tests and commit**
 
 Run: `npm test -- --run tests/unit/id-override-manager.test.js`
 Expected: PASS
@@ -261,7 +261,7 @@ git commit -m "feat: add IdOverrideManager for per-title IMDb ID overrides"
 - Consumes: `IdOverrideManager` instance passed to constructor
 - Produces: Modified `BaseApiClient.fetch()` that checks override before search
 
-- [ ] **Step 1: Write failing test for override path**
+- [x] **Step 1: Write failing test for override path**
 
 Add to `tests/unit/api-clients.test.js`:
 
@@ -291,11 +291,11 @@ describe('BaseApiClient with override', () => {
 });
 ```
 
-- [ ] **Step 2: Check current test structure**
+- [x] **Step 2: Check current test structure**
 
 Read `tests/unit/api-clients.test.js` to understand existing test patterns and mock structure.
 
-- [ ] **Step 3: Modify BaseApiClient constructor and fetch method**
+- [x] **Step 3: Modify BaseApiClient constructor and fetch method**
 
 In `src/core/api-clients.js`:
 
@@ -366,7 +366,7 @@ export class BaseApiClient {
 }
 ```
 
-- [ ] **Step 4: Update subclass constructors to pass overrideManager**
+- [x] **Step 4: Update subclass constructors to pass overrideManager**
 
 In `XmdbApiClient`, `OmdbApiClient`, `AgregarrApiClient`:
 
@@ -388,12 +388,12 @@ export class XmdbApiClient extends BaseApiClient {
 // Same for OmdbApiClient and AgregarrApiClient
 ```
 
-- [ ] **Step 5: Run existing tests to ensure no regressions**
+- [x] **Step 5: Run existing tests to ensure no regressions**
 
 Run: `npm test -- --run tests/unit/api-clients.test.js`
 Expected: PASS (or fix any failures)
 
-- [ ] **Step 6: Add proper test for override path**
+- [x] **Step 6: Add proper test for override path**
 
 Now that we know the test structure, add proper test:
 
@@ -428,12 +428,12 @@ describe('BaseApiClient fetch with override', () => {
 });
 ```
 
-- [ ] **Step 7: Run all api-clients tests**
+- [x] **Step 7: Run all api-clients tests**
 
 Run: `npm test -- --run tests/unit/api-clients.test.js`
 Expected: PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/api-clients.js
@@ -453,7 +453,7 @@ git commit -m "feat(api): add override path to BaseApiClient.fetch()"
 - Consumes: `IdOverrideManager` instance
 - Produces: Modified manager that passes overrideManager to clients
 
-- [ ] **Step 1: Modify ApiClientManager constructor**
+- [x] **Step 1: Modify ApiClientManager constructor**
 
 ```javascript
 import { IdOverrideManager } from './id-override-manager.js';
@@ -494,7 +494,7 @@ export class ApiClientManager {
 }
 ```
 
-- [ ] **Step 2: Update getData to pass overrideManager context if needed**
+- [x] **Step 2: Update getData to pass overrideManager context if needed**
 
 Actually, looking at the architecture, the overrideManager is already injected into the client via constructor. The ApiClientManager doesn't need to do anything special in getData. The client already has the overrideManager.
 
@@ -511,7 +511,7 @@ So the client is created first, then passed to ApiClientManager. The overrideMan
 
 **Revised Task 3**: Actually, we might not need to modify ApiClientManager at all. The overrideManager is passed to the client at construction time. Let's verify by checking the current flow.
 
-- [ ] **Step 3: Verify if ApiClientManager needs modification**
+- [x] **Step 3: Verify if ApiClientManager needs modification**
 
 Read `src/core/api-manager.js` - does it create clients or just use them? If it only uses pre-created clients, then no modification needed here.
 
@@ -534,7 +534,7 @@ If ApiClientManager creates clients internally, then we need to pass overrideMan
 - Consumes: `IdOverrideManager` instance
 - Produces: Modified `createApiClient` that passes overrideManager to clients
 
-- [ ] **Step 1: Modify createApiClient to accept overrideManager**
+- [x] **Step 1: Modify createApiClient to accept overrideManager**
 
 In `src/core/app.js`:
 
@@ -551,7 +551,7 @@ function createApiClient(config, disabledManager, adapter, logger, overrideManag
 }
 ```
 
-- [ ] **Step 2: Modify startApp to create and pass overrideManager**
+- [x] **Step 2: Modify startApp to create and pass overrideManager**
 
 ```javascript
 export function startApp(adapter) {
@@ -579,12 +579,12 @@ export function startApp(adapter) {
 }
 ```
 
-- [ ] **Step 3: Run tests to ensure no regressions**
+- [x] **Step 3: Run tests to ensure no regressions**
 
 Run: `npm test`
 Expected: All existing tests pass (or fix any failures)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/app.js
@@ -605,7 +605,7 @@ git commit -m "feat(app): inject IdOverrideManager into API client creation"
 - Consumes: `overrideManager` and `onEditClick`, `onRefreshClick` handlers
 - Produces: Modified overlay with ✏️ and ↻ icons on IMDb badge hover
 
-- [ ] **Step 1: Write failing test for icon visibility**
+- [x] **Step 1: Write failing test for icon visibility**
 
 Add to `tests/ui/overlay.test.js`:
 
@@ -623,11 +623,11 @@ describe('Overlay with override UI', () => {
 });
 ```
 
-- [ ] **Step 2: Check existing overlay test structure**
+- [x] **Step 2: Check existing overlay test structure**
 
 Read `tests/ui/overlay.test.js` to understand existing patterns.
 
-- [ ] **Step 3: Modify OverlayRenderer to accept handlers**
+- [x] **Step 3: Modify OverlayRenderer to accept handlers**
 
 In `src/core/overlay.js`:
 
@@ -677,7 +677,7 @@ export class OverlayRenderer {
 }
 ```
 
-- [ ] **Step 4: Modify createOverlayElement to add icons**
+- [x] **Step 4: Modify createOverlayElement to add icons**
 
 In `src/core/ui/overlay-elements.js`:
 
@@ -791,7 +791,7 @@ function setupHoverTimer(badgeElement, iconContainer) {
 }
 ```
 
-- [ ] **Step 5: Add CSS for icon badges**
+- [x] **Step 5: Add CSS for icon badges**
 
 In `src/core/ui/overlay-styles.js`, add styles for `.fm-icon-badge`:
 
@@ -817,12 +817,12 @@ function buildOverlayStyles({ overlayClass, corner, top10Selectors, top10Offset 
 }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/overlay.js src/core/ui/overlay-elements.js src/core/ui/overlay-styles.js
@@ -842,7 +842,7 @@ git commit -m "feat(ui): add edit and refresh icons to IMDb badge overlay"
 - Consumes: `IdOverrideManager` from startApp
 - Produces: Handler functions for edit and refresh
 
-- [ ] **Step 1: Modify FlixMonkeyApp to accept overrideManager**
+- [x] **Step 1: Modify FlixMonkeyApp to accept overrideManager**
 
 ```javascript
 export class FlixMonkeyApp {
@@ -970,7 +970,7 @@ export class FlixMonkeyApp {
 }
 ```
 
-- [ ] **Step 2: Modify startApp to pass overrideManager to FlixMonkeyApp**
+- [x] **Step 2: Modify startApp to pass overrideManager to FlixMonkeyApp**
 
 In `src/core/app.js`:
 
@@ -989,12 +989,12 @@ const app = new FlixMonkeyApp(
 );
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/app.js
@@ -1011,7 +1011,7 @@ git commit -m "feat: wire up override manager and UI handlers in FlixMonkeyApp"
 - Modify: `tests/unit/api-clients.test.js`
 - Modify: `tests/unit/overlay.test.js`
 
-- [ ] **Step 1: Complete IdOverrideManager tests**
+- [x] **Step 1: Complete IdOverrideManager tests**
 
 Ensure `tests/unit/id-override-manager.test.js` covers:
 
@@ -1021,7 +1021,7 @@ Ensure `tests/unit/id-override-manager.test.js` covers:
 - Special characters in titles
 - Empty/null inputs
 
-- [ ] **Step 2: Add tests for BaseApiClient override path**
+- [x] **Step 2: Add tests for BaseApiClient override path**
 
 In `tests/unit/api-clients.test.js`:
 
@@ -1029,7 +1029,7 @@ In `tests/unit/api-clients.test.js`:
 - Test that normal path uses search when no override
 - Test error handling with override
 
-- [ ] **Step 3: Add tests for extractImdbId**
+- [x] **Step 3: Add tests for extractImdbId**
 
 Add tests for the helper function:
 
@@ -1052,12 +1052,12 @@ describe('extractImdbId', () => {
 });
 ```
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 Run: `npm test`
 Expected: All tests pass with 90%+ coverage
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/id-override-manager.test.js tests/unit/api-clients.test.js tests/unit/app.test.js
@@ -1068,17 +1068,17 @@ git commit -m "test: add tests for IMDb ID override functionality"
 
 ## Task 7: Final Integration Test
 
-- [ ] **Step 1: Build all targets**
+- [x] **Step 1: Build all targets**
 
 Run: `npm run build`
 Expected: All three targets (userscript, firefox, chrome) build successfully
 
-- [ ] **Step 2: Run full test suite**
+- [x] **Step 2: Run full test suite**
 
 Run: `npm test`
 Expected: All tests pass
 
-- [ ] **Step 3: Manual verification (optional)**
+- [x] **Step 3: Manual verification (optional)**
 - Load extension/userscript on Netflix page
 - Find a title with wrong rating
 - Hover IMDb badge, wait 1s
@@ -1087,7 +1087,7 @@ Expected: All tests pass
 - Verify rating updates
 - Click ↻, verify refresh works
 
-- [ ] **Step 4: Commit final integration**
+- [x] **Step 4: Commit final integration**
 
 ```bash
 git add .

@@ -31,7 +31,7 @@ const logger = new Logger(adapter);
     const cacheManager = new CacheManager(adapter, config, logger);
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
-    const ui = new SettingsUI(adapter, logger, cacheManager, disabledClientsManager);
+    const ui = new SettingsUI({ adapter, logger, cacheManager, disabledClientsManager });
     await ui.render(document.body);
 })().catch((error: unknown) => {
     logger.error('FlixMonkey options page failed to start', error);

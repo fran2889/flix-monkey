@@ -4,7 +4,7 @@
  */
 import type { PlatformAdapter } from '../platform/adapter';
 import type { BaseApiClient } from './api/base-api-client';
-import { AgregarrApiClient, OmdbApiClient, XmdbApiClient } from './api/index';
+import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } from './api/index';
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
@@ -45,15 +45,7 @@ export class FlixMonkeyApp {
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
 
-    /**
-     * @param logger - Logger instance
-     * @param cache - Cache manager instance
-     * @param fadeManager - Fade manager instance
-     * @param overrideManager - ID override manager instance
-     * @param renderer - Overlay renderer instance
-     * @param surfaces - Surface manager instance
-     * @param api - API client manager instance
-     */
+    // eslint-disable-next-line @typescript-eslint/max-params -- single wiring point, and startApp() is its only caller
     constructor(
         logger: Logger,
         cache: CacheManagerType,
@@ -204,10 +196,12 @@ export class FlixMonkeyApp {
         const existing = this.#inFlight.get(dedupKey);
         if (existing) return existing;
 
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
         const timeout = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+            timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
         });
         const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+            clearTimeout(timeoutId);
             this.#inFlight.delete(dedupKey);
         });
         this.#inFlight.set(dedupKey, request);
@@ -234,30 +228,27 @@ export class FlixMonkeyApp {
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
         this.#renderer.applyFade(container as HTMLElement, shouldFade);
         (container as HTMLElement).dataset.fmKey = dedupKey;
-        const displayTitle = data.displayTitle;
-        this.#renderer.injectOverlay(
-            container as HTMLElement,
-            data,
-            (dt: string) => {
+        this.#renderer.injectOverlay(container as HTMLElement, data, {
+            displayTitle: data.displayTitle,
+            onEditClick: (dt: string): void => {
                 this.#handleEditClick(dt, data.imdbId).catch(err =>
                     this.#logger.error(`Failed to edit IMDb ID for "${dt}"`, err)
                 );
             },
-            (dt: string) => {
+            onRefreshClick: (dt: string): void => {
                 this.#handleRefreshClick(dt).catch(err =>
                     this.#logger.error(`Failed to refresh ratings for "${dt}"`, err)
                 );
             },
-            displayTitle,
-            showFadeToggle ? fadeOverride : undefined,
-            showFadeToggle
+            fadeToggleState: showFadeToggle ? fadeOverride : undefined,
+            onFadeToggleClick: showFadeToggle
                 ? (el: HTMLElement): void => {
                       this.#handleFadeToggleClick(dedupKey, data.imdbRating, el).catch(
                           /* istanbul ignore next */ () => undefined
                       );
                   }
-                : undefined
-        );
+                : undefined,
+        });
     }
 
     async #handleFadeToggleClick(
@@ -266,7 +257,7 @@ export class FlixMonkeyApp {
         toggleBadgeEl: HTMLElement
     ): Promise<void> {
         const domState = toggleBadgeEl.dataset.state;
-        const currentState: FadeOverrideState = domState === 'auto' ? undefined : (domState as 'always' | 'never');
+        const currentState: FadeOverrideState = domState === 'always' || domState === 'never' ? domState : undefined;
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
         toggleBadgeEl.dataset.state = nextState ?? 'auto';
@@ -347,12 +338,10 @@ export class FlixMonkeyApp {
         });
     }
 
-    /** @returns CacheManager */
     get cacheManager(): CacheManagerType {
         return this.#cache;
     }
 
-    /** @returns DisabledClientsManager */
     get disabledManager(): DisabledClientsManagerType {
         return this.#api.disabledManager;
     }
@@ -361,31 +350,23 @@ export class FlixMonkeyApp {
 /**
  * Builds the API client for the provider selected in config.
  *
- * @param adapter - Platform adapter for HTTP and storage.
- * @param config - Application configuration.
- * @param disabledManager - Tracks temporarily disabled clients.
- * @param logger - Required; client construction and fallback paths log.
- * @param overrideManager - Manager for ID overrides.
+ * @param deps - Dependencies shared by every API client.
  * @returns Client for the configured provider, defaulting to Agregarr.
  */
-function createApiClient(
-    adapter: PlatformAdapter,
-    config: ConfigManager,
-    disabledManager: DisabledClientsManagerType,
-    logger: Logger,
-    overrideManager: IdOverrideManagerType
-): BaseApiClient {
-    const provider = config.get('apiClient').trim().toLowerCase();
+function createApiClient(deps: ApiClientDeps): BaseApiClient {
+    const provider = deps.config.get('apiClient').trim().toLowerCase();
     const clientMap = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
     };
     const ClientClass = clientMap[provider as keyof typeof clientMap] ?? AgregarrApiClient;
-    return new ClientClass(adapter, config, disabledManager, logger, overrideManager);
+    return new ClientClass(deps);
 }
 
 /**
+ * Starts the application for the detected streaming service.
+ *
  * @param adapter - Platform adapter
  * @returns FlixMonkeyApp or undefined if service not detected or not enabled
  */
@@ -403,7 +384,14 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     const cache = new CacheManager(adapter, configManager, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
-    const client = createApiClient(adapter, configManager, disabledManager, logger, overrideManager);
+    const clientDeps: ApiClientDeps = {
+        adapter,
+        config: configManager,
+        disabledManager,
+        logger,
+        overrideManager,
+    };
+    const client = createApiClient(clientDeps);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
     const surfaces = new currentService.SurfaceManager(logger);
     const renderer = new OverlayRenderer(configManager, currentService.constants);

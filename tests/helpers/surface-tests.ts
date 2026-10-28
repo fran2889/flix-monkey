@@ -48,9 +48,13 @@ export function testSurfaceFixtures(
         overlayRenderer.injectOverlay(
             surface.container as unknown as HTMLElement,
             new Title({ displayTitle: surface.title, imdbRating: 8.5, imdbId: 'tt1234567' }),
-            () => {},
-            () => {},
-            surface.title
+            {
+                displayTitle: surface.title,
+                onEditClick: () => {},
+                onRefreshClick: () => {},
+                fadeToggleState: undefined,
+                onFadeToggleClick: undefined,
+            }
         );
         expect(surface.container.querySelector('.fm-rating-overlay')).not.toBeNull();
     });

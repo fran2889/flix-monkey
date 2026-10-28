@@ -122,25 +122,4 @@ buildTitle.withRating = (rating: number | undefined) => {
         .build();
 };
 
-function extractFromObj(obj: Record<string, unknown> | undefined, key: string): unknown {
-    return obj?.[key];
-}
-
-buildTitle.fromCacheJSON = (json: unknown) => {
-    const obj = json as Record<string, unknown> | undefined;
-    if (!obj) return undefined;
-    return new Title({
-        apiTitle: (extractFromObj(obj, 'apiTitle') as string | undefined) ?? undefined,
-        displayTitle: (extractFromObj(obj, 'displayTitle') as string | undefined) ?? 'Test Title',
-        imdbId: (extractFromObj(obj, 'imdbId') as string | undefined) ?? undefined,
-        imdbRating: (extractFromObj(obj, 'imdbRating') as number | undefined) ?? undefined,
-        imdbVotes: (extractFromObj(obj, 'imdbVotes') as number | undefined) ?? undefined,
-        rtRating: (extractFromObj(obj, 'rtRating') as number | undefined) ?? undefined,
-        mcRating: (extractFromObj(obj, 'mcRating') as number | undefined) ?? undefined,
-        year: (extractFromObj(obj, 'year') as number | undefined) ?? undefined,
-        source: (extractFromObj(obj, 'source') as string | undefined) ?? undefined,
-        type: (extractFromObj(obj, 'type') as string | undefined) ?? undefined,
-    });
-};
-
 export { buildTitle };

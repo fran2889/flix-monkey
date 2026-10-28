@@ -47,13 +47,13 @@
 
 - Produces: `testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures)` function
 
-- [ ] **Step 1: Create helpers directory**
+- [x] **Step 1: Create helpers directory**
 
 ```bash
 mkdir -p /home/fran/Projects/flix-monkey/tests/helpers
 ```
 
-- [ ] **Step 2: Create helper file with license header**
+- [x] **Step 2: Create helper file with license header**
 
 ```javascript
 // tests/helpers/surface-tests.js
@@ -89,7 +89,7 @@ export function testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures) {
 }
 ```
 
-- [ ] **Step 3: Verify helper file syntax**
+- [x] **Step 3: Verify helper file syntax**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -98,7 +98,7 @@ node --check tests/helpers/surface-tests.js
 
 Expected: No errors
 
-- [ ] **Step 4: Commit helper creation**
+- [x] **Step 4: Commit helper creation**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -128,31 +128,31 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Produces: Default export of array with 6 fixture entries
 
-- [ ] **Step 1: Extract TITLE_CARD snippet from title-card.html**
+- [x] **Step 1: Extract TITLE_CARD snippet from title-card.html**
 
 Read `tests/fixtures/title-card.html`, find first `.title-card` element with `aria-label`, extract minimal HTML including necessary parents for `.title-card a[aria-label]` selector to work.
 
-- [ ] **Step 2: Extract PREVIEW_MINI snippet from preview-mini.html**
+- [x] **Step 2: Extract PREVIEW_MINI snippet from preview-mini.html**
 
 Read `tests/fixtures/preview-mini.html`, find the `.previewModal--wrapper.mini-modal .previewModal--player_container img[alt]` element, extract minimal HTML.
 
-- [ ] **Step 3: Extract PREVIEW_DETAIL snippet from preview-detail.html**
+- [x] **Step 3: Extract PREVIEW_DETAIL snippet from preview-detail.html**
 
 Read `tests/fixtures/preview-detail.html`, find the `.previewModal--wrapper.detail-modal .previewModal--player_container img[alt]` element, extract minimal HTML.
 
-- [ ] **Step 4: Extract PROGRESS_CARD snippet from progress-card.html**
+- [x] **Step 4: Extract PROGRESS_CARD snippet from progress-card.html**
 
 Read `tests/fixtures/progress-card.html`, find `[data-uia="progress-card"][aria-label]` element, extract minimal HTML.
 
-- [ ] **Step 5: Extract RANKED_CARD snippet from ranked-card.html**
+- [x] **Step 5: Extract RANKED_CARD snippet from ranked-card.html**
 
 Read `tests/fixtures/ranked-card.html`, find `[data-uia="ranked-card"][aria-label]` element, extract minimal HTML.
 
-- [ ] **Step 6: Extract SEARCH_CARD snippet from standard-card.html**
+- [x] **Step 6: Extract SEARCH_CARD snippet from standard-card.html**
 
 Read `tests/fixtures/standard-card.html`, find `[data-uia="standard-card"]` element, extract minimal HTML.
 
-- [ ] **Step 7: Create netflix-surfaces.js with all 6 entries**
+- [x] **Step 7: Create netflix-surfaces.js with all 6 entries**
 
 ```javascript
 // tests/fixtures/netflix-surfaces.js
@@ -260,7 +260,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 8: Verify syntax**
+- [x] **Step 8: Verify syntax**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -269,7 +269,7 @@ node --check tests/fixtures/netflix-surfaces.js
 
 Expected: No errors
 
-- [ ] **Step 9: Commit Netflix fixtures**
+- [x] **Step 9: Commit Netflix fixtures**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -294,15 +294,15 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Produces: Default export of array with 2 fixture entries
 
-- [ ] **Step 1: Extract SHELF_CARD snippet from disneyplus-browse.html**
+- [x] **Step 1: Extract SHELF_CARD snippet from disneyplus-browse.html**
 
 Find `a[data-testid$="_tile"][data-item-id][href*="/browse/entity-"]` element, extract minimal HTML.
 
-- [ ] **Step 2: Extract CONTINUE_WATCHING snippet from disneyplus-browse.html**
+- [x] **Step 2: Extract CONTINUE_WATCHING snippet from disneyplus-browse.html**
 
 Find `[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]` element, extract minimal HTML.
 
-- [ ] **Step 3: Create disneyplus-surfaces.js with both entries**
+- [x] **Step 3: Create disneyplus-surfaces.js with both entries**
 
 ```javascript
 // tests/fixtures/disneyplus-surfaces.js
@@ -347,7 +347,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 4: Verify syntax**
+- [x] **Step 4: Verify syntax**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -356,7 +356,7 @@ node --check tests/fixtures/disneyplus-surfaces.js
 
 Expected: No errors
 
-- [ ] **Step 5: Commit Disney+ fixtures**
+- [x] **Step 5: Commit Disney+ fixtures**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -381,11 +381,11 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Produces: Default export of array with 1 fixture entry
 
-- [ ] **Step 1: Extract TILE snippet from hbomax-browse.html**
+- [x] **Step 1: Extract TILE snippet from hbomax-browse.html**
 
 Find `a[data-testid$="_tile"][data-sonic-type]` element, extract minimal HTML.
 
-- [ ] **Step 2: Create hbomax-surfaces.js with TILE entry**
+- [x] **Step 2: Create hbomax-surfaces.js with TILE entry**
 
 ```javascript
 // tests/fixtures/hbomax-surfaces.js
@@ -412,7 +412,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 3: Verify syntax**
+- [x] **Step 3: Verify syntax**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -421,7 +421,7 @@ node --check tests/fixtures/hbomax-surfaces.js
 
 Expected: No errors
 
-- [ ] **Step 4: Commit HBO Max fixtures**
+- [x] **Step 4: Commit HBO Max fixtures**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -449,7 +449,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `testSurfaceFixtures` from `tests/helpers/surface-tests.js`
 - Consumes: `fixtures` from `tests/fixtures/netflix-surfaces.js`
 
-- [ ] **Step 1: Create netflix.ui.test.js**
+- [x] **Step 1: Create netflix.ui.test.js**
 
 ```javascript
 // tests/ui/netflix.ui.test.js
@@ -482,7 +482,7 @@ describe('Netflix surfaces', () => {
 });
 ```
 
-- [ ] **Step 2: Verify test runs and passes**
+- [x] **Step 2: Verify test runs and passes**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -491,7 +491,7 @@ npx vitest run tests/ui/netflix.ui.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 3: Delete old Netflix UI test files**
+- [x] **Step 3: Delete old Netflix UI test files**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -501,7 +501,7 @@ rm tests/ui/netflix-preview-mini.ui.test.js
 rm tests/ui/netflix-search.ui.test.js
 ```
 
-- [ ] **Step 4: Commit Netflix UI test refactor**
+- [x] **Step 4: Commit Netflix UI test refactor**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -527,7 +527,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `testSurfaceFixtures` from `tests/helpers/surface-tests.js`
 - Consumes: `fixtures` from `tests/fixtures/disneyplus-surfaces.js`
 
-- [ ] **Step 1: Create disneyplus.ui.test.js**
+- [x] **Step 1: Create disneyplus.ui.test.js**
 
 ```javascript
 // tests/ui/disneyplus.ui.test.js
@@ -563,7 +563,7 @@ describe('Disney+ surfaces', () => {
 });
 ```
 
-- [ ] **Step 2: Verify test runs and passes**
+- [x] **Step 2: Verify test runs and passes**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -572,14 +572,14 @@ npx vitest run tests/ui/disneyplus.ui.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 3: Delete old Disney+ UI test file**
+- [x] **Step 3: Delete old Disney+ UI test file**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
 rm tests/ui/disneyplus-browse.ui.test.js
 ```
 
-- [ ] **Step 4: Commit Disney+ UI test refactor**
+- [x] **Step 4: Commit Disney+ UI test refactor**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -606,7 +606,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 - Consumes: `testSurfaceFixtures` from `tests/helpers/surface-tests.js`
 - Consumes: `fixtures` from `tests/fixtures/hbomax-surfaces.js`
 
-- [ ] **Step 1: Create hbomax.ui.test.js**
+- [x] **Step 1: Create hbomax.ui.test.js**
 
 ```javascript
 // tests/ui/hbomax.ui.test.js
@@ -639,7 +639,7 @@ describe('HBO Max surfaces', () => {
 });
 ```
 
-- [ ] **Step 2: Verify test runs and passes**
+- [x] **Step 2: Verify test runs and passes**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -648,7 +648,7 @@ npx vitest run tests/ui/hbomax.ui.test.js
 
 Expected: All tests pass
 
-- [ ] **Step 3: Delete old HBO Max UI test files**
+- [x] **Step 3: Delete old HBO Max UI test files**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -656,7 +656,7 @@ rm tests/ui/hbomax-browse.ui.test.js
 rm tests/ui/hbomax-search.ui.test.js
 ```
 
-- [ ] **Step 4: Commit HBO Max UI test refactor**
+- [x] **Step 4: Commit HBO Max UI test refactor**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -676,7 +676,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Delete: `tests/fixtures/*.html` (all 9 files)
 
-- [ ] **Step 1: List and verify HTML fixtures to delete**
+- [x] **Step 1: List and verify HTML fixtures to delete**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -685,14 +685,14 @@ ls tests/fixtures/*.html
 
 Expected: disneyplus-browse.html, hbomax-browse.html, hbomax-search.html, preview-detail.html, preview-mini.html, progress-card.html, ranked-card.html, standard-card.html, title-card.html
 
-- [ ] **Step 2: Delete all HTML fixtures**
+- [x] **Step 2: Delete all HTML fixtures**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
 rm tests/fixtures/*.html
 ```
 
-- [ ] **Step 3: Verify .keep file remains (if exists)**
+- [x] **Step 3: Verify .keep file remains (if exists)**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -701,7 +701,7 @@ ls -la tests/fixtures/
 
 Expected: Only JS fixture files and .keep (if it exists)
 
-- [ ] **Step 4: Commit HTML fixture removal**
+- [x] **Step 4: Commit HTML fixture removal**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -720,14 +720,14 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 - Delete: `scripts/capture-surface-fixtures.py`
 
-- [ ] **Step 1: Delete Python script**
+- [x] **Step 1: Delete Python script**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
 rm scripts/capture-surface-fixtures.py
 ```
 
-- [ ] **Step 2: Commit script removal**
+- [x] **Step 2: Commit script removal**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -744,7 +744,7 @@ Co-Authored-By: Mistral Vibe <vibe@mistral.ai>"
 
 **Files:** All created and modified files
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -753,7 +753,7 @@ npm test
 
 Expected: All tests pass, 90%+ coverage maintained
 
-- [ ] **Step 2: Run UI tests specifically**
+- [x] **Step 2: Run UI tests specifically**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -762,7 +762,7 @@ npm run test:ui
 
 Expected: All UI tests pass (3 test files, 1 test each, with multiple assertions per fixture)
 
-- [ ] **Step 3: Run linting**
+- [x] **Step 3: Run linting**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -771,7 +771,7 @@ npm run lint
 
 Expected: No lint errors
 
-- [ ] **Step 4: Run formatting**
+- [x] **Step 4: Run formatting**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -780,7 +780,7 @@ npm run format
 
 Expected: No formatting issues
 
-- [ ] **Step 5: Verify file structure**
+- [x] **Step 5: Verify file structure**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
@@ -799,7 +799,7 @@ tests/ui/hbomax.ui.test.js
 tests/ui/netflix.ui.test.js
 ```
 
-- [ ] **Step 6: Final commit with design doc**
+- [x] **Step 6: Final commit with design doc**
 
 ```bash
 cd /home/fran/Projects/flix-monkey
