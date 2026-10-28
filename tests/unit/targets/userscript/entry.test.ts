@@ -167,7 +167,12 @@ describe('userscript entry point', () => {
         expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
         expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger);
         expect(disabledConstructor).toHaveBeenCalledWith(adapter);
-        expect(settingsConstructor).toHaveBeenCalledWith(adapter, logger, cacheManager, disabledManager);
+        expect(settingsConstructor).toHaveBeenCalledWith({
+            adapter,
+            logger,
+            cacheManager,
+            disabledClientsManager: disabledManager,
+        });
     });
 
     it('uses the app managers in the settings menu when startApp returns an app handle', async () => {
@@ -182,7 +187,12 @@ describe('userscript entry point', () => {
         menuCallback();
 
         const logger = loggerConstructor.mock.results[0].value;
-        expect(settingsConstructor).toHaveBeenCalledWith(adapter, logger, cacheManager, disabledManager);
+        expect(settingsConstructor).toHaveBeenCalledWith({
+            adapter,
+            logger,
+            cacheManager,
+            disabledClientsManager: disabledManager,
+        });
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
     });

@@ -7,7 +7,7 @@
 # IMDb ID Override Feature Design
 
 **Date**: 2026-09-25
-**Status**: Draft
+**Status:** Implemented
 **Type**: Architectural
 **Author**: Mistral Vibe (with human partner)
 

@@ -34,7 +34,7 @@
 - Produces: `HBO_MAX_SURFACES`, `extractHboMaxTitle(tile)`, and `HboMaxSurfaceManager`.
 - Preserves: `SurfaceManager.discover(root)` result objects: `{ container, title, fadeable, showFadeToggle }`.
 
-- [ ] **Step 1: Write failing parser and callback tests**
+- [x] **Step 1: Write failing parser and callback tests**
 
 Import `HboMaxSurfaceManager` and `extractHboMaxTitle`. Add:
 
@@ -70,13 +70,13 @@ it.each(['video', 'sport', 'topical'])('skips %s tiles', type => {
 });
 ```
 
-- [ ] **Step 2: Verify the tests fail**
+- [x] **Step 2: Verify the tests fail**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js`
 
 Expected: FAIL because the callback and HBO Max exports do not exist.
 
-- [ ] **Step 3: Implement the callback and manager**
+- [x] **Step 3: Implement the callback and manager**
 
 Make `titleAttribute` optional in `SurfaceDefinition`; document optional `getTitle(element)`. In `discover()`, use:
 
@@ -115,13 +115,13 @@ export class HboMaxSurfaceManager extends SurfaceManager {
 }
 ```
 
-- [ ] **Step 4: Verify unit tests pass**
+- [x] **Step 4: Verify unit tests pass**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Add fixture-backed UI tests**
+- [x] **Step 5: Add fixture-backed UI tests**
 
 Create `tests/fixtures/hbomax-browse.html` with sanitized movie, show, mini-series, video, and sport tile links. Give each link `data-testid="<id>_tile"`, `data-sonic-type`, and an `aria-label` in `Title. N of M.` form.
 
@@ -140,7 +140,7 @@ surfaceManager.discover(document.body).forEach(({ container }) => {
 expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(3);
 ```
 
-- [ ] **Step 6: Run focused tests and commit**
+- [x] **Step 6: Run focused tests and commit**
 
 Run: `npx vitest run tests/unit/core/surfaces.test.js tests/ui/hbomax-browse.ui.test.js`
 
@@ -165,7 +165,7 @@ git commit -m "feat(surfaces): add HBO Max tile discovery"
 - Consumes: `HboMaxSurfaceManager` and `ConfigManager.getBool(key)`.
 - Produces: `HboMaxService`, `SERVICES.hbomax`, and `enableHboMax` defaulting to `true`.
 
-- [ ] **Step 1: Write failing service and setting tests**
+- [x] **Step 1: Write failing service and setting tests**
 
 Import `HboMaxService`; test ID `hbomax`, frozen `['play.hbomax.com']` domains, `HboMaxSurfaceManager`, enabled/disabled `getBool` results, and `SERVICES.hbomax`. Add `ServiceRegistry.detect()` cases for `play.hbomax.com` (`hbomax`) and `www.hbomax.com` (`null`). In the config field test, add:
 
@@ -178,13 +178,13 @@ expect(CONFIG_FIELDS.find(field => field.key === 'enableHboMax')).toMatchObject(
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 Run: `npx vitest run tests/unit/core/services.test.js tests/unit/core/config-fields.test.js`
 
 Expected: FAIL because HBO Max is not registered or configured.
 
-- [ ] **Step 3: Implement the service and field**
+- [x] **Step 3: Implement the service and field**
 
 Import `HboMaxSurfaceManager`, then add:
 
@@ -214,7 +214,7 @@ Add `hbomax: new HboMaxService()` to `SERVICES`. Insert this immediately after `
 },
 ```
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `npx vitest run tests/unit/core/services.test.js tests/unit/core/config-fields.test.js`
 
@@ -239,7 +239,7 @@ git commit -m "feat(services): register HBO Max"
 
 - Produces: injection on `play.hbomax.com` and settings reload for Netflix and HBO Max tabs.
 
-- [ ] **Step 1: Write the failing reload test**
+- [x] **Step 1: Write the failing reload test**
 
 Replace the Netflix-only expected query with:
 
@@ -249,13 +249,13 @@ expect(tabsQuerySpy).toHaveBeenCalledWith({
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 Run: `npx vitest run tests/unit/targets/options.test.js`
 
 Expected: FAIL because only Netflix is queried.
 
-- [ ] **Step 3: Add exact match patterns and reload query**
+- [x] **Step 3: Add exact match patterns and reload query**
 
 Add `"https://play.hbomax.com/*"` to `host_permissions` and `content_scripts[0].matches` in both manifests. Add `// @match        https://play.hbomax.com/*` after the Netflix userscript match. Change the options query to:
 
@@ -265,7 +265,7 @@ const tabs = await browser.tabs.query({
 });
 ```
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `npx vitest run tests/unit/targets/options.test.js && npm run build`
 
@@ -288,7 +288,7 @@ git commit -m "feat(targets): inject on HBO Max"
 
 - Produces: consistent two-service copy.
 
-- [ ] **Step 1: Update package and store description**
+- [x] **Step 1: Update package and store description**
 
 Set `package.json` description to:
 
@@ -298,17 +298,17 @@ Set `package.json` description to:
 
 Set the opening of `docs/store-description.txt` to “FlixMonkey adds title ratings directly to Netflix and HBO Max, helping you decide what to watch before you press play.” Change the first feature bullet to name Netflix and HBO Max titles.
 
-- [ ] **Step 2: Update README**
+- [x] **Step 2: Update README**
 
 Replace the introduction with “See IMDb, Metacritic, and Rotten Tomatoes ratings while browsing Netflix and HBO Max.” Change Multi-Tab Sync to name Netflix and HBO Max tabs. Add an Enabled Streaming Services setting row listing Netflix and HBO Max as default-enabled. Retain existing Netflix screenshots and do not add an invented screenshot asset.
 
-- [ ] **Step 3: Run full verification**
+- [x] **Step 3: Run full verification**
 
 Run: `npm run lint && npm run format:check && npm test && npm run build`
 
 Expected: all commands exit 0. Confirm the built userscript includes the HBO Max `@match`; confirm both built manifests include `https://play.hbomax.com/*` in permissions and content-script matches.
 
-- [ ] **Step 4: Commit and inspect status**
+- [x] **Step 4: Commit and inspect status**
 
 ```bash
 git add README.md package.json docs/store-description.txt

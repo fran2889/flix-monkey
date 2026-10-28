@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-import { FlixMonkeyError } from '../core/utils/index';
-
 export type StorageValue = string | boolean;
 
+/** Options for a platform HTTP fetch. */
 export interface HttpFetchOptions {
     responseType?: 'json' | 'text';
     timeout?: number;
@@ -15,86 +14,68 @@ export interface HttpFetchOptions {
 /**
  * Abstract base class for platform adapters.
  *
- * Subclasses must implement all methods. Optional methods default to
+ * Subclasses must implement every abstract member. Optional methods default to
  * no-ops and may be overridden where the platform supports them.
- *
- * In JavaScript this was a concrete class with throwing methods.
- * In TypeScript we maintain the same behavior for backward compatibility
- * with existing tests.
  */
-export class PlatformAdapter {
+export abstract class PlatformAdapter {
     /**
      * Retrieves a single value from platform storage.
      *
-     * @param _key - Storage key.
+     * @param key - Storage key.
      * @returns The stored value, or `undefined` if the key does not exist.
      */
-    async storageGet(_key: string): Promise<StorageValue | undefined> {
-        throw new FlixMonkeyError('PlatformAdapter: storageGet() must be implemented by subclass');
-    }
+    abstract storageGet(key: string): Promise<StorageValue | undefined>;
 
     /**
      * Retrieves all key/value pairs from platform storage.
      *
      * @returns All stored entries.
      */
-    async storageGetAll(): Promise<Record<string, StorageValue>> {
-        throw new FlixMonkeyError('PlatformAdapter: storageGetAll() must be implemented by subclass');
-    }
+    abstract storageGetAll(): Promise<Record<string, StorageValue>>;
 
     /**
      * Stores a single key/value pair in platform storage.
      *
-     * @param _key - Storage key.
-     * @param _value - Value to store.
+     * @param key - Storage key.
+     * @param value - Value to store.
      * @returns Resolves when the value is stored.
      */
-    async storageSet(_key: string, _value: StorageValue): Promise<void> {
-        throw new FlixMonkeyError('PlatformAdapter: storageSet() must be implemented by subclass');
-    }
+    abstract storageSet(key: string, value: StorageValue): Promise<void>;
 
     /**
      * Stores multiple key/value pairs atomically in platform storage.
      *
-     * @param _values - Object of key/value pairs to store.
+     * @param values - Object of key/value pairs to store.
      * @returns Resolves when all values are stored.
      */
-    async storageSetMany(_values: Record<string, StorageValue>): Promise<void> {
-        throw new FlixMonkeyError('PlatformAdapter: storageSetMany() must be implemented by subclass');
-    }
+    abstract storageSetMany(values: Record<string, StorageValue>): Promise<void>;
 
     /**
      * Removes a single key from platform storage.
      *
-     * @param _key - Storage key to delete.
+     * @param key - Storage key to delete.
      * @returns Resolves when the value is removed.
      */
-    async storageDelete(_key: string): Promise<void> {
-        throw new FlixMonkeyError('PlatformAdapter: storageDelete() must be implemented by subclass');
-    }
+    abstract storageDelete(key: string): Promise<void>;
 
     /**
      * Returns all storage keys that start with the given prefix.
      *
-     * @param _prefix - Key prefix to match.
+     * @param prefix - Key prefix to match.
      * @returns Matching keys.
      */
-    async storageGetKeys(_prefix: string): Promise<string[]> {
-        throw new FlixMonkeyError('PlatformAdapter: storageGetKeys() must be implemented by subclass');
-    }
+    abstract storageGetKeys(prefix: string): Promise<string[]>;
 
     /**
      * Makes an HTTP request through the platform's CORS-capable transport.
      * Platform HTTP failures reported by implementations reject with a
-     * {@link FlixMonkeyError} that includes request failure details.
+     * `FlixMonkeyError` that includes request failure details.
      *
-     * @param _url - Request URL.
-     * @param _options - Fetch options.
+     * @param url - Request URL.
+     * @param options - Fetch options.
      * @returns Parsed response body (JSON object or string, depending on `responseType`).
      */
-    async httpFetch(_url: string, _options?: HttpFetchOptions): Promise<unknown> {
-        throw new FlixMonkeyError('PlatformAdapter: httpFetch() must be implemented by subclass');
-    }
+    abstract httpFetch(url: string, options?: HttpFetchOptions): Promise<unknown>;
 
     /**
      * Synchronously reads a configuration value.
@@ -109,14 +90,17 @@ export class PlatformAdapter {
      * `ConfigManager` treats `undefined` as "key absent" and falls back to
      * `CONFIG_DEFAULTS`.
      *
-     * @param _key - Config key (one of the keys defined in `CONFIG_FIELDS`).
+     * @param key - Config key (one of the keys defined in `CONFIG_FIELDS`).
      * @returns The current config value, or `undefined` if absent.
      */
-    configGet(_key: string): string | boolean | undefined {
-        throw new FlixMonkeyError('PlatformAdapter: configGet() must be implemented by subclass');
-    }
+    abstract configGet(key: string): string | boolean | undefined;
 
-    /** Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing. */
+    /**
+     * Registers a platform menu command. UserscriptAdapter overrides this; other adapters do nothing.
+     *
+     * @param _label - Menu label shown to the user.
+     * @param _fn - Callback invoked when the command is selected.
+     */
     registerMenuCommand(_label: string, _fn: () => void): void {
         // No-op by default
     }

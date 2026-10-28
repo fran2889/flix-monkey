@@ -1,7 +1,7 @@
 # Fade Toggle in Mini Preview — Design Spec
 
 **Date:** 2026-06-28
-**Status:** Approved
+**Status:** Implemented
 
 ## Overview
 

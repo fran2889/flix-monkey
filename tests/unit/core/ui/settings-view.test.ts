@@ -4,7 +4,13 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONFIG_FIELDS, type ConfigField } from '../../../../src/core/config/index';
+import {
+    CONFIG_FIELDS,
+    type ConfigField,
+    isActionField,
+    isSettingField,
+    ROW_LABELS,
+} from '../../../../src/core/config/index';
 import { SettingsView } from '../../../../src/core/ui/settings-view';
 
 const configFields: readonly ConfigField[] = CONFIG_FIELDS;
@@ -54,7 +60,7 @@ describe('SettingsView', () => {
 
             configFields.forEach(field => {
                 // Skip action fields - they are rendered as buttons, not inputs
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
 
                 const label = Array.from(container.querySelectorAll('label')).find(
                     element => element.textContent === field.label
@@ -72,22 +78,35 @@ describe('SettingsView', () => {
                     expect((input as HTMLInputElement).type).toBe('text');
                 }
 
-                if (field.type === 'select' && field.options) {
+                if (field.type === 'select') {
                     expect(
                         [...(input as HTMLSelectElement).options].map(option => [option.value, option.textContent])
                     ).toEqual(field.options.map(option => (Array.isArray(option) ? option : [option, option])));
                 }
 
-                if ((field as { labelUrl?: string }).labelUrl) {
+                if (field.labelUrl) {
                     const link = label?.querySelector('a');
                     expect(link).not.toBeNull();
-                    expect((link as HTMLAnchorElement)?.href).toBe((field as { labelUrl: string }).labelUrl);
+                    expect((link as HTMLAnchorElement)?.href).toBe(field.labelUrl);
                     expect((link as HTMLAnchorElement)?.target).toBe('_blank');
+                    expect(label!.hasAttribute('for')).toBe(false);
                 } else {
                     const link = label?.querySelector('a');
                     expect(link).toBeNull();
                 }
             });
+        });
+
+        it('associates a lone field label and leaves grouped row labels unassociated', () => {
+            view.render(container, {});
+
+            expect(container.querySelector('label[for="fm-debug"]')).not.toBeNull();
+
+            const groupedLabel = Array.from(container.querySelectorAll('label')).find(
+                element => element.textContent === ROW_LABELS.services.label
+            );
+            expect(groupedLabel).toBeDefined();
+            expect(groupedLabel?.hasAttribute('for')).toBe(false);
         });
 
         it('injects styles and applies the settings container class', () => {
@@ -137,7 +156,6 @@ describe('SettingsView', () => {
                     type: 'action',
                     label: '',
                     group: 'debug',
-                    row: 'action-clearCache',
                     actionLabel: 'Clear',
                 },
             ];
@@ -178,7 +196,6 @@ describe('SettingsView', () => {
                     type: 'action',
                     label: '',
                     group: 'debug',
-                    row: 'debug-settings',
                     actionLabel: 'Run It',
                 },
             ];
@@ -187,7 +204,7 @@ describe('SettingsView', () => {
 
             const row = container.querySelector('.field-value');
             expect(row?.querySelector('#fm-debug')).not.toBeNull();
-            expect(row?.querySelector('#fm-debug-settings')).not.toBeNull();
+            expect(row?.querySelectorAll('#fm-debug-settings')).toHaveLength(1);
         });
 
         it('renders the fixed IMDb rating control', () => {
@@ -205,7 +222,7 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             configFields.forEach(field => {
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
                 const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
                 const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(field.default);
@@ -214,24 +231,20 @@ describe('SettingsView', () => {
 
         it('populates every field with its stored value', () => {
             const storedSettings = Object.fromEntries(
-                configFields
-                    .filter(f => f.type !== 'action')
-                    .map(field => {
-                        if (field.type === 'checkbox') return [field.key, !field.default];
-                        if (field.type === 'select' && field.options) {
-                            const optionValues = field.options.map(option =>
-                                Array.isArray(option) ? option[0] : option
-                            );
-                            return [field.key, optionValues.find(option => option !== field.default)];
-                        }
-                        return [field.key, `stored-${field.key}`];
-                    })
+                configFields.filter(isSettingField).map(field => {
+                    if (field.type === 'checkbox') return [field.key, !field.default];
+                    if (field.type === 'select') {
+                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
+                        return [field.key, optionValues.find(option => option !== field.default)];
+                    }
+                    return [field.key, `stored-${field.key}`];
+                })
             );
 
             view.render(container, storedSettings);
 
             configFields.forEach(field => {
-                if (field.type === 'action') return;
+                if (isActionField(field)) return;
                 const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
                 const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
                 expect(value).toBe(storedSettings[field.key]);

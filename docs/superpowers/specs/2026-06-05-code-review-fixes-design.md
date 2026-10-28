@@ -1,7 +1,7 @@
 # Code Review Fixes Design
 
 **Date**: 2026-06-05
-**Source**: `docs/code-review.md` (full codebase review, 2026-06-05)
+**Source**: Full codebase review, 2026-06-05
 **Scope**: All actionable items — 3 bugs, 6 weaknesses, tooling tweaks. Title matching (W2) and metacritic schema note (W9) are explicitly out of scope.
 **Commit strategy**: One commit per issue.
 

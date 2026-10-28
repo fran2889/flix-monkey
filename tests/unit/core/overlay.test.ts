@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OverlayRenderer } from '../../../src/core/overlay';
 import type { Title } from '../../../src/core/title';
@@ -15,15 +15,14 @@ describe('OverlayRenderer', () => {
         document.body.innerHTML = '';
     });
 
-    /** Injects an overlay with the action handlers and display title the signature requires. */
     const injectOverlay = (renderer: OverlayRenderer, container: HTMLElement, title: Title) =>
-        renderer.injectOverlay(
-            container,
-            title,
-            () => {},
-            () => {},
-            title.displayTitle
-        );
+        renderer.injectOverlay(container, title, {
+            displayTitle: title.displayTitle,
+            onEditClick: () => {},
+            onRefreshClick: () => {},
+            fadeToggleState: undefined,
+            onFadeToggleClick: undefined,
+        });
 
     describe('style injection', () => {
         it('injects styles into document head', () => {
@@ -89,6 +88,29 @@ describe('OverlayRenderer', () => {
             expect(renderer.isLoading(container)).toBe(false);
             expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
             expect(renderer.hasOverlay(container)).toBe(true);
+        });
+    });
+
+    describe('interaction wiring', () => {
+        it('forwards the interaction display title to the action handlers', () => {
+            const renderer = new OverlayRenderer(buildConfig().build());
+            const container = document.createElement('div');
+            const onEditClick = vi.fn();
+            const onRefreshClick = vi.fn();
+
+            renderer.injectOverlay(container, buildTitle().withImdbId('tt1').withImdbRating(7).build(), {
+                displayTitle: 'Surface Title',
+                onEditClick,
+                onRefreshClick,
+                fadeToggleState: undefined,
+                onFadeToggleClick: undefined,
+            });
+
+            (container.querySelector('[title="Override IMDb ID"]') as HTMLElement).click();
+            (container.querySelector('[title="Refresh ratings (clears cache)"]') as HTMLElement).click();
+
+            expect(onEditClick).toHaveBeenCalledWith('Surface Title');
+            expect(onRefreshClick).toHaveBeenCalledWith('Surface Title');
         });
     });
 

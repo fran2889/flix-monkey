@@ -44,7 +44,7 @@
 - Consumes: `SurfaceDefinition.showFadeToggle`, which `SurfaceManager.discover()` copies to every `DiscoveredSurface`.
 - Produces: all `HBO_MAX_SURFACES` and `DISNEY_PLUS_SURFACES` card definitions return `showFadeToggle: true`; Netflix definitions remain unchanged.
 
-- [ ] **Step 1: Write failing surface assertions**
+- [x] **Step 1: Write failing surface assertions**
 
     Change the existing Disney+ unit expectations from `showFadeToggle: false` to `showFadeToggle: true`. Add an HBO Max discovery assertion that exercises a `data-sonic-type="show"` tile and expects the discovered surface to match the following shape:
 
@@ -58,7 +58,7 @@
     expect(surfaces.every(({ fadeable, showFadeToggle }) => fadeable && showFadeToggle)).toBe(true);
     ```
 
-- [ ] **Step 2: Run the focused tests to verify they fail**
+- [x] **Step 2: Run the focused tests to verify they fail**
 
     Run:
 
@@ -68,7 +68,7 @@
 
     Expected: failures report that HBO Max and Disney+ discovered surfaces have `showFadeToggle: false`.
 
-- [ ] **Step 3: Set the surface flags**
+- [x] **Step 3: Set the surface flags**
 
     In `src/core/surfaces.js`, change each of the three non-Netflix card definitions as follows. Do not alter any Netflix definition.
 
@@ -95,7 +95,7 @@
     });
     ```
 
-- [ ] **Step 4: Run the focused tests to verify they pass**
+- [x] **Step 4: Run the focused tests to verify they pass**
 
     Run:
 
@@ -105,7 +105,7 @@
 
     Expected: all three files pass, including the existing Netflix mini-preview tests that prove Netflix placement is unchanged.
 
-- [ ] **Step 5: Commit the surface capability change**
+- [x] **Step 5: Commit the surface capability change**
 
     ```bash
     git add src/core/surfaces.js tests/unit/core/surfaces.test.js tests/ui/hbomax-browse.ui.test.js tests/ui/disneyplus-browse.ui.test.js
@@ -124,7 +124,7 @@
 - Consumes: `OverlayRenderer.injectOverlay(container, title, state, onFadeToggleClick)`, which already appends `.fm-fade-toggle` only for toggle-capable surfaces with the setting enabled.
 - Produces: a neutral `.fm-fade-toggle` element that is hidden and non-interactive by default, then visible and interactive whenever its container is hovered.
 
-- [ ] **Step 1: Write the failing CSS-content assertions**
+- [x] **Step 1: Write the failing CSS-content assertions**
 
     Extend the existing fade-toggle CSS test to assert the stylesheet includes each required declaration and selector:
 
@@ -142,7 +142,7 @@
     expect(toggle.tagName).toBe('DIV');
     ```
 
-- [ ] **Step 2: Run the focused test to verify it fails**
+- [x] **Step 2: Run the focused test to verify it fails**
 
     Run:
 
@@ -152,7 +152,7 @@
 
     Expected: the fade-toggle CSS test fails because the hidden and reveal rules do not yet exist.
 
-- [ ] **Step 3: Keep the neutral control and add hidden and reveal rules**
+- [x] **Step 3: Keep the neutral control and add hidden and reveal rules**
 
     In `#createFadeToggle()`, retain the neutral element and its existing state, title, icon, and click-propagation behavior:
 
@@ -182,7 +182,7 @@
 
     Do not use `display: none` or remove the element: retaining the control preserves overlay layout and the existing click-propagation behavior.
 
-- [ ] **Step 4: Run the focused test to verify it passes**
+- [x] **Step 4: Run the focused test to verify it passes**
 
     Run:
 
@@ -192,7 +192,7 @@
 
     Expected: all OverlayRenderer tests pass, including click propagation and state-cycle rendering tests.
 
-- [ ] **Step 5: Commit the shared presentation change**
+- [x] **Step 5: Commit the shared presentation change**
 
     ```bash
     git add src/core/overlay.js tests/unit/core/overlay.test.js
@@ -212,7 +212,7 @@
 - Consumes: `CONFIG_FIELDS`, the single source of truth for setting labels and help text.
 - Produces: service-neutral description of the manual override, consistent with the README.
 
-- [ ] **Step 1: Write the failing setting-copy test**
+- [x] **Step 1: Write the failing setting-copy test**
 
     Add this test to `tests/unit/core/config-fields.test.js`:
 
@@ -224,7 +224,7 @@
     });
     ```
 
-- [ ] **Step 2: Run the focused test to verify it fails**
+- [x] **Step 2: Run the focused test to verify it fails**
 
     Run:
 
@@ -234,7 +234,7 @@
 
     Expected: failure because the current title says `in hover preview`.
 
-- [ ] **Step 3: Update setting and README copy**
+- [x] **Step 3: Update setting and README copy**
 
     Change the `enableFadeToggle` field title to exactly:
 
@@ -248,7 +248,7 @@
     | Allow Override | No | Show a fade override button on supported title surfaces |
     ```
 
-- [ ] **Step 4: Run focused and project verification**
+- [x] **Step 4: Run focused and project verification**
 
     Run:
 
@@ -259,7 +259,7 @@
 
     Expected: the focused test passes; formatting, linting, unit/UI tests, and all target builds succeed.
 
-- [ ] **Step 5: Commit the copy and verification-ready change**
+- [x] **Step 5: Commit the copy and verification-ready change**
 
     ```bash
     git add src/core/config-fields.js tests/unit/core/config-fields.test.js README.md

@@ -3,9 +3,33 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SettingsActions } from '../../types/extension';
-import { type ConfigField, type ConfigValueType, GROUPS, ROW_LABELS } from '../config/index';
+import type {
+    ActionConfigField,
+    ConfigField,
+    ConfigValueType,
+    SelectOption,
+    SettingConfigField,
+} from '../config/index';
+import { GROUPS, isActionField, isSettingField, ROW_LABELS } from '../config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../constants';
 import { SETTINGS_STYLES } from './styles';
+
+interface SettingsFieldRow {
+    readonly id: string;
+    readonly fields: readonly ConfigField[];
+}
+
+interface SettingsRowLabel {
+    readonly text: string;
+    readonly tooltip: string;
+}
+
+interface SettingsGroup {
+    readonly id: string;
+    readonly label: string;
+    readonly icon: string;
+    readonly fields: readonly SettingsFieldRow[];
+}
 
 /**
  * UI component that renders and manages the settings panel with grouped configuration fields.
@@ -59,18 +83,8 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByGroup(): Array<{
-        id: string;
-        label: string;
-        icon: string;
-        fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-    }> {
-        const groups: Array<{
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        }> = [];
+    #groupFieldsByGroup(): SettingsGroup[] {
+        const groups: SettingsGroup[] = [];
         const fieldsByGroup: Record<string, ConfigField[]> = {};
 
         // ConfigField.group is a required GroupKey, so every field belongs to a group.
@@ -91,15 +105,7 @@ export class SettingsView {
         fieldsByGroup[groupId].push(field);
     }
 
-    #buildGroupElements(
-        groups: Array<{
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        }>,
-        fieldsByGroup: Record<string, ConfigField[]>
-    ): void {
+    #buildGroupElements(groups: SettingsGroup[], fieldsByGroup: Record<string, ConfigField[]>): void {
         for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
             const groupInfo = GROUPS[groupId as keyof typeof GROUPS];
             groups.push({
@@ -111,27 +117,21 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByRow(fields: ConfigField[]): Array<{ id: string; fields: ConfigField[] }> {
-        const rows: Record<string, { id: string; fields: ConfigField[] }> = {};
+    #groupFieldsByRow(fields: readonly ConfigField[]): SettingsFieldRow[] {
+        const rows = new Map<string, ConfigField[]>();
         for (const field of fields) {
             const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
-            if (!rows[rowId]) {
-                rows[rowId] = { id: rowId, fields: [] };
+            const rowFields = rows.get(rowId);
+            if (rowFields) {
+                rowFields.push(field);
+            } else {
+                rows.set(rowId, [field]);
             }
-            rows[rowId].fields.push(field);
         }
-        return Object.values(rows);
+        return [...rows].map(([id, rowFields]) => ({ id, fields: rowFields }));
     }
 
-    #createGroupElement(
-        group: {
-            id: string;
-            label: string;
-            icon: string;
-            fields: Array<{ id: string; fields: readonly ConfigField[] }>;
-        },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createGroupElement(group: SettingsGroup, settings: Record<string, unknown>): HTMLElement {
         const container = document.createElement('div');
         container.className = 'settings-group';
 
@@ -152,115 +152,135 @@ export class SettingsView {
         for (const row of group.fields) {
             const fieldElement = this.#createFieldRow(row, settings);
             container.appendChild(fieldElement);
-
-            const actionFields = this.#fields.filter(
-                (f): boolean => f.type === 'action' && f.group === group.id && f.row === row.id
-            );
-            for (const actionField of actionFields) {
-                const actionElement = this.#createActionField(actionField);
-                container.appendChild(actionElement);
-            }
         }
 
         return container;
     }
 
-    #getFieldClassName(row: { id: string; fields: readonly ConfigField[] }): string {
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
-        const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
+    #getFieldClassName(row: SettingsFieldRow): string {
+        if (this.#isActionRow(row)) return 'field field--actions';
 
-        if (hasActions) return 'field field--actions';
+        const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
         if (isLoneCheckbox) return 'field field--checkbox';
         return 'field';
     }
 
-    #createFieldLabel(row: { id: string; fields: readonly ConfigField[] }): HTMLLabelElement {
-        const label = document.createElement('label');
-        label.className = 'field-label';
+    #isActionRow(row: SettingsFieldRow): boolean {
+        return row.fields.every(isActionField);
+    }
 
-        const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
-        const rowLabel = rowLabelObj?.label ?? row.fields[0].label;
-        const onlyField = row.fields[0];
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
-        const tooltip = hasActions ? '' : (rowLabelObj?.title ?? row.fields[0].title ?? '');
+    #createFieldLabel(row: SettingsFieldRow): HTMLLabelElement {
+        if (this.#isActionRow(row)) return this.#createSpacerLabel();
 
-        if (hasActions) {
-            label.textContent = '\u00A0';
-            label.style.visibility = 'hidden';
-        } else if (row.fields.length === 1 && onlyField.labelUrl) {
-            const link = document.createElement('a');
-            link.href = onlyField.labelUrl;
-            link.target = '_blank';
-            link.textContent = rowLabel;
-            if (tooltip) {
-                link.title = tooltip;
-            }
-            label.appendChild(link);
-        } else {
-            label.textContent = rowLabel;
-            if (row.fields.length === 1 && !onlyField.labelUrl) {
-                label.htmlFor = `fm-${onlyField.key}`;
-            }
-            if (tooltip) {
-                label.title = tooltip;
-            }
+        const { text, tooltip } = this.#rowLabel(row);
+        const onlyField = this.#singleSettingField(row);
+
+        if (onlyField?.labelUrl) {
+            return this.#createLinkedLabel(text, onlyField.labelUrl, tooltip);
         }
+        return this.#createPlainLabel(text, onlyField, tooltip);
+    }
 
+    #rowLabel(row: SettingsFieldRow): SettingsRowLabel {
+        const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
+        return {
+            text: rowLabelObj?.label ?? row.fields[0].label,
+            tooltip: rowLabelObj?.title ?? row.fields[0].title ?? '',
+        };
+    }
+
+    #singleSettingField(row: SettingsFieldRow): SettingConfigField | undefined {
+        if (row.fields.length !== 1) return undefined;
+        const [field] = row.fields;
+        return isSettingField(field) ? field : undefined;
+    }
+
+    #createSpacerLabel(): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        label.textContent = '\u00A0';
+        label.style.visibility = 'hidden';
         return label;
     }
 
-    #createFieldValueContainer(
-        row: { id: string; fields: readonly ConfigField[] },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createLinkedLabel(text: string, labelUrl: string, tooltip: string): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        const link = document.createElement('a');
+        link.href = labelUrl;
+        link.target = '_blank';
+        link.textContent = text;
+        if (tooltip) {
+            link.title = tooltip;
+        }
+        label.appendChild(link);
+        return label;
+    }
+
+    #createPlainLabel(text: string, field: SettingConfigField | undefined, tooltip: string): HTMLLabelElement {
+        const label = this.#createLabelElement();
+        label.textContent = text;
+        if (field) {
+            label.htmlFor = `fm-${field.key}`;
+        }
+        if (tooltip) {
+            label.title = tooltip;
+        }
+        return label;
+    }
+
+    #createLabelElement(): HTMLLabelElement {
+        const label = document.createElement('label');
+        label.className = 'field-label';
+        return label;
+    }
+
+    #createFieldValueContainer(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
         const valueContainer = document.createElement('div');
         valueContainer.className = 'field-value';
 
-        const hasActions = row.fields.every((f): boolean => f.type === 'action');
-        const isCheckboxGroup = row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox');
-
-        if (hasActions) {
-            for (const field of row.fields) {
-                const btn = this.#createActionField(field);
-                valueContainer.appendChild(btn);
-            }
-        } else if (isCheckboxGroup) {
-            const checkboxes = document.createElement('div');
-            checkboxes.className = 'checkboxes';
-
-            for (const field of row.fields) {
-                const item = document.createElement('div');
-                item.className = 'service-item';
-                const input = this.#createInput(field, settings);
-                const cbLabel = document.createElement('label');
-                cbLabel.className = 'field-label';
-                cbLabel.textContent = field.label;
-                cbLabel.htmlFor = `fm-${field.key}`;
-                item.append(input, cbLabel);
-                checkboxes.appendChild(item);
-            }
-
-            valueContainer.appendChild(checkboxes);
+        if (this.#isActionRow(row)) {
+            valueContainer.append(...this.#createActionFields(row.fields));
+        } else if (row.fields.length > 1 && row.fields.every((f): boolean => f.type === 'checkbox')) {
+            valueContainer.appendChild(this.#createCheckboxGroup(row.fields, settings));
         } else {
-            for (const field of row.fields) {
-                if (field.type === 'action') {
-                    const btn = this.#createActionField(field);
-                    valueContainer.appendChild(btn);
-                } else if (field.suffix) {
-                    valueContainer.appendChild(this.#createInputWithSuffix(field, settings));
-                } else {
-                    valueContainer.appendChild(this.#createInput(field, settings));
-                }
-            }
+            valueContainer.append(...this.#createSettingFields(row.fields, settings));
         }
 
         return valueContainer;
     }
 
-    #createFieldRow(
-        row: { id: string; fields: readonly ConfigField[] },
-        settings: Record<string, unknown>
-    ): HTMLElement {
+    #createActionFields(fields: readonly ConfigField[]): HTMLElement[] {
+        return fields.filter(isActionField).map(field => this.#createActionField(field));
+    }
+
+    #createCheckboxGroup(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement {
+        const checkboxes = document.createElement('div');
+        checkboxes.className = 'checkboxes';
+
+        for (const field of fields) {
+            if (!isSettingField(field)) continue;
+            const item = document.createElement('div');
+            item.className = 'service-item';
+            const input = this.#createInput(field, settings);
+            const cbLabel = document.createElement('label');
+            cbLabel.className = 'field-label';
+            cbLabel.textContent = field.label;
+            cbLabel.htmlFor = `fm-${field.key}`;
+            item.append(input, cbLabel);
+            checkboxes.appendChild(item);
+        }
+
+        return checkboxes;
+    }
+
+    #createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[] {
+        return fields.map(field => {
+            if (isActionField(field)) return this.#createActionField(field);
+            if (field.suffix) return this.#createInputWithSuffix(field, settings);
+            return this.#createInput(field, settings);
+        });
+    }
+
+    #createFieldRow(row: SettingsFieldRow, settings: Record<string, unknown>): HTMLElement {
         const fieldElement = document.createElement('div');
         fieldElement.className = this.#getFieldClassName(row);
 
@@ -273,11 +293,11 @@ export class SettingsView {
         return fieldElement;
     }
 
-    #createActionField(field: ConfigField): HTMLButtonElement {
+    #createActionField(field: ActionConfigField): HTMLButtonElement {
         const btn = document.createElement('button');
         btn.className = 'action-btn';
         btn.id = `fm-${field.key}`;
-        btn.textContent = field.actionLabel ?? '';
+        btn.textContent = field.actionLabel;
         btn.addEventListener('click', () => {
             if (field.key === 'clearCache') {
                 void this.#actions.onClearCache();
@@ -288,7 +308,7 @@ export class SettingsView {
         return btn;
     }
 
-    #createInputWithSuffix(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
+    #createInputWithSuffix(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
         const container = document.createElement('div');
         container.className = 'input-with-suffix';
 
@@ -305,7 +325,7 @@ export class SettingsView {
         return container;
     }
 
-    #createInput(field: ConfigField, settings: Record<string, unknown>): HTMLElement {
+    #createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
         const input = document.createElement(field.type === 'select' ? 'select' : 'input');
         input.className = 'field-input';
         input.name = field.key;
@@ -313,7 +333,7 @@ export class SettingsView {
 
         if (field.type === 'select') {
             const selectInput = input as HTMLSelectElement;
-            this.#addOptions(selectInput, field.options ?? []);
+            this.#addOptions(selectInput, field.options);
             selectInput.value = String(this.#settingValue(field.key, settings, field.default));
         } else if (field.type === 'checkbox') {
             const checkboxInput = input as HTMLInputElement;
@@ -336,7 +356,7 @@ export class SettingsView {
         return input;
     }
 
-    #addOptions(select: HTMLSelectElement, options: ReadonlyArray<string | readonly [string, string]>): void {
+    #addOptions(select: HTMLSelectElement, options: readonly (string | SelectOption)[]): void {
         for (const configuredOption of options) {
             const option = document.createElement('option');
             const [value, text] = Array.isArray(configuredOption)
@@ -381,18 +401,27 @@ export class SettingsView {
     readValues(): Record<string, ConfigValueType> {
         const values: Record<string, ConfigValueType> = {};
         for (const field of this.#fields) {
-            if (field.type === 'action') continue;
-            if (field.disabled) continue;
-            const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+            if (!isSettingField(field)) continue;
+            const input = this.#fieldInput(field);
             if (input) {
-                if (field.type === 'checkbox') {
-                    values[field.key] = (input as HTMLInputElement).checked;
-                } else {
-                    values[field.key] = (input as HTMLInputElement).value;
-                }
+                values[field.key] = this.#readInputValue(field, input);
             }
         }
         return values;
+    }
+
+    #fieldInput(field: SettingConfigField): HTMLInputElement | HTMLSelectElement | undefined {
+        if (field.disabled) return undefined;
+        return (
+            this.#container?.querySelector<HTMLInputElement | HTMLSelectElement>(`[id="fm-${field.key}"]`) ?? undefined
+        );
+    }
+
+    #readInputValue(field: SettingConfigField, input: HTMLInputElement | HTMLSelectElement): ConfigValueType {
+        if (field.type === 'checkbox') {
+            return input instanceof HTMLInputElement ? input.checked : false;
+        }
+        return input.value;
     }
 
     /**
@@ -405,15 +434,19 @@ export class SettingsView {
         const errors: string[] = [];
         if (this.#container === undefined) return errors;
         for (const field of this.#fields) {
-            if (field.type === 'action') continue;
-            if (field.disabled) continue;
-            const input = this.#container.querySelector(`[id="fm-${field.key}"]`);
-            if (!input) continue;
-            const error = field.validate ? field.validate(values[field.key], values) : undefined;
-            input.classList.toggle('error', Boolean(error));
+            if (!isSettingField(field)) continue;
+            const error = this.#validateField(field, values);
             if (error) errors.push(error);
         }
         return errors;
+    }
+
+    #validateField(field: SettingConfigField, values: Record<string, ConfigValueType>): string | undefined {
+        const input = this.#fieldInput(field);
+        if (!input) return undefined;
+        const error = field.validate ? field.validate(values[field.key], values) : undefined;
+        input.classList.toggle('error', Boolean(error));
+        return error;
     }
 
     /**

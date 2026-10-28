@@ -34,7 +34,7 @@
 - Produces: `buildOverlayStyles({ overlayClass, corner, top10Selectors, top10Offset }): string`
 - Consumes: rating overlay class name, configured corner, and service presentation constants.
 
-- [ ] **Step 1: Write the failing pure-style test**
+- [x] **Step 1: Write the failing pure-style test**
 
 Create `tests/unit/core/ui/overlay-styles.test.js` with the license header and direct tests for the new boundary:
 
@@ -70,13 +70,13 @@ describe('buildOverlayStyles', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the boundary is missing**
+- [x] **Step 2: Run the test and verify the boundary is missing**
 
 Run: `npx vitest run tests/unit/core/ui/overlay-styles.test.js`
 
 Expected: FAIL because `src/core/ui/overlay-styles.js` does not exist.
 
-- [ ] **Step 3: Move CSS generation into the pure module**
+- [x] **Step 3: Move CSS generation into the pure module**
 
 Create `buildOverlayStyles()` by moving the complete CSS template and corner map from `OverlayRenderer.injectStyles()`. Normalize unknown corners before using `includes()`:
 
@@ -98,7 +98,7 @@ After these calculations, assign the existing CSS template from `OverlayRenderer
 
 Update `OverlayRenderer.injectStyles()` to read configuration, call `buildOverlayStyles()`, and only update or create `#fm-overlay-styles`.
 
-- [ ] **Step 4: Move style-output assertions and run both suites**
+- [x] **Step 4: Move style-output assertions and run both suites**
 
 Move corner, direction, Top 10 offset, and base CSS assertions from `overlay.test.js` to `overlay-styles.test.js`. Keep style-element creation and replacement assertions in `overlay.test.js`.
 
@@ -106,7 +106,7 @@ Run: `npx vitest run tests/unit/core/ui/overlay-styles.test.js tests/unit/core/o
 
 Expected: PASS with no duplicated style-output assertions.
 
-- [ ] **Step 5: Commit the style extraction**
+- [x] **Step 5: Commit the style extraction**
 
 ```bash
 git add src/core/overlay.js src/core/ui/overlay-styles.js tests/unit/core/overlay.test.js tests/unit/core/ui/overlay-styles.test.js
@@ -128,7 +128,7 @@ git commit -m "refactor(overlay): extract style generation"
 - Produces: `createLoadingOverlayElement(overlayClass, loadingClass): HTMLElement`
 - Consumes: `showRtRating`, `showMcRating`, `showFadeToggle`, `fadeToggleState`, and `onFadeToggleClick` as explicit options.
 
-- [ ] **Step 1: Write the failing element-builder test**
+- [x] **Step 1: Write the failing element-builder test**
 
 Create `overlay-elements.test.js` with the license header and this initial boundary test:
 
@@ -156,13 +156,13 @@ describe('createOverlayElement', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the module is missing**
+- [x] **Step 2: Run the test and verify the module is missing**
 
 Run: `npx vitest run tests/unit/core/ui/overlay-elements.test.js`
 
 Expected: FAIL because `overlay-elements.js` does not exist.
 
-- [ ] **Step 3: Move element construction into the new module**
+- [x] **Step 3: Move element construction into the new module**
 
 Move `FADE_STATE_LABELS`, badge creation, rating color calculation, formatting, tooltip creation, completed overlay construction, loading overlay construction, and fade-toggle construction from `overlay.js` into `overlay-elements.js`. Export this explicit surface while preserving the existing implementation bodies:
 
@@ -178,7 +178,7 @@ Export `createOverlayElement(title, options)` by adapting the current `#createOv
 
 Re-export `FADE_STATE_LABELS` from `overlay.js` so the existing `app.js` import remains compatible. Make `OverlayRenderer.injectOverlay()` translate configuration into builder options and attach the returned element.
 
-- [ ] **Step 4: Move element assertions by responsibility**
+- [x] **Step 4: Move element assertions by responsibility**
 
 Move these groups from `overlay.test.js` into `overlay-elements.test.js`: overlay content, optional ratings, loading content, fade toggle, pointer-event click propagation, tooltip formatting, vote formatting, and rating colors. Keep injection replacement, loading removal, marker attributes, container positioning, clear-all behavior, and fade-class behavior in `overlay.test.js`.
 
@@ -186,7 +186,7 @@ Run: `npx vitest run tests/unit/core/ui/overlay-elements.test.js tests/unit/core
 
 Expected: PASS, with `overlay.test.js` testing only renderer-owned behavior.
 
-- [ ] **Step 5: Run the clean-code diagnostic for overlay modules**
+- [x] **Step 5: Run the clean-code diagnostic for overlay modules**
 
 Run:
 
@@ -196,7 +196,7 @@ npx eslint src/core/overlay.js src/core/ui/overlay-elements.js src/core/ui/overl
 
 Expected: no warning for `OverlayRenderer.injectStyles()` or completed-overlay construction.
 
-- [ ] **Step 6: Commit the element extraction**
+- [x] **Step 6: Commit the element extraction**
 
 ```bash
 git add src/core/overlay.js src/core/ui/overlay-elements.js tests/unit/core/overlay.test.js tests/unit/core/ui/overlay-elements.test.js
@@ -218,7 +218,7 @@ git commit -m "refactor(overlay): extract element builders"
 - Produces: `render(container, settings): void`, `readValues(): object`, `validate(values): string[]`, `showStatus(message, type): void`, and `setSaveDisabled(disabled): void`
 - Consumes: callbacks `{ onSave, onClearCache, onResetClients }`.
 
-- [ ] **Step 1: Write a failing view snapshot test**
+- [x] **Step 1: Write a failing view snapshot test**
 
 Create `settings-view.test.js` with the license header and the intended view API:
 
@@ -244,19 +244,19 @@ describe('SettingsView', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the module is missing**
+- [x] **Step 2: Run the test and verify the module is missing**
 
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.js`
 
 Expected: FAIL because `settings-view.js` does not exist.
 
-- [ ] **Step 3: Move presentation and form access into `SettingsView`**
+- [x] **Step 3: Move presentation and form access into `SettingsView`**
 
 Move field grouping, ratings and services groups, label construction, input construction, action construction, status construction, form reading, validation classes, and style injection out of `SettingsUI`. `SettingsView` must store `fields`, `actions`, and the rendered container in private fields. Its controller-facing methods are `render(container, settings)`, `readValues()`, `validate(values)`, `showStatus(message, type)`, and `setSaveDisabled(disabled)`. `render()` invokes `actions.onSave`, `actions.onClearCache`, and `actions.onResetClients` from the three existing button handlers. `showStatus()` assigns the supplied message and `fm-status--${type}` class to `#fm-status`. `setSaveDisabled()` updates `#fm-saveBtn` when present.
 
 Order the class by constructor, `render()`, its first-use builders, `readValues()`, `validate()`, status and action state helpers, and style injection at its point of first use.
 
-- [ ] **Step 4: Make `SettingsUI` a controller using one snapshot**
+- [x] **Step 4: Make `SettingsUI` a controller using one snapshot**
 
 Construct the view in `SettingsUI` and wire its callbacks to controller methods. Implement save in this exact flow:
 
@@ -280,7 +280,7 @@ async save() {
 }
 ```
 
-- [ ] **Step 5: Split existing settings assertions**
+- [x] **Step 5: Split existing settings assertions**
 
 Move rendering, field population, validation-value semantics, and container-scoping assertions into `settings-view.test.js`. Keep storage persistence, asynchronous save state, `onSave`, cache clearing, reset behavior, and action error handling in `settings-ui.test.js`. Controller tests may render the real view but must assert controller-owned outcomes.
 
@@ -288,7 +288,7 @@ Run: `npx vitest run tests/unit/core/ui/settings-view.test.js tests/unit/core/ui
 
 Expected: PASS with each behavior asserted in exactly one file.
 
-- [ ] **Step 6: Run the clean-code diagnostic for settings modules**
+- [x] **Step 6: Run the clean-code diagnostic for settings modules**
 
 Run:
 
@@ -298,7 +298,7 @@ npx eslint src/core/ui/settings-ui.js src/core/ui/settings-view.js --rule 'max-l
 
 Expected: no warning for `SettingsUI.render()`, `SettingsView.render()`, or field construction.
 
-- [ ] **Step 7: Commit the settings extraction**
+- [x] **Step 7: Commit the settings extraction**
 
 ```bash
 git add src/core/ui/settings-ui.js src/core/ui/settings-view.js tests/unit/core/ui/settings-ui.test.js tests/unit/core/ui/settings-view.test.js
@@ -317,13 +317,13 @@ git commit -m "refactor(settings): extract view rendering"
 - Keeps: all existing `FlixMonkeyApp` public methods and `startApp(adapter)` behavior.
 - Adds only private helpers for fade-state lookup, in-flight requests, and resolved rendering.
 
-- [ ] **Step 1: Establish the green characterization baseline**
+- [x] **Step 1: Establish the green characterization baseline**
 
 Run: `npx vitest run tests/unit/core/app.test.js`
 
 Expected: PASS. The existing suite characterizes in-flight deduplication, timeout rejection, loading cleanup, removed-container handling, fade behavior, and navigation observation. This task is the refactor phase of the already-green TDD cycle and adds no behavior.
 
-- [ ] **Step 2: Extract the request helper without changing timer behavior**
+- [x] **Step 2: Extract the request helper without changing timer behavior**
 
 Add `#getTitleRequest(dedupKey, displayTitle)` that reuses an existing promise or creates the same timed promise currently built inside `#decorateContainer()`:
 
@@ -343,11 +343,11 @@ Add `#getTitleRequest(dedupKey, displayTitle)` that reuses an existing promise o
 }
 ```
 
-- [ ] **Step 3: Extract fade lookup and resolved rendering**
+- [x] **Step 3: Extract fade lookup and resolved rendering**
 
 Create `#getFadeOverride(dedupKey, fadeable, showFadeToggle)` and `#renderTitle(container, data, options)`. Leave `#decorateContainer()` as preparation, paint yield, helper calls, await, render, and cleanup. Preserve the existing `document.contains(container)` guard and fade-toggle callback behavior.
 
-- [ ] **Step 4: Run the complete app suite and diagnostic**
+- [x] **Step 4: Run the complete app suite and diagnostic**
 
 Run:
 
@@ -358,7 +358,7 @@ npx eslint src/core/app.js --rule 'max-lines-per-function: [warn, {max: 50, skip
 
 Expected: all app tests pass and `#decorateContainer()` has no length or complexity warning.
 
-- [ ] **Step 5: Commit application decomposition**
+- [x] **Step 5: Commit application decomposition**
 
 ```bash
 git add src/core/app.js tests/unit/core/app.test.js
@@ -395,13 +395,13 @@ git commit -m "refactor(app): clarify decoration workflow"
 - Produces no new runtime interface.
 - Preserves every method body outside the responsibility refactors from Tasks 1 through 4.
 
-- [ ] **Step 1: Record a green pre-reorder baseline**
+- [x] **Step 1: Record a green pre-reorder baseline**
 
 Run: `npm run test:unit`
 
 Expected: all unit tests pass before mechanical member movement.
 
-- [ ] **Step 2: Reorder lifecycle-oriented classes**
+- [x] **Step 2: Reorder lifecycle-oriented classes**
 
 Apply this sequence to `FlixMonkeyApp`, `SettingsUI`, `SettingsView`, `OverlayRenderer`, `Modal`, and `RequestQueue`:
 
@@ -417,7 +417,7 @@ accessors not needed earlier in the flow
 
 For `FlixMonkeyApp`, begin with `constructor`, `init`, `#initNavigationObservers`, `decorateRoot`, `#decorateContainer`, its extracted helpers, `#handleFadeToggleClick`, `redecorate`, administrative methods, `disconnect`, and accessors.
 
-- [ ] **Step 3: Reorder semantic and contract classes**
+- [x] **Step 3: Reorder semantic and contract classes**
 
 Use semantic consumption order for API clients, managers, data classes, services, and adapters:
 
@@ -429,7 +429,7 @@ Use semantic consumption order for API clients, managers, data classes, services
 
 Do not change method bodies during this step.
 
-- [ ] **Step 4: Group surface code by service**
+- [x] **Step 4: Group surface code by service**
 
 Keep shared typedefs, shared helpers, and `SurfaceManager` first. Then use these self-contained sections:
 
@@ -444,7 +444,7 @@ DISNEY_PLUS_SURFACES
 DisneyPlusSurfaceManager
 ```
 
-- [ ] **Step 5: Verify the mechanical reorder**
+- [x] **Step 5: Verify the mechanical reorder**
 
 Run:
 
@@ -457,7 +457,7 @@ git diff --check
 
 Expected: all commands pass. Inspect `git diff --word-diff=porcelain` to confirm files outside Tasks 1 through 4 contain movement only.
 
-- [ ] **Step 6: Commit project-wide ordering**
+- [x] **Step 6: Commit project-wide ordering**
 
 ```bash
 git add src
@@ -474,13 +474,13 @@ git commit -m "refactor: order classes by lifecycle"
 
 - Confirms all three build targets and all non-integration tests retain behavior.
 
-- [ ] **Step 1: Format the refactor**
+- [x] **Step 1: Format the refactor**
 
 Run: `npm run format`
 
 Expected: Prettier completes successfully. Review any formatting changes before staging them.
 
-- [ ] **Step 2: Run repository lint and formatting checks**
+- [x] **Step 2: Run repository lint and formatting checks**
 
 Run:
 
@@ -491,19 +491,19 @@ npm run format:check
 
 Expected: both commands pass with no warnings or errors.
 
-- [ ] **Step 3: Run all unit and UI tests**
+- [x] **Step 3: Run all unit and UI tests**
 
 Run: `npm test`
 
 Expected: all unit and UI tests pass. Do not run integration tests because they require live API credentials and are outside per-PR verification.
 
-- [ ] **Step 4: Build every distribution target**
+- [x] **Step 4: Build every distribution target**
 
 Run: `npm run build`
 
 Expected: userscript, Firefox, and Chrome builds complete, and extension packages are produced successfully.
 
-- [ ] **Step 5: Run the clean-code diagnostic**
+- [x] **Step 5: Run the clean-code diagnostic**
 
 Run:
 
@@ -513,7 +513,7 @@ npx eslint src scripts --rule 'max-lines-per-function: [warn, {max: 50, skipBlan
 
 Expected: no length warning for the refactored settings, overlay, or app workflows. Review unrelated complexity warnings from provider parsing and immutable data normalization without expanding this refactor.
 
-- [ ] **Step 6: Review the final diff and status**
+- [x] **Step 6: Review the final diff and status**
 
 Run:
 
@@ -525,7 +525,7 @@ git diff --stat HEAD~4..HEAD
 
 Expected: no whitespace errors, no unexpected untracked files, and changes limited to the approved source, tests, specification, and plan.
 
-- [ ] **Step 7: Commit any verification-only corrections**
+- [x] **Step 7: Commit any verification-only corrections**
 
 If formatting or verification required source corrections, commit only those reviewed changes:
 

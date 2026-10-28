@@ -4,5 +4,6 @@
  */
 
 export { AgregarrApiClient } from './agregarr-api-client';
+export type { ApiClientDeps } from './base-api-client';
 export { OmdbApiClient } from './omdb-api-client';
 export { XmdbApiClient } from './xmdb-api-client';

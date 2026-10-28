@@ -10,31 +10,18 @@ import { StreamingService } from './base-streaming-service';
 
 /** HBO Max streaming service implementation. */
 export class HboMaxService extends StreamingService {
-    /**
-     * @param configManager - Current application configuration.
-     * @returns Whether decoration is enabled for this service.
-     */
     override isEnabled(configManager: ConfigManager): boolean {
         return configManager.getBool('enableHboMax');
     }
 
-    /**
-     * @returns Root domains or exact hostnames without a protocol, port, or path.
-     */
     override get domains(): readonly string[] {
         return Object.freeze(['play.hbomax.com']);
     }
 
-    /**
-     * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
-     */
     override get SurfaceManager(): ServiceSurfaceManager {
         return HboMaxSurfaceManager;
     }
 
-    /**
-     * @returns Optional presentation values consumed by OverlayRenderer.
-     */
     override get constants(): ServicePresentation {
         return Object.freeze({ TOP_10_SELECTORS: Object.freeze(['.fm-hbo-top-10']), TOP_10_OFFSET: '30%' });
     }

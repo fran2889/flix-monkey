@@ -33,7 +33,7 @@
 - Produces: `extractDisneyPlusTitle(tile: Element): string | null`, `DISNEY_PLUS_SURFACES`, and `DisneyPlusSurfaceManager`.
 - Behavior contract: accepted cards match `a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]`; their parent is the fadeable, non-toggle overlay container.
 
-- [ ] **Step 1: Write failing unit tests for Disney+ label parsing and rejected labels**
+- [x] **Step 1: Write failing unit tests for Disney+ label parsing and rejected labels**
 
     In `tests/unit/core/surfaces.test.js`, import `extractDisneyPlusTitle` and `DisneyPlusSurfaceManager`. Add a `describe('Disney+ surfaces', ...)` block with these exact parsing cases:
 
@@ -79,13 +79,13 @@
     });
     ```
 
-- [ ] **Step 2: Run the focused test file and verify the new cases fail**
+- [x] **Step 2: Run the focused test file and verify the new cases fail**
 
     Run: `npx vitest run tests/unit/core/surfaces.test.js`
 
     Expected: FAIL because the Disney+ exports do not exist.
 
-- [ ] **Step 3: Implement the parser, surface definition, and manager**
+- [x] **Step 3: Implement the parser, surface definition, and manager**
 
     In `src/core/surfaces.js`, add the following after the HBO Max surface definitions. Keep the existing Netflix and HBO Max exports unchanged.
 
@@ -127,13 +127,13 @@
 
     The parent element is intentional: `OverlayRenderer.injectOverlay()` creates an IMDb anchor, and placing it inside Disney+'s title anchor would create invalid nested links.
 
-- [ ] **Step 4: Run unit tests and formatting for the changed core files**
+- [x] **Step 4: Run unit tests and formatting for the changed core files**
 
     Run: `npx vitest run tests/unit/core/surfaces.test.js && npx prettier --check src/core/surfaces.js tests/unit/core/surfaces.test.js`
 
     Expected: PASS.
 
-- [ ] **Step 5: Commit the surface-manager deliverable**
+- [x] **Step 5: Commit the surface-manager deliverable**
 
     ```bash
     git add src/core/surfaces.js tests/unit/core/surfaces.test.js
@@ -156,7 +156,7 @@
 - Produces: `DisneyPlusService` with ID `disneyplus`, domain `disneyplus.com`, and `isEnabled(configManager)` reading `enableDisneyPlus`; configuration field `enableDisneyPlus` defaulting to `true`.
 - Behavior contract: `ServiceRegistry.detect()` returns `DisneyPlusService` for `www.disneyplus.com`, and the Settings UI renders the new checkbox as checked by default.
 
-- [ ] **Step 1: Write failing registry and settings tests**
+- [x] **Step 1: Write failing registry and settings tests**
 
     Update `tests/unit/core/services.test.js` to import `DisneyPlusService` and `DisneyPlusSurfaceManager`, then extend existing tables:
 
@@ -194,13 +194,13 @@
     });
     ```
 
-- [ ] **Step 2: Run focused tests and verify failure**
+- [x] **Step 2: Run focused tests and verify failure**
 
     Run: `npx vitest run tests/unit/core/services.test.js tests/unit/core/config-fields.test.js tests/unit/core/ui/settings-ui.test.js`
 
     Expected: FAIL because `DisneyPlusService` and `enableDisneyPlus` do not exist.
 
-- [ ] **Step 3: Implement the service and setting**
+- [x] **Step 3: Implement the service and setting**
 
     In `src/core/services.js`, add `DisneyPlusSurfaceManager` to the surfaces import, then add this class after `HboMaxService`:
 
@@ -243,13 +243,13 @@
     },
     ```
 
-- [ ] **Step 4: Run focused tests and lint**
+- [x] **Step 4: Run focused tests and lint**
 
     Run: `npx vitest run tests/unit/core/services.test.js tests/unit/core/config-fields.test.js tests/unit/core/ui/settings-ui.test.js && npm run lint -- --quiet`
 
     Expected: PASS.
 
-- [ ] **Step 5: Commit the service-registry deliverable**
+- [x] **Step 5: Commit the service-registry deliverable**
 
     ```bash
     git add src/core/services.js src/core/config-fields.js tests/unit/core/services.test.js tests/unit/core/config-fields.test.js tests/unit/core/ui/settings-ui.test.js
@@ -272,7 +272,7 @@
 - Produces: Chrome and Firefox content-script matches and host permissions, a userscript `@match`, and options-page reload coverage for Disney+ tabs.
 - Behavior contract: installed extension and userscript code runs on `https://www.disneyplus.com/*`; saving settings reloads all matching Netflix, HBO Max, and Disney+ tabs.
 
-- [ ] **Step 1: Write the failing options-page reload test**
+- [x] **Step 1: Write the failing options-page reload test**
 
     In `tests/unit/targets/options.test.js`, replace the HBO Max-only test description and expected query with:
 
@@ -289,13 +289,13 @@
     });
     ```
 
-- [ ] **Step 2: Run the target test and verify failure**
+- [x] **Step 2: Run the target test and verify failure**
 
     Run: `npx vitest run tests/unit/targets/options.test.js`
 
     Expected: FAIL because the tab query does not include Disney+.
 
-- [ ] **Step 3: Add Disney+ to target matches, permissions, and reload query**
+- [x] **Step 3: Add Disney+ to target matches, permissions, and reload query**
 
     In both manifest files, add the same host pattern to `host_permissions` and `content_scripts[0].matches`:
 
@@ -315,13 +315,13 @@
     url: ['*://*.netflix.com/*', '*://play.hbomax.com/*', '*://www.disneyplus.com/*'],
     ```
 
-- [ ] **Step 4: Verify target tests, formatting, and builds**
+- [x] **Step 4: Verify target tests, formatting, and builds**
 
     Run: `npx vitest run tests/unit/targets/options.test.js && npm run format:check && npm run build`
 
     Expected: PASS; all three targets build and package successfully.
 
-- [ ] **Step 5: Commit the target-runtime deliverable**
+- [x] **Step 5: Commit the target-runtime deliverable**
 
     ```bash
     git add src/targets/chrome/manifest.json src/targets/firefox/manifest.json src/targets/userscript/metadata.js src/targets/extension/options.js tests/unit/targets/options.test.js
@@ -341,7 +341,7 @@
 - Produces: fixture-backed discovery and injection coverage for supported Disney+ cards, live cards, scheduled cards, and collection-page links.
 - Behavior contract: only eligible movie and series cards are discovered; overlays attach to shelf-card parents and never create nested anchors.
 
-- [ ] **Step 1: Create the fixture with supported and excluded surfaces**
+- [x] **Step 1: Create the fixture with supported and excluded surfaces**
 
     Create `tests/fixtures/disneyplus-browse.html` with the GPL-3.0 HTML license header and this body structure:
 
@@ -390,7 +390,7 @@
     </main>
     ```
 
-- [ ] **Step 2: Write the failing fixture-backed UI test**
+- [x] **Step 2: Write the failing fixture-backed UI test**
 
     Create `tests/ui/disneyplus-browse.ui.test.js` with the GPL-3.0 JS license header. Follow `tests/ui/hbomax-browse.ui.test.js`: load the fixture with `fs.readFileSync`, initialize `DisneyPlusSurfaceManager` and `OverlayRenderer`, then assert discovery and injection:
 
@@ -414,19 +414,19 @@
     });
     ```
 
-- [ ] **Step 3: Run the UI test after the Task 1 surface manager is available**
+- [x] **Step 3: Run the UI test after the Task 1 surface manager is available**
 
     Run: `npx vitest run tests/ui/disneyplus-browse.ui.test.js`
 
     Expected: PASS. The parser's failing and passing test cycle is completed in Task 1; this task adds fixture-backed discovery and injection coverage for that implementation.
 
-- [ ] **Step 4: Run UI coverage after completing fixture wiring**
+- [x] **Step 4: Run UI coverage after completing fixture wiring**
 
     Run: `npx vitest run tests/ui/disneyplus-browse.ui.test.js tests/ui/hbomax-browse.ui.test.js tests/ui/netflix-browse.ui.test.js`
 
     Expected: PASS, proving that Disney+ support does not regress the existing fixture-backed surfaces.
 
-- [ ] **Step 5: Commit the UI deliverable**
+- [x] **Step 5: Commit the UI deliverable**
 
     ```bash
     git add tests/fixtures/disneyplus-browse.html tests/ui/disneyplus-browse.ui.test.js
@@ -446,7 +446,7 @@
 - Consumes: the supported-service list: Netflix, HBO Max, and Disney+.
 - Produces: consistent service names in package metadata, store copy, README overview, settings help, troubleshooting, privacy text, and tab-reload documentation.
 
-- [ ] **Step 1: Update product copy to name all three services**
+- [x] **Step 1: Update product copy to name all three services**
 
     Make the following exact category of replacements, preserving existing meaning:
 
@@ -462,25 +462,25 @@
 
     Apply it to `package.json`'s description, the first two service references in `docs/store-description.txt`, and every user-facing Netflix/HBO Max service list in `README.md`, including multi-tab sync, the Enabled Streaming Services default, save behavior, troubleshooting, title lookup explanation, support guidance, and privacy disclosure. Keep the screenshots unchanged because no representative Disney+ screenshot is part of this scope.
 
-- [ ] **Step 2: Check documentation formatting and package JSON**
+- [x] **Step 2: Check documentation formatting and package JSON**
 
     Run: `npm run format:check && node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8')); console.log('package.json valid')"`
 
     Expected: PASS and `package.json valid`.
 
-- [ ] **Step 3: Run the full verification suite**
+- [x] **Step 3: Run the full verification suite**
 
     Run: `npm run lint && npm run format:check && npm test && npm run build`
 
     Expected: all lint, format, unit, UI, build, icon-generation, and packaging steps PASS.
 
-- [ ] **Step 4: Inspect the final change set**
+- [x] **Step 4: Inspect the final change set**
 
     Run: `git status --short && git diff --check && git diff --stat`
 
     Expected: only the README, store description, and package metadata are uncommitted at this step; `git diff --check` reports no whitespace errors; and the diff stat contains only the intended Disney+ documentation changes.
 
-- [ ] **Step 5: Commit the documentation deliverable**
+- [x] **Step 5: Commit the documentation deliverable**
 
     ```bash
     git add README.md docs/store-description.txt package.json

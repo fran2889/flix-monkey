@@ -6,7 +6,13 @@ import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
-import { CONFIG_FIELDS, ConfigManager, type ConfigValueType } from '../../../../src/core/config/index';
+import {
+    CONFIG_FIELDS,
+    type ConfigField,
+    ConfigManager,
+    type ConfigValueType,
+    isSettingField,
+} from '../../../../src/core/config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { Logger } from '../../../../src/core/logger';
@@ -31,7 +37,12 @@ describe('SettingsUI', () => {
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);
-        settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager);
+        settingsUI = new SettingsUI({
+            adapter: mockAdapter,
+            logger: mockLogger,
+            cacheManager: mockCacheManager,
+            disabledClientsManager: mockDisabledClientsManager,
+        });
         container = document.createElement('div');
         document.head.innerHTML = '';
         document.body.innerHTML = '';
@@ -70,8 +81,8 @@ describe('SettingsUI', () => {
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
             const saved = mockAdapter.storageSetMany.mock.calls[0][0];
-            CONFIG_FIELDS.forEach(field => {
-                if (field.type !== 'action' && !(field as { disabled?: boolean }).disabled) {
+            CONFIG_FIELDS.forEach((field: ConfigField) => {
+                if (isSettingField(field) && !field.disabled) {
                     expect(Object.hasOwn(saved, field.key)).toBe(true);
                 }
             });
@@ -101,7 +112,15 @@ describe('SettingsUI', () => {
                     return undefined;
                 },
             };
-            settingsUI = new SettingsUI(mockAdapter, mockLogger, mockCacheManager, mockDisabledClientsManager, [field]);
+            settingsUI = new SettingsUI(
+                {
+                    adapter: mockAdapter,
+                    logger: mockLogger,
+                    cacheManager: mockCacheManager,
+                    disabledClientsManager: mockDisabledClientsManager,
+                },
+                [field]
+            );
             await settingsUI.render(container);
 
             await settingsUI.save();
@@ -218,7 +237,7 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('Collaborator wiring', () => {
+    describe('Dependency wiring', () => {
         it('gives the cache manager a working config logger', async () => {
             mockAdapter.configGet = vi.fn(() => {
                 throw new Error('config read failed');

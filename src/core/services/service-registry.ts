@@ -18,12 +18,12 @@ export class ServiceRegistry {
     /**
      * Detects the current streaming service from the hostname.
      *
+     * @param [hostname] - Hostname to inspect; defaults to the current page hostname.
      * @returns StreamingService instance or undefined if no match found
      */
-    static detect(): StreamingService | undefined {
-        const currentHost: string = window.location.hostname;
+    static detect(hostname: string = window.location.hostname): StreamingService | undefined {
         for (const service of Object.values(SERVICES)) {
-            if (service.domains.some(d => currentHost === d || currentHost.endsWith(`.${d}`))) {
+            if (service.domains.some(d => hostname === d || hostname.endsWith(`.${d}`))) {
                 return service;
             }
         }

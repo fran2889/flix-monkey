@@ -9,24 +9,14 @@ import { StreamingService } from './base-streaming-service';
 
 /** Disney+ streaming service implementation. */
 export class DisneyPlusService extends StreamingService {
-    /**
-     * @param configManager - Current application configuration.
-     * @returns Whether decoration is enabled for this service.
-     */
     override isEnabled(configManager: ConfigManager): boolean {
         return configManager.getBool('enableDisneyPlus');
     }
 
-    /**
-     * @returns Root domains or exact hostnames without a protocol, port, or path.
-     */
     override get domains(): readonly string[] {
         return Object.freeze(['disneyplus.com']);
     }
 
-    /**
-     * @returns Constructor that accepts a Logger and creates this service's SurfaceManager.
-     */
     override get SurfaceManager(): ServiceSurfaceManager {
         return DisneyPlusSurfaceManager;
     }

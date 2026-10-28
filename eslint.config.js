@@ -5,16 +5,17 @@ import { globalIgnores } from 'eslint/config';
 import headers from 'eslint-plugin-headers';
 import jsdoc from 'eslint-plugin-jsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 const commonRules = {
-    indent: 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: 'error',
     'no-console': ['error', { allow: ['debug', 'info', 'warn', 'error', 'log'] }],
-    complexity: ['error', 16],
+    complexity: ['error', 10],
+    'sonarjs/cognitive-complexity': ['error', 10],
     'default-param-last': 'error',
     'no-nested-ternary': 'error',
     'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
@@ -22,6 +23,25 @@ const commonRules = {
     'simple-import-sort/exports': 'error',
     'unused-imports/no-unused-imports': 'error',
 };
+
+const javascriptRules = {
+    ...commonRules,
+    'max-params': ['error', 4],
+};
+
+// JSDoc is enforced on exported declarations, abstract members, and interface
+// signatures. Class members are optional.
+const exported = ':is(ExportNamedDeclaration, ExportDefaultDeclaration)';
+
+const exportedContracts = [
+    `${exported} > FunctionDeclaration`,
+    `${exported} > ClassDeclaration`,
+    `${exported} > ClassDeclaration > ClassBody > TSAbstractMethodDefinition`,
+    `${exported} > TSInterfaceDeclaration`,
+    `${exported} > TSInterfaceDeclaration > TSInterfaceBody > TSMethodSignature`,
+    `${exported} > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression`,
+    `${exported} > VariableDeclaration > VariableDeclarator > FunctionExpression`,
+];
 
 const typescriptRules = {
     ...commonRules,
@@ -38,6 +58,7 @@ const typescriptRules = {
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/prefer-string-starts-ends-with': 'error',
     '@typescript-eslint/no-shadow': 'error',
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
     '@typescript-eslint/no-import-type-side-effects': 'error',
     '@typescript-eslint/no-floating-promises': 'error',
@@ -47,6 +68,7 @@ const typescriptRules = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-unused-vars': 'off',
+    '@typescript-eslint/max-params': ['error', { max: 4 }],
     // TypeScript already checks undefined identifiers.
     'no-undef': 'off',
 };
@@ -79,9 +101,10 @@ export default [
         },
         plugins: {
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
-        rules: commonRules,
+        rules: javascriptRules,
     },
     // 2. TypeScript files - strict TypeScript rules
     {
@@ -98,6 +121,7 @@ export default [
         plugins: {
             '@typescript-eslint': typescriptPlugin,
             'simple-import-sort': simpleImportSort,
+            sonarjs,
             'unused-imports': eslintPluginUnusedImports,
         },
         rules: typescriptRules,
@@ -112,6 +136,12 @@ export default [
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
         },
+    },
+    // 2.6. Cache migrations will be replaced by a cache schema version.
+    {
+        files: ['src/core/migrations.ts'],
+        plugins: { sonarjs },
+        rules: { complexity: 'off', 'sonarjs/cognitive-complexity': 'off' },
     },
     // 3. Production code must document intentional no-op functions.
     {
@@ -141,6 +171,11 @@ export default [
                 {
                     selector: 'TSAsExpression > TSNeverKeyword',
                     message: 'Do not assert to never; fix the underlying type instead.',
+                },
+                {
+                    selector: 'ExportNamedDeclaration[declaration=null][source=null]',
+                    message:
+                        'Export declarations at their declaration site; local export lists hide the declaration from the JSDoc rule.',
                 },
             ],
         },
@@ -175,7 +210,7 @@ export default [
             },
         },
     },
-    // 7. JSDoc validation for exported functions
+    // 7. JSDoc validation for the exported API surface
     {
         files: ['src/**/*.ts'],
         plugins: { jsdoc },
@@ -184,28 +219,28 @@ export default [
                 'error',
                 {
                     require: {
-                        MethodDefinition: true,
-                        ClassDeclaration: true,
+                        FunctionDeclaration: false,
+                        MethodDefinition: false,
+                        ClassDeclaration: false,
                     },
-                    contexts: ['export'],
-                    publicOnly: true,
+                    contexts: exportedContracts,
                 },
             ],
-            'jsdoc/require-description': ['error', { contexts: ['export'] }],
-            'jsdoc/require-param': ['error', { contexts: ['export'] }],
+            'jsdoc/require-description': ['error', { contexts: exportedContracts }],
+            'jsdoc/require-param': ['error', { contexts: exportedContracts, checkDestructured: false }],
             'jsdoc/require-param-description': 'error',
-            'jsdoc/require-returns': ['error', { contexts: ['export'] }],
+            'jsdoc/require-returns': ['error', { contexts: exportedContracts }],
             'jsdoc/require-returns-description': 'error',
             'jsdoc/no-types': 'error',
             'jsdoc/check-types': 'error',
             'jsdoc/no-undefined-types': 'error',
         },
     },
-    // 8. License header enforcement - src and tests only (isolated block)
+    // 8. License header enforcement - src, tests, and scripts (isolated block)
     // metadata.ts is a comment-only template file (no AST tokens). The plugin
     // cannot detect its existing header and would insert duplicates on --fix.
     {
-        files: ['{src,tests}/**/*.ts'],
+        files: ['{src,tests}/**/*.ts', 'scripts/**/*.{js,ts}'],
         ignores: ['src/targets/userscript/metadata.ts'],
         plugins: { headers },
         rules: {

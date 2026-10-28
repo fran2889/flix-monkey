@@ -16,6 +16,8 @@ export class RequestQueue {
     readonly #adapter: PlatformAdapter;
 
     /**
+     * Creates a queue with the given pacing and cross-tab sync key.
+     *
      * @param adapter - Storage adapter used for cross-tab coordination.
      * @param minInterval - Minimum delay between dispatched requests.
      * @param globalSyncKey - Storage key used to coordinate the delay across tabs.
