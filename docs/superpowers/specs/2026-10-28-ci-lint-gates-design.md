@@ -78,13 +78,16 @@ Option 1 is chosen for speed and the smallest surface change.
     cost of one third-party action pinned by SHA.
 
 - **web-ext lint step.** Place it in `build` after `npm run build` and run
+  `npm run lint:firefox`. The script wraps
   `npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox`.
   npx installs into its own cache, so the install does not touch the project
-  dependency tree, and the command matches the one documented for contributors.
+  dependency tree, and the version pin lives in `package.json`.
 - **Warnings do not gate.** `web-ext lint` exits non-zero on errors only;
   warnings are printed in the job log without failing the build.
-- **No new npm scripts.** Keep the ad hoc web-ext install out of `package.json`.
-  Document the local command instead.
+- **One npm script, no dependency.** Add a `lint:firefox` script that runs the
+  ad hoc `npx` command. `web-ext` stays out of `devDependencies`, so
+  `npm run audit` is unaffected, and CI and the docs share one command and one
+  version pin.
 - **Documentation.** Update `AGENTS.md` and `CONTRIBUTING.md` so the described
   CI gates and local equivalents match the workflows.
 
@@ -93,7 +96,7 @@ Option 1 is chosen for speed and the smallest surface change.
 - actionlint 1.7.12 passes on the repository when run locally.
 - A PR run shows the `Lint workflows` step green on a clean tree and red on a
   deliberately broken workflow expression.
-- `npm run build:firefox` followed by the web-ext lint command exits 0 with no
+- `npm run build:firefox` followed by `npm run lint:firefox` exits 0 with no
   errors.
 - A manifest error, such as a malformed version, still exits non-zero.
 - `npm run format:check` and `npm run lint` pass.
@@ -115,8 +118,15 @@ Option 1 is chosen for speed and the smallest surface change.
   first run depends on GitHub release availability and npm registry access for
   its tool-cache helper. Its internal `actions/cache` entry makes later runs
   fast.
-- The web-ext version now appears in four places: the CI workflow, the store
-  publish workflow, `AGENTS.md`, and `CONTRIBUTING.md`. Bump them together.
+- The web-ext version now appears in two places: the `lint:firefox` script in
+  `package.json` and the store publish workflow. Bump them together.
+- `web-ext lint` reports `KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION` on the
+  current manifest. The extension is desktop-only: MDN documents
+  `browser_specific_settings.gecko_android` as the Android opt-in, and without it
+  the extension is only made available on desktop Firefox. The linter falls back
+  to `gecko.strict_min_version` when the sub-key is absent, so the warning is
+  expected and does not gate. Do not add the sub-key just to silence it, because
+  that also opts the extension into Firefox for Android.
 - CI installs web-ext from the repository root, so the repository `.npmrc`
   applies. `min-release-age=5` rejects a web-ext version published less than five
   days before the run; a release-day bump fails until the version ages or the

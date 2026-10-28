@@ -18,7 +18,8 @@
 
 ## Global Constraints
 
-- `web-ext` must not enter `package.json` or `package-lock.json`; `npm run audit` must stay green.
+- `web-ext` must not enter `package.json` dependencies or `package-lock.json`; `npm run audit` must stay green.
+- Add a `lint:firefox` npm script that wraps the ad hoc `npx` command.
 - `raven-actions/actionlint` must be pinned to `3d39aea434753780c3b3d4a1a31c854b4dbf49d7` (v2.2.0) with `version: '1.7.12'`.
 - `web-ext` version is `10.7.0`, matching the store publish workflow.
 - CI owns the actionlint pin; local runs use a direct `actionlint` install.
@@ -94,21 +95,28 @@ git commit -m "ci(github): lint workflows with actionlint"
 **Files:**
 
 - Modify: `.github/workflows/ci.yml` (`build` job)
+- Modify: `package.json` (`scripts`)
 
 **Interfaces:**
 
 - Consumes: the `build` job and `dist/firefox` produced by `npm run build`.
-- Produces: a `Lint Firefox extension` step inside `build`, which `merge-gate` already requires.
+- Produces: a `lint:firefox` script and a `Lint Firefox extension` step inside `build`, which `merge-gate` already requires.
 
-- [x] **Step 1: Add the web-ext lint step to the build job**
+- [x] **Step 1: Add the `lint:firefox` script and the build step**
+
+Add to the `scripts` block in `package.json`:
+
+```json
+"lint:firefox": "npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox"
+```
 
 Append this step after `- run: npm run build` in the `build` job:
 
 ```yaml
 - name: Lint Firefox extension
-  # Errors fail the step; warnings are reported in the log. npx installs
-  # web-ext into its cache, so the project dependency tree is untouched.
-  run: npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
+  # Errors fail the step; warnings are reported in the log. The script resolves
+  # web-ext through npx, so the project dependency tree is untouched.
+  run: npm run lint:firefox
 ```
 
 - [x] **Step 2: Rebuild and verify the lint passes**
@@ -117,7 +125,7 @@ Run:
 
 ```bash
 npm run build:firefox
-npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
+npm run lint:firefox
 ```
 
 Expected: exit 0 with `errors 0`; warnings are reported without failing.
@@ -150,10 +158,10 @@ Run:
 npm run format:check
 npm run lint
 npm run audit
-git diff --exit-code package.json package-lock.json
+git diff --exit-code package-lock.json
 ```
 
-Expected: all pass, and the dependency files are unchanged.
+Expected: all pass, `package-lock.json` is unchanged, and the only `package.json` change is the new script.
 
 - [x] **Step 5: Commit**
 
@@ -183,8 +191,8 @@ git commit -m "ci(github): lint the Firefox build with web-ext"
 After the full local check line in `AGENTS.md`, add:
 
 ```markdown
-- Lint workflows: `actionlint` 1.7.12, installed separately; CI runs it through `raven-actions/actionlint`
-- Lint the Firefox extension: `npm run build:firefox && npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox`
+- Lint workflows: `actionlint` 1.7.12, installed separately; run it from the repo root. CI runs it through `raven-actions/actionlint`
+- Lint the Firefox extension: `npm run build:firefox && npm run lint:firefox`
 ```
 
 - [x] **Step 2: Update the CI job description in AGENTS.md**
@@ -200,11 +208,13 @@ Replace the `CI enforces six merge-gate jobs` bullet with:
 After the full local check code block in the `Run the checks` section, add:
 
 ````markdown
+    If you changed a workflow, also run `actionlint`.
+
     If you changed the Firefox manifest, also run:
 
     ```bash
     npm run build:firefox
-    npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
+    npm run lint:firefox
     ```
 ````
 
@@ -245,7 +255,7 @@ git diff --stat origin/main...HEAD
 git status --short
 ```
 
-Expected: exactly these changed files: `.github/workflows/ci.yml`, `AGENTS.md`, `CONTRIBUTING.md`, the spec, and this plan. `git status` shows only the two unrelated untracked review documents.
+Expected: exactly these changed files: `.github/workflows/ci.yml`, `package.json`, `AGENTS.md`, `CONTRIBUTING.md`, the spec, and this plan. `git status` shows only the two unrelated untracked review documents.
 
 - [x] **Step 2: Run both new gates**
 
@@ -254,7 +264,7 @@ Run:
 ```bash
 actionlint
 npm run build:firefox
-npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
+npm run lint:firefox
 ```
 
 Expected: actionlint exits 0 silently; web-ext reports `errors 0`.

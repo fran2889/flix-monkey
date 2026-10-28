@@ -79,11 +79,13 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
       && npm run test:coverage
     ```
 
+    If you changed a workflow, also run `actionlint`.
+
     If you changed the Firefox manifest, also run:
 
     ```bash
     npm run build:firefox
-    npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
+    npm run lint:firefox
     ```
 
 5.  **Submit your PR:**
