@@ -57,8 +57,7 @@ jobs:
             - run: npm rebuild sharp
             - run: npm run build
             - name: Lint Firefox extension
-              # Errors fail the step; warnings are reported in the log. The script
-              # resolves web-ext through npx, so the project dependency tree is untouched.
+              # Errors fail the step; warnings are reported in the log.
               run: npm run lint:firefox
 
     test-unit:

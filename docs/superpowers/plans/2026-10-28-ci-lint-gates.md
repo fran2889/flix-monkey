@@ -114,8 +114,7 @@ Append this step after `- run: npm run build` in the `build` job:
 
 ```yaml
 - name: Lint Firefox extension
-  # Errors fail the step; warnings are reported in the log. The script resolves
-  # web-ext through npx, so the project dependency tree is untouched.
+  # Errors fail the step; warnings are reported in the log.
   run: npm run lint:firefox
 ```
 
