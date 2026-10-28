@@ -52,7 +52,7 @@ Plans live in [`docs/superpowers/plans/`](docs/superpowers/plans/) and track wor
 
 - License header: every `{src,tests}/**/*.ts` and `scripts/**/*.{js,ts}` file starts with the SPDX header matching `LICENSE_HEADER.template`. ESLint enforces this; `src/targets/userscript/metadata.ts` is exempt from the rule because it is a comment-only template, but it still carries the header. Do not hand-add headers to generated bundles.
 - Exports are the boundary: ESLint requires a description plus `@param` and `@returns` where applicable on exported functions and classes, exported arrow and function constants, abstract members, and interface method signatures. Destructured options are documented as one root object. Class methods, constructors, fields, and object function properties are not lint-enforced; document them when a caller cannot infer the contract. See `eslint.config.js` for the exact rules.
-- Declare exports at their declaration site (`export function`, `export class`, `export const`). Local export lists, including `export type { ... }`, are rejected because the JSDoc rule cannot see the exported declaration through them.
+- Declare exports at their declaration site (`export function`, `export class`, `export const`). Local export lists in `src/`, including `export type { ... }`, are rejected because the JSDoc rule cannot see the exported declaration through them.
 - Document what a caller must understand to use the export safely: abstract and cross-platform contracts, injected dependencies, and persistence, messaging, HTTP, and external-data behavior. Use `unknown` for untrusted input and named `@typedef`s for reused shapes.
 - Omit JSDoc for private helpers, non-exported DOM and UI glue, concrete getters and setters, and self-evident signatures. Keep an accessor comment only when it explains behavior a caller cannot see, such as a fallback. The lint rule checks exported declarations, abstract members, and interface signatures, and it checks that documentation exists rather than that it is warranted.
 - Relative imports name a file. Directory modules go through their `index.ts` barrel with an explicit extensionless path (`../core/config/index`), never as a bare directory or with a `.ts` suffix.
@@ -99,7 +99,7 @@ Issue and PR body shape is defined by the templates in [`.github/`](.github/), n
 
 ### Releases
 
-release-please runs on pushes to `main`. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `.github/workflows/publish-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
+release-please runs on pushes to `main`. It authenticates with a short-lived installation access token for the GitHub App installed on this repository (`RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`), not `GITHUB_TOKEN`, so CI runs automatically on its release PR. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `.github/workflows/publish-to-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
 
 ## Where to look
 

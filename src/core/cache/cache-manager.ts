@@ -18,7 +18,7 @@ export interface CacheStore {
      * Reads a cache entry by display title.
      *
      * @param displayTitle - Title as shown by the streaming service.
-     * @returns Cache entry, including expired entries, or undefined on a miss.
+     * @returns Cache entry, including expired entries for short-circuit refresh, or undefined on a miss or a corrupt entry.
      */
     read(displayTitle: string): Promise<CacheEntry | undefined>;
 
@@ -47,14 +47,6 @@ export class CacheManager implements CacheStore {
         this.#logger = logger;
     }
 
-    /**
-     * Reads a cache entry by display title. Returns a CacheEntry for both
-     * hits and expired entries (which may be used for short-circuit refresh).
-     * Returns undefined for complete cache misses or corrupt entries.
-     *
-     * @param displayTitle - Streaming-service title used to derive the cache key.
-     * @returns Cache entry (including expired), or undefined for miss/corrupt.
-     */
     async read(displayTitle: string): Promise<CacheEntry | undefined> {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
@@ -72,15 +64,6 @@ export class CacheManager implements CacheStore {
         return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
-    /**
-     * Persists a Title as a CacheEntry using the TTL selected from its
-     * rating and release year. Stores displayTitle and imdbId at the top
-     * level, with Title data (excluding displayTitle) in the data field.
-     *
-     * @param displayTitle - Streaming-service title used to derive the cache key.
-     * @param titleObj - Title to serialize.
-     * @returns Resolves when the entry has been stored.
-     */
     async write(displayTitle: string, titleObj: Title): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
         const now = Date.now();

@@ -112,11 +112,6 @@ export class Title {
         return new Title({ ...this, source });
     }
 
-    /**
-     * Indicates whether this title has at least one rating (IMDb, Rotten Tomatoes, or Metacritic).
-     *
-     * @returns True when at least one rating is present.
-     */
     get hasRating(): boolean {
         return this.imdbRating !== undefined || this.rtRating !== undefined || this.mcRating !== undefined;
     }
