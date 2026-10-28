@@ -53,6 +53,10 @@ jobs:
             - run: npm ci --ignore-scripts
             - run: npm rebuild sharp
             - run: npm run build
+            - name: Install web-ext
+              run: npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0
+            - name: Lint Firefox extension
+              run: npx --no-install web-ext lint --source-dir dist/firefox --warnings-as-errors
 
     test-unit:
         runs-on: ubuntu-latest
