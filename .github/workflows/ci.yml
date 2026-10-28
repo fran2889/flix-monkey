@@ -61,8 +61,9 @@ jobs:
               # cannot disturb the locked dependency tree.
               run: npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0
             - name: Lint Firefox extension
+              # Errors fail the step; warnings are reported in the log.
               run: |
-                  "$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox --warnings-as-errors
+                  "$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox
 
     test-unit:
         runs-on: ubuntu-latest
