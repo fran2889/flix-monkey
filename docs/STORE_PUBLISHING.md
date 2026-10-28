@@ -2,7 +2,7 @@
 
 FlixMonkey is published to the Chrome Web Store and Firefox Add-ons (AMO) by the
 `Publish to Stores` GitHub Actions workflow
-(`.github/workflows/publish-stores.yml`). Publishing is a **manual deployment**:
+(`.github/workflows/publish-to-stores.yml`). Publishing is a **manual deployment**:
 a maintainer runs the workflow for a chosen release tag, and it reuses the
 artifacts already attached to that GitHub Release (no rebuild). A release must
 therefore exist, with its artifacts attached, before it can be published.
