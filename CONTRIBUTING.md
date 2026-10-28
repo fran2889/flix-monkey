@@ -83,7 +83,7 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 
     ```bash
     npm run build:firefox
-    npx --yes web-ext@10.7.0 lint --source-dir dist/firefox
+    npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
     ```
 
 5.  **Submit your PR:**

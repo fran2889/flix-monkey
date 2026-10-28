@@ -4,7 +4,7 @@
 
 **Goal:** Add actionlint and web-ext lint to the existing CI jobs so both block merges through `merge-gate`.
 
-**Architecture:** actionlint runs through the SHA-pinned `raven-actions/actionlint` action in `lint-and-audit`, with the tool version pinned by its `version` input. web-ext lint runs in `build` after the all-target build, installing `web-ext` ad hoc. Warnings are reported but do not fail the build. No new workflows or required check contexts.
+**Architecture:** actionlint runs through the SHA-pinned `raven-actions/actionlint` action in `lint-and-audit`, with the tool version pinned by its `version` input. web-ext lint runs in `build` after the all-target build through `npx`. Warnings are reported but do not fail the build. No new workflows or required check contexts.
 
 **Tech Stack:** GitHub Actions, raven-actions/actionlint 2.2.0, actionlint 1.7.12, web-ext 10.7.0, Node 24, Prettier.
 
@@ -55,9 +55,10 @@ Insert this step between `actions/checkout` and `actions/setup-node` in the `lin
   uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
   with:
       version: '1.7.12'
+      pyflakes: false
 ```
 
-The action downloads the pinned actionlint release, caches it, and fails the step on errors. Keep `version` explicit because its default is `latest`.
+The action downloads the pinned actionlint release, caches it, and fails the step on errors. Keep `version` explicit because its default is `latest`. `pyflakes` is off because the workflows contain no Python; `shellcheck` stays on.
 
 - [ ] **Step 2: Verify actionlint passes on the repository locally**
 
@@ -97,22 +98,17 @@ git commit -m "ci(github): lint workflows with actionlint"
 **Interfaces:**
 
 - Consumes: the `build` job and `dist/firefox` produced by `npm run build`.
-- Produces: `Install web-ext` and `Lint Firefox extension` steps inside `build`, which `merge-gate` already requires.
+- Produces: a `Lint Firefox extension` step inside `build`, which `merge-gate` already requires.
 
-- [ ] **Step 1: Add the web-ext steps to the build job**
+- [ ] **Step 1: Add the web-ext lint step to the build job**
 
-Append these steps after `- run: npm run build` in the `build` job:
+Append this step after `- run: npm run build` in the `build` job:
 
 ```yaml
-- name: Install web-ext
-  # web-ext is not a devDependency because its advisories would keep the audit
-  # gate red. Install it outside the project tree so it cannot disturb the
-  # locked dependency tree.
-  run: npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0
 - name: Lint Firefox extension
-  # Errors fail the step; warnings are reported in the log.
-  run: |
-      "$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox
+  # Errors fail the step; warnings are reported in the log. npx installs
+  # web-ext into its cache, so the project dependency tree is untouched.
+  run: npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 ```
 
 - [ ] **Step 2: Rebuild and verify the lint passes**
@@ -121,7 +117,7 @@ Run:
 
 ```bash
 npm run build:firefox
-npx --yes web-ext@10.7.0 lint --source-dir dist/firefox
+npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 ```
 
 Expected: exit 0 with `errors 0`; warnings are reported without failing.
@@ -140,7 +136,7 @@ d = json.load(open(p))
 d['version'] = 'not-a-version'
 json.dump(d, open(p, 'w'))
 PY
-npx --yes web-ext@10.7.0 lint --source-dir /tmp/fm-manifest-probe
+npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir /tmp/fm-manifest-probe
 rm -rf /tmp/fm-manifest-probe
 ```
 
@@ -188,7 +184,7 @@ After the full local check line in `AGENTS.md`, add:
 
 ```markdown
 - Lint workflows: `actionlint` 1.7.12, installed separately; CI runs it through `raven-actions/actionlint`
-- Lint the Firefox extension: `npm run build:firefox && npx --yes web-ext@10.7.0 lint --source-dir dist/firefox`
+- Lint the Firefox extension: `npm run build:firefox && npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox`
 ```
 
 - [ ] **Step 2: Update the CI job description in AGENTS.md**
@@ -208,7 +204,7 @@ After the full local check code block in the `Run the checks` section, add:
 
     ```bash
     npm run build:firefox
-    npx --yes web-ext@10.7.0 lint --source-dir dist/firefox
+    npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
     ```
 ````
 
@@ -258,7 +254,7 @@ Run:
 ```bash
 actionlint
 npm run build:firefox
-npx --yes web-ext@10.7.0 lint --source-dir dist/firefox
+npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 ```
 
 Expected: actionlint exits 0 silently; web-ext reports `errors 0`.

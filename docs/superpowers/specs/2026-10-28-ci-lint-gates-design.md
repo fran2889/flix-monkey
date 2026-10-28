@@ -39,9 +39,9 @@ new status check contexts or ruleset changes.
   The action downloads the actionlint release named by its `version` input, so
   pinning the action SHA and the input together fixes both the runner and the
   tool.
-- The action ensures `shellcheck` and `pyflakes` are on `PATH` for actionlint's
-  embedded script checks. On `ubuntu-latest` it uses the preinstalled
-  `shellcheck` and installs `pyflakes` with `pipx`.
+- The action uses the preinstalled `shellcheck` for actionlint's embedded script
+  checks. `pyflakes` is disabled: the workflows contain no Python, and enabling it
+  installs an unpinned PyPI package on every cold run.
 - `merge-gate` runs on pushes to `main` and on pull requests. Do not add
   PR-only jobs to `ci.yml`.
 - CI owns the actionlint pin; local runs use a direct `actionlint` install.
@@ -77,12 +77,10 @@ Option 1 is chosen for speed and the smallest surface change.
     pull, the image cache, and the container runtime dependency from CI, at the
     cost of one third-party action pinned by SHA.
 
-- **web-ext lint step.** Place it in `build` after `npm run build`. Install with
-  `npm install --prefix "$RUNNER_TEMP/web-ext" --no-save --no-package-lock --no-audit --no-fund --ignore-scripts web-ext@10.7.0`,
-  then run
-  `"$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" lint --source-dir dist/firefox`.
-  The isolated prefix keeps the install from touching the project dependency
-  tree.
+- **web-ext lint step.** Place it in `build` after `npm run build` and run
+  `npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox`.
+  npx installs into its own cache, so the install does not touch the project
+  dependency tree, and the command matches the one documented for contributors.
 - **Warnings do not gate.** `web-ext lint` exits non-zero on errors only;
   warnings are printed in the job log without failing the build.
 - **No new npm scripts.** Keep the ad hoc web-ext install out of `package.json`.
@@ -119,3 +117,7 @@ Option 1 is chosen for speed and the smallest surface change.
   fast.
 - The web-ext version now appears in four places: the CI workflow, the store
   publish workflow, `AGENTS.md`, and `CONTRIBUTING.md`. Bump them together.
+- CI installs web-ext from the repository root, so the repository `.npmrc`
+  applies. `min-release-age=5` rejects a web-ext version published less than five
+  days before the run; a release-day bump fails until the version ages or the
+  step overrides the setting.
