@@ -30,6 +30,8 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Lint workflows
+              run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
             - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
               with:
                   node-version: '24.x'
