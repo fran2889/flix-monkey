@@ -105,7 +105,7 @@ export function interpolateColor(progress: number, startHex: string, endHex: str
 
     const rgb = hslToRgb(h, s, l);
 
-    // Clamp RGB values to stay within endpoint color bounds
+    // The HSL round-trip can overshoot the endpoints; clamp so a gradient never leaves its configured colors.
     const clampedR = Math.max(Math.min(rgb.r, Math.max(startRgb.r, endRgb.r)), Math.min(startRgb.r, endRgb.r));
     const clampedG = Math.max(Math.min(rgb.g, Math.max(startRgb.g, endRgb.g)), Math.min(startRgb.g, endRgb.g));
     const clampedB = Math.max(Math.min(rgb.b, Math.max(startRgb.b, endRgb.b)), Math.min(startRgb.b, endRgb.b));

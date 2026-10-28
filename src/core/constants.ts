@@ -10,7 +10,7 @@ export const AUTOSAVE_DEBOUNCE_MS: number = 1000;
 export const HOVER_ACTION_DELAY_MS: number = 1000;
 export const IDLE_CALLBACK_TIMEOUT_MS: number = 2000;
 export const INFLIGHT_TIMEOUT_MS: number = 30_000;
-export const CLIENT_DISABLE_DURATION: number = 60 * 60 * 1000; // 1 hour
+export const CLIENT_DISABLE_DURATION: number = 60 * 60 * 1000;
 export const DEFAULT_FETCH_TIMEOUT: number = 8000;
 
 export const ApiSource = Object.freeze({
@@ -30,8 +30,6 @@ export const TitleType = Object.freeze({
     SERIES: 'series',
 } as const);
 
-// Type for ApiSource values
 export type ApiSourceType = (typeof ApiSource)[keyof typeof ApiSource];
 
-// Type for TitleType values
 export type TitleTypeType = (typeof TitleType)[keyof typeof TitleType];

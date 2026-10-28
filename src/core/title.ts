@@ -70,16 +70,6 @@ export class Title {
     }
 
     /**
-     * Returns a plain object representation suitable for cache serialization,
-     * excluding displayTitle which is stored separately at the cache entry level.
-     * @returns Title fields without displayTitle
-     */
-    toCacheJSON(): TitleData {
-        const { displayTitle: _displayTitle, ...rest } = this;
-        return rest;
-    }
-
-    /**
      * Reconstructs a Title from cache data with displayTitle provided separately.
      * This is the single validation boundary for untrusted Title payloads, so
      * callers holding decoded storage JSON hand the value over unchecked.
@@ -93,8 +83,33 @@ export class Title {
         return new Title({ ...(obj as TitleData), displayTitle });
     }
 
+    /**
+     * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
+     *
+     * @param displayTitle - The streaming-service title that was searched.
+     * @param [source] - API source that produced the miss.
+     * @returns A Title marked with no ratings or metadata.
+     */
+    static notFound(displayTitle: string, source?: string): Title {
+        return new Title({ displayTitle, source });
+    }
+
     #toFiniteNumber(val: unknown): number | undefined {
         return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
+    }
+
+    /**
+     * Returns a plain object representation suitable for cache serialization,
+     * excluding displayTitle which is stored separately at the cache entry level.
+     * @returns Title fields without displayTitle
+     */
+    toCacheJSON(): TitleData {
+        const { displayTitle: _displayTitle, ...rest } = this;
+        return rest;
+    }
+
+    withSource(source: string): Title {
+        return new Title({ ...this, source });
     }
 
     get hasRating(): boolean {
@@ -108,21 +123,6 @@ export class Title {
      */
     get imdbUrl(): string {
         return buildImdbUrl({ imdbId: this.imdbId, displayTitle: this.displayTitle });
-    }
-
-    withSource(source: string): Title {
-        return new Title({ ...this, source });
-    }
-
-    /**
-     * Creates a `Title` that represents a lookup miss (no ratings, no IDs).
-     *
-     * @param displayTitle - The streaming-service title that was searched.
-     * @param [source] - API source that produced the miss.
-     * @returns A Title marked with no ratings or metadata.
-     */
-    static notFound(displayTitle: string, source?: string): Title {
-        return new Title({ displayTitle, source });
     }
 }
 

@@ -124,6 +124,10 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
+    async #isDisabled(): Promise<boolean> {
+        return this.#disabledManager.isDisabled(this.#source);
+    }
+
     async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
@@ -155,10 +159,6 @@ export abstract class BaseApiClient implements ApiClient {
      */
     async queuedFetch(url: string, priority: number): Promise<unknown> {
         return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
-    }
-
-    async #isDisabled(): Promise<boolean> {
-        return this.#disabledManager.isDisabled(this.#source);
     }
 
     /**

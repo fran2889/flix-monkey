@@ -54,7 +54,7 @@ describe('Firefox Background Script', () => {
             abort() {
                 this.signal.aborted = true;
             }
-        } as unknown as { new (): AbortController; prototype: AbortController };
+        } as unknown as { prototype: AbortController; new (): AbortController };
 
         await import('../../../../src/targets/firefox/background');
     });

@@ -100,7 +100,7 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                 const displayTitle = data.displayTitle;
                 const imdbId = data.imdbId ?? null;
 
-                // Can't migrate without displayTitle (must be a string)
+                // Unrecoverable without a display title, so drop the key instead of retrying on every run.
                 if (!displayTitle || typeof displayTitle !== 'string') {
                     await adapter.storageDelete(key);
                     deleted += 1;
