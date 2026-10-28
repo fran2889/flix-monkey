@@ -30,6 +30,11 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Lint workflows
+              uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+              with:
+                  version: '1.7.12'
+                  pyflakes: false
             - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
               with:
                   node-version: '24.x'
@@ -51,6 +56,9 @@ jobs:
             - run: npm ci --ignore-scripts
             - run: npm rebuild sharp
             - run: npm run build
+            - name: Lint Firefox extension
+              # Errors fail the step; warnings are reported in the log.
+              run: npm run lint:firefox
 
     test-unit:
         runs-on: ubuntu-latest
