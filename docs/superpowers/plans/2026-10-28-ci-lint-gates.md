@@ -46,7 +46,7 @@
 - Consumes: nothing from earlier tasks.
 - Produces: a `Lint workflows` step inside `lint-and-audit`, which `merge-gate` already requires.
 
-- [ ] **Step 1: Add the actionlint action step after checkout**
+- [x] **Step 1: Add the actionlint action step after checkout**
 
 Insert this step between `actions/checkout` and `actions/setup-node` in the `lint-and-audit` job:
 
@@ -60,7 +60,7 @@ Insert this step between `actions/checkout` and `actions/setup-node` in the `lin
 
 The action downloads the pinned actionlint release, caches it, and fails the step on errors. Keep `version` explicit because its default is `latest`. `pyflakes` is off because the workflows contain no Python; `shellcheck` stays on.
 
-- [ ] **Step 2: Verify actionlint passes on the repository locally**
+- [x] **Step 2: Verify actionlint passes on the repository locally**
 
 Run a local actionlint 1.7.12 (installed separately; CI owns the pin):
 
@@ -70,7 +70,7 @@ actionlint
 
 Expected: exit 0 and no output.
 
-- [ ] **Step 3: Verify the gate detects a malformed workflow expression**
+- [x] **Step 3: Verify the gate detects a malformed workflow expression**
 
 Run the same probe through the local actionlint 1.7.12:
 
@@ -80,7 +80,7 @@ printf 'name: Bad\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n    ste
 
 Expected: exit 1 with `unexpected EOF while lexing expression` and a shellcheck parse failure.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -100,7 +100,7 @@ git commit -m "ci(github): lint workflows with actionlint"
 - Consumes: the `build` job and `dist/firefox` produced by `npm run build`.
 - Produces: a `Lint Firefox extension` step inside `build`, which `merge-gate` already requires.
 
-- [ ] **Step 1: Add the web-ext lint step to the build job**
+- [x] **Step 1: Add the web-ext lint step to the build job**
 
 Append this step after `- run: npm run build` in the `build` job:
 
@@ -111,7 +111,7 @@ Append this step after `- run: npm run build` in the `build` job:
   run: npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 ```
 
-- [ ] **Step 2: Rebuild and verify the lint passes**
+- [x] **Step 2: Rebuild and verify the lint passes**
 
 Run:
 
@@ -122,7 +122,7 @@ npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 
 Expected: exit 0 with `errors 0`; warnings are reported without failing.
 
-- [ ] **Step 3: Verify the gate detects a manifest error**
+- [x] **Step 3: Verify the gate detects a manifest error**
 
 Run:
 
@@ -142,7 +142,7 @@ rm -rf /tmp/fm-manifest-probe
 
 Expected: exit 1 with `VERSION_FORMAT_INVALID`.
 
-- [ ] **Step 4: Verify formatting, lint, audit, and dependency files**
+- [x] **Step 4: Verify formatting, lint, audit, and dependency files**
 
 Run:
 
@@ -155,7 +155,7 @@ git diff --exit-code package.json package-lock.json
 
 Expected: all pass, and the dependency files are unchanged.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -178,7 +178,7 @@ git commit -m "ci(github): lint the Firefox build with web-ext"
 - Consumes: the exact commands and job contents from Tasks 1 and 2.
 - Produces: documentation only.
 
-- [ ] **Step 1: Add the local commands to AGENTS.md**
+- [x] **Step 1: Add the local commands to AGENTS.md**
 
 After the full local check line in `AGENTS.md`, add:
 
@@ -187,7 +187,7 @@ After the full local check line in `AGENTS.md`, add:
 - Lint the Firefox extension: `npm run build:firefox && npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox`
 ```
 
-- [ ] **Step 2: Update the CI job description in AGENTS.md**
+- [x] **Step 2: Update the CI job description in AGENTS.md**
 
 Replace the `CI enforces six merge-gate jobs` bullet with:
 
@@ -195,7 +195,7 @@ Replace the `CI enforces six merge-gate jobs` bullet with:
 - CI enforces six merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, and actionlint), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
 ```
 
-- [ ] **Step 3: Add the conditional checks to CONTRIBUTING.md**
+- [x] **Step 3: Add the conditional checks to CONTRIBUTING.md**
 
 After the full local check code block in the `Run the checks` section, add:
 
@@ -208,7 +208,7 @@ After the full local check code block in the `Run the checks` section, add:
     ```
 ````
 
-- [ ] **Step 4: Verify documentation formatting**
+- [x] **Step 4: Verify documentation formatting**
 
 Run:
 
@@ -218,7 +218,7 @@ npx prettier --check AGENTS.md CONTRIBUTING.md docs/superpowers/specs/2026-10-28
 
 Expected: all files pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add AGENTS.md CONTRIBUTING.md docs/superpowers/specs/2026-10-28-ci-lint-gates-design.md docs/superpowers/plans/2026-10-28-ci-lint-gates.md
@@ -236,7 +236,7 @@ git commit -m "docs: document CI lint gates"
 - Consumes: Tasks 1 through 3.
 - Produces: evidence that the gates pass and the ruleset is untouched.
 
-- [ ] **Step 1: Confirm the change set**
+- [x] **Step 1: Confirm the change set**
 
 Run:
 
@@ -247,7 +247,7 @@ git status --short
 
 Expected: exactly these changed files: `.github/workflows/ci.yml`, `AGENTS.md`, `CONTRIBUTING.md`, the spec, and this plan. `git status` shows only the two unrelated untracked review documents.
 
-- [ ] **Step 2: Run both new gates**
+- [x] **Step 2: Run both new gates**
 
 Run:
 
@@ -259,7 +259,7 @@ npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox
 
 Expected: actionlint exits 0 silently; web-ext reports `errors 0`.
 
-- [ ] **Step 3: Run the existing local gates**
+- [x] **Step 3: Run the existing local gates**
 
 Run:
 
@@ -272,7 +272,7 @@ npm run audit
 
 Expected: all pass.
 
-- [ ] **Step 4: Confirm the ruleset is unchanged**
+- [x] **Step 4: Confirm the ruleset is unchanged**
 
 Run:
 
