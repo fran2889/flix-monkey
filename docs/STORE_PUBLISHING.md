@@ -97,13 +97,16 @@ The built extension is written to `dist/chrome/`.
 
 ## Publishing New Versions
 
-1. Create and push a tagged release (e.g., `v1.0.0`) with attached artifacts
-   (`FlixMonkey-v1.0.0-chrome.zip`, `FlixMonkey-v1.0.0-firefox.xpi`,
-   `FlixMonkey-v1.0.0-source.zip`)
-2. Navigate to **Actions** > **Publish to Stores** in the GitHub repository
-3. Click **Run workflow**
-4. Select the release tag to publish
-5. Click **Run workflow**
+1. Merge the release-please PR (e.g., `chore(main): release 1.0.0`).
+   release-please creates the `v1.0.0` tag and a draft GitHub Release, then the
+   `Release Please` workflow builds and attaches the store artifacts
+   (`FlixMonkey-v1.0.0-chrome.zip`, `FlixMonkey-v1.0.0-firefox.xpi`, and
+   `FlixMonkey-v1.0.0-source.zip`) and publishes the release.
+2. Wait for the `Release Please` workflow to finish successfully.
+3. Navigate to **Actions** > **Publish to Stores** in the GitHub repository
+4. Click **Run workflow**
+5. Select the release tag to publish
+6. Click **Run workflow**
 
 The workflow will upload both Chrome and Firefox artifacts to their respective
 stores. Both uploads run in parallel.
