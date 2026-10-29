@@ -38,6 +38,7 @@ jobs:
             - name: Resolve release tag and state
               id: release-state
               env:
+                  GITHUB_SHA: ${{ github.sha }}
                   RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
                   RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
                   RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -53,6 +54,15 @@ jobs:
                   fi
                   should_build=false
                   if [[ "$RELEASE_CREATED" == "true" || "$RUN_ATTEMPT" -gt 1 ]]; then
+                      if ! git fetch --no-tags origin "+refs/tags/$tag:refs/tags/$tag"; then
+                          echo "Release tag '$tag' does not exist on origin." >&2
+                          exit 1
+                      fi
+                      tag_sha="$(git rev-list -n 1 "refs/tags/$tag")"
+                      if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
+                          echo "Release tag '$tag' points to commit $tag_sha, not this run's commit $GITHUB_SHA." >&2
+                          exit 1
+                      fi
                       should_build=true
                   fi
                   {
@@ -61,7 +71,8 @@ jobs:
                   } >> "$GITHUB_OUTPUT"
                   echo "Release tag: $tag"
                   echo "Build release assets: $should_build"
-            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Check out release tag
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               with:
                   ref: ${{ steps.release-state.outputs.tag }}
@@ -87,9 +98,15 @@ jobs:
                       "dist/FlixMonkey-$TAG-firefox.xpi" \
                       "dist/FlixMonkey-$TAG-source.zip" \
                       "dist/FlixMonkey.user.js"; do
-                      if [[ ! -f "$file" ]]; then
-                          echo "Missing expected release asset: $file" >&2
+                      if [[ ! -s "$file" ]]; then
+                          echo "Missing or empty release asset: $file" >&2
                           exit 1
+                      fi
+                      if [[ "$file" == *.zip || "$file" == *.xpi ]]; then
+                          if ! unzip -tq "$file" >/dev/null; then
+                              echo "Corrupt release asset: $file" >&2
+                              exit 1
+                          fi
                       fi
                   done
             - name: Upload to Release
@@ -110,6 +127,7 @@ jobs:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   TAG: ${{ steps.release-state.outputs.tag }}
               run: |
-                  if [[ "$(gh release view "$TAG" --json isDraft --jq '.isDraft')" == "true" ]]; then
+                  draft="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
+                  if [[ "$draft" == "true" ]]; then
                       gh release edit "$TAG" --draft=false
                   fi

@@ -1,4 +1,5 @@
 {
+    "force-tag-creation": true,
     "packages": {
         ".": {
             "release-type": "node",

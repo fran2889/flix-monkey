@@ -38,6 +38,7 @@
 **Files:**
 
 - Modify: `.github/workflows/release-please.yml`
+- Modify: `release-please-config.json`
 
 **Interfaces:**
 
@@ -66,6 +67,7 @@ Add this step immediately after the `googleapis/release-please-action` step:
 - name: Resolve release tag and state
   id: release-state
   env:
+      GITHUB_SHA: ${{ github.sha }}
       RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
       RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
       RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -81,6 +83,15 @@ Add this step immediately after the `googleapis/release-please-action` step:
       fi
       should_build=false
       if [[ "$RELEASE_CREATED" == "true" || "$RUN_ATTEMPT" -gt 1 ]]; then
+          if ! git fetch --no-tags origin "+refs/tags/$tag:refs/tags/$tag"; then
+              echo "Release tag '$tag' does not exist on origin." >&2
+              exit 1
+          fi
+          tag_sha="$(git rev-list -n 1 "refs/tags/$tag")"
+          if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
+              echo "Release tag '$tag' points to commit $tag_sha, not this run's commit $GITHUB_SHA." >&2
+              exit 1
+          fi
           should_build=true
       fi
       {
@@ -91,12 +102,15 @@ Add this step immediately after the `googleapis/release-please-action` step:
       echo "Build release assets: $should_build"
 ```
 
+Add `"force-tag-creation": true` to `release-please-config.json` before this step, because GitHub does not create a tag for a draft release until it is published.
+
 - [x] **Step 3: Check out the tag before building**
 
 Add this step immediately after the state step:
 
 ```yaml
-- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+- name: Check out release tag
+  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
   if: ${{ steps.release-state.outputs.should_build == 'true' }}
   with:
       ref: ${{ steps.release-state.outputs.tag }}
@@ -129,9 +143,15 @@ Add this step after `Build source archive` and before the upload:
           "dist/FlixMonkey-$TAG-firefox.xpi" \
           "dist/FlixMonkey-$TAG-source.zip" \
           "dist/FlixMonkey.user.js"; do
-          if [[ ! -f "$file" ]]; then
-              echo "Missing expected release asset: $file" >&2
+          if [[ ! -s "$file" ]]; then
+              echo "Missing or empty release asset: $file" >&2
               exit 1
+          fi
+          if [[ "$file" == *.zip || "$file" == *.xpi ]]; then
+              if ! unzip -tq "$file" >/dev/null; then
+                  echo "Corrupt release asset: $file" >&2
+                  exit 1
+              fi
           fi
       done
 ```
@@ -166,7 +186,8 @@ Replace the existing `Publish Release` step with:
       GH_TOKEN: ${{ steps.app-token.outputs.token }}
       TAG: ${{ steps.release-state.outputs.tag }}
   run: |
-      if [[ "$(gh release view "$TAG" --json isDraft --jq '.isDraft')" == "true" ]]; then
+      draft="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
+      if [[ "$draft" == "true" ]]; then
           gh release edit "$TAG" --draft=false
       fi
 ```
@@ -190,34 +211,37 @@ grep -c "steps.release-state.outputs.should_build" .github/workflows/release-ple
 grep -c -- "--clobber" .github/workflows/release-please.yml
 grep -c "isDraft" .github/workflows/release-please.yml
 grep -c 'tag="$version"' .github/workflows/release-please.yml
-grep -c 'Missing expected release asset' .github/workflows/release-please.yml
+grep -c 'Missing or empty release asset' .github/workflows/release-please.yml
 grep -c 'RUN_ATTEMPT' .github/workflows/release-please.yml
+grep -c 'tag_sha' .github/workflows/release-please.yml
+grep -c 'force-tag-creation' release-please-config.json
 ```
 
-Expected, in order: `8`, `1`, `1`, `1`, `1`, `2`.
+Expected, in order: `8`, `1`, `1`, `1`, `1`, `2`, `2`, `1`.
 
-The first count covers the tag checkout, the four build steps, the verification step, the upload, and the publish. The second covers idempotent upload. The third covers the draft check in the publish step. The last covers the `RUN_ATTEMPT` environment entry and its comparison.
+The first count covers the tag checkout, the four build steps, the verification step, the upload, and the publish. The second covers idempotent upload. The third covers the draft check in the publish step. The last counts cover the run attempt, the tag commit check, and the config option.
 
 - [x] **Step 10: Review the scenarios**
 
 Read the state step and confirm each result:
 
-| Scenario                                     | Expected path                                                                 |
-| -------------------------------------------- | ----------------------------------------------------------------------------- |
-| Initial release                              | `release_created` is true, `should_build` is true.                            |
-| Re-run after a failed build                  | `release_created` is false, `run_attempt` is 2, `should_build` is true.       |
-| Normal push with no release                  | `release_created` is false, `run_attempt` is 1, `should_build` is false.      |
-| Re-run of a run that never created a release | `should_build` is true, but the tag does not exist, so checkout fails loudly. |
-| Re-run of an already published release       | Build and upload repeat, `isDraft` is false, so publish does nothing.         |
-| Tag mismatch or missing asset                | The state step or the verification step exits 1 before upload.                |
+| Scenario                               | Expected path                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Initial release                        | `release_created` is true, the tag exists and points to this commit, `should_build` is true.           |
+| Re-run after a failed build            | `release_created` is false, `run_attempt` is 2, the tag points to this commit, `should_build` is true. |
+| Normal push with no release            | `release_created` is false, `run_attempt` is 1, `should_build` is false.                               |
+| Re-run of a run from another commit    | The tag points to a different commit, so the state step exits 1.                                       |
+| Re-run with no tag                     | `git fetch` fails, so the state step exits 1 with a clear message.                                     |
+| Re-run of an already published release | Build and upload repeat, `isDraft` is false, so publish does nothing.                                  |
+| Tag mismatch or bad asset              | The state step fails on the version, or verification fails on missing, empty, or corrupt assets.       |
 
 - [x] **Step 11: Commit**
 
-Use a pathspec so only the workflow is committed:
+Use a pathspec so only the workflow and config are committed:
 
 ```bash
-git add .github/workflows/release-please.yml
-git commit .github/workflows/release-please.yml -m "ci(github): make the release job re-runnable"
+git add .github/workflows/release-please.yml release-please-config.json
+git commit .github/workflows/release-please.yml release-please-config.json -m "ci(github): make the release job re-runnable"
 ```
 
 ---
@@ -252,7 +276,13 @@ upload assets by hand.
 
 The workflow detects the re-run, rebuilds the artifacts from the release tag,
 replaces the attached assets with `gh release upload --clobber`, and publishes
-the release. It does not build from the `main` branch head.
+the release if it is still a draft. It does not build from the `main` branch
+head. The release-please config sets `force-tag-creation`, so the tag exists
+while the release is still a draft.
+
+A re-run only repairs the release for the commit that triggered the run. If
+the tag does not point to that commit, the workflow fails instead of rebuilding
+an older release.
 
 A re-run uses the workflow file from the failed commit. If the workflow itself
 is the cause, merge the fix first, then re-run the resulting `Release Please`
@@ -275,7 +305,7 @@ successful release always matches its tag.
 Append this paragraph to the existing Releases section:
 
 ```markdown
-The release job is re-runnable. Re-running a failed `Release Please` run rebuilds from the release tag, replaces the assets with `gh release upload --clobber`, and publishes the draft. A re-run uses the workflow file from the failed commit; if the workflow itself is the cause, merge the fix and re-run the resulting run. If the tagged source cannot build, delete only the draft release and roll forward with the next version; do not delete the release tag or change the tag ruleset.
+The release job is re-runnable. Re-running a failed `Release Please` run rebuilds from the release tag, replaces the assets with `gh release upload --clobber`, and publishes the release if it is still a draft. The release-please config sets `force-tag-creation`, so the tag exists while the release is a draft. A re-run only repairs the release for the commit that triggered the run; if the tag points elsewhere, it fails. A re-run uses the workflow file from the failed commit; if the workflow itself is the cause, merge the fix and re-run the resulting run. If the tagged source cannot build, delete only the draft release and roll forward with the next version; do not delete the release tag or change the tag ruleset.
 ```
 
 - [x] **Step 3: Check documentation formatting**
@@ -313,6 +343,6 @@ git diff main --check
 git log --oneline main..HEAD
 ```
 
-Expected: actionlint and Prettier pass, the local gates pass, `git diff --check` prints nothing, and the log shows the two commits.
+Expected: actionlint and Prettier pass, the local gates pass, `git diff --check` prints nothing, and the log shows the implementation commits. The state and asset/publish behavior checks were run from a scratch harness in the plan workspace during execution; the harness is not committed.
 
-Live behavior is verified after merge. On the next draft release, confirm the artifacts are built from the tag. On the next failed release after the draft is created, re-run the workflow and confirm it repairs and publishes.
+Live behavior is verified after merge. Confirm `force-tag-creation` creates the tag with the draft, then confirm the artifacts are built from the tag. On the next failed release after the draft is created, re-run the workflow and confirm it repairs and publishes.
