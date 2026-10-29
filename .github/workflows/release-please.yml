@@ -35,62 +35,25 @@ jobs:
               with:
                   config-file: release-please-config.json
                   token: ${{ steps.app-token.outputs.token }}
-            - name: Resolve release tag and state
-              id: release-state
-              env:
-                  RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
-                  RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
-                  RUN_ATTEMPT: ${{ github.run_attempt }}
-              run: |
-                  version="v$(node -p "require('./package.json').version")"
-                  tag="$RELEASE_TAG"
-                  if [[ -z "$tag" ]]; then
-                      tag="$version"
-                  fi
-                  if [[ "$tag" != "$version" ]]; then
-                      echo "Release tag '$tag' does not match package.json version '$version'." >&2
-                      exit 1
-                  fi
-                  should_build=false
-                  if [[ "$RELEASE_CREATED" == "true" || "$RUN_ATTEMPT" -gt 1 ]]; then
-                      if ! git fetch --no-tags origin "+refs/tags/$tag:refs/tags/$tag"; then
-                          echo "Release tag '$tag' does not exist on origin." >&2
-                          exit 1
-                      fi
-                      tag_sha="$(git rev-list -n 1 "refs/tags/$tag")"
-                      if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
-                          echo "Release tag '$tag' points to commit $tag_sha, not this run's commit $GITHUB_SHA." >&2
-                          exit 1
-                      fi
-                      should_build=true
-                  fi
-                  {
-                      echo "tag=$tag"
-                      echo "should_build=$should_build"
-                  } >> "$GITHUB_OUTPUT"
-                  echo "Release tag: $tag"
-                  echo "Build release assets: $should_build"
             - name: Install dependencies
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
               run: npm ci --ignore-scripts
             - name: Rebuild native dependencies
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
               run: npm rebuild sharp
             - name: Build artifacts
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
               run: npm run build
             - name: Build source archive
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
               run: npm run package:source
             - name: Upload to Release
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
+              run: gh release upload "${{ steps.release.outputs.tag_name }}" dist/*.zip dist/*.xpi dist/*.user.js
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
-                  TAG: ${{ steps.release-state.outputs.tag }}
-              run: gh release upload "$TAG" dist/*.zip dist/*.xpi dist/*.user.js --clobber
             - name: Publish Release
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              if: ${{ steps.release.outputs.release_created }}
+              run: gh release edit "${{ steps.release.outputs.tag_name }}" --draft=false
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
-                  TAG: ${{ steps.release-state.outputs.tag }}
-              run: gh release edit "$TAG" --draft=false

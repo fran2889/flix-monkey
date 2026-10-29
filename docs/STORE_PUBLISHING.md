@@ -113,39 +113,30 @@ stores. Both uploads run in parallel.
 
 ### Recovering a failed release build
 
-If the `Release Please` workflow fails after the draft release is created, the
-draft can be left with missing or partial assets. Do not create a new tag or
-upload assets by hand.
+A failed `Release Please` run is not retried. The workflow only builds when
+release-please creates a release, so re-running it for the same commit does not
+rebuild the assets or repair the draft.
 
-1. Open **Actions** > **Release Please**.
-2. Open the failed run.
-3. Choose **Re-run all jobs**.
+If the run fails before the release is published, the draft can be left with
+missing or partial assets. Roll forward instead:
 
-The workflow detects the re-run, rebuilds the artifacts from the release tag,
-replaces the attached assets with `gh release upload --clobber`, and publishes
-the release. The edit is idempotent, so a re-run of an already published
-release leaves it published. It does not build from the `main` branch head.
-The release-please config sets `force-tag-creation`, so the tag exists while
-the release is still a draft.
+1. Delete only the draft GitHub Release, keeping the `vX.Y.Z` tag:
+   `gh release delete vX.Y.Z --yes`. Do not pass `--cleanup-tag`.
+2. Fix the problem on `main` with a commit that release-please will include in
+   the next release.
+3. Merge the next release PR when it appears. It bumps to the next version.
 
-A re-run only repairs the release for the commit that triggered the run. If
-the tag does not point to that commit, the workflow fails instead of rebuilding
-an older release.
+The release-please config sets `force-tag-creation`, so the tag exists while the
+release is a draft and remains after the draft is deleted. Keeping the tag makes
+release-please increment the version for the next release instead of reusing the
+failed one. Do not delete the tag or change the tag ruleset.
 
-A re-run uses the workflow file from the failed commit. If the workflow itself
-is the cause, merge the fix first, then re-run the resulting `Release Please`
-run.
+If the build and asset upload succeeded and only the final publish failed, the
+assets are already attached. Publish the draft from the Releases page, or run
+`gh release edit vX.Y.Z --draft=false`, instead of rolling forward.
 
-### Abandoning a failed release
-
-If the tagged source cannot build, rebuilding that tag will not help. Delete
-only the draft GitHub Release from the Releases page, keep the `vX.Y.Z` tag,
-and fix the problem on `main` so release-please can open the next release PR.
-Do not delete the tag or change the tag ruleset. The tag remains the release
-boundary for release-please.
-
-The release assets are built from the tag that release-please creates, so a
-successful release always matches its tag.
+The workflow builds from the commit that triggered the run, which is the commit
+release-please tags, so a successful release matches its tag.
 
 ## Updating Store Metadata
 
