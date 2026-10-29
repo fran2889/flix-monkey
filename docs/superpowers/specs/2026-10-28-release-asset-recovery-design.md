@@ -82,7 +82,7 @@ The first checkout is already at `github.sha`. The state step verifies that the 
 
 ### Packaging and uploading
 
-`scripts/package.js` takes a target: `chrome`, `firefox`, or `all`. `all` requires both `dist/chrome` and `dist/firefox`, verifies the required files in each, and only then writes both archives. The individual targets require only their own directory. `build` passes `all`; `build:chrome` and `build:firefox` pass their target. A missing target or required file fails the build before any archive is written.
+`scripts/package.js` takes a target: `chrome`, `firefox`, or `all`. `all` is the default when no target is passed. `all` requires both `dist/chrome` and `dist/firefox`, verifies the required files in each, and only then writes both archives. The individual targets require only their own directory. `build` passes no target; `build:chrome` and `build:firefox` pass their target. A missing target or required file fails the build before any archive is written.
 
 There is no separate asset preflight in the workflow. `npm run build`, `npm run package:source`, and Rollup all exit non-zero on failure. The upload uses the `dist/*.zip dist/*.xpi dist/*.user.js` glob with `--clobber`; `prebuild` cleans `dist`.
 
