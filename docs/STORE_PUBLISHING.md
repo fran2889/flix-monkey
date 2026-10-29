@@ -1,24 +1,30 @@
 # Store Publishing
 
-FlixMonkey is published to the Chrome Web Store and Firefox Add-ons (AMO) by the
-`Publish to Stores` GitHub Actions workflow
+FlixMonkey is published to the Chrome Web Store, Firefox Add-ons (AMO), and
+Greasy Fork. Chrome and Firefox are published by the `Publish to Stores` GitHub
+Actions workflow
 ([`.github/workflows/publish-to-stores.yml`](../.github/workflows/publish-to-stores.yml)).
-Publishing is a **manual deployment**: a maintainer runs the workflow for a
-chosen release tag, and it reuses the artifacts already attached to that GitHub
-Release (no rebuild). A release must therefore exist, with its artifacts
-attached, before it can be published.
+Greasy Fork is synced from the GitHub Release by a repository webhook, and the
+same workflow verifies that the listing serves the released version. Publishing
+is a **manual deployment**: a maintainer runs the workflow for a chosen release
+tag, and it reuses the artifacts already attached to that GitHub Release (no
+rebuild). A release must therefore exist, with its artifacts attached, before it
+can be published.
 
 The published artifacts are:
 
 - Chrome: `FlixMonkey-v<version>-chrome.zip`
 - Firefox: `FlixMonkey-v<version>-firefox.xpi` and `FlixMonkey-v<version>-source.zip`
+- Userscript: `FlixMonkey.user.js`, synced to Greasy Fork from the same release
 
 ## Overview
 
 The `Publish to Stores` workflow is triggered manually via `workflow_dispatch`
 and requires a tag input. It downloads the pre-built artifacts from the specified
-GitHub Release and publishes them to their respective stores. No code is built
-during this workflow; it only handles the store upload process.
+GitHub Release and publishes the Chrome and Firefox builds. It also checks that
+the Greasy Fork listing serves the same version. The listing itself is updated by
+the repository's GitHub `release` webhook, not by this workflow. No code is built
+during this workflow; it only handles the store upload and verification process.
 
 ## Required Repository Secrets
 
@@ -65,6 +71,36 @@ The add-on's stable ID is set in
 `browser_specific_settings.gecko.id` (`flixmonkey@fran`); AMO uses it to
 match version updates to the listing.
 
+## Required Repository Variables
+
+### Greasy Fork
+
+| Variable               | Where to get it                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GREASYFORK_SCRIPT_ID` | The numeric script ID in the listing URL: `https://greasyfork.org/en/scripts/<id>-...`. Store it as a repository **variable**, not a secret. |
+
+Greasy Fork has no publish API. The listing is created once and then synced from
+the GitHub Release.
+
+## Greasy Fork Setup
+
+Greasy Fork is updated by a repository webhook, not by the publish workflow.
+
+1. On Greasy Fork, open <https://greasyfork.org/en/import> and import
+   `https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js`.
+   Keep the default `Automatic` sync type. The first release webhook changes the
+   listing to `Webhook` sync.
+2. Copy the numeric script ID from the listing URL
+   (`https://greasyfork.org/en/scripts/<id>-...`) and store it as the repository
+   variable `GREASYFORK_SCRIPT_ID`.
+3. Open <https://greasyfork.org/en/users/webhook-info>, note the payload URL, and
+   generate the webhook secret.
+4. In the GitHub repository, open **Settings** > **Webhooks** > **Add webhook**.
+   Set the payload URL, the content type `application/json`, and the generated
+   secret. Choose **Let me select individual events**, uncheck **Pushes**, and
+   check **Releases**. Leave the webhook active.
+5. Confirm the ping delivery succeeds.
+
 ## Build Instructions for Store Reviewers
 
 Store reviewers can reproduce the published artifacts from the source code.
@@ -100,16 +136,28 @@ The built extension is written to `dist/chrome/`.
 1. Merge the release-please PR (e.g., `chore(main): release 1.0.0`).
    release-please creates the `v1.0.0` tag and a draft GitHub Release, then the
    `Release Please` workflow builds and attaches the store artifacts
-   (`FlixMonkey-v1.0.0-chrome.zip`, `FlixMonkey-v1.0.0-firefox.xpi`, and
-   `FlixMonkey-v1.0.0-source.zip`) and publishes the release.
+   (`FlixMonkey-v1.0.0-chrome.zip`, `FlixMonkey-v1.0.0-firefox.xpi`,
+   `FlixMonkey-v1.0.0-source.zip`, and `FlixMonkey.user.js`) and publishes the
+   release. Publishing the release triggers the Greasy Fork webhook.
 2. Wait for the `Release Please` workflow to finish successfully.
-3. Navigate to **Actions** > **Publish to Stores** in the GitHub repository
-4. Click **Run workflow**
-5. Select the release tag to publish
-6. Click **Run workflow**
+3. Navigate to **Actions** > **Publish to Stores** in the GitHub repository.
+4. Click **Run workflow**.
+5. Select the release tag to publish.
+6. Click **Run workflow**.
 
-The workflow will upload both Chrome and Firefox artifacts to their respective
-stores. Both uploads run in parallel.
+The workflow uploads the Chrome and Firefox artifacts in parallel and checks the
+Greasy Fork version once. The Greasy Fork check does not poll or retry.
+
+## Failure Handling
+
+- A missing release asset, or a userscript whose `@version` differs from the tag,
+  fails the `publish-greasyfork` job before it contacts Greasy Fork.
+- An unset `GREASYFORK_SCRIPT_ID` fails the job with the variable name.
+- If Greasy Fork is unreachable or returns an error, the job fails with the
+  endpoint and curl's error.
+- If Greasy Fork serves a different version, the job prints both versions. Check
+  the webhook delivery and the listing sync URL, then re-run only that job.
+- The job checks once. It does not poll or retry.
 
 ## Updating Store Metadata
 

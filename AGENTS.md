@@ -102,7 +102,7 @@ Issue and PR body shape is defined by the templates in [`.github/`](.github/), n
 
 ### Releases
 
-release-please runs on pushes to `main`. It authenticates with a short-lived installation access token for the GitHub App installed on this repository (`RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`), not `GITHUB_TOKEN`, so CI runs automatically on its release PR. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `.github/workflows/publish-to-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag.
+release-please runs on pushes to `main`. It authenticates with a short-lived installation access token for the GitHub App installed on this repository (`RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY`), not `GITHUB_TOKEN`, so CI runs automatically on its release PR. It cuts the release as a draft so the same workflow can build the distribution artifacts, attach them with `gh release upload`, and then finalize the release with `gh release edit --draft=false`. Publishing to the Chrome Web Store and Firefox Add-ons is a separate manual step: `.github/workflows/publish-to-stores.yml` is `workflow_dispatch` only and downloads the attached assets for the chosen tag. Greasy Fork is updated by the repository's GitHub `release` webhook, and the workflow's `publish-greasyfork` job verifies that the listing serves the released version.
 
 ## Where to look
 
