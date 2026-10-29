@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-28-release-asset-recovery-design.md`
 
-> **Post-review simplification:** The final implementation drops the second tag checkout, the `unzip -tq` integrity check, the explicit upload list, and the `isDraft` lookup. It uses the glob upload, an unconditional `gh release edit --draft=false`, and makes `scripts/package.js` fail when no extension directories exist. The task steps below record the original implementation.
+> **Post-review simplification:** The final implementation drops the second tag checkout, the `unzip -tq` integrity check, the explicit upload list, the workflow asset preflight, and the `isDraft` lookup. It uses the glob upload, an unconditional `gh release edit --draft=false`, and makes `scripts/package.js` target-aware: `all` requires both extension directories. The task steps below record the original implementation.
 
 ## Global Constraints
 

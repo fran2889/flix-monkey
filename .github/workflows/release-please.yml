@@ -82,21 +82,6 @@ jobs:
             - name: Build source archive
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm run package:source
-            - name: Verify release assets
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
-              env:
-                  TAG: ${{ steps.release-state.outputs.tag }}
-              run: |
-                  for file in \
-                      "dist/FlixMonkey-$TAG-chrome.zip" \
-                      "dist/FlixMonkey-$TAG-firefox.xpi" \
-                      "dist/FlixMonkey-$TAG-source.zip" \
-                      "dist/FlixMonkey.user.js"; do
-                      if [[ ! -s "$file" ]]; then
-                          echo "Missing or empty release asset: $file" >&2
-                          exit 1
-                      fi
-                  done
             - name: Upload to Release
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               env:

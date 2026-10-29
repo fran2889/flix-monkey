@@ -80,16 +80,11 @@ Every existing step gated on `steps.release.outputs.release_created` changes to 
 
 The first checkout is already at `github.sha`. The state step verifies that the release tag points to that same commit, so the build and `npm run package:source` (`git archive HEAD`) use the release commit without a second checkout.
 
-### Verifying and uploading
+### Packaging and uploading
 
-After `npm run build` and `npm run package:source`, add a verification step that fails unless all four files exist and are non-empty:
+`scripts/package.js` takes a target: `chrome`, `firefox`, or `all`. `all` requires both `dist/chrome` and `dist/firefox`, verifies the required files in each, and only then writes both archives. The individual targets require only their own directory. `build` passes `all`; `build:chrome` and `build:firefox` pass their target. A missing target or required file fails the build before any archive is written.
 
-- `dist/FlixMonkey-<tag>-chrome.zip`
-- `dist/FlixMonkey-<tag>-firefox.xpi`
-- `dist/FlixMonkey-<tag>-source.zip`
-- `dist/FlixMonkey.user.js`
-
-The verification step is a final preflight that prevents a partial upload. `scripts/package.js` also fails when it finds no extension directories, so a successful build cannot silently produce no archives. The upload uses the `dist/*.zip dist/*.xpi dist/*.user.js` glob with `--clobber`; `prebuild` cleans `dist`, and the verification step has already checked the four expected names.
+There is no separate asset preflight in the workflow. `npm run build`, `npm run package:source`, and Rollup all exit non-zero on failure. The upload uses the `dist/*.zip dist/*.xpi dist/*.user.js` glob with `--clobber`; `prebuild` cleans `dist`.
 
 ### Publishing
 
@@ -99,7 +94,7 @@ The final step runs `gh release edit <tag> --draft=false`. The edit is idempoten
 
 ### Documentation
 
-- `docs/STORE_PUBLISHING.md`: add a "Recovering a failed release build" subsection under "Publishing New Versions". It says to open the failed `Release Please` run and choose **Re-run all jobs**. The workflow detects the re-run, rebuilds from the tag, replaces the assets, and publishes the release if it is still a draft. It notes that `force-tag-creation` makes the tag exist while the release is a draft, and that a re-run only repairs the release for the run's commit.
+- `docs/STORE_PUBLISHING.md`: add a "Recovering a failed release build" subsection under "Publishing New Versions". It says to open the failed `Release Please` run and choose **Re-run all jobs**. The workflow detects the re-run, rebuilds from the tag, replaces the assets, and publishes the release. It notes that `force-tag-creation` makes the tag exist while the release is a draft, and that a re-run only repairs the release for the run's commit.
 - `docs/STORE_PUBLISHING.md`: note that a re-run uses the workflow file from the failed commit. If the workflow itself is the cause, merge the fix and re-run the resulting `Release Please` run.
 - `docs/STORE_PUBLISHING.md`: add a short "Abandoning a failed release" note. If the tagged source cannot build, delete only the draft GitHub Release in the UI, keep the `vX.Y.Z` tag, and roll forward with the next version. Do not delete the tag or change the tag ruleset. The existing tag remains the release boundary for release-please.
 - `AGENTS.md`: extend the Releases section to say the release job is re-runnable, builds from the tag, checks the tag commit, and that abandoned releases roll forward without deleting tags.
@@ -115,7 +110,6 @@ The final step runs `gh release edit <tag> --draft=false`. The edit is idempoten
 
 - `actionlint` passes on the changed workflow.
 - The state step is exercised locally with a fake `git` for an initial release, a repair re-run, a normal push, an unrelated commit, a missing tag, and a tag/version mismatch.
-- `scripts/package.js` exits 1 when no extension directories exist and still packages a valid target directory.
-- The asset check is exercised locally for missing and empty artifacts.
+- `scripts/package.js` packages both targets for `all`, either target for `chrome` or `firefox`, and fails before writing any archive when a requested directory or required file is missing.
 - The publish step is the single idempotent `gh release edit --draft=false` call.
 - A live repair can only be verified by re-running a failed release after merge. The first re-run should target a release whose artifacts are already correct, so replacing them is harmless.
