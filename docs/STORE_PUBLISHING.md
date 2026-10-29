@@ -111,6 +111,35 @@ The built extension is written to `dist/chrome/`.
 The workflow will upload both Chrome and Firefox artifacts to their respective
 stores. Both uploads run in parallel.
 
+### Recovering a failed release build
+
+If the `Release Please` workflow fails after the draft release is created, the
+draft can be left with missing or partial assets. Do not create a new tag or
+upload assets by hand.
+
+1. Open **Actions** > **Release Please**.
+2. Open the failed run.
+3. Choose **Re-run all jobs**.
+
+The workflow detects the re-run, rebuilds the artifacts from the release tag,
+replaces the attached assets with `gh release upload --clobber`, and publishes
+the release. It does not build from the `main` branch head.
+
+A re-run uses the workflow file from the failed commit. If the workflow itself
+is the cause, merge the fix first, then re-run the resulting `Release Please`
+run.
+
+### Abandoning a failed release
+
+If the tagged source cannot build, rebuilding that tag will not help. Delete
+only the draft GitHub Release from the Releases page, keep the `vX.Y.Z` tag,
+and fix the problem on `main` so release-please can open the next release PR.
+Do not delete the tag or change the tag ruleset. The tag remains the release
+boundary for release-please.
+
+The release assets are built from the tag that release-please creates, so a
+successful release always matches its tag.
+
 ## Updating Store Metadata
 
 ### Firefox Add-ons (AMO)
