@@ -76,7 +76,7 @@ async function main() {
     }
 
     if (!packaged) {
-        console.warn('No extension directories found to package.');
+        throw new Error('No extension directories found to package.');
     }
 }
 

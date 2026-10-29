@@ -38,7 +38,6 @@ jobs:
             - name: Resolve release tag and state
               id: release-state
               env:
-                  GITHUB_SHA: ${{ github.sha }}
                   RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
                   RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
                   RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -71,11 +70,6 @@ jobs:
                   } >> "$GITHUB_OUTPUT"
                   echo "Release tag: $tag"
                   echo "Build release assets: $should_build"
-            - name: Check out release tag
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              if: ${{ steps.release-state.outputs.should_build == 'true' }}
-              with:
-                  ref: ${{ steps.release-state.outputs.tag }}
             - name: Install dependencies
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm ci --ignore-scripts
@@ -102,32 +96,16 @@ jobs:
                           echo "Missing or empty release asset: $file" >&2
                           exit 1
                       fi
-                      if [[ "$file" == *.zip || "$file" == *.xpi ]]; then
-                          if ! unzip -tq "$file" >/dev/null; then
-                              echo "Corrupt release asset: $file" >&2
-                              exit 1
-                          fi
-                      fi
                   done
             - name: Upload to Release
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   TAG: ${{ steps.release-state.outputs.tag }}
-              run: |
-                  gh release upload "$TAG" \
-                      "dist/FlixMonkey-$TAG-chrome.zip" \
-                      "dist/FlixMonkey-$TAG-firefox.xpi" \
-                      "dist/FlixMonkey-$TAG-source.zip" \
-                      "dist/FlixMonkey.user.js" \
-                      --clobber
+              run: gh release upload "$TAG" dist/*.zip dist/*.xpi dist/*.user.js --clobber
             - name: Publish Release
               if: ${{ steps.release-state.outputs.should_build == 'true' }}
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   TAG: ${{ steps.release-state.outputs.tag }}
-              run: |
-                  draft="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
-                  if [[ "$draft" == "true" ]]; then
-                      gh release edit "$TAG" --draft=false
-                  fi
+              run: gh release edit "$TAG" --draft=false

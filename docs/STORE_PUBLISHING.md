@@ -123,9 +123,10 @@ upload assets by hand.
 
 The workflow detects the re-run, rebuilds the artifacts from the release tag,
 replaces the attached assets with `gh release upload --clobber`, and publishes
-the release if it is still a draft. It does not build from the `main` branch
-head. The release-please config sets `force-tag-creation`, so the tag exists
-while the release is still a draft.
+the release. The edit is idempotent, so a re-run of an already published
+release leaves it published. It does not build from the `main` branch head.
+The release-please config sets `force-tag-creation`, so the tag exists while
+the release is still a draft.
 
 A re-run only repairs the release for the commit that triggered the run. If
 the tag does not point to that commit, the workflow fails instead of rebuilding

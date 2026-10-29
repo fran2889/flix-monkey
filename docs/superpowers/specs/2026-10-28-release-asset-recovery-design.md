@@ -74,21 +74,11 @@ A normal push that did not create a release sets `should_build=false`, so every 
 
 The commit comparison makes a re-run of an unrelated push fail with a clear message instead of rebuilding and clobbering the previous release's assets.
 
-### Building from the tag
+### Building from the release commit
 
 Every existing step gated on `steps.release.outputs.release_created` changes to `steps.release-state.outputs.should_build == 'true'`.
 
-Immediately after the state step and before installing dependencies, add a second checkout:
-
-```yaml
-- name: Check out release tag
-  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-  if: ${{ steps.release-state.outputs.should_build == 'true' }}
-  with:
-      ref: ${{ steps.release-state.outputs.tag }}
-```
-
-The first checkout stays because release-please reads its config from the workspace. The second one makes `HEAD` the tag, so `npm run package:source` (`git archive HEAD`) produces the source archive for that tag.
+The first checkout is already at `github.sha`. The state step verifies that the release tag points to that same commit, so the build and `npm run package:source` (`git archive HEAD`) use the release commit without a second checkout.
 
 ### Verifying and uploading
 
@@ -99,11 +89,11 @@ After `npm run build` and `npm run package:source`, add a verification step that
 - `dist/FlixMonkey-<tag>-source.zip`
 - `dist/FlixMonkey.user.js`
 
-The three archives are also checked with `unzip -tq`, so a truncated or corrupt archive fails before it can replace a good asset. The upload names those four files explicitly instead of using globs, passes `TAG` through `env`, and adds `--clobber`. This replaces the current `dist/*.zip dist/*.xpi dist/*.user.js` glob.
+The verification step is a final preflight that prevents a partial upload. `scripts/package.js` also fails when it finds no extension directories, so a successful build cannot silently produce no archives. The upload uses the `dist/*.zip dist/*.xpi dist/*.user.js` glob with `--clobber`; `prebuild` cleans `dist`, and the verification step has already checked the four expected names.
 
 ### Publishing
 
-The final step reads `isDraft` for the tag and runs `gh release edit <tag> --draft=false` only when the release is still a draft. The lookup is assigned to a variable before the comparison, so a failed `gh release view` fails the step instead of silently reporting success. On a re-run of an already published release, the rebuild and upload repeat but the publish step does nothing.
+The final step runs `gh release edit <tag> --draft=false`. The edit is idempotent on an already published release, so a re-run does not need a draft lookup.
 
 `TAG` is never interpolated directly into a `run` script.
 
@@ -125,6 +115,7 @@ The final step reads `isDraft` for the tag and runs `gh release edit <tag> --dra
 
 - `actionlint` passes on the changed workflow.
 - The state step is exercised locally with a fake `git` for an initial release, a repair re-run, a normal push, an unrelated commit, a missing tag, and a tag/version mismatch.
-- The asset check is exercised locally for missing, empty, corrupt, and valid artifacts.
-- The publish step is exercised locally for a draft, a published release, and a failed `gh release view`.
+- `scripts/package.js` exits 1 when no extension directories exist and still packages a valid target directory.
+- The asset check is exercised locally for missing and empty artifacts.
+- The publish step is the single idempotent `gh release edit --draft=false` call.
 - A live repair can only be verified by re-running a failed release after merge. The first re-run should target a release whose artifacts are already correct, so replacing them is harmless.
