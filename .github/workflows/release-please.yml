@@ -35,25 +35,81 @@ jobs:
               with:
                   config-file: release-please-config.json
                   token: ${{ steps.app-token.outputs.token }}
+            - name: Resolve release tag and state
+              id: release-state
+              env:
+                  RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
+                  RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
+                  RUN_ATTEMPT: ${{ github.run_attempt }}
+              run: |
+                  version="v$(node -p "require('./package.json').version")"
+                  tag="$RELEASE_TAG"
+                  if [[ -z "$tag" ]]; then
+                      tag="$version"
+                  fi
+                  if [[ "$tag" != "$version" ]]; then
+                      echo "Release tag '$tag' does not match package.json version '$version'." >&2
+                      exit 1
+                  fi
+                  should_build=false
+                  if [[ "$RELEASE_CREATED" == "true" || "$RUN_ATTEMPT" -gt 1 ]]; then
+                      should_build=true
+                  fi
+                  {
+                      echo "tag=$tag"
+                      echo "should_build=$should_build"
+                  } >> "$GITHUB_OUTPUT"
+                  echo "Release tag: $tag"
+                  echo "Build release assets: $should_build"
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              with:
+                  ref: ${{ steps.release-state.outputs.tag }}
             - name: Install dependencies
-              if: ${{ steps.release.outputs.release_created }}
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm ci --ignore-scripts
             - name: Rebuild native dependencies
-              if: ${{ steps.release.outputs.release_created }}
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm rebuild sharp
             - name: Build artifacts
-              if: ${{ steps.release.outputs.release_created }}
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm run build
             - name: Build source archive
-              if: ${{ steps.release.outputs.release_created }}
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               run: npm run package:source
+            - name: Verify release assets
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
+              env:
+                  TAG: ${{ steps.release-state.outputs.tag }}
+              run: |
+                  for file in \
+                      "dist/FlixMonkey-$TAG-chrome.zip" \
+                      "dist/FlixMonkey-$TAG-firefox.xpi" \
+                      "dist/FlixMonkey-$TAG-source.zip" \
+                      "dist/FlixMonkey.user.js"; do
+                      if [[ ! -f "$file" ]]; then
+                          echo "Missing expected release asset: $file" >&2
+                          exit 1
+                      fi
+                  done
             - name: Upload to Release
-              if: ${{ steps.release.outputs.release_created }}
-              run: gh release upload "${{ steps.release.outputs.tag_name }}" dist/*.zip dist/*.xpi dist/*.user.js
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
+                  TAG: ${{ steps.release-state.outputs.tag }}
+              run: |
+                  gh release upload "$TAG" \
+                      "dist/FlixMonkey-$TAG-chrome.zip" \
+                      "dist/FlixMonkey-$TAG-firefox.xpi" \
+                      "dist/FlixMonkey-$TAG-source.zip" \
+                      "dist/FlixMonkey.user.js" \
+                      --clobber
             - name: Publish Release
-              if: ${{ steps.release.outputs.release_created }}
-              run: gh release edit "${{ steps.release.outputs.tag_name }}" --draft=false
+              if: ${{ steps.release-state.outputs.should_build == 'true' }}
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
+                  TAG: ${{ steps.release-state.outputs.tag }}
+              run: |
+                  if [[ "$(gh release view "$TAG" --json isDraft --jq '.isDraft')" == "true" ]]; then
+                      gh release edit "$TAG" --draft=false
+                  fi
