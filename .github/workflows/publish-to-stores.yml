@@ -128,8 +128,16 @@ jobs:
                       echo "GREASYFORK_SCRIPT_ID is not set. See docs/STORE_PUBLISHING.md." >&2
                       exit 1
                   fi
-                  meta="$(curl --fail --silent --show-error --max-time 30 -H 'Cache-Control: no-cache' "https://update.greasyfork.org/scripts/$SCRIPT_ID.meta.js")"
+                  meta_url="https://update.greasyfork.org/scripts/$SCRIPT_ID.meta.js"
+                  if ! meta="$(curl --fail --silent --show-error --location --proto '=https' --max-time 30 -H 'Cache-Control: no-cache' "$meta_url")"; then
+                      echo "Could not fetch $meta_url." >&2
+                      exit 1
+                  fi
                   greasyfork_version="$(printf '%s\n' "$meta" | sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' | head -n 1 | tr -d '\r')"
+                  if [[ -z "$greasyfork_version" ]]; then
+                      echo "Greasy Fork returned no @version from $meta_url." >&2
+                      exit 1
+                  fi
                   if [[ "$greasyfork_version" != "$expected" ]]; then
                       echo "Greasy Fork serves version '$greasyfork_version', expected '$expected'." >&2
                       echo "Check the release webhook delivery and the listing sync URL, then re-run this job." >&2
