@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.0](https://github.com/fran2889/flix-monkey/compare/v1.7.0...v1.8.0) (2026-10-29)
+
+
+### Features
+
+* **core:** normalize absent values to undefined and fix rating and expiry fallbacks ([#217](https://github.com/fran2889/flix-monkey/issues/217)) ([c9adb03](https://github.com/fran2889/flix-monkey/commit/c9adb038da3e032364032a3bfe97992d37e99cac))
+
+
+### Bug Fixes
+
+* **core:** clear the inflight timeout after each lookup ([#242](https://github.com/fran2889/flix-monkey/issues/242)) ([999a93c](https://github.com/fran2889/flix-monkey/commit/999a93c9d578c41f0555abb1917108552fae879e))
+* remove blank line left by license header stripping ([#249](https://github.com/fran2889/flix-monkey/issues/249)) ([a9fa1f0](https://github.com/fran2889/flix-monkey/commit/a9fa1f030fe624752f5b37bd9972dcba8d40b2a3))
+
+
+### Performance Improvements
+
+* **test:** run unit and UI suites in vmThreads ([#247](https://github.com/fran2889/flix-monkey/issues/247)) ([6b30492](https://github.com/fran2889/flix-monkey/commit/6b3049205af4dab0368f83ff99cea02588830f46))
+
 ## [1.7.0](https://github.com/fran2889/flix-monkey/compare/v1.6.1...v1.7.0) (2026-10-08)
 
 
