@@ -1,6 +1,6 @@
 # Greasy Fork Publishing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a one-shot Greasy Fork verification job to the manual store publishing workflow and document the one-time release-sync setup.
 
@@ -49,7 +49,7 @@
 - Consumes: the `tag` workflow input, the release asset `FlixMonkey.user.js`, and the repository variable `GREASYFORK_SCRIPT_ID`.
 - Produces: a job named `publish-greasyfork` that exits 0 only when the released userscript and the Greasy Fork listing both match the tag version.
 
-- [ ] **Step 1: Append the job to the workflow**
+- [x] **Step 1: Append the job to the workflow**
 
 Add this block at the end of `.github/workflows/publish-to-stores.yml`, after the `publish-firefox` job:
 
@@ -99,7 +99,7 @@ Add this block at the end of `.github/workflows/publish-to-stores.yml`, after th
                   echo "Greasy Fork serves version $expected."
 ```
 
-- [ ] **Step 2: Lint the workflow**
+- [x] **Step 2: Lint the workflow**
 
 Run:
 
@@ -109,7 +109,7 @@ go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/publ
 
 Expected: exit 0, no output. If Go is unavailable, use an installed `actionlint` 1.7.12 or let the CI lint gate run it.
 
-- [ ] **Step 3: Verify the parser against the real release asset**
+- [x] **Step 3: Verify the parser against the real release asset**
 
 Run:
 
@@ -124,7 +124,7 @@ printf 'expected=%s asset=%s\n' "$expected" "$asset_version"
 
 Expected output: `expected=1.7.0 asset=1.7.0`.
 
-- [ ] **Step 4: Verify the parser against tabs and CRLF**
+- [x] **Step 4: Verify the parser against tabs and CRLF**
 
 Run:
 
@@ -135,7 +135,7 @@ sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' /tmp/greasyfork-ch
 
 Expected output: `1.7.0`.
 
-- [ ] **Step 5: Verify the missing-asset failure**
+- [x] **Step 5: Verify the missing-asset failure**
 
 Run:
 
@@ -145,7 +145,7 @@ gh release download v1.7.0 --pattern "FlixMonkey-does-not-exist.user.js" --dir /
 
 Expected: non-zero exit and a message that no assets matched.
 
-- [ ] **Step 6: Verify the unset-variable failure**
+- [x] **Step 6: Verify the unset-variable failure**
 
 Copy the `run` block from `Verify Greasy Fork serves the released version` into `/tmp/greasyfork-check/check.sh`, then run:
 
@@ -156,7 +156,7 @@ TAG=v1.7.0 SCRIPT_ID= bash check.sh
 
 Expected: exit 1 and `GREASYFORK_SCRIPT_ID is not set. See docs/STORE_PUBLISHING.md.` The command must fail before contacting Greasy Fork.
 
-- [ ] **Step 7: Verify the wrong-asset-version failure**
+- [x] **Step 7: Verify the wrong-asset-version failure**
 
 Run:
 
@@ -174,7 +174,7 @@ Restore the real asset:
 gh release download v1.7.0 --pattern "FlixMonkey.user.js" --dir /tmp/greasyfork-check/dist --clobber
 ```
 
-- [ ] **Step 8: Verify the non-2xx failure path**
+- [x] **Step 8: Verify the non-2xx failure path**
 
 Run:
 
@@ -186,7 +186,7 @@ Expected: non-zero exit. This confirms that `--fail` turns a Greasy Fork error
 response into a failed step instead of an empty version. If the network blocks
 Greasy Fork, note it and rely on the live rollout check in Task 4.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add .github/workflows/publish-to-stores.yml
@@ -206,7 +206,7 @@ git commit -m "ci(github): verify Greasy Fork in the store publish workflow"
 - Consumes: the job name `publish-greasyfork` and the variable `GREASYFORK_SCRIPT_ID` from Task 1.
 - Produces: a runbook a maintainer can follow to create the listing, set the variable, and add the webhook.
 
-- [ ] **Step 1: Replace the intro and artifact list in `docs/STORE_PUBLISHING.md`**
+- [x] **Step 1: Replace the intro and artifact list in `docs/STORE_PUBLISHING.md`**
 
 Replace the paragraph beginning `FlixMonkey is published to the Chrome Web Store` through the artifact list with:
 
@@ -229,7 +229,7 @@ The published artifacts are:
 - Userscript: `FlixMonkey.user.js`, synced to Greasy Fork from the same release
 ```
 
-- [ ] **Step 2: Replace the overview paragraph**
+- [x] **Step 2: Replace the overview paragraph**
 
 Replace the `## Overview` paragraph with:
 
@@ -244,7 +244,7 @@ the repository's GitHub `release` webhook, not by this workflow. No code is buil
 during this workflow; it only handles the store upload and verification process.
 ```
 
-- [ ] **Step 3: Add the variable and setup sections**
+- [x] **Step 3: Add the variable and setup sections**
 
 Insert after the Firefox Add-ons secrets table and before `## Build Instructions for Store Reviewers`:
 
@@ -280,7 +280,7 @@ Greasy Fork is updated by a repository webhook, not by the publish workflow.
 5. Confirm the ping delivery succeeds.
 ```
 
-- [ ] **Step 4: Replace the publishing steps**
+- [x] **Step 4: Replace the publishing steps**
 
 Replace the `## Publishing New Versions` list with:
 
@@ -303,7 +303,7 @@ The workflow uploads the Chrome and Firefox artifacts in parallel and checks the
 Greasy Fork version once. The Greasy Fork check does not poll or retry.
 ```
 
-- [ ] **Step 5: Add the failure-handling section**
+- [x] **Step 5: Add the failure-handling section**
 
 Insert after the publishing steps and before `## Updating Store Metadata`:
 
@@ -320,7 +320,7 @@ Insert after the publishing steps and before `## Updating Store Metadata`:
 - The job checks once. It does not poll or retry.
 ```
 
-- [ ] **Step 6: Update the `CONTRIBUTING.md` pointer**
+- [x] **Step 6: Update the `CONTRIBUTING.md` pointer**
 
 Replace the store-publishing paragraph with:
 
@@ -330,7 +330,7 @@ Store publishing is a separate manual deployment from the GitHub release. See
 secrets, Greasy Fork webhook setup, and AMO source-build instructions.
 ```
 
-- [ ] **Step 7: Update the `AGENTS.md` Releases paragraph**
+- [x] **Step 7: Update the `AGENTS.md` Releases paragraph**
 
 In the `### Releases` section, replace the final sentence about store publishing with:
 
@@ -342,7 +342,7 @@ repository's GitHub `release` webhook, and the workflow's `publish-greasyfork`
 job verifies that the listing serves the released version.
 ```
 
-- [ ] **Step 8: Check the Markdown formatting**
+- [x] **Step 8: Check the Markdown formatting**
 
 Run:
 
@@ -354,7 +354,7 @@ Expected: all three files pass. If a file is reported, run
 `npx prettier --write CONTRIBUTING.md AGENTS.md docs/STORE_PUBLISHING.md` and
 re-run the check.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add docs/STORE_PUBLISHING.md CONTRIBUTING.md AGENTS.md
@@ -367,7 +367,7 @@ git commit -m "docs: document Greasy Fork publishing"
 
 **Files:** none.
 
-- [ ] **Step 1: Lint the workflow**
+- [x] **Step 1: Lint the workflow**
 
 Run:
 
@@ -377,7 +377,7 @@ go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/publ
 
 Expected: exit 0.
 
-- [ ] **Step 2: Check formatting and whitespace**
+- [x] **Step 2: Check formatting and whitespace**
 
 Run:
 
@@ -388,7 +388,7 @@ git diff --check
 
 Expected: Prettier passes, and `git diff --check` prints nothing.
 
-- [ ] **Step 3: Confirm the existing store jobs are unchanged**
+- [x] **Step 3: Confirm the existing store jobs are unchanged**
 
 Run:
 
@@ -399,7 +399,7 @@ git diff HEAD~2 -- .github/workflows/publish-to-stores.yml
 Expected: the only change is the appended `publish-greasyfork` job. The
 `publish-chrome` and `publish-firefox` jobs are untouched.
 
-- [ ] **Step 4: Confirm the tree is clean and the commits are present**
+- [x] **Step 4: Confirm the tree is clean and the commits are present**
 
 Run:
 
