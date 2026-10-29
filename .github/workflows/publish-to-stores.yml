@@ -92,3 +92,47 @@ jobs:
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
               run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0
+
+    publish-greasyfork:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - name: Validate release tag format
+              env:
+                  TAG: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      echo "Invalid tag: '$TAG'." >&2
+                      echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
+                      exit 1
+                  fi
+            - name: Download the released userscript
+              env:
+                  GH_REPO: ${{ github.repository }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ inputs.tag }}
+              run: gh release download "$TAG" --pattern "FlixMonkey.user.js" --dir dist
+            - name: Verify Greasy Fork serves the released version
+              env:
+                  TAG: ${{ inputs.tag }}
+                  SCRIPT_ID: ${{ vars.GREASYFORK_SCRIPT_ID }}
+              run: |
+                  set -euo pipefail
+                  expected="${TAG#v}"
+                  asset_version="$(sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' dist/FlixMonkey.user.js | head -n 1 | tr -d '\r')"
+                  if [[ "$asset_version" != "$expected" ]]; then
+                      echo "Released userscript is version '$asset_version', expected '$expected'." >&2
+                      exit 1
+                  fi
+                  if [[ -z "$SCRIPT_ID" ]]; then
+                      echo "GREASYFORK_SCRIPT_ID is not set. See docs/STORE_PUBLISHING.md." >&2
+                      exit 1
+                  fi
+                  meta="$(curl --fail --silent --show-error --max-time 30 -H 'Cache-Control: no-cache' "https://update.greasyfork.org/scripts/$SCRIPT_ID.meta.js")"
+                  greasyfork_version="$(printf '%s\n' "$meta" | sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' | head -n 1 | tr -d '\r')"
+                  if [[ "$greasyfork_version" != "$expected" ]]; then
+                      echo "Greasy Fork serves version '$greasyfork_version', expected '$expected'." >&2
+                      echo "Check the release webhook delivery and the listing sync URL, then re-run this job." >&2
+                      exit 1
+                  fi
+                  echo "Greasy Fork serves version $expected."
