@@ -510,4 +510,73 @@ describe('AgregarrApiClient', () => {
             expect(agregarrClient).toBeInstanceOf(AgregarrApiClient);
         });
     });
+
+    describe('response decoding', () => {
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['an array body', []],
+        ])('should return undefined when search receives %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it.each([
+            ['a string d field', { d: 'nope' }],
+            ['a result without qid', { d: [{ id: 'tt1', l: 'Movie 1' }] }],
+            ['a result without id', { d: [{ qid: 'movie', l: 'Movie 1' }] }],
+            ['a result without l', { d: [{ qid: 'movie', id: 'tt1' }] }],
+            ['a result with a numeric id', { d: [{ qid: 'movie', id: 42, l: 'Movie 1' }] }],
+            ['a result with a numeric l', { d: [{ qid: 'movie', id: 'tt1', l: 42 }] }],
+            ['a result with a string year', { d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1', y: '2020' }] }],
+        ])('should fail the search when it receives %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it('should keep a valid search result that has no year', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({ d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1' }] })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.search('Movie 1');
+
+            expect(result!.apiTitle).toBe('Movie 1');
+            expect(result!.year).toBeUndefined();
+        });
+
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['an object body', {}],
+            ['an entry without imdbId', [{ rating: 8.8 }]],
+            ['an entry with a numeric imdbId', [{ imdbId: 42, rating: 8.8 }]],
+            ['an entry with a string rating', [{ imdbId: 'tt1', rating: '8.8' }]],
+            ['an entry with a string votes field', [{ imdbId: 'tt1', votes: 'many' }]],
+        ])('should fail the details lookup when it receives %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should keep a valid details entry that has no rating', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt1', votes: 1000 }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result!.imdbVotes).toBe(1000);
+            expect(result!.imdbRating).toBeUndefined();
+        });
+    });
 });

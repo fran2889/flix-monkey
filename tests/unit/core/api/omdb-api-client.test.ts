@@ -91,6 +91,7 @@ describe('OmdbApiClient', () => {
                 Response: 'True',
                 Year: 'invalid',
                 Title: 'Movie 1',
+                imdbID: 'tt1',
             })
             .build();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
@@ -151,8 +152,7 @@ describe('OmdbApiClient', () => {
     it.each([
         ['8.0', 8],
         ['8.7', 8.7],
-        [8, 8],
-    ])('should convert imdbRating %o -> %o', async (raw: string | number, expected: number) => {
+    ])('should convert imdbRating %o -> %o', async (raw: string, expected: number) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
@@ -193,7 +193,13 @@ describe('OmdbApiClient', () => {
         ['', undefined],
     ])('should convert imdbVotes %o -> %o', async (raw: string, expected: number | undefined) => {
         const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: '8.0', imdbVotes: raw, imdbID: 'tt1' })
+            .withHttpFetchResolvingTo({
+                Response: 'True',
+                imdbRating: '8.0',
+                imdbVotes: raw,
+                imdbID: 'tt1',
+                Title: 'Movie 1',
+            })
             .build();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
@@ -256,6 +262,7 @@ describe('OmdbApiClient', () => {
                 Response: 'True',
                 imdbVotes: '2,500,000',
                 imdbRating: '8.8',
+                imdbID: 'tt1',
                 Title: 'Test',
             })
             .build();
@@ -269,6 +276,7 @@ describe('OmdbApiClient', () => {
             .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.8',
+                imdbID: 'tt1',
                 Title: 'Test',
             })
             .build();
@@ -394,5 +402,74 @@ describe('OmdbApiClient', () => {
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbRating).toBe(8.5);
         expect(client.queuedFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123', 1);
+    });
+
+    describe('response decoding', () => {
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['an array body', []],
+        ])('should return undefined when search receives %s', async (_label, response) => {
+            const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it.each([
+            ['a numeric Response field', { Response: 1 }],
+            ['an unknown Response value', { Response: 'Maybe' }],
+            ['a numeric Title field', { Response: 'True', Title: 42, imdbID: 'tt1' }],
+            ['a numeric Year field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', Year: 2020 }],
+            ['a numeric imdbRating field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', imdbRating: 8 }],
+            ['an object imdbRating field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', imdbRating: {} }],
+            ['a string Ratings field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', Ratings: 'nope' }],
+            ['a missing Title field', { Response: 'True', imdbID: 'tt1' }],
+            ['a missing imdbID field', { Response: 'True', Title: 'Movie 1' }],
+            ['an empty Title field', { Response: 'True', Title: '', imdbID: 'tt1' }],
+            ['an empty imdbID field', { Response: 'True', Title: 'Movie 1', imdbID: '' }],
+        ])('should fail the lookup when search receives %s', async (_label, response) => {
+            const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it('should keep a valid search response that has no rating', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'True', Title: 'Movie 1', imdbID: 'tt1' })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+
+            const result = await client.search('Movie 1');
+
+            expect(result!.imdbRating).toBeUndefined();
+            expect(result!.hasRating).toBe(false);
+        });
+
+        it('should treat a False response as a failed lookup without requiring Title or imdbID', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['a numeric imdbID field', { Response: 'True', Title: 'Movie 1', imdbID: 42 }],
+            ['an object imdbRating field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', imdbRating: {} }],
+            ['a missing Title field', { Response: 'True', imdbID: 'tt1' }],
+            ['a missing imdbID field', { Response: 'True', Title: 'Movie 1' }],
+        ])('should fail the details lookup when it receives %s', async (_label, response) => {
+            const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
+
+            expect(result).toBeUndefined();
+        });
     });
 });

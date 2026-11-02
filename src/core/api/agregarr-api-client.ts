@@ -7,10 +7,79 @@ import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
+import { decodeArray, isRecord, readOptionalArray, readOptionalNumber, readRequiredString } from './decode-utils';
 import { mapAgregarrTitleType } from './title-type-mappers';
 
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
+
+/**
+ * Decodes one IMDb Suggestions result.
+ *
+ * Every suggestion carries `id`, `l`, and `qid`; `y` is absent (or null) for
+ * people and other results that have no release year.
+ *
+ * @param raw - Untrusted result.
+ * @returns Normalized result, or undefined when a required field is missing or mistyped.
+ */
+function decodeImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult | undefined {
+    if (!isRecord(raw)) return undefined;
+    const qid = readRequiredString(raw, 'qid');
+    if (!qid.ok) return undefined;
+    const id = readRequiredString(raw, 'id');
+    if (!id.ok) return undefined;
+    const label = readRequiredString(raw, 'l');
+    if (!label.ok) return undefined;
+    const year = readOptionalNumber(raw, 'y');
+    if (!year.ok) return undefined;
+    return { qid: qid.value, id: id.value, l: label.value, y: year.value };
+}
+
+/**
+ * Decodes an untrusted IMDb Suggestions payload.
+ *
+ * @param raw - Parsed JSON body, which may be any value.
+ * @returns Normalized response, or undefined when the payload is not a suggestions object.
+ */
+function decodeImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse | undefined {
+    if (!isRecord(raw)) return undefined;
+    const results = readOptionalArray(raw, 'd');
+    if (!results.ok) return undefined;
+    if (!results.value) return {};
+    const decoded = decodeArray(results.value, decodeImdbSuggestionsResult);
+    return decoded ? { d: decoded } : undefined;
+}
+
+/**
+ * Decodes one Agregarr rating entry.
+ *
+ * Agregarr always echoes `imdbId`; `rating` and `votes` are `null` when the
+ * title is unknown, so both stay optional.
+ *
+ * @param raw - Untrusted entry.
+ * @returns Normalized entry, or undefined when a required field is missing or mistyped.
+ */
+function decodeAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry | undefined {
+    if (!isRecord(raw)) return undefined;
+    const imdbId = readRequiredString(raw, 'imdbId');
+    if (!imdbId.ok) return undefined;
+    const rating = readOptionalNumber(raw, 'rating');
+    if (!rating.ok) return undefined;
+    const votes = readOptionalNumber(raw, 'votes');
+    if (!votes.ok) return undefined;
+    return { imdbId: imdbId.value, rating: rating.value, votes: votes.value };
+}
+
+/**
+ * Decodes an untrusted Agregarr ratings payload.
+ *
+ * @param raw - Parsed JSON body, which may be any value.
+ * @returns Normalized entries, or undefined when the payload is not an array.
+ */
+function decodeAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] | undefined {
+    if (!Array.isArray(raw)) return undefined;
+    return decodeArray(raw, decodeAgregarrRatingEntry);
+}
 
 /**
  * API client for Agregarr service that fetches ratings from IMDb Suggestions and Agregarr API.
@@ -30,11 +99,13 @@ export class AgregarrApiClient extends BaseApiClient {
     async search(displayTitle: string): Promise<Title | undefined> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
-        const data = (await this.queuedFetch(
-            `https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`,
-            0
-        )) as ImdbSuggestionsResponse;
-        const results = data?.d;
+        const raw = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
+        const data = decodeImdbSuggestionsResponse(raw);
+        if (!data) {
+            this.logger.warn(`Malformed IMDb Suggestions response for "${displayTitle}"`, { response: raw });
+            return undefined;
+        }
+        const results = data.d;
         if (!results?.length) {
             this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
             return undefined;
@@ -46,14 +117,14 @@ export class AgregarrApiClient extends BaseApiClient {
         }
         return new Title({
             displayTitle,
-            apiTitle: match.l ?? undefined,
-            imdbId: match.id ?? undefined,
+            apiTitle: match.l,
+            imdbId: match.id,
             year: match.y ?? undefined,
             imdbRating: undefined,
             imdbVotes: undefined,
             rtRating: undefined,
             mcRating: undefined,
-            type: mapAgregarrTitleType(match.qid ?? undefined),
+            type: mapAgregarrTitleType(match.qid),
             source: undefined,
         });
     }
@@ -68,14 +139,12 @@ export class AgregarrApiClient extends BaseApiClient {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const encodedId = encodeURIComponent(String(id ?? ''));
-        const ratings = (await this.queuedFetch(
-            `https://api.agregarr.org/api/ratings?id=${encodedId}`,
-            1
-        )) as AgregarrRatingsResponse;
+        const raw = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodedId}`, 1);
+        const ratings = decodeAgregarrRatingsResponse(raw);
         const entry = ratings?.[0];
         if (!entry) {
             this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: ratings ?? undefined,
+                response: raw ?? undefined,
             });
             return undefined;
         }
@@ -96,20 +165,22 @@ export class AgregarrApiClient extends BaseApiClient {
     }
 }
 
-/** IMDb Suggestions response type */
-interface ImdbSuggestionsResponse {
-    d?: Array<{
-        qid: string;
-        id?: string;
-        l?: string;
-        y?: number;
-    }>;
+/** Normalized IMDb Suggestions result. */
+interface ImdbSuggestionsResult {
+    qid: string;
+    id: string;
+    l: string;
+    y?: number | undefined;
 }
 
-/** Agregarr ratings response type */
-interface AgregarrRatingsResponse {
-    [key: number]: {
-        rating?: number;
-        votes?: number;
-    };
+/** Normalized IMDb Suggestions response. */
+interface ImdbSuggestionsResponse {
+    d?: ImdbSuggestionsResult[] | undefined;
+}
+
+/** Normalized Agregarr rating entry. */
+interface AgregarrRatingEntry {
+    imdbId: string;
+    rating?: number | undefined;
+    votes?: number | undefined;
 }
