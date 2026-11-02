@@ -73,6 +73,10 @@
         "vitest": "^5.0.0",
         "webextension-polyfill": "^0.12.0"
     },
+    "overrides": {
+        "glob": "^14.0.3",
+        "minimatch": "^11.0.4"
+    },
     "engines": {
         "node": ">= 24"
     },
