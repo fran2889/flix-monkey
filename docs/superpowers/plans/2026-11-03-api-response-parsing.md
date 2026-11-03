@@ -885,15 +885,15 @@ git commit -m "refactor(api): parse XMDb responses with ParseError"
 - Consumes: all earlier tasks.
 - Produces: final state with `fetchParsed` public and `#queuedFetch` private.
 
-- [ ] **Step 1: Remove the temporary wrapper**
+- [x] **Step 1: Remove the temporary wrapper**
 
 Delete the temporary `queuedFetch` method from `BaseApiClient`. No client should call it now.
 
-- [ ] **Step 2: Delete the old module**
+- [x] **Step 2: Delete the old module**
 
 Delete `src/core/api/decode-utils.ts`.
 
-- [ ] **Step 3: Verify no stale names remain**
+- [x] **Step 3: Verify no stale names remain**
 
 Run:
 
@@ -911,13 +911,13 @@ rg "queuedFetch" src tests
 
 Expected: only `#queuedFetch` in `src/core/api/base-api-client.ts`, and no test references.
 
-- [ ] **Step 4: Run the full test suite**
+- [x] **Step 4: Run the full test suite**
 
 Run: `npm test`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the full local check**
+- [x] **Step 5: Run the full local check**
 
 Run:
 
@@ -927,7 +927,7 @@ npm run type-check && npm run lint && npm run format:check && npm run audit && n
 
 Expected: all commands pass. Coverage stays at or above the configured thresholds.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api/base-api-client.ts
