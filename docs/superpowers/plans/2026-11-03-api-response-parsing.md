@@ -568,7 +568,7 @@ git commit -m "refactor(api): parse Agregarr responses with ParseError"
     function parseOmdbRating(raw: unknown): OmdbRatingEntry;
     ```
 
-- [ ] **Step 1: Update the failing tests**
+- [x] **Step 1: Update the failing tests**
 
 Rewrite the three tests that assign `client.queuedFetch` to use the adapter.
 
@@ -615,13 +615,13 @@ it('should log info and not warn for a Response "False" payload', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/omdb-api-client.test.ts`
 
 Expected: FAIL because the client still imports `decode-utils`, and the `queuedFetch` stubs no longer match the new seam.
 
-- [ ] **Step 3: Implement the parsers and call sites**
+- [x] **Step 3: Implement the parsers and call sites**
 
 Replace the `decode-utils` import with `parse-utils`. Keep the `OMDB_SUCCESS` and `OMDB_FAILURE` constants. Rename the functions and use the throwing readers:
 
@@ -681,7 +681,7 @@ if (!json) return undefined;
 
 Keep the existing failure check and merge logic.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/omdb-api-client.test.ts`
 
@@ -691,7 +691,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/omdb-api-client.ts tests/unit/core/api/omdb-api-client.test.ts
