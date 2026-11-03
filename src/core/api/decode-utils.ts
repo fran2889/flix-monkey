@@ -6,9 +6,9 @@
 /**
  * Result of decoding one field from an untrusted response.
  *
- * `ok: false` means the field has the wrong type, or was required and is
- * absent. Optional readers treat absent and null fields as `ok: true` with an
- * undefined value.
+ * `ok: false` means the field has the wrong type, or was required and is empty
+ * or absent. Optional readers treat absent and null fields as `ok: true` with
+ * an undefined value.
  */
 export type Decoded<T> = { ok: true; value: T } | { ok: false };
 
@@ -23,15 +23,15 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Reads a required string field.
+ * Reads a required, non-empty string field.
  *
  * @param record - Decoded object.
  * @param key - Field name.
- * @returns The field value, or a failed result when it is absent or not a string.
+ * @returns The field value, or a failed result when it is absent, empty, or not a string.
  */
 export function readRequiredString(record: Record<string, unknown>, key: string): Decoded<string> {
     const value = record[key];
-    return typeof value === 'string' ? { ok: true, value } : { ok: false };
+    return typeof value === 'string' && value.trim() !== '' ? { ok: true, value } : { ok: false };
 }
 
 /**
@@ -71,6 +71,22 @@ export function readOptionalArray(record: Record<string, unknown>, key: string):
     const value = record[key];
     if (value === undefined || value === null) return { ok: true, value: undefined };
     return Array.isArray(value) ? { ok: true, value } : { ok: false };
+}
+
+/**
+ * Decodes the valid items of an array and drops invalid ones.
+ *
+ * @param values - Untrusted array items.
+ * @param decode - Item decoder that returns undefined for an invalid item.
+ * @returns The decoded items in source order, with invalid items omitted.
+ */
+export function decodeValidItems<T>(values: unknown[], decode: (_value: unknown) => T | undefined): T[] {
+    const decoded: T[] = [];
+    for (const value of values) {
+        const item = decode(value);
+        if (item !== undefined) decoded.push(item);
+    }
+    return decoded;
 }
 
 /**
