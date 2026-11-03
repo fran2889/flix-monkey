@@ -232,7 +232,7 @@ git commit -m "refactor(api): add throwing response parsers"
     #queuedFetch(url: string, priority: number): Promise<unknown>
     ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `tests/unit/core/api/base-api-client.test.ts`, import `ParseError` from the new module. Extend the local `StubClient` constructor with an adapter parameter defaulted to `mockAdapter`:
 
@@ -328,13 +328,13 @@ it('does not catch a queue error', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts`
 
 Expected: FAIL because `fetchParsed` does not exist.
 
-- [ ] **Step 3: Implement the request path**
+- [x] **Step 3: Implement the request path**
 
 Add `import { ParseError } from './parse-utils';`.
 
@@ -375,7 +375,7 @@ async queuedFetch(url: string, priority: number): Promise<unknown> {
 
 Add JSDoc to `fetchParsed` describing the `ParseError` catch, the warning, and the rethrow.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts`
 
@@ -389,7 +389,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/base-api-client.ts tests/unit/core/api/base-api-client.test.ts
