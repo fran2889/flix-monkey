@@ -329,8 +329,8 @@ describe('OmdbApiClient', () => {
             Ratings: [],
             Type: 'movie',
         };
-        const client = new OmdbApiClient(deps);
-        client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+        const client = new OmdbApiClient({ ...deps, adapter });
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
         const result = await client.getDetails(minimalTitle);
 
@@ -338,7 +338,7 @@ describe('OmdbApiClient', () => {
         expect(result!.imdbId).toBe('tt1234567');
         expect(result!.imdbRating).toBe(8.5);
         expect(result!.apiTitle).toBe('Test Movie');
-        expect(client.queuedFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567', 1);
+        expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567');
     });
 
     it('should return searchTitle directly when it has apiTitle', async () => {
@@ -363,8 +363,8 @@ describe('OmdbApiClient', () => {
             Title: 'Updated Title',
             Type: 'movie',
         };
-        const client = new OmdbApiClient(deps);
-        client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+        const client = new OmdbApiClient({ ...deps, adapter });
         const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(undefined).build();
         const result = await client.getDetails(minimalTitle);
         expect(result!.apiTitle).toBe('Updated Title');
@@ -396,8 +396,8 @@ describe('OmdbApiClient', () => {
             imdbRating: '8.5',
             Type: 'movie',
         };
-        const client = new OmdbApiClient(deps);
-        client.queuedFetch = vi.fn().mockResolvedValue(mockResponse);
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+        const client = new OmdbApiClient({ ...deps, adapter });
         // A cache entry written before the null to undefined migration carries a literal null.
         const legacyCachedTitle = Title.fromCacheJSON(
             { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
@@ -407,7 +407,29 @@ describe('OmdbApiClient', () => {
 
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbRating).toBe(8.5);
-        expect(client.queuedFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123', 1);
+        expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123');
+    });
+
+    it('should warn once when the OMDb response is not an object', async () => {
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
+            response: [],
+            error: 'expected an object',
+        });
+    });
+
+    it('should log info and not warn for a Response "False" payload', async () => {
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('No OMDb results found'));
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 
     describe('response decoding', () => {

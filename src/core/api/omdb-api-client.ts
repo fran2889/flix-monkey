@@ -8,7 +8,14 @@ import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
-import { decodeValidItems, isRecord, readOptionalArray, readOptionalString, readRequiredString } from './decode-utils';
+import {
+    assertRecord,
+    optionalArray,
+    optionalString,
+    ParseError,
+    parseValidItems,
+    requiredString,
+} from './parse-utils';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /** OMDb signals a successful lookup with this exact `Response` value. */
@@ -17,57 +24,45 @@ const OMDB_SUCCESS = 'True';
 /** OMDb signals a failed lookup with this exact `Response` value. */
 const OMDB_FAILURE = 'False';
 
-function decodeOmdbResponse(raw: unknown): OmdbResponse | undefined {
-    if (!isRecord(raw)) return undefined;
-    const response = readRequiredString(raw, 'Response');
-    if (!response.ok) return undefined;
-    if (response.value === OMDB_FAILURE) return { Response: response.value };
-    if (response.value !== OMDB_SUCCESS) return undefined;
-    return decodeOmdbSuccessResponse(raw);
+function parseOmdbResponse(raw: unknown): OmdbResponse {
+    assertRecord(raw);
+    const response = requiredString(raw, 'Response');
+    if (response === OMDB_FAILURE) return { Response: response };
+    if (response !== OMDB_SUCCESS) {
+        throw new ParseError(`expected Response "True" or "False", got "${response}"`);
+    }
+    return parseOmdbSuccessResponse(raw);
 }
 
-function decodeOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse | undefined {
-    const imdbRating = readOptionalString(raw, 'imdbRating');
-    if (!imdbRating.ok) return undefined;
-    const ratings = readOptionalArray(raw, 'Ratings');
-    if (!ratings.ok) return undefined;
-    const imdbId = readRequiredString(raw, 'imdbID');
-    if (!imdbId.ok) return undefined;
-    const year = readOptionalString(raw, 'Year');
-    if (!year.ok) return undefined;
-    const title = readRequiredString(raw, 'Title');
-    if (!title.ok) return undefined;
-    const apiType = readOptionalString(raw, 'Type');
-    if (!apiType.ok) return undefined;
-    const imdbVotes = readOptionalString(raw, 'imdbVotes');
-    if (!imdbVotes.ok) return undefined;
+function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse {
     return {
         Response: OMDB_SUCCESS,
-        imdbRating: imdbRating.value,
-        Ratings: decodeOmdbRatings(ratings.value),
-        imdbID: imdbId.value,
-        Year: year.value,
-        Title: title.value,
-        Type: apiType.value,
-        imdbVotes: imdbVotes.value,
+        imdbRating: optionalString(raw, 'imdbRating'),
+        Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')),
+        imdbID: requiredString(raw, 'imdbID'),
+        Year: optionalString(raw, 'Year'),
+        Title: requiredString(raw, 'Title'),
+        Type: optionalString(raw, 'Type'),
+        imdbVotes: optionalString(raw, 'imdbVotes'),
     };
 }
 
-function decodeOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
+function parseOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
     if (!ratings) return undefined;
-    return decodeValidItems(ratings, decodeOmdbRating);
+    return parseValidItems(ratings, parseOmdbRating);
 }
 
-function decodeOmdbRating(raw: unknown): OmdbRatingEntry | undefined {
-    if (!isRecord(raw)) return undefined;
-    const upperSource = readOptionalString(raw, 'Source');
-    const lowerSource = readOptionalString(raw, 'source');
-    const upperValue = readOptionalString(raw, 'Value');
-    const lowerValue = readOptionalString(raw, 'value');
-    if (!upperSource.ok || !lowerSource.ok || !upperValue.ok || !lowerValue.ok) return undefined;
-    const source = upperSource.value ?? lowerSource.value;
-    const value = upperValue.value ?? lowerValue.value;
-    if (source === undefined || value === undefined) return undefined;
+function parseOmdbRating(raw: unknown): OmdbRatingEntry {
+    assertRecord(raw);
+    const upperSource = optionalString(raw, 'Source');
+    const lowerSource = optionalString(raw, 'source');
+    const upperValue = optionalString(raw, 'Value');
+    const lowerValue = optionalString(raw, 'value');
+    const source = upperSource ?? lowerSource;
+    const value = upperValue ?? lowerValue;
+    if (source === undefined || value === undefined) {
+        throw new ParseError('expected source and value');
+    }
     return { source, value };
 }
 
@@ -113,12 +108,13 @@ export class OmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
         this.logger.debug(`Searching OMDb for title: "${displayTitle}"`);
-        const raw = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
-        const json = decodeOmdbResponse(raw);
-        if (!json) {
-            this.logger.warn(`Malformed OMDb response for "${displayTitle}"`, { response: raw });
-            return undefined;
-        }
+        const json = await this.fetchParsed(
+            `https://www.omdbapi.com/?${params}`,
+            1,
+            parseOmdbResponse,
+            `OMDb search for "${displayTitle}"`
+        );
+        if (!json) return undefined;
         if (json.Response === OMDB_FAILURE) {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return undefined;
@@ -139,12 +135,13 @@ export class OmdbApiClient extends BaseApiClient {
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
             this.logger.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
-            const raw = await this.queuedFetch(`https://www.omdbapi.com/?${params}`, 1);
-            const json = decodeOmdbResponse(raw);
-            if (!json) {
-                this.logger.warn(`Malformed OMDb response for "${searchTitle.displayTitle}"`, { response: raw });
-                return undefined;
-            }
+            const json = await this.fetchParsed(
+                `https://www.omdbapi.com/?${params}`,
+                1,
+                parseOmdbResponse,
+                `OMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
+            );
+            if (!json) return undefined;
             if (json.Response === OMDB_FAILURE) {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
