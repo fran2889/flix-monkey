@@ -417,7 +417,7 @@ git commit -m "refactor(api): add fetchParsed request path"
     function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry;
     ```
 
-- [ ] **Step 1: Update the failing tests**
+- [x] **Step 1: Update the failing tests**
 
 In `tests/unit/core/api/agregarr-api-client.test.ts`:
 
@@ -466,13 +466,13 @@ it('should warn once when the IMDb Suggestions body is not an object', async () 
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/agregarr-api-client.test.ts`
 
 Expected: FAIL because the client still imports `decode-utils` and logs the old message.
 
-- [ ] **Step 3: Implement the parsers and call sites**
+- [x] **Step 3: Implement the parsers and call sites**
 
 Replace the `decode-utils` import with `parse-utils`. Rename the four functions and use the throwing readers:
 
@@ -530,7 +530,7 @@ if (!entry) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/agregarr-api-client.test.ts`
 
@@ -540,7 +540,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/agregarr-api-client.ts tests/unit/core/api/agregarr-api-client.test.ts
