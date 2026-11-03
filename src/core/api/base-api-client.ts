@@ -185,13 +185,6 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * @deprecated Use fetchParsed. Removed when every client has migrated.
-     */
-    async queuedFetch(url: string, priority: number): Promise<unknown> {
-        return this.#queuedFetch(url, priority);
-    }
-
-    /**
      * Searches the API for a title matching the streaming-service display name.
      * Subclasses must override this method.
      *
