@@ -55,7 +55,7 @@
     export function parseValidItems<T>(values: unknown[], parseItem: (_value: unknown) => T): T[]
     ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/unit/core/api/parse-utils.test.ts` with the SPDX header and these tests:
 
@@ -157,13 +157,13 @@ describe('parseValidItems', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/parse-utils.test.ts`
 
 Expected: FAIL because `src/core/api/parse-utils.ts` does not exist.
 
-- [ ] **Step 3: Implement `parse-utils.ts`**
+- [x] **Step 3: Implement `parse-utils.ts`**
 
 Add the SPDX header, then the declarations above. `ParseError` sets `this.name = 'ParseError'`, `assertRecord` rejects null, arrays, and non-objects, and `parseValidItems` catches only `ParseError`:
 
@@ -191,7 +191,7 @@ Implement `requiredString` and the three `optional*` readers with the signatures
 
 Add JSDoc to every exported declaration. Document that `optional*` treat absent and null as `undefined` and throw only on a wrong type.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/parse-utils.test.ts`
 
@@ -201,7 +201,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/parse-utils.ts tests/unit/core/api/parse-utils.test.ts
