@@ -27,7 +27,7 @@
 
 - A non-record body (null, array, string) at the response or item level is logged or dropped, never an uncaught `TypeError`.
 - A non-`ParseError` thrown by a parser propagates to `ApiClientManager` instead of being swallowed as malformed.
-- A valid not-found payload (`Response: 'False'`, an XMDb `error` field, empty results) returns `undefined` without a malformed warning.
+- A valid not-found payload (`Response: 'False'`, an XMDb `error` field or a null `title` that keeps `id`, empty results) returns `undefined` without a malformed warning.
 - A malformed array item is dropped while valid siblings survive.
 - An absent or null optional field becomes `undefined`; a wrong-typed optional field fails the response.
 

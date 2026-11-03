@@ -152,9 +152,9 @@ turning parse failures into fetch failures.
   their existing no-results logs for decoded empty or not-found results such
   as `Response: 'False'` or an empty results array. Clients do not log when
   `fetchParsed` returns `undefined`, because the helper already logged the
-  malformed case. The XMDb details not-found payload (`error`) returns
-  `undefined` without a warning; remove the current "details request failed"
-  warning on that path.
+  malformed case. The XMDb details not-found payloads (an `error` field, or a
+  `title` of `null` while `id` is still present) return `undefined` without a
+  warning; remove the current "details request failed" warning on that path.
 - **Collapse the XMDb split.** Inline the details-fields parsing into
   `parseXmdbDetailsResponse`. Merge `XmdbDetailsFields` into
   `XmdbDetailsResponse`: required `id` and `title` first, then `rating`,
