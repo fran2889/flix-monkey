@@ -34,7 +34,7 @@ function parseOmdbResponse(raw: unknown): OmdbResponse {
     return parseOmdbSuccessResponse(raw);
 }
 
-function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse {
+function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbSuccessResponse {
     return {
         Response: OMDB_SUCCESS,
         imdbRating: optionalString(raw, 'imdbRating'),
@@ -113,7 +113,7 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return undefined;
         }
-        return this.#parseOmdbResponse(json, displayTitle, undefined);
+        return this.#titleFromOmdbResponse(json, displayTitle);
     }
 
     /**
@@ -140,7 +140,7 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
-            return this.#parseOmdbResponse(json, searchTitle.displayTitle, searchTitle.imdbId);
+            return this.#titleFromOmdbResponse(json, searchTitle.displayTitle);
         }
         return searchTitle;
     }
@@ -150,23 +150,22 @@ export class OmdbApiClient extends BaseApiClient {
      *
      * @param json - Parsed OMDb API response.
      * @param displayTitle - Display title from streaming service.
-     * @param fallbackImdbId - Fallback IMDb ID from search results.
      * @returns Title instance.
      */
-    #parseOmdbResponse(json: OmdbResponse, displayTitle: string, fallbackImdbId: string | undefined): Title {
+    #titleFromOmdbResponse(json: OmdbSuccessResponse, displayTitle: string): Title {
         const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
         const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
         return new Title({
             displayTitle,
-            apiTitle: apiTitle ?? undefined,
-            imdbId: imdbID ?? fallbackImdbId ?? undefined,
+            apiTitle,
+            imdbId: imdbID,
             year: releaseYear ? Number(releaseYear) : undefined,
             imdbRating: toRating(imdbRating),
             imdbVotes: votes,
             rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
             mcRating: parseRatings(Ratings, /Metacritic/i),
-            type: mapOmdbTitleType(apiType ?? undefined),
+            type: mapOmdbTitleType(apiType),
             source: undefined,
         });
     }
@@ -179,19 +178,27 @@ interface OmdbRatingEntry {
 }
 
 /**
- * Normalized OMDb API response.
+ * Normalized successful OMDb API response.
  *
- * A successful response always carries `Title` and `imdbID`; a failed response
- * (`Response: "False"`) carries neither. The fields stay optional because this
- * type covers both shapes.
+ * A successful response always carries `Title` and `imdbID`, so both fields
+ * are required. The remaining fields are optional because OMDb omits them when
+ * it has no value.
  */
-interface OmdbResponse {
-    Response: string;
+interface OmdbSuccessResponse {
+    Response: typeof OMDB_SUCCESS;
     imdbRating?: string | undefined;
     Ratings?: OmdbRatingEntry[] | undefined;
-    imdbID?: string | undefined;
+    imdbID: string;
     Year?: string | undefined;
-    Title?: string | undefined;
+    Title: string;
     Type?: string | undefined;
     imdbVotes?: string | undefined;
 }
+
+/** Normalized failed OMDb API response. */
+interface OmdbFailureResponse {
+    Response: typeof OMDB_FAILURE;
+}
+
+/** Normalized OMDb API response, discriminated by `Response`. */
+type OmdbResponse = OmdbSuccessResponse | OmdbFailureResponse;
