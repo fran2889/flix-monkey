@@ -164,6 +164,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
                 response: { id: 42 },
                 error: 'expected string at "id"',
             });
+            expect(logger.warn).toHaveBeenCalledTimes(1);
         });
 
         it('rethrows a non-ParseError', async () => {

@@ -154,7 +154,7 @@ export class OmdbApiClient extends BaseApiClient {
     /**
      * Parses OMDb JSON response into a Title.
      *
-     * @param json - Decoded OMDb API response.
+     * @param json - Parsed OMDb API response.
      * @param displayTitle - Display title from streaming service.
      * @param fallbackImdbId - Fallback IMDb ID from search results.
      * @returns Title instance.
