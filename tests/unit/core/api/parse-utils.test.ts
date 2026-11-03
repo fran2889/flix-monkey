@@ -88,6 +88,14 @@ describe('parseValidItems', () => {
         expect(parseValidItems([{ title: 'A' }, null, { title: '' }, { title: 'B' }], parseTitle)).toEqual(['A', 'B']);
     });
 
+    it('throws when every item is invalid', () => {
+        expect(() => parseValidItems([null, { title: '' }], parseTitle)).toThrow('no valid items');
+    });
+
+    it('returns an empty array for an empty input', () => {
+        expect(parseValidItems([], parseTitle)).toEqual([]);
+    });
+
     it('rethrows a non-ParseError', () => {
         const boom = new Error('boom');
         expect(() =>

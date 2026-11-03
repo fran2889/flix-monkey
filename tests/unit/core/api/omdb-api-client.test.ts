@@ -318,6 +318,24 @@ describe('OmdbApiClient', () => {
         expect(result!.rtRating).toBe(90);
     });
 
+    it('should fail the lookup when every Ratings entry is invalid', async () => {
+        const response = {
+            Response: 'True',
+            imdbID: 'tt1',
+            Title: 'Movie 1',
+            Ratings: [null, 'nope'],
+        };
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
+            response,
+            error: 'no valid items',
+        });
+    });
+
     it('should use ID endpoint when searchTitle has imdbId', async () => {
         const mockResponse = {
             Response: 'True',

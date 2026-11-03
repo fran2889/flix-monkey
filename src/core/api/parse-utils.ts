@@ -97,11 +97,14 @@ export function optionalArray(record: Record<string, unknown>, key: string): unk
  * Parses the valid items of an array and drops the invalid ones.
  *
  * Only `ParseError` from the item parser is caught. Any other error type
- * propagates so bugs are not silently swallowed.
+ * propagates so bugs are not silently swallowed. A non-empty array where every
+ * item is invalid throws, because silently returning an empty array would hide
+ * a provider shape change.
  *
  * @param values - Untrusted array items.
  * @param parseItem - Item parser that throws `ParseError` for an invalid item.
  * @returns The parsed items in source order, with invalid items omitted.
+ * @throws ParseError when the array is non-empty and every item is invalid.
  */
 export function parseValidItems<T>(values: unknown[], parseItem: (_value: unknown) => T): T[] {
     const parsed: T[] = [];
@@ -111,6 +114,9 @@ export function parseValidItems<T>(values: unknown[], parseItem: (_value: unknow
         } catch (error: unknown) {
             if (!(error instanceof ParseError)) throw error;
         }
+    }
+    if (values.length > 0 && parsed.length === 0) {
+        throw new ParseError('no valid items');
     }
     return parsed;
 }

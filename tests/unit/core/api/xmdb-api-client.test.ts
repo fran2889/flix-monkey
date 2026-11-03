@@ -304,6 +304,19 @@ describe('XmdbApiClient', () => {
             expect(result!.year).toBeUndefined();
         });
 
+        it('should warn once when every search result is invalid', async () => {
+            const response = { results: [{ type: 'title', id: '', name: '' }] };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const logger = buildLogger().build();
+            const client = new XmdbApiClient({ ...deps, adapter, logger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed XMDb search for "Movie 1"'), {
+                response,
+                error: 'no valid items',
+            });
+        });
+
         it.each([
             ['a null body', null],
             ['an empty body', ''],
