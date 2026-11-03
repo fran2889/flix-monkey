@@ -9,69 +9,44 @@ import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import {
-    decodeValidItems,
-    isRecord,
-    readOptionalArray,
-    readOptionalNumber,
-    readOptionalString,
-    readRequiredString,
-} from './decode-utils';
+    assertRecord,
+    optionalArray,
+    optionalNumber,
+    optionalString,
+    parseValidItems,
+    requiredString,
+} from './parse-utils';
 import { mapXmdbTitleType } from './title-type-mappers';
 
-function decodeXmdbSearchResponse(raw: unknown): XmdbSearchResponse | undefined {
-    if (!isRecord(raw)) return undefined;
-    const results = readOptionalArray(raw, 'results');
-    if (!results.ok) return undefined;
-    if (!results.value) return {};
-    return { results: decodeValidItems(results.value, decodeXmdbSearchResult) };
+function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse {
+    assertRecord(raw);
+    const results = optionalArray(raw, 'results');
+    if (!results) return {};
+    return { results: parseValidItems(results, parseXmdbSearchResult) };
 }
 
-function decodeXmdbSearchResult(raw: unknown): XmdbSearchResult | undefined {
-    if (!isRecord(raw)) return undefined;
-    const type = readRequiredString(raw, 'type');
-    if (!type.ok) return undefined;
-    const id = readRequiredString(raw, 'id');
-    if (!id.ok) return undefined;
-    const name = readRequiredString(raw, 'name');
-    if (!name.ok) return undefined;
-    // Person results have no release year.
-    const year = readOptionalNumber(raw, 'year');
-    if (!year.ok) return undefined;
-    return { type: type.value, id: id.value, name: name.value, year: year.value };
-}
-
-function decodeXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
-    if (!isRecord(raw)) return undefined;
-    const error = readOptionalString(raw, 'error');
-    if (!error.ok) return undefined;
-    if (error.value) return undefined;
-    const id = readRequiredString(raw, 'id');
-    if (!id.ok) return undefined;
-    // The not-found payload keeps id but sends title: null.
-    const title = readRequiredString(raw, 'title');
-    if (!title.ok) return undefined;
-    const fields = decodeXmdbDetailsFields(raw);
-    if (!fields) return undefined;
-    return { id: id.value, title: title.value, ...fields };
-}
-
-function decodeXmdbDetailsFields(raw: Record<string, unknown>): XmdbDetailsFields | undefined {
-    const rating = readOptionalNumber(raw, 'rating');
-    if (!rating.ok) return undefined;
-    const releaseYear = readOptionalNumber(raw, 'release_year');
-    if (!releaseYear.ok) return undefined;
-    const metascore = readOptionalNumber(raw, 'metascore');
-    if (!metascore.ok) return undefined;
-    const titleType = readOptionalString(raw, 'title_type');
-    if (!titleType.ok) return undefined;
-    const voteCount = readOptionalNumber(raw, 'vote_count');
-    if (!voteCount.ok) return undefined;
+function parseXmdbSearchResult(raw: unknown): XmdbSearchResult {
+    assertRecord(raw);
     return {
-        rating: rating.value,
-        release_year: releaseYear.value,
-        metascore: metascore.value,
-        title_type: titleType.value,
-        vote_count: voteCount.value,
+        type: requiredString(raw, 'type'),
+        id: requiredString(raw, 'id'),
+        name: requiredString(raw, 'name'),
+        year: optionalNumber(raw, 'year'),
+    };
+}
+
+function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
+    assertRecord(raw);
+    const error = optionalString(raw, 'error');
+    if (error) return undefined;
+    return {
+        id: requiredString(raw, 'id'),
+        title: requiredString(raw, 'title'),
+        rating: optionalNumber(raw, 'rating'),
+        release_year: optionalNumber(raw, 'release_year'),
+        metascore: optionalNumber(raw, 'metascore'),
+        title_type: optionalString(raw, 'title_type'),
+        vote_count: optionalNumber(raw, 'vote_count'),
     };
 }
 
@@ -105,13 +80,14 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: String(5) });
         this.logger.debug(`Searching XMDb for title: "${displayTitle}"`);
-        const raw = await this.queuedFetch(`https://xmdbapi.com/api/v1/search?${searchParams}`, 0);
-        const response = decodeXmdbSearchResponse(raw);
-        if (!response) {
-            this.logger.warn(`Malformed XMDb response for "${displayTitle}"`, { response: raw });
-            return undefined;
-        }
-        const { results } = response;
+        const data = await this.fetchParsed(
+            `https://xmdbapi.com/api/v1/search?${searchParams}`,
+            0,
+            parseXmdbSearchResponse,
+            `XMDb search for "${displayTitle}"`
+        );
+        if (!data) return undefined;
+        const { results } = data;
         if (!results?.length) {
             this.logger.info(`No search results found in XMDb for "${displayTitle}"`);
             return undefined;
@@ -147,15 +123,14 @@ export class XmdbApiClient extends BaseApiClient {
         this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
-        const raw = await this.queuedFetch(`https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`, 1);
-        const detailsJson = decodeXmdbDetailsResponse(raw);
-        if (!detailsJson) {
-            this.logger.warn(`XMDb details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: raw ?? undefined,
-            });
-            return undefined;
-        }
-        return this.#titleFromDetails(searchTitle, detailsJson);
+        const details = await this.fetchParsed(
+            `https://xmdbapi.com/api/v1/movies/${id}?${detailsParams}`,
+            1,
+            parseXmdbDetailsResponse,
+            `XMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
+        );
+        if (!details) return undefined;
+        return this.#titleFromDetails(searchTitle, details);
     }
 
     #titleFromDetails(searchTitle: Title, details: XmdbDetailsResponse): Title {
@@ -188,17 +163,13 @@ interface XmdbSearchResponse {
     results?: XmdbSearchResult[] | undefined;
 }
 
-/** Optional metadata fields of an XMDb details response. */
-interface XmdbDetailsFields {
+/** Normalized XMDb details response. */
+interface XmdbDetailsResponse {
+    id: string;
+    title: string;
     rating?: number | undefined;
     release_year?: number | undefined;
     metascore?: number | undefined;
     title_type?: string | undefined;
     vote_count?: number | undefined;
-}
-
-/** Normalized XMDb details response. */
-interface XmdbDetailsResponse extends XmdbDetailsFields {
-    id: string;
-    title: string;
 }
