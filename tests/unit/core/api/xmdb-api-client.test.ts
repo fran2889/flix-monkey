@@ -171,8 +171,8 @@ describe('XmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined when details response has no title', async () => {
-        const mockAdapterForTest = buildMockAdapter()
+    it('should return undefined without a warning when the details response has a null title', async () => {
+        const adapter = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',
                 title: null,
@@ -181,11 +181,13 @@ describe('XmdbApiClient', () => {
                 rating: null,
             })
             .build();
-        const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+        const logger = buildLogger().build();
+        const client = new XmdbApiClient({ ...deps, adapter, logger });
         const result = await client.getDetails(
             buildTitle().withImdbId('tt0000000').withDisplayTitle('nonexistent').build()
         );
         expect(result).toBeUndefined();
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 
     it('should return unhealthy status when API key is missing', async () => {

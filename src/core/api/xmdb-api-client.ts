@@ -39,6 +39,8 @@ function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined
     assertRecord(raw);
     const error = optionalString(raw, 'error');
     if (error) return undefined;
+    // The details endpoint keeps id and sends title: null for a missing title.
+    if (raw['title'] === null) return undefined;
     return {
         id: requiredString(raw, 'id'),
         title: requiredString(raw, 'title'),
