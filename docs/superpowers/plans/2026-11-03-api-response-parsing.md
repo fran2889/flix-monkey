@@ -719,7 +719,7 @@ git commit -m "refactor(api): parse OMDb responses with ParseError"
     interface XmdbDetailsResponse
     ```
 
-- [ ] **Step 1: Update the failing tests**
+- [x] **Step 1: Update the failing tests**
 
 In the two existing no-results info tests ("should log info when no search results found" and "should log info when search results have no titles"), add `expect(mockLoggerForTest.warn).not.toHaveBeenCalled();` after the info assertion.
 
@@ -774,13 +774,13 @@ it.each([
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 
 Expected: FAIL because the client still imports `decode-utils` and logs the old details warning.
 
-- [ ] **Step 3: Implement the parsers, the merged interface, and call sites**
+- [x] **Step 3: Implement the parsers, the merged interface, and call sites**
 
 Replace the `decode-utils` import with `parse-utils`. Rename the parsers:
 
@@ -853,7 +853,7 @@ return this.#titleFromDetails(searchTitle, details);
 
 Remove the old "XMDb details request failed" warning.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 
@@ -863,7 +863,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api/xmdb-api-client.ts tests/unit/core/api/xmdb-api-client.test.ts
