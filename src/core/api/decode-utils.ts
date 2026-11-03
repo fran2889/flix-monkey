@@ -88,20 +88,3 @@ export function decodeValidItems<T>(values: unknown[], decode: (_value: unknown)
     }
     return decoded;
 }
-
-/**
- * Decodes every item of an array, failing when any item is invalid.
- *
- * @param values - Untrusted array items.
- * @param decode - Item decoder that returns undefined for an invalid item.
- * @returns The decoded array, or undefined when any item fails to decode.
- */
-export function decodeArray<T>(values: unknown[], decode: (_value: unknown) => T | undefined): T[] | undefined {
-    const decoded: T[] = [];
-    for (const value of values) {
-        const item = decode(value);
-        if (item === undefined) return undefined;
-        decoded.push(item);
-    }
-    return decoded;
-}
