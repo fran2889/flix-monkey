@@ -10,6 +10,7 @@ import {
     optionalNumber,
     optionalString,
     ParseError,
+    parseRequiredItems,
     parseValidItems,
     requiredString,
 } from '../../../../src/core/api/parse-utils';
@@ -88,8 +89,8 @@ describe('parseValidItems', () => {
         expect(parseValidItems([{ title: 'A' }, null, { title: '' }, { title: 'B' }], parseTitle)).toEqual(['A', 'B']);
     });
 
-    it('throws when every item is invalid', () => {
-        expect(() => parseValidItems([null, { title: '' }], parseTitle)).toThrow('no valid items');
+    it('returns an empty array when every item is invalid', () => {
+        expect(parseValidItems([null, { title: '' }], parseTitle)).toEqual([]);
     });
 
     it('returns an empty array for an empty input', () => {
@@ -103,5 +104,24 @@ describe('parseValidItems', () => {
                 throw boom;
             })
         ).toThrow(boom);
+    });
+});
+
+describe('parseRequiredItems', () => {
+    it('keeps parsed items and drops items whose parser throws ParseError', () => {
+        expect(parseRequiredItems([{ title: 'A' }, null, { title: 'B' }], parseTitle, 'the "titles" array')).toEqual([
+            'A',
+            'B',
+        ]);
+    });
+
+    it('throws when every item is invalid', () => {
+        expect(() => parseRequiredItems([null, { title: '' }], parseTitle, 'the "titles" array')).toThrow(
+            'no valid items in the "titles" array'
+        );
+    });
+
+    it('returns an empty array for an empty input', () => {
+        expect(parseRequiredItems([], parseTitle, 'the "titles" array')).toEqual([]);
     });
 });

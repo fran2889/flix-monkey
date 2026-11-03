@@ -54,15 +54,10 @@ function parseOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | u
 
 function parseOmdbRating(raw: unknown): OmdbRatingEntry {
     assertRecord(raw);
-    const upperSource = optionalString(raw, 'Source');
-    const lowerSource = optionalString(raw, 'source');
-    const upperValue = optionalString(raw, 'Value');
-    const lowerValue = optionalString(raw, 'value');
-    const source = upperSource ?? lowerSource;
-    const value = upperValue ?? lowerValue;
-    if (source === undefined) throw new ParseError('missing rating source');
-    if (value === undefined) throw new ParseError('missing rating value');
-    return { source, value };
+    return {
+        source: requiredString(raw, 'Source'),
+        value: requiredString(raw, 'Value'),
+    };
 }
 
 function parseRatings(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {

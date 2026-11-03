@@ -12,7 +12,7 @@ import {
     optionalArray,
     optionalNumber,
     ParseError,
-    parseValidItems,
+    parseRequiredItems,
     requiredString,
 } from './parse-utils';
 import { mapAgregarrTitleType } from './title-type-mappers';
@@ -24,7 +24,7 @@ function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
     assertRecord(raw);
     const results = optionalArray(raw, 'd');
     if (!results) return {};
-    return { d: parseValidItems(results, parseImdbSuggestionsResult) };
+    return { d: parseRequiredItems(results, parseImdbSuggestionsResult, 'the "d" array') };
 }
 
 function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
@@ -40,7 +40,7 @@ function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
 
 function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
     if (!Array.isArray(raw)) throw new ParseError('expected an array');
-    return parseValidItems(raw, parseAgregarrRatingEntry);
+    return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
 }
 
 function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry {

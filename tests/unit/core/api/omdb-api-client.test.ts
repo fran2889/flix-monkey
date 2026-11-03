@@ -165,7 +165,6 @@ describe('OmdbApiClient', () => {
     it.each([
         [{ Source: 'Rotten Tomatoes', Value: '90%' }, 90],
         [{ Source: 'Rotten Tomatoes', Value: '0%' }, 0],
-        [{ source: 'Rotten Tomatoes', value: '85%' }, 85],
         [{ Source: 'Rotten Tomatoes', Value: 'N/A' }, undefined],
         [{ Source: 'Metacritic', Value: '85/100' }, 85],
         [{ Source: 'Metacritic', Value: '0/100' }, 0],
@@ -182,8 +181,8 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
         const result = await client.search('Movie 1');
 
-        const rating = entry as { Source?: string; source?: string };
-        const isRottenTomatoes = /Rotten Tomatoes/i.test(rating.Source ?? rating.source ?? '');
+        const rating = entry as { Source: string };
+        const isRottenTomatoes = /Rotten Tomatoes/i.test(rating.Source);
         expect(isRottenTomatoes ? result!.rtRating : result!.mcRating).toBe(expected);
     });
 
@@ -318,22 +317,25 @@ describe('OmdbApiClient', () => {
         expect(result!.rtRating).toBe(90);
     });
 
-    it('should fail the lookup when every Ratings entry is invalid', async () => {
+    it('should keep the title when every Ratings entry is invalid', async () => {
         const response = {
             Response: 'True',
             imdbID: 'tt1',
             Title: 'Movie 1',
+            imdbRating: '7.5',
             Ratings: [null, 'nope'],
         };
         const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
         const logger = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter, logger });
 
-        expect(await client.search('Movie 1')).toBeUndefined();
-        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
-            response,
-            error: 'no valid items',
-        });
+        const result = await client.search('Movie 1');
+
+        expect(result?.apiTitle).toBe('Movie 1');
+        expect(result?.imdbRating).toBe(7.5);
+        expect(result?.rtRating).toBeUndefined();
+        expect(result?.mcRating).toBeUndefined();
+        expect(logger.warn).not.toHaveBeenCalled();
     });
 
     it('should use ID endpoint when searchTitle has imdbId', async () => {
@@ -450,7 +452,7 @@ describe('OmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    describe('response decoding', () => {
+    describe('response parsing', () => {
         it.each([
             ['a null body', null],
             ['an empty body', ''],

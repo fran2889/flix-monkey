@@ -103,23 +103,6 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should drop invalid IMDb Suggestions results and keep valid ones', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                d: [
-                    { id: '', l: 'Bad', qid: 'movie' },
-                    { id: 'tt2', l: 'Good', qid: 'movie', y: 2021 },
-                ],
-            })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        const result = await client.search('Good');
-
-        expect(result!.imdbId).toBe('tt2');
-        expect(result!.apiTitle).toBe('Good');
-    });
-
     it('should warn once when the IMDb Suggestions body is not an object', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
         const mockLogger = buildLogger().build();
@@ -547,7 +530,7 @@ describe('AgregarrApiClient', () => {
         });
     });
 
-    describe('response decoding', () => {
+    describe('response parsing', () => {
         it.each([
             ['a null body', null],
             ['an empty body', ''],
@@ -616,7 +599,7 @@ describe('AgregarrApiClient', () => {
             expect(await client.search('Movie 1')).toBeUndefined();
             expect(logger.warn).toHaveBeenCalledWith(
                 expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
-                { response, error: 'no valid items' }
+                { response, error: 'no valid items in the "d" array' }
             );
         });
 
@@ -677,7 +660,7 @@ describe('AgregarrApiClient', () => {
             expect(result).toBeUndefined();
             expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed Agregarr details for "Test"'), {
                 response,
-                error: 'no valid items',
+                error: 'no valid items in the ratings array',
             });
         });
     });

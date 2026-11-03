@@ -223,7 +223,7 @@ describe('XmdbApiClient', () => {
         );
     });
 
-    describe('response decoding', () => {
+    describe('response parsing', () => {
         it.each([
             ['a null body', null],
             ['an empty body', ''],
@@ -292,7 +292,7 @@ describe('XmdbApiClient', () => {
             expect(await client.search('Movie 1')).toBeUndefined();
             expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed XMDb search for "Movie 1"'), {
                 response,
-                error: 'no valid items',
+                error: 'no valid items in the "results" array',
             });
         });
 

@@ -13,7 +13,7 @@ import {
     optionalArray,
     optionalNumber,
     optionalString,
-    parseValidItems,
+    parseRequiredItems,
     requiredString,
 } from './parse-utils';
 import { mapXmdbTitleType } from './title-type-mappers';
@@ -22,7 +22,7 @@ function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse {
     assertRecord(raw);
     const results = optionalArray(raw, 'results');
     if (!results) return {};
-    return { results: parseValidItems(results, parseXmdbSearchResult) };
+    return { results: parseRequiredItems(results, parseXmdbSearchResult, 'the "results" array') };
 }
 
 function parseXmdbSearchResult(raw: unknown): XmdbSearchResult {

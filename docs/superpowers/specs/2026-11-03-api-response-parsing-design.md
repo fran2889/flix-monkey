@@ -108,8 +108,17 @@ turning parse failures into fetch failures.
   `parseValidItems<T>(values: unknown[], parseItem: (value: unknown) => T)`.
   It calls `parseItem` for each item, catches only `ParseError`, drops that
   item, and returns the rest. `parseItem` returns `T` and throws on an invalid
-  item. One bad item does not fail the response, and item failures are not
-  logged individually. Non-`ParseError` values rethrow.
+  item. One bad item does not fail the response, item failures are not logged
+  individually, and an all-invalid input returns an empty array.
+  Non-`ParseError` values rethrow.
+- **`parseRequiredItems`.** Add
+  `parseRequiredItems<T>(values, parseItem, label)`. It delegates to
+  `parseValidItems` and throws `ParseError` with the label when the input is
+  non-empty and every item is invalid. Primary result arrays (XMDb `results`,
+  IMDb Suggestions `d`, and the Agregarr ratings array) use it so a provider
+  shape change is not reported as an empty result. Optional secondary arrays
+  keep the lenient `parseValidItems` behavior: an all-invalid OMDb `Ratings`
+  array leaves the RT and MC ratings absent without failing the title.
 - **`fetchParsed`.** Add it to `BaseApiClient` as a public method:
 
     ```ts
