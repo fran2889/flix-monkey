@@ -160,7 +160,7 @@ export abstract class BaseApiClient implements ApiClient {
      *
      * @param url - Request URL.
      * @param priority - Higher values are processed first.
-     * @param parse - Parser that turns the raw body into the response type.
+     * @param parse - Synchronous parser that turns the raw body into the response type.
      * @param label - Human-readable request label for the malformed warning.
      * @returns The parsed response, or undefined when parsing fails with ParseError.
      */
