@@ -285,7 +285,7 @@ describe('OmdbApiClient', () => {
         expect(result!.imdbVotes).toBeUndefined();
     });
 
-    it('should not throw when the Ratings array contains a null element', async () => {
+    it('should drop invalid Ratings entries and keep valid ones', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -294,7 +294,12 @@ describe('OmdbApiClient', () => {
                 imdbRating: '7.5',
                 Year: '2020',
                 Type: 'movie',
-                Ratings: [null, { Source: 'Metacritic', Value: '80/100' }],
+                Ratings: [
+                    null,
+                    'nope',
+                    { Source: 'Metacritic', Value: '80/100' },
+                    { Source: 'Rotten Tomatoes', Value: '90%' },
+                ],
             })
             .build();
         const mockDisabledManagerForTest: DisabledClientsManager = {
@@ -310,6 +315,7 @@ describe('OmdbApiClient', () => {
         const result = await client.fetch('Some Title');
         expect(result).not.toBeUndefined();
         expect(result!.mcRating).toBe(80);
+        expect(result!.rtRating).toBe(90);
     });
 
     it('should use ID endpoint when searchTitle has imdbId', async () => {
@@ -418,7 +424,7 @@ describe('OmdbApiClient', () => {
 
         it.each([
             ['a numeric Response field', { Response: 1 }],
-            ['an unknown Response value', { Response: 'Maybe' }],
+            ['an unknown Response value', { Response: 'Maybe', Title: 'Movie 1', imdbID: 'tt1' }],
             ['a numeric Title field', { Response: 'True', Title: 42, imdbID: 'tt1' }],
             ['a numeric Year field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', Year: 2020 }],
             ['a numeric imdbRating field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', imdbRating: 8 }],

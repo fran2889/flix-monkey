@@ -8,7 +8,7 @@ import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
-import { isRecord, readOptionalArray, readOptionalString, readRequiredString } from './decode-utils';
+import { decodeValidItems, isRecord, readOptionalArray, readOptionalString, readRequiredString } from './decode-utils';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /** OMDb signals a successful lookup with this exact `Response` value. */
@@ -17,78 +17,15 @@ const OMDB_SUCCESS = 'True';
 /** OMDb signals a failed lookup with this exact `Response` value. */
 const OMDB_FAILURE = 'False';
 
-/**
- * Converts an OMDb numeric field to a number.
- *
- * OMDb sends ratings as strings, and a literal null, an empty string, or
- * "N/A" all mean "no rating". Unparseable input becomes undefined so a
- * blank field can never be coerced into a 0.0 rating.
- *
- * @param value - Raw field value from the OMDb response.
- * @returns The parsed number, or undefined when the field carries no rating.
- */
-function toRating(value: unknown): number | undefined {
-    if (value === null || value === undefined) return undefined;
-    const num = Number.parseFloat(String(value));
-    return Number.isNaN(num) ? undefined : num;
-}
-
-/**
- * Extracts a rating value from normalized OMDb rating entries by matching the source label.
- *
- * @param ratings - Normalized `Ratings` field from an OMDb response.
- * @param sourcePattern - Pattern matched against the rating source name.
- * @returns Rating value, or undefined when absent.
- */
-function parseRatings(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
-    const entry = ratings?.find(r => sourcePattern.test(r.source));
-    return toRating(entry?.value);
-}
-
-/**
- * Decodes one OMDb rating entry.
- *
- * @param raw - Untrusted entry.
- * @returns Normalized entry, or undefined when the entry is not a usable rating.
- */
-function decodeOmdbRating(raw: unknown): OmdbRatingEntry | undefined {
+function decodeOmdbResponse(raw: unknown): OmdbResponse | undefined {
     if (!isRecord(raw)) return undefined;
-    const upperSource = readOptionalString(raw, 'Source');
-    const lowerSource = readOptionalString(raw, 'source');
-    const upperValue = readOptionalString(raw, 'Value');
-    const lowerValue = readOptionalString(raw, 'value');
-    if (!upperSource.ok || !lowerSource.ok || !upperValue.ok || !lowerValue.ok) return undefined;
-    const source = upperSource.value ?? lowerSource.value;
-    const value = upperValue.value ?? lowerValue.value;
-    if (source === undefined || value === undefined) return undefined;
-    return { source, value };
+    const response = readRequiredString(raw, 'Response');
+    if (!response.ok) return undefined;
+    if (response.value === OMDB_FAILURE) return { Response: response.value };
+    if (response.value !== OMDB_SUCCESS) return undefined;
+    return decodeOmdbSuccessResponse(raw);
 }
 
-/**
- * Normalizes the `Ratings` array, dropping entries without a usable source or value.
- *
- * @param ratings - Untrusted `Ratings` array, or undefined when absent.
- * @returns The normalized entries, or undefined when the field is absent.
- */
-function decodeOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
-    if (!ratings) return undefined;
-    const decoded: OmdbRatingEntry[] = [];
-    for (const rating of ratings) {
-        const entry = decodeOmdbRating(rating);
-        if (entry) decoded.push(entry);
-    }
-    return decoded;
-}
-
-/**
- * Decodes a successful OMDb payload.
- *
- * OMDb always includes `Title` and `imdbID` on a successful lookup, so a
- * success response that lacks either is treated as malformed.
- *
- * @param raw - Parsed JSON object.
- * @returns Normalized response, or undefined when a required field is missing or mistyped.
- */
 function decodeOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse | undefined {
     const imdbRating = readOptionalString(raw, 'imdbRating');
     if (!imdbRating.ok) return undefined;
@@ -104,8 +41,6 @@ function decodeOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse |
     if (!apiType.ok) return undefined;
     const imdbVotes = readOptionalString(raw, 'imdbVotes');
     if (!imdbVotes.ok) return undefined;
-    if (!title.value) return undefined;
-    if (!imdbId.value) return undefined;
     return {
         Response: OMDB_SUCCESS,
         imdbRating: imdbRating.value,
@@ -118,19 +53,34 @@ function decodeOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse |
     };
 }
 
-/**
- * Decodes an untrusted OMDb payload before it is mapped to a Title.
- *
- * @param raw - Parsed JSON body, which may be any value.
- * @returns Normalized response, or undefined when the payload is not an OMDb object.
- */
-function decodeOmdbResponse(raw: unknown): OmdbResponse | undefined {
+function decodeOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
+    if (!ratings) return undefined;
+    return decodeValidItems(ratings, decodeOmdbRating);
+}
+
+function decodeOmdbRating(raw: unknown): OmdbRatingEntry | undefined {
     if (!isRecord(raw)) return undefined;
-    const response = readRequiredString(raw, 'Response');
-    if (!response.ok) return undefined;
-    if (response.value === OMDB_FAILURE) return { Response: response.value };
-    if (response.value !== OMDB_SUCCESS) return undefined;
-    return decodeOmdbSuccessResponse(raw);
+    const upperSource = readOptionalString(raw, 'Source');
+    const lowerSource = readOptionalString(raw, 'source');
+    const upperValue = readOptionalString(raw, 'Value');
+    const lowerValue = readOptionalString(raw, 'value');
+    if (!upperSource.ok || !lowerSource.ok || !upperValue.ok || !lowerValue.ok) return undefined;
+    const source = upperSource.value ?? lowerSource.value;
+    const value = upperValue.value ?? lowerValue.value;
+    if (source === undefined || value === undefined) return undefined;
+    return { source, value };
+}
+
+function parseRatings(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
+    const entry = ratings?.find(r => sourcePattern.test(r.source));
+    return toRating(entry?.value);
+}
+
+/** OMDb sends ratings as strings; null, empty, and "N/A" mean no rating. */
+function toRating(value: unknown): number | undefined {
+    if (value === null || value === undefined) return undefined;
+    const num = Number.parseFloat(String(value));
+    return Number.isNaN(num) ? undefined : num;
 }
 
 /**
@@ -169,7 +119,7 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger.warn(`Malformed OMDb response for "${displayTitle}"`, { response: raw });
             return undefined;
         }
-        if (json.Response === 'False') {
+        if (json.Response === OMDB_FAILURE) {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return undefined;
         }
@@ -195,7 +145,7 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger.warn(`Malformed OMDb response for "${searchTitle.displayTitle}"`, { response: raw });
                 return undefined;
             }
-            if (json.Response === 'False') {
+            if (json.Response === OMDB_FAILURE) {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
