@@ -113,6 +113,19 @@ describe('api-clients integration', () => {
         overrideManager,
     });
 
+    describe('XMDB search metadata', () => {
+        it('returns the search name, year, and id before the details lookup', async () => {
+            const client = new XmdbApiClient(clientDeps());
+
+            const result = await client.search('The Godfather');
+
+            assertNonNullTitle(result);
+            expect(result.imdbId).toBe('tt0068646');
+            expect(result.apiTitle).toContain('Godfather');
+            expect(result.year).toBe(1972);
+        });
+    });
+
     describe('movie with all ratings', () => {
         const TITLE = 'The Godfather';
         const common = {
