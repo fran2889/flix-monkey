@@ -60,9 +60,8 @@ function parseOmdbRating(raw: unknown): OmdbRatingEntry {
     const lowerValue = optionalString(raw, 'value');
     const source = upperSource ?? lowerSource;
     const value = upperValue ?? lowerValue;
-    if (source === undefined || value === undefined) {
-        throw new ParseError('expected source and value');
-    }
+    if (source === undefined) throw new ParseError('missing rating source');
+    if (value === undefined) throw new ParseError('missing rating value');
     return { source, value };
 }
 
