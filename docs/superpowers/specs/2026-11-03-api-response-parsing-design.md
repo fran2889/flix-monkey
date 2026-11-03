@@ -160,6 +160,20 @@ turning parse failures into fetch failures.
   `XmdbDetailsResponse`: required `id` and `title` first, then `rating`,
   `release_year`, `metascore`, `title_type`, and `vote_count`, each optional
   with `| undefined`.
+- **Identity fields.** The Agregarr ratings entry and the XMDb details response
+  are the canonical source of the IMDb ID. Build the resulting `Title` with
+  `entry.imdbId` and `details.id` rather than copying the ID from the search
+  result. Search results still provide the display title, API title, year, and
+  title type for those providers.
+- **OMDb response union.** Model `OmdbResponse` as a discriminated union on
+  `Response`. `OmdbSuccessResponse` carries required `Title` and `imdbID`
+  fields; `OmdbFailureResponse` carries only `Response: 'False'`. This makes the
+  invariant explicit and removes the optional identity fields from the success
+  path. Name the private Title builder `#titleFromOmdbResponse` to avoid
+  shadowing the module-level parser.
+- **No redundant fallbacks.** Parsers already normalize absent and null values
+  to `undefined`, so call sites pass those fields through directly. Do not add
+  `?? undefined` or fall back to a search value for a field the parser requires.
 - **Parser names.** Rename the client functions to `parseOmdbResponse`,
   `parseOmdbSuccessResponse`, `parseOmdbRating`, `parseAgregarrRatingsResponse`,
   `parseAgregarrRatingEntry`, `parseXmdbSearchResponse`,

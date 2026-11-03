@@ -4,7 +4,7 @@
 
 **Goal:** Replace `Decoded<T>` with throwing `ParseError` parsers and route every API client request through one `fetchParsed` entry point.
 
-**Architecture:** `parse-utils.ts` provides throwing field readers and `parseValidItems`. `BaseApiClient.fetchParsed` fetches through the queue, runs a parser, catches only `ParseError`, logs one warning, and returns `undefined`; anything else rethrows. Each client moves to `parse*` functions and keeps only its no-results logging.
+**Architecture:** `parse-utils.ts` provides throwing field readers plus `parseValidItems` and `parseRequiredItems`. `BaseApiClient.fetchParsed` fetches through the queue, runs a parser, catches only `ParseError`, logs one warning, and returns `undefined`; anything else rethrows. Each client moves to `parse*` functions and keeps only its no-results logging.
 
 **Tech Stack:** TypeScript (ES2022, ESM), Vitest, ESLint, Rollup.
 
@@ -53,6 +53,7 @@
     export function optionalNumber(record: Record<string, unknown>, key: string): number | undefined
     export function optionalArray(record: Record<string, unknown>, key: string): unknown[] | undefined
     export function parseValidItems<T>(values: unknown[], parseItem: (_value: unknown) => T): T[]
+    export function parseRequiredItems<T>(values: unknown[], parseItem: (_value: unknown) => T, label: string): T[]
     ```
 
 - [x] **Step 1: Write the failing tests**
@@ -185,9 +186,17 @@ export function parseValidItems<T>(values: unknown[], parseItem: (_value: unknow
     }
     return parsed;
 }
+
+export function parseRequiredItems<T>(values: unknown[], parseItem: (_value: unknown) => T, label: string): T[] {
+    const parsed = parseValidItems(values, parseItem);
+    if (values.length > 0 && parsed.length === 0) {
+        throw new ParseError(`no valid items in ${label}`);
+    }
+    return parsed;
+}
 ```
 
-Implement `requiredString` and the three `optional*` readers with the signatures above. `requiredString` throws `ParseError('expected string at "<key>"')` for a non-string or `value.trim() === ''`. Each optional reader returns `undefined` for `undefined` or `null`, then throws `ParseError('expected <type> at "<key>"')` for a wrong type.
+`parseValidItems` returns an empty array when every item is invalid. `parseRequiredItems` delegates to it and throws `ParseError` with the label only when the input is non-empty and every item is invalid. Primary result arrays use `parseRequiredItems`; optional secondary arrays keep the lenient `parseValidItems` behavior. Add tests for items dropped, empty input, all-invalid input, and non-`ParseError` propagation. `requiredString` throws `ParseError('expected string at "<key>"')` for a non-string or `value.trim() === ''`. Each optional reader returns `undefined` for `undefined` or `null`, then throws `ParseError('expected <type> at "<key>"')` for a wrong type.
 
 Add JSDoc to every exported declaration. Document that `optional*` treat absent and null as `undefined` and throw only on a wrong type.
 
@@ -407,7 +416,7 @@ git commit -m "refactor(api): add fetchParsed request path"
 
 **Interfaces:**
 
-- Consumes: `fetchParsed`, `ParseError`, `assertRecord`, `requiredString`, `optionalNumber`, `optionalArray`, `parseValidItems`.
+- Consumes: `fetchParsed`, `ParseError`, `assertRecord`, `requiredString`, `optionalNumber`, `optionalArray`, `parseRequiredItems`.
 - Produces (internal to the client):
 
     ```ts
@@ -481,12 +490,12 @@ function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
     assertRecord(raw);
     const results = optionalArray(raw, 'd');
     if (!results) return {};
-    return { d: parseValidItems(results, parseImdbSuggestionsResult) };
+    return { d: parseRequiredItems(results, parseImdbSuggestionsResult, 'the "d" array') };
 }
 
 function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
     if (!Array.isArray(raw)) throw new ParseError('expected an array');
-    return parseValidItems(raw, parseAgregarrRatingEntry);
+    return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
 }
 ```
 
@@ -518,7 +527,10 @@ const ratings = await this.fetchParsed(
 if (!ratings) return undefined;
 ```
 
-Then keep the existing first-entry and Title construction logic. The empty-array warning stays:
+Then keep the existing first-entry check and build the Title from the search
+metadata plus the details ratings. Use `entry.imdbId` for the resulting
+`imdbId`; the details response is the canonical source for that identity field.
+The empty-array warning stays:
 
 ```ts
 const entry = ratings[0];
@@ -638,20 +650,16 @@ function parseOmdbResponse(raw: unknown): OmdbResponse {
 
 function parseOmdbRating(raw: unknown): OmdbRatingEntry {
     assertRecord(raw);
-    const upperSource = optionalString(raw, 'Source');
-    const lowerSource = optionalString(raw, 'source');
-    const upperValue = optionalString(raw, 'Value');
-    const lowerValue = optionalString(raw, 'value');
-    const source = upperSource ?? lowerSource;
-    const value = upperValue ?? lowerValue;
-    if (source === undefined || value === undefined) {
-        throw new ParseError('expected source and value');
-    }
-    return { source, value };
+    return {
+        source: requiredString(raw, 'Source'),
+        value: requiredString(raw, 'Value'),
+    };
 }
 ```
 
-`parseOmdbSuccessResponse` returns `{ Response: OMDB_SUCCESS, imdbRating: optionalString(raw, 'imdbRating'), Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')), imdbID: requiredString(raw, 'imdbID'), Year: optionalString(raw, 'Year'), Title: requiredString(raw, 'Title'), Type: optionalString(raw, 'Type'), imdbVotes: optionalString(raw, 'imdbVotes') }`. `parseOmdbRatings` returns `undefined` for an absent array and otherwise returns `parseValidItems(ratings, parseOmdbRating)`.
+`parseOmdbSuccessResponse` returns an `OmdbSuccessResponse` containing `{ Response: OMDB_SUCCESS, imdbRating: optionalString(raw, 'imdbRating'), Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')), imdbID: requiredString(raw, 'imdbID'), Year: optionalString(raw, 'Year'), Title: requiredString(raw, 'Title'), Type: optionalString(raw, 'Type'), imdbVotes: optionalString(raw, 'imdbVotes') }`. `parseOmdbRatings` returns `undefined` for an absent array and otherwise returns `parseValidItems(ratings, parseOmdbRating)`.
+
+`OmdbResponse` is a discriminated union on `Response`: `OmdbSuccessResponse` requires `Title` and `imdbID`, while `OmdbFailureResponse` carries only `Response: 'False'`. Name the private Title builder `#titleFromOmdbResponse` so it does not shadow the module-level parser.
 
 In `search`, replace the fetch and decode block with:
 
@@ -709,7 +717,7 @@ git commit -m "refactor(api): parse OMDb responses with ParseError"
 
 **Interfaces:**
 
-- Consumes: `fetchParsed`, `assertRecord`, `requiredString`, `optionalString`, `optionalNumber`, `optionalArray`, `parseValidItems`.
+- Consumes: `fetchParsed`, `assertRecord`, `requiredString`, `optionalString`, `optionalNumber`, `optionalArray`, `parseRequiredItems`.
 - Produces (internal to the client):
 
     ```ts
@@ -789,13 +797,15 @@ function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse {
     assertRecord(raw);
     const results = optionalArray(raw, 'results');
     if (!results) return {};
-    return { results: parseValidItems(results, parseXmdbSearchResult) };
+    return { results: parseRequiredItems(results, parseXmdbSearchResult, 'the "results" array') };
 }
 
 function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
     assertRecord(raw);
     const error = optionalString(raw, 'error');
     if (error) return undefined;
+    // The details endpoint keeps id and sends title: null for a missing title.
+    if (raw['title'] === null) return undefined;
     return {
         id: requiredString(raw, 'id'),
         title: requiredString(raw, 'title'),
@@ -850,6 +860,8 @@ const details = await this.fetchParsed(
 if (!details) return undefined;
 return this.#titleFromDetails(searchTitle, details);
 ```
+
+`#titleFromDetails` uses `details.id` for the resulting `imdbId`; the details response is the canonical source for that identity field. The normalized optional fields are passed through directly instead of adding `?? undefined` fallbacks.
 
 Remove the old "XMDb details request failed" warning.
 
@@ -945,5 +957,9 @@ git commit -m "refactor(api): remove the raw request path"
 - [x] Malformed responses log exactly once, with the label, raw body, and message.
 - [x] Valid not-found payloads return `undefined` without a malformed warning.
 - [x] `parseValidItems` drops one bad item without failing its siblings.
+- [x] Primary result arrays use `parseRequiredItems`; optional secondary arrays stay lenient.
+- [x] `OmdbResponse` is a discriminated union on `Response`, with required identity fields on success.
+- [x] XMDb and Agregarr take the resulting `imdbId` from the details response.
+- [x] Normalized optional fields pass through without `?? undefined` fallbacks.
 - [x] The XMDb details parser and interface are collapsed into one of each.
 - [x] The full local check from `AGENTS.md` passes.
