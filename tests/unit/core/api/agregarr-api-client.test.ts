@@ -159,6 +159,18 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe('movie');
     });
 
+    it('should use the IMDb ID from the Agregarr details response', async () => {
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt2', rating: 8.8, votes: 2500000 }])
+            .build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        const result = await client.getDetails(searchResult);
+
+        expect(result!.imdbId).toBe('tt2');
+    });
+
     it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo([{ imdbId: 'tt4', rating: null, votes: null }])

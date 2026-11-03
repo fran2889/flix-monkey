@@ -104,7 +104,7 @@ export class XmdbApiClient extends BaseApiClient {
             displayTitle,
             apiTitle: match.name,
             imdbId: match.id,
-            year: match.year ?? undefined,
+            year: match.year,
             imdbRating: undefined,
             imdbVotes: undefined,
             rtRating: undefined,
@@ -136,17 +136,17 @@ export class XmdbApiClient extends BaseApiClient {
     }
 
     #titleFromDetails(searchTitle: Title, details: XmdbDetailsResponse): Title {
-        const { rating, release_year, title, metascore, title_type, vote_count } = details;
+        const { id, rating, release_year, title, metascore, title_type, vote_count } = details;
         return new Title({
             displayTitle: searchTitle.displayTitle,
-            apiTitle: title ?? searchTitle.apiTitle,
-            imdbId: searchTitle.imdbId,
+            apiTitle: title,
+            imdbId: id,
             year: release_year ?? searchTitle.year,
-            imdbRating: rating ?? undefined,
-            imdbVotes: vote_count ?? undefined,
+            imdbRating: rating,
+            imdbVotes: vote_count,
             rtRating: undefined,
-            mcRating: metascore ?? undefined,
-            type: mapXmdbTitleType(title_type ?? undefined),
+            mcRating: metascore,
+            type: mapXmdbTitleType(title_type),
             source: undefined,
         });
     }

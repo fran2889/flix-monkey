@@ -192,6 +192,17 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbVotes).toBe(2500000);
     });
 
+    it('should use the id from the XMDb details response', async () => {
+        const adapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ id: 'tt2', title: 'Movie 1', release_year: 2020 })
+            .build();
+        const client = new XmdbApiClient({ ...deps, adapter });
+
+        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+        expect(result!.imdbId).toBe('tt2');
+    });
+
     it('should return undefined without a warning for an error payload', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 'Movie not found' }).build();
         const logger = buildLogger().build();

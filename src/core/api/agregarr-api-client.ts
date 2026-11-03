@@ -92,7 +92,7 @@ export class AgregarrApiClient extends BaseApiClient {
             displayTitle,
             apiTitle: match.l,
             imdbId: match.id,
-            year: match.y ?? undefined,
+            year: match.y,
             imdbRating: undefined,
             imdbVotes: undefined,
             rtRating: undefined,
@@ -126,15 +126,15 @@ export class AgregarrApiClient extends BaseApiClient {
             });
             return undefined;
         }
-        // Agregarr supplies ratings only in the details response; every identity
-        // field comes from the search result that produced `id`.
+        // Agregarr supplies ratings and the canonical IMDb ID in the details
+        // response; every other identity field comes from the search result.
         return new Title({
             displayTitle: searchTitle.displayTitle,
             apiTitle: searchTitle.apiTitle,
-            imdbId: id,
+            imdbId: entry.imdbId,
             year: searchTitle.year,
-            imdbRating: entry.rating ?? undefined,
-            imdbVotes: entry.votes ?? undefined,
+            imdbRating: entry.rating,
+            imdbVotes: entry.votes,
             rtRating: undefined,
             mcRating: undefined,
             type: searchTitle.type,
