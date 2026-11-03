@@ -85,6 +85,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should return undefined if IMDb Suggestions response has no d array', async () => {
@@ -99,6 +100,36 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should drop invalid IMDb Suggestions results and keep valid ones', async () => {
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({
+                d: [
+                    { id: '', l: 'Bad', qid: 'movie' },
+                    { id: 'tt2', l: 'Good', qid: 'movie', y: 2021 },
+                ],
+            })
+            .build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+        const result = await client.search('Good');
+
+        expect(result!.imdbId).toBe('tt2');
+        expect(result!.apiTitle).toBe('Good');
+    });
+
+    it('should warn once when the IMDb Suggestions body is not an object', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
+            { response: [], error: 'expected an object' }
+        );
     });
 
     it('should return undefined when IMDb Suggestions has no supported title types', async () => {
@@ -239,8 +270,13 @@ describe('AgregarrApiClient', () => {
         const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
 
         expect(await client.getDetails(searchResult)).toBeUndefined();
-        // The logged response collapses an absent payload to undefined rather than null.
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { response: undefined });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Malformed Agregarr details for "Movie 1"'),
+            {
+                response: undefined,
+                error: 'expected an array',
+            }
+        );
     });
 
     it('should skip search when imdbId is provided', async () => {

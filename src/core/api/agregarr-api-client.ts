@@ -7,49 +7,50 @@ import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
-import { decodeValidItems, isRecord, readOptionalArray, readOptionalNumber, readRequiredString } from './decode-utils';
+import {
+    assertRecord,
+    optionalArray,
+    optionalNumber,
+    ParseError,
+    parseValidItems,
+    requiredString,
+} from './parse-utils';
 import { mapAgregarrTitleType } from './title-type-mappers';
 
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
-function decodeImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse | undefined {
-    if (!isRecord(raw)) return undefined;
-    const results = readOptionalArray(raw, 'd');
-    if (!results.ok) return undefined;
-    if (!results.value) return {};
-    return { d: decodeValidItems(results.value, decodeImdbSuggestionsResult) };
+function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
+    assertRecord(raw);
+    const results = optionalArray(raw, 'd');
+    if (!results) return {};
+    return { d: parseValidItems(results, parseImdbSuggestionsResult) };
 }
 
-function decodeImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult | undefined {
-    if (!isRecord(raw)) return undefined;
-    const qid = readRequiredString(raw, 'qid');
-    if (!qid.ok) return undefined;
-    const id = readRequiredString(raw, 'id');
-    if (!id.ok) return undefined;
-    const label = readRequiredString(raw, 'l');
-    if (!label.ok) return undefined;
-    // People and other results have no release year.
-    const year = readOptionalNumber(raw, 'y');
-    if (!year.ok) return undefined;
-    return { qid: qid.value, id: id.value, l: label.value, y: year.value };
+function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
+    assertRecord(raw);
+    return {
+        qid: requiredString(raw, 'qid'),
+        id: requiredString(raw, 'id'),
+        l: requiredString(raw, 'l'),
+        // People and other results have no release year.
+        y: optionalNumber(raw, 'y'),
+    };
 }
 
-function decodeAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] | undefined {
-    if (!Array.isArray(raw)) return undefined;
-    return decodeValidItems(raw, decodeAgregarrRatingEntry);
+function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
+    if (!Array.isArray(raw)) throw new ParseError('expected an array');
+    return parseValidItems(raw, parseAgregarrRatingEntry);
 }
 
-function decodeAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry | undefined {
-    if (!isRecord(raw)) return undefined;
-    const imdbId = readRequiredString(raw, 'imdbId');
-    if (!imdbId.ok) return undefined;
-    // rating and votes are null when the title is unknown.
-    const rating = readOptionalNumber(raw, 'rating');
-    if (!rating.ok) return undefined;
-    const votes = readOptionalNumber(raw, 'votes');
-    if (!votes.ok) return undefined;
-    return { imdbId: imdbId.value, rating: rating.value, votes: votes.value };
+function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry {
+    assertRecord(raw);
+    return {
+        imdbId: requiredString(raw, 'imdbId'),
+        // rating and votes are null when the title is unknown.
+        rating: optionalNumber(raw, 'rating'),
+        votes: optionalNumber(raw, 'votes'),
+    };
 }
 
 /**
@@ -70,12 +71,13 @@ export class AgregarrApiClient extends BaseApiClient {
     async search(displayTitle: string): Promise<Title | undefined> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
-        const raw = await this.queuedFetch(`https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`, 0);
-        const data = decodeImdbSuggestionsResponse(raw);
-        if (!data) {
-            this.logger.warn(`Malformed IMDb Suggestions response for "${displayTitle}"`, { response: raw });
-            return undefined;
-        }
+        const data = await this.fetchParsed(
+            `https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`,
+            0,
+            parseImdbSuggestionsResponse,
+            `IMDb Suggestions search for "${displayTitle}"`
+        );
+        if (!data) return undefined;
         const results = data.d;
         if (!results?.length) {
             this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
@@ -110,12 +112,17 @@ export class AgregarrApiClient extends BaseApiClient {
         const id = searchTitle.imdbId;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const encodedId = encodeURIComponent(String(id ?? ''));
-        const raw = await this.queuedFetch(`https://api.agregarr.org/api/ratings?id=${encodedId}`, 1);
-        const ratings = decodeAgregarrRatingsResponse(raw);
-        const entry = ratings?.[0];
+        const ratings = await this.fetchParsed(
+            `https://api.agregarr.org/api/ratings?id=${encodedId}`,
+            1,
+            parseAgregarrRatingsResponse,
+            `Agregarr details for "${searchTitle.displayTitle}" (ID: ${id})`
+        );
+        if (!ratings) return undefined;
+        const entry = ratings[0];
         if (!entry) {
             this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: raw ?? undefined,
+                response: ratings,
             });
             return undefined;
         }
