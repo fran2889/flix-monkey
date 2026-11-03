@@ -11,6 +11,7 @@ import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
+import { ParseError } from './parse-utils';
 
 /**
  * Dependencies shared by every API client.
@@ -151,14 +152,43 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Enqueues an HTTP request through the rate-limited queue.
+     * Fetches through the rate-limited queue and parses the raw response body.
+     *
+     * When the parser throws `ParseError`, the response is malformed: one warning
+     * is logged and `undefined` is returned. Any other error type propagates to
+     * the caller so a bug is not silently swallowed.
      *
      * @param url - Request URL.
      * @param priority - Higher values are processed first.
-     * @returns Parsed response body.
+     * @param parse - Parser that turns the raw body into the response type.
+     * @param label - Human-readable request label for the malformed warning.
+     * @returns The parsed response, or undefined when parsing fails with ParseError.
+     */
+    async fetchParsed<T>(
+        url: string,
+        priority: number,
+        parse: (raw: unknown) => T,
+        label: string
+    ): Promise<T | undefined> {
+        const raw = await this.#queuedFetch(url, priority);
+        try {
+            return parse(raw);
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError)) throw error;
+            this.logger.warn(`Malformed ${label}`, { response: raw, error: error.message });
+            return undefined;
+        }
+    }
+
+    async #queuedFetch(url: string, priority: number): Promise<unknown> {
+        return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
+    }
+
+    /**
+     * @deprecated Use fetchParsed. Removed when every client has migrated.
      */
     async queuedFetch(url: string, priority: number): Promise<unknown> {
-        return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
+        return this.#queuedFetch(url, priority);
     }
 
     /**
