@@ -7,21 +7,20 @@ import { PROVIDER_RATE_LIMITS } from '../rate-limits';
 import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
-import { decodeArray, isRecord, readOptionalArray, readOptionalNumber, readRequiredString } from './decode-utils';
+import { decodeValidItems, isRecord, readOptionalArray, readOptionalNumber, readRequiredString } from './decode-utils';
 import { mapAgregarrTitleType } from './title-type-mappers';
 
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
 
-/**
- * Decodes one IMDb Suggestions result.
- *
- * Every suggestion carries `id`, `l`, and `qid`; `y` is absent (or null) for
- * people and other results that have no release year.
- *
- * @param raw - Untrusted result.
- * @returns Normalized result, or undefined when a required field is missing or mistyped.
- */
+function decodeImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse | undefined {
+    if (!isRecord(raw)) return undefined;
+    const results = readOptionalArray(raw, 'd');
+    if (!results.ok) return undefined;
+    if (!results.value) return {};
+    return { d: decodeValidItems(results.value, decodeImdbSuggestionsResult) };
+}
+
 function decodeImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult | undefined {
     if (!isRecord(raw)) return undefined;
     const qid = readRequiredString(raw, 'qid');
@@ -30,55 +29,27 @@ function decodeImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult | unde
     if (!id.ok) return undefined;
     const label = readRequiredString(raw, 'l');
     if (!label.ok) return undefined;
+    // People and other results have no release year.
     const year = readOptionalNumber(raw, 'y');
     if (!year.ok) return undefined;
     return { qid: qid.value, id: id.value, l: label.value, y: year.value };
 }
 
-/**
- * Decodes an untrusted IMDb Suggestions payload.
- *
- * @param raw - Parsed JSON body, which may be any value.
- * @returns Normalized response, or undefined when the payload is not a suggestions object.
- */
-function decodeImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse | undefined {
-    if (!isRecord(raw)) return undefined;
-    const results = readOptionalArray(raw, 'd');
-    if (!results.ok) return undefined;
-    if (!results.value) return {};
-    const decoded = decodeArray(results.value, decodeImdbSuggestionsResult);
-    return decoded ? { d: decoded } : undefined;
+function decodeAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] | undefined {
+    if (!Array.isArray(raw)) return undefined;
+    return decodeValidItems(raw, decodeAgregarrRatingEntry);
 }
 
-/**
- * Decodes one Agregarr rating entry.
- *
- * Agregarr always echoes `imdbId`; `rating` and `votes` are `null` when the
- * title is unknown, so both stay optional.
- *
- * @param raw - Untrusted entry.
- * @returns Normalized entry, or undefined when a required field is missing or mistyped.
- */
 function decodeAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry | undefined {
     if (!isRecord(raw)) return undefined;
     const imdbId = readRequiredString(raw, 'imdbId');
     if (!imdbId.ok) return undefined;
+    // rating and votes are null when the title is unknown.
     const rating = readOptionalNumber(raw, 'rating');
     if (!rating.ok) return undefined;
     const votes = readOptionalNumber(raw, 'votes');
     if (!votes.ok) return undefined;
     return { imdbId: imdbId.value, rating: rating.value, votes: votes.value };
-}
-
-/**
- * Decodes an untrusted Agregarr ratings payload.
- *
- * @param raw - Parsed JSON body, which may be any value.
- * @returns Normalized entries, or undefined when the payload is not an array.
- */
-function decodeAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] | undefined {
-    if (!Array.isArray(raw)) return undefined;
-    return decodeArray(raw, decodeAgregarrRatingEntry);
 }
 
 /**
