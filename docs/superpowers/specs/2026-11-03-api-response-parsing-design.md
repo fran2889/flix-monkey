@@ -1,0 +1,197 @@
+# API response parsing: throw ParseError from a single request path
+
+**Date:** 2026-11-03
+
+**Status:** accepted
+
+**Size:** small change
+
+## Intent
+
+Replace the `Decoded<T>` result object in the API response parsers with a
+throwing `ParseError` model, and make parsing part of the single request entry
+point. Validation then has one failure path, one log point, and far fewer
+per-field checks.
+
+## Context
+
+The branch `refactor/decode-api-responses` added `decode-utils.ts` with
+`Decoded<T>` (`{ ok: true; value: T } | { ok: false }`), `isRecord`, and
+`read*` helpers. Each client fetches raw JSON, calls a decoder, and logs a
+warning when the decoder returns `undefined`.
+
+Three problems remain:
+
+- `{ ok: false }` carries no reason, so the log cannot say which field failed.
+- There are about 30 `if (!x.ok) return undefined` checks across the three
+  clients.
+- Fetch and parse are separate calls, so a future client can skip validation.
+
+This design also adopts one vocabulary. The module becomes `parse-utils.ts`,
+the field readers lose their `read` prefix, the client functions become
+`parse*`, and the request method becomes `fetchParsed`. The branch name and
+commit history keep the old `decode` wording.
+
+## Goals
+
+- One failure model: readers throw `ParseError`; only `parseValidItems` and
+  `fetchParsed` catch it.
+- One public HTTP entry point per client: `fetchParsed`.
+- Malformed responses log once, with provider context, the raw body, and the
+  field message.
+- Valid but empty or not-found payloads keep their existing no-results logs
+  and are never reported as malformed.
+- Valid payloads produce the same `Title` values as before.
+
+## Non-goals
+
+- No schema library (Zod, Valibot) and no new dependency.
+- No change to endpoints, rate limits, queue behavior, cache, or
+  `ApiClientManager`.
+- No change to `Title` or the public `ApiClient` interface.
+- No raw HTTP escape hatch for subclasses.
+- No new feature behavior.
+
+## Anti-goals
+
+- Swallowing programmer errors as malformed responses.
+- Logging one malformed response twice.
+- Treating an expected not-found payload as an exception.
+- Keeping both `queuedFetch` and `fetchParsed` as public request paths.
+
+## Constraints
+
+- `strict` and `exactOptionalPropertyTypes` are enabled. Optional fields that
+  are always written need `| undefined`.
+- ESLint complexity is capped at 10. Flattening the parsers must stay under
+  it without a disable comment.
+- `max-params` is 4, so `fetchParsed(url, priority, parse, label)` fits
+  exactly.
+- Private methods use `#`. The codebase has no `protected` members today.
+- License headers, JSDoc for exports, sorted imports, ASCII only, and no
+  em-dashes.
+- Tests are unit tests with the adapter mock. No live API calls.
+
+## Approaches considered
+
+1. **Keep `Decoded<T>` (current).** Failure stays in the type system, there is
+   no hidden control flow, and bugs cannot be swallowed. The costs are no
+   reason on failure, 30 checks, and validation that is optional at each call
+   site.
+2. **Throwing readers with a catch in each client method.** Removes the field
+   checks, but adds six copies of `try`/`catch` and repeated logging.
+3. **Throwing readers with a shared `fetchParsed` (chosen).** One catch, one
+   log, validation is mandatory, and clients keep provider context by passing
+   a label. A dedicated `ParseError` plus a rethrow keeps bugs visible.
+
+Option 3 is chosen because it fixes the diagnostics and the boilerplate without
+turning parse failures into fetch failures.
+
+## Decisions
+
+- **`ParseError`.** Add it to `parse-utils.ts` and export it so
+  `BaseApiClient` can catch it. It extends `Error` and names the field or path
+  in its message, for example `expected string at "title", got null`.
+  Parsers that reject a value without a reader, such as an unknown OMDb
+  `Response`, throw it directly. It does not extend `FlixMonkeyError`, which
+  carries HTTP request metadata and is treated as a request failure.
+- **Readers throw.** `requiredString` throws on absent, empty, or wrong type.
+  `optionalString`, `optionalNumber`, and `optionalArray` return `undefined`
+  for absent or null and throw only on a wrong type. The short names replace
+  `readRequiredString`, `readOptionalString`, `readOptionalNumber`, and
+  `readOptionalArray`.
+- **`assertRecord`.** Replace `isRecord` with
+  `assertRecord(value): asserts value is Record<string, unknown>`. It throws
+  `ParseError('expected an object')`. The name matches TypeScript's `asserts`
+  vocabulary and signals that it throws.
+- **`parseValidItems`.** Add
+  `parseValidItems<T>(values: unknown[], parseItem: (value: unknown) => T)`.
+  It calls `parseItem` for each item, catches only `ParseError`, drops that
+  item, and returns the rest. `parseItem` returns `T` and throws on an invalid
+  item. One bad item does not fail the response, and item failures are not
+  logged individually. Non-`ParseError` values rethrow.
+- **`fetchParsed`.** Add it to `BaseApiClient` as a public method:
+
+    ```ts
+    async fetchParsed<T>(
+        url: string,
+        priority: number,
+        parse: (raw: unknown) => T,
+        label: string
+    ): Promise<T | undefined>
+    ```
+
+    It calls `#queuedFetch`, then runs `parse` inside a `try`. On
+    `ParseError`, it logs a warning with the label, raw body, and message,
+    then returns `undefined`. Anything else rethrows. The `try` wraps only the
+    parse, never the queue.
+
+- **Private `#queuedFetch`.** Rename the current `queuedFetch` to
+  `#queuedFetch`. It stays the single place that wires `#queue`, `#adapter`,
+  and the priority. No public raw request method remains.
+- **Client call sites.** Replace the fetch, parse, and warn block with:
+
+    ```ts
+    const data = await this.fetchParsed(url, priority, parseX, label);
+    if (!data) return undefined;
+    ```
+
+    Labels include the provider, operation, and title or ID, for example
+    `XMDb details for "Some Title" (ID: tt123)`.
+
+- **Logging split.** `fetchParsed` logs malformed payloads only. Clients keep
+  their existing no-results logs for decoded empty or not-found results such
+  as `Response: 'False'` or an empty results array. Clients do not log when
+  `fetchParsed` returns `undefined`, because the helper already logged the
+  malformed case. The XMDb details not-found payload (`error`) returns
+  `undefined` without a warning; remove the current "details request failed"
+  warning on that path.
+- **Collapse the XMDb split.** Inline the details-fields parsing into
+  `parseXmdbDetailsResponse`. Merge `XmdbDetailsFields` into
+  `XmdbDetailsResponse`: required `id` and `title` first, then `rating`,
+  `release_year`, `metascore`, `title_type`, and `vote_count`, each optional
+  with `| undefined`.
+- **Parser names.** Rename the client functions to `parseOmdbResponse`,
+  `parseOmdbSuccessResponse`, `parseOmdbRating`, `parseAgregarrRatingsResponse`,
+  `parseAgregarrRatingEntry`, `parseXmdbSearchResponse`,
+  `parseXmdbSearchResult`, and `parseXmdbDetailsResponse`.
+- **Tests.** Rewrite the three OMDb tests that assign `client.queuedFetch` to
+  assert through the adapter instead. Add unit coverage for `assertRecord`,
+  the throwing readers, per-item drops, and `fetchParsed`: valid parse,
+  `ParseError` logs and returns `undefined`, and non-`ParseError` rethrows.
+  Keep the existing parser coverage that goes through the adapter.
+
+## Verification
+
+- `npm run type-check`, `npm run lint`, `npm run format:check`, and `npm test`
+  pass.
+- `rg "Decoded<|decode-utils|fetchDecoded|readRequiredString|readOptional"` in
+  `src/` finds nothing.
+- `rg "queuedFetch"` finds only the private `#queuedFetch`.
+- A malformed response logs one warning containing the label, raw body, and
+  field message.
+- A non-`ParseError` thrown by a parser propagates to `ApiClientManager`,
+  which handles it as before.
+- Valid responses produce the same `Title` values as the branch did before
+  this change.
+- The three OMDb tests no longer touch `queuedFetch` and assert through
+  `adapter.httpFetch`.
+
+## Risks and maintenance
+
+- A future parser could throw a non-`ParseError`. That propagates, which is
+  intentional, but every validation helper must use `ParseError`.
+- `fetchParsed` returns `undefined` for both malformed and not-found. The log
+  is the only distinction; do not add caller-side logging for `undefined`.
+- `ParseError` messages need the field path to be useful. If nested array
+  errors become hard to diagnose, `parseValidItems` can add the index.
+- A public `fetchParsed` is a test seam. If tests move fully to the adapter,
+  it can become `protected`.
+- No raw request method remains. If a future endpoint needs the raw body, add
+  a separate method with a clear reason instead of reopening `queuedFetch`.
+
+## What is left to the builder
+
+- The exact `ParseError` message and label wording.
+- Whether `parseValidItems` includes an array index in its messages.
+- Test names and placement under `tests/unit/core/api/`.
