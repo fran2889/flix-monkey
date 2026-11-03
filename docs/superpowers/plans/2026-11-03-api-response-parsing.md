@@ -939,11 +939,11 @@ git commit -m "refactor(api): remove the raw request path"
 
 ## Final Review Checklist
 
-- [ ] `parse-utils.ts` is the only place that defines `ParseError` and the field readers.
-- [ ] No client imports `decode-utils` or calls `queuedFetch`.
-- [ ] `fetchParsed` catches only `ParseError`; a non-`ParseError` propagates.
-- [ ] Malformed responses log exactly once, with the label, raw body, and message.
-- [ ] Valid not-found payloads return `undefined` without a malformed warning.
-- [ ] `parseValidItems` drops one bad item without failing its siblings.
-- [ ] The XMDb details parser and interface are collapsed into one of each.
-- [ ] The full local check from `AGENTS.md` passes.
+- [x] `parse-utils.ts` is the only place that defines `ParseError` and the field readers.
+- [x] No client imports `decode-utils` or calls `queuedFetch`.
+- [x] `fetchParsed` catches only `ParseError`; a non-`ParseError` propagates.
+- [x] Malformed responses log exactly once, with the label, raw body, and message.
+- [x] Valid not-found payloads return `undefined` without a malformed warning.
+- [x] `parseValidItems` drops one bad item without failing its siblings.
+- [x] The XMDb details parser and interface are collapsed into one of each.
+- [x] The full local check from `AGENTS.md` passes.
