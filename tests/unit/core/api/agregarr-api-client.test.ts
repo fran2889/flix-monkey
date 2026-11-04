@@ -85,6 +85,7 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+        expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should return undefined if IMDb Suggestions response has no d array', async () => {
@@ -99,6 +100,19 @@ describe('AgregarrApiClient', () => {
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
         await client.search('Unknown');
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should warn once when the IMDb Suggestions body is not an object', async () => {
+        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+        const mockLogger = buildLogger().build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
+            { response: [], error: 'expected an object' }
+        );
     });
 
     it('should return undefined when IMDb Suggestions has no supported title types', async () => {
@@ -143,6 +157,18 @@ describe('AgregarrApiClient', () => {
         expect(result!.rtRating).toBeUndefined();
         expect(result!.mcRating).toBeUndefined();
         expect(result!.type).toBe('movie');
+    });
+
+    it('should use the IMDb ID from the Agregarr details response', async () => {
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo([{ imdbId: 'tt2', rating: 8.8, votes: 2500000 }])
+            .build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
+
+        const result = await client.getDetails(searchResult);
+
+        expect(result!.imdbId).toBe('tt2');
     });
 
     it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
@@ -226,10 +252,17 @@ describe('AgregarrApiClient', () => {
         const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
 
         expect(await client.getDetails(searchResult)).toBeUndefined();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Agregarr details request failed for "Movie 1"'),
-            { response: [] }
-        );
+        expect(mockLogger.info).toHaveBeenCalledWith('No Agregarr ratings found for "Movie 1" (ID: tt1)');
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined without fetching when the title has no IMDb ID', async () => {
+        const mockAdapter = buildMockAdapter().build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+        const searchResult = buildTitle().withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
     });
 
     it('should return undefined when the Agregarr response carries no ratings array', async () => {
@@ -239,8 +272,13 @@ describe('AgregarrApiClient', () => {
         const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
 
         expect(await client.getDetails(searchResult)).toBeUndefined();
-        // The logged response collapses an absent payload to undefined rather than null.
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { response: undefined });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Malformed Agregarr details for "Movie 1"'),
+            {
+                response: undefined,
+                error: 'expected an array',
+            }
+        );
     });
 
     it('should skip search when imdbId is provided', async () => {
@@ -508,6 +546,141 @@ describe('AgregarrApiClient', () => {
             expect(xmdbClient).toBeInstanceOf(XmdbApiClient);
             expect(omdbClient).toBeInstanceOf(OmdbApiClient);
             expect(agregarrClient).toBeInstanceOf(AgregarrApiClient);
+        });
+    });
+
+    describe('response parsing', () => {
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['an array body', []],
+        ])('should return undefined when search receives %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it.each([
+            ['a string d field', { d: 'nope' }],
+            ['a result without qid', { d: [{ id: 'tt1', l: 'Movie 1' }] }],
+            ['a result without id', { d: [{ qid: 'movie', l: 'Movie 1' }] }],
+            ['a result without l', { d: [{ qid: 'movie', id: 'tt1' }] }],
+            ['a result with an empty qid', { d: [{ qid: '', id: 'tt1', l: 'Movie 1' }] }],
+            ['a result with an empty id', { d: [{ qid: 'movie', id: '', l: 'Movie 1' }] }],
+            ['a result with an empty l', { d: [{ qid: 'movie', id: 'tt1', l: '' }] }],
+            ['a result with a numeric id', { d: [{ qid: 'movie', id: 42, l: 'Movie 1' }] }],
+            ['a result with a numeric l', { d: [{ qid: 'movie', id: 'tt1', l: 42 }] }],
+            ['a result with a string year', { d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1', y: '2020' }] }],
+        ])('should return undefined when the search response has %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+        });
+
+        it('should drop invalid search results and keep valid ones', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    d: [
+                        { qid: 'movie', id: '', l: 'Empty ID' },
+                        { qid: 'movie', id: 'tt2', l: 'Movie 2', y: 2021 },
+                    ],
+                })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.search('Movie 2');
+
+            expect(result!.imdbId).toBe('tt2');
+            expect(result!.apiTitle).toBe('Movie 2');
+            expect(result!.year).toBe(2021);
+        });
+
+        it('should keep a valid search result that has no year', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({ d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1' }] })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.search('Movie 1');
+
+            expect(result!.apiTitle).toBe('Movie 1');
+            expect(result!.year).toBeUndefined();
+        });
+
+        it('should warn once when every search result is invalid', async () => {
+            const response = { d: [{ qid: 'movie', id: '', l: 'Bad' }] };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const logger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter, logger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
+                { response, error: 'no valid items in the "d" array' }
+            );
+        });
+
+        it.each([
+            ['a null body', null],
+            ['an empty body', ''],
+            ['an object body', {}],
+            ['an entry without imdbId', [{ rating: 8.8 }]],
+            ['an entry with an empty imdbId', [{ imdbId: '', rating: 8.8 }]],
+            ['an entry with a numeric imdbId', [{ imdbId: 42, rating: 8.8 }]],
+            ['an entry with a string rating', [{ imdbId: 'tt1', rating: '8.8' }]],
+            ['an entry with a string votes field', [{ imdbId: 'tt1', votes: 'many' }]],
+        ])('should return undefined when the details response has %s', async (_label, response) => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should drop invalid rating entries and keep valid ones', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([
+                    { rating: 7.5 },
+                    { imdbId: 'tt1', rating: '8.8' },
+                    { imdbId: 'tt1', rating: 8.8, votes: 2500000 },
+                ])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result!.imdbRating).toBe(8.8);
+            expect(result!.imdbVotes).toBe(2500000);
+        });
+
+        it('should keep a valid details entry that has no rating', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt1', votes: 1000 }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result!.imdbVotes).toBe(1000);
+            expect(result!.imdbRating).toBeUndefined();
+        });
+
+        it('should warn once when every rating entry is invalid', async () => {
+            const response = [{ imdbId: '', rating: 8.8 }];
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const logger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter, logger });
+
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+            expect(result).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed Agregarr details for "Test"'), {
+                response,
+                error: 'no valid items in the ratings array',
+            });
         });
     });
 });
