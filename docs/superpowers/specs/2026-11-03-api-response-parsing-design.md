@@ -41,12 +41,14 @@ commit history keep the old `decode` wording.
   field message.
 - Valid but empty or not-found payloads keep their existing no-results logs
   and are never reported as malformed.
-- Valid payloads produce the same `Title` values as before.
+- Valid payloads produce the same `Title` values as before for the wire
+  shapes the parsers accept. OMDb rating entries are narrowed to the
+  capitalized `Source` and `Value` keys.
 
 ## Non-goals
 
 - No schema library (Zod, Valibot) and no new dependency.
-- No change to endpoints, rate limits, queue behavior, cache, or
+- No change to endpoints, rate limits, queue scheduling, cache, or
   `ApiClientManager`.
 - No change to `Title` or the public `ApiClient` interface.
 - No raw HTTP escape hatch for subclasses.
@@ -70,7 +72,9 @@ commit history keep the old `decode` wording.
 - Private methods use `#`. The codebase has no `protected` members today.
 - License headers, JSDoc for exports, sorted imports, ASCII only, and no
   em-dashes.
-- Tests are unit tests with the adapter mock. No live API calls.
+- Unit tests use the adapter mock and make no live API calls. The separate
+  `tests/integration/` suite may add live wire-shape checks; it runs only via
+  `npm run test:integration` and the Nightly Integration workflow.
 
 ## Approaches considered
 
@@ -141,8 +145,8 @@ turning parse failures into fetch failures.
 - **Client call sites.** Replace the fetch, parse, and warn block with:
 
     ```ts
-    const data = await this.fetchParsed(url, priority, parseX, label);
-    if (!data) return undefined;
+    const response = await this.fetchParsed(url, priority, parseX, label);
+    if (!response) return undefined;
     ```
 
     Labels include the provider, operation, and title or ID, for example
@@ -150,11 +154,13 @@ turning parse failures into fetch failures.
 
 - **Logging split.** `fetchParsed` logs malformed payloads only. Clients keep
   their existing no-results logs for decoded empty or not-found results such
-  as `Response: 'False'` or an empty results array. Clients do not log when
-  `fetchParsed` returns `undefined`, because the helper already logged the
-  malformed case. The XMDb details not-found payloads (an `error` field, or a
-  `title` of `null` while `id` is still present) return `undefined` without a
-  warning; remove the current "details request failed" warning on that path.
+  as `Response: 'False'`, an empty search results array, or an empty Agregarr
+  ratings array. Clients do not log when `fetchParsed` returns `undefined`,
+  because the helper already logged the malformed case. The XMDb details
+  not-found payloads (an `error` field, or a `title` of `null`) return
+  `undefined` without a warning; remove the current "details request failed"
+  warning on that path. The Agregarr details empty-array case logs at `info`
+  ("No Agregarr ratings found"), not at `warn`.
 - **Collapse the XMDb split.** Inline the details-fields parsing into
   `parseXmdbDetailsResponse`. Merge `XmdbDetailsFields` into
   `XmdbDetailsResponse`: required `id` and `title` first, then `rating`,
@@ -163,20 +169,35 @@ turning parse failures into fetch failures.
 - **Identity fields.** The Agregarr ratings entry and the XMDb details response
   are the canonical source of the IMDb ID. Build the resulting `Title` with
   `entry.imdbId` and `details.id` rather than copying the ID from the search
-  result. Search results still provide the display title, API title, year, and
-  title type for those providers.
+  result. Search results still provide the display title for both providers
+  and the API title, year, and title type for Agregarr.
+- **Details require an IMDb ID.** XMDb and Agregarr return `undefined` from
+  `getDetails` before enqueuing a request when the incoming title has no
+  `imdbId`. This avoids a request with an empty `id` parameter; the queue
+  itself is unchanged.
+- **XMDb search fields.** Normalize XMDb search results from `type`, `id`,
+  `name`, and `year`. The `name` and `year` fields are the live API shape; do
+  not fall back to `title` or `release_year`.
 - **OMDb response union.** Model `OmdbResponse` as a discriminated union on
   `Response`. `OmdbSuccessResponse` carries required `Title` and `imdbID`
   fields; `OmdbFailureResponse` carries only `Response: 'False'`. This makes the
   invariant explicit and removes the optional identity fields from the success
-  path. Name the private Title builder `#titleFromOmdbResponse` to avoid
-  shadowing the module-level parser.
+  path. Build the `Title` in a module-level `titleFromOmdbSuccessResponse`
+  function so the name cannot shadow the module-level parser.
+- **OMDb rating keys.** OMDb `Ratings` entries use the capitalized `Source` and
+  `Value` keys. Accept only that wire shape; do not add lowercase fallbacks.
 - **No redundant fallbacks.** Parsers already normalize absent and null values
   to `undefined`, so call sites pass those fields through directly. Do not add
   `?? undefined` or fall back to a search value for a field the parser requires.
+- **Title builders.** Build `Title` values in module-level `titleFrom*`
+  functions beside the parsers, not in private methods, because they do not
+  use instance state. The functions are `titleFromImdbSuggestionsResult`,
+  `titleFromRatingsEntry`, `titleFromSearchResult`,
+  `titleFromDetailsResponse`, and `titleFromOmdbSuccessResponse`.
 - **Parser names.** Rename the client functions to `parseOmdbResponse`,
-  `parseOmdbSuccessResponse`, `parseOmdbRating`, `parseAgregarrRatingsResponse`,
-  `parseAgregarrRatingEntry`, `parseXmdbSearchResponse`,
+  `parseOmdbSuccessResponse`, `parseOmdbRating`, `parseAgregarrRatings`,
+  `parseAgregarrRatingEntry`, `parseImdbSuggestionsResponse`,
+  `parseImdbSuggestionsResult`, `parseXmdbSearchResponse`,
   `parseXmdbSearchResult`, and `parseXmdbDetailsResponse`.
 - **Tests.** Rewrite the three OMDb tests that assign `client.queuedFetch` to
   assert through the adapter instead. Add unit coverage for `assertRecord`,
@@ -196,7 +217,7 @@ turning parse failures into fetch failures.
 - A non-`ParseError` thrown by a parser propagates to `ApiClientManager`,
   which handles it as before.
 - Valid responses produce the same `Title` values as the branch did before
-  this change.
+  this change for the wire shapes the parsers accept.
 - The three OMDb tests no longer touch `queuedFetch` and assert through
   `adapter.httpFetch`.
 

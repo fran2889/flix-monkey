@@ -18,7 +18,7 @@
 - Every exported declaration needs JSDoc with `@param` and `@returns` where applicable. Every `{src,tests}/**/*.ts` file starts with the SPDX header.
 - Imports are sorted, output is ASCII only, and prose uses no em-dashes.
 - No new dependencies.
-- Unit tests use adapter mocks. No live API calls.
+- Unit tests use adapter mocks and make no live API calls. The separate `tests/integration/` suite may cover live wire shapes and runs only via `npm run test:integration`.
 - `ParseError` extends `Error`, not `FlixMonkeyError`.
 - Final state: `fetchParsed` public, `#queuedFetch` private, no `queuedFetch`, no `decode-utils.ts`.
 - Use Conventional Commits, one commit per task.
@@ -27,7 +27,7 @@
 
 - A non-record body (null, array, string) at the response or item level is logged or dropped, never an uncaught `TypeError`.
 - A non-`ParseError` thrown by a parser propagates to `ApiClientManager` instead of being swallowed as malformed.
-- A valid not-found payload (`Response: 'False'`, an XMDb `error` field or a null `title` that keeps `id`, empty results) returns `undefined` without a malformed warning.
+- A valid not-found payload (`Response: 'False'`, an XMDb `error` field or a null `title`, empty results) returns `undefined` without a malformed warning.
 - A malformed array item is dropped while valid siblings survive.
 - An absent or null optional field becomes `undefined`; a wrong-typed optional field fails the response.
 
@@ -422,8 +422,10 @@ git commit -m "refactor(api): add fetchParsed request path"
     ```ts
     function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse;
     function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult;
-    function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[];
+    function parseAgregarrRatings(raw: unknown): AgregarrRatingEntry[];
     function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry;
+    function titleFromImdbSuggestionsResult(displayTitle: string, result: ImdbSuggestionsResult): Title;
+    function titleFromRatingsEntry(searchTitle: Title, entry: AgregarrRatingEntry): Title;
     ```
 
 - [x] **Step 1: Update the failing tests**
@@ -493,7 +495,7 @@ function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
     return { d: parseRequiredItems(results, parseImdbSuggestionsResult, 'the "d" array') };
 }
 
-function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
+function parseAgregarrRatings(raw: unknown): AgregarrRatingEntry[] {
     if (!Array.isArray(raw)) throw new ParseError('expected an array');
     return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
 }
@@ -504,16 +506,17 @@ function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
 In `search`, replace the fetch and decode block with:
 
 ```ts
-const data = await this.fetchParsed(
+const response = await this.fetchParsed(
     `https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`,
     0,
     parseImdbSuggestionsResponse,
     `IMDb Suggestions search for "${displayTitle}"`
 );
-if (!data) return undefined;
+if (!response) return undefined;
 ```
 
-Keep the existing `results` checks and info logs after `data.d`.
+Keep the existing `results` checks and info logs after `response.d`. Build the
+search `Title` in `titleFromImdbSuggestionsResult`.
 
 In `getDetails`, replace the fetch and decode block with:
 
@@ -521,23 +524,21 @@ In `getDetails`, replace the fetch and decode block with:
 const ratings = await this.fetchParsed(
     `https://api.agregarr.org/api/ratings?id=${encodedId}`,
     1,
-    parseAgregarrRatingsResponse,
+    parseAgregarrRatings,
     `Agregarr details for "${searchTitle.displayTitle}" (ID: ${id})`
 );
 if (!ratings) return undefined;
 ```
 
 Then keep the existing first-entry check and build the Title from the search
-metadata plus the details ratings. Use `entry.imdbId` for the resulting
-`imdbId`; the details response is the canonical source for that identity field.
-The empty-array warning stays:
+metadata plus the details ratings in `titleFromRatingsEntry`. Use
+`entry.imdbId` for the resulting `imdbId`; the details response is the
+canonical source for that identity field. The empty-array case logs at `info`:
 
 ```ts
 const entry = ratings[0];
 if (!entry) {
-    this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-        response: ratings,
-    });
+    this.logger.info(`No Agregarr ratings found for "${searchTitle.displayTitle}" (ID: ${id})`);
     return undefined;
 }
 ```
@@ -575,9 +576,10 @@ git commit -m "refactor(api): parse Agregarr responses with ParseError"
 
     ```ts
     function parseOmdbResponse(raw: unknown): OmdbResponse;
-    function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbResponse;
+    function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbSuccessResponse;
     function parseOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined;
     function parseOmdbRating(raw: unknown): OmdbRatingEntry;
+    function titleFromOmdbSuccessResponse(response: OmdbSuccessResponse, displayTitle: string): Title;
     ```
 
 - [x] **Step 1: Update the failing tests**
@@ -659,32 +661,32 @@ function parseOmdbRating(raw: unknown): OmdbRatingEntry {
 
 `parseOmdbSuccessResponse` returns an `OmdbSuccessResponse` containing `{ Response: OMDB_SUCCESS, imdbRating: optionalString(raw, 'imdbRating'), Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')), imdbID: requiredString(raw, 'imdbID'), Year: optionalString(raw, 'Year'), Title: requiredString(raw, 'Title'), Type: optionalString(raw, 'Type'), imdbVotes: optionalString(raw, 'imdbVotes') }`. `parseOmdbRatings` returns `undefined` for an absent array and otherwise returns `parseValidItems(ratings, parseOmdbRating)`.
 
-`OmdbResponse` is a discriminated union on `Response`: `OmdbSuccessResponse` requires `Title` and `imdbID`, while `OmdbFailureResponse` carries only `Response: 'False'`. Name the private Title builder `#titleFromOmdbResponse` so it does not shadow the module-level parser.
+`OmdbResponse` is a discriminated union on `Response`: `OmdbSuccessResponse` requires `Title` and `imdbID`, while `OmdbFailureResponse` carries only `Response: 'False'`. Build the `Title` in a module-level `titleFromOmdbSuccessResponse` function so the name does not shadow the module-level parser. Only the capitalized `Source` and `Value` rating keys are accepted.
 
 In `search`, replace the fetch and decode block with:
 
 ```ts
-const json = await this.fetchParsed(
+const response = await this.fetchParsed(
     `https://www.omdbapi.com/?${params}`,
     1,
     parseOmdbResponse,
     `OMDb search for "${displayTitle}"`
 );
-if (!json) return undefined;
+if (!response) return undefined;
 ```
 
-Keep the existing `json.Response === OMDB_FAILURE` info log and the response parsing that follows.
+Keep the existing `response.Response === OMDB_FAILURE` info log and the response parsing that follows.
 
 In `getDetails`, do the same with:
 
 ```ts
-const json = await this.fetchParsed(
+const response = await this.fetchParsed(
     `https://www.omdbapi.com/?${params}`,
     1,
     parseOmdbResponse,
     `OMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
 );
-if (!json) return undefined;
+if (!response) return undefined;
 ```
 
 Keep the existing failure check and merge logic.
@@ -724,6 +726,8 @@ git commit -m "refactor(api): parse OMDb responses with ParseError"
     function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse
     function parseXmdbSearchResult(raw: unknown): XmdbSearchResult
     function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined
+    function titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): Title
+    function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsResponse): Title
     interface XmdbDetailsResponse
     ```
 
@@ -837,16 +841,17 @@ interface XmdbDetailsResponse {
 In `search`, replace the fetch and decode block with:
 
 ```ts
-const data = await this.fetchParsed(
+const response = await this.fetchParsed(
     `https://xmdbapi.com/api/v1/search?${searchParams}`,
     0,
     parseXmdbSearchResponse,
     `XMDb search for "${displayTitle}"`
 );
-if (!data) return undefined;
+if (!response) return undefined;
 ```
 
-Keep the existing `results` checks and Title construction after `data.results`.
+Keep the existing `results` checks and Title construction after `response.results`.
+Build the search `Title` in `titleFromSearchResult`.
 
 In `getDetails`, replace the fetch and decode block with:
 
@@ -858,10 +863,10 @@ const details = await this.fetchParsed(
     `XMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
 );
 if (!details) return undefined;
-return this.#titleFromDetails(searchTitle, details);
+return titleFromDetailsResponse(searchTitle, details);
 ```
 
-`#titleFromDetails` uses `details.id` for the resulting `imdbId`; the details response is the canonical source for that identity field. The normalized optional fields are passed through directly instead of adding `?? undefined` fallbacks.
+`titleFromDetailsResponse` uses `details.id` for the resulting `imdbId`; the details response is the canonical source for that identity field. The normalized optional fields are passed through directly instead of adding `?? undefined` fallbacks.
 
 Remove the old "XMDb details request failed" warning.
 
@@ -960,6 +965,8 @@ git commit -m "refactor(api): remove the raw request path"
 - [x] Primary result arrays use `parseRequiredItems`; optional secondary arrays stay lenient.
 - [x] `OmdbResponse` is a discriminated union on `Response`, with required identity fields on success.
 - [x] XMDb and Agregarr take the resulting `imdbId` from the details response.
+- [x] XMDb and Agregarr skip the details request when the incoming title has no IMDb ID.
+- [x] `Title` values are built in module-level `titleFrom*` functions, not private methods.
 - [x] Normalized optional fields pass through without `?? undefined` fallbacks.
 - [x] The XMDb details parser and interface are collapsed into one of each.
 - [x] The full local check from `AGENTS.md` passes.
