@@ -252,10 +252,17 @@ describe('AgregarrApiClient', () => {
         const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
 
         expect(await client.getDetails(searchResult)).toBeUndefined();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Agregarr details request failed for "Movie 1"'),
-            { response: [] }
-        );
+        expect(mockLogger.info).toHaveBeenCalledWith('No Agregarr ratings found for "Movie 1" (ID: tt1)');
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined without fetching when the title has no IMDb ID', async () => {
+        const mockAdapter = buildMockAdapter().build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+        const searchResult = buildTitle().withDisplayTitle('Movie 1').build();
+
+        expect(await client.getDetails(searchResult)).toBeUndefined();
+        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
     });
 
     it('should return undefined when the Agregarr response carries no ratings array', async () => {

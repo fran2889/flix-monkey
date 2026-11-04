@@ -82,14 +82,14 @@ export class XmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('xmdbApiKey');
         const searchParams = new URLSearchParams({ apiKey, q: displayTitle, limit: String(5) });
         this.logger.debug(`Searching XMDb for title: "${displayTitle}"`);
-        const data = await this.fetchParsed(
+        const response = await this.fetchParsed(
             `https://xmdbapi.com/api/v1/search?${searchParams}`,
             0,
             parseXmdbSearchResponse,
             `XMDb search for "${displayTitle}"`
         );
-        if (!data) return undefined;
-        const { results } = data;
+        if (!response) return undefined;
+        const { results } = response;
         if (!results?.length) {
             this.logger.info(`No search results found in XMDb for "${displayTitle}"`);
             return undefined;
@@ -100,11 +100,15 @@ export class XmdbApiClient extends BaseApiClient {
             return undefined;
         }
         const match = titleResults[0];
+        return this.#titleFromSearchResult(displayTitle, match);
+    }
+
+    #titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): Title {
         return new Title({
             displayTitle,
-            apiTitle: match.name,
-            imdbId: match.id,
-            year: match.year,
+            apiTitle: result.name,
+            imdbId: result.id,
+            year: result.year,
             imdbRating: undefined,
             imdbVotes: undefined,
             rtRating: undefined,
@@ -118,10 +122,11 @@ export class XmdbApiClient extends BaseApiClient {
      * Fetches detailed ratings and metadata from XMDb API.
      *
      * @param searchTitle - Title from search results with IMDb ID.
-     * @returns Title with ratings and metadata or undefined on failure.
+     * @returns Title with ratings and metadata, or undefined when no IMDb ID is available or the request fails.
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;
+        if (!id) return undefined;
         this.logger.debug(`Fetching XMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
         const apiKey = this.config.get('xmdbApiKey');
         const detailsParams = new URLSearchParams({ apiKey });
@@ -132,10 +137,10 @@ export class XmdbApiClient extends BaseApiClient {
             `XMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
         );
         if (!details) return undefined;
-        return this.#titleFromDetails(searchTitle, details);
+        return this.#titleFromDetailsResponse(searchTitle, details);
     }
 
-    #titleFromDetails(searchTitle: Title, details: XmdbDetailsResponse): Title {
+    #titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsResponse): Title {
         const { id, rating, release_year, title, metascore, title_type, vote_count } = details;
         return new Title({
             displayTitle: searchTitle.displayTitle,

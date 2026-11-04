@@ -169,6 +169,15 @@ describe('XmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
+    it('should return undefined without fetching when the title has no IMDb ID', async () => {
+        const adapter = buildMockAdapter().build();
+        const client = new XmdbApiClient({ ...deps, adapter });
+        const searchTitle = buildTitle().withDisplayTitle('Test').build();
+
+        expect(await client.getDetails(searchTitle)).toBeUndefined();
+        expect(adapter.httpFetch).not.toHaveBeenCalled();
+    });
+
     it('should return unhealthy status when API key is missing', async () => {
         const mockConfigForTest: ConfigManager = {
             get: () => '',

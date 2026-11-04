@@ -38,7 +38,7 @@ function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
     };
 }
 
-function parseAgregarrRatingsResponse(raw: unknown): AgregarrRatingEntry[] {
+function parseAgregarrRatings(raw: unknown): AgregarrRatingEntry[] {
     if (!Array.isArray(raw)) throw new ParseError('expected an array');
     return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
 }
@@ -71,14 +71,14 @@ export class AgregarrApiClient extends BaseApiClient {
     async search(displayTitle: string): Promise<Title | undefined> {
         const encoded = encodeURIComponent(displayTitle.toLowerCase());
         this.logger.debug(`Searching IMDb Suggestions for title: "${displayTitle}"`);
-        const data = await this.fetchParsed(
+        const response = await this.fetchParsed(
             `https://v3.sg.media-imdb.com/suggestion/titles/x/${encoded}.json`,
             0,
             parseImdbSuggestionsResponse,
             `IMDb Suggestions search for "${displayTitle}"`
         );
-        if (!data) return undefined;
-        const results = data.d;
+        if (!response) return undefined;
+        const results = response.d;
         if (!results?.length) {
             this.logger.info(`No search results found in IMDb Suggestions for "${displayTitle}"`);
             return undefined;
@@ -88,16 +88,20 @@ export class AgregarrApiClient extends BaseApiClient {
             this.logger.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
             return undefined;
         }
+        return this.#titleFromImdbSuggestionsResult(displayTitle, match);
+    }
+
+    #titleFromImdbSuggestionsResult(displayTitle: string, result: ImdbSuggestionsResult): Title {
         return new Title({
             displayTitle,
-            apiTitle: match.l,
-            imdbId: match.id,
-            year: match.y,
+            apiTitle: result.l,
+            imdbId: result.id,
+            year: result.y,
             imdbRating: undefined,
             imdbVotes: undefined,
             rtRating: undefined,
             mcRating: undefined,
-            type: mapAgregarrTitleType(match.qid),
+            type: mapAgregarrTitleType(result.qid),
             source: undefined,
         });
     }
@@ -106,26 +110,29 @@ export class AgregarrApiClient extends BaseApiClient {
      * Fetches detailed ratings from Agregarr API using the cached IMDb ID.
      *
      * @param searchTitle - Title from search results with IMDb ID.
-     * @returns Title with ratings or undefined on failure.
+     * @returns Title with ratings, or undefined when no IMDb ID is available or the request fails.
      */
     async getDetails(searchTitle: Title): Promise<Title | undefined> {
         const id = searchTitle.imdbId;
+        if (!id) return undefined;
         this.logger.debug(`Fetching Agregarr details for ID: ${id} ("${searchTitle.displayTitle}")`);
-        const encodedId = encodeURIComponent(String(id ?? ''));
+        const encodedId = encodeURIComponent(id);
         const ratings = await this.fetchParsed(
             `https://api.agregarr.org/api/ratings?id=${encodedId}`,
             1,
-            parseAgregarrRatingsResponse,
+            parseAgregarrRatings,
             `Agregarr details for "${searchTitle.displayTitle}" (ID: ${id})`
         );
         if (!ratings) return undefined;
         const entry = ratings[0];
         if (!entry) {
-            this.logger.warn(`Agregarr details request failed for "${searchTitle.displayTitle}" (ID: ${id})`, {
-                response: ratings,
-            });
+            this.logger.info(`No Agregarr ratings found for "${searchTitle.displayTitle}" (ID: ${id})`);
             return undefined;
         }
+        return this.#titleFromRatingsEntry(searchTitle, entry);
+    }
+
+    #titleFromRatingsEntry(searchTitle: Title, entry: AgregarrRatingEntry): Title {
         // Agregarr supplies ratings and the canonical IMDb ID in the details
         // response; every other identity field comes from the search result.
         return new Title({

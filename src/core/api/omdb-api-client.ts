@@ -60,7 +60,7 @@ function parseOmdbRating(raw: unknown): OmdbRatingEntry {
     };
 }
 
-function parseRatings(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
+function ratingFromSource(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
     const entry = ratings?.find(r => sourcePattern.test(r.source));
     return toRating(entry?.value);
 }
@@ -102,18 +102,18 @@ export class OmdbApiClient extends BaseApiClient {
         const apiKey = this.config.get('omdbApiKey');
         const params = new URLSearchParams({ apikey: apiKey, t: displayTitle });
         this.logger.debug(`Searching OMDb for title: "${displayTitle}"`);
-        const json = await this.fetchParsed(
+        const response = await this.fetchParsed(
             `https://www.omdbapi.com/?${params}`,
             1,
             parseOmdbResponse,
             `OMDb search for "${displayTitle}"`
         );
-        if (!json) return undefined;
-        if (json.Response === OMDB_FAILURE) {
+        if (!response) return undefined;
+        if (response.Response === OMDB_FAILURE) {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return undefined;
         }
-        return this.#titleFromOmdbResponse(json, displayTitle);
+        return this.#titleFromSuccessResponse(response, displayTitle);
     }
 
     /**
@@ -129,31 +129,24 @@ export class OmdbApiClient extends BaseApiClient {
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
             this.logger.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
-            const json = await this.fetchParsed(
+            const response = await this.fetchParsed(
                 `https://www.omdbapi.com/?${params}`,
                 1,
                 parseOmdbResponse,
                 `OMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
             );
-            if (!json) return undefined;
-            if (json.Response === OMDB_FAILURE) {
+            if (!response) return undefined;
+            if (response.Response === OMDB_FAILURE) {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
-            return this.#titleFromOmdbResponse(json, searchTitle.displayTitle);
+            return this.#titleFromSuccessResponse(response, searchTitle.displayTitle);
         }
         return searchTitle;
     }
 
-    /**
-     * Parses OMDb JSON response into a Title.
-     *
-     * @param json - Parsed OMDb API response.
-     * @param displayTitle - Display title from streaming service.
-     * @returns Title instance.
-     */
-    #titleFromOmdbResponse(json: OmdbSuccessResponse, displayTitle: string): Title {
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = json;
+    #titleFromSuccessResponse(response: OmdbSuccessResponse, displayTitle: string): Title {
+        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = response;
         const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
         const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
         return new Title({
@@ -163,8 +156,8 @@ export class OmdbApiClient extends BaseApiClient {
             year: releaseYear ? Number(releaseYear) : undefined,
             imdbRating: toRating(imdbRating),
             imdbVotes: votes,
-            rtRating: parseRatings(Ratings, /Rotten Tomatoes/i),
-            mcRating: parseRatings(Ratings, /Metacritic/i),
+            rtRating: ratingFromSource(Ratings, /Rotten Tomatoes/i),
+            mcRating: ratingFromSource(Ratings, /Metacritic/i),
             type: mapOmdbTitleType(apiType),
             source: undefined,
         });
