@@ -17,41 +17,28 @@ import {
 } from './parse-utils';
 import { mapAgregarrTitleType } from './title-type-mappers';
 
+/** Normalized IMDb Suggestions result. */
+interface ImdbSuggestionsResult {
+    qid: string;
+    id: string;
+    l: string;
+    y?: number | undefined;
+}
+
+/** Normalized IMDb Suggestions response. */
+interface ImdbSuggestionsResponse {
+    d?: ImdbSuggestionsResult[] | undefined;
+}
+
+/** Normalized Agregarr rating entry. */
+interface AgregarrRatingEntry {
+    imdbId: string;
+    rating?: number | undefined;
+    votes?: number | undefined;
+}
+
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
-
-function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
-    assertRecord(raw);
-    const results = optionalArray(raw, 'd');
-    if (!results) return {};
-    return { d: parseRequiredItems(results, parseImdbSuggestionsResult, 'the "d" array') };
-}
-
-function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
-    assertRecord(raw);
-    return {
-        qid: requiredString(raw, 'qid'),
-        id: requiredString(raw, 'id'),
-        l: requiredString(raw, 'l'),
-        // People and other results have no release year.
-        y: optionalNumber(raw, 'y'),
-    };
-}
-
-function parseAgregarrRatings(raw: unknown): AgregarrRatingEntry[] {
-    if (!Array.isArray(raw)) throw new ParseError('expected an array');
-    return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
-}
-
-function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry {
-    assertRecord(raw);
-    return {
-        imdbId: requiredString(raw, 'imdbId'),
-        // rating and votes are null when the title is unknown.
-        rating: optionalNumber(raw, 'rating'),
-        votes: optionalNumber(raw, 'votes'),
-    };
-}
 
 /**
  * API client for Agregarr service that fetches ratings from IMDb Suggestions and Agregarr API.
@@ -88,22 +75,7 @@ export class AgregarrApiClient extends BaseApiClient {
             this.logger.info(`No supported title-type results found in IMDb Suggestions for "${displayTitle}"`);
             return undefined;
         }
-        return this.#titleFromImdbSuggestionsResult(displayTitle, match);
-    }
-
-    #titleFromImdbSuggestionsResult(displayTitle: string, result: ImdbSuggestionsResult): Title {
-        return new Title({
-            displayTitle,
-            apiTitle: result.l,
-            imdbId: result.id,
-            year: result.y,
-            imdbRating: undefined,
-            imdbVotes: undefined,
-            rtRating: undefined,
-            mcRating: undefined,
-            type: mapAgregarrTitleType(result.qid),
-            source: undefined,
-        });
+        return titleFromImdbSuggestionsResult(displayTitle, match);
     }
 
     /**
@@ -129,43 +101,71 @@ export class AgregarrApiClient extends BaseApiClient {
             this.logger.info(`No Agregarr ratings found for "${searchTitle.displayTitle}" (ID: ${id})`);
             return undefined;
         }
-        return this.#titleFromRatingsEntry(searchTitle, entry);
-    }
-
-    #titleFromRatingsEntry(searchTitle: Title, entry: AgregarrRatingEntry): Title {
-        // Agregarr supplies ratings and the canonical IMDb ID in the details
-        // response; every other identity field comes from the search result.
-        return new Title({
-            displayTitle: searchTitle.displayTitle,
-            apiTitle: searchTitle.apiTitle,
-            imdbId: entry.imdbId,
-            year: searchTitle.year,
-            imdbRating: entry.rating,
-            imdbVotes: entry.votes,
-            rtRating: undefined,
-            mcRating: undefined,
-            type: searchTitle.type,
-            source: undefined,
-        });
+        return titleFromRatingsEntry(searchTitle, entry);
     }
 }
 
-/** Normalized IMDb Suggestions result. */
-interface ImdbSuggestionsResult {
-    qid: string;
-    id: string;
-    l: string;
-    y?: number | undefined;
+function parseImdbSuggestionsResponse(raw: unknown): ImdbSuggestionsResponse {
+    assertRecord(raw);
+    const results = optionalArray(raw, 'd');
+    if (!results) return {};
+    return { d: parseRequiredItems(results, parseImdbSuggestionsResult, 'the "d" array') };
 }
 
-/** Normalized IMDb Suggestions response. */
-interface ImdbSuggestionsResponse {
-    d?: ImdbSuggestionsResult[] | undefined;
+function parseImdbSuggestionsResult(raw: unknown): ImdbSuggestionsResult {
+    assertRecord(raw);
+    return {
+        qid: requiredString(raw, 'qid'),
+        id: requiredString(raw, 'id'),
+        l: requiredString(raw, 'l'),
+        // People and other results have no release year.
+        y: optionalNumber(raw, 'y'),
+    };
 }
 
-/** Normalized Agregarr rating entry. */
-interface AgregarrRatingEntry {
-    imdbId: string;
-    rating?: number | undefined;
-    votes?: number | undefined;
+function titleFromImdbSuggestionsResult(displayTitle: string, result: ImdbSuggestionsResult): Title {
+    return new Title({
+        displayTitle,
+        apiTitle: result.l,
+        imdbId: result.id,
+        year: result.y,
+        imdbRating: undefined,
+        imdbVotes: undefined,
+        rtRating: undefined,
+        mcRating: undefined,
+        type: mapAgregarrTitleType(result.qid),
+        source: undefined,
+    });
+}
+
+function parseAgregarrRatings(raw: unknown): AgregarrRatingEntry[] {
+    if (!Array.isArray(raw)) throw new ParseError('expected an array');
+    return parseRequiredItems(raw, parseAgregarrRatingEntry, 'the ratings array');
+}
+
+function parseAgregarrRatingEntry(raw: unknown): AgregarrRatingEntry {
+    assertRecord(raw);
+    return {
+        imdbId: requiredString(raw, 'imdbId'),
+        // rating and votes are null when the title is unknown.
+        rating: optionalNumber(raw, 'rating'),
+        votes: optionalNumber(raw, 'votes'),
+    };
+}
+
+function titleFromRatingsEntry(searchTitle: Title, entry: AgregarrRatingEntry): Title {
+    // Agregarr supplies ratings and the canonical IMDb ID in the details
+    // response; every other identity field comes from the search result.
+    return new Title({
+        displayTitle: searchTitle.displayTitle,
+        apiTitle: searchTitle.apiTitle,
+        imdbId: entry.imdbId,
+        year: searchTitle.year,
+        imdbRating: entry.rating,
+        imdbVotes: entry.votes,
+        rtRating: undefined,
+        mcRating: undefined,
+        type: searchTitle.type,
+        source: undefined,
+    });
 }

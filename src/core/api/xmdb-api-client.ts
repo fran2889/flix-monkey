@@ -18,38 +18,28 @@ import {
 } from './parse-utils';
 import { mapXmdbTitleType } from './title-type-mappers';
 
-function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse {
-    assertRecord(raw);
-    const results = optionalArray(raw, 'results');
-    if (!results) return {};
-    return { results: parseRequiredItems(results, parseXmdbSearchResult, 'the "results" array') };
+/** Normalized XMDb search result. */
+interface XmdbSearchResult {
+    type: string;
+    id: string;
+    name: string;
+    year?: number | undefined;
 }
 
-function parseXmdbSearchResult(raw: unknown): XmdbSearchResult {
-    assertRecord(raw);
-    return {
-        type: requiredString(raw, 'type'),
-        id: requiredString(raw, 'id'),
-        name: requiredString(raw, 'name'),
-        year: optionalNumber(raw, 'year'),
-    };
+/** Normalized XMDb search response. */
+interface XmdbSearchResponse {
+    results?: XmdbSearchResult[] | undefined;
 }
 
-function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
-    assertRecord(raw);
-    const error = optionalString(raw, 'error');
-    if (error) return undefined;
-    // The details endpoint keeps id and sends title: null for a missing title.
-    if (raw['title'] === null) return undefined;
-    return {
-        id: requiredString(raw, 'id'),
-        title: requiredString(raw, 'title'),
-        rating: optionalNumber(raw, 'rating'),
-        release_year: optionalNumber(raw, 'release_year'),
-        metascore: optionalNumber(raw, 'metascore'),
-        title_type: optionalString(raw, 'title_type'),
-        vote_count: optionalNumber(raw, 'vote_count'),
-    };
+/** Normalized XMDb details response. */
+interface XmdbDetailsResponse {
+    id: string;
+    title: string;
+    rating?: number | undefined;
+    release_year?: number | undefined;
+    metascore?: number | undefined;
+    title_type?: string | undefined;
+    vote_count?: number | undefined;
 }
 
 /**
@@ -100,22 +90,7 @@ export class XmdbApiClient extends BaseApiClient {
             return undefined;
         }
         const match = titleResults[0];
-        return this.#titleFromSearchResult(displayTitle, match);
-    }
-
-    #titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): Title {
-        return new Title({
-            displayTitle,
-            apiTitle: result.name,
-            imdbId: result.id,
-            year: result.year,
-            imdbRating: undefined,
-            imdbVotes: undefined,
-            rtRating: undefined,
-            mcRating: undefined,
-            type: undefined,
-            source: undefined,
-        });
+        return titleFromSearchResult(displayTitle, match);
     }
 
     /**
@@ -137,46 +112,71 @@ export class XmdbApiClient extends BaseApiClient {
             `XMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
         );
         if (!details) return undefined;
-        return this.#titleFromDetailsResponse(searchTitle, details);
-    }
-
-    #titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsResponse): Title {
-        const { id, rating, release_year, title, metascore, title_type, vote_count } = details;
-        return new Title({
-            displayTitle: searchTitle.displayTitle,
-            apiTitle: title,
-            imdbId: id,
-            year: release_year ?? searchTitle.year,
-            imdbRating: rating,
-            imdbVotes: vote_count,
-            rtRating: undefined,
-            mcRating: metascore,
-            type: mapXmdbTitleType(title_type),
-            source: undefined,
-        });
+        return titleFromDetailsResponse(searchTitle, details);
     }
 }
 
-/** Normalized XMDb search result. */
-interface XmdbSearchResult {
-    type: string;
-    id: string;
-    name: string;
-    year?: number | undefined;
+function parseXmdbSearchResponse(raw: unknown): XmdbSearchResponse {
+    assertRecord(raw);
+    const results = optionalArray(raw, 'results');
+    if (!results) return {};
+    return { results: parseRequiredItems(results, parseXmdbSearchResult, 'the "results" array') };
 }
 
-/** Normalized XMDb search response. */
-interface XmdbSearchResponse {
-    results?: XmdbSearchResult[] | undefined;
+function parseXmdbSearchResult(raw: unknown): XmdbSearchResult {
+    assertRecord(raw);
+    return {
+        type: requiredString(raw, 'type'),
+        id: requiredString(raw, 'id'),
+        name: requiredString(raw, 'name'),
+        year: optionalNumber(raw, 'year'),
+    };
 }
 
-/** Normalized XMDb details response. */
-interface XmdbDetailsResponse {
-    id: string;
-    title: string;
-    rating?: number | undefined;
-    release_year?: number | undefined;
-    metascore?: number | undefined;
-    title_type?: string | undefined;
-    vote_count?: number | undefined;
+function titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): Title {
+    return new Title({
+        displayTitle,
+        apiTitle: result.name,
+        imdbId: result.id,
+        year: result.year,
+        imdbRating: undefined,
+        imdbVotes: undefined,
+        rtRating: undefined,
+        mcRating: undefined,
+        type: undefined,
+        source: undefined,
+    });
+}
+
+function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
+    assertRecord(raw);
+    const error = optionalString(raw, 'error');
+    if (error) return undefined;
+    // The details endpoint keeps id and sends title: null for a missing title.
+    if (raw['title'] === null) return undefined;
+    return {
+        id: requiredString(raw, 'id'),
+        title: requiredString(raw, 'title'),
+        rating: optionalNumber(raw, 'rating'),
+        release_year: optionalNumber(raw, 'release_year'),
+        metascore: optionalNumber(raw, 'metascore'),
+        title_type: optionalString(raw, 'title_type'),
+        vote_count: optionalNumber(raw, 'vote_count'),
+    };
+}
+
+function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsResponse): Title {
+    const { id, rating, release_year, title, metascore, title_type, vote_count } = details;
+    return new Title({
+        displayTitle: searchTitle.displayTitle,
+        apiTitle: title,
+        imdbId: id,
+        year: release_year ?? searchTitle.year,
+        imdbRating: rating,
+        imdbVotes: vote_count,
+        rtRating: undefined,
+        mcRating: metascore,
+        type: mapXmdbTitleType(title_type),
+        source: undefined,
+    });
 }

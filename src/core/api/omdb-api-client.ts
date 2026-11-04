@@ -18,59 +18,43 @@ import {
 } from './parse-utils';
 import { mapOmdbTitleType } from './title-type-mappers';
 
+/** Normalized OMDb rating entry. OMDb sends every rating value as a string, for example "8.5" or "90%". */
+interface OmdbRatingEntry {
+    source: string;
+    value: string;
+}
+
+/**
+ * Normalized successful OMDb API response.
+ *
+ * A successful response always carries `Title` and `imdbID`, so both fields
+ * are required. The remaining fields are optional because OMDb omits them when
+ * it has no value.
+ */
+interface OmdbSuccessResponse {
+    Response: typeof OMDB_SUCCESS;
+    imdbRating?: string | undefined;
+    Ratings?: OmdbRatingEntry[] | undefined;
+    imdbID: string;
+    Year?: string | undefined;
+    Title: string;
+    Type?: string | undefined;
+    imdbVotes?: string | undefined;
+}
+
+/** Normalized failed OMDb API response. */
+interface OmdbFailureResponse {
+    Response: typeof OMDB_FAILURE;
+}
+
+/** Normalized OMDb API response, discriminated by `Response`. */
+type OmdbResponse = OmdbSuccessResponse | OmdbFailureResponse;
+
 /** OMDb signals a successful lookup with this exact `Response` value. */
 const OMDB_SUCCESS = 'True';
 
 /** OMDb signals a failed lookup with this exact `Response` value. */
 const OMDB_FAILURE = 'False';
-
-function parseOmdbResponse(raw: unknown): OmdbResponse {
-    assertRecord(raw);
-    const response = requiredString(raw, 'Response');
-    if (response === OMDB_FAILURE) return { Response: response };
-    if (response !== OMDB_SUCCESS) {
-        throw new ParseError(`expected Response "True" or "False", got "${response}"`);
-    }
-    return parseOmdbSuccessResponse(raw);
-}
-
-function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbSuccessResponse {
-    return {
-        Response: OMDB_SUCCESS,
-        imdbRating: optionalString(raw, 'imdbRating'),
-        Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')),
-        imdbID: requiredString(raw, 'imdbID'),
-        Year: optionalString(raw, 'Year'),
-        Title: requiredString(raw, 'Title'),
-        Type: optionalString(raw, 'Type'),
-        imdbVotes: optionalString(raw, 'imdbVotes'),
-    };
-}
-
-function parseOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
-    if (!ratings) return undefined;
-    return parseValidItems(ratings, parseOmdbRating);
-}
-
-function parseOmdbRating(raw: unknown): OmdbRatingEntry {
-    assertRecord(raw);
-    return {
-        source: requiredString(raw, 'Source'),
-        value: requiredString(raw, 'Value'),
-    };
-}
-
-function ratingFromSource(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
-    const entry = ratings?.find(r => sourcePattern.test(r.source));
-    return toRating(entry?.value);
-}
-
-/** OMDb sends ratings as strings; null, empty, and "N/A" mean no rating. */
-function toRating(value: unknown): number | undefined {
-    if (value === null || value === undefined) return undefined;
-    const num = Number.parseFloat(String(value));
-    return Number.isNaN(num) ? undefined : num;
-}
 
 /**
  * API client for OMDb service that provides movie and series information with ratings.
@@ -113,7 +97,7 @@ export class OmdbApiClient extends BaseApiClient {
             this.logger.info(`No OMDb results found for "${displayTitle}"`);
             return undefined;
         }
-        return this.#titleFromSuccessResponse(response, displayTitle);
+        return titleFromOmdbSuccessResponse(response, displayTitle);
     }
 
     /**
@@ -140,58 +124,74 @@ export class OmdbApiClient extends BaseApiClient {
                 this.logger.info(`No OMDb results found for ID: ${id}`);
                 return undefined;
             }
-            return this.#titleFromSuccessResponse(response, searchTitle.displayTitle);
+            return titleFromOmdbSuccessResponse(response, searchTitle.displayTitle);
         }
         return searchTitle;
     }
+}
 
-    #titleFromSuccessResponse(response: OmdbSuccessResponse, displayTitle: string): Title {
-        const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = response;
-        const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
-        const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
-        return new Title({
-            displayTitle,
-            apiTitle,
-            imdbId: imdbID,
-            year: releaseYear ? Number(releaseYear) : undefined,
-            imdbRating: toRating(imdbRating),
-            imdbVotes: votes,
-            rtRating: ratingFromSource(Ratings, /Rotten Tomatoes/i),
-            mcRating: ratingFromSource(Ratings, /Metacritic/i),
-            type: mapOmdbTitleType(apiType),
-            source: undefined,
-        });
+function parseOmdbResponse(raw: unknown): OmdbResponse {
+    assertRecord(raw);
+    const response = requiredString(raw, 'Response');
+    if (response === OMDB_FAILURE) return { Response: response };
+    if (response !== OMDB_SUCCESS) {
+        throw new ParseError(`expected Response "True" or "False", got "${response}"`);
     }
+    return parseOmdbSuccessResponse(raw);
 }
 
-/** Normalized OMDb rating entry. OMDb sends every rating value as a string, for example "8.5" or "90%". */
-interface OmdbRatingEntry {
-    source: string;
-    value: string;
+function parseOmdbSuccessResponse(raw: Record<string, unknown>): OmdbSuccessResponse {
+    return {
+        Response: OMDB_SUCCESS,
+        imdbRating: optionalString(raw, 'imdbRating'),
+        Ratings: parseOmdbRatings(optionalArray(raw, 'Ratings')),
+        imdbID: requiredString(raw, 'imdbID'),
+        Year: optionalString(raw, 'Year'),
+        Title: requiredString(raw, 'Title'),
+        Type: optionalString(raw, 'Type'),
+        imdbVotes: optionalString(raw, 'imdbVotes'),
+    };
 }
 
-/**
- * Normalized successful OMDb API response.
- *
- * A successful response always carries `Title` and `imdbID`, so both fields
- * are required. The remaining fields are optional because OMDb omits them when
- * it has no value.
- */
-interface OmdbSuccessResponse {
-    Response: typeof OMDB_SUCCESS;
-    imdbRating?: string | undefined;
-    Ratings?: OmdbRatingEntry[] | undefined;
-    imdbID: string;
-    Year?: string | undefined;
-    Title: string;
-    Type?: string | undefined;
-    imdbVotes?: string | undefined;
+function parseOmdbRatings(ratings: unknown[] | undefined): OmdbRatingEntry[] | undefined {
+    if (!ratings) return undefined;
+    return parseValidItems(ratings, parseOmdbRating);
 }
 
-/** Normalized failed OMDb API response. */
-interface OmdbFailureResponse {
-    Response: typeof OMDB_FAILURE;
+function parseOmdbRating(raw: unknown): OmdbRatingEntry {
+    assertRecord(raw);
+    return {
+        source: requiredString(raw, 'Source'),
+        value: requiredString(raw, 'Value'),
+    };
 }
 
-/** Normalized OMDb API response, discriminated by `Response`. */
-type OmdbResponse = OmdbSuccessResponse | OmdbFailureResponse;
+function titleFromOmdbSuccessResponse(response: OmdbSuccessResponse, displayTitle: string): Title {
+    const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = response;
+    const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
+    const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
+    return new Title({
+        displayTitle,
+        apiTitle,
+        imdbId: imdbID,
+        year: releaseYear ? Number(releaseYear) : undefined,
+        imdbRating: toRating(imdbRating),
+        imdbVotes: votes,
+        rtRating: ratingFromSource(Ratings, /Rotten Tomatoes/i),
+        mcRating: ratingFromSource(Ratings, /Metacritic/i),
+        type: mapOmdbTitleType(apiType),
+        source: undefined,
+    });
+}
+
+function ratingFromSource(ratings: OmdbRatingEntry[] | undefined, sourcePattern: RegExp): number | undefined {
+    const entry = ratings?.find(r => sourcePattern.test(r.source));
+    return toRating(entry?.value);
+}
+
+/** OMDb sends ratings as strings; null, empty, and "N/A" mean no rating. */
+function toRating(value: unknown): number | undefined {
+    if (value === null || value === undefined) return undefined;
+    const num = Number.parseFloat(String(value));
+    return Number.isNaN(num) ? undefined : num;
+}

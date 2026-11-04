@@ -197,9 +197,11 @@ export abstract class BaseApiClient implements ApiClient {
      * Fetches ratings and additional details for a title returned by search().
      * Subclasses must override this method.
      *
-     * Implementations should merge searchTitle values as fallbacks:
-     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns undefined
-     * - Override with details fetch values when available
+     * Implementations take identity fields from the details response when it
+     * carries them. A provider that cannot look up details without an IMDb ID,
+     * or whose details request fails, returns undefined; callers treat that as
+     * no match. OMDb may return the search title unchanged when it already has
+     * full details.
      *
      * @param _searchTitle - Title returned by search().
      * @returns A Title with ratings and details populated, or undefined.
