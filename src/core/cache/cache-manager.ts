@@ -50,13 +50,21 @@ export class CacheManager implements CacheStore {
     async read(displayTitle: string): Promise<CacheEntry | undefined> {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (!raw) return undefined;
+        if (raw === undefined) return undefined;
+
+        const entry = CacheEntry.fromJSON(raw);
+        if (entry) return entry;
+
+        this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
+        await this.#deleteInvalid(key);
+        return undefined;
+    }
+
+    async #deleteInvalid(key: string): Promise<void> {
         try {
-            // Always return entry; ApiClientManager handles validation and short-circuit logic
-            return CacheEntry.fromJSON(raw as string);
-        } catch {
-            this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
-            return undefined;
+            await this.#adapter.storageDelete(key);
+        } catch (error: unknown) {
+            this.#logger.debug('Failed to delete corrupt cache entry', { key, error });
         }
     }
 

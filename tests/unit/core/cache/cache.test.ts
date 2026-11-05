@@ -42,7 +42,7 @@ describe('CacheManager', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should return cache entry even without title data', async () => {
+    it('should treat an entry without title data as a cache miss', async () => {
         const entry = buildCacheEntry()
             .withDisplayTitle('Missing Data')
             .withImdbId(undefined)
@@ -52,10 +52,12 @@ describe('CacheManager', () => {
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
 
         const result = await cacheManager.read('Missing Data');
-        expect(result).not.toBeUndefined();
-        expect(result).toBeInstanceOf(CacheEntry);
-        expect(result!.getTitle()).toBeUndefined();
-        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(result).toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+            key: 'fmc:missing_data',
+            displayTitle: 'Missing Data',
+        });
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:missing_data');
     });
 
     it('should write data to storage', async () => {
@@ -219,6 +221,62 @@ describe('CacheManager', () => {
         });
     });
 
+    it.each([
+        ['null', 'null'],
+        ['an array', '[]'],
+        ['a string', '"value"'],
+        ['a number', '42'],
+    ])('should treat %s JSON as a cache miss', async (_label, raw) => {
+        adapter.storageGet.mockResolvedValue(raw);
+
+        await expect(cacheManager.read('Corrupt Title')).resolves.toBeUndefined();
+        expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+            key: 'fmc:corrupt_title',
+            displayTitle: 'Corrupt Title',
+        });
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:corrupt_title');
+    });
+
+    it.each([
+        ['a missing display title', { data: {} }],
+        ['a non-string display title', { displayTitle: 42, data: {} }],
+        ['a non-string IMDb ID', { displayTitle: 'Corrupt', imdbId: 42, data: {} }],
+        ['a non-number expiry', { displayTitle: 'Corrupt', expires: 'soon', data: {} }],
+        ['a missing data payload', { displayTitle: 'Corrupt' }],
+        ['a non-object data payload', { displayTitle: 'Corrupt', data: null }],
+        ['a string rating', { displayTitle: 'Corrupt', data: { imdbRating: '7.5' } }],
+        ['a legacy rating field', { displayTitle: 'Corrupt', data: { rating: 7.5 } }],
+    ])('should treat an entry with %s as a cache miss', async (_label, entry) => {
+        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
+
+        await expect(cacheManager.read('Corrupt Title')).resolves.toBeUndefined();
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:corrupt_title');
+    });
+
+    it('should treat a legacy nested entry as a cache miss', async () => {
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                data: { displayTitle: 'Legacy Movie', imdbId: 'tt1', rating: 8.1 },
+                expires: null,
+            })
+        );
+
+        await expect(cacheManager.read('Legacy Movie')).resolves.toBeUndefined();
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:legacy_movie');
+    });
+
+    it('should resolve a miss when deleting a corrupt entry fails', async () => {
+        adapter.storageGet.mockResolvedValue('invalid-json{');
+        adapter.storageDelete.mockRejectedValue(new Error('delete failed'));
+
+        await expect(cacheManager.read('Some Title')).resolves.toBeUndefined();
+
+        expect(mockLogger.debug).toHaveBeenCalledWith('Failed to delete corrupt cache entry', {
+            key: 'fmc:some_title',
+            error: expect.any(Error),
+        });
+    });
+
     it('should return cache entry for cache hit', async () => {
         const titleObj = buildTitle()
             .withDisplayTitle('Cached Movie')
@@ -277,7 +335,7 @@ describe('CacheManager', () => {
                 apiTitle: 'Cached Movie',
                 imdbId: 'tt456',
                 year: 2020,
-                imdbRating: '7.5',
+                imdbRating: 7.5,
                 imdbVotes: undefined,
                 rtRating: undefined,
                 mcRating: undefined,
@@ -305,7 +363,7 @@ describe('CacheManager', () => {
                 apiTitle: 'Expired Movie',
                 imdbId: 'tt789',
                 year: 2020,
-                imdbRating: '6.5',
+                imdbRating: 6.5,
                 imdbVotes: undefined,
                 rtRating: undefined,
                 mcRating: undefined,

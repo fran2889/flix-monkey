@@ -269,14 +269,14 @@ git commit -m "refactor(platform): validate storage and background payloads"
 
 - Internal to `cache-entry.ts`: `parseCacheEntry(value: unknown): CacheEntry` and `assertOnlyKeys(record: Record<string, unknown>, allowed: ReadonlySet<string>, label: string): void`.
 
-- [ ] **Step 1: Update the existing cache tests**
+- [x] **Step 1: Update the existing cache tests**
 
 In `tests/unit/core/cache/cache.test.ts`:
 
 - Rename "should return cache entry even without title data" to "should treat an entry without title data as a cache miss" and assert `undefined`, one warning, and a delete of `fmc:missing_data`.
 - Change the string `imdbRating` values in "should return CacheEntry with getTitle for valid entry" and "should identify expired entry" to finite numbers so those tests keep covering successful reads.
 
-- [ ] **Step 2: Write the failing validation tests**
+- [x] **Step 2: Write the failing validation tests**
 
 Add to `tests/unit/core/cache/cache.test.ts`:
 
@@ -340,13 +340,13 @@ it('should resolve a miss when deleting a corrupt entry fails', async () => {
 
 Keep the existing legacy null test as the accepted legacy case.
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 
 Expected: FAIL because malformed entries are still returned and invalid keys are not deleted.
 
-- [ ] **Step 4: Implement the cache parser**
+- [x] **Step 4: Implement the cache parser**
 
 In `src/core/cache/cache-entry.ts`:
 
@@ -367,7 +367,7 @@ const TITLE_DATA_KEYS = new Set([...TITLE_STRING_KEYS, ...TITLE_NUMBER_KEYS]);
 - Implement `assertOnlyKeys` to throw `ParseError('unexpected field "<key>" in <label>')` for the first unknown key.
 - Update the JSDoc to say corrupt or legacy data returns `undefined` and that only `ParseError` is converted to a miss.
 
-- [ ] **Step 5: Implement best-effort deletion in the cache manager**
+- [x] **Step 5: Implement best-effort deletion in the cache manager**
 
 In `src/core/cache/cache-manager.ts`:
 
@@ -388,7 +388,7 @@ return undefined;
 - Add a private `#deleteInvalid(key: string): Promise<void>` that awaits `storageDelete` and catches any error, logging `Failed to delete corrupt cache entry` at debug level with `{ key, error }`.
 - Remove the now-unused `string` assertion.
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 
@@ -398,7 +398,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/cache/cache-entry.ts src/core/cache/cache-manager.ts tests/unit/core/cache/cache.test.ts

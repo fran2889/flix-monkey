@@ -2,7 +2,13 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
+import { assertRecord, optionalNumber, optionalString, ParseError, requiredString } from '../parse-utils';
 import { Title } from '../title';
+
+const CACHE_ENTRY_KEYS: ReadonlySet<string> = new Set(['displayTitle', 'imdbId', 'data', 'expires']);
+const TITLE_STRING_KEYS = ['apiTitle', 'imdbId', 'source', 'type'] as const;
+const TITLE_NUMBER_KEYS = ['year', 'imdbRating', 'imdbVotes', 'rtRating', 'mcRating'] as const;
+const TITLE_DATA_KEYS: ReadonlySet<string> = new Set([...TITLE_STRING_KEYS, ...TITLE_NUMBER_KEYS]);
 
 /**
  * Cache entry encapsulating both metadata and API data.
@@ -33,28 +39,31 @@ export class CacheEntry {
     }
 
     /**
-     * Parses a JSON string from storage and returns a CacheEntry instance.
+     * Parses a JSON string from storage and returns a validated CacheEntry.
      * Literal nulls from entries written before the null to undefined
-     * migration are normalized to undefined. The payload is stored unvalidated:
-     * {@link CacheEntry.getTitle} hands it to `Title.fromCacheJSON`, which owns
-     * the check for a well-formed title object.
+     * migration are normalized to undefined. Truncated JSON, non-object JSON,
+     * missing fields, wrong-typed fields, and legacy shapes return undefined
+     * instead of throwing or producing a partial entry.
      *
-     * @param raw - Raw JSON string from storage
-     * @returns New CacheEntry instance
+     * @param raw - Untrusted value read from storage
+     * @returns New CacheEntry instance, or undefined when the payload is invalid
      */
-    static fromJSON(raw: string): CacheEntry {
-        const obj = JSON.parse(raw) as {
-            displayTitle: string;
-            imdbId?: string | null;
-            data?: unknown;
-            expires?: number | null;
-        };
-        return new CacheEntry(
-            obj.displayTitle,
-            obj.imdbId ?? undefined,
-            obj.data ?? undefined,
-            obj.expires ?? undefined
-        );
+    static fromJSON(raw: unknown): CacheEntry | undefined {
+        if (typeof raw !== 'string') return undefined;
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw);
+        } catch {
+            return undefined;
+        }
+
+        try {
+            return parseCacheEntry(parsed);
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError)) throw error;
+            return undefined;
+        }
     }
 
     /**
@@ -92,5 +101,29 @@ export class CacheEntry {
 
     get isExpired(): boolean {
         return this.#expires !== undefined && Date.now() > this.#expires;
+    }
+}
+
+function parseCacheEntry(value: unknown): CacheEntry {
+    assertRecord(value);
+    assertOnlyKeys(value, CACHE_ENTRY_KEYS, 'cache entry');
+
+    const displayTitle = requiredString(value, 'displayTitle');
+    const imdbId = optionalString(value, 'imdbId');
+    const expires = optionalNumber(value, 'expires');
+    const data = value['data'];
+
+    assertRecord(data);
+    assertOnlyKeys(data, TITLE_DATA_KEYS, 'title payload');
+    for (const key of TITLE_STRING_KEYS) optionalString(data, key);
+    for (const key of TITLE_NUMBER_KEYS) optionalNumber(data, key);
+
+    return new CacheEntry(displayTitle, imdbId, data, expires);
+}
+
+function assertOnlyKeys(record: Record<string, unknown>, allowed: ReadonlySet<string>, label: string): void {
+    const unknownKey = Object.keys(record).find(key => !allowed.has(key));
+    if (unknownKey !== undefined) {
+        throw new ParseError(`unexpected field "${unknownKey}" in ${label}`);
     }
 }
