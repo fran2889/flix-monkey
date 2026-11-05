@@ -98,7 +98,7 @@ function parseCacheEntry(value: unknown): CacheEntry {
 }
 
 function parseTitleData(raw: unknown): TitleData {
-    assertRecord(raw);
+    assertRecord(raw, 'data');
     return {
         apiTitle: optionalString(raw, 'apiTitle'),
         imdbId: optionalString(raw, 'imdbId'),
