@@ -35,30 +35,18 @@ export class CacheEntry {
     /**
      * Parses a JSON string from storage and returns a validated CacheEntry.
      * Literal nulls from entries written before the null to undefined
-     * migration are normalized to undefined. Truncated JSON, non-object JSON,
-     * missing required fields, and wrong-typed fields return undefined instead
-     * of throwing or producing a partial entry. Unknown fields are dropped like
+     * migration are normalized to undefined. Unknown fields are dropped like
      * the API response parsers do.
      *
      * @param raw - Untrusted value read from storage
-     * @returns New CacheEntry instance, or undefined when the payload is invalid
+     * @returns New CacheEntry instance
+     * @throws ParseError when the value is not a string or the payload has an
+     *   invalid shape
+     * @throws SyntaxError when the value is not valid JSON
      */
-    static fromJSON(raw: unknown): CacheEntry | undefined {
-        if (typeof raw !== 'string') return undefined;
-
-        let parsed: unknown;
-        try {
-            parsed = JSON.parse(raw);
-        } catch {
-            return undefined;
-        }
-
-        try {
-            return parseCacheEntry(parsed);
-        } catch (error: unknown) {
-            if (!(error instanceof ParseError)) throw error;
-            return undefined;
-        }
+    static fromJSON(raw: unknown): CacheEntry {
+        if (typeof raw !== 'string') throw new ParseError('expected serialized JSON string');
+        return parseCacheEntry(JSON.parse(raw));
     }
 
     /**

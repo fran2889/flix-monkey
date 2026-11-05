@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CacheEntry, CacheManager } from '../../../../src/core/cache/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { Logger } from '../../../../src/core/logger';
+import { ParseError } from '../../../../src/core/parse-utils';
 import { Title } from '../../../../src/core/title';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
 import { buildCacheEntry } from '../../../mocks/cache';
@@ -52,6 +53,7 @@ describe('CacheManager', () => {
         expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
             key: 'fmc:missing_data',
             displayTitle: 'Missing Data',
+            error: expect.any(ParseError),
         });
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:missing_data');
     });
@@ -207,14 +209,29 @@ describe('CacheManager', () => {
         expect(result!.imdbId).toBeUndefined();
     });
 
-    it('should return undefined and log the display title when JSON parsing fails in read', async () => {
+    it('should return undefined, log the syntax error, and delete the entry when JSON parsing fails', async () => {
         adapter.storageGet.mockResolvedValue('invalid-json{');
         const result = await cacheManager.read('Some Title');
         expect(result).toBeUndefined();
         expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
             key: 'fmc:some_title',
             displayTitle: 'Some Title',
+            error: expect.any(SyntaxError),
         });
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:some_title');
+    });
+
+    it('logs the failing field when a cache entry is corrupt', async () => {
+        adapter.storageGet.mockResolvedValue(JSON.stringify({ displayTitle: 'Bad Expiry', data: {}, expires: 'soon' }));
+
+        await expect(cacheManager.read('Bad Expiry')).resolves.toBeUndefined();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+            key: 'fmc:bad_expiry',
+            displayTitle: 'Bad Expiry',
+            error: expect.objectContaining({ message: 'expected number at "expires"' }),
+        });
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:bad_expiry');
     });
 
     it.each([
@@ -229,6 +246,7 @@ describe('CacheManager', () => {
         expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
             key: 'fmc:corrupt_title',
             displayTitle: 'Corrupt Title',
+            error: expect.any(ParseError),
         });
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:corrupt_title');
     });

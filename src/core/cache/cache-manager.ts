@@ -6,6 +6,7 @@ import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
 import type { Logger } from '../logger';
+import { ParseError } from '../parse-utils';
 import type { Title } from '../title';
 import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
@@ -52,12 +53,14 @@ export class CacheManager implements CacheStore {
         const raw = await this.#adapter.storageGet(key);
         if (raw === undefined) return undefined;
 
-        const entry = CacheEntry.fromJSON(raw);
-        if (entry) return entry;
-
-        this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
-        await this.#deleteInvalid(key);
-        return undefined;
+        try {
+            return CacheEntry.fromJSON(raw);
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError) && !(error instanceof SyntaxError)) throw error;
+            this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle, error });
+            await this.#deleteInvalid(key);
+            return undefined;
+        }
     }
 
     async #deleteInvalid(key: string): Promise<void> {
