@@ -43,13 +43,9 @@ describe('CacheManager', () => {
     });
 
     it('should treat an entry without title data as a cache miss', async () => {
-        const entry = buildCacheEntry()
-            .withDisplayTitle('Missing Data')
-            .withImdbId(undefined)
-            .withData(undefined)
-            .withExpiry(Date.now() + 10000)
-            .build();
-        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({ displayTitle: 'Missing Data', expires: Date.now() + 10000 })
+        );
 
         const result = await cacheManager.read('Missing Data');
         expect(result).toBeUndefined();
@@ -244,13 +240,80 @@ describe('CacheManager', () => {
         ['a non-number expiry', { displayTitle: 'Corrupt', expires: 'soon', data: {} }],
         ['a missing data payload', { displayTitle: 'Corrupt' }],
         ['a non-object data payload', { displayTitle: 'Corrupt', data: null }],
+        ['an array data payload', { displayTitle: 'Corrupt', data: [] }],
+        ['a string data payload', { displayTitle: 'Corrupt', data: 'text' }],
+        ['a number data payload', { displayTitle: 'Corrupt', data: 42 }],
         ['a string rating', { displayTitle: 'Corrupt', data: { imdbRating: '7.5' } }],
-        ['a legacy rating field', { displayTitle: 'Corrupt', data: { rating: 7.5 } }],
     ])('should treat an entry with %s as a cache miss', async (_label, entry) => {
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
 
         await expect(cacheManager.read('Corrupt Title')).resolves.toBeUndefined();
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:corrupt_title');
+    });
+
+    it('ignores unknown entry and title fields', async () => {
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                displayTitle: 'Cached Movie',
+                imdbId: 'tt456',
+                data: { apiTitle: 'Cached Movie', imdbRating: 7.5, rating: 9.9, extra: true },
+                expires: Date.now() + 10000,
+                unknownEntryField: 'ignored',
+            })
+        );
+
+        const entry = await cacheManager.read('Cached Movie');
+
+        expect(entry).toBeInstanceOf(CacheEntry);
+        expect(entry!.getTitle().imdbRating).toBe(7.5);
+        expect(entry!.toJSON().data).not.toHaveProperty('rating');
+        expect(entry!.toJSON().data).not.toHaveProperty('extra');
+    });
+
+    it('returns a Title for an entry with empty title data', async () => {
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({ displayTitle: 'Empty Movie', data: {}, expires: Date.now() + 10000 })
+        );
+
+        const entry = await cacheManager.read('Empty Movie');
+
+        expect(entry!.getTitle()).toBeInstanceOf(Title);
+        expect(entry!.getTitle().displayTitle).toBe('Empty Movie');
+    });
+
+    it('keeps every known title field', async () => {
+        adapter.storageGet.mockResolvedValue(
+            JSON.stringify({
+                displayTitle: 'Full Movie',
+                imdbId: 'tt1',
+                data: {
+                    apiTitle: 'Full Movie',
+                    imdbId: 'tt1',
+                    year: 2020,
+                    imdbRating: 7.5,
+                    imdbVotes: 1000,
+                    rtRating: 90,
+                    mcRating: 80,
+                    source: 'omdb',
+                    type: 'movie',
+                },
+                expires: Date.now() + 10000,
+            })
+        );
+
+        const title = (await cacheManager.read('Full Movie'))!.getTitle();
+
+        expect(title).toMatchObject({
+            apiTitle: 'Full Movie',
+            imdbId: 'tt1',
+            year: 2020,
+            imdbRating: 7.5,
+            imdbVotes: 1000,
+            rtRating: 90,
+            mcRating: 80,
+            source: 'omdb',
+            type: 'movie',
+        });
     });
 
     it('should treat a legacy nested entry as a cache miss', async () => {

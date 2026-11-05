@@ -4,22 +4,28 @@
  */
 import { CacheEntry } from '../../src/core/cache/index';
 import type { Title, TitleData } from '../../src/core/title';
+import { emptyTitleData } from './title';
 
 interface CacheEntryBuilder {
     withDisplayTitle(_value: string): CacheEntryBuilder;
     withImdbId(_value: string | undefined): CacheEntryBuilder;
-    withData(_value: TitleData | undefined): CacheEntryBuilder;
+    withData(_value: TitleData): CacheEntryBuilder;
     withExpiry(_value: number | undefined): CacheEntryBuilder;
     build(): CacheEntry;
 }
 
 function buildCacheEntry(): CacheEntryBuilder {
     // Default all CacheEntry fields
-    const props = {
+    const props: {
+        displayTitle: string;
+        imdbId: string | undefined;
+        data: TitleData;
+        expires: number | undefined;
+    } = {
         displayTitle: '',
-        imdbId: undefined as string | undefined,
-        data: undefined as TitleData | undefined,
-        expires: undefined as number | undefined,
+        imdbId: undefined,
+        data: emptyTitleData,
+        expires: undefined,
     };
     return {
         withDisplayTitle(_value: string): CacheEntryBuilder {
@@ -30,7 +36,7 @@ function buildCacheEntry(): CacheEntryBuilder {
             props.imdbId = _value;
             return this;
         },
-        withData(_value: TitleData | undefined): CacheEntryBuilder {
+        withData(_value: TitleData): CacheEntryBuilder {
             props.data = _value;
             return this;
         },
@@ -49,7 +55,7 @@ buildCacheEntry.expired = (): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Expired Movie')
         .withImdbId('tt1234567')
-        .withData(undefined)
+        .withData(emptyTitleData)
         .withExpiry(Date.now() - 1000)
         .build();
 };
@@ -58,7 +64,7 @@ buildCacheEntry.indefinite = (): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Indefinite Movie')
         .withImdbId('tt1234567')
-        .withData(undefined)
+        .withData(emptyTitleData)
         .withExpiry(undefined)
         .build();
 };
@@ -68,7 +74,7 @@ buildCacheEntry.withExpiry = (ms: number): CacheEntry => {
     return buildCacheEntry()
         .withDisplayTitle('Movie')
         .withImdbId('tt1234567')
-        .withData(undefined)
+        .withData(emptyTitleData)
         .withExpiry(Date.now() + ms)
         .build();
 };
