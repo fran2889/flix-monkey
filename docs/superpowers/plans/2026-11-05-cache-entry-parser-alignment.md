@@ -1,6 +1,6 @@
 # Cache Entry Parser Alignment Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Parse stored cache entries the same way API responses are parsed: rebuild a fresh, typed `TitleData` from the known keys instead of validating in place and casting during hydration.
 
@@ -43,7 +43,7 @@
 - Consumes: nothing.
 - Produces: the approved design revision and this plan in history.
 
-- [ ] **Step 1: Commit the documents**
+- [x] **Step 1: Commit the documents**
 
 ```bash
 git add docs/superpowers/specs/2026-11-05-cache-storage-validation-design.md \
@@ -72,7 +72,7 @@ git commit -m "docs(cache): align cache parser with API response parsing"
     - `CacheEntry.toJSON(): { displayTitle: string; imdbId: string | undefined; data: TitleData; expires: number | undefined }`
     - Module-private `parseTitleData(raw: unknown): TitleData`
 
-- [ ] **Step 1: Write the failing cache tests**
+- [x] **Step 1: Write the failing cache tests**
 
 In `tests/unit/core/cache/cache.test.ts`, add after the miss-table tests:
 
@@ -151,13 +151,13 @@ Remove `['a legacy rating field', { displayTitle: 'Corrupt', data: { rating: 7.5
 ['a number data payload', { displayTitle: 'Corrupt', data: 42 }],
 ```
 
-- [ ] **Step 2: Run the cache tests to verify they fail**
+- [x] **Step 2: Run the cache tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 
 Expected: the unknown-key test fails because the current parser rejects unknown keys. The empty-data test passes and stays as a regression pin.
 
-- [ ] **Step 3: Implement the payload parser and tighten the entry type**
+- [x] **Step 3: Implement the payload parser and tighten the entry type**
 
 In `src/core/cache/cache-entry.ts`:
 
@@ -208,13 +208,13 @@ function parseTitleData(raw: unknown): TitleData {
 
 - Update the `fromJSON` JSDoc: unknown fields are dropped, and missing required or wrong-typed fields return `undefined`.
 
-- [ ] **Step 4: Run the cache tests to verify they pass**
+- [x] **Step 4: Run the cache tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Fix the type ripple**
+- [x] **Step 5: Fix the type ripple**
 
 - `src/core/api-manager.ts`: change `const titleObj: Title | undefined = entry.getTitle();` to `const titleObj: Title = entry.getTitle();` and drop `titleObj &&` from the cache-hit condition.
 - `tests/mocks/cache.ts`: make `withData` and the stored `data` field required `TitleData`. Initialize `data` as `{}` in a typed props object, and change the `.withData(undefined)` presets to `.withData({})`.
@@ -225,7 +225,7 @@ Expected: PASS.
 adapter.storageGet.mockResolvedValue(JSON.stringify({ displayTitle: 'Missing Data', expires: Date.now() + 10000 }));
 ```
 
-- [ ] **Step 6: Run type-check and the affected tests**
+- [x] **Step 6: Run type-check and the affected tests**
 
 Run: `npm run type-check`
 
@@ -235,7 +235,7 @@ Run: `npx vitest run tests/unit/core/cache tests/unit/core/api-manager.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/core/cache/cache-entry.ts src/core/api-manager.ts \
@@ -259,7 +259,7 @@ git commit -m "refactor(cache): rebuild cached title payloads as typed data"
 - Consumes: the `CacheEntry` changes from Task 2, which remove the last production caller.
 - Produces: no `fromCacheJSON` symbol and no assertion in the cache path.
 
-- [ ] **Step 1: Replace the remaining test caller**
+- [x] **Step 1: Replace the remaining test caller**
 
 In `tests/unit/core/api/omdb-api-client.test.ts`, replace:
 
@@ -278,11 +278,11 @@ const legacyCachedTitle = new Title({ imdbId: 'tt123' });
 
 Rename the test to "should fetch details for a cached title without an apiTitle". Remove `TitleData` from the `title` import if it is no longer used.
 
-- [ ] **Step 2: Delete the method**
+- [x] **Step 2: Delete the method**
 
 In `src/core/title.ts`, delete `static fromCacheJSON` and its JSDoc. Leave `toCacheJSON`, `TitleData`, and constructor normalization unchanged.
 
-- [ ] **Step 3: Delete its tests**
+- [x] **Step 3: Delete its tests**
 
 In `tests/unit/core/title.test.ts`:
 
@@ -291,7 +291,7 @@ In `tests/unit/core/title.test.ts`:
 - Delete `it('should reconstruct Title with displayTitle from fromCacheJSON', ...)` near the end.
 - Delete the `emptyTitleData` constant and the `TitleData` import if they become unused. Keep `TitleOptions`.
 
-- [ ] **Step 4: Verify the symbol is gone**
+- [x] **Step 4: Verify the symbol is gone**
 
 Run: `rg "fromCacheJSON" src tests`
 
@@ -301,13 +301,13 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the affected tests**
+- [x] **Step 5: Run the affected tests**
 
 Run: `npx vitest run tests/unit/core/title.test.ts tests/unit/core/api/omdb-api-client.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/title.ts tests/unit/core/title.test.ts tests/unit/core/api/omdb-api-client.test.ts
@@ -327,13 +327,13 @@ git commit -m "refactor(cache): remove the unused cache JSON hydration helper"
 - Consumes: Tasks 2 and 3.
 - Produces: a verified branch.
 
-- [ ] **Step 1: Verify no removed symbols remain**
+- [x] **Step 1: Verify no removed symbols remain**
 
 Run: `rg "fromCacheJSON|core/api/parse-utils|api/parse-utils" src tests`
 
 Expected: no output.
 
-- [ ] **Step 2: Verify the cache files are assertion-free**
+- [x] **Step 2: Verify the cache files are assertion-free**
 
 Run:
 
@@ -344,7 +344,7 @@ npx eslint src/core/cache/cache-entry.ts src/core/cache/cache-manager.ts \
 
 Expected: no findings.
 
-- [ ] **Step 3: Run the full local check**
+- [x] **Step 3: Run the full local check**
 
 Run:
 
@@ -354,13 +354,13 @@ npm run type-check && npm run lint && npm run format:check && npm run audit && n
 
 Expected: all commands pass and coverage stays at or above the configured thresholds.
 
-- [ ] **Step 4: Review the diff**
+- [x] **Step 4: Review the diff**
 
 Run: `git diff origin/main --stat && git diff origin/main -- src/core/cache src/core/title.ts src/core/api-manager.ts tests`
 
 Expected: only the parser, the entry type, `api-manager`, the removed helper, mocks, and affected tests. No `dist/` or `coverage/` changes.
 
-- [ ] **Step 5: Commit the plan ticks**
+- [x] **Step 5: Commit the plan ticks**
 
 ```bash
 git add docs/superpowers/plans/2026-11-05-cache-entry-parser-alignment.md
