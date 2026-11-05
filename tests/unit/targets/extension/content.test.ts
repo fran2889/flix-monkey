@@ -80,6 +80,10 @@ describe('content.js entry point', () => {
         await Promise.resolve();
     }
 
+    function startedAdapter(): { configGet: (_key: string) => unknown } {
+        return startAppSpy.mock.calls[0][0] as { configGet: (_key: string) => unknown };
+    }
+
     it('waits for migrations before reading storage and starting the app', async () => {
         const entryImport = import('../../../../src/targets/extension/content');
         await entryImport;
@@ -93,6 +97,7 @@ describe('content.js entry point', () => {
         await Promise.resolve();
 
         expect(browser.storage.local.get).toHaveBeenCalledAfter(browser.runtime.sendMessage);
+        await vi.waitFor(() => expect(startAppSpy).toHaveBeenCalled());
         expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
     });
 
@@ -111,6 +116,33 @@ describe('content.js entry point', () => {
     it('should call startApp once', async () => {
         await startAfterMigrations();
         expect(startAppSpy).toHaveBeenCalledOnce();
+    });
+
+    it('seeds the config snapshot with only valid storage values', async () => {
+        storedObject = { overlayCorner: 42, showRtRating: true };
+        await startAfterMigrations();
+
+        const adapter = startedAdapter();
+        expect(adapter.configGet('overlayCorner')).toBeUndefined();
+        expect(adapter.configGet('showRtRating')).toBe(true);
+    });
+
+    it('removes a setting from the snapshot when the new value has the wrong type', async () => {
+        await startAfterMigrations();
+
+        onChangedListener({ overlayCorner: { newValue: 42 } });
+
+        expect(startedAdapter().configGet('overlayCorner')).toBeUndefined();
+        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+    });
+
+    it('removes a setting from the snapshot when the key is deleted', async () => {
+        storedObject = { showRtRating: true };
+        await startAfterMigrations();
+
+        onChangedListener({ showRtRating: { newValue: undefined } });
+
+        expect(startedAdapter().configGet('showRtRating')).toBeUndefined();
     });
 
     it('should register a storage.onChanged listener', async () => {
@@ -144,7 +176,7 @@ describe('content.js entry point', () => {
 
     it('should call redecorate when fadeRatingThreshold changes', async () => {
         await startAfterMigrations();
-        onChangedListener({ fadeRatingThreshold: { newValue: 50 } });
+        onChangedListener({ fadeRatingThreshold: { newValue: '50' } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
@@ -158,11 +190,11 @@ describe('content.js entry point', () => {
         it('updates the stored object when storage changes', async () => {
             await startAfterMigrations();
 
-            expect(storedObject.overlayCorner).toBe('top-right');
+            expect(startedAdapter().configGet('overlayCorner')).toBe('top-right');
 
             onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
 
-            expect(storedObject.overlayCorner).toBe('bottom-left');
+            expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
         });
 
         it('updates multiple keys in stored object', async () => {
@@ -173,8 +205,8 @@ describe('content.js entry point', () => {
                 showRtRating: { newValue: true },
             });
 
-            expect(storedObject.overlayCorner).toBe('bottom-left');
-            expect(storedObject.showRtRating).toBe(true);
+            expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
+            expect(startedAdapter().configGet('showRtRating')).toBe(true);
         });
 
         it('updates stored object for non-visual settings', async () => {
@@ -182,7 +214,7 @@ describe('content.js entry point', () => {
 
             onChangedListener({ apiClient: { newValue: 'omdb' } });
 
-            expect(storedObject.apiClient).toBe('omdb');
+            expect(startedAdapter().configGet('apiClient')).toBe('omdb');
         });
     });
 

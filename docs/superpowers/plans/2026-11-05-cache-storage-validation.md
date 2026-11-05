@@ -419,7 +419,7 @@ git commit -m "refactor(cache): validate stored cache entries"
 - Consumes: `WebExtensionAdapter.storageGetAll()` and `isStorageValue` from the platform layer.
 - Produces: a config snapshot that contains only `StorageValue` entries.
 
-- [ ] **Step 1: Update and extend the content tests**
+- [x] **Step 1: Update and extend the content tests**
 
 In `tests/unit/targets/extension/content.test.ts`:
 
@@ -455,13 +455,13 @@ it('removes a setting from the snapshot when the key is deleted', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/targets/extension/content.test.ts`
 
 Expected: FAIL because the content script still asserts storage values and keeps stale values.
 
-- [ ] **Step 3: Narrow the content bootstrap and listener**
+- [x] **Step 3: Narrow the content bootstrap and listener**
 
 In `src/targets/extension/content.ts`:
 
@@ -470,7 +470,7 @@ In `src/targets/extension/content.ts`:
 - Remove the direct `browser.storage.local.get(null)` call and its assertion.
 - In the listener, assign `v.newValue` only when `isStorageValue` accepts it; otherwise `delete stored[k]`. Keep the visual-settings redecorate check unchanged.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/targets/extension/content.test.ts`
 
@@ -480,7 +480,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/targets/extension/content.ts tests/unit/targets/extension/content.test.ts
