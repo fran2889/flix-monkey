@@ -18,6 +18,15 @@ cast it in `Title.fromCacheJSON`. Review replaced that with the API parser shape
 Task 3 is kept as the record of the first pass; Tasks 6 to 8 supersede it. The
 Review Focus and Final Checklist describe the merged result.
 
+## Revision: corrupt cache diagnostics (2026-11-05)
+
+The cache parser now reports why an entry was rejected. `CacheEntry.fromJSON`
+throws the parse failure instead of swallowing it, and `CacheManager.read`
+logs the error, deletes the key, and returns a miss. Task 9 supersedes the
+`CacheEntry.fromJSON` return contract and the warning payload recorded in
+Tasks 3, 6, and 8. The Review Focus and Final Checklist describe the merged
+result.
+
 ## Global Constraints
 
 - `strict` and `exactOptionalPropertyTypes` are enabled.
@@ -36,6 +45,7 @@ Review Focus and Final Checklist describe the merged result.
 - A cached `Title` field with the wrong type, such as a string rating, must be a miss rather than a silently normalized hit.
 - An entry with unknown keys and valid known keys must read back with only the known keys, and `getTitle()` must always return a `Title` using the envelope `displayTitle`.
 - A failed delete of a corrupt entry must still leave the read resolving to `undefined`.
+- The corrupt-entry warning must carry the parser failure that rejected the entry.
 - A wrong-typed `storage.onChanged` value must not leave stale config in the snapshot and must not throw.
 
 ---
@@ -876,11 +886,141 @@ git add docs/superpowers/plans/2026-11-05-cache-storage-validation.md
 git commit -m "docs(cache): merge the parser alignment into the storage validation plan"
 ```
 
+### Task 9: Log the parser failure on corrupt cache reads
+
+> Supersedes the `CacheEntry.fromJSON` return contract and warning payload in
+> Tasks 3 and 6.
+
+**Files:**
+
+- Modify: `src/core/cache/cache-entry.ts`
+- Modify: `src/core/cache/cache-manager.ts`
+- Test: `tests/unit/core/cache/cache.test.ts`
+
+**Interfaces:**
+
+- Consumes: `ParseError` from `src/core/parse-utils.ts`.
+- Produces:
+    - `CacheEntry.fromJSON(raw: unknown): CacheEntry`, throwing `ParseError` for a non-string value and `SyntaxError` or `ParseError` for an invalid payload.
+    - `CacheManager.read` logging `{ key, displayTitle, error }` before deleting a corrupt entry.
+
+- [x] **Step 1: Update the failing cache tests**
+
+In `tests/unit/core/cache/cache.test.ts`, extend every warning assertion for a
+corrupt read to include the error. Import `ParseError` from
+`../../../../src/core/parse-utils`.
+
+```ts
+expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+    key: 'fmc:corrupt_title',
+    displayTitle: 'Corrupt Title',
+    error: expect.any(ParseError),
+});
+```
+
+Add a case that asserts the parser detail:
+
+```ts
+it('logs the failing field when a cache entry is corrupt', async () => {
+    adapter.storageGet.mockResolvedValue(JSON.stringify({ displayTitle: 'Bad Expiry', data: {}, expires: 'soon' }));
+
+    await expect(cacheManager.read('Bad Expiry')).resolves.toBeUndefined();
+
+    expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+        key: 'fmc:bad_expiry',
+        displayTitle: 'Bad Expiry',
+        error: expect.objectContaining({ message: 'expected number at "expires"' }),
+    });
+    expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:bad_expiry');
+});
+```
+
+Add a case for truncated JSON:
+
+```ts
+it('logs the syntax error when a cache entry is not valid JSON', async () => {
+    adapter.storageGet.mockResolvedValue('invalid-json{');
+
+    await expect(cacheManager.read('Some Title')).resolves.toBeUndefined();
+
+    expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+        key: 'fmc:some_title',
+        displayTitle: 'Some Title',
+        error: expect.any(SyntaxError),
+    });
+    expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:some_title');
+});
+```
+
+- [x] **Step 2: Run the tests to verify they fail**
+
+Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
+
+Expected: FAIL because `read` logs only `key` and `displayTitle`.
+
+- [x] **Step 3: Implement the throwing parser**
+
+In `src/core/cache/cache-entry.ts`, change `fromJSON` to:
+
+```ts
+static fromJSON(raw: unknown): CacheEntry {
+    if (typeof raw !== 'string') throw new ParseError('expected serialized JSON string');
+    return parseCacheEntry(JSON.parse(raw));
+}
+```
+
+Update the JSDoc `@returns` to name the validated entry and add `@throws` for
+`ParseError` on an invalid value and `SyntaxError` on invalid JSON.
+
+- [x] **Step 4: Catch and log in the cache manager**
+
+In `src/core/cache/cache-manager.ts`, import `ParseError` from
+`../parse-utils` and replace the `fromJSON` call with:
+
+```ts
+try {
+    return CacheEntry.fromJSON(raw);
+} catch (error: unknown) {
+    if (!(error instanceof ParseError) && !(error instanceof SyntaxError)) throw error;
+    this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle, error });
+    await this.#deleteInvalid(key);
+    return undefined;
+}
+```
+
+Keep the `raw === undefined` early return.
+
+- [x] **Step 5: Run the tests and the type check**
+
+Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
+
+Expected: PASS.
+
+Run: `npm run type-check`
+
+Expected: PASS.
+
+- [x] **Step 6: Commit the code and tests**
+
+```bash
+git add src/core/cache/cache-entry.ts src/core/cache/cache-manager.ts tests/unit/core/cache/cache.test.ts
+git commit -m "fix(cache): log the parser failure for corrupt entries"
+```
+
+- [x] **Step 7: Commit the design and plan revision**
+
+```bash
+git add docs/superpowers/specs/2026-11-05-cache-storage-validation-design.md docs/superpowers/plans/2026-11-05-cache-storage-validation.md
+git commit -m "docs(cache): record corrupt cache diagnostics"
+```
+
 ---
 
 ## Final Checklist
 
-- [x] `CacheEntry.fromJSON` accepts `unknown` and returns `CacheEntry | undefined`.
+- [x] `CacheEntry.fromJSON` accepts `unknown`, returns `CacheEntry`, and throws `ParseError` or `SyntaxError` for corrupt data.
+- [x] The corrupt-entry warning includes the parser error.
+- [x] Errors that are neither `ParseError` nor `SyntaxError` still propagate.
 - [x] A non-string storage value and malformed JSON both become a miss.
 - [x] An entry with missing required or wrong-typed fields becomes a miss; unknown fields are dropped.
 - [x] The legacy null entry remains accepted.
@@ -894,3 +1034,4 @@ git commit -m "docs(cache): merge the parser alignment into the storage validati
 - [x] `CacheEntry.#data` is `TitleData` and `getTitle()` returns a `Title` with no assertion.
 - [x] `Title.fromCacheJSON` is removed and no cache path casts.
 - [x] The parser alignment is recorded in this plan; the separate plan file is removed.
+- [x] The corrupt cache diagnostics revision is recorded in the design and plan.

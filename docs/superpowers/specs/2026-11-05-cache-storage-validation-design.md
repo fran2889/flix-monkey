@@ -5,8 +5,10 @@
 **Status:** accepted
 
 **Revision:** 2026-11-05, the cached title payload is rebuilt with the API parser
-pattern instead of being validated in place and cast at hydration time. The
-cache parser and the strict title payload decisions below reflect the revision.
+pattern instead of being validated in place and cast at hydration time. A
+second revision makes the cache read log the parser failure before deleting the
+entry. The cache parser, cache read, and revision 2 approaches below reflect the
+revisions.
 
 **Size:** small change
 
@@ -39,7 +41,9 @@ API-specific code, so the cache should reuse them instead of growing a second
 set.
 
 There is no expiry sweep in the current code. Corrupt cache entries are removed
-only by a migration or Clear Cache.
+only by a migration or Clear Cache. The cache parser discards the failure
+reason, so a corrupt entry is logged without the field or syntax position that
+failed.
 
 ## Goals
 
@@ -47,6 +51,8 @@ only by a migration or Clear Cache.
   a `CacheEntry` exists.
 - Return a cache miss for truncated JSON, non-object JSON, missing required
   fields, wrong-typed fields, and legacy shapes.
+- Log the parser failure that rejected a cache entry, naming the failing field
+  or the JSON syntax error.
 - Never throw from the cache read path, including when deleting an invalid
   entry fails.
 - Validate every `StorageValue` crossing the WebExtension storage and content
@@ -70,6 +76,8 @@ only by a migration or Clear Cache.
 - Silently ignoring a wrong-typed cached rating and serving a hit.
 - Writing during a cache read unless an invalid entry has to be removed.
 - Letting a failed cleanup turn a cache miss into an exception.
+- Logging the raw stored value, which can be large and is not needed.
+- Reporting a parser bug as corruption instead of letting it propagate.
 - Adding disable comments.
 
 ## Constraints
@@ -111,6 +119,19 @@ only by a migration or Clear Cache.
    pushes expiry and serialization into one object with no benefit over the
    first approach. Rejected.
 
+### Revision 2 approaches
+
+1. **Throw from the parser, catch in the cache manager (chosen).** The parser
+   stops swallowing failures and lets `SyntaxError` and `ParseError` propagate.
+   `CacheManager.read` catches those two types, logs the error, deletes the key,
+   and returns `undefined`; other errors propagate. Smallest diff, one catch
+   site, and the read still never rejects for corrupt data.
+2. **Return a discriminated result from the parser.** A result object avoids
+   exceptions but adds an exported shape and branching for the only production
+   caller. Rejected as more code for the same behavior.
+3. **Inject the logger into the cache entry.** Rejected: a storage parser
+   should not own logging, and it does not know the storage key.
+
 ## Decisions
 
 - **Shared parser module.** Move `parse-utils.ts` and its unit test to the core
@@ -137,12 +158,11 @@ StorageValue` from `src/platform/adapter.ts`. A storage value is a string or a
   `isStorageValue` accepts it. An invalid value or an absent `newValue` removes
   the key from the snapshot, so config falls back to its default instead of
   keeping a stale value. Visual setting keys still trigger `redecorate`.
-- **Cache parser.** `CacheEntry.fromJSON(raw: unknown): CacheEntry | undefined`
-  handles a non-string storage value and a `JSON.parse` failure by returning
-  `undefined`. It then calls a local `parseCacheEntry` that uses
-  `assertRecord`, `requiredString`, `optionalString`, and `optionalNumber` and
-  throws only `ParseError` for invalid data. `fromJSON` catches `ParseError` and
-  returns `undefined`; any other error propagates.
+- **Cache parser.** `CacheEntry.fromJSON(raw: unknown): CacheEntry` throws
+  `ParseError` for a non-string storage value. It calls the local
+  `parseCacheEntry` that uses `assertRecord`, `requiredString`, `optionalString`,
+  and `optionalNumber`, and lets `JSON.parse`'s `SyntaxError` and the parser's
+  `ParseError` propagate. Any other error also propagates.
 - **Cache entry shape.** The parser requires a non-array object. Unknown keys
   are ignored, matching the API parsers. `displayTitle` must be a non-empty
   string, `imdbId` a string or null, `expires` a finite number or null, and
@@ -160,16 +180,19 @@ StorageValue` from `src/platform/adapter.ts`. A storage value is a string or a
   cache path contains no assertion. `Title.fromCacheJSON` loses its last
   production caller and is removed with its tests. `Title.toCacheJSON` and
   `Title` normalization stay unchanged.
-- **Cache read.** `CacheManager.read` treats `undefined` as a plain miss. Any
-  other rejected value logs the existing `Cache entry corrupt, treating as
-miss` warning, deletes the key best-effort, and returns `undefined`. A failed
-  delete is logged at debug level and does not throw.
+- **Cache read.** `CacheManager.read` treats `undefined` as a plain miss. It
+  catches only `ParseError` and `SyntaxError` from the parser, logs the existing
+  `Cache entry corrupt, treating as miss` warning with `{ key, displayTitle,
+error }`, deletes the key best-effort, and returns `undefined`. Any other
+  error propagates. A failed delete is logged at debug level and does not
+  throw.
 - **Entry limit.** An entry with no `data` is invalid. Cache hits always have a
   serialized `Title` payload, including the empty object written for a
   not-found title.
 - **Tests.** Cover truncated JSON, non-object JSON, missing `displayTitle`,
   wrong-typed entry and title fields, the existing legacy null entry, invalid
-  storage values, and a failing delete during read. Replace the cache test that
+  storage values, and a failing delete during read. Assert the logged error
+  names the failing field or is a `SyntaxError`. Replace the cache test that
   asserts an unknown `rating` field is a miss with one that asserts the payload
   is rebuilt from the known keys. Cover the removed `Title.fromCacheJSON` cases
   in the cache parser tests. Update cache mock presets and `ApiClientManager` tests
@@ -188,6 +211,9 @@ src/platform/webextension.ts src/targets/extension/content.ts --rule
 - `rg "core/api/parse-utils|api/parse-utils" src tests` finds nothing.
 - A corrupt entry read and a failed cleanup both resolve to `undefined` without
   rejecting.
+- A corrupt entry read logs the parser error and deletes the key.
+- A truncated JSON entry logs a `SyntaxError` and deletes the key.
+- An error that is not `ParseError` or `SyntaxError` still propagates.
 - A `storage.onChanged` event with a wrong-typed value leaves a valid
   configuration state and does not throw.
 - `rg "fromCacheJSON" src` finds nothing, and no cache path contains a type
@@ -203,3 +229,5 @@ src/platform/webextension.ts src/targets/extension/content.ts --rule
   dedicated file.
 - Whether the content listener test asserts the invalid key is removed or only
   that the snapshot remains valid.
+- Whether the corrupt-read test asserts the whole error object or only its
+  message.
