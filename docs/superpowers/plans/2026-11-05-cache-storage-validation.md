@@ -4,11 +4,19 @@
 
 **Goal:** Validate cache and platform storage payloads at their boundaries so corrupt data becomes a cache miss or an ignored setting instead of an exception or a partially built entry.
 
-**Architecture:** Move the generic throwing readers to `src/core/parse-utils.ts`, add a shared `isStorageValue` guard, parse cache entries with those readers while catching only `ParseError`, and narrow WebExtension storage, background, and content-script payloads with guards.
+**Architecture:** Move the generic throwing readers to `src/core/parse-utils.ts`, add a shared `isStorageValue` guard, rebuild cached title payloads as typed `TitleData` the same way API responses are parsed, and narrow WebExtension storage, background, and content-script payloads with guards.
 
 **Tech Stack:** TypeScript (ES2022, ESM), Vitest, ESLint, Rollup.
 
 **Spec:** `docs/superpowers/specs/2026-11-05-cache-storage-validation-design.md`
+
+## Revision: cache entry parser alignment (2026-11-05)
+
+The first pass validated the cached title payload in place: it called the
+readers for their side effects, rejected unknown keys, kept the raw payload, and
+cast it in `Title.fromCacheJSON`. Review replaced that with the API parser shape.
+Task 3 is kept as the record of the first pass; Tasks 6 to 8 supersede it. The
+Review Focus and Final Checklist describe the merged result.
 
 ## Global Constraints
 
@@ -26,7 +34,7 @@
 
 - A cache value that is valid JSON but not an object, such as `null`, `[]`, or `"text"`, must be a miss rather than a `TypeError`.
 - A cached `Title` field with the wrong type, such as a string rating, must be a miss rather than a silently normalized hit.
-- A legacy cache shape with a nested `displayTitle` or `rating` field must be a miss rather than a partially populated `Title`.
+- An entry with unknown keys and valid known keys must read back with only the known keys, and `getTitle()` must always return a `Title` using the envelope `displayTitle`.
 - A failed delete of a corrupt entry must still leave the read resolving to `undefined`.
 - A wrong-typed `storage.onChanged` value must not leave stale config in the snapshot and must not throw.
 
@@ -251,6 +259,9 @@ git commit -m "refactor(platform): validate storage and background payloads"
 ---
 
 ### Task 3: Validate cache entries and delete corrupt reads
+
+> Superseded by Task 6. This task records the first pass, which validated the
+> payload in place and kept the late cast. Its commit stays in history.
 
 **Files:**
 
@@ -543,11 +554,335 @@ git commit -m "docs(cache): tick the storage validation plan"
 
 ---
 
+### Task 6: Rebuild cached title payloads as `TitleData`
+
+> Supersedes the in-place parser in Task 3.
+
+**Files:**
+
+- Modify: `src/core/cache/cache-entry.ts`
+- Modify: `src/core/api-manager.ts:39`
+- Modify: `tests/mocks/cache.ts`
+- Modify: `tests/mocks/title.ts`
+- Test: `tests/unit/core/cache/cache.test.ts`
+- Test: `tests/unit/core/api-manager.test.ts`
+
+**Interfaces:**
+
+- Consumes: `assertRecord`, `optionalNumber`, `optionalString`, `requiredString`, and `ParseError` from `src/core/parse-utils.ts`; `Title` and `TitleData` from `src/core/title.ts`.
+- Produces:
+    - `CacheEntry(displayTitle: string, imdbId: string | undefined, data: TitleData, expires: number | undefined)`
+    - `CacheEntry.getTitle(): Title`
+    - `CacheEntry.toJSON(): { displayTitle: string; imdbId: string | undefined; data: TitleData; expires: number | undefined }`
+    - Module-private `parseTitleData(raw: unknown): TitleData`
+
+- [x] **Step 1: Write the failing cache tests**
+
+In `tests/unit/core/cache/cache.test.ts`, add after the miss-table tests:
+
+```ts
+it('ignores unknown entry and title fields', async () => {
+    adapter.storageGet.mockResolvedValue(
+        JSON.stringify({
+            displayTitle: 'Cached Movie',
+            imdbId: 'tt456',
+            data: { apiTitle: 'Cached Movie', imdbRating: 7.5, rating: 9.9, extra: true },
+            expires: Date.now() + 10000,
+            unknownEntryField: 'ignored',
+        })
+    );
+
+    const entry = await cacheManager.read('Cached Movie');
+
+    expect(entry).toBeInstanceOf(CacheEntry);
+    expect(entry!.getTitle().imdbRating).toBe(7.5);
+    expect(entry!.toJSON().data).not.toHaveProperty('rating');
+    expect(entry!.toJSON().data).not.toHaveProperty('extra');
+});
+
+it('returns a Title for an entry with empty title data', async () => {
+    adapter.storageGet.mockResolvedValue(
+        JSON.stringify({ displayTitle: 'Empty Movie', data: {}, expires: Date.now() + 10000 })
+    );
+
+    const entry = await cacheManager.read('Empty Movie');
+
+    expect(entry!.getTitle()).toBeInstanceOf(Title);
+    expect(entry!.getTitle().displayTitle).toBe('Empty Movie');
+});
+
+it('keeps every known title field', async () => {
+    adapter.storageGet.mockResolvedValue(
+        JSON.stringify({
+            displayTitle: 'Full Movie',
+            imdbId: 'tt1',
+            data: {
+                apiTitle: 'Full Movie',
+                imdbId: 'tt1',
+                year: 2020,
+                imdbRating: 7.5,
+                imdbVotes: 1000,
+                rtRating: 90,
+                mcRating: 80,
+                source: 'omdb',
+                type: 'movie',
+            },
+            expires: Date.now() + 10000,
+        })
+    );
+
+    const title = (await cacheManager.read('Full Movie'))!.getTitle();
+
+    expect(title).toMatchObject({
+        apiTitle: 'Full Movie',
+        imdbId: 'tt1',
+        year: 2020,
+        imdbRating: 7.5,
+        imdbVotes: 1000,
+        rtRating: 90,
+        mcRating: 80,
+        source: 'omdb',
+        type: 'movie',
+    });
+});
+```
+
+Remove `['a legacy rating field', { displayTitle: 'Corrupt', data: { rating: 7.5 } }]` from the miss table. Keep the string-rating, missing-data, and null-data cases. Add array, string, and number data cases:
+
+```ts
+['an array data payload', { displayTitle: 'Corrupt', data: [] }],
+['a string data payload', { displayTitle: 'Corrupt', data: 'text' }],
+['a number data payload', { displayTitle: 'Corrupt', data: 42 }],
+```
+
+- [x] **Step 2: Run the cache tests to verify they fail**
+
+Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
+
+Expected: the unknown-key test fails because the current parser rejects unknown keys. The empty-data test passes and stays as a regression pin.
+
+- [x] **Step 3: Implement the payload parser and tighten the entry type**
+
+In `src/core/cache/cache-entry.ts`:
+
+- Remove `CACHE_ENTRY_KEYS`, `TITLE_STRING_KEYS`, `TITLE_NUMBER_KEYS`, `TITLE_DATA_KEYS`, and `assertOnlyKeys`.
+- Import `type TitleData` alongside `Title`.
+- Change the constructor and `#data` to `TitleData`, and update their JSDoc to say the payload is a validated title without `displayTitle`.
+- Change `toJSON()` to return `data: TitleData`.
+- Replace `getTitle()` with:
+
+```ts
+getTitle(): Title {
+    return new Title({ ...this.#data, displayTitle: this.#displayTitle });
+}
+```
+
+- Replace `parseCacheEntry` with:
+
+```ts
+function parseCacheEntry(value: unknown): CacheEntry {
+    assertRecord(value);
+    return new CacheEntry(
+        requiredString(value, 'displayTitle'),
+        optionalString(value, 'imdbId'),
+        parseTitleData(value['data']),
+        optionalNumber(value, 'expires')
+    );
+}
+```
+
+- Add:
+
+```ts
+function parseTitleData(raw: unknown): TitleData {
+    assertRecord(raw);
+    return {
+        apiTitle: optionalString(raw, 'apiTitle'),
+        imdbId: optionalString(raw, 'imdbId'),
+        year: optionalNumber(raw, 'year'),
+        imdbRating: optionalNumber(raw, 'imdbRating'),
+        imdbVotes: optionalNumber(raw, 'imdbVotes'),
+        rtRating: optionalNumber(raw, 'rtRating'),
+        mcRating: optionalNumber(raw, 'mcRating'),
+        source: optionalString(raw, 'source'),
+        type: optionalString(raw, 'type'),
+    };
+}
+```
+
+- Update the `fromJSON` JSDoc: unknown fields are dropped, and missing required or wrong-typed fields return `undefined`.
+
+- [x] **Step 4: Run the cache tests to verify they pass**
+
+Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
+
+Expected: PASS.
+
+- [x] **Step 5: Fix the type ripple**
+
+- `src/core/api-manager.ts`: change `const titleObj: Title | undefined = entry.getTitle();` to `const titleObj: Title = entry.getTitle();` and drop `titleObj &&` from the cache-hit condition.
+- `tests/mocks/title.ts`: add `const emptyTitleData = buildTitle().build().toCacheJSON();` and export it alongside `buildTitle`.
+- `tests/mocks/cache.ts`: import `emptyTitleData`. Make `withData` and the stored `data` field required `TitleData`, initialize the default `data` with `emptyTitleData`, and change the `.withData(undefined)` presets to `.withData(emptyTitleData)`.
+- `tests/unit/core/api-manager.test.ts`: import `emptyTitleData`. Change `.withData(undefined)` to `.withData(emptyTitleData)`. Change the local `expiredEntry` and `invalidEntry` objects from `data: undefined` to `data: emptyTitleData`, and rename `invalidEntry` to `emptyEntry`. Rename the test "should use short-circuit fetch for non-expired entry with imdbId but invalid data" to "... but empty title data".
+- `tests/unit/core/cache/cache.test.ts`: rewrite "should treat an entry without title data as a cache miss" to pass raw JSON without a `data` key instead of building an entry with `withData(undefined)`:
+
+```ts
+adapter.storageGet.mockResolvedValue(JSON.stringify({ displayTitle: 'Missing Data', expires: Date.now() + 10000 }));
+```
+
+- [x] **Step 6: Run type-check and the affected tests**
+
+Run: `npm run type-check`
+
+Expected: PASS.
+
+Run: `npx vitest run tests/unit/core/cache tests/unit/core/api-manager.test.ts`
+
+Expected: PASS.
+
+- [x] **Step 7: Commit**
+
+```bash
+git add src/core/cache/cache-entry.ts src/core/api-manager.ts \
+  tests/mocks/cache.ts tests/mocks/title.ts \
+  tests/unit/core/cache/cache.test.ts tests/unit/core/api-manager.test.ts
+git commit -m "refactor(cache): rebuild cached title payloads as typed data"
+```
+
+---
+
+### Task 7: Remove `Title.fromCacheJSON`
+
+**Files:**
+
+- Modify: `src/core/title.ts:72-84`
+- Modify: `tests/unit/core/title.test.ts`
+- Modify: `tests/unit/core/api/omdb-api-client.test.ts:422-425`
+
+**Interfaces:**
+
+- Consumes: the `CacheEntry` changes from Task 6, which remove the last production caller.
+- Produces: no `fromCacheJSON` symbol and no assertion in the cache path.
+
+- [x] **Step 1: Replace the remaining test caller**
+
+In `tests/unit/core/api/omdb-api-client.test.ts`, replace:
+
+```ts
+const legacyCachedTitle = Title.fromCacheJSON(
+    { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
+    'Test'
+)!;
+```
+
+with:
+
+```ts
+const cachedTitle = new Title({ displayTitle: 'Test', imdbId: 'tt123' });
+```
+
+Rename the test to "should fetch details for a cached title without an apiTitle". Remove `TitleData` from the `title` import if it is no longer used.
+
+- [x] **Step 2: Delete the method**
+
+In `src/core/title.ts`, delete `static fromCacheJSON` and its JSDoc. Leave `toCacheJSON`, `TitleData`, and constructor normalization unchanged.
+
+- [x] **Step 3: Delete its tests**
+
+In `tests/unit/core/title.test.ts`:
+
+- Delete the `describe('fromCacheJSON creation', ...)` block.
+- Delete `it('should round-trip through fromCacheJSON', ...)` inside `describe('type field')`.
+- Delete `it('should reconstruct Title with displayTitle from fromCacheJSON', ...)` near the end.
+- Delete the `emptyTitleData` constant and the `TitleData` import if they become unused. Keep `TitleOptions`.
+
+- [x] **Step 4: Verify the symbol is gone**
+
+Run: `rg "fromCacheJSON" src tests`
+
+Expected: no output.
+
+Run: `npm run type-check`
+
+Expected: PASS.
+
+- [x] **Step 5: Run the affected tests**
+
+Run: `npx vitest run tests/unit/core/title.test.ts tests/unit/core/api/omdb-api-client.test.ts`
+
+Expected: PASS.
+
+- [x] **Step 6: Commit**
+
+```bash
+git add src/core/title.ts tests/unit/core/title.test.ts tests/unit/core/api/omdb-api-client.test.ts
+git commit -m "refactor(cache): remove the unused cache JSON hydration helper"
+```
+
+---
+
+### Task 8: Verify the revised change
+
+**Files:**
+
+- Modify: `docs/superpowers/plans/2026-11-05-cache-storage-validation.md` only to tick completed steps.
+- Delete: `docs/superpowers/plans/2026-11-05-cache-entry-parser-alignment.md`
+
+**Interfaces:**
+
+- Consumes: Tasks 6 and 7.
+- Produces: a verified branch with one plan document.
+
+- [x] **Step 1: Verify no removed symbols remain**
+
+Run: `rg "fromCacheJSON|core/api/parse-utils|api/parse-utils" src tests`
+
+Expected: no output.
+
+- [x] **Step 2: Verify the cache files are assertion-free**
+
+Run:
+
+```bash
+npx eslint src/core/cache/cache-entry.ts src/core/cache/cache-manager.ts \
+  --rule '{"@typescript-eslint/no-unsafe-type-assertion":"error"}'
+```
+
+Expected: no findings.
+
+- [x] **Step 3: Run the full local check**
+
+Run:
+
+```bash
+npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage
+```
+
+Expected: all commands pass and coverage stays at or above the configured thresholds.
+
+- [x] **Step 4: Review the diff**
+
+Run: `git diff origin/main --stat && git diff origin/main -- src/core/cache src/core/title.ts src/core/api-manager.ts tests`
+
+Expected: only the parser, the entry type, `api-manager`, the removed helper, mocks, and affected tests. No `dist/` or `coverage/` changes.
+
+- [x] **Step 5: Merge the plans and commit**
+
+Remove the separate parser plan now that its tasks live here:
+
+```bash
+git rm docs/superpowers/plans/2026-11-05-cache-entry-parser-alignment.md
+git add docs/superpowers/plans/2026-11-05-cache-storage-validation.md
+git commit -m "docs(cache): merge the parser alignment into the storage validation plan"
+```
+
+---
+
 ## Final Checklist
 
 - [x] `CacheEntry.fromJSON` accepts `unknown` and returns `CacheEntry | undefined`.
 - [x] A non-string storage value and malformed JSON both become a miss.
-- [x] An entry with missing, wrong-typed, or legacy fields becomes a miss.
+- [x] An entry with missing required or wrong-typed fields becomes a miss; unknown fields are dropped.
 - [x] The legacy null entry remains accepted.
 - [x] A corrupt entry is deleted best-effort; a failed delete does not reject the read.
 - [x] `WebExtensionAdapter.storageGet` and `storageGetAll` return only valid `StorageValue` entries.
@@ -555,3 +890,7 @@ git commit -m "docs(cache): tick the storage validation plan"
 - [x] The content bootstrap uses `adapter.storageGetAll()` and the listener ignores invalid values.
 - [x] `parse-utils.ts` lives at `src/core/parse-utils.ts` and every import points there.
 - [x] The full local check and the targeted rule check pass.
+- [x] `parseTitleData` rebuilds the title payload from known keys and drops unknown ones.
+- [x] `CacheEntry.#data` is `TitleData` and `getTitle()` returns a `Title` with no assertion.
+- [x] `Title.fromCacheJSON` is removed and no cache path casts.
+- [x] The parser alignment is recorded in this plan; the separate plan file is removed.
