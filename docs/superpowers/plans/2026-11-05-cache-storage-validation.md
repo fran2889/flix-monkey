@@ -895,11 +895,12 @@ git commit -m "docs(cache): merge the parser alignment into the storage validati
 
 - Modify: `src/core/cache/cache-entry.ts`
 - Modify: `src/core/cache/cache-manager.ts`
+- Modify: `src/core/parse-utils.ts`
 - Test: `tests/unit/core/cache/cache.test.ts`
 
 **Interfaces:**
 
-- Consumes: `ParseError` from `src/core/parse-utils.ts`.
+- Consumes: `assertRecord` and `ParseError` from `src/core/parse-utils.ts`.
 - Produces:
     - `CacheEntry.fromJSON(raw: unknown): CacheEntry`, throwing `ParseError` for a non-string value and `SyntaxError` or `ParseError` for an invalid payload.
     - `CacheManager.read` logging `{ key, displayTitle, error }` before deleting a corrupt entry.
@@ -1014,12 +1015,20 @@ git add docs/superpowers/specs/2026-11-05-cache-storage-validation-design.md doc
 git commit -m "docs(cache): record corrupt cache diagnostics"
 ```
 
+- [x] **Step 8: Label the payload in the parse error (review fix)**
+
+Add an optional label to `assertRecord` and pass `'data'` from `parseTitleData`
+so a non-object payload logs `expected an object at "data"`. Cover the message in
+the parser-detail test and keep the unlabelled message unchanged for API
+callers. Committed as `fix(cache): name the data field in cache parse errors`.
+
 ---
 
 ## Final Checklist
 
 - [x] `CacheEntry.fromJSON` accepts `unknown`, returns `CacheEntry`, and throws `ParseError` or `SyntaxError` for corrupt data.
 - [x] The corrupt-entry warning includes the parser error.
+- [x] A non-object title payload names `data` in the parse error.
 - [x] Errors that are neither `ParseError` nor `SyntaxError` still propagate.
 - [x] A non-string storage value and malformed JSON both become a miss.
 - [x] An entry with missing required or wrong-typed fields becomes a miss; unknown fields are dropped.

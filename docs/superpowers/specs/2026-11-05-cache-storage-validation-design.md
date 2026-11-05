@@ -167,6 +167,10 @@ StorageValue` from `src/platform/adapter.ts`. A storage value is a string or a
   are ignored, matching the API parsers. `displayTitle` must be a non-empty
   string, `imdbId` a string or null, `expires` a finite number or null, and
   `data` a present, non-array object.
+- **Payload error label.** `assertRecord` accepts an optional label, and the
+  cache parser passes `data`, so a non-object payload logs `expected an object
+at "data"` rather than an anonymous message. API callers keep the unlabelled
+  message.
 - **Title payload parser.** A module-level `parseTitleData(raw): TitleData`
   rebuilds a fresh payload from the known keys, using the reader return values
   so the compiler enforces the `TitleData` shape. Optional string fields must
