@@ -500,13 +500,13 @@ git commit -m "refactor(extension): validate content storage boundaries"
 - Consumes: all earlier tasks.
 - Produces: a verified branch ready for review.
 
-- [ ] **Step 1: Verify no old parser imports remain**
+- [x] **Step 1: Verify no old parser imports remain**
 
 Run: `rg "core/api/parse-utils|api/parse-utils" src tests`
 
 Expected: no output.
 
-- [ ] **Step 2: Verify the boundary files satisfy the disabled rule**
+- [x] **Step 2: Verify the boundary files satisfy the disabled rule**
 
 Run:
 
@@ -516,7 +516,7 @@ npx eslint src/core/cache/cache-entry.ts src/core/cache/cache-manager.ts src/pla
 
 Expected: no findings.
 
-- [ ] **Step 3: Run the full local check**
+- [x] **Step 3: Run the full local check**
 
 Run:
 
@@ -526,13 +526,13 @@ npm run type-check && npm run lint && npm run format:check && npm run audit && n
 
 Expected: all commands pass and coverage stays at or above the configured thresholds.
 
-- [ ] **Step 4: Review the final diff**
+- [x] **Step 4: Review the final diff**
 
 Run: `git diff origin/main --stat && git diff origin/main`
 
 Expected: only the four boundary files, `src/platform/adapter.ts`, `src/core/parse-utils.ts`, the moved test, and the affected tests and docs. No `dist/` or `coverage/` changes.
 
-- [ ] **Step 5: Commit any remaining documentation updates**
+- [x] **Step 5: Commit any remaining documentation updates**
 
 If ticking this plan changed the file, commit it:
 
@@ -545,13 +545,13 @@ git commit -m "docs(cache): tick the storage validation plan"
 
 ## Final Checklist
 
-- [ ] `CacheEntry.fromJSON` accepts `unknown` and returns `CacheEntry | undefined`.
-- [ ] A non-string storage value and malformed JSON both become a miss.
-- [ ] An entry with missing, wrong-typed, or legacy fields becomes a miss.
-- [ ] The legacy null entry remains accepted.
-- [ ] A corrupt entry is deleted best-effort; a failed delete does not reject the read.
-- [ ] `WebExtensionAdapter.storageGet` and `storageGetAll` return only valid `StorageValue` entries.
-- [ ] `httpFetch` narrows the background response without an assertion.
-- [ ] The content bootstrap uses `adapter.storageGetAll()` and the listener ignores invalid values.
-- [ ] `parse-utils.ts` lives at `src/core/parse-utils.ts` and every import points there.
-- [ ] The full local check and the targeted rule check pass.
+- [x] `CacheEntry.fromJSON` accepts `unknown` and returns `CacheEntry | undefined`.
+- [x] A non-string storage value and malformed JSON both become a miss.
+- [x] An entry with missing, wrong-typed, or legacy fields becomes a miss.
+- [x] The legacy null entry remains accepted.
+- [x] A corrupt entry is deleted best-effort; a failed delete does not reject the read.
+- [x] `WebExtensionAdapter.storageGet` and `storageGetAll` return only valid `StorageValue` entries.
+- [x] `httpFetch` narrows the background response without an assertion.
+- [x] The content bootstrap uses `adapter.storageGetAll()` and the listener ignores invalid values.
+- [x] `parse-utils.ts` lives at `src/core/parse-utils.ts` and every import points there.
+- [x] The full local check and the targeted rule check pass.
