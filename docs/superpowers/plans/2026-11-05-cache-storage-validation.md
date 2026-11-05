@@ -49,14 +49,14 @@
 - Consumes: nothing.
 - Produces: `ParseError`, `assertRecord`, `requiredString`, `optionalString`, `optionalNumber`, `optionalArray`, `parseValidItems`, and `parseRequiredItems`, all exported from `src/core/parse-utils.ts`. `optionalNumber` now rejects non-finite numbers.
 
-- [ ] **Step 1: Move the module and its test**
+- [x] **Step 1: Move the module and its test**
 
 ```bash
 git mv src/core/api/parse-utils.ts src/core/parse-utils.ts
 git mv tests/unit/core/api/parse-utils.test.ts tests/unit/core/parse-utils.test.ts
 ```
 
-- [ ] **Step 2: Update imports**
+- [x] **Step 2: Update imports**
 
 In the four API clients and `src/core/api/base-api-client.ts`, change `'./parse-utils'` to `'../parse-utils'`.
 
@@ -64,11 +64,11 @@ In `tests/unit/core/api/base-api-client.test.ts`, change `'../../../../src/core/
 
 In the moved test, change the import to `'../../../src/core/parse-utils'`.
 
-- [ ] **Step 3: Broaden the parser wording**
+- [x] **Step 3: Broaden the parser wording**
 
 In `src/core/parse-utils.ts`, change the `ParseError` description from "untrusted API response" to "untrusted input". Keep the reader behavior unchanged except for the finite-number check below.
 
-- [ ] **Step 4: Write the failing non-finite number test**
+- [x] **Step 4: Write the failing non-finite number test**
 
 Add to the `optionalNumber` block in `tests/unit/core/parse-utils.test.ts`:
 
@@ -78,13 +78,13 @@ it.each([Infinity, -Infinity, NaN])('throws for the non-finite number %s', value
 });
 ```
 
-- [ ] **Step 5: Run the test to verify it fails**
+- [x] **Step 5: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/parse-utils.test.ts`
 
 Expected: FAIL because `optionalNumber` currently accepts non-finite numbers.
 
-- [ ] **Step 6: Implement the finite-number check**
+- [x] **Step 6: Implement the finite-number check**
 
 Change the wrong-type condition in `optionalNumber` to:
 
@@ -96,7 +96,7 @@ if (typeof value !== 'number' || !Number.isFinite(value)) {
 
 Update its JSDoc to say it throws for a wrong type or a non-finite number.
 
-- [ ] **Step 7: Run the parser and API tests**
+- [x] **Step 7: Run the parser and API tests**
 
 Run: `npx vitest run tests/unit/core/parse-utils.test.ts tests/unit/core/api`
 
@@ -106,7 +106,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/core/parse-utils.ts src/core/api tests/unit/core/parse-utils.test.ts tests/unit/core/api

@@ -9,9 +9,9 @@ import { type ApiSourceType, CLIENT_DISABLE_DURATION } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
+import { ParseError } from '../parse-utils';
 import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
-import { ParseError } from './parse-utils';
 
 /**
  * Dependencies shared by every API client.

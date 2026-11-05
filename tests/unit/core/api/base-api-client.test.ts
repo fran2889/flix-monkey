@@ -6,11 +6,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BaseApiClient } from '../../../../src/core/api/base-api-client';
 import { type ApiClientDeps, XmdbApiClient } from '../../../../src/core/api/index';
-import { ParseError } from '../../../../src/core/api/parse-utils';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
+import { ParseError } from '../../../../src/core/parse-utils';
 import type { RequestQueue } from '../../../../src/core/request-queue';
 import type { Title } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
