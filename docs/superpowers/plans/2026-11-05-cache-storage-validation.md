@@ -134,7 +134,7 @@ git commit -m "refactor(core): share untrusted input parser helpers"
 
 - Internal to `webextension.ts`: `isRecord(value: unknown): value is Record<string, unknown>` and `isFetchResponse(value: unknown): value is FetchResponse`.
 
-- [ ] **Step 1: Write the failing storage tests**
+- [x] **Step 1: Write the failing storage tests**
 
 Add to `tests/unit/platform/webextension.test.ts`:
 
@@ -180,13 +180,13 @@ it('httpFetch should reject a non-object background response', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/platform/webextension.test.ts`
 
 Expected: FAIL because wrong-typed values are currently returned and arrays are asserted to `FetchResponse`.
 
-- [ ] **Step 3: Add the shared storage guard**
+- [x] **Step 3: Add the shared storage guard**
 
 In `src/platform/adapter.ts`, after the `StorageValue` type, add:
 
@@ -202,7 +202,7 @@ export function isStorageValue(value: unknown): value is StorageValue {
 }
 ```
 
-- [ ] **Step 4: Narrow the adapter reads and the background response**
+- [x] **Step 4: Narrow the adapter reads and the background response**
 
 In `src/platform/webextension.ts`:
 
@@ -231,7 +231,7 @@ function isFetchResponse(value: unknown): value is FetchResponse {
 }
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/platform/webextension.test.ts`
 
@@ -241,7 +241,7 @@ Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/platform/adapter.ts src/platform/webextension.ts tests/unit/platform/webextension.test.ts

@@ -7,7 +7,7 @@ import browser from 'webextension-polyfill';
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
 import { FlixMonkeyError } from '../core/utils/index';
 import type { HttpFetchOptions, StorageValue } from './adapter';
-import { PlatformAdapter } from './adapter';
+import { isStorageValue, PlatformAdapter } from './adapter';
 
 /**
  * Type for the fetch response from the background service worker.
@@ -54,8 +54,10 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns The stored value, or `undefined` if the key does not exist.
      */
     override async storageGet(key: string): Promise<StorageValue | undefined> {
-        const result = await browser.storage.local.get(key);
-        return (result[key] as StorageValue | undefined) ?? undefined;
+        const result: unknown = await browser.storage.local.get(key);
+        if (!isRecord(result)) return undefined;
+        const value: unknown = result[key];
+        return isStorageValue(value) ? value : undefined;
     }
 
     /**
@@ -65,7 +67,13 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns All stored entries.
      */
     override async storageGetAll(): Promise<Record<string, StorageValue>> {
-        return (await browser.storage.local.get(null)) as Record<string, StorageValue>;
+        const stored: unknown = await browser.storage.local.get(null);
+        if (!isRecord(stored)) return {};
+        const values: Record<string, StorageValue> = {};
+        for (const [key, value] of Object.entries(stored)) {
+            if (isStorageValue(value)) values[key] = value;
+        }
+        return values;
     }
 
     /**
@@ -134,8 +142,8 @@ export class WebExtensionAdapter extends PlatformAdapter {
         });
 
         try {
-            const response = (await Promise.race([fetchPromise, timeoutPromise])) as FetchResponse;
-            if (!response) {
+            const response: unknown = await Promise.race([fetchPromise, timeoutPromise]);
+            if (!isFetchResponse(response)) {
                 throw new FlixMonkeyError('empty background response', url);
             }
             if (response.error) {
@@ -161,4 +169,20 @@ export class WebExtensionAdapter extends PlatformAdapter {
         }
         return this.#configData[key];
     }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFetchResponse(value: unknown): value is FetchResponse {
+    if (!isRecord(value)) return false;
+    const error = value['error'];
+    const status = value['status'];
+    const body = value['body'];
+    return (
+        (error === undefined || typeof error === 'string') &&
+        (status === undefined || typeof status === 'number') &&
+        (body === undefined || typeof body === 'string')
+    );
 }
