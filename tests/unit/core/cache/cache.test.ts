@@ -221,6 +221,30 @@ describe('CacheManager', () => {
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:some_title');
     });
 
+    it('treats a non-string storage value as a corrupt entry', async () => {
+        adapter.storageGet.mockResolvedValue(true);
+
+        await expect(cacheManager.read('Some Title')).resolves.toBeUndefined();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+            key: 'fmc:some_title',
+            displayTitle: 'Some Title',
+            error: expect.objectContaining({ message: 'expected serialized JSON string' }),
+        });
+        expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:some_title');
+    });
+
+    it('propagates errors that are not parse failures', async () => {
+        adapter.storageGet.mockResolvedValue('{}');
+        vi.spyOn(CacheEntry, 'fromJSON').mockImplementationOnce(() => {
+            throw new TypeError('unexpected parser error');
+        });
+
+        await expect(cacheManager.read('Some Title')).rejects.toThrow('unexpected parser error');
+
+        expect(adapter.storageDelete).not.toHaveBeenCalled();
+    });
+
     it.each([
         [
             'a wrong-typed field',
