@@ -56,6 +56,11 @@ describe('WebExtensionAdapter', () => {
         await expect(adapter.storageGet('key')).resolves.toBeUndefined();
     });
 
+    it('storageGet should return undefined when storage.local.get is not a record', async () => {
+        mockedBrowser.storage.local.get.mockResolvedValue(null as unknown as Record<string, unknown>);
+        await expect(adapter.storageGet('key')).resolves.toBeUndefined();
+    });
+
     it('storageGetAll should call storage.local.get(null)', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
         const result = await adapter.storageGetAll();
