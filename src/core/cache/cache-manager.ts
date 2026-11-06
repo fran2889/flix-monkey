@@ -63,16 +63,16 @@ export class CacheManager implements CacheStore {
         }
     }
 
+    #getCacheKey(displayTitle: string): string {
+        return `${this.#prefix}${slugify(displayTitle)}`;
+    }
+
     async #deleteInvalid(key: string): Promise<void> {
         try {
             await this.#adapter.storageDelete(key);
         } catch (error: unknown) {
             this.#logger.debug('Failed to delete corrupt cache entry', { key, error });
         }
-    }
-
-    #getCacheKey(displayTitle: string): string {
-        return `${this.#prefix}${slugify(displayTitle)}`;
     }
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {
