@@ -190,7 +190,7 @@ describe('CacheManager', () => {
         adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
         const result = await cacheManager.read('Indefinite Title');
         expect(result).not.toBeUndefined();
-        expect(result!.getTitle()?.displayTitle).toBe('Indefinite Title');
+        expect(result!.getTitle().displayTitle).toBe('Indefinite Title');
     });
 
     it('treats a pre-migration entry with null expiry as never expiring', async () => {
@@ -407,7 +407,7 @@ describe('CacheManager', () => {
         expect(result).not.toBeUndefined();
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result!.imdbId).toBe('tt123');
-        expect(result!.getTitle()?.imdbRating).toBe(8.0);
+        expect(result!.getTitle().imdbRating).toBe(8.0);
     });
 
     it('should produce the same cache key for titles that differ only by punctuation', async () => {
@@ -461,7 +461,7 @@ describe('CacheManager', () => {
         expect(result).not.toBeUndefined();
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result!.getTitle()).toBeInstanceOf(Title);
-        expect(result!.getTitle()?.displayTitle).toBe('Cached Movie');
+        expect(result!.getTitle().displayTitle).toBe('Cached Movie');
         expect(result!.imdbId).toBe('tt456');
         expect(result!.isExpired).toBe(false);
     });
@@ -490,7 +490,7 @@ describe('CacheManager', () => {
         expect(result).toBeInstanceOf(CacheEntry);
         expect(result!.isExpired).toBe(true);
         expect(result!.imdbId).toBe('tt789');
-        expect(result!.getTitle()?.displayTitle).toBe('Expired Movie');
+        expect(result!.getTitle().displayTitle).toBe('Expired Movie');
     });
 
     it('should return undefined for cache miss', async () => {
