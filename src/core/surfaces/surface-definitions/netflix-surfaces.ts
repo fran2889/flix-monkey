@@ -21,6 +21,10 @@ export function extractNetflixMoreLikeThisTitle(element: Element): string | unde
     return alt || undefined;
 }
 
+const containerFromMoreLikeThisArtwork = (element: Element): Element | undefined => {
+    return element.querySelector('.titleCard-imageWrapper') ?? element;
+};
+
 export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
@@ -51,6 +55,15 @@ export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze
         titleSelector: '[data-uia="ranked-card"][aria-label]',
         getTitle: titleFromAttribute('aria-label'),
         getContainer: containerFromClosest('[data-uia="ranked-card"]'),
+        fadeable: true,
+        showFadeToggle: false,
+    }),
+    // Title detail modal "More Like This" recommendations: the tile carries the label and the
+    // artwork wrapper is the badge anchor. Ordinary browse-card fade behavior applies.
+    MORE_LIKE_THIS: Object.freeze({
+        titleSelector: '.moreLikeThis--wrapper .titleCard--container',
+        getTitle: extractNetflixMoreLikeThisTitle,
+        getContainer: containerFromMoreLikeThisArtwork,
         fadeable: true,
         showFadeToggle: false,
     }),

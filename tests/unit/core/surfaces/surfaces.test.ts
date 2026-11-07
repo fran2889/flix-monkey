@@ -11,6 +11,7 @@ import {
     extractNetflixMoreLikeThisTitle,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
+    NetflixSurfaceManager,
     SurfaceManager,
 } from '../../../../src/core/surfaces/index';
 import { buildLogger } from '../../../mocks/logger';
@@ -45,6 +46,7 @@ describe('SurfaceManager', () => {
             closest: () => document.body,
             parentElement: document.body,
             getAttribute: () => null,
+            querySelector: () => null,
         };
         const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         expect(sm.discover({ querySelectorAll: () => [mockEl] } as unknown as Element)).toHaveLength(0);
@@ -70,8 +72,11 @@ describe('SurfaceManager', () => {
             closest: () => null,
             parentElement: fakeParent,
             getAttribute: () => 'Orphan',
+            querySelector: () => null,
         };
-        const results = sm.discover({ querySelectorAll: () => [mockTitleEl] } as unknown as Element);
+        const results = sm.discover({
+            querySelectorAll: (selector: string) => (selector === '.title-card a[aria-label]' ? [mockTitleEl] : []),
+        } as unknown as Element);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
         expect(results[0].container).toBe(fakeParent);
@@ -267,6 +272,71 @@ describe('Netflix More Like This title extraction', () => {
             `)
         ).toBeUndefined();
         expect(extract('<div class="titleCard--container"></div>')).toBeUndefined();
+    });
+});
+
+describe('Netflix More Like This surfaces', () => {
+    function discoverMoreLikeThis(html: string) {
+        document.body.innerHTML = html;
+        return new NetflixSurfaceManager(buildLogger().build()).discover(document.body);
+    }
+
+    it('discovers a tile with browse-card flags and the artwork container', () => {
+        const [surface] = discoverMoreLikeThis(`
+            <div class="moreLikeThis--wrapper">
+                <div class="titleCard--container" aria-label="Caramelo">
+                    <div class="titleCard-imageWrapper"><img alt="Caramelo"></div>
+                </div>
+            </div>
+        `);
+        expect(surface).toMatchObject({ title: 'Caramelo', fadeable: true, showFadeToggle: false });
+        expect(surface.container).toBe(document.querySelector('.titleCard-imageWrapper'));
+    });
+
+    it('discovers a tile from the artwork alt when the label is missing', () => {
+        const [surface] = discoverMoreLikeThis(`
+            <div class="moreLikeThis--wrapper">
+                <div class="titleCard--container">
+                    <div class="titleCard-imageWrapper"><img alt="Alt Only Title"></div>
+                </div>
+            </div>
+        `);
+        expect(surface.title).toBe('Alt Only Title');
+    });
+
+    it('anchors to the tile itself when the image wrapper is missing', () => {
+        const [surface] = discoverMoreLikeThis(`
+            <div class="moreLikeThis--wrapper">
+                <div class="titleCard--container" aria-label="No Wrapper">
+                    <img alt="No Wrapper">
+                </div>
+            </div>
+        `);
+        expect(surface.container).toBe(document.querySelector('.titleCard--container'));
+    });
+
+    it('does not discover a tile without a usable label or alt', () => {
+        expect(
+            discoverMoreLikeThis(`
+                <div class="moreLikeThis--wrapper">
+                    <div class="titleCard--container" aria-label="   ">
+                        <div class="titleCard-imageWrapper"><img alt="   "></div>
+                    </div>
+                </div>
+            `)
+        ).toEqual([]);
+    });
+
+    it('does not discover titleCard--container markup outside the More Like This wrapper', () => {
+        expect(
+            discoverMoreLikeThis(`
+                <div class="previewModal--wrapper detail-modal">
+                    <div class="titleCard--container" aria-label="Hero">
+                        <div class="titleCard-imageWrapper"><img alt="Hero"></div>
+                    </div>
+                </div>
+            `)
+        ).toEqual([]);
     });
 });
 

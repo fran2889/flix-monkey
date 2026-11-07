@@ -207,7 +207,7 @@ git commit -m "feat(surfaces): extract Netflix More Like This titles"
 - Consumes: `extractNetflixMoreLikeThisTitle(element: Element): string | undefined` from Task 1.
 - Produces: `NETFLIX_SURFACES.MORE_LIKE_THIS` and the `NETFLIX_MORE_LIKE_THIS_SECTION` fixture with `name`, `collapsedHtml`, and `expandedHtml`.
 
-- [ ] **Step 1: Add the sanitized section fixture**
+- [x] **Step 1: Add the sanitized section fixture**
 
 In `tests/fixtures/netflix-surfaces.ts`, add this before the default export:
 
@@ -264,7 +264,7 @@ export const NETFLIX_MORE_LIKE_THIS_SECTION: MoreLikeThisSectionFixture = {
 };
 ```
 
-- [ ] **Step 2: Write the failing UI test**
+- [x] **Step 2: Write the failing UI test**
 
 In `tests/ui/netflix.ui.test.ts`, add `expect` to the Vitest import, import `Title`, import the `DiscoveredSurface` type, and import `NETFLIX_MORE_LIKE_THIS_SECTION`:
 
@@ -337,12 +337,12 @@ it('should decorate collapsed and expanded More Like This tiles once', () => {
 });
 ```
 
-- [ ] **Step 3: Run the UI test to verify it fails**
+- [x] **Step 3: Run the UI test to verify it fails**
 
 Run: `npx vitest run tests/ui/netflix.ui.test.ts`
 Expected: FAIL because no More Like This surface is defined, so discovery returns zero tiles.
 
-- [ ] **Step 4: Add the failing unit discovery tests**
+- [x] **Step 4: Add the failing unit discovery tests**
 
 In `tests/unit/core/surfaces/surfaces.test.ts`, add `NetflixSurfaceManager` to the import block, then add:
 
@@ -413,12 +413,12 @@ describe('Netflix More Like This surfaces', () => {
 });
 ```
 
-- [ ] **Step 5: Run the unit tests to verify they fail**
+- [x] **Step 5: Run the unit tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts`
 Expected: FAIL because the More Like This surface is not defined yet.
 
-- [ ] **Step 6: Implement the surface definition**
+- [x] **Step 6: Implement the surface definition**
 
 In `src/core/surfaces/surface-definitions/netflix-surfaces.ts`, add below the import block:
 
@@ -442,12 +442,12 @@ Add the entry after `RANKED_CARD` and before `PREVIEW_MINI`:
     }),
 ```
 
-- [ ] **Step 7: Run the focused tests to verify they pass**
+- [x] **Step 7: Run the focused tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts tests/ui/netflix.ui.test.ts`
 Expected: PASS. The existing fixture suite also confirms that every other Netflix surface still discovers exactly one surface.
 
-- [ ] **Step 8: Update the README feature line**
+- [x] **Step 8: Update the README feature line**
 
 In `README.md`, replace the `Rating Badges` bullet with:
 
@@ -455,12 +455,12 @@ In `README.md`, replace the `Rating Badges` bullet with:
 - **Rating Badges**: View IMDb ratings on titles, title previews, detail pages, and More Like This recommendations. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
 ```
 
-- [ ] **Step 9: Check formatting before committing**
+- [x] **Step 9: Check formatting before committing**
 
 Run: `npm run format:check`
 Expected: PASS. If it fails, run `npm run format` and include the changes in the task commit.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/core/surfaces/surface-definitions/netflix-surfaces.ts tests/fixtures/netflix-surfaces.ts tests/ui/netflix.ui.test.ts tests/unit/core/surfaces/surfaces.test.ts README.md
