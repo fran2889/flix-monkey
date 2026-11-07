@@ -19,7 +19,7 @@ GET https://v3.sg.media-imdb.com/suggestion/titles/x/{query}.json
 - No authentication required.
 - The path segment `x` is a fixed routing prefix.
 - Returns `{ d: [{ id, l, qid, y, yr, ... }] }`.
-- Filter results to `qid` in `['movie', 'tvSeries', 'tvMiniSeries']` — ignore shorts, videos, franchises.
+- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']` — ignore shorts, videos, franchises.
 - Use the first matching result.
 
 ### Ratings: Agregarr Public API
@@ -47,7 +47,7 @@ Extends `BaseApiClient`. Follows the existing search-then-details template metho
 
 1. Lowercase and URI-encode the display title.
 2. Call `queuedFetch` on `https://v3.sg.media-imdb.com/suggestion/titles/x/{encodedTitle}.json`.
-3. Filter `response.d` to entries where `qid` is `movie`, `tvSeries`, or `tvMiniSeries`.
+3. Filter `response.d` to entries where `qid` is `movie`, `tvMovie`, `tvSpecial`, `tvSeries`, or `tvMiniSeries`.
 4. Return the first match or `null`.
 
 ### `getDetails(match, displayTitle)`
