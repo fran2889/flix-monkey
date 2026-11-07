@@ -31,8 +31,9 @@ interface XmdbSearchResponse {
     results?: XmdbSearchResult[] | undefined;
 }
 
-/** Normalized XMDb details response. */
-interface XmdbDetailsResponse {
+/** Normalized XMDb details response for a title that was found. */
+interface XmdbDetailsFound {
+    status: 'found';
     id: string;
     title: string;
     rating?: number | undefined;
@@ -41,6 +42,15 @@ interface XmdbDetailsResponse {
     title_type?: string | undefined;
     vote_count?: number | undefined;
 }
+
+/** Normalized XMDb details response for a title the provider does not have. */
+interface XmdbDetailsNotFound {
+    status: 'not-found';
+    error?: string | undefined;
+}
+
+/** Normalized XMDb details response. */
+type XmdbDetailsResponse = XmdbDetailsFound | XmdbDetailsNotFound;
 
 /**
  * API client for XMDb service that provides comprehensive movie and series data with ratings.
@@ -86,7 +96,7 @@ export class XmdbApiClient extends BaseApiClient {
         }
         const titleResults = results.filter(r => r.type === 'title');
         if (!titleResults.length) {
-            this.logger.info(`No title-type results found in XMDb for "${displayTitle}"`);
+            this.logger.info(`No supported title-type results found in XMDb for "${displayTitle}"`);
             return undefined;
         }
         const match = titleResults[0];
@@ -112,6 +122,11 @@ export class XmdbApiClient extends BaseApiClient {
             `XMDb details for "${searchTitle.displayTitle}" (ID: ${id})`
         );
         if (!details) return undefined;
+        if (details.status === 'not-found') {
+            const message = details.error ? `: ${details.error}` : '';
+            this.logger.info(`No XMDb details found for "${searchTitle.displayTitle}" (ID: ${id})${message}`);
+            return undefined;
+        }
         return titleFromDetailsResponse(searchTitle, details);
     }
 }
@@ -148,13 +163,14 @@ function titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): 
     });
 }
 
-function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined {
+function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse {
     assertRecord(raw);
     const error = optionalString(raw, 'error');
-    if (error) return undefined;
+    if (error) return { status: 'not-found', error };
     // The details endpoint keeps id and sends title: null for a missing title.
-    if (raw['title'] === null) return undefined;
+    if (raw['title'] === null) return { status: 'not-found' };
     return {
+        status: 'found',
         id: requiredString(raw, 'id'),
         title: requiredString(raw, 'title'),
         rating: optionalNumber(raw, 'rating'),
@@ -165,7 +181,7 @@ function parseXmdbDetailsResponse(raw: unknown): XmdbDetailsResponse | undefined
     };
 }
 
-function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsResponse): Title {
+function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsFound): Title {
     const { id, rating, release_year, title, metascore, title_type, vote_count } = details;
     return new Title({
         displayTitle: searchTitle.displayTitle,

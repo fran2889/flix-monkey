@@ -64,7 +64,7 @@ describe('XmdbApiClient', () => {
         const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
         await client.search('Movie 1');
-        expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
+        expect(mockLoggerForTest.info).toHaveBeenCalledWith('No search results found in XMDb for "Movie 1"');
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
@@ -83,7 +83,9 @@ describe('XmdbApiClient', () => {
         const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
         await client.search('Movie 1');
-        expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Movie 1'));
+        expect(mockLoggerForTest.info).toHaveBeenCalledWith(
+            'No supported title-type results found in XMDb for "Movie 1"'
+        );
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
@@ -150,7 +152,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBeUndefined();
     });
 
-    it('should return undefined without a warning when the details response has a null title', async () => {
+    it('should log info when the details response has a null title', async () => {
         const adapter = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',
@@ -166,6 +168,8 @@ describe('XmdbApiClient', () => {
             buildTitle().withImdbId('tt0000000').withDisplayTitle('nonexistent').build()
         );
         expect(result).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No XMDb details found for "nonexistent" (ID: tt0000000)');
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
@@ -212,7 +216,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbId).toBe('tt2');
     });
 
-    it('should return undefined without a warning for an error payload', async () => {
+    it('should log info with the provider message for an error payload', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 'Movie not found' }).build();
         const logger = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter, logger });
@@ -220,7 +224,37 @@ describe('XmdbApiClient', () => {
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
 
         expect(result).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No XMDb details found for "Test" (ID: tt1): Movie not found');
         expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should prefer the provider message when the details response has an error and a null title', async () => {
+        const adapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ id: 'tt1', title: null, error: 'Movie not found' })
+            .build();
+        const logger = buildLogger().build();
+        const client = new XmdbApiClient({ ...deps, adapter, logger });
+
+        await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No XMDb details found for "Test" (ID: tt1): Movie not found');
+        expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log a malformed warning when the details error field is not a string', async () => {
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 42 }).build();
+        const logger = buildLogger().build();
+        const client = new XmdbApiClient({ ...deps, adapter, logger });
+
+        await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+
+        expect(logger.info).not.toHaveBeenCalled();
+        expect(logger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('Malformed XMDb details for "Test"'),
+            expect.anything()
+        );
     });
 
     it.each([
