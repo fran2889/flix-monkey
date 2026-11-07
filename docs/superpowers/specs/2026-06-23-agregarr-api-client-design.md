@@ -19,7 +19,7 @@ GET https://v3.sg.media-imdb.com/suggestion/titles/x/{query}.json
 - No authentication required.
 - The path segment `x` is a fixed routing prefix.
 - Returns `{ d: [{ id, l, qid, y, yr, ... }] }`.
-- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']` — ignore shorts, videos, franchises.
+- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']`; ignore shorts, videos, franchises.
 - Use the first matching result.
 
 ### Ratings: Agregarr Public API

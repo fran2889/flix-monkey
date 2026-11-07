@@ -44,7 +44,7 @@
 - Consumes: `mapAgregarrTitleType(apiValue: string | undefined): TitleTypeType | undefined` and `AGREGARR_TITLE_TYPES: Set<string>` from the existing modules.
 - Produces: `mapAgregarrTitleType('tvMovie')` and `mapAgregarrTitleType('tvSpecial')` return `TitleType.MOVIE`; `AGREGARR_TITLE_TYPES` contains both. No signature changes.
 
-- [ ] **Step 1: Update the mapper tests to expect the new values**
+- [x] **Step 1: Update the mapper tests to expect the new values**
 
 In `tests/unit/core/api/title-type-mappers.test.ts`, replace the `mapAgregarrTitleType` `movie` case with:
 
@@ -65,12 +65,12 @@ it.each(['tvShow', 'Movie', 'series', 'tvShort', 'short', 'videoGame'])(
 );
 ```
 
-- [ ] **Step 2: Run the mapper test to verify it fails**
+- [x] **Step 2: Run the mapper test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/api/title-type-mappers.test.ts`
 Expected: FAIL on `should map tvMovie to MOVIE` and `should map tvSpecial to MOVIE` because the mapper returns `undefined`.
 
-- [ ] **Step 3: Implement the mapper change**
+- [x] **Step 3: Implement the mapper change**
 
 In `src/core/api/title-type-mappers.ts`, change the first branch of `mapAgregarrTitleType` to:
 
@@ -78,12 +78,12 @@ In `src/core/api/title-type-mappers.ts`, change the first branch of `mapAgregarr
 if (apiValue === 'movie' || apiValue === 'tvMovie' || apiValue === 'tvSpecial') return TitleType.MOVIE;
 ```
 
-- [ ] **Step 4: Run the mapper test to verify it passes**
+- [x] **Step 4: Run the mapper test to verify it passes**
 
 Run: `npx vitest run tests/unit/core/api/title-type-mappers.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Add the client tests**
+- [x] **Step 5: Add the client tests**
 
 In `tests/unit/core/api/agregarr-api-client.test.ts`, extend the existing `should map IMDb Suggestions %s results to %s` table with:
 
@@ -165,12 +165,12 @@ it.each(['TvMovie', 'TVSPECIAL'])('should not accept mixed-case %s results', asy
 });
 ```
 
-- [ ] **Step 6: Run the client test to verify the new acceptance cases fail**
+- [x] **Step 6: Run the client test to verify the new acceptance cases fail**
 
 Run: `npx vitest run tests/unit/core/api/agregarr-api-client.test.ts`
 Expected: FAIL on `should map IMDb Suggestions tvMovie results to movie`, `should map IMDb Suggestions tvSpecial results to movie`, the TV movie precedence case, and the TV special cases because `tvMovie`/`tvSpecial` are not in the allowlist.
 
-- [ ] **Step 7: Implement the allowlist change**
+- [x] **Step 7: Implement the allowlist change**
 
 In `src/core/api/agregarr-api-client.ts`, change the constant to:
 
@@ -178,19 +178,19 @@ In `src/core/api/agregarr-api-client.ts`, change the constant to:
 const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']);
 ```
 
-- [ ] **Step 8: Run both targeted test files to verify they pass**
+- [x] **Step 8: Run both targeted test files to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/title-type-mappers.test.ts tests/unit/core/api/agregarr-api-client.test.ts`
 Expected: PASS.
 
-- [ ] **Step 9: Update the original design spec's allowlist**
+- [x] **Step 9: Update the original design spec's allowlist**
 
 In `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md`:
 
 Line 22 becomes:
 
 ```markdown
-- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']` — ignore shorts, videos, franchises.
+- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']`; ignore shorts, videos, franchises.
 ```
 
 Line 50 becomes:
@@ -199,12 +199,12 @@ Line 50 becomes:
 3. Filter `response.d` to entries where `qid` is `movie`, `tvMovie`, `tvSpecial`, `tvSeries`, or `tvMiniSeries`.
 ```
 
-- [ ] **Step 10: Run the full local gate**
+- [x] **Step 10: Run the full local gate**
 
 Run: `npm run type-check && npm run lint && npm run format:check && npm run test:coverage`
 Expected: all commands exit 0 and coverage meets the configured thresholds.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/core/api/agregarr-api-client.ts src/core/api/title-type-mappers.ts \
