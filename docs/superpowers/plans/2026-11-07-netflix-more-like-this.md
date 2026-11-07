@@ -43,12 +43,12 @@
 - Add: `docs/superpowers/specs/2026-11-07-netflix-more-like-this-design.md`
 - Add: `docs/superpowers/plans/2026-11-07-netflix-more-like-this.md`
 
-- [ ] **Step 1: Confirm the approved design and plan are present**
+- [x] **Step 1: Confirm the approved design and plan are present**
 
 Run: `git status --short docs/superpowers/specs/2026-11-07-netflix-more-like-this-design.md docs/superpowers/plans/2026-11-07-netflix-more-like-this.md`
 Expected: both files are listed as untracked or modified.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-11-07-netflix-more-like-this-design.md docs/superpowers/plans/2026-11-07-netflix-more-like-this.md
@@ -69,7 +69,7 @@ git commit -m "docs: add Netflix More Like This design and plan"
 
 - Produces: `extractNetflixMoreLikeThisTitle(element: Element): string | undefined`, exported from `netflix-surfaces.ts` and re-exported from `src/core/surfaces/index.ts`.
 
-- [ ] **Step 1: Write the failing extraction tests**
+- [x] **Step 1: Write the failing extraction tests**
 
 Add `extractNetflixMoreLikeThisTitle` to the import block in `tests/unit/core/surfaces/surfaces.test.ts`, then add:
 
@@ -142,12 +142,12 @@ describe('Netflix More Like This title extraction', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts`
 Expected: FAIL because `extractNetflixMoreLikeThisTitle` is not exported.
 
-- [ ] **Step 3: Implement the extractor in `src/core/surfaces/surface-definitions/netflix-surfaces.ts`**
+- [x] **Step 3: Implement the extractor in `src/core/surfaces/surface-definitions/netflix-surfaces.ts`**
 
 Add below the imports:
 
@@ -168,7 +168,7 @@ export function extractNetflixMoreLikeThisTitle(element: Element): string | unde
 }
 ```
 
-- [ ] **Step 4: Re-export the extractor from `src/core/surfaces/index.ts`**
+- [x] **Step 4: Re-export the extractor from `src/core/surfaces/index.ts`**
 
 ```ts
 export {
@@ -178,12 +178,12 @@ export {
 } from './surface-definitions/netflix-surfaces';
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts`
 Expected: PASS, including the new extraction tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/surfaces/surface-definitions/netflix-surfaces.ts src/core/surfaces/index.ts tests/unit/core/surfaces/surfaces.test.ts

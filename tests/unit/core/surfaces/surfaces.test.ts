@@ -8,6 +8,7 @@ import {
     DisneyPlusSurfaceManager,
     extractDisneyPlusTitle,
     extractHboMaxTitle,
+    extractNetflixMoreLikeThisTitle,
     HboMaxSurfaceManager,
     NETFLIX_SURFACES,
     SurfaceManager,
@@ -199,6 +200,73 @@ describe('SurfaceManager', () => {
             </div>
         `);
         expect(results[0].showFadeToggle).toBe(false);
+    });
+});
+
+describe('Netflix More Like This title extraction', () => {
+    function extract(html: string): string | undefined {
+        document.body.innerHTML = html;
+        const tile = document.querySelector('.titleCard--container');
+        if (!tile) throw new Error('fixture tile missing');
+        return extractNetflixMoreLikeThisTitle(tile);
+    }
+
+    it('prefers the tile aria-label over the artwork alt', () => {
+        expect(
+            extract(`
+                <div class="titleCard--container" aria-label="Caramelo">
+                    <div class="titleCard-imageWrapper"><img alt="Wrong"></div>
+                </div>
+            `)
+        ).toBe('Caramelo');
+    });
+
+    it('falls back to the artwork alt when the label is missing', () => {
+        expect(
+            extract(`
+                <div class="titleCard--container">
+                    <div class="titleCard-imageWrapper"><img alt="Alt Only Title"></div>
+                </div>
+            `)
+        ).toBe('Alt Only Title');
+    });
+
+    it('falls back to the artwork alt when the label is whitespace-only', () => {
+        expect(
+            extract(`
+                <div class="titleCard--container" aria-label="   ">
+                    <div class="titleCard-imageWrapper"><img alt="Alt Only Title"></div>
+                </div>
+            `)
+        ).toBe('Alt Only Title');
+    });
+
+    it('trims the aria-label and artwork alt', () => {
+        expect(
+            extract(`
+                <div class="titleCard--container" aria-label="  Caramelo  ">
+                    <div class="titleCard-imageWrapper"><img alt="Other"></div>
+                </div>
+            `)
+        ).toBe('Caramelo');
+        expect(
+            extract(`
+                <div class="titleCard--container">
+                    <div class="titleCard-imageWrapper"><img alt="  Alt Only Title  "></div>
+                </div>
+            `)
+        ).toBe('Alt Only Title');
+    });
+
+    it('returns undefined when neither the label nor the artwork alt is usable', () => {
+        expect(
+            extract(`
+                <div class="titleCard--container" aria-label="   ">
+                    <div class="titleCard-imageWrapper"><img alt="   "></div>
+                </div>
+            `)
+        ).toBeUndefined();
+        expect(extract('<div class="titleCard--container"></div>')).toBeUndefined();
     });
 });
 
