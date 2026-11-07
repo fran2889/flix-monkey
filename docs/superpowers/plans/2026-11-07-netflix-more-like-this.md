@@ -473,27 +473,27 @@ git commit -m "feat(surfaces): show ratings on Netflix More Like This tiles"
 
 **Files:** None.
 
-- [ ] **Step 1: Run the type check**
+- [x] **Step 1: Run the type check**
 
 Run: `npm run type-check`
 Expected: PASS with no errors.
 
-- [ ] **Step 2: Run lint and formatting checks**
+- [x] **Step 2: Run lint and formatting checks**
 
 Run: `npm run lint && npm run format:check`
 Expected: PASS with no findings.
 
-- [ ] **Step 3: Build all three targets**
+- [x] **Step 3: Build all three targets**
 
 Run: `npm run build`
 Expected: PASS; userscript, Firefox, and Chrome outputs build without errors.
 
-- [ ] **Step 4: Run the coverage suite**
+- [x] **Step 4: Run the coverage suite**
 
 Run: `npm run test:coverage`
 Expected: PASS; all unit and UI tests pass and coverage thresholds hold.
 
-- [ ] **Step 5: Confirm no generated files were changed**
+- [x] **Step 5: Confirm no generated files were changed**
 
 Run: `git status --short`
 Expected: only the source, test, README, spec, and plan files from this work are listed, plus the pre-existing unrelated changes under `tests/unit/core/api/omdb-api-client.test.ts` and `docs/reviews/`. No `dist/` or `coverage/` entries.
