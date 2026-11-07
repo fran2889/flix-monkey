@@ -47,6 +47,7 @@ describe('AgregarrApiClient', () => {
                     { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
                     { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
                     { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
+                    { id: 'tt0004', l: 'Show 1', qid: 'tvSeries', y: 2021 },
                 ],
             })
             .build();
@@ -60,6 +61,8 @@ describe('AgregarrApiClient', () => {
     it.each([
         ['tvSeries', 'series'],
         ['tvMiniSeries', 'series'],
+        ['tvMovie', 'movie'],
+        ['tvSpecial', 'movie'],
     ])('should map IMDb Suggestions %s results to %s', async (qid, type) => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({
@@ -71,6 +74,15 @@ describe('AgregarrApiClient', () => {
         const result = await client.search('Show 1');
 
         expect(result!.type).toBe(type);
+    });
+
+    it.each(['short', 'tvShort'])('should not accept %s IMDb Suggestions results', async qid => {
+        const mockAdapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Short', qid, y: 2020 }] })
+            .build();
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+        expect(await client.search('Short')).toBeUndefined();
     });
 
     it('should return undefined if no results found', async () => {

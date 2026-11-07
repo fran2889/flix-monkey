@@ -50,15 +50,15 @@ describe('mapOmdbTitleType', () => {
 });
 
 describe('mapAgregarrTitleType', () => {
-    it('should map movie to MOVIE', () => {
-        expect(mapAgregarrTitleType('movie')).toBe(TitleType.MOVIE);
+    it.each(['movie', 'tvMovie', 'tvSpecial'])('should map %s to MOVIE', value => {
+        expect(mapAgregarrTitleType(value)).toBe(TitleType.MOVIE);
     });
 
     it.each(['tvSeries', 'tvMiniSeries'])('should map %s to SERIES', value => {
         expect(mapAgregarrTitleType(value)).toBe(TitleType.SERIES);
     });
 
-    it.each(['tvShow', 'Movie', 'series', 'tvMovie', 'videoGame'])(
+    it.each(['tvShow', 'Movie', 'series', 'tvShort', 'short', 'videoGame'])(
         'should return undefined for unrecognised value %s',
         value => {
             expect(mapAgregarrTitleType(value)).toBeUndefined();

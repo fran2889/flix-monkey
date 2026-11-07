@@ -38,7 +38,7 @@ interface AgregarrRatingEntry {
 }
 
 /** IMDb Suggestions `qid` values this provider can map to a canonical TitleType. */
-const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvSeries', 'tvMiniSeries']);
+const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']);
 
 /**
  * API client for Agregarr service that fetches ratings from IMDb Suggestions and Agregarr API.
