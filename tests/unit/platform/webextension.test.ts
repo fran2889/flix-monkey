@@ -41,11 +41,51 @@ describe('WebExtensionAdapter', () => {
         expect(result).toBe('value');
     });
 
+    it('storageGet should return a boolean value', async () => {
+        mockedBrowser.storage.local.get.mockResolvedValue({ key: true });
+        await expect(adapter.storageGet('key')).resolves.toBe(true);
+    });
+
+    it.each([
+        ['a number', 42],
+        ['null', null],
+        ['an object', { nested: true }],
+        ['an array', ['value']],
+    ])('storageGet should return undefined for %s', async (_label, value) => {
+        mockedBrowser.storage.local.get.mockResolvedValue({ key: value });
+        await expect(adapter.storageGet('key')).resolves.toBeUndefined();
+    });
+
+    it('storageGet should return undefined when storage.local.get is not a record', async () => {
+        mockedBrowser.storage.local.get.mockResolvedValue(null as unknown as Record<string, unknown>);
+        await expect(adapter.storageGet('key')).resolves.toBeUndefined();
+    });
+
     it('storageGetAll should call storage.local.get(null)', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
         const result = await adapter.storageGetAll();
         expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith(null);
         expect(result).toEqual({ k1: 'v1', k2: 'v2' });
+    });
+
+    it('storageGetAll should omit values that are not storage values', async () => {
+        mockedBrowser.storage.local.get.mockResolvedValue({
+            validString: 'value',
+            validBoolean: false,
+            invalidNumber: 42,
+            invalidNull: null,
+            invalidObject: { nested: true },
+        });
+
+        await expect(adapter.storageGetAll()).resolves.toEqual({
+            validString: 'value',
+            validBoolean: false,
+        });
+    });
+
+    it('storageGetAll should return an empty record when storage is not an object', async () => {
+        mockedBrowser.storage.local.get.mockResolvedValue(null as unknown as Record<string, unknown>);
+        await expect(adapter.storageGetAll()).resolves.toEqual({});
     });
 
     it('storageSet should call storage.local.set', async () => {
@@ -134,6 +174,11 @@ describe('WebExtensionAdapter', () => {
 
     it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
         mockedBrowser.runtime.sendMessage.mockResolvedValue(undefined);
+        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
+    });
+
+    it('httpFetch should reject a non-object background response', async () => {
+        mockedBrowser.runtime.sendMessage.mockResolvedValue([]);
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
     });
 

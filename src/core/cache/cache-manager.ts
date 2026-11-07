@@ -6,6 +6,7 @@ import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
 import type { Logger } from '../logger';
+import { ParseError } from '../parse-utils';
 import type { Title } from '../title';
 import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
@@ -50,18 +51,28 @@ export class CacheManager implements CacheStore {
     async read(displayTitle: string): Promise<CacheEntry | undefined> {
         const key = this.#getCacheKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (!raw) return undefined;
+        if (raw === undefined) return undefined;
+
         try {
-            // Always return entry; ApiClientManager handles validation and short-circuit logic
-            return CacheEntry.fromJSON(raw as string);
-        } catch {
-            this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle });
+            return CacheEntry.fromJSON(raw);
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError) && !(error instanceof SyntaxError)) throw error;
+            this.#logger.warn('Cache entry corrupt, treating as miss', { key, displayTitle, error });
+            await this.#deleteInvalid(key);
             return undefined;
         }
     }
 
     #getCacheKey(displayTitle: string): string {
         return `${this.#prefix}${slugify(displayTitle)}`;
+    }
+
+    async #deleteInvalid(key: string): Promise<void> {
+        try {
+            await this.#adapter.storageDelete(key);
+        } catch (error: unknown) {
+            this.#logger.debug('Failed to delete corrupt cache entry', { key, error });
+        }
     }
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {

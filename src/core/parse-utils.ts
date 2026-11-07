@@ -4,11 +4,11 @@
  */
 
 /**
- * Error thrown when an untrusted API response fails to parse.
+ * Error thrown when untrusted input fails to parse.
  *
  * Parsers throw this instead of returning a result object. Callers catch it
- * to drop invalid items, while any other error type signals a bug and must
- * propagate.
+ * to drop invalid items or treat stored data as absent, while any other error
+ * type signals a bug and must propagate.
  */
 export class ParseError extends Error {
     constructor(message: string) {
@@ -21,11 +21,13 @@ export class ParseError extends Error {
  * Asserts that a value is a non-null, non-array object.
  *
  * @param value - Untrusted value.
+ * @param label - Optional field or location name included in the error.
  * @throws ParseError when the value is null, an array, or not an object.
  */
-export function assertRecord(value: unknown): asserts value is Record<string, unknown> {
+export function assertRecord(value: unknown, label?: string): asserts value is Record<string, unknown> {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-        throw new ParseError('expected an object');
+        const location = label === undefined ? '' : ` at "${label}"`;
+        throw new ParseError(`expected an object${location}`);
     }
 }
 
@@ -63,17 +65,19 @@ export function optionalString(record: Record<string, unknown>, key: string): st
 
 /**
  * Reads an optional number field. An absent or null field is treated as
- * undefined and does not throw; only a value of the wrong type does.
+ * undefined and does not throw; only a wrong type or a non-finite number does.
  *
  * @param record - Parsed object.
  * @param key - Field name.
  * @returns The field value or undefined.
- * @throws ParseError when the field is present but not a number.
+ * @throws ParseError when the field is present but not a finite number.
  */
 export function optionalNumber(record: Record<string, unknown>, key: string): number | undefined {
     const value = record[key];
     if (value === undefined || value === null) return undefined;
-    if (typeof value !== 'number') throw new ParseError(`expected number at "${key}"`);
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new ParseError(`expected number at "${key}"`);
+    }
     return value;
 }
 

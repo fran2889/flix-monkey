@@ -13,7 +13,7 @@ import {
     parseRequiredItems,
     parseValidItems,
     requiredString,
-} from '../../../../src/core/api/parse-utils';
+} from '../../../src/core/parse-utils';
 
 function parseTitle(raw: unknown): string {
     assertRecord(raw);
@@ -74,6 +74,9 @@ describe('optionalNumber', () => {
     it('returns undefined for null', () => expect(optionalNumber({ year: null }, 'year')).toBeUndefined());
     it('throws for a string', () =>
         expect(() => optionalNumber({ year: '2020' }, 'year')).toThrow('expected number at "year"'));
+    it.each([Infinity, -Infinity, NaN])('throws for the non-finite number %s', value => {
+        expect(() => optionalNumber({ number: value }, 'number')).toThrow('expected number at "number"');
+    });
 });
 
 describe('optionalArray', () => {

@@ -5,7 +5,7 @@
 import browser from 'webextension-polyfill';
 
 import { startApp } from '../../core/app';
-import type { StorageValue } from '../../platform/adapter';
+import { isStorageValue } from '../../platform/adapter';
 import { WebExtensionAdapter } from '../../platform/webextension';
 
 /*
@@ -38,10 +38,7 @@ interface MigrationResponse {
     }
 
     const adapter = new WebExtensionAdapter();
-    const stored: Record<string, StorageValue> = (await browser.storage.local.get(null)) as Record<
-        string,
-        StorageValue
-    >;
+    const stored = await adapter.storageGetAll();
     adapter.setConfigData(stored);
 
     /*
@@ -54,8 +51,11 @@ interface MigrationResponse {
 
     browser.storage.onChanged.addListener((changes: Record<string, { newValue?: unknown }>, _areaName: string) => {
         Object.entries(changes).forEach(([k, v]) => {
-            if (v.newValue !== undefined) {
-                stored[k] = v.newValue as StorageValue;
+            const newValue = v.newValue;
+            if (isStorageValue(newValue)) {
+                stored[k] = newValue;
+            } else {
+                delete stored[k];
             }
         });
         if (Object.keys(changes).some(k => VISUAL_SETTINGS.has(k))) {

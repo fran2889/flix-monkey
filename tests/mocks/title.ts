@@ -122,4 +122,7 @@ buildTitle.withRating = (rating: number | undefined) => {
         .build();
 };
 
-export { buildTitle };
+// A serialized Title whose optional fields are all absent.
+const emptyTitleData = buildTitle().build().toCacheJSON();
+
+export { buildTitle, emptyTitleData };

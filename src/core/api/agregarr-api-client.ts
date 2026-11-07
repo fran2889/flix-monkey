@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import { ApiSource } from '../constants';
-import { PROVIDER_RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
-import { Title } from '../title';
-import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import {
     assertRecord,
     optionalArray,
@@ -14,7 +10,11 @@ import {
     ParseError,
     parseRequiredItems,
     requiredString,
-} from './parse-utils';
+} from '../parse-utils';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
+import { Title } from '../title';
+import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapAgregarrTitleType } from './title-type-mappers';
 
 /** Normalized IMDb Suggestions result. */

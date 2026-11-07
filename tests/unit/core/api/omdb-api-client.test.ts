@@ -9,7 +9,7 @@ import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
-import { Title, type TitleData } from '../../../../src/core/title';
+import { Title } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
@@ -408,7 +408,7 @@ describe('OmdbApiClient', () => {
         expect(result!.hasRating).toBe(false);
     });
 
-    it('should fetch details for a cached title that still carries a null apiTitle', async () => {
+    it('should fetch details for a cached title without an apiTitle', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt123',
@@ -418,12 +418,8 @@ describe('OmdbApiClient', () => {
         };
         const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
         const client = new OmdbApiClient({ ...deps, adapter });
-        // A cache entry written before the null to undefined migration carries a literal null.
-        const legacyCachedTitle = Title.fromCacheJSON(
-            { apiTitle: null, imdbId: 'tt123', year: null } as unknown as TitleData,
-            'Test'
-        )!;
-        const result = await client.getDetails(legacyCachedTitle);
+        const cachedTitle = new Title({ displayTitle: 'Test', imdbId: 'tt123' });
+        const result = await client.getDetails(cachedTitle);
 
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbRating).toBe(8.5);

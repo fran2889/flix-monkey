@@ -4,10 +4,6 @@
  */
 import type { ClientStatus } from '../../types/api';
 import { ApiSource } from '../constants';
-import { PROVIDER_RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
-import { Title } from '../title';
-import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import {
     assertRecord,
     optionalArray,
@@ -15,7 +11,11 @@ import {
     ParseError,
     parseValidItems,
     requiredString,
-} from './parse-utils';
+} from '../parse-utils';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
+import { Title } from '../title';
+import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
 
 /** Normalized OMDb rating entry. OMDb sends every rating value as a string, for example "8.5" or "90%". */
