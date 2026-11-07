@@ -4,7 +4,7 @@
 
 **Goal:** Resolve `tvMovie` and `tvSpecial` IMDb Suggestions results in the Agregarr provider and map both to `TitleType.MOVIE`.
 
-**Architecture:** The provider has an explicit allowlist of accepted IMDb `qid` values and a separate mapper from `qid` to canonical `TitleType`. This change adds the two values to both lists, pins the behavior with unit tests, and updates the original design spec so its allowlist matches the code. Short-form values stay excluded.
+**Architecture:** The provider has an explicit allowlist of accepted IMDb `qid` values and a separate mapper from `qid` to canonical `TitleType`. This change adds the two values to both lists and pins the behavior with unit tests. The 2026-06-23 design spec stays unchanged as a historical record, and this design supersedes its allowlist. Short-form values stay excluded.
 
 **Tech Stack:** TypeScript (ES2022, ESM), Vitest, ESLint, Prettier.
 
@@ -37,7 +37,6 @@
 - Modify: `src/core/api/title-type-mappers.ts:38-42`
 - Test: `tests/unit/core/api/title-type-mappers.test.ts:52-71`
 - Test: `tests/unit/core/api/agregarr-api-client.test.ts:42-74`
-- Modify: `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md:22,50`
 
 **Interfaces:**
 
@@ -183,21 +182,11 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvMovie', 'tvSpecial', 'tvSeries
 Run: `npx vitest run tests/unit/core/api/title-type-mappers.test.ts tests/unit/core/api/agregarr-api-client.test.ts`
 Expected: PASS.
 
-- [x] **Step 9: Update the original design spec's allowlist**
+- [x] **Step 9: Leave the historical design spec unchanged**
 
-In `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md`:
+In `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md`, change nothing. Historical plans and specs are immutable; the 2026-11-07 design doc supersedes its allowlist.
 
-Line 22 becomes:
-
-```markdown
-- Filter results to `qid` in `['movie', 'tvMovie', 'tvSpecial', 'tvSeries', 'tvMiniSeries']`; ignore shorts, videos, franchises.
-```
-
-Line 50 becomes:
-
-```markdown
-3. Filter `response.d` to entries where `qid` is `movie`, `tvMovie`, `tvSpecial`, `tvSeries`, or `tvMiniSeries`.
-```
+Ruling: this step was first executed as written, then reverted at the user's direction because old plans are immutable.
 
 - [x] **Step 10: Run the full local gate**
 
@@ -209,7 +198,6 @@ Expected: all commands exit 0 and coverage meets the configured thresholds.
 ```bash
 git add src/core/api/agregarr-api-client.ts src/core/api/title-type-mappers.ts \
     tests/unit/core/api/title-type-mappers.test.ts tests/unit/core/api/agregarr-api-client.test.ts \
-    docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md \
     docs/superpowers/specs/2026-11-07-agregarr-tv-movie-special-design.md \
     docs/superpowers/plans/2026-11-07-agregarr-tv-movie-special.md
 git commit -m "fix(api): accept TV movies and specials in Agregarr search"

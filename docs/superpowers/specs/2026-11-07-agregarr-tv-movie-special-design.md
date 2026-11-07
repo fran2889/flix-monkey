@@ -46,8 +46,8 @@ _The Office Retrospective_ (`tt3150140`, `tvMovie`), _Bo Burnham: Inside_
 - `AGREGARR_TITLE_TYPES` gates which results are accepted; it must contain the
   same values `mapAgregarrTitleType` recognizes.
 - The design spec at
-  `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md` records the
-  old allowlist and must be updated so it does not drift from the code.
+  `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md` is a
+  historical record and stays unchanged; this design supersedes its allowlist.
 - Unit tests cover every business-logic change. No storage migration is needed.
 
 ## Approaches Considered
@@ -73,8 +73,9 @@ _The Office Retrospective_ (`tt3150140`, `tvMovie`), _Bo Burnham: Inside_
   `MOVIE`, and remove `tvMovie` from the unrecognized-value cases.
 - `tests/unit/core/api/agregarr-api-client.test.ts`: assert search accepts and
   maps `tvMovie` and `tvSpecial` results, and that `short` remains excluded.
-- `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md`: update both
-  allowlist mentions to include the two new values.
+- `docs/superpowers/specs/2026-06-23-agregarr-api-client-design.md`: leave
+  unchanged. Historical plans and specs are immutable; this design supersedes
+  its allowlist.
 
 ## Verification
 
