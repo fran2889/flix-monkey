@@ -45,6 +45,7 @@ interface OmdbSuccessResponse {
 /** Normalized failed OMDb API response. */
 interface OmdbFailureResponse {
     Response: typeof OMDB_FAILURE;
+    Error?: string | undefined;
 }
 
 /** Normalized OMDb API response, discriminated by `Response`. */
@@ -94,7 +95,8 @@ export class OmdbApiClient extends BaseApiClient {
         );
         if (!response) return undefined;
         if (response.Response === OMDB_FAILURE) {
-            this.logger.info(`No OMDb results found for "${displayTitle}"`);
+            const message = response.Error ? `: ${response.Error}` : '';
+            this.logger.info(`No search results found in OMDb for "${displayTitle}"${message}`);
             return undefined;
         }
         return titleFromOmdbSuccessResponse(response, displayTitle);
@@ -112,7 +114,7 @@ export class OmdbApiClient extends BaseApiClient {
             const id = searchTitle.imdbId;
             const apiKey = this.config.get('omdbApiKey');
             const params = new URLSearchParams({ apikey: apiKey, i: id });
-            this.logger.debug(`Fetching OMDb details by ID: ${id} ("${searchTitle.displayTitle}")`);
+            this.logger.debug(`Fetching OMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
             const response = await this.fetchParsed(
                 `https://www.omdbapi.com/?${params}`,
                 1,
@@ -121,7 +123,8 @@ export class OmdbApiClient extends BaseApiClient {
             );
             if (!response) return undefined;
             if (response.Response === OMDB_FAILURE) {
-                this.logger.info(`No OMDb results found for ID: ${id}`);
+                const message = response.Error ? `: ${response.Error}` : '';
+                this.logger.info(`No OMDb results found for "${searchTitle.displayTitle}" (ID: ${id})${message}`);
                 return undefined;
             }
             return titleFromOmdbSuccessResponse(response, searchTitle.displayTitle);
@@ -133,7 +136,7 @@ export class OmdbApiClient extends BaseApiClient {
 function parseOmdbResponse(raw: unknown): OmdbResponse {
     assertRecord(raw);
     const response = requiredString(raw, 'Response');
-    if (response === OMDB_FAILURE) return { Response: response };
+    if (response === OMDB_FAILURE) return { Response: response, Error: optionalString(raw, 'Error') };
     if (response !== OMDB_SUCCESS) {
         throw new ParseError(`expected Response "True" or "False", got "${response}"`);
     }
