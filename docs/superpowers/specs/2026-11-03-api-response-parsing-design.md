@@ -230,8 +230,10 @@ turning parse failures into fetch failures.
 
 - A future parser could throw a non-`ParseError`. That propagates, which is
   intentional, but every validation helper must use `ParseError`.
-- `fetchParsed` returns `undefined` for both malformed and not-found. The log
-  is the only distinction; do not add caller-side logging for `undefined`.
+- `fetchParsed` returns `undefined` for malformed payloads only. Valid
+  not-found results return a discriminated member (XMDb and OMDb) or an empty
+  array (Agregarr), and the owning client logs the miss exactly once. Do not
+  add caller-side logging for `undefined`; the helper already logged it.
 - `ParseError` messages need the field path to be useful. If nested array
   errors become hard to diagnose, `parseValidItems` can add the index.
 - A public `fetchParsed` is a test seam. If tests move fully to the adapter,

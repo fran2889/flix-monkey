@@ -71,7 +71,7 @@
     function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsFound): Title;
     ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `tests/unit/core/api/xmdb-api-client.test.ts`, change the two search info assertions to the exact convention lines.
 
@@ -161,13 +161,13 @@ it('should log a malformed warning when the details error field is not a string'
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 
 Expected: FAIL. The null-title and error-payload tests see no `info` call, and the unsupported-type test sees the old wording.
 
-- [ ] **Step 3: Implement the union, parser, and logging**
+- [x] **Step 3: Implement the union, parser, and logging**
 
 Replace the `XmdbDetailsResponse` interface with the two interfaces and the union shown in the Interfaces block. Add the `status: 'found'` field to the object the parser returns.
 
@@ -212,19 +212,19 @@ Change the unsupported-type line in `search` to:
 this.logger.info(`No supported title-type results found in XMDb for "${displayTitle}"`);
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the type checker**
+- [x] **Step 5: Run the type checker**
 
 Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api/xmdb-api-client.ts tests/unit/core/api/xmdb-api-client.test.ts
@@ -252,7 +252,7 @@ git commit -m "fix(api): log XMDb details misses"
     }
     ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace `should log warn with error message on OMDB False response` with:
 
@@ -331,13 +331,13 @@ it('should log a malformed warning when a False response has a non-string Error'
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/api/omdb-api-client.test.ts`
 
 Expected: FAIL. The old wording is still logged and the `Error` field is not parsed.
 
-- [ ] **Step 3: Implement the failure message and wording**
+- [x] **Step 3: Implement the failure message and wording**
 
 Add `Error?: string | undefined` to `OmdbFailureResponse`. In `parseOmdbResponse`, return the message with the failure member:
 
@@ -371,19 +371,19 @@ Change the details debug line to:
 this.logger.debug(`Fetching OMDb details for ID: ${id} ("${searchTitle.displayTitle}")`);
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/api/omdb-api-client.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run the type checker**
+- [x] **Step 5: Run the type checker**
 
 Run: `npm run type-check`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/api/omdb-api-client.ts tests/unit/core/api/omdb-api-client.test.ts
@@ -403,7 +403,7 @@ git commit -m "fix(api): log OMDb provider messages on misses"
 - Consumes: the behavior and types from Tasks 1 and 2.
 - Produces: documentation that matches the shipped convention.
 
-- [ ] **Step 1: Update the logging split bullet**
+- [x] **Step 1: Update the logging split bullet**
 
 Replace the `Logging split` bullet with:
 
@@ -420,7 +420,7 @@ Replace the `Logging split` bullet with:
   at `warn`.
 ```
 
-- [ ] **Step 2: Update the XMDb and OMDb type bullets**
+- [x] **Step 2: Update the XMDb and OMDb type bullets**
 
 Replace the `Collapse the XMDb split` bullet with:
 
@@ -445,7 +445,7 @@ Replace the `OMDb response union` bullet with:
   so the name cannot shadow the module-level parser.
 ```
 
-- [ ] **Step 3: Update the verification section**
+- [x] **Step 3: Update the verification section**
 
 Add this bullet after the malformed-response bullet:
 
@@ -454,13 +454,13 @@ Add this bullet after the malformed-response bullet:
   `warn` or `error`.
 ```
 
-- [ ] **Step 4: Run the full local check**
+- [x] **Step 4: Run the full local check**
 
 Run: `npm run type-check && npm run lint && npm run format:check && npm test`
 
 Expected: PASS for every command.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-11-03-api-response-parsing-design.md
