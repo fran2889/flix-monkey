@@ -152,20 +152,22 @@ turning parse failures into fetch failures.
     Labels include the provider, operation, and title or ID, for example
     `XMDb details for "Some Title" (ID: tt123)`.
 
-- **Logging split.** `fetchParsed` logs malformed payloads only. Clients keep
-  their existing no-results logs for decoded empty or not-found results such
-  as `Response: 'False'`, an empty search results array, or an empty Agregarr
-  ratings array. Clients do not log when `fetchParsed` returns `undefined`,
-  because the helper already logged the malformed case. The XMDb details
-  not-found payloads (an `error` field, or a `title` of `null`) return
-  `undefined` without a warning; remove the current "details request failed"
-  warning on that path. The Agregarr details empty-array case logs at `info`
-  ("No Agregarr ratings found"), not at `warn`.
-- **Collapse the XMDb split.** Inline the details-fields parsing into
-  `parseXmdbDetailsResponse`. Merge `XmdbDetailsFields` into
-  `XmdbDetailsResponse`: required `id` and `title` first, then `rating`,
-  `release_year`, `metascore`, `title_type`, and `vote_count`, each optional
-  with `| undefined`.
+- **Logging split.** `fetchParsed` logs malformed payloads only. Clients log
+  every HTTP-200 miss or in-body error once at `info` for decoded empty or
+  not-found results such as `Response: 'False'`, an empty search results
+  array, an empty Agregarr ratings array, an XMDb `error` field, or an XMDb
+  `title` of `null`. Clients do not log when `fetchParsed` returns `undefined`,
+  because the helper already logged the malformed case. Details misses name
+  the display title and the IMDb ID; search misses name the display title.
+  Provider-supplied messages are appended as `: <message>`. The Agregarr
+  details empty-array case logs at `info` ("No Agregarr ratings found"), not
+  at `warn`.
+- **Model XMDb not-found.** `XmdbDetailsResponse` is a discriminated union on
+  `status`: `XmdbDetailsFound` carries `status: 'found'`, required `id` and
+  `title`, then optional `rating`, `release_year`, `metascore`, `title_type`,
+  and `vote_count`; `XmdbDetailsNotFound` carries `status: 'not-found'` and an
+  optional `error`. `parseXmdbDetailsResponse` always returns a member, so
+  `undefined` from `fetchParsed` means malformed only.
 - **Identity fields.** The Agregarr ratings entry and the XMDb details response
   are the canonical source of the IMDb ID. Build the resulting `Title` with
   `entry.imdbId` and `details.id` rather than copying the ID from the search
@@ -180,10 +182,11 @@ turning parse failures into fetch failures.
   not fall back to `title` or `release_year`.
 - **OMDb response union.** Model `OmdbResponse` as a discriminated union on
   `Response`. `OmdbSuccessResponse` carries required `Title` and `imdbID`
-  fields; `OmdbFailureResponse` carries only `Response: 'False'`. This makes the
-  invariant explicit and removes the optional identity fields from the success
-  path. Build the `Title` in a module-level `titleFromOmdbSuccessResponse`
-  function so the name cannot shadow the module-level parser.
+  fields; `OmdbFailureResponse` carries `Response: 'False'` and an optional
+  `Error`. This makes the invariant explicit, keeps the provider message for
+  logging, and removes the optional identity fields from the success path.
+  Build the `Title` in a module-level `titleFromOmdbSuccessResponse` function
+  so the name cannot shadow the module-level parser.
 - **OMDb rating keys.** OMDb `Ratings` entries use the capitalized `Source` and
   `Value` keys. Accept only that wire shape; do not add lowercase fallbacks.
 - **No redundant fallbacks.** Parsers already normalize absent and null values
@@ -214,6 +217,8 @@ turning parse failures into fetch failures.
 - `rg "queuedFetch"` finds only the private `#queuedFetch`.
 - A malformed response logs one warning containing the label, raw body, and
   field message.
+- Every HTTP-200 miss logs one `info` line with the provider context and no
+  `warn` or `error`.
 - A non-`ParseError` thrown by a parser propagates to `ApiClientManager`,
   which handles it as before.
 - Valid responses produce the same `Title` values as the branch did before
