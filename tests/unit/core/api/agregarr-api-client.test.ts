@@ -47,6 +47,7 @@ describe('AgregarrApiClient', () => {
                     { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
                     { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
                     { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
+                    { id: 'tt0004', l: 'Show 1', qid: 'tvSeries', y: 2021 },
                 ],
             })
             .build();
@@ -75,73 +76,13 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe(type);
     });
 
-    it('should use the first supported result even when it is a TV movie', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                d: [
-                    { id: 'tt1', l: 'TV Movie', qid: 'tvMovie', y: 2021 },
-                    { id: 'tt2', l: 'Regular Movie', qid: 'movie', y: 2022 },
-                ],
-            })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        const result = await client.search('TV Movie');
-
-        expect(result!.imdbId).toBe('tt1');
-        expect(result!.type).toBe('movie');
-    });
-
-    it('should skip unsupported results before a TV special', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                d: [
-                    { id: 'tt0', l: 'Music Video', qid: 'musicVideo', y: 2020 },
-                    { id: 'tt1', l: 'Special', qid: 'tvSpecial', y: 2021 },
-                ],
-            })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        const result = await client.search('Special');
-
-        expect(result!.imdbId).toBe('tt1');
-        expect(result!.type).toBe('movie');
-    });
-
     it.each(['short', 'tvShort'])('should not accept %s IMDb Suggestions results', async qid => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Short', qid, y: 2020 }] })
             .build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
 
         expect(await client.search('Short')).toBeUndefined();
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            'No supported title-type results found in IMDb Suggestions for "Short"'
-        );
-    });
-
-    it('should keep a TV special result that has no year', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Special', qid: 'tvSpecial' }] })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        const result = await client.search('Special');
-
-        expect(result!.imdbId).toBe('tt1');
-        expect(result!.year).toBeUndefined();
-        expect(result!.type).toBe('movie');
-    });
-
-    it.each(['TvMovie', 'TVSPECIAL'])('should not accept mixed-case %s results', async qid => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Title', qid, y: 2020 }] })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        expect(await client.search('Title')).toBeUndefined();
     });
 
     it('should return undefined if no results found', async () => {

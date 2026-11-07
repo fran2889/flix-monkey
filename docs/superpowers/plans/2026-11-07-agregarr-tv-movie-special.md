@@ -164,6 +164,8 @@ it.each(['TvMovie', 'TVSPECIAL'])('should not accept mixed-case %s results', asy
 });
 ```
 
+Ruling: the precedence, missing-year, mixed-case, and duplicate logging tests were removed at the user's direction. They re-verified behavior this change does not touch, or pinned `Set.has` case sensitivity as a contract. The generic first-supported test gained a second supported entry so result ordering stays covered.
+
 - [x] **Step 6: Run the client test to verify the new acceptance cases fail**
 
 Run: `npx vitest run tests/unit/core/api/agregarr-api-client.test.ts`
