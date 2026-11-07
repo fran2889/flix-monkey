@@ -164,7 +164,7 @@ export function extractNetflixMoreLikeThisTitle(element: Element): string | unde
 
     const artwork = element.querySelector('.titleCard-imageWrapper img[alt]') ?? element.querySelector('img[alt]');
     const alt = artwork?.getAttribute('alt')?.trim();
-    return alt || undefined;
+    return alt === '' ? undefined : alt;
 }
 ```
 
