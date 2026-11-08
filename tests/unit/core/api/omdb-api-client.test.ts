@@ -476,6 +476,7 @@ describe('OmdbApiClient', () => {
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
 
         expect(result).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledTimes(1);
         expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1)');
         expect(logger.warn).not.toHaveBeenCalled();
     });

@@ -373,12 +373,14 @@ describe('XmdbApiClient', () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchResolvingTo({ id: 'tt1', title: 'Movie 1', release_year: 2020 })
                 .build();
-            const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const logger = buildLogger().build();
+            const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger });
 
             const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
 
             expect(result!.apiTitle).toBe('Movie 1');
             expect(result!.imdbRating).toBeUndefined();
+            expect(logger.info).not.toHaveBeenCalled();
         });
     });
 });
