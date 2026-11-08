@@ -151,11 +151,8 @@ Examples:
 
 ## Documentation
 
-- Update the "Logging split", "Collapse the XMDb split", and "OMDb response
-  union" bullets in
-  `docs/superpowers/specs/2026-11-03-api-response-parsing-design.md` to match
-  this convention and the new types.
-- Leave the historical plan document unchanged.
+- Leave the historical 2026-11-03 plan and design documents unchanged as
+  records. This design supersedes their logging and XMDb/OMDb type guidance.
 
 ## Verification
 
