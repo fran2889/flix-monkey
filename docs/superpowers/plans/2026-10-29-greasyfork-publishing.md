@@ -4,9 +4,9 @@
 
 **Goal:** Add a one-shot Greasy Fork verification job to the manual store publishing workflow and document the one-time release-sync setup.
 
-**Architecture:** Greasy Fork has no publish API. A GitHub `release` webhook makes Greasy Fork pull `FlixMonkey.user.js` from the release asset. The new `publish-greasyfork` job downloads the released userscript, checks its `@version` against the tag, then fetches the Greasy Fork metadata once and compares versions. It never triggers the sync and never retries.
+**Architecture:** Greasy Fork has no publish API. A GitHub `release` webhook makes Greasy Fork pull `FlixMonkey.user.js` from the release asset. The new `publish-greasyfork` job fetches the Greasy Fork metadata once and compares its `@version` to the tag. It does not download the release asset. It never triggers the sync and never retries.
 
-**Tech Stack:** GitHub Actions, `gh`, `curl`, Bash, Markdown.
+**Tech Stack:** GitHub Actions, `curl`, Bash, Markdown.
 
 **Spec:** [`docs/superpowers/specs/2026-10-29-greasyfork-publishing-design.md`](../specs/2026-10-29-greasyfork-publishing-design.md)
 
@@ -16,7 +16,7 @@
 - The Greasy Fork sync URL must be `https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js`.
 - The release asset name must stay `FlixMonkey.user.js`.
 - `GREASYFORK_SCRIPT_ID` is a repository variable, not a secret.
-- The new job is read-only and uses only the preinstalled `gh` and `curl`. No checkout, Node, or `npm ci`.
+- The new job is read-only and uses only the preinstalled `curl`. It needs no checkout, GitHub token, Node, or `npm ci`.
 - Check Greasy Fork once. No polling, no retries.
 - Keep all actions SHA-pinned and make the workflow pass `actionlint`.
 - Do not change `src/targets/userscript/metadata.ts`, the README, or the existing Chrome and Firefox jobs.
@@ -25,11 +25,12 @@
 
 ## Review Focus
 
-- Missing or renamed release asset: the job must fail at the release download, not report a false Greasy Fork mismatch.
 - Unset `GREASYFORK_SCRIPT_ID`: the job must fail with the variable name before contacting Greasy Fork.
-- `@version` with tabs, extra spaces, or CRLF: the parser must still return the bare version.
+- `@version` with tabs, extra spaces, or CRLF in the Greasy Fork metadata: the parser must still return the bare version.
 - Greasy Fork unreachable or returning non-2xx: the job must fail with curl's error, not a misleading version mismatch.
 - Stale Greasy Fork version after a missed webhook: the job must print both versions and tell the maintainer what to check.
+- The job checks the listing only. A missing or renamed release asset is outside
+  its scope and appears as a version mismatch.
 
 ## File Structure
 
@@ -43,16 +44,19 @@
 ### Task 1: Add the `publish-greasyfork` job
 
 **Files:**
+
 - Modify: `.github/workflows/publish-to-stores.yml` (append after the last line of the `publish-firefox` job)
 
 **Interfaces:**
-- Consumes: the `tag` workflow input, the release asset `FlixMonkey.user.js`, and the repository variable `GREASYFORK_SCRIPT_ID`.
-- Produces: a job named `publish-greasyfork` that exits 0 only when the released userscript and the Greasy Fork listing both match the tag version.
+
+- Consumes: the `tag` workflow input and the repository variable `GREASYFORK_SCRIPT_ID`.
+- Produces: a job named `publish-greasyfork` that exits 0 only when the Greasy Fork listing matches the tag version.
 
 - [x] **Step 1: Append the job to the workflow**
 
 Add this block at the end of `.github/workflows/publish-to-stores.yml`, after the `publish-firefox` job:
 
+<!-- prettier-ignore -->
 ```yaml
     publish-greasyfork:
         runs-on: ubuntu-latest
@@ -67,12 +71,6 @@ Add this block at the end of `.github/workflows/publish-to-stores.yml`, after th
                       echo "Expected vMAJOR.MINOR.PATCH, for example v1.7.0." >&2
                       exit 1
                   fi
-            - name: Download the released userscript
-              env:
-                  GH_REPO: ${{ github.repository }}
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  TAG: ${{ inputs.tag }}
-              run: gh release download "$TAG" --pattern "FlixMonkey.user.js" --dir dist
             - name: Verify Greasy Fork serves the released version
               env:
                   TAG: ${{ inputs.tag }}
@@ -80,20 +78,23 @@ Add this block at the end of `.github/workflows/publish-to-stores.yml`, after th
               run: |
                   set -euo pipefail
                   expected="${TAG#v}"
-                  asset_version="$(sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' dist/FlixMonkey.user.js | head -n 1 | tr -d '\r')"
-                  if [[ "$asset_version" != "$expected" ]]; then
-                      echo "Released userscript is version '$asset_version', expected '$expected'." >&2
-                      exit 1
-                  fi
                   if [[ -z "$SCRIPT_ID" ]]; then
                       echo "GREASYFORK_SCRIPT_ID is not set. See docs/STORE_PUBLISHING.md." >&2
                       exit 1
                   fi
-                  meta="$(curl --fail --silent --show-error --max-time 30 -H 'Cache-Control: no-cache' "https://update.greasyfork.org/scripts/$SCRIPT_ID.meta.js")"
+                  meta_url="https://update.greasyfork.org/scripts/$SCRIPT_ID.meta.js"
+                  if ! meta="$(curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 30 -H 'Cache-Control: no-cache' "$meta_url")"; then
+                      echo "Could not fetch $meta_url." >&2
+                      exit 1
+                  fi
                   greasyfork_version="$(printf '%s\n' "$meta" | sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' | head -n 1 | tr -d '\r')"
+                  if [[ -z "$greasyfork_version" ]]; then
+                      echo "Greasy Fork returned no @version from $meta_url." >&2
+                      exit 1
+                  fi
                   if [[ "$greasyfork_version" != "$expected" ]]; then
                       echo "Greasy Fork serves version '$greasyfork_version', expected '$expected'." >&2
-                      echo "Check the release webhook delivery and the listing sync URL, then re-run this job." >&2
+                      echo "Check the release asset, the webhook delivery, and the listing sync URL, then re-run this job." >&2
                       exit 1
                   fi
                   echo "Greasy Fork serves version $expected."
@@ -109,43 +110,18 @@ go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/publ
 
 Expected: exit 0, no output. If Go is unavailable, use an installed `actionlint` 1.7.12 or let the CI lint gate run it.
 
-- [x] **Step 3: Verify the parser against the real release asset**
+- [x] **Step 3: Verify the parser against tabs and CRLF**
 
 Run:
 
 ```bash
-mkdir -p /tmp/greasyfork-check/dist
-gh release download v1.7.0 --pattern "FlixMonkey.user.js" --dir /tmp/greasyfork-check/dist --clobber
-TAG=v1.7.0
-expected="${TAG#v}"
-asset_version="$(sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' /tmp/greasyfork-check/dist/FlixMonkey.user.js | head -n 1 | tr -d '\r')"
-printf 'expected=%s asset=%s\n' "$expected" "$asset_version"
-```
-
-Expected output: `expected=1.7.0 asset=1.7.0`.
-
-- [x] **Step 4: Verify the parser against tabs and CRLF**
-
-Run:
-
-```bash
-printf '// ==UserScript==\r\n//\t@version\t1.7.0\r\n// ==/UserScript==\r\n' > /tmp/greasyfork-check/crlf.user.js
-sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' /tmp/greasyfork-check/crlf.user.js | head -n 1 | tr -d '\r'
+printf '// ==UserScript==\r\n//\t@version\t1.7.0\r\n// ==/UserScript==\r\n' > /tmp/greasyfork-check/crlf.meta.js
+sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' /tmp/greasyfork-check/crlf.meta.js | head -n 1 | tr -d '\r'
 ```
 
 Expected output: `1.7.0`.
 
-- [x] **Step 5: Verify the missing-asset failure**
-
-Run:
-
-```bash
-gh release download v1.7.0 --pattern "FlixMonkey-does-not-exist.user.js" --dir /tmp/greasyfork-check/missing
-```
-
-Expected: non-zero exit and a message that no assets matched.
-
-- [x] **Step 6: Verify the unset-variable failure**
+- [x] **Step 4: Verify the unset-variable failure**
 
 Copy the `run` block from `Verify Greasy Fork serves the released version` into `/tmp/greasyfork-check/check.sh`, then run:
 
@@ -156,37 +132,19 @@ TAG=v1.7.0 SCRIPT_ID= bash check.sh
 
 Expected: exit 1 and `GREASYFORK_SCRIPT_ID is not set. See docs/STORE_PUBLISHING.md.` The command must fail before contacting Greasy Fork.
 
-- [x] **Step 7: Verify the wrong-asset-version failure**
+- [x] **Step 5: Verify the non-2xx failure path**
 
 Run:
 
 ```bash
-cd /tmp/greasyfork-check
-printf '// @version 1.6.0\n' > dist/FlixMonkey.user.js
-TAG=v1.7.0 SCRIPT_ID=123 bash check.sh
-```
-
-Expected: exit 1 and `Released userscript is version '1.6.0', expected '1.7.0'.`
-
-Restore the real asset:
-
-```bash
-gh release download v1.7.0 --pattern "FlixMonkey.user.js" --dir /tmp/greasyfork-check/dist --clobber
-```
-
-- [x] **Step 8: Verify the non-2xx failure path**
-
-Run:
-
-```bash
-curl --fail --silent --show-error --max-time 30 https://update.greasyfork.org/scripts/0.meta.js
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 30 https://update.greasyfork.org/scripts/0.meta.js
 ```
 
 Expected: non-zero exit. This confirms that `--fail` turns a Greasy Fork error
 response into a failed step instead of an empty version. If the network blocks
 Greasy Fork, note it and rely on the live rollout check in Task 4.
 
-- [x] **Step 9: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .github/workflows/publish-to-stores.yml
@@ -198,11 +156,13 @@ git commit -m "ci(github): verify Greasy Fork in the store publish workflow"
 ### Task 2: Document the Greasy Fork setup and behavior
 
 **Files:**
+
 - Modify: `docs/STORE_PUBLISHING.md`
 - Modify: `CONTRIBUTING.md`
 - Modify: `AGENTS.md`
 
 **Interfaces:**
+
 - Consumes: the job name `publish-greasyfork` and the variable `GREASYFORK_SCRIPT_ID` from Task 1.
 - Produces: a runbook a maintainer can follow to create the listing, set the variable, and add the webhook.
 
@@ -253,8 +213,8 @@ Insert after the Firefox Add-ons secrets table and before `## Build Instructions
 
 ### Greasy Fork
 
-| Variable               | Where to get it |
-| ---------------------- | --------------- |
+| Variable               | Where to get it                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GREASYFORK_SCRIPT_ID` | The numeric script ID in the listing URL: `https://greasyfork.org/en/scripts/<id>-...`. Store it as a repository **variable**, not a secret. |
 
 Greasy Fork has no publish API. The listing is created once and then synced from
@@ -310,13 +270,15 @@ Insert after the publishing steps and before `## Updating Store Metadata`:
 ```markdown
 ## Failure Handling
 
-- A missing release asset, or a userscript whose `@version` differs from the tag,
-  fails the `publish-greasyfork` job before it contacts Greasy Fork.
+- The job checks the Greasy Fork listing only. It does not download or inspect
+  the release asset, so a missing or wrong asset is reported as a version
+  mismatch. Check the release asset if the listing is stale.
 - An unset `GREASYFORK_SCRIPT_ID` fails the job with the variable name.
 - If Greasy Fork is unreachable or returns an error, the job fails with the
   endpoint and curl's error.
 - If Greasy Fork serves a different version, the job prints both versions. Check
-  the webhook delivery and the listing sync URL, then re-run only that job.
+  the release asset, the webhook delivery, and the listing sync URL, then re-run
+  only that job.
 - The job checks once. It does not poll or retry.
 ```
 
@@ -445,10 +407,8 @@ configured will move the listing to `Webhook` sync.
 Run the check script from Task 1 against an older tag and the real script ID:
 
 ```bash
-mkdir -p /tmp/greasyfork-check/old/dist
-gh release download v1.6.0 --pattern "FlixMonkey.user.js" --dir /tmp/greasyfork-check/old/dist --clobber
-cd /tmp/greasyfork-check/old
-TAG=v1.6.0 SCRIPT_ID=<real-id> bash /tmp/greasyfork-check/check.sh
+cd /tmp/greasyfork-check
+TAG=v1.6.0 SCRIPT_ID=<real-id> bash check.sh
 ```
 
 Expected: exit 1 with `Greasy Fork serves version '1.7.0', expected '1.6.0'.`
@@ -459,5 +419,5 @@ the old Chrome and Firefox builds.
 - [ ] **Step 6: Confirm on the next release**
 
 After the next release and `Publish to Stores` run, confirm the
-`publish-greasyfork` job passes. If it fails, check the webhook delivery and the
-listing sync URL before changing the endpoint.
+`publish-greasyfork` job passes. If it fails, check the release asset, the webhook
+delivery, and the listing sync URL before changing the endpoint.

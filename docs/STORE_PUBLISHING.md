@@ -150,13 +150,15 @@ Greasy Fork version once. The Greasy Fork check does not poll or retry.
 
 ## Failure Handling
 
-- A missing release asset, or a userscript whose `@version` differs from the tag,
-  fails the `publish-greasyfork` job before it contacts Greasy Fork.
+- The job checks the Greasy Fork listing only. It does not download or inspect
+  the release asset, so a missing or wrong asset is reported as a version
+  mismatch. Check the release asset if the listing is stale.
 - An unset `GREASYFORK_SCRIPT_ID` fails the job with the variable name.
 - If Greasy Fork is unreachable or returns an error, the job fails with the
   endpoint and curl's error.
 - If Greasy Fork serves a different version, the job prints both versions. Check
-  the webhook delivery and the listing sync URL, then re-run only that job.
+  the release asset, the webhook delivery, and the listing sync URL, then re-run
+  only that job.
 - The job checks once. It does not poll or retry.
 
 ## Updating Store Metadata

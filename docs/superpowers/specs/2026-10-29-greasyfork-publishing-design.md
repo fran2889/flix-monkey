@@ -4,6 +4,9 @@
 
 **Status:** accepted
 
+**Revision:** 2026-11-11. The verification job checks the Greasy Fork listing
+only. It no longer downloads or validates the release asset.
+
 **Size:** small change
 
 ## Intent
@@ -19,8 +22,8 @@ confirms that Greasy Fork is serving the released version.
 - A Greasy Fork listing updates automatically when a FlixMonkey release is
   published.
 - `publish-to-stores.yml` gains a `publish-greasyfork` job that performs one
-  check of the released userscript and the Greasy Fork listing version, then
-  passes or fails. No polling and no retries.
+  check of the Greasy Fork listing version, then passes or fails. No polling and
+  no retries.
 - The one-time Greasy Fork and GitHub webhook setup is documented so a
   maintainer can repeat it.
 - `docs/STORE_PUBLISHING.md`, `CONTRIBUTING.md`, and `AGENTS.md` describe the new
@@ -51,9 +54,8 @@ confirms that Greasy Fork is serving the released version.
 - The `release` webhook fires when release-please finalizes the draft release,
   which happens before a maintainer runs `Publish to Stores`. The manual
   workflow verifies the result; it does not cause it.
-- The verification job is read-only. It needs `GITHUB_TOKEN` for the release
-  download and the public Greasy Fork script ID. It needs no Greasy Fork
-  credentials.
+- The verification job is read-only. It needs only the public Greasy Fork script
+  ID. It needs no GitHub token and no Greasy Fork credentials.
 - `GREASYFORK_SCRIPT_ID` is a repository variable, not a secret. The script ID is
   public.
 - All actions stay SHA-pinned, and the workflow must pass `actionlint`.
@@ -64,9 +66,9 @@ confirms that Greasy Fork is serving the released version.
 
 1. **Release webhook sync with a one-shot verification job (chosen).** Configure
    the Greasy Fork listing once, add the GitHub `Releases` webhook, and add a
-   `publish-greasyfork` job that checks the released asset and the Greasy Fork
-   version once. The job makes the manual publish run the place where all three
-   channels are confirmed, without putting Greasy Fork credentials in CI.
+   `publish-greasyfork` job that checks the Greasy Fork version once. The job
+   makes the manual publish run the place where all three channels are confirmed,
+   without putting Greasy Fork credentials in CI.
 2. **Release webhook sync, documentation only.** The simplest option, but the
    publish flow gives no signal when the webhook or listing is broken.
 3. **Playwright-driven upload from the manual workflow.** Real
@@ -101,22 +103,19 @@ the run instead of waiting for Greasy Fork.
   failure does not block the stores and each job can be re-run on its own.
 - Uses `timeout-minutes: 5`, `ubuntu-latest`, and the workflow's existing
   `permissions: contents: read`.
-- Does not check out the repository and does not install Node or run
-  `npm ci`. It uses the preinstalled `gh` and `curl` only. It sets `GH_REPO` to
-  `${{ github.repository }}` so `gh release download` resolves the repository
-  without a checkout.
+- Does not check out the repository, does not use `gh`, and does not install
+  Node or run `npm ci`. It uses the preinstalled `curl` only.
 - Validates the tag with the same `^v[0-9]+\.[0-9]+\.[0-9]+$` check as the other
   jobs.
-- Downloads the released userscript with
-  `gh release download "$TAG" --pattern "FlixMonkey.user.js" --dir dist`.
-- Reads `@version` from the downloaded userscript and fails if it does not match
-  the tag without its `v` prefix. This isolates a broken release from a stale
-  Greasy Fork listing.
+- Does not download or inspect the release asset. A missing or wrong asset is
+  outside this job's scope and is reported as a version mismatch.
 - Fetches `https://update.greasyfork.org/scripts/<id>.meta.js` once, with
-  `--max-time 30` and a `Cache-Control: no-cache` request header, reads
-  `@version`, and fails if it does not match the expected version.
+  `--location`, HTTPS-only protocol restrictions, `--max-time 30`, and a
+  `Cache-Control: no-cache` request header, reads `@version`, and fails if it
+  does not match the expected version.
 - On a version mismatch, prints both versions and tells the maintainer to check
-  the webhook delivery and the listing sync URL, then re-run the job.
+  the release asset, the webhook delivery, and the listing sync URL, then re-run
+  the job.
 - When `GREASYFORK_SCRIPT_ID` is unset, fails before contacting Greasy Fork with
   a message naming the variable.
 
@@ -138,23 +137,23 @@ sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' <file> | head -n 1
 
 ## Failure handling
 
-- Missing release asset, or a released userscript whose `@version` differs from
-  the tag: fail before contacting Greasy Fork, naming the asset and both
-  versions.
+- The job checks the Greasy Fork listing only. A missing or wrong release asset
+  is outside its scope and is reported as a version mismatch. Check the release
+  asset if the listing is stale.
 - Unset `GREASYFORK_SCRIPT_ID`: fail with the variable name and the setup
   section reference.
 - Greasy Fork unreachable, non-2xx, or slower than 30 seconds: fail with the
   endpoint and curl's error.
 - Greasy Fork serving a different version: fail with both versions. The
-  maintainer checks the webhook delivery and the listing sync URL, then re-runs
-  the job.
+  maintainer checks the release asset, the webhook delivery, and the listing sync
+  URL, then re-runs the job.
 - No retry. A re-run is deliberate.
 
 ## Verification
 
 - `actionlint` passes on the edited workflow, and Prettier and markdown checks
   pass.
-- The version extraction returns `1.7.0` for the released `v1.7.0` userscript.
+- The version extraction returns `1.7.0` for a metadata file with tabs or CRLF.
 - After the listing exists and the variable is set, a workflow run for an
   ingested tag passes.
 - Running against a tag whose version Greasy Fork has not ingested fails with
@@ -181,5 +180,5 @@ sed -n 's|^[[:space:]]*//[[:space:]]*@version[[:space:]]*||p' <file> | head -n 1
   indentation.
 - Choose the final error wording.
 - Update the three documentation files.
-- Keep the job free of checkout, Node, and npm setup.
+- Keep the job free of checkout, `gh`, Node, and npm setup.
 - Add the README Greasy Fork install link in a follow-up once the listing exists.
