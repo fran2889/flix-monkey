@@ -11,7 +11,7 @@ import { FlixMonkeyError } from '../../../src/core/utils/index';
 import { buildMockAdapter } from '../../mocks/adapter';
 import { buildCacheEntry } from '../../mocks/cache';
 import { buildLogger } from '../../mocks/logger';
-import { buildTitle } from '../../mocks/title';
+import { buildTitle, emptyTitleData } from '../../mocks/title';
 
 const disabledManager = new DisabledClientsManager(buildMockAdapter().build());
 
@@ -235,7 +235,7 @@ describe('ApiClientManager', () => {
         const entry = buildCacheEntry()
             .withDisplayTitle('Cached Movie')
             .withImdbId('tt123')
-            .withData(undefined)
+            .withData(emptyTitleData)
             .withExpiry(Date.now() - 1000)
             .build();
         const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
@@ -255,7 +255,7 @@ describe('ApiClientManager', () => {
         const expiredEntry = {
             displayTitle: 'Cached Movie',
             imdbId: 'tt123',
-            data: undefined,
+            data: emptyTitleData,
             expires: Date.now() - 1000,
         };
         const entry = buildCacheEntry()
@@ -280,7 +280,7 @@ describe('ApiClientManager', () => {
         const expiredEntry = {
             displayTitle: 'No ID Movie',
             imdbId: undefined,
-            data: undefined,
+            data: emptyTitleData,
             expires: Date.now() - 1000,
         };
         const entry = buildCacheEntry()
@@ -327,18 +327,18 @@ describe('ApiClientManager', () => {
         expect(mockClient.fetch).not.toHaveBeenCalled();
     });
 
-    it('should use short-circuit fetch for non-expired entry with imdbId but invalid data', async () => {
-        const invalidEntry = {
+    it('should use short-circuit fetch for non-expired entry with imdbId but empty title data', async () => {
+        const emptyEntry = {
             displayTitle: 'Stale Movie',
             imdbId: 'tt789',
-            data: undefined,
+            data: emptyTitleData,
             expires: Date.now() + 100000,
         };
         const entry = buildCacheEntry()
-            .withDisplayTitle(invalidEntry.displayTitle)
-            .withImdbId(invalidEntry.imdbId)
-            .withData(invalidEntry.data)
-            .withExpiry(invalidEntry.expires)
+            .withDisplayTitle(emptyEntry.displayTitle)
+            .withImdbId(emptyEntry.imdbId)
+            .withData(emptyEntry.data)
+            .withExpiry(emptyEntry.expires)
             .build();
         const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
         const mockClient: ApiClient = {

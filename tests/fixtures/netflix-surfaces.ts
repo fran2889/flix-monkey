@@ -13,6 +13,57 @@ export interface SurfaceFixture {
     };
 }
 
+export interface MoreLikeThisSectionFixture {
+    name: string;
+    collapsedHtml: string;
+    expandedHtml: string;
+}
+
+export const NETFLIX_MORE_LIKE_THIS_SECTION: MoreLikeThisSectionFixture = {
+    name: "Netflix More Like This section",
+    collapsedHtml: `
+        <div class="moreLikeThis--wrapper">
+            <div class="moreLikeThis--container">
+                <div class="titleCard--container" aria-label="Caramelo" role="button" tabindex="0">
+                    <div class="titleCard-imageWrapper has-duration">
+                        <div class="ptrack-content">
+                            <img src="https://example.com/caramelo.jpg" alt="Caramelo">
+                        </div>
+                        <div class="titleCard-playIcon"></div>
+                        <span class="duration ellipsized">1h 41m</span>
+                    </div>
+                </div>
+                <div class="titleCard--container" aria-label="The Crown" role="button" tabindex="0">
+                    <div class="titleCard-imageWrapper has-duration">
+                        <div class="ptrack-content">
+                            <img src="https://example.com/the-crown.jpg" alt="The Crown">
+                        </div>
+                        <span class="duration ellipsized">4 seasons</span>
+                    </div>
+                </div>
+            </div>
+        </div>`,
+    expandedHtml: `
+        <div class="moreLikeThis--container moreLikeThis--expanded">
+            <div class="titleCard--container" role="button" tabindex="0">
+                <div class="titleCard-imageWrapper has-duration">
+                    <div class="ptrack-content">
+                        <img src="https://example.com/alt-only.jpg" alt="Alt Only Title">
+                    </div>
+                    <span class="duration ellipsized">2h 5m</span>
+                </div>
+            </div>
+            <div class="titleCard--container" aria-label="No Artwork Label" role="button" tabindex="0">
+                <div class="titleCard-imageWrapper has-duration">
+                    <div class="ptrack-content">
+                        <img src="https://example.com/no-alt.jpg" alt="">
+                    </div>
+                    <span class="duration ellipsized">1h 30m</span>
+                </div>
+            </div>
+        </div>`
+};
+
 export default <SurfaceFixture[]>[
     {
         name: "Netflix TITLE_CARD surface",

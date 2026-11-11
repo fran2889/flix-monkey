@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.0](https://github.com/fran2889/flix-monkey/compare/v1.7.0...v1.8.0) (2026-11-11)
+
+
+### Features
+
+* **core:** normalize absent values to undefined and fix rating and expiry fallbacks ([#217](https://github.com/fran2889/flix-monkey/issues/217)) ([c9adb03](https://github.com/fran2889/flix-monkey/commit/c9adb038da3e032364032a3bfe97992d37e99cac))
+* **surfaces:** show ratings on Netflix More Like This tiles ([#281](https://github.com/fran2889/flix-monkey/issues/281)) ([70abbda](https://github.com/fran2889/flix-monkey/commit/70abbdac15e60a4506ecef7e9356d2ccf9557bd2))
+
+
+### Bug Fixes
+
+* **api:** accept TV movies and specials in Agregarr search ([#278](https://github.com/fran2889/flix-monkey/issues/278)) ([483f8fd](https://github.com/fran2889/flix-monkey/commit/483f8fd1cb37d9a49664a600e0c98513475fc0a7))
+* **api:** log provider misses consistently ([#279](https://github.com/fran2889/flix-monkey/issues/279)) ([45888ae](https://github.com/fran2889/flix-monkey/commit/45888ae3e3118b71bcef9f8b4c7125c58110e984))
+* **core:** clear the inflight timeout after each lookup ([#242](https://github.com/fran2889/flix-monkey/issues/242)) ([999a93c](https://github.com/fran2889/flix-monkey/commit/999a93c9d578c41f0555abb1917108552fae879e))
+* remove blank line left by license header stripping ([#249](https://github.com/fran2889/flix-monkey/issues/249)) ([a9fa1f0](https://github.com/fran2889/flix-monkey/commit/a9fa1f030fe624752f5b37bd9972dcba8d40b2a3))
+
+
+### Performance Improvements
+
+* **test:** run unit and UI suites in vmThreads ([#247](https://github.com/fran2889/flix-monkey/issues/247)) ([6b30492](https://github.com/fran2889/flix-monkey/commit/6b3049205af4dab0368f83ff99cea02588830f46))
+
 ## [1.7.0](https://github.com/fran2889/flix-monkey/compare/v1.6.1...v1.7.0) (2026-10-08)
 
 

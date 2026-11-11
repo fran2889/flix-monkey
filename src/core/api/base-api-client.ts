@@ -9,6 +9,7 @@ import { type ApiSourceType, CLIENT_DISABLE_DURATION } from '../constants';
 import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
+import { ParseError } from '../parse-utils';
 import type { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
@@ -151,13 +152,35 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Enqueues an HTTP request through the rate-limited queue.
+     * Fetches through the rate-limited queue and parses the raw response body.
+     *
+     * When the parser throws `ParseError`, the response is malformed: one warning
+     * is logged and `undefined` is returned. Any other error type propagates to
+     * the caller so a bug is not silently swallowed.
      *
      * @param url - Request URL.
      * @param priority - Higher values are processed first.
-     * @returns Parsed response body.
+     * @param parse - Synchronous parser that turns the raw body into the response type.
+     * @param label - Human-readable request label for the malformed warning.
+     * @returns The parsed response, or undefined when parsing fails with ParseError.
      */
-    async queuedFetch(url: string, priority: number): Promise<unknown> {
+    async fetchParsed<T>(
+        url: string,
+        priority: number,
+        parse: (raw: unknown) => T,
+        label: string
+    ): Promise<T | undefined> {
+        const raw = await this.#queuedFetch(url, priority);
+        try {
+            return parse(raw);
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError)) throw error;
+            this.logger.warn(`Malformed ${label}`, { response: raw, error: error.message });
+            return undefined;
+        }
+    }
+
+    async #queuedFetch(url: string, priority: number): Promise<unknown> {
         return this.#queue.enqueue(url, priority, async (requestUrl: string) => this.#adapter.httpFetch(requestUrl));
     }
 
@@ -174,9 +197,11 @@ export abstract class BaseApiClient implements ApiClient {
      * Fetches ratings and additional details for a title returned by search().
      * Subclasses must override this method.
      *
-     * Implementations should merge searchTitle values as fallbacks:
-     * - Use searchTitle fields (apiTitle, imdbId, year, type) when details fetch returns undefined
-     * - Override with details fetch values when available
+     * Implementations take identity fields from the details response when it
+     * carries them. A provider that cannot look up details without an IMDb ID,
+     * or whose details request fails, returns undefined; callers treat that as
+     * no match. OMDb may return the search title unchanged when it already has
+     * full details.
      *
      * @param _searchTitle - Title returned by search().
      * @returns A Title with ratings and details populated, or undefined.

@@ -5,6 +5,16 @@
 
 export type StorageValue = string | boolean;
 
+/**
+ * Narrows an untrusted value to a value the platform storage contract allows.
+ *
+ * @param value - Value read from platform storage or a storage change event.
+ * @returns True when the value is a string or boolean.
+ */
+export function isStorageValue(value: unknown): value is StorageValue {
+    return typeof value === 'string' || typeof value === 'boolean';
+}
+
 /** Options for a platform HTTP fetch. */
 export interface HttpFetchOptions {
     responseType?: 'json' | 'text';

@@ -2,7 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { Title } from '../title';
+import { assertRecord, optionalNumber, optionalString, ParseError, requiredString } from '../parse-utils';
+import { Title, type TitleData } from '../title';
 
 /**
  * Cache entry encapsulating both metadata and API data.
@@ -12,7 +13,7 @@ import { Title } from '../title';
 export class CacheEntry {
     readonly #displayTitle: string;
     readonly #imdbId: string | undefined;
-    readonly #data: unknown;
+    readonly #data: TitleData;
     readonly #expires: number | undefined;
 
     /**
@@ -20,12 +21,11 @@ export class CacheEntry {
      *
      * @param displayTitle - Netflix display title (search key)
      * @param imdbId - IMDb ID for short-circuit optimization
-     * @param data - Title data without displayTitle. `CacheManager.write` stores
-     *   `Title.toCacheJSON()` output here; entries parsed from storage carry untrusted JSON,
-     *   which only {@link CacheEntry.getTitle} may read.
+     * @param data - Validated title data without displayTitle, as produced by
+     *   `Title.toCacheJSON()` or the storage parser.
      * @param expires - Expiry timestamp or undefined for never expires
      */
-    constructor(displayTitle: string, imdbId: string | undefined, data: unknown, expires: number | undefined) {
+    constructor(displayTitle: string, imdbId: string | undefined, data: TitleData, expires: number | undefined) {
         this.#displayTitle = displayTitle;
         this.#imdbId = imdbId;
         this.#data = data;
@@ -33,37 +33,29 @@ export class CacheEntry {
     }
 
     /**
-     * Parses a JSON string from storage and returns a CacheEntry instance.
+     * Parses a JSON string from storage and returns a validated CacheEntry.
      * Literal nulls from entries written before the null to undefined
-     * migration are normalized to undefined. The payload is stored unvalidated:
-     * {@link CacheEntry.getTitle} hands it to `Title.fromCacheJSON`, which owns
-     * the check for a well-formed title object.
+     * migration are normalized to undefined. Unknown fields are dropped like
+     * the API response parsers do.
      *
-     * @param raw - Raw JSON string from storage
+     * @param raw - Untrusted value read from storage
      * @returns New CacheEntry instance
+     * @throws ParseError when the value is not a string or the payload has an
+     *   invalid shape
+     * @throws SyntaxError when the value is not valid JSON
      */
-    static fromJSON(raw: string): CacheEntry {
-        const obj = JSON.parse(raw) as {
-            displayTitle: string;
-            imdbId?: string | null;
-            data?: unknown;
-            expires?: number | null;
-        };
-        return new CacheEntry(
-            obj.displayTitle,
-            obj.imdbId ?? undefined,
-            obj.data ?? undefined,
-            obj.expires ?? undefined
-        );
+    static fromJSON(raw: unknown): CacheEntry {
+        if (typeof raw !== 'string') throw new ParseError('expected serialized JSON string');
+        return parseCacheEntry(JSON.parse(raw));
     }
 
     /**
      * Combines cached data with entry metadata to create a complete Title object.
      *
-     * @returns Hydrated Title, or undefined if data is missing or invalid
+     * @returns Hydrated Title.
      */
-    getTitle(): Title | undefined {
-        return Title.fromCacheJSON(this.#data, this.#displayTitle);
+    getTitle(): Title {
+        return new Title({ ...this.#data, displayTitle: this.#displayTitle });
     }
 
     /**
@@ -75,7 +67,7 @@ export class CacheEntry {
     toJSON(): {
         displayTitle: string;
         imdbId: string | undefined;
-        data: unknown;
+        data: TitleData;
         expires: number | undefined;
     } {
         return {
@@ -93,4 +85,29 @@ export class CacheEntry {
     get isExpired(): boolean {
         return this.#expires !== undefined && Date.now() > this.#expires;
     }
+}
+
+function parseCacheEntry(value: unknown): CacheEntry {
+    assertRecord(value);
+    return new CacheEntry(
+        requiredString(value, 'displayTitle'),
+        optionalString(value, 'imdbId'),
+        parseTitleData(value['data']),
+        optionalNumber(value, 'expires')
+    );
+}
+
+function parseTitleData(raw: unknown): TitleData {
+    assertRecord(raw, 'data');
+    return {
+        apiTitle: optionalString(raw, 'apiTitle'),
+        imdbId: optionalString(raw, 'imdbId'),
+        year: optionalNumber(raw, 'year'),
+        imdbRating: optionalNumber(raw, 'imdbRating'),
+        imdbVotes: optionalNumber(raw, 'imdbVotes'),
+        rtRating: optionalNumber(raw, 'rtRating'),
+        mcRating: optionalNumber(raw, 'mcRating'),
+        source: optionalString(raw, 'source'),
+        type: optionalString(raw, 'type'),
+    };
 }
