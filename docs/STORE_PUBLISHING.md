@@ -34,12 +34,13 @@ only from `main` and `v*` tags, and it has no required reviewers. A workflow
 dispatched from any other branch or tag fails at the environment gate before it
 can read the credentials.
 
-The store credentials are environment secrets on `store-publish`, not
-repository secrets. To migrate existing repository secrets, create each one on
-the environment first, merge the workflow change, confirm a run resolves them,
-then delete the repository copies. Environment secrets take precedence over
-same-named repository secrets, so leaving both makes it unclear which value is
-live.
+The store credentials belong on the `store-publish` environment as environment
+secrets, not as repository secrets. To migrate existing repository secrets,
+create each one on the environment first, merge the workflow change, confirm a
+run succeeds and the environment page lists the same names, then delete the
+repository copies. Environment secrets take precedence over same-named
+repository secrets, so while both exist the environment value is live and the
+repository copy is only a fallback.
 
 ## Required Environment Secrets
 
