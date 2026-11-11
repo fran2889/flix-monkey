@@ -46,7 +46,7 @@ Use the links below to install FlixMonkey for your browser.
 
 ## Features
 
-- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
+- **Rating Badges**: View IMDb ratings on titles, title previews, detail pages, and More Like This recommendations. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
 - **Color-Coded Ratings**: Rating badges use a gradient from red (IMDb 5.0 or below; RT/MC 50% or below) to green (IMDb 8.5 or above; RT/MC 85% or above)
 - **Click to Open**: Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
 - **Fade Low-Rated Titles**: Fade titles rated below your chosen IMDb threshold
