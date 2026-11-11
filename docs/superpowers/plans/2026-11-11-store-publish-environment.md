@@ -278,7 +278,7 @@ git add docs/superpowers/specs/2026-11-11-store-publish-environment-design.md do
 git commit -m "docs: add store-publish environment design and plan"
 ```
 
-- [ ] **Step 2: Run the repository checks that apply**
+- [x] **Step 2: Run the repository checks that apply**
 
 ```bash
 "$(go env GOPATH)/bin/actionlint" .github/workflows/publish-to-stores.yml .github/workflows/update-store-description.yml
@@ -289,7 +289,7 @@ Expected: no output from `actionlint`; Prettier reports all files formatted.
 
 No TypeScript, build, or Vitest run is needed because no source file changes.
 
-- [ ] **Step 3: Review the diff**
+- [x] **Step 3: Review the diff**
 
 Run:
 
@@ -300,7 +300,7 @@ git diff main...HEAD -- .github/workflows docs/STORE_PUBLISHING.md
 
 Expected: only the two workflow files and `docs/STORE_PUBLISHING.md` change, plus the two added design files. No `dist/`, `src/`, or `tests/` changes. No `publish-greasyfork` environment.
 
-- [ ] **Step 4: Push the branch**
+- [x] **Step 4: Push the branch**
 
 ```bash
 git push -u origin ci/store-publish-environment
@@ -308,7 +308,7 @@ git push -u origin ci/store-publish-environment
 
 Expected: the branch is pushed and tracks `origin/ci/store-publish-environment`.
 
-- [ ] **Step 5: Open the PR with the administrator checklist**
+- [x] **Step 5: Open the PR with the administrator checklist**
 
 Write a body from `.github/PULL_REQUEST_TEMPLATE.md` that includes:
 
