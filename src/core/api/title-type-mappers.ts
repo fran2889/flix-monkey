@@ -36,7 +36,7 @@ export function mapOmdbTitleType(apiValue: string | undefined): TitleTypeType | 
  * @returns Canonical title type or undefined
  */
 export function mapAgregarrTitleType(apiValue: string | undefined): TitleTypeType | undefined {
-    if (apiValue === 'movie') return TitleType.MOVIE;
+    if (apiValue === 'movie' || apiValue === 'tvMovie' || apiValue === 'tvSpecial') return TitleType.MOVIE;
     if (apiValue === 'tvSeries' || apiValue === 'tvMiniSeries') return TitleType.SERIES;
     return undefined;
 }

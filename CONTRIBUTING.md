@@ -108,7 +108,7 @@ If you are an AI agent, please refer to [AGENTS.md](./AGENTS.md) for specialized
 
 Store publishing is a separate manual deployment from the GitHub release. See
 [docs/STORE_PUBLISHING.md](docs/STORE_PUBLISHING.md) for the workflow, required
-secrets, and AMO source-build instructions.
+secrets, Greasy Fork webhook setup, and AMO source-build instructions.
 
 ## License
 

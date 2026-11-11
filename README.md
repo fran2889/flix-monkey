@@ -3,6 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/fran2889/flix-monkey)](https://github.com/fran2889/flix-monkey/releases)
 [![Chrome Web Store Version](https://img.shields.io/chrome-web-store/v/ipbiebdbicmlajmbcghkcdkobmcaoadl.svg?label=Chrome)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
 [![Firefox Add-on Version](https://img.shields.io/amo/v/flixmonkey.svg?label=Firefox)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
+[![Greasy Fork Version](https://img.shields.io/greasyfork/v/604942)](https://greasyfork.org/en/scripts/604942-flixmonkey)
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/ci.yml?branch=main&label=CI)](https://github.com/fran2889/flix-monkey/actions/workflows/ci.yml)
 [![Nightly](https://img.shields.io/github/actions/workflow/status/fran2889/flix-monkey/nightly.yml?label=Nightly)](https://github.com/fran2889/flix-monkey/actions/workflows/nightly.yml)
@@ -38,7 +39,7 @@ Use the links below to install FlixMonkey for your browser.
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-black?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/flixmonkey/ipbiebdbicmlajmbcghkcdkobmcaoadl)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/flixmonkey/)
-[![Tampermonkey](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://github.com/fran2889/flix-monkey/releases/latest/download/FlixMonkey.user.js)
+[![Tampermonkey](https://img.shields.io/badge/Userscript-Install-green?logo=tampermonkey&logoColor=white)](https://greasyfork.org/en/scripts/604942-flixmonkey)
 
 > The userscript version requires [Tampermonkey](https://www.tampermonkey.net/) (Chrome, Edge, Firefox, Opera, Safari), [Violentmonkey](https://violentmonkey.github.io/) (Chrome, Edge, Firefox), or [Greasemonkey](https://www.greasespot.net/) (Firefox).
 
@@ -46,7 +47,7 @@ Use the links below to install FlixMonkey for your browser.
 
 ## Features
 
-- **Rating Badges**: View IMDb ratings on titles, title previews, and detail pages. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
+- **Rating Badges**: View IMDb ratings on titles, title previews, detail pages, and More Like This recommendations. Metacritic and Rotten Tomatoes scores appear when the selected provider supplies them
 - **Color-Coded Ratings**: Rating badges use a gradient from red (IMDb 5.0 or below; RT/MC 50% or below) to green (IMDb 8.5 or above; RT/MC 85% or above)
 - **Click to Open**: Click the IMDb badge to open the title on IMDb, or search IMDb when no match is found
 - **Fade Low-Rated Titles**: Fade titles rated below your chosen IMDb threshold

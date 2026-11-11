@@ -5,5 +5,9 @@
 
 export { DisneyPlusSurfaceManager, extractDisneyPlusTitle } from './surface-definitions/disney-plus-surfaces';
 export { extractHboMaxTitle, HboMaxSurfaceManager } from './surface-definitions/hbo-max-surfaces';
-export { NETFLIX_SURFACES, NetflixSurfaceManager } from './surface-definitions/netflix-surfaces';
+export {
+    extractNetflixMoreLikeThisTitle,
+    NETFLIX_SURFACES,
+    NetflixSurfaceManager,
+} from './surface-definitions/netflix-surfaces';
 export { SurfaceManager } from './surface-manager';

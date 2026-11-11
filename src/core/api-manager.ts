@@ -36,8 +36,8 @@ export class ApiClientManager {
         const entry: CacheEntry | undefined = await this.#cache.read(displayTitle);
 
         if (entry && !entry.isExpired) {
-            const titleObj: Title | undefined = entry.getTitle();
-            if (titleObj && (titleObj.hasRating || titleObj.source === source)) {
+            const titleObj: Title = entry.getTitle();
+            if (titleObj.hasRating || titleObj.source === source) {
                 this.#logger.debug(`Cache hit for "${displayTitle}" from ${titleObj.source}`);
                 return titleObj;
             }
