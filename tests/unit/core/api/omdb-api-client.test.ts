@@ -238,14 +238,18 @@ describe('OmdbApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should log warn with error message on OMDB False response', async () => {
+    it('should log info with the provider error message on an OMDb False response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
             .build();
         const mockLoggerForTest = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
         await client.search('Unknown');
-        expect(mockLoggerForTest.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+        expect(mockLoggerForTest.info).toHaveBeenCalledTimes(1);
+        expect(mockLoggerForTest.info).toHaveBeenCalledWith(
+            'No search results found in OMDb for "Unknown": Movie not found!'
+        );
+        expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
     it('should return undefined on OMDB False response', async () => {
@@ -444,8 +448,50 @@ describe('OmdbApiClient', () => {
         const client = new OmdbApiClient({ ...deps, adapter, logger });
 
         expect(await client.search('Movie 1')).toBeUndefined();
-        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('No OMDb results found'));
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No search results found in OMDb for "Movie 1"');
         expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log info with the display title, IMDb ID, and provider message on a details miss', async () => {
+        const adapter = buildMockAdapter()
+            .withHttpFetchResolvingTo({ Response: 'False', Error: 'Incorrect IMDb ID.' })
+            .build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
+
+        expect(result).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1): Incorrect IMDb ID.');
+        expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log info without a provider message on a details miss that has no Error', async () => {
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
+
+        expect(result).toBeUndefined();
+        expect(logger.info).toHaveBeenCalledTimes(1);
+        expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1)');
+        expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log a malformed warning when a False response has a non-string Error', async () => {
+        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False', Error: 42 }).build();
+        const logger = buildLogger().build();
+        const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+        expect(logger.info).not.toHaveBeenCalled();
+        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
+            response: { Response: 'False', Error: 42 },
+            error: 'expected string at "Error"',
+        });
     });
 
     describe('response parsing', () => {
