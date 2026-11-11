@@ -26,7 +26,25 @@ the Greasy Fork listing serves the same version. The listing itself is updated b
 the repository's GitHub `release` webhook, not by this workflow. No code is built
 during this workflow; it only handles the store upload and verification process.
 
-## Required Repository Secrets
+## Publishing Environment
+
+The Chrome upload, Firefox upload, and Firefox description jobs run in the
+`store-publish` GitHub environment. Deployments to that environment are allowed
+only from `main` and `v*` tags, and it has no required reviewers. A workflow
+dispatched from any other branch or tag fails at the environment gate before it
+can read the credentials.
+
+The store credentials belong on the `store-publish` environment as environment
+secrets, not as repository secrets. To migrate existing repository secrets,
+create each one on the environment first, merge the workflow change, confirm a
+run succeeds and the environment page lists the same names, then delete the
+repository copies. Environment secrets take precedence over same-named
+repository secrets, so while both exist the environment value is live and the
+repository copy is only a fallback.
+
+## Required Environment Secrets
+
+Store these as secrets on the `store-publish` environment.
 
 ### Chrome Web Store
 
@@ -148,8 +166,15 @@ The built extension is written to `dist/chrome/`.
 The workflow uploads the Chrome and Firefox artifacts in parallel and checks the
 Greasy Fork version once. The Greasy Fork check does not poll or retry.
 
+The run deploys to the `store-publish` environment. There are no required
+reviewers, so it starts as soon as it is dispatched.
+
 ## Failure Handling
 
+- A job that fails before its first step with an environment protection error
+  was not dispatched from `main` or a `v*` tag. Dispatch it from `main`.
+- An empty store credential fails the store command. Confirm the secret exists
+  on the `store-publish` environment and not only at repository level.
 - The job checks the Greasy Fork listing only. It does not download or inspect
   the release asset, so a missing or wrong asset is reported as a version
   mismatch. Check the release asset if the listing is stale.
@@ -183,7 +208,7 @@ the `main` branch. This ensures store listings stay in sync with the repository.
 2. Click **Run workflow**
 
 Uses the AMO credentials documented in
-[Required Repository Secrets](#required-repository-secrets).
+[Required Environment Secrets](#required-environment-secrets).
 
 ### Chrome Web Store
 

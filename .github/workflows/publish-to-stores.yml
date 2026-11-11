@@ -14,6 +14,7 @@ permissions:
 jobs:
     publish-chrome:
         runs-on: ubuntu-latest
+        environment: store-publish
         timeout-minutes: 10
         steps:
             - name: Validate release tag format
@@ -50,6 +51,7 @@ jobs:
 
     publish-firefox:
         runs-on: ubuntu-latest
+        environment: store-publish
         timeout-minutes: 15
         steps:
             - name: Validate release tag format
