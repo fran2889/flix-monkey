@@ -8,25 +8,66 @@ import { ApiSource } from '../../../src/core/constants';
 import { PROVIDER_RATE_LIMITS } from '../../../src/core/rate-limits';
 import { RequestQueue } from '../../../src/core/request-queue';
 import { buildMockAdapter } from '../../mocks/adapter';
+import { buildLogger } from '../../mocks/logger';
 
 const SYNC_KEY = 'sync-key';
 
-function buildQueue(interval: number, adapter = buildMockAdapter().build()): RequestQueue {
-    return new RequestQueue(adapter, interval, SYNC_KEY);
+function buildQueue(
+    interval: number,
+    adapter = buildMockAdapter().build(),
+    logger = buildLogger().build()
+): RequestQueue {
+    return new RequestQueue(adapter, logger, interval, SYNC_KEY);
 }
 
 describe('RequestQueue', () => {
-    it('should clear queue', async () => {
+    it('should clear queue and reject pending requests', async () => {
         const firstFetch = vi.fn(() => new Promise(() => {}));
         const queue = buildQueue(999999);
         void queue.enqueue('url1', 1, firstFetch).catch(() => {});
-        void queue.enqueue('url2', 1, () => new Promise(() => {})).catch(() => {});
+        const pending = queue.enqueue('url2', 1, () => new Promise(() => {}));
 
         // Cross-tab sync reads storage before the first dequeue, so wait for the
         // active request to start before clearing the remaining queued item.
         await vi.waitFor(() => expect(firstFetch).toHaveBeenCalledOnce());
         const count = queue.clear();
         expect(count).toBe(1);
+        await expect(pending).rejects.toThrow('Client Disabled');
+    });
+
+    it('rejects the caller with the original fetch error', async () => {
+        const queue = buildQueue(0);
+        const error = new Error('fetch failed');
+
+        await expect(queue.enqueue('url', 1, () => Promise.reject(error))).rejects.toBe(error);
+    });
+
+    it('recovers when a storage read fails during processing', async () => {
+        let storageReads = 0;
+        const adapter = buildMockAdapter()
+            .withStorageGetResolvingTo(() => {
+                storageReads += 1;
+                return storageReads === 1 ? Promise.reject(new Error('storage failed')) : Promise.resolve(undefined);
+            })
+            .build();
+        const logger = buildLogger().build();
+        const queue = buildQueue(0, adapter, logger);
+        const firstFetch = vi.fn(() => Promise.resolve('first'));
+        const secondFetch = vi.fn(() => Promise.resolve('second'));
+
+        void queue.enqueue('url1', 1, firstFetch);
+        await vi.waitFor(() => expect(storageReads).toBe(1));
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(logger.warn).toHaveBeenCalledWith('RequestQueue pass aborted after a storage failure', {
+            key: SYNC_KEY,
+            pending: 1,
+            err: expect.any(Error),
+        });
+
+        void queue.enqueue('url2', 1, secondFetch);
+
+        await vi.waitFor(() => expect(secondFetch).toHaveBeenCalledOnce(), { timeout: 500 });
+        expect(firstFetch).toHaveBeenCalledOnce();
     });
 
     it('should synchronize across instances using storage', async () => {
@@ -66,16 +107,25 @@ describe('RequestQueue', () => {
             const fetchFn = vi.fn().mockResolvedValue({ ok: true });
             const xmdbKey = PROVIDER_RATE_LIMITS[ApiSource.XMDB].syncKey;
             const omdbKey = PROVIDER_RATE_LIMITS[ApiSource.OMDB].syncKey;
+            const queueLogger = buildLogger().build();
 
-            await new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-1', 0, fetchFn);
+            await new RequestQueue(adapter, queueLogger, interval, xmdbKey).enqueue('xmdb-1', 0, fetchFn);
             expect(fetchFn).toHaveBeenCalledTimes(1);
 
-            const otherProvider = new RequestQueue(adapter, interval, omdbKey).enqueue('omdb-1', 0, fetchFn);
+            const otherProvider = new RequestQueue(adapter, queueLogger, interval, omdbKey).enqueue(
+                'omdb-1',
+                0,
+                fetchFn
+            );
             await vi.advanceTimersByTimeAsync(0);
             expect(fetchFn).toHaveBeenCalledTimes(2);
             await otherProvider;
 
-            const sameProvider = new RequestQueue(adapter, interval, xmdbKey).enqueue('xmdb-2', 0, fetchFn);
+            const sameProvider = new RequestQueue(adapter, queueLogger, interval, xmdbKey).enqueue(
+                'xmdb-2',
+                0,
+                fetchFn
+            );
             await vi.advanceTimersByTimeAsync(0);
             expect(fetchFn).toHaveBeenCalledTimes(2);
 

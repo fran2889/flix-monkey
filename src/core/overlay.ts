@@ -6,10 +6,7 @@ import type { ServicePresentation } from '../types/overlay';
 import type { ConfigManager } from './config/config-manager';
 import type { Title } from './title';
 import { createLoadingOverlayElement, createOverlayElement, type OverlayOptions } from './ui/overlay-elements';
-import { buildOverlayStyles } from './ui/overlay-styles';
-
-/** Valid overlay corner positions. */
-type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+import { buildOverlayStyles, isOverlayCorner, type OverlayCorner } from './ui/overlay-styles';
 
 /** Interaction-driven overlay options passed to `injectOverlay`. */
 export type OverlayInteraction = Pick<
@@ -39,7 +36,7 @@ export class OverlayRenderer {
         const existing = document.getElementById('fm-overlay-styles');
         const cssText = buildOverlayStyles({
             overlayClass: this.#OVERLAY_CLASS,
-            corner: this.#config.get('overlayCorner') as OverlayCorner,
+            corner: this.#overlayCorner(),
             top10Selectors: [...(this.#serviceConstants.TOP_10_SELECTORS ?? [])],
             top10Offset: this.#serviceConstants.TOP_10_OFFSET ?? '50%',
         });
@@ -51,6 +48,11 @@ export class OverlayRenderer {
             style.textContent = cssText;
             document.head.appendChild(style);
         }
+    }
+
+    #overlayCorner(): OverlayCorner {
+        const corner = this.#config.get('overlayCorner');
+        return isOverlayCorner(corner) ? corner : 'top-left';
     }
 
     /**
@@ -107,7 +109,7 @@ export class OverlayRenderer {
             showRtRating: this.#config.getBool('showRtRating'),
             showMcRating: this.#config.getBool('showMcRating'),
             showFadeToggle: this.#config.getBool('enableFadeToggle'),
-            corner: this.#config.get('overlayCorner'),
+            corner: this.#overlayCorner(),
             ...interaction,
         });
         container.appendChild(overlay);

@@ -4,6 +4,7 @@
  */
 import type { PlatformAdapter } from '../platform/adapter';
 import type { MigrationSummary, StorageMigration } from '../types/migrations';
+import { isRecord } from './parse-utils';
 
 export const DATA_VERSION_KEY: string = 'fm_data_version';
 const CACHE_PREFIX: string = 'fmc:';
@@ -32,16 +33,22 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                     deleted += 1;
                     continue;
                 }
-                let entry: Record<string, unknown>;
+                let parsed: unknown;
                 try {
-                    entry = JSON.parse(raw);
+                    parsed = JSON.parse(raw);
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
                 }
-                const data = entry?.data as Record<string, unknown> | undefined;
-                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                if (!isRecord(parsed)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const entry = parsed;
+                const data = isRecord(entry.data) ? entry.data : undefined;
+                if (!data) {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
@@ -78,16 +85,22 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                     deleted += 1;
                     continue;
                 }
-                let entry: Record<string, unknown>;
+                let parsed: unknown;
                 try {
-                    entry = JSON.parse(raw);
+                    parsed = JSON.parse(raw);
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
                 }
-                const data = entry?.data as Record<string, unknown> | undefined;
-                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                if (!isRecord(parsed)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const entry = parsed;
+                const data = isRecord(entry.data) ? entry.data : undefined;
+                if (!data) {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;

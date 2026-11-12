@@ -12,7 +12,7 @@ import { containerFromClosest, SurfaceManager, titleFromAttribute } from '../sur
  * @param element - A `.titleCard--container` element.
  * @returns The trimmed accessible label, the trimmed artwork alt, or undefined.
  */
-export function extractNetflixMoreLikeThisTitle(element: Element): string | undefined {
+export function extractNetflixMoreLikeThisTitle(element: HTMLElement): string | undefined {
     const label = element.getAttribute('aria-label')?.trim();
     if (label) return label;
 
@@ -21,8 +21,9 @@ export function extractNetflixMoreLikeThisTitle(element: Element): string | unde
     return alt === '' ? undefined : alt;
 }
 
-const containerFromMoreLikeThisArtwork = (element: Element): Element | undefined => {
-    return element.querySelector('.titleCard-imageWrapper') ?? element;
+const containerFromMoreLikeThisArtwork = (element: HTMLElement): HTMLElement | undefined => {
+    const artwork = element.querySelector('.titleCard-imageWrapper');
+    return artwork instanceof HTMLElement ? artwork : element;
 };
 
 export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({

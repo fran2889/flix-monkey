@@ -10,11 +10,11 @@ export interface SurfaceDefinition {
     /** CSS selector for title elements. */
     titleSelector: string;
     /** Returns the title text. */
-    getTitle: (_element: Element) => string | undefined;
+    getTitle: (_element: HTMLElement) => string | undefined;
     /** Returns the container element. */
-    getContainer: (_element: Element) => Element | undefined;
+    getContainer: (_element: HTMLElement) => HTMLElement | undefined;
     /** Optional container decorator. */
-    decorateContainer?: (_container: Element, _element: Element) => void;
+    decorateContainer?: (_container: HTMLElement, _element: HTMLElement) => void;
     /** Whether this surface supports fading. Default: false */
     fadeable?: boolean;
     /** Whether to show fade toggle button. Default: false */
@@ -25,7 +25,7 @@ export interface SurfaceDefinition {
  * A surface discovered on the page.
  */
 export interface DiscoveredSurface {
-    container: Element;
+    container: HTMLElement;
     title: string;
     fadeable: boolean;
     showFadeToggle: boolean;

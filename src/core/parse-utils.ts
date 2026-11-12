@@ -18,6 +18,16 @@ export class ParseError extends Error {
 }
 
 /**
+ * Checks that a value is a non-null, non-array object.
+ *
+ * @param value - Untrusted value.
+ * @returns True when the value is a non-null, non-array object.
+ */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
  * Asserts that a value is a non-null, non-array object.
  *
  * @param value - Untrusted value.
@@ -25,7 +35,7 @@ export class ParseError extends Error {
  * @throws ParseError when the value is null, an array, or not an object.
  */
 export function assertRecord(value: unknown, label?: string): asserts value is Record<string, unknown> {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    if (!isRecord(value)) {
         const location = label === undefined ? '' : ` at "${label}"`;
         throw new ParseError(`expected an object${location}`);
     }

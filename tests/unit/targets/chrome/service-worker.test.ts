@@ -149,6 +149,18 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).toHaveBeenCalledWith({ error: 'Invalid URL' });
     });
 
+    it('ignores a message with malformed options', () => {
+        const sendResponse = vi.fn();
+        const result = messageListener(
+            { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'xml' } },
+            { id: 'test-ext' },
+            sendResponse
+        );
+
+        expect(result).toBe(false);
+        expect(sendResponse).not.toHaveBeenCalled();
+    });
+
     it('should respect custom timeout in options', async () => {
         const customTimeout = 1234;
         const sendResponse = vi.fn();

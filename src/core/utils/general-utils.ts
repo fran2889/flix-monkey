@@ -33,7 +33,10 @@ export class FlixMonkeyError extends Error {
 /**
  * Debounced wrapper that forwards its receiver and arguments to the wrapped function.
  */
-export type DebouncedFunction<T extends (..._args: unknown[]) => unknown> = (..._args: Parameters<T>) => ReturnType<T>;
+export type DebouncedFunction<T extends (..._args: unknown[]) => unknown> = (
+    this: unknown,
+    ..._args: Parameters<T>
+) => void;
 
 /**
  * Creates a debounced function that delays invoking the input function until after
@@ -46,10 +49,10 @@ export type DebouncedFunction<T extends (..._args: unknown[]) => unknown> = (...
  */
 export function debounce<T extends (..._args: unknown[]) => unknown>(func: T, wait: number): DebouncedFunction<T> {
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    return function (this: unknown, ...args: Parameters<T>) {
+    return function (this: unknown, ...args: Parameters<T>): void {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
-    } as DebouncedFunction<T>;
+    };
 }
 
 /**

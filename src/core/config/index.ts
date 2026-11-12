@@ -10,6 +10,7 @@ export type {
     ConfigFieldKey,
     ConfigValueType,
     GroupKey,
+    RowLabelKey,
     SelectOption,
     SettingConfigField,
     SettingKey,
@@ -20,6 +21,7 @@ export {
     CONFIG_SELECT_ALLOWED,
     GROUPS,
     isActionField,
+    isCompleteSettingsMap,
     isSettingField,
     ROW_LABELS,
 } from './config-fields';

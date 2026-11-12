@@ -56,11 +56,11 @@ export class Modal {
     open(): void {
         if (this.#escHandler !== undefined) return;
         document.body.appendChild(this.overlay);
-        this.#returnFocus = (document.activeElement as HTMLElement | null) ?? undefined;
+        this.#returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
         this.overlay.style.display = 'flex';
-        const contentElement = this.overlay.querySelector('.fm-modal-content');
+        const contentElement = this.overlay.querySelector<HTMLElement>('.fm-modal-content');
         if (contentElement) {
-            (contentElement as HTMLElement).focus();
+            contentElement.focus();
         }
         this.#escHandler = (e: KeyboardEvent): void => {
             if (e.key === 'Escape') this.#close();
@@ -83,10 +83,10 @@ export class Modal {
      * @returns The modal body container.
      */
     getContentContainer(): HTMLElement {
-        const body = this.overlay.querySelector('.fm-modal-body');
+        const body = this.overlay.querySelector<HTMLElement>('.fm-modal-body');
         if (body === null) {
             throw new Error('Modal body container not found');
         }
-        return body as HTMLElement;
+        return body;
     }
 }

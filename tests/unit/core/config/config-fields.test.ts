@@ -10,6 +10,7 @@ import {
     CONFIG_FIELDS,
     GROUPS,
     isActionField,
+    isCompleteSettingsMap,
     isSettingField,
     ROW_LABELS,
 } from '../../../../src/core/config/index';
@@ -37,6 +38,15 @@ describe('core/config-fields', () => {
                 expect(['string', 'boolean']).toContain(typeof value);
             }
             expect(CONFIG_DEFAULTS.debug).toBe(true);
+        });
+    });
+
+    describe('isCompleteSettingsMap', () => {
+        it('accepts the built defaults and rejects a missing setting', () => {
+            expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
+
+            const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
+            expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
         });
     });
 

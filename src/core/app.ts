@@ -8,7 +8,7 @@ import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } f
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
-import { ApiSource, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants';
+import { ApiSource, type ApiSourceType, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants';
 import { DisabledClientsManager, type DisabledClientsManager as DisabledClientsManagerType } from './disabled-clients';
 import {
     FadeManager,
@@ -25,6 +25,8 @@ import type { Title } from './title';
 import { FADE_STATE_LABELS } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
 
+type HistoryMethod = (data: unknown, unused: string, url?: string | URL | null) => void;
+
 /** Main application class coordinating rating overlay functionality. */
 export class FlixMonkeyApp {
     readonly #api: ApiClientManagerType;
@@ -39,8 +41,8 @@ export class FlixMonkeyApp {
     #initialised = false;
     #boundDisconnect: (() => void) | undefined;
     #navigationPatched = false;
-    #originalPushState: ((..._args: unknown[]) => void) | undefined;
-    #originalReplaceState: ((..._args: unknown[]) => void) | undefined;
+    #originalPushState: HistoryMethod | undefined;
+    #originalReplaceState: HistoryMethod | undefined;
     #popstateHandler: (() => void) | undefined;
     readonly #fadeManager: FadeManagerType;
     readonly #overrideManager: IdOverrideManagerType;
@@ -85,38 +87,44 @@ export class FlixMonkeyApp {
         if (this.#navigationPatched) return;
         this.#navigationPatched = true;
 
-        this.#originalPushState = history.pushState as (..._args: unknown[]) => void;
-        this.#originalReplaceState = history.replaceState as (..._args: unknown[]) => void;
+        this.#originalPushState = history.pushState;
+        this.#originalReplaceState = history.replaceState;
 
-        history.pushState = (...args: unknown[]): void => {
-            this.#originalPushState?.apply(history, args);
+        history.pushState = (data: unknown, unused: string, url?: string | URL | null): void => {
+            this.#originalPushState?.call(history, data, unused, url);
             this.#debouncedDecorate();
         };
-        history.replaceState = (...args: unknown[]): void => {
-            this.#originalReplaceState?.apply(history, args);
+        history.replaceState = (data: unknown, unused: string, url?: string | URL | null): void => {
+            this.#originalReplaceState?.call(history, data, unused, url);
             this.#debouncedDecorate();
         };
 
         this.#popstateHandler = (): void => this.#debouncedDecorate();
         window.addEventListener('popstate', this.#popstateHandler);
 
-        this.#observer = new MutationObserver(mutations => {
-            try {
-                let hasElements = false;
-                for (const m of mutations) {
-                    for (const n of m.addedNodes) {
-                        if (n.nodeType === Node.ELEMENT_NODE) {
-                            hasElements = true;
-                            this.#pendingRoots.add(m.target as Element);
-                        }
-                    }
-                }
-                if (hasElements) this.#debouncedDecorate();
-            } catch (err) {
-                this.#logger.error('Mutation observer error', err);
-            }
-        });
+        this.#observer = new MutationObserver(mutations => this.#handleMutations(mutations));
         this.#observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    #handleMutations(mutations: MutationRecord[]): void {
+        try {
+            let hasElements = false;
+            for (const mutation of mutations) {
+                if (this.#collectPendingRoot(mutation)) hasElements = true;
+            }
+            if (hasElements) this.#debouncedDecorate();
+        } catch (err) {
+            this.#logger.error('Mutation observer error', err);
+        }
+    }
+
+    #collectPendingRoot(mutation: MutationRecord): boolean {
+        for (const node of mutation.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            if (mutation.target instanceof Element) this.#pendingRoots.add(mutation.target);
+            return true;
+        }
+        return false;
     }
 
     #decorateRoot(root: Element | Document): void {
@@ -128,18 +136,17 @@ export class FlixMonkeyApp {
     }
 
     async #decorateContainer(
-        container: Element,
+        container: HTMLElement,
         displayTitle: string,
         fadeable: boolean,
         showFadeToggle: boolean
     ): Promise<void> {
-        if (this.#renderer.hasOverlay(container as HTMLElement) || this.#renderer.isLoading(container as HTMLElement))
-            return;
+        if (this.#renderer.hasOverlay(container) || this.#renderer.isLoading(container)) return;
 
         const dedupKey = slugify(displayTitle);
 
-        this.#renderer.ensureRelative(container as HTMLElement);
-        this.#renderer.injectLoadingOverlay(container as HTMLElement, displayTitle);
+        this.#renderer.ensureRelative(container);
+        this.#renderer.injectLoadingOverlay(container, displayTitle);
 
         /*
          * Yield to the event loop so the browser can paint the loading overlay
@@ -156,7 +163,7 @@ export class FlixMonkeyApp {
             const data = await request;
             this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
         } finally {
-            this.#renderer.removeLoadingOverlay(container as HTMLElement);
+            this.#renderer.removeLoadingOverlay(container);
         }
     }
 
@@ -177,7 +184,7 @@ export class FlixMonkeyApp {
     }
 
     #renderTitle(
-        container: Element,
+        container: HTMLElement,
         data: Title,
         {
             dedupKey,
@@ -191,12 +198,12 @@ export class FlixMonkeyApp {
             fadeOverride: FadeOverrideState;
         }
     ): void {
-        if (this.#renderer.hasOverlay(container as HTMLElement) || !document.contains(container)) return;
+        if (this.#renderer.hasOverlay(container) || !document.contains(container)) return;
 
         const shouldFade = fadeable && this.#fadeManager.shouldFade(fadeOverride, data.imdbRating);
-        this.#renderer.applyFade(container as HTMLElement, shouldFade);
-        (container as HTMLElement).dataset.fmKey = dedupKey;
-        this.#renderer.injectOverlay(container as HTMLElement, data, {
+        this.#renderer.applyFade(container, shouldFade);
+        container.dataset.fmKey = dedupKey;
+        this.#renderer.injectOverlay(container, data, {
             displayTitle: data.displayTitle,
             onEditClick: (dt: string): void => {
                 this.#handleEditClick(dt, data.imdbId).catch(err =>
@@ -268,8 +275,9 @@ export class FlixMonkeyApp {
     #redecorateTitle(dedupKey: string, displayTitle: string): void {
         // querySelectorAll only yields nodes inside the document, so no containment check is needed.
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
-            delete (container as HTMLElement).dataset.fmInjected;
-            this.#renderer.removeLoadingOverlay(container as HTMLElement);
+            if (!(container instanceof HTMLElement)) return;
+            delete container.dataset.fmInjected;
+            this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>
                 this.#logger.error(`Failed to redecorate "${displayTitle}"`, err)
             );
@@ -304,7 +312,8 @@ export class FlixMonkeyApp {
         }
         const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
-            this.#renderer.applyFade(c as HTMLElement, shouldFade);
+            if (!(c instanceof HTMLElement)) return;
+            this.#renderer.applyFade(c, shouldFade);
         });
     }
 
@@ -355,13 +364,17 @@ export class FlixMonkeyApp {
  */
 function createApiClient(deps: ApiClientDeps): BaseApiClient {
     const provider = deps.config.get('apiClient').trim().toLowerCase();
-    const clientMap = {
+    const clientMap: Record<ApiSourceType, new (_deps: ApiClientDeps) => BaseApiClient> = {
         [ApiSource.AGREGARR]: AgregarrApiClient,
         [ApiSource.XMDB]: XmdbApiClient,
         [ApiSource.OMDB]: OmdbApiClient,
     };
-    const ClientClass = clientMap[provider as keyof typeof clientMap] ?? AgregarrApiClient;
+    const ClientClass = isApiSource(provider) ? clientMap[provider] : AgregarrApiClient;
     return new ClientClass(deps);
+}
+
+function isApiSource(value: string): value is ApiSourceType {
+    return Object.values(ApiSource).some(source => source === value);
 }
 
 /**

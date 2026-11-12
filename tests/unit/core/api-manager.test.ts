@@ -172,6 +172,27 @@ describe('ApiClientManager', () => {
         });
     });
 
+    it('handles a non-Error rejection without metadata', async () => {
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockClient: ApiClient = {
+            source: 'xmdb',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn().mockRejectedValue('boom'),
+            disable: vi.fn(),
+        };
+        const mockLogger = buildLogger().build();
+        const manager = new ApiClientManager(mockLogger, mockCache, disabledManager, mockClient);
+
+        const result = await manager.getData('Broken Movie');
+
+        expect(result.hasRating).toBe(false);
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Broken Movie'), {
+            url: undefined,
+            status: undefined,
+            body: undefined,
+        });
+    });
+
     it('should log at warn level for non-HTTP errors', async () => {
         const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
         const error = new Error('network error');

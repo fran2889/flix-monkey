@@ -2,8 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { HttpFetchOptions } from '../../platform/adapter';
 import { handleFetchMessage } from '../extension/fetch-proxy';
+import { parseExtensionMessage } from '../extension/messages';
 import { createExtensionMigrationExecutor } from '../extension/migrations';
 
 /**
@@ -35,19 +35,6 @@ declare const chrome: {
     };
 };
 
-/**
- * Message types for chrome.runtime.onMessage communication.
- */
-interface FMRunMigrationsMessage {
-    type: 'FM_RUN_MIGRATIONS';
-}
-interface FMFetchMessage {
-    type: 'FM_FETCH';
-    url: string;
-    options?: HttpFetchOptions;
-}
-type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
-
 const executeMigrations = createExtensionMigrationExecutor();
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -67,17 +54,14 @@ chrome.runtime.onMessage.addListener(
             return false;
         }
 
-        const message = msg as ExtensionMessage;
+        const message = parseExtensionMessage(msg);
+        if (!message) return false;
         if (message.type === 'FM_RUN_MIGRATIONS') {
             executeMigrations().then(
                 () => sendResponse({}),
                 (error: unknown) => sendResponse({ error: error instanceof Error ? error.message : String(error) })
             );
             return true;
-        }
-
-        if (message.type !== 'FM_FETCH') {
-            return false;
         }
 
         const { url, options } = message;

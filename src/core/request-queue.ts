@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { PlatformAdapter } from '../platform/adapter';
+import type { Logger } from './logger';
 
 /**
  * Rate-limited request queue with priority-based execution and cross-tab synchronization.
@@ -14,18 +15,21 @@ export class RequestQueue {
     readonly #minInterval: number;
     readonly #globalSyncKey: string;
     readonly #adapter: PlatformAdapter;
+    readonly #logger: Logger;
 
     /**
      * Creates a queue with the given pacing and cross-tab sync key.
      *
      * @param adapter - Storage adapter used for cross-tab coordination.
+     * @param logger - Logger for storage failures that abort a processing pass.
      * @param minInterval - Minimum delay between dispatched requests.
      * @param globalSyncKey - Storage key used to coordinate the delay across tabs.
      */
-    constructor(adapter: PlatformAdapter, minInterval: number, globalSyncKey: string) {
+    constructor(adapter: PlatformAdapter, logger: Logger, minInterval: number, globalSyncKey: string) {
+        this.#adapter = adapter;
+        this.#logger = logger;
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
-        this.#adapter = adapter;
     }
 
     /**
@@ -38,46 +42,60 @@ export class RequestQueue {
      * @returns Result returned by fetchFn.
      */
     async enqueue<T>(url: string, priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
-        return new Promise((resolve: (_value: T | PromiseLike<T>) => void, reject) => {
+        return new Promise<T>((resolve, reject) => {
             this.#queue.push({
                 url,
                 priority,
-                resolve: resolve as (_value2: unknown) => void,
                 reject,
-                fetchFn: fetchFn,
+                run: async (urlParam: string): Promise<void> => {
+                    try {
+                        resolve(await fetchFn(urlParam));
+                    } catch (error: unknown) {
+                        reject(error);
+                    }
+                },
             });
             if (this.#queue.length > 1) {
                 this.#queue.sort((a, b) => b.priority - a.priority);
             }
-            void this.#process<T>();
+            void this.#process();
         });
     }
 
-    async #process<T>(): Promise<void> {
+    async #process(): Promise<void> {
         if (this.#isProcessing) return;
         this.#isProcessing = true;
 
-        while (this.#queue.length > 0) {
-            const now = Date.now();
-            const lastGlobal = await this.#getLastGlobalRequestTime();
+        try {
+            while (this.#queue.length > 0) {
+                const now = Date.now();
+                const lastGlobal = await this.#getLastGlobalRequestTime();
 
-            const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
-            if (wait > 0) {
-                await new Promise(r => setTimeout(r, wait));
-                // Re-read storage after waiting, then restart the loop: another tab may
-                // have claimed the slot while this one slept.
-                continue;
+                const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
+                if (wait > 0) {
+                    await new Promise(r => setTimeout(r, wait));
+                    // Re-read storage after waiting, then restart the loop: another tab may
+                    // have claimed the slot while this one slept.
+                    continue;
+                }
+
+                // Re-read storage before claiming the timeslot to reduce cross-tab races
+                const freshGlobal = await this.#getLastGlobalRequestTime();
+                if (Date.now() - freshGlobal < this.#minInterval) continue;
+
+                this.#lastLocalReqTime = Date.now();
+                await this.#syncClaimedRequestSlot();
+                await this.#dispatchNextRequest();
             }
-
-            // Re-read storage before claiming the timeslot to reduce cross-tab races
-            const freshGlobal = await this.#getLastGlobalRequestTime();
-            if (Date.now() - freshGlobal < this.#minInterval) continue;
-
-            this.#lastLocalReqTime = Date.now();
-            await this.#syncClaimedRequestSlot();
-            await this.#dispatchNextRequest<T>();
+        } catch (err) {
+            this.#logger.warn('RequestQueue pass aborted after a storage failure', {
+                key: this.#globalSyncKey,
+                pending: this.#queue.length,
+                err,
+            });
+        } finally {
+            this.#isProcessing = false;
         }
-        this.#isProcessing = false;
     }
 
     async #getLastGlobalRequestTime(): Promise<number> {
@@ -91,15 +109,10 @@ export class RequestQueue {
         await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
-    async #dispatchNextRequest<T>(): Promise<void> {
+    async #dispatchNextRequest(): Promise<void> {
         const item = this.#queue.shift();
         if (!item) return;
-        try {
-            const result = await (item.fetchFn as (_url: string) => Promise<T>)(item.url);
-            (item.resolve as (_value: T | PromiseLike<T>) => void)(result);
-        } catch (error) {
-            item.reject(error);
-        }
+        await item.run(item.url);
     }
 
     /**
@@ -119,10 +132,9 @@ export class RequestQueue {
 }
 
 /** Internal queue item type */
-interface QueueItem<T = unknown> {
+interface QueueItem {
     url: string;
     priority: number;
-    resolve: (_value: T | PromiseLike<T>) => void;
     reject: (_reason: unknown) => void;
-    fetchFn: (_url: string) => Promise<T>;
+    run: (_url: string) => Promise<void>;
 }

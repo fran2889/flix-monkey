@@ -31,14 +31,15 @@ function canonicalizeDisneyPlusTitle(title: string): string {
  * @param element - DOM element representing a Disney+ content tile.
  * @returns Extracted title or undefined if not found.
  */
-export function extractDisneyPlusTitle(element: Element): string | undefined {
-    const tile = element as HTMLElement;
-    const imageTitle = [...tile.querySelectorAll<HTMLImageElement>('img[alt]:not([data-testid="set-item-rating"] img)')]
+export function extractDisneyPlusTitle(element: HTMLElement): string | undefined {
+    const imageTitle = [
+        ...element.querySelectorAll<HTMLImageElement>('img[alt]:not([data-testid="set-item-rating"] img)'),
+    ]
         .map(image => image.alt.trim())
         .find(Boolean);
     if (imageTitle) return canonicalizeDisneyPlusTitle(imageTitle);
 
-    const label = tile
+    const label = element
         .getAttribute('aria-label')
         ?.replace(/[\u2066-\u2069]/g, '')
         .trim();
@@ -65,7 +66,7 @@ const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
     CONTINUE_WATCHING: Object.freeze({
         titleSelector:
             '[data-testid="set-section"][data-set-style="continue_watching"] [data-testid="cw-set-item-wrapper"]',
-        getTitle: (wrapper: Element): string | undefined => {
+        getTitle: (wrapper: HTMLElement): string | undefined => {
             const metadataEl = wrapper.querySelector('[data-testid="cw-set-item-metadata"]');
             return metadataEl?.children[1]?.textContent ?? undefined;
         },

@@ -62,6 +62,7 @@ const typescriptRules = {
     // TypeScript-specific strict rules
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-non-null-assertion': 'error',
+    '@typescript-eslint/no-unsafe-type-assertion': 'error',
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off', // Too many false positives for internal modules
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
@@ -149,13 +150,14 @@ export default [
         },
         rules: typescriptRules,
     },
-    // 2.5. Relax some rules in test files (non-null-assertion for mocks, type assertions, promise-returning)
+    // 2.5. Relax some rules in test files (non-null-assertion and narrowing assertions for mocks, promise-returning)
     {
         files: ['tests/**/*.ts'],
         rules: {
             '@typescript-eslint/no-non-null-assertion': 'off',
             '@typescript-eslint/explicit-function-return-type': 'off',
             '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+            '@typescript-eslint/no-unsafe-type-assertion': 'off',
             '@typescript-eslint/promise-function-async': 'off',
             '@typescript-eslint/prefer-readonly': 'off',
         },

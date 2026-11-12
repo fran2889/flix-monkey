@@ -97,6 +97,16 @@ describe('Firefox Background Script', () => {
         expect(result).toEqual({ error: 'Invalid URL' });
     });
 
+    it('ignores a message with malformed options', async () => {
+        const result = await messageListener({
+            type: 'FM_FETCH',
+            url: 'https://xmdbapi.com',
+            options: { responseType: 'xml' },
+        });
+
+        expect(result).toBeUndefined();
+    });
+
     it('should respect custom timeout in options', async () => {
         const customTimeout = 1234;
         const setTimeoutSpy = vi.spyOn(global, 'setTimeout');

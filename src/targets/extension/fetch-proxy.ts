@@ -9,9 +9,9 @@ import { validateDomain } from './domains';
 
 /**
  * Fetches an allowlisted external URL for content scripts. URL validation and
- * fetch/request failures return the error branch. Options are destructured
- * without validation, so malformed values such as `null` can throw before the
- * request begins.
+ * fetch/request failures return the error branch. Options are expected to be
+ * pre-validated by the caller (`parseExtensionMessage` in the extension
+ * targets); this function does not re-validate them.
  *
  * @param url - Requested URL, validated against ALLOWED_DOMAINS.
  * @param options - Requested response format and timeout.

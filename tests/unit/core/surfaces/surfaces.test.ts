@@ -42,14 +42,33 @@ describe('SurfaceManager', () => {
     });
 
     it('should skip element with missing title attribute', () => {
-        const mockEl = {
-            closest: () => document.body,
-            parentElement: document.body,
-            getAttribute: () => null,
-            querySelector: () => null,
-        };
-        const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
-        expect(sm.discover({ querySelectorAll: () => [mockEl] } as unknown as Element)).toHaveLength(0);
+        expect(discover('<div data-uia="standard-card"></div>')).toHaveLength(0);
+    });
+
+    it('should skip a surface whose getTitle returns undefined', () => {
+        const sm = new SurfaceManager(buildLogger().build(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: () => undefined,
+                getContainer: () => document.body,
+            },
+        });
+        document.body.innerHTML = '<div data-title></div>';
+
+        expect(sm.discover(document.body)).toHaveLength(0);
+    });
+
+    it('skips a title element that is not an HTMLElement', () => {
+        document.body.innerHTML = '<svg data-title="Vector"></svg>';
+        const sm = new SurfaceManager(buildLogger().build(), {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: () => 'Vector',
+                getContainer: () => document.body,
+            },
+        });
+
+        expect(sm.discover(document.body)).toHaveLength(0);
     });
 
     it('should deduplicate when multiple title elements share the same container', () => {
@@ -65,23 +84,33 @@ describe('SurfaceManager', () => {
 
     it('should fall back to parentElement when the container resolver finds nothing', () => {
         const logger = buildLogger().build();
-        const sm = new SurfaceManager(logger, NETFLIX_SURFACES);
-        const fakeParent = document.createElement('div');
-        fakeParent.className = 'orphan-parent';
-        const mockTitleEl = {
-            closest: () => null,
-            parentElement: fakeParent,
-            getAttribute: () => 'Orphan',
-            querySelector: () => null,
-        };
-        const results = sm.discover({
-            querySelectorAll: (selector: string) => (selector === '.title-card a[aria-label]' ? [mockTitleEl] : []),
-        } as unknown as Element);
+        const sm = new SurfaceManager(logger, {
+            card: {
+                titleSelector: '[data-title]',
+                getTitle: element => element.dataset.title,
+                getContainer: () => undefined,
+            },
+        });
+        document.body.innerHTML = '<section data-container><div data-title="Orphan"></div></section>';
+        const results = sm.discover(document.body);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Orphan');
-        expect(results[0].container).toBe(fakeParent);
+        expect(results[0].container).toBe(document.querySelector('[data-container]'));
         expect(logger.warn).toHaveBeenCalledWith(
             'Surface container resolver failed for Orphan, falling back to parentElement'
+        );
+    });
+
+    it('skips a title whose closest container is not an HTML element', () => {
+        document.body.innerHTML =
+            '<svg><g class="title-card"><foreignObject><a aria-label="Vector" href="#"></a></foreignObject></g></svg>';
+        const logger = buildLogger().build();
+
+        const results = new SurfaceManager(logger, NETFLIX_SURFACES).discover(document.body);
+
+        expect(results).toHaveLength(0);
+        expect(logger.warn).toHaveBeenCalledWith(
+            'Surface container resolver failed for Vector, falling back to parentElement'
         );
     });
 
@@ -100,8 +129,8 @@ describe('SurfaceManager', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
-                getTitle: (el: Element) => (el as HTMLElement).dataset.title as string,
-                getContainer: (element: Element) => element,
+                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
+                getContainer: (element: HTMLElement) => element,
             },
         });
         document.body.innerHTML = '<div data-title="Callback Title"></div>';
@@ -112,8 +141,8 @@ describe('SurfaceManager', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
-                getTitle: (element: Element) => (element as HTMLElement).dataset.title as string,
-                getContainer: (element: Element) => element,
+                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
+                getContainer: (element: HTMLElement) => element,
             },
         });
         document.body.innerHTML = '<div data-title="Default Flags"></div>';
@@ -131,8 +160,8 @@ describe('SurfaceManager', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
-                getTitle: (element: Element) => (element as HTMLElement).dataset.title as string,
-                getContainer: (element: Element) => (element as HTMLElement).parentElement as HTMLElement,
+                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
+                getContainer: (element: HTMLElement) => element.parentElement ?? undefined,
             },
         });
 
@@ -144,9 +173,9 @@ describe('SurfaceManager', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
-                getTitle: (element: Element) => (element as HTMLElement).dataset.title as string,
-                getContainer: (element: Element) => (element as HTMLElement).parentElement as HTMLElement,
-                decorateContainer: (container: Element) => (container as HTMLElement).classList.add('decorated'),
+                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
+                getContainer: (element: HTMLElement) => element.parentElement ?? undefined,
+                decorateContainer: (container: HTMLElement) => container.classList.add('decorated'),
             },
         });
 
@@ -163,7 +192,7 @@ describe('SurfaceManager', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
-                getTitle: (element: Element) => (element as HTMLElement).dataset.title as string,
+                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
                 getContainer: () => undefined,
             },
         });
@@ -211,7 +240,7 @@ describe('SurfaceManager', () => {
 describe('Netflix More Like This title extraction', () => {
     function extract(html: string): string | undefined {
         document.body.innerHTML = html;
-        const tile = document.querySelector('.titleCard--container');
+        const tile = document.querySelector<HTMLElement>('.titleCard--container');
         if (!tile) throw new Error('fixture tile missing');
         return extractNetflixMoreLikeThisTitle(tile);
     }
@@ -376,7 +405,7 @@ describe('HBO Max surfaces', () => {
 
         const [surface] = new HboMaxSurfaceManager(buildLogger().build()).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
-        expect((surface.container as HTMLElement).classList.contains('fm-hbo-top-10')).toBe(true);
+        expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', (type: string) => {

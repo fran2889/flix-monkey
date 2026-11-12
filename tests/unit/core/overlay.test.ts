@@ -58,6 +58,19 @@ describe('OverlayRenderer', () => {
             expect(document.head.querySelector('#fm-overlay-styles')).toBe(existingStyle);
             expect(existingStyle?.textContent).not.toBe(originalCssText);
         });
+
+        it('falls back to top-left when the configured corner is unrecognized', () => {
+            const config = buildConfig().build();
+            vi.spyOn(config, 'get').mockReturnValue('middle');
+            const renderer = new OverlayRenderer(config);
+
+            renderer.injectStyles();
+            const container = document.createElement('div');
+            injectOverlay(renderer, container, buildTitle().build());
+
+            expect(container.querySelector('.fm-top-left')).not.toBeNull();
+            expect(container.querySelector('.fm-middle')).toBeNull();
+        });
     });
 
     describe('overlay lifecycle', () => {

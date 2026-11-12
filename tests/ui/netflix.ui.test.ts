@@ -33,9 +33,9 @@ describe('Netflix surfaces', () => {
     });
 
     function attachOverlay(surface: DiscoveredSurface): void {
-        if (overlayRenderer.hasOverlay(surface.container as HTMLElement)) return;
+        if (overlayRenderer.hasOverlay(surface.container)) return;
         overlayRenderer.injectOverlay(
-            surface.container as HTMLElement,
+            surface.container,
             new Title({ displayTitle: surface.title, imdbRating: 8.5, imdbId: 'tt1234567' }),
             {
                 displayTitle: surface.title,

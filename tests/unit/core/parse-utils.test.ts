@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     assertRecord,
+    isRecord,
     optionalArray,
     optionalNumber,
     optionalString,
@@ -43,6 +44,14 @@ describe('assertRecord', () => {
         expect(() => assertRecord(value)).toThrow(ParseError);
         expect(() => assertRecord(value)).toThrow('expected an object');
     });
+});
+
+describe('isRecord', () => {
+    it('accepts a plain object', () => expect(isRecord({ a: 1 })).toBe(true));
+    it('accepts any non-array object', () => expect(isRecord(new Map())).toBe(true));
+    it('rejects null', () => expect(isRecord(null)).toBe(false));
+    it('rejects an array', () => expect(isRecord([])).toBe(false));
+    it('rejects a primitive', () => expect(isRecord('text')).toBe(false));
 });
 
 describe('requiredString', () => {

@@ -44,6 +44,11 @@ describe('core/utils/general-utils', () => {
             expect(func).toHaveBeenCalledWith('arg1', 'arg2');
         });
 
+        it('returns undefined because the call is deferred', () => {
+            const debounced = debounce(vi.fn(), 100);
+            expect(debounced()).toBeUndefined();
+        });
+
         it('should maintain context', () => {
             const context = { value: 'test' };
             let capturedContext: unknown;

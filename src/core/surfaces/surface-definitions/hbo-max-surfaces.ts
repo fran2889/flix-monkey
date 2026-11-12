@@ -10,11 +10,11 @@ const HBO_MAX_TITLE_PATTERNS = Object.freeze([
     /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
     /^(.+)\. Row \d+ of \d+, Column \d+ of \d+\.?/u,
     /^(.+)\. \d+ of \d+(?:\. (?:Just Added|New|New Episode|Leaving Soon))?\.?$/u,
-]) as RegExp[];
+]);
 const HBO_MAX_WATCH_TITLE_PATTERNS = Object.freeze([
     /^Watch (.+)\. Season \d+(?=, |: |\. |$)/u,
     /^Watch (.+)[.,] Episode \d+(?=, |: |\. |$)/u,
-]) as RegExp[];
+]);
 const HBO_MAX_TITLE_TYPES = new Set(['movie', 'show', 'mini-series']);
 
 function firstMatchingPattern(label: string, patterns: readonly RegExp[]): string | undefined {
@@ -31,7 +31,7 @@ function firstMatchingPattern(label: string, patterns: readonly RegExp[]): strin
  * @param element - HBO Max content tile element.
  * @returns Normalized aria-label text or undefined.
  */
-function getNormalizedHboMaxAriaLabel(element: Element): string | undefined {
+function getNormalizedHboMaxAriaLabel(element: HTMLElement): string | undefined {
     const label = element.getAttribute('aria-label') ?? undefined;
     if (label === undefined) return undefined;
     return label.replace(/[\u2066-\u2069]/g, '').trim();
@@ -43,11 +43,11 @@ function getNormalizedHboMaxAriaLabel(element: Element): string | undefined {
  * @param element - DOM element representing an HBO Max content tile.
  * @returns Extracted title or undefined if not found.
  */
-export function extractHboMaxTitle(element: Element): string | undefined {
+export function extractHboMaxTitle(element: HTMLElement): string | undefined {
     const label = getNormalizedHboMaxAriaLabel(element);
     if (!label) return undefined;
 
-    const sonicType = (element as HTMLElement).dataset.sonicType;
+    const sonicType = element.dataset.sonicType;
     if (sonicType === 'video') {
         return firstMatchingPattern(label, HBO_MAX_WATCH_TITLE_PATTERNS);
     }
@@ -61,7 +61,7 @@ export function extractHboMaxTitle(element: Element): string | undefined {
  * @param element - HBO Max content tile element.
  * @returns True if the tile is a Top 10 item.
  */
-function isHboMaxTop10Tile(element: Element): boolean {
+function isHboMaxTop10Tile(element: HTMLElement): boolean {
     const label = getNormalizedHboMaxAriaLabel(element);
     return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
@@ -71,7 +71,7 @@ const HBO_MAX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
         getContainer: containerFromParent,
-        decorateContainer: (container: Element, element: Element): void => {
+        decorateContainer: (container: HTMLElement, element: HTMLElement): void => {
             container.classList.toggle('fm-hbo-top-10', isHboMaxTop10Tile(element));
         },
         fadeable: true,

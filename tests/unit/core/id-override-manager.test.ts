@@ -60,6 +60,17 @@ describe('IdOverrideManager', () => {
             const result = await manager.getImdbId('The Matrix');
             expect(result).toBeUndefined();
         });
+
+        it('returns undefined when imdbId is not a string', async () => {
+            mockAdapter.storageGet.mockResolvedValue('{"imdbId":123}');
+            const result = await manager.getImdbId('Numeric ID Movie');
+            expect(result).toBeUndefined();
+        });
+
+        it.each(['[]', 'true', '"tt123"'])('returns undefined when the payload is not an object: %s', async payload => {
+            mockAdapter.storageGet.mockResolvedValue(payload);
+            await expect(manager.getImdbId('Non Object Movie')).resolves.toBeUndefined();
+        });
     });
 
     describe('setImdbId', () => {

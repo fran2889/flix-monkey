@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
+import { isRecord } from '../core/parse-utils';
 import { FlixMonkeyError } from '../core/utils/index';
 import type { HttpFetchOptions, StorageValue } from './adapter';
 import { isStorageValue, PlatformAdapter } from './adapter';
@@ -169,10 +170,6 @@ export class WebExtensionAdapter extends PlatformAdapter {
         }
         return this.#configData[key];
     }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isFetchResponse(value: unknown): value is FetchResponse {
