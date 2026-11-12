@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { HttpFetchOptions } from '../../platform/adapter';
 import type { FetchProxyResponse } from '../../types/extension';
 import { handleFetchMessage } from '../extension/fetch-proxy';
+import { parseExtensionMessage } from '../extension/messages';
 import { createExtensionMigrationExecutor } from '../extension/migrations';
 
 /**
@@ -24,19 +24,6 @@ declare const browser: {
         onClicked: { addListener: (_callback: () => void) => void };
     };
 };
-
-/**
- * Message types for browser.runtime.onMessage communication.
- */
-interface FMRunMigrationsMessage {
-    type: 'FM_RUN_MIGRATIONS';
-}
-interface FMFetchMessage {
-    type: 'FM_FETCH';
-    url: string;
-    options?: HttpFetchOptions;
-}
-type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
 
 const executeMigrations = createExtensionMigrationExecutor();
 
@@ -60,13 +47,10 @@ browser.runtime.onMessage.addListener(
             return undefined;
         }
 
-        const message = msg as ExtensionMessage;
+        const message = parseExtensionMessage(msg);
+        if (!message) return undefined;
         if (message.type === 'FM_RUN_MIGRATIONS') {
             await executeMigrations();
-            return undefined;
-        }
-
-        if (message.type !== 'FM_FETCH') {
             return undefined;
         }
 
