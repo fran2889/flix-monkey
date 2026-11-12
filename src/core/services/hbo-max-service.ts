@@ -15,7 +15,7 @@ export class HboMaxService extends StreamingService {
     }
 
     override get domains(): readonly string[] {
-        return Object.freeze(['play.hbomax.com']);
+        return Object.freeze(['hbomax.com']);
     }
 
     override get SurfaceManager(): ServiceSurfaceManager {
