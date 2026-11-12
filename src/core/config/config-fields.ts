@@ -323,8 +323,24 @@ for (const field of CONFIG_FIELDS) {
     configDefaults[field.key] = field.default;
 }
 
+/**
+ * Checks that every settings-bearing field has a value in the defaults map.
+ *
+ * @param value - Candidate defaults map.
+ * @returns True when every setting key is present.
+ */
+export function isCompleteSettingsMap(
+    value: Partial<Record<ConfigFieldKey, ConfigValueType>>
+): value is Record<SettingKey, ConfigValueType> {
+    return CONFIG_FIELDS.every(field => !isSettingField(field) || Object.hasOwn(value, field.key));
+}
+
+if (!isCompleteSettingsMap(configDefaults)) {
+    throw new Error('CONFIG_DEFAULTS is missing a setting key');
+}
+
 /** Default values for all settings-bearing config fields. */
-export const CONFIG_DEFAULTS = configDefaults as Record<SettingKey, string | boolean>;
+export const CONFIG_DEFAULTS: Record<SettingKey, ConfigValueType> = configDefaults;
 
 const configSelectAllowed: Partial<Record<ConfigFieldKey, readonly string[]>> = {};
 for (const field of CONFIG_FIELDS) {
