@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-12
 
-**Status:** proposed
+**Status:** implemented
 
 **Issue:** [#237](https://github.com/fran2889/flix-monkey/issues/237)
 
@@ -122,23 +122,28 @@ and deliberately relaxed for tests, rather than silently absent.
 
 ### Surface contract
 
-- `src/types/surfaces.ts`: `getTitle`, `getContainer`, and `decorateContainer`
-  take `HTMLElement`; `DiscoveredSurface.container` is `HTMLElement`.
+- `src/types/surfaces.ts`: `getTitle` and `decorateContainer` take
+  `HTMLElement`; `getContainer` takes `HTMLElement` and returns
+  `HTMLElement | undefined`; `DiscoveredSurface.container` is `HTMLElement`.
 - `src/core/surfaces/surface-manager.ts`: after
   `querySelectorAll(surface.titleSelector)`, skip non-`HTMLElement` title
-  elements. Narrow the resolved container with `instanceof HTMLElement`, falling
-  back to `titleEl.parentElement`. This is the only production place that has to
-  know a surface is an HTML element.
+  elements. `#resolveContainer` verifies the resolved container with
+  `instanceof HTMLElement`, falls back to `titleEl.parentElement`, and checks
+  that parent too, so a non-HTML container is skipped. This is the only
+  production place that has to know a surface is an HTML element.
 - `containerFromClosest` returns `HTMLElement | undefined` through an
   `instanceof` check. `containerFromParent` returns
-  `element.parentElement ?? undefined`, which is already `HTMLElement`.
+  `element.parentElement ?? undefined`; `#resolveContainer` verifies it.
+- `containerFromMoreLikeThisArtwork` narrows the artwork wrapper with
+  `instanceof HTMLElement` and falls back to the title element.
 - Surface definitions in `disney-plus-surfaces.ts` and
   `hbo-max-surfaces.ts` take `HTMLElement` parameters, so `dataset` is direct.
   The frozen pattern arrays keep their inferred `readonly RegExp[]` type; drop
   the `as RegExp[]` widening.
-- `app.ts` takes `HTMLElement` in `#decorateContainer` and `#renderTitle`, and
-  uses `querySelectorAll<HTMLElement>` for the `data-fm-key` lookups. Every
-  former cast at those call sites disappears.
+- `app.ts` takes `HTMLElement` in `#decorateContainer` and `#renderTitle`. The
+  `data-fm-key` lookups iterate the raw query result and skip
+  non-`HTMLElement` nodes with an `instanceof` guard, so no unchecked generic is
+  introduced. Every former cast at those call sites disappears.
 
 Skipping non-HTML title elements is a deliberate narrowing. The overlays rely
 on `dataset`, `style`, and `classList`; no supported streaming service uses

@@ -23,6 +23,21 @@
 - The pre-commit hook runs Prettier and ESLint on staged files. If it rewrites a file, re-stage it before the commit completes.
 - Use `npx eslint <files> --rule '{"@typescript-eslint/no-unsafe-type-assertion":"error"}'` as the red and green signal in each task until Task 12 enables the rule in config.
 
+## Post-plan follow-ups
+
+Two commits landed after Task 12 and are not represented in the task list:
+
+- `6b71b0d` fixed mutation-root collection across an observer batch and added
+  the null migration payload cases.
+- `8b178c5` made `getContainer` return `HTMLElement | undefined` and moved the
+  container narrowing into the resolvers. A later review restored the runtime
+  check in `#resolveContainer` and verifies the fallback parent as well.
+
+All checkboxes were ticked in the Task 12 commit in one batch, which conflicts
+with `AGENTS.md` ("Do not leave finished work unchecked or batch the updates at
+the end"). This plan records the batch state as executed; future plans should
+tick each box in the task commit that completes it.
+
 ## Review Focus
 
 - A surface title element that is not an `HTMLElement` (SVG or MathML) must be skipped, not decorated through a lying cast. Tested in Task 1.
@@ -49,7 +64,7 @@
 **Interfaces:**
 
 - Produces: `SurfaceDefinition.getTitle: (_element: HTMLElement) => string | undefined`
-- Produces: `SurfaceDefinition.getContainer: (_element: HTMLElement) => Element | undefined`
+- Produces: `SurfaceDefinition.getContainer: (_element: HTMLElement) => HTMLElement | undefined`
 - Produces: `SurfaceDefinition.decorateContainer?: (_container: HTMLElement, _element: HTMLElement) => void`
 - Produces: `DiscoveredSurface.container: HTMLElement`
 - Produces: `containerFromClosest(selector: string): (element: HTMLElement) => HTMLElement | undefined`
@@ -101,7 +116,7 @@ In `src/core/surfaces/surface-manager.ts`:
 - Return `element.parentElement ?? undefined` from `containerFromParent`.
 - Change `titleFromAttribute` to take `HTMLElement`.
 - In `discover`, skip a title element that is not an `HTMLElement` before calling `surface.getTitle`.
-- Narrow the resolved container with `instanceof HTMLElement`, falling back to `titleEl.parentElement`. Keep the existing warning when the resolver fails and the existing `seen` deduplication.
+- Verify the resolved container with `instanceof HTMLElement`, falling back to `titleEl.parentElement` and verifying that parent too. Keep the existing warning when the resolver fails and the existing `seen` deduplication.
 
 In `src/core/surfaces/surface-definitions/disney-plus-surfaces.ts` and `hbo-max-surfaces.ts`, change resolver parameters and exported extraction functions to `HTMLElement`. Access `element.dataset` directly. Remove `as RegExp[]` from both frozen pattern arrays; keep the inferred `readonly RegExp[]` type.
 
