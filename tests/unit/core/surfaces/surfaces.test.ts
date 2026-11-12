@@ -42,6 +42,10 @@ describe('SurfaceManager', () => {
     });
 
     it('should skip element with missing title attribute', () => {
+        expect(discover('<div data-uia="standard-card"></div>')).toHaveLength(0);
+    });
+
+    it('should skip a surface whose getTitle returns undefined', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
