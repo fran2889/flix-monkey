@@ -297,6 +297,7 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
 
     it.each([
         ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes a null payload', { value: null }],
         ['deletes entries without data', { value: { expires: 12345 } }],
         ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
     ])('deletes invalid entries: %s', async (_desc, { value }) => {
@@ -495,6 +496,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
 
     it.each([
         ['deletes malformed JSON', { value: '{bad json' }],
+        ['deletes a null payload', { value: null }],
         ['deletes entries without data', { value: { expires: 12345 } }],
         ['deletes entries with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
     ])('deletes invalid entries: %s', async (_desc, { value }) => {

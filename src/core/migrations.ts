@@ -33,16 +33,22 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                     deleted += 1;
                     continue;
                 }
-                let entry: Record<string, unknown>;
+                let parsed: unknown;
                 try {
-                    entry = JSON.parse(raw);
+                    parsed = JSON.parse(raw);
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
                 }
+                if (!isRecord(parsed)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const entry = parsed;
                 const data = isRecord(entry.data) ? entry.data : undefined;
-                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                if (!data) {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
@@ -79,16 +85,22 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
                     deleted += 1;
                     continue;
                 }
-                let entry: Record<string, unknown>;
+                let parsed: unknown;
                 try {
-                    entry = JSON.parse(raw);
+                    parsed = JSON.parse(raw);
                 } catch {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;
                 }
+                if (!isRecord(parsed)) {
+                    await adapter.storageDelete(key);
+                    deleted += 1;
+                    continue;
+                }
+                const entry = parsed;
                 const data = isRecord(entry.data) ? entry.data : undefined;
-                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                if (!data) {
                     await adapter.storageDelete(key);
                     deleted += 1;
                     continue;

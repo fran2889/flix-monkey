@@ -535,6 +535,29 @@ describe('App', () => {
         discoverSpy.mockRestore();
     });
 
+    it('collects every mutated root in one observer batch', async () => {
+        appRef = startApp(buildMockAdapter().build());
+        await Promise.resolve();
+
+        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+        const firstParent = document.createElement('div');
+        const secondParent = document.createElement('div');
+
+        mockMutationObserverInstance?.trigger([
+            { addedNodes: [document.createElement('span')], target: firstParent } as unknown as MutationRecord,
+            { addedNodes: [document.createElement('span')], target: secondParent } as unknown as MutationRecord,
+        ]);
+
+        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+        await vi.runAllTimersAsync();
+
+        const roots = discoverSpy.mock.calls.map(c => c[0]);
+        expect(roots).toContain(firstParent);
+        expect(roots).toContain(secondParent);
+
+        discoverSpy.mockRestore();
+    });
+
     it('should deduplicate in-flight requests for titles that differ only by punctuation', async () => {
         const mockAdapter = buildMockAdapter().build();
         document.body.innerHTML = `

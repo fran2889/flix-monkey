@@ -108,7 +108,10 @@ export class FlixMonkeyApp {
 
     #handleMutations(mutations: MutationRecord[]): void {
         try {
-            const hasElements = mutations.some(mutation => this.#collectPendingRoot(mutation));
+            let hasElements = false;
+            for (const mutation of mutations) {
+                if (this.#collectPendingRoot(mutation)) hasElements = true;
+            }
             if (hasElements) this.#debouncedDecorate();
         } catch (err) {
             this.#logger.error('Mutation observer error', err);
@@ -116,13 +119,12 @@ export class FlixMonkeyApp {
     }
 
     #collectPendingRoot(mutation: MutationRecord): boolean {
-        let hasElement = false;
         for (const node of mutation.addedNodes) {
             if (node.nodeType !== Node.ELEMENT_NODE) continue;
-            hasElement = true;
             if (mutation.target instanceof Element) this.#pendingRoots.add(mutation.target);
+            return true;
         }
-        return hasElement;
+        return false;
     }
 
     #decorateRoot(root: Element | Document): void {
