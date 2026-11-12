@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { PlatformAdapter } from '../platform/adapter';
+import { isRecord, optionalString } from './parse-utils';
 import { slugify } from './utils/index';
 
 /**
@@ -27,10 +28,11 @@ export class IdOverrideManager {
     async getImdbId(displayTitle: string): Promise<string | undefined> {
         const key = this.#getKey(displayTitle);
         const raw = await this.#adapter.storageGet(key);
-        if (raw === undefined) return undefined;
+        if (typeof raw !== 'string') return undefined;
         try {
-            const data = JSON.parse(raw as string);
-            return (data as { imdbId?: string }).imdbId ?? undefined;
+            const data: unknown = JSON.parse(raw);
+            if (!isRecord(data)) return undefined;
+            return optionalString(data, 'imdbId');
         } catch {
             return undefined;
         }
