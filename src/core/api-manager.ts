@@ -7,6 +7,7 @@ import type { CacheEntry, CacheStore } from './cache/index';
 import type { DisabledClientsManager } from './disabled-clients';
 import type { Logger } from './logger';
 import { Title } from './title';
+import { FlixMonkeyError } from './utils/index';
 
 /**
  * Manages API clients, caching, and coordinates fetching rating data.
@@ -68,21 +69,16 @@ export class ApiClientManager {
             this.#logger.debug(`Successfully retrieved ratings for "${displayTitle}" from ${data.source}`);
             return data;
         } catch (err: unknown) {
-            const error = err as {
-                message?: string;
-                url?: string | undefined;
-                status?: number | undefined;
-                body?: string | undefined;
-            };
-            const httpStatus = error.status;
+            const { message, url, status: httpStatus, body } = getErrorDetails(err);
             const isHttpError = httpStatus !== undefined && Number.isInteger(httpStatus) && httpStatus >= 400;
             if (isHttpError && httpStatus < 500) {
                 await this.#client.disable();
             }
-            this.#logger[isHttpError ? 'error' : 'warn'](
-                `Failed to fetch ratings for "${displayTitle}": ${error.message ?? ''}`,
-                { url: error.url, status: error.status, body: error.body }
-            );
+            this.#logger[isHttpError ? 'error' : 'warn'](`Failed to fetch ratings for "${displayTitle}": ${message}`, {
+                url,
+                status: httpStatus,
+                body,
+            });
             return Title.notFound(displayTitle, this.#client.source);
         }
     }
@@ -90,4 +86,19 @@ export class ApiClientManager {
     get disabledManager(): DisabledClientsManager {
         return this.#disabledManager;
     }
+}
+
+function getErrorDetails(error: unknown): {
+    message: string;
+    url: string | undefined;
+    status: number | undefined;
+    body: string | undefined;
+} {
+    const flixError = error instanceof FlixMonkeyError ? error : undefined;
+    return {
+        message: error instanceof Error ? error.message : '',
+        url: flixError?.url,
+        status: flixError?.status,
+        body: flixError?.body,
+    };
 }
