@@ -195,9 +195,6 @@ If the build and asset upload succeeded and only the final publish failed, the
 assets are already attached. Publish the draft from the Releases page, or run
 `gh release edit vX.Y.Z --draft=false`, instead of rolling forward.
 
-The workflow builds from the commit that triggered the run, which is the commit
-release-please tags, so a successful release matches its tag.
-
 ## Failure Handling
 
 - A job that fails before its first step with an environment protection error
