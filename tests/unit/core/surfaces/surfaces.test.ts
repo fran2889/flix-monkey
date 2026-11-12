@@ -223,7 +223,7 @@ describe('SurfaceManager', () => {
 describe('Netflix More Like This title extraction', () => {
     function extract(html: string): string | undefined {
         document.body.innerHTML = html;
-        const tile = document.querySelector('.titleCard--container');
+        const tile = document.querySelector<HTMLElement>('.titleCard--container');
         if (!tile) throw new Error('fixture tile missing');
         return extractNetflixMoreLikeThisTitle(tile);
     }

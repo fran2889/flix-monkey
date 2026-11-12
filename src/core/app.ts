@@ -274,7 +274,8 @@ export class FlixMonkeyApp {
      */
     #redecorateTitle(dedupKey: string, displayTitle: string): void {
         // querySelectorAll only yields nodes inside the document, so no containment check is needed.
-        document.querySelectorAll<HTMLElement>(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(container => {
+            if (!(container instanceof HTMLElement)) return;
             delete container.dataset.fmInjected;
             this.#renderer.removeLoadingOverlay(container);
             this.#decorateContainer(container, displayTitle, false, false).catch(err =>
@@ -310,7 +311,8 @@ export class FlixMonkeyApp {
             icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
         }
         const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
-        document.querySelectorAll<HTMLElement>(`[data-fm-key="${dedupKey}"]`).forEach(c => {
+        document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
+            if (!(c instanceof HTMLElement)) return;
             this.#renderer.applyFade(c, shouldFade);
         });
     }

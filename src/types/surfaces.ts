@@ -12,7 +12,7 @@ export interface SurfaceDefinition {
     /** Returns the title text. */
     getTitle: (_element: HTMLElement) => string | undefined;
     /** Returns the container element. */
-    getContainer: (_element: HTMLElement) => Element | undefined;
+    getContainer: (_element: HTMLElement) => HTMLElement | undefined;
     /** Optional container decorator. */
     decorateContainer?: (_container: HTMLElement, _element: HTMLElement) => void;
     /** Whether this surface supports fading. Default: false */
