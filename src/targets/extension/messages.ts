@@ -23,6 +23,12 @@ export type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage;
 /**
  * Parses an untrusted runtime message into the supported message shapes.
  *
+ * A message is accepted only when its type and every present field are valid.
+ * Malformed options reject the whole message, so callers must not fall back to
+ * a fetch with defaults. The returned options are a rebuilt allowlist:
+ * `responseType` must be "json" or "text", `timeout` must be a finite
+ * non-negative number, and unknown option keys are dropped.
+ *
  * @param value - Raw runtime message.
  * @returns The parsed message, or undefined when the shape is invalid.
  */

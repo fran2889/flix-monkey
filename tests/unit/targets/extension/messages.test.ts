@@ -51,6 +51,7 @@ describe('parseExtensionMessage', () => {
         ['a fetch message without a URL', { type: 'FM_FETCH' }],
         ['a non-string URL', { type: 'FM_FETCH', url: 42 }],
         ['numeric options', { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: 42 }],
+        ['null options', { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: null }],
         ['array options', { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: [] }],
         [
             'an unsupported responseType',
