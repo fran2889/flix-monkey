@@ -16,17 +16,18 @@ function buildQueue(interval: number, adapter = buildMockAdapter().build()): Req
 }
 
 describe('RequestQueue', () => {
-    it('should clear queue', async () => {
+    it('should clear queue and reject pending requests', async () => {
         const firstFetch = vi.fn(() => new Promise(() => {}));
         const queue = buildQueue(999999);
         void queue.enqueue('url1', 1, firstFetch).catch(() => {});
-        void queue.enqueue('url2', 1, () => new Promise(() => {})).catch(() => {});
+        const pending = queue.enqueue('url2', 1, () => new Promise(() => {}));
 
         // Cross-tab sync reads storage before the first dequeue, so wait for the
         // active request to start before clearing the remaining queued item.
         await vi.waitFor(() => expect(firstFetch).toHaveBeenCalledOnce());
         const count = queue.clear();
         expect(count).toBe(1);
+        await expect(pending).rejects.toThrow('Client Disabled');
     });
 
     it('rejects the caller with the original fetch error', async () => {
