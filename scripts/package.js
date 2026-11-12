@@ -10,6 +10,11 @@ import { ZipArchive } from 'archiver';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
 
+const OUTPUTS = {
+    chrome: `FlixMonkey-v${version}-chrome.zip`,
+    firefox: `FlixMonkey-v${version}-firefox.xpi`,
+};
+
 function verifyDistFiles(dir, target) {
     const required = [
         'manifest.json',
@@ -59,24 +64,22 @@ async function zipDirectory(sourceDir, outPath) {
 }
 
 async function main() {
-    const chromeDir = path.join('dist', 'chrome');
-    const firefoxDir = path.join('dist', 'firefox');
-    let packaged = false;
-
-    if (fs.existsSync(chromeDir)) {
-        verifyDistFiles(chromeDir, 'chrome');
-        await zipDirectory(chromeDir, path.join('dist', `FlixMonkey-v${version}-chrome.zip`));
-        packaged = true;
+    const requested = process.argv[2] ?? 'all';
+    if (requested !== 'all' && !Object.hasOwn(OUTPUTS, requested)) {
+        throw new Error(`Unknown package target: ${requested}`);
     }
 
-    if (fs.existsSync(firefoxDir)) {
-        verifyDistFiles(firefoxDir, 'firefox');
-        await zipDirectory(firefoxDir, path.join('dist', `FlixMonkey-v${version}-firefox.xpi`));
-        packaged = true;
+    const targets = requested === 'all' ? Object.keys(OUTPUTS) : [requested];
+    for (const target of targets) {
+        const dir = path.join('dist', target);
+        if (!fs.existsSync(dir)) {
+            throw new Error(`Missing extension directory: ${dir}`);
+        }
+        verifyDistFiles(dir, target);
     }
 
-    if (!packaged) {
-        console.warn('No extension directories found to package.');
+    for (const target of targets) {
+        await zipDirectory(path.join('dist', target), path.join('dist', OUTPUTS[target]));
     }
 }
 

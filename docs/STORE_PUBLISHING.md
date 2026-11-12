@@ -169,6 +169,36 @@ Greasy Fork version once. The Greasy Fork check does not poll or retry.
 The run deploys to the `store-publish` environment. There are no required
 reviewers, so it starts as soon as it is dispatched.
 
+### Recovering a failed release build
+
+A failed `Release Please` run is not retried. The build steps only run when
+release-please creates a release in that run, so a re-run after the draft
+already exists does not rebuild its assets or repair the draft. If the first run
+failed before release-please created the draft, a re-run can still create it and
+build the assets.
+
+If the run fails before the release is published, the draft can be left with
+missing or partial assets. Roll forward instead:
+
+1. Delete only the draft GitHub Release:
+   `gh release delete vX.Y.Z --yes`. Do not pass `--cleanup-tag`.
+2. Fix the problem on `main` with a commit that increments the release-please
+   version; a commit that does not bump it will not open the next release PR.
+   See [release-please: releasable
+   units](https://github.com/googleapis/release-please#release-please-bot-does-not-create-a-release-pr-why).
+3. Merge the next release PR when it appears. It bumps to the next version.
+
+The release-please config sets `force-tag-creation`, so the tag exists while the
+release is a draft. The `Protect release tags` ruleset makes every `v*` tag
+immutable: it cannot be deleted or moved. release-please uses the tag to find
+the previous release ([how release-please determines the previous
+release](https://github.com/googleapis/release-please/blob/main/docs/troubleshooting.md#how-does-release-please-determine-the-previous-release)),
+so the next release covers only newer commits. Do not change the tag ruleset.
+
+If the build and asset upload succeeded and only the final publish failed, the
+assets are already attached. Publish the draft from the Releases page, or run
+`gh release edit vX.Y.Z --draft=false`, instead of rolling forward.
+
 ## Failure Handling
 
 - A job that fails before its first step with an environment protection error
