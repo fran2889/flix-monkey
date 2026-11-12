@@ -101,6 +101,19 @@ describe('SurfaceManager', () => {
         );
     });
 
+    it('skips a title whose closest container is not an HTML element', () => {
+        document.body.innerHTML =
+            '<svg><g class="title-card"><foreignObject><a aria-label="Vector" href="#"></a></foreignObject></g></svg>';
+        const logger = buildLogger().build();
+
+        const results = new SurfaceManager(logger, NETFLIX_SURFACES).discover(document.body);
+
+        expect(results).toHaveLength(0);
+        expect(logger.warn).toHaveBeenCalledWith(
+            'Surface container resolver failed for Vector, falling back to parentElement'
+        );
+    });
+
     it('should return empty array when querySelectorAll throws', () => {
         const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         expect(

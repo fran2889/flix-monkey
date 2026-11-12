@@ -93,8 +93,9 @@ export class SurfaceManager {
 
     #resolveContainer(titleEl: HTMLElement, surface: SurfaceDefinition, title: string): HTMLElement | undefined {
         const resolved = surface.getContainer(titleEl);
-        if (resolved) return resolved;
+        if (resolved instanceof HTMLElement) return resolved;
         this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
-        return titleEl.parentElement ?? undefined;
+        const parent = titleEl.parentElement;
+        return parent instanceof HTMLElement ? parent : undefined;
     }
 }
