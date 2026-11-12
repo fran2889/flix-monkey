@@ -20,7 +20,7 @@ const CSS_VARS: string = `
     }
 `;
 
-export const OVERLAY_CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const;
+export const OVERLAY_CORNERS = Object.freeze(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const);
 
 /** Corner of a surface container where the overlay badge is anchored. */
 export type OverlayCorner = (typeof OVERLAY_CORNERS)[number];
