@@ -7,6 +7,8 @@ import type {
     ActionConfigField,
     ConfigField,
     ConfigValueType,
+    GroupKey,
+    RowLabelKey,
     SelectOption,
     SettingConfigField,
 } from '../config/index';
@@ -29,6 +31,10 @@ interface SettingsGroup {
     readonly label: string;
     readonly icon: string;
     readonly fields: readonly SettingsFieldRow[];
+}
+
+function isRowLabelKey(value: string): value is RowLabelKey {
+    return Object.hasOwn(ROW_LABELS, value);
 }
 
 /**
@@ -85,9 +91,8 @@ export class SettingsView {
 
     #groupFieldsByGroup(): SettingsGroup[] {
         const groups: SettingsGroup[] = [];
-        const fieldsByGroup: Record<string, ConfigField[]> = {};
+        const fieldsByGroup = new Map<GroupKey, ConfigField[]>();
 
-        // ConfigField.group is a required GroupKey, so every field belongs to a group.
         for (const field of this.#fields) {
             this.#addFieldToGroup(field, fieldsByGroup);
         }
@@ -97,17 +102,18 @@ export class SettingsView {
         return groups;
     }
 
-    #addFieldToGroup(field: ConfigField, fieldsByGroup: Record<string, ConfigField[]>): void {
-        const groupId = field.group;
-        if (!fieldsByGroup[groupId]) {
-            fieldsByGroup[groupId] = [];
+    #addFieldToGroup(field: ConfigField, fieldsByGroup: Map<GroupKey, ConfigField[]>): void {
+        const groupFields = fieldsByGroup.get(field.group);
+        if (groupFields) {
+            groupFields.push(field);
+        } else {
+            fieldsByGroup.set(field.group, [field]);
         }
-        fieldsByGroup[groupId].push(field);
     }
 
-    #buildGroupElements(groups: SettingsGroup[], fieldsByGroup: Record<string, ConfigField[]>): void {
-        for (const [groupId, fields] of Object.entries(fieldsByGroup)) {
-            const groupInfo = GROUPS[groupId as keyof typeof GROUPS];
+    #buildGroupElements(groups: SettingsGroup[], fieldsByGroup: Map<GroupKey, ConfigField[]>): void {
+        for (const [groupId, fields] of fieldsByGroup) {
+            const groupInfo = GROUPS[groupId];
             groups.push({
                 id: groupId,
                 label: groupInfo.label,
@@ -208,7 +214,7 @@ export class SettingsView {
     }
 
     #rowLabel(row: SettingsFieldRow): SettingsRowLabel {
-        const rowLabelObj = ROW_LABELS[row.id as keyof typeof ROW_LABELS];
+        const rowLabelObj = isRowLabelKey(row.id) ? ROW_LABELS[row.id] : undefined;
         return {
             text: rowLabelObj?.label ?? row.fields[0].label,
             tooltip: rowLabelObj?.title ?? row.fields[0].title ?? '',
@@ -300,35 +306,33 @@ export class SettingsView {
         return checkboxes;
     }
 
-    #createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLElement {
-        const input = document.createElement(field.type === 'select' ? 'select' : 'input');
-        input.className = 'field-input';
-        input.name = field.key;
-        input.id = `fm-${field.key}`;
-
+    #createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLInputElement | HTMLSelectElement {
         if (field.type === 'select') {
-            const selectInput = input as HTMLSelectElement;
+            const selectInput = document.createElement('select');
+            this.#configureInput(selectInput, field);
             this.#addOptions(selectInput, field.options);
             selectInput.value = String(this.#settingValue(field.key, settings, field.default));
-        } else if (field.type === 'checkbox') {
-            const checkboxInput = input as HTMLInputElement;
-            checkboxInput.type = 'checkbox';
-            checkboxInput.checked = Boolean(this.#settingValue(field.key, settings, field.default));
+            return selectInput;
+        }
+
+        const textInput = document.createElement('input');
+        this.#configureInput(textInput, field);
+        if (field.type === 'checkbox') {
+            textInput.type = 'checkbox';
+            textInput.checked = Boolean(this.#settingValue(field.key, settings, field.default));
         } else {
-            const textInput = input as HTMLInputElement;
             textInput.type = 'text';
             textInput.value = String(this.#settingValue(field.key, settings, field.default));
         }
+        return textInput;
+    }
 
-        if (field.disabled) {
-            (input as HTMLInputElement).disabled = true;
-        }
-
-        if (field.short) {
-            input.classList.add('short');
-        }
-
-        return input;
+    #configureInput(input: HTMLInputElement | HTMLSelectElement, field: SettingConfigField): void {
+        input.className = 'field-input';
+        input.name = field.key;
+        input.id = `fm-${field.key}`;
+        if (field.disabled) input.disabled = true;
+        if (field.short) input.classList.add('short');
     }
 
     #addOptions(select: HTMLSelectElement, options: readonly (string | SelectOption)[]): void {
@@ -383,7 +387,7 @@ export class SettingsView {
         if (this.#container === undefined) return;
         const inputs = this.#container.querySelectorAll('.field-input');
         for (const input of inputs) {
-            const eventType = (input as HTMLInputElement).type === 'checkbox' ? 'change' : 'input';
+            const eventType = input instanceof HTMLInputElement && input.type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, () => {
                 if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
                 this.#debounceTimer = setTimeout(() => {

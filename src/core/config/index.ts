@@ -10,6 +10,7 @@ export type {
     ConfigFieldKey,
     ConfigValueType,
     GroupKey,
+    RowLabelKey,
     SelectOption,
     SettingConfigField,
     SettingKey,
