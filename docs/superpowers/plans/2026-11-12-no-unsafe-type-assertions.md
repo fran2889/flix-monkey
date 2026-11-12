@@ -56,7 +56,7 @@
 - Produces: `containerFromParent(element: HTMLElement): HTMLElement | undefined`
 - Produces: `titleFromAttribute(attribute: string): (element: HTMLElement) => string | undefined`
 
-- [ ] **Step 1: Create the branch and commit the design and plan**
+- [x] **Step 1: Create the branch and commit the design and plan**
 
 ```bash
 git switch -c refactor/unsafe-type-assertions
@@ -66,7 +66,7 @@ git commit -m "docs: add unsafe type assertion design and plan"
 
 Expected: branch created, docs committed, `package.json` still modified and unstaged.
 
-- [ ] **Step 2: Write the failing non-HTML surface test**
+- [x] **Step 2: Write the failing non-HTML surface test**
 
 Add to `tests/unit/core/surfaces/surfaces.test.ts`:
 
@@ -85,13 +85,13 @@ it('skips a title element that is not an HTMLElement', () => {
 });
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts -t "not an HTMLElement"`
 
 Expected: FAIL because the current discovery path accepts the SVG element and returns one surface.
 
-- [ ] **Step 4: Change the surface types and narrow once in discovery**
+- [x] **Step 4: Change the surface types and narrow once in discovery**
 
 In `src/types/surfaces.ts`, change the three callbacks and `DiscoveredSurface.container` to `HTMLElement` exactly as listed in Interfaces.
 
@@ -105,13 +105,13 @@ In `src/core/surfaces/surface-manager.ts`:
 
 In `src/core/surfaces/surface-definitions/disney-plus-surfaces.ts` and `hbo-max-surfaces.ts`, change resolver parameters and exported extraction functions to `HTMLElement`. Access `element.dataset` directly. Remove `as RegExp[]` from both frozen pattern arrays; keep the inferred `readonly RegExp[]` type.
 
-- [ ] **Step 5: Update the surface tests for the new contract**
+- [x] **Step 5: Update the surface tests for the new contract**
 
 - `tests/helpers/surface-tests.ts`: pass `surface.container` directly to `injectOverlay`; delete the two-line comment and the `as unknown as HTMLElement` cast.
 - `tests/ui/netflix.ui.test.ts`: pass `surface.container` directly to `hasOverlay` and `injectOverlay`; delete both casts.
 - `tests/unit/core/surfaces/surfaces.test.ts`: change `getTitle` parameters to `HTMLElement`, use `element.dataset.title ?? ''`, return `element.parentElement ?? undefined` from `getContainer`, type `decorateContainer`'s parameter as `HTMLElement`, and delete the `surface.container as HTMLElement` cast.
 
-- [ ] **Step 6: Run the surface tests and the targeted rule**
+- [x] **Step 6: Run the surface tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/surfaces/surfaces.test.ts tests/ui/netflix.ui.test.ts`
 
@@ -121,7 +121,7 @@ Run: `npx eslint src/types/surfaces.ts src/core/surfaces --rule '{"@typescript-e
 
 Expected: 0 problems. `src/core/app.ts` still has findings and is handled in Task 2.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/types/surfaces.ts src/core/surfaces tests/helpers/surface-tests.ts tests/ui/netflix.ui.test.ts tests/unit/core/surfaces/surfaces.test.ts
@@ -144,13 +144,13 @@ git commit -m "refactor: type surface contracts as HTMLElement"
 - Produces: `#decorateContainer(container: HTMLElement, displayTitle: string, fadeable: boolean, showFadeToggle: boolean): Promise<void>`
 - Produces: `#renderTitle(container: HTMLElement, data: Title, options: {...}): void`
 
-- [ ] **Step 1: Confirm the current findings**
+- [x] **Step 1: Confirm the current findings**
 
 Run: `npx eslint src/core/app.ts --rule '{"@typescript-eslint/no-unsafe-type-assertion":"error"}'`
 
 Expected: 15 findings, mostly `Element` to `HTMLElement` casts.
 
-- [ ] **Step 2: Change the container parameters and remove the casts**
+- [x] **Step 2: Change the container parameters and remove the casts**
 
 In `src/core/app.ts`:
 
@@ -160,11 +160,11 @@ In `src/core/app.ts`:
 - Type `#originalPushState` and `#originalReplaceState` as `(data: unknown, unused: string, url?: string | URL | null) => void`. Assign `history.pushState` and `history.replaceState` directly. In the wrappers, call the original with `.call(history, data, unused, url)` and forward `url` unchanged.
 - Type `clientMap` as `Record<ApiSourceType, new (_deps: ApiClientDeps) => BaseApiClient>`. Add `function isApiSource(value: string): value is ApiSourceType` using `Object.values(ApiSource).some(source => source === value)`. Select with the guard and keep Agregarr as the fallback.
 
-- [ ] **Step 3: Update the app test helper**
+- [x] **Step 3: Update the app test helper**
 
 In `tests/unit/core/app.test.ts`, change `decorateAndCaptureActions`'s `container` parameter from `Element` to `HTMLElement`. Existing callers pass `document.createElement('div')`, so no other test edit is expected.
 
-- [ ] **Step 4: Run the app tests, type-check, and the targeted rule**
+- [x] **Step 4: Run the app tests, type-check, and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/app.test.ts`
 
@@ -178,7 +178,7 @@ Run: `npx eslint src/core/app.ts --rule '{"@typescript-eslint/no-unsafe-type-ass
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/app.ts tests/unit/core/app.test.ts
@@ -204,7 +204,7 @@ git commit -m "refactor: narrow app DOM and history types"
 - Produces: `isOverlayCorner(value: string): value is OverlayCorner`
 - Produces: `BuildOverlayStylesOptions.corner: OverlayCorner`
 
-- [ ] **Step 1: Write the failing corner guard test**
+- [x] **Step 1: Write the failing corner guard test**
 
 Add to `tests/unit/core/ui/styles/overlay-styles.test.ts`:
 
@@ -220,13 +220,13 @@ it('recognizes only the four overlay corners', () => {
 
 Import `isOverlayCorner` from `../../../../../src/core/ui/overlay-styles`.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/ui/styles/overlay-styles.test.ts -t "four overlay corners"`
 
 Expected: FAIL because `isOverlayCorner` is not exported.
 
-- [ ] **Step 3: Export the corner vocabulary and use it**
+- [x] **Step 3: Export the corner vocabulary and use it**
 
 In `src/core/ui/overlay-styles.ts`:
 
@@ -239,7 +239,7 @@ In `src/core/ui/modal.ts`, use `querySelector<HTMLElement>('.fm-modal-content')`
 
 In `src/core/ui/overlay-elements.ts`, replace `(el.lastChild as HTMLElement).style.color = ...` with a `lastElementChild instanceof HTMLElement` guard around the same assignment.
 
-- [ ] **Step 4: Run the overlay, modal, and element tests plus the targeted rule**
+- [x] **Step 4: Run the overlay, modal, and element tests plus the targeted rule**
 
 Run: `npx vitest run tests/unit/core/ui/styles/overlay-styles.test.ts tests/unit/core/overlay.test.ts tests/unit/core/ui/modal.test.ts tests/unit/core/ui/elements/overlay-elements.test.ts`
 
@@ -249,7 +249,7 @@ Run: `npx eslint src/core/overlay.ts src/core/ui/overlay-styles.ts src/core/ui/m
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/ui/overlay-styles.ts src/core/overlay.ts src/core/ui/modal.ts src/core/ui/overlay-elements.ts tests/unit/core/ui/styles/overlay-styles.test.ts
@@ -271,13 +271,13 @@ git commit -m "refactor: replace overlay and modal assertions with guards"
 - Produces: `#createInput(field: SettingConfigField, settings: Record<string, unknown>): HTMLInputElement | HTMLSelectElement`
 - Produces: `#groupFieldsByGroup(): SettingsGroup[]` backed by `Map<GroupKey, ConfigField[]>`
 
-- [ ] **Step 1: Confirm the current findings**
+- [x] **Step 1: Confirm the current findings**
 
 Run: `npx eslint src/core/ui/settings-view.ts --rule '{"@typescript-eslint/no-unsafe-type-assertion":"error"}'`
 
 Expected: 7 findings.
 
-- [ ] **Step 2: Replace the lookups and element casts**
+- [x] **Step 2: Replace the lookups and element casts**
 
 In `src/core/ui/settings-view.ts`:
 
@@ -286,7 +286,7 @@ In `src/core/ui/settings-view.ts`:
 - In `#createInput`, create the concrete element in each branch: `select` for select fields and `input` for checkbox and text fields. Set class, name, id, disabled, and short on the concrete element. Return `HTMLInputElement | HTMLSelectElement`.
 - In `#setupAutoSave`, use `input instanceof HTMLInputElement` for the checkbox event check.
 
-- [ ] **Step 3: Run the settings tests and the targeted rule**
+- [x] **Step 3: Run the settings tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts tests/unit/core/ui/settings-ui.test.ts`
 
@@ -296,7 +296,7 @@ Run: `npx eslint src/core/ui/settings-view.ts --rule '{"@typescript-eslint/no-un
 
 Expected: 0 problems.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/ui/settings-view.ts
@@ -318,7 +318,7 @@ git commit -m "refactor: build settings inputs with concrete types"
 - Produces: `isCompleteSettingsMap(value: Partial<Record<ConfigFieldKey, ConfigValueType>>): value is Record<SettingKey, ConfigValueType>`
 - Produces: `CONFIG_DEFAULTS: Record<SettingKey, ConfigValueType>`
 
-- [ ] **Step 1: Write the failing guard test**
+- [x] **Step 1: Write the failing guard test**
 
 Add to `tests/unit/core/config/config-fields.test.ts`:
 
@@ -335,13 +335,13 @@ describe('isCompleteSettingsMap', () => {
 
 Import `isCompleteSettingsMap` from `../../../../src/core/config/index`.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/config/config-fields.test.ts -t "isCompleteSettingsMap"`
 
 Expected: FAIL because the guard is not exported.
 
-- [ ] **Step 3: Add the predicate and remove the assertion**
+- [x] **Step 3: Add the predicate and remove the assertion**
 
 In `src/core/config/config-fields.ts`, export `isCompleteSettingsMap` with JSDoc. Implement it by checking that every field where `isSettingField(field)` is true has its key present in the value.
 
@@ -349,7 +349,7 @@ After the defaults loop, check the map with the predicate and throw a plain `Err
 
 Add the helper to the `src/core/config/index.ts` export list in sorted position.
 
-- [ ] **Step 4: Run the config tests and the targeted rule**
+- [x] **Step 4: Run the config tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/config/config-fields.test.ts tests/unit/core/config/config-manager.test.ts`
 
@@ -359,7 +359,7 @@ Run: `npx eslint src/core/config --rule '{"@typescript-eslint/no-unsafe-type-ass
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/config/config-fields.ts src/core/config/index.ts tests/unit/core/config/config-fields.test.ts
@@ -382,7 +382,7 @@ git commit -m "refactor: narrow config defaults with a completeness guard"
 - Produces: `isRecord(value: unknown): value is Record<string, unknown>`
 - Consumes: `assertRecord` keeps its current throwing contract and uses `isRecord`.
 
-- [ ] **Step 1: Write the failing guard tests**
+- [x] **Step 1: Write the failing guard tests**
 
 Add to `tests/unit/core/parse-utils.test.ts`:
 
@@ -397,13 +397,13 @@ describe('isRecord', () => {
 
 Import `isRecord` from `../../../../src/core/parse-utils`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/parse-utils.test.ts -t "isRecord"`
 
 Expected: FAIL because `isRecord` is not exported.
 
-- [ ] **Step 3: Implement the guard and use it in migrations**
+- [x] **Step 3: Implement the guard and use it in migrations**
 
 In `src/core/parse-utils.ts`, export `isRecord` with JSDoc. Implement `assertRecord` by calling `isRecord` and throwing the existing `ParseError` message when it returns false.
 
@@ -413,7 +413,7 @@ In `src/core/migrations.ts`, replace both
 
 Keep the existing delete, skip, and `updates` behavior unchanged.
 
-- [ ] **Step 4: Run the parser and migration tests plus the targeted rule**
+- [x] **Step 4: Run the parser and migration tests plus the targeted rule**
 
 Run: `npx vitest run tests/unit/core/parse-utils.test.ts tests/unit/core/migrations.test.ts`
 
@@ -423,7 +423,7 @@ Run: `npx eslint src/core/parse-utils.ts src/core/migrations.ts --rule '{"@types
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/parse-utils.ts src/core/migrations.ts tests/unit/core/parse-utils.test.ts
@@ -444,7 +444,7 @@ git commit -m "refactor: guard stored migration records"
 - Consumes: `isRecord` and `optionalString` from `./parse-utils`.
 - Produces: `getImdbId(displayTitle: string): Promise<string | undefined>` with unchanged signature.
 
-- [ ] **Step 1: Write the failing validation test**
+- [x] **Step 1: Write the failing validation test**
 
 Add to the `getImdbId` tests in `tests/unit/core/id-override-manager.test.ts`:
 
@@ -461,17 +461,17 @@ it.each(['[]', 'true', '"tt123"'])('returns undefined when the payload is not an
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/id-override-manager.test.ts -t "not a string"`
 
 Expected: FAIL because the current code returns the number `123`.
 
-- [ ] **Step 3: Validate the stored value instead of asserting**
+- [x] **Step 3: Validate the stored value instead of asserting**
 
 In `src/core/id-override-manager.ts`, return `undefined` when the raw storage value is not a string. Parse it as `unknown`, require `isRecord`, and read `imdbId` with `optionalString`. Keep the existing `try`/`catch` so both invalid JSON and a `ParseError` become `undefined`.
 
-- [ ] **Step 4: Run the ID override tests and the targeted rule**
+- [x] **Step 4: Run the ID override tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/id-override-manager.test.ts`
 
@@ -481,7 +481,7 @@ Run: `npx eslint src/core/id-override-manager.ts --rule '{"@typescript-eslint/no
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/id-override-manager.ts tests/unit/core/id-override-manager.test.ts
@@ -503,7 +503,7 @@ git commit -m "refactor: validate stored ID overrides"
 - Produces: `enqueue<T>(url: string, priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T>` with unchanged signature.
 - Produces: `#dispatchNextRequest(): Promise<void>` and `#process(): Promise<void>` drop their generic parameters.
 
-- [ ] **Step 1: Write the failing rejection test**
+- [x] **Step 1: Write the failing rejection test**
 
 Add to `tests/unit/core/request-queue.test.ts`:
 
@@ -516,19 +516,19 @@ it('rejects the caller with the original fetch error', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to confirm the current behavior before refactoring**
+- [x] **Step 2: Run the test to confirm the current behavior before refactoring**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts -t "original fetch error"`
 
 Expected: PASS. This is a characterization test for the refactor; the red signal is the rule.
 
-- [ ] **Step 3: Replace the resolve and fetch-function casts with a run closure**
+- [x] **Step 3: Replace the resolve and fetch-function casts with a run closure**
 
 In `src/core/request-queue.ts`, change `QueueItem` to the erased shape in Interfaces. In `enqueue`, push an item whose `run` closure awaits `fetchFn(url)`, resolves the caller on success, and rejects on failure. Type `reject` directly from the promise executor.
 
 Make `#process` and `#dispatchNextRequest` non-generic. In `#dispatchNextRequest`, call `await item.run(item.url)`. Leave pacing, priority sorting, cross-tab synchronization, and `clear()` semantics unchanged.
 
-- [ ] **Step 4: Run the queue tests and the targeted rule**
+- [x] **Step 4: Run the queue tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts`
 
@@ -538,7 +538,7 @@ Run: `npx eslint src/core/request-queue.ts --rule '{"@typescript-eslint/no-unsaf
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/request-queue.ts tests/unit/core/request-queue.test.ts
@@ -559,7 +559,7 @@ git commit -m "refactor: erase request queue items with run closures"
 - Produces: `DebouncedFunction<T> = (this: unknown, ..._args: Parameters<T>) => void`
 - Produces: `debounce<T extends (..._args: unknown[]) => unknown>(func: T, wait: number): DebouncedFunction<T>`
 
-- [ ] **Step 1: Write the return-value test**
+- [x] **Step 1: Write the return-value test**
 
 Add to the `debounce` tests in `tests/unit/core/utils/general-utils.test.ts`:
 
@@ -570,17 +570,17 @@ it('returns undefined because the call is deferred', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test**
+- [x] **Step 2: Run the test**
 
 Run: `npx vitest run tests/unit/core/utils/general-utils.test.ts -t "call is deferred"`
 
 Expected: PASS at runtime; the signature still lies about the return type.
 
-- [ ] **Step 3: Correct the type and remove the assertion**
+- [x] **Step 3: Correct the type and remove the assertion**
 
 Change `DebouncedFunction` to return `void`, type the implementation's `this` as `unknown`, and return the function directly without `as DebouncedFunction<T>`. Keep `func.apply(this, args)` so the context test still passes.
 
-- [ ] **Step 4: Run the utility tests, type-check, and the targeted rule**
+- [x] **Step 4: Run the utility tests, type-check, and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/utils/general-utils.test.ts`
 
@@ -594,7 +594,7 @@ Run: `npx eslint src/core/utils/general-utils.ts --rule '{"@typescript-eslint/no
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/utils/general-utils.ts tests/unit/core/utils/general-utils.test.ts
@@ -615,7 +615,7 @@ git commit -m "refactor: type debounce return as void"
 - Consumes: `FlixMonkeyError` from `./utils/index`.
 - Produces: `#fetch(displayTitle: string, imdbId?: string): Promise<Title>` with unchanged behavior for `FlixMonkeyError`, `Error`, and non-Error rejections.
 
-- [ ] **Step 1: Write the failing non-Error rejection test**
+- [x] **Step 1: Write the failing non-Error rejection test**
 
 Add to `tests/unit/core/api-manager.test.ts`:
 
@@ -642,13 +642,13 @@ it('handles a non-Error rejection without metadata', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to confirm the current behavior**
+- [x] **Step 2: Run the test to confirm the current behavior**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.ts -t "non-Error rejection"`
 
 Expected: PASS. This is a characterization test; the red signal is the rule.
 
-- [ ] **Step 3: Narrow with `instanceof` instead of a shape cast**
+- [x] **Step 3: Narrow with `instanceof` instead of a shape cast**
 
 In `src/core/api-manager.ts`, replace the `err as { ... }` object with:
 
@@ -657,7 +657,7 @@ In `src/core/api-manager.ts`, replace the `err as { ... }` object with:
 
 Keep the `isHttpError` calculation, the disable rule for 4xx, the error-versus-warn selection, and the exact logger context shape `{ url, status, body }`, including explicit `undefined` values.
 
-- [ ] **Step 4: Run the manager tests and the targeted rule**
+- [x] **Step 4: Run the manager tests and the targeted rule**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.ts`
 
@@ -667,7 +667,7 @@ Run: `npx eslint src/core/api-manager.ts --rule '{"@typescript-eslint/no-unsafe-
 
 Expected: 0 problems.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/api-manager.ts tests/unit/core/api-manager.test.ts
@@ -694,7 +694,7 @@ git commit -m "refactor: narrow API errors with instanceof"
 - Produces: `type ExtensionMessage = FMRunMigrationsMessage | FMFetchMessage`
 - Produces: `parseExtensionMessage(value: unknown): ExtensionMessage | undefined`
 
-- [ ] **Step 1: Write the failing parser tests**
+- [x] **Step 1: Write the failing parser tests**
 
 Create `tests/unit/targets/extension/messages.test.ts` with cases that assert:
 
@@ -737,25 +737,25 @@ null
 { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: '5' } }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/targets/extension/messages.test.ts`
 
 Expected: FAIL because the module does not exist.
 
-- [ ] **Step 3: Implement the parser**
+- [x] **Step 3: Implement the parser**
 
 Create `src/targets/extension/messages.ts` with the types and signature above. Require a non-null, non-array object. Accept `type: 'FM_RUN_MIGRATIONS'`. Accept `FM_FETCH` only with a string `url`.
 
 When `options` is present and not `undefined`, it must be a non-null, non-array object. Rebuild a fresh `HttpFetchOptions`: copy `responseType` only when it is `json` or `text`, and `timeout` only when it is a finite number greater than or equal to zero. Reject the whole message when a present field is invalid. Ignore unknown keys. Omit absent fields so `exactOptionalPropertyTypes` is satisfied.
 
-- [ ] **Step 4: Run the parser tests**
+- [x] **Step 4: Run the parser tests**
 
 Run: `npx vitest run tests/unit/targets/extension/messages.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Wire both targets to the parser**
+- [x] **Step 5: Wire both targets to the parser**
 
 In `src/targets/chrome/service-worker.ts` and
 `src/targets/firefox/background.ts`, delete the local message interfaces and
@@ -767,13 +767,13 @@ In `src/targets/chrome/service-worker.ts` and
 
 Keep the sender check before parsing and keep every existing response path.
 
-- [ ] **Step 6: Add one target-level malformed-options test per target**
+- [x] **Step 6: Add one target-level malformed-options test per target**
 
 Chrome: add a test asserting `messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'xml' } }, { id: 'test-ext' }, sendResponse)` returns `false` and never calls `sendResponse`.
 
 Firefox: add a test asserting the same message resolves to `undefined`.
 
-- [ ] **Step 7: Run the target and parser tests plus the targeted rule**
+- [x] **Step 7: Run the target and parser tests plus the targeted rule**
 
 Run: `npx vitest run tests/unit/targets/extension/messages.test.ts tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts`
 
@@ -783,7 +783,7 @@ Run: `npx eslint src/targets/extension/messages.ts src/targets/chrome/service-wo
 
 Expected: 0 problems.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/targets/extension/messages.ts src/targets/chrome/service-worker.ts src/targets/firefox/background.ts tests/unit/targets/extension/messages.test.ts tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts
@@ -803,17 +803,17 @@ git commit -m "refactor: parse extension messages instead of casting"
 - Produces: `@typescript-eslint/no-unsafe-type-assertion: 'error'` in `typescriptRules`.
 - Produces: `@typescript-eslint/no-unsafe-type-assertion: 'off'` in the `tests/**/*.ts` relaxation block.
 
-- [ ] **Step 1: Enable the rule with an explicit test exception**
+- [x] **Step 1: Enable the rule with an explicit test exception**
 
 Add `'@typescript-eslint/no-unsafe-type-assertion': 'error',` to `typescriptRules` in `eslint.config.js`. Add `'@typescript-eslint/no-unsafe-type-assertion': 'off',` to the `files: ['tests/**/*.ts']` block and update its comment to name narrowing assertions in mocks and fixtures.
 
-- [ ] **Step 2: Confirm no findings remain in `src/`**
+- [x] **Step 2: Confirm no findings remain in `src/`**
 
 Run: `npx eslint "src/**/*.ts"`
 
 Expected: 0 problems. Any remaining finding is a missed site from Tasks 1 to 11; fix it in the owning file with a follow-up commit.
 
-- [ ] **Step 3: Run the required checks**
+- [x] **Step 3: Run the required checks**
 
 Run: `npm run type-check`
 
@@ -827,7 +827,7 @@ Run: `npm test`
 
 Expected: PASS, including all new tests.
 
-- [ ] **Step 4: Run the remaining pull-request checks**
+- [x] **Step 4: Run the remaining pull-request checks**
 
 Run: `npm run format:check`
 
@@ -837,13 +837,13 @@ Run: `npm run build`
 
 Expected: all three targets build and package.
 
-- [ ] **Step 5: Confirm no new disable comments**
+- [x] **Step 5: Confirm no new disable comments**
 
 Run: `git diff main -- src eslint.config.js | rg "eslint-disable"`
 
 Expected: no new disable comment. The existing `promise-function-async` disable in `src/targets/extension/migrations.ts` and the documented `max-params` disable in `src/core/app.ts` are unchanged.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add eslint.config.js docs/superpowers/plans/2026-11-12-no-unsafe-type-assertions.md
