@@ -171,9 +171,11 @@ reviewers, so it starts as soon as it is dispatched.
 
 ### Recovering a failed release build
 
-A failed `Release Please` run is not retried. The workflow only builds when
-release-please creates a release, so re-running it for the same commit does not
-rebuild the assets or repair the draft.
+A failed `Release Please` run is not retried. The build steps only run when
+release-please creates a release in that run, so a re-run after the draft
+already exists does not rebuild its assets or repair the draft. If the first run
+failed before release-please created the draft, a re-run can still create it and
+build the assets.
 
 If the run fails before the release is published, the draft can be left with
 missing or partial assets. Roll forward instead:
