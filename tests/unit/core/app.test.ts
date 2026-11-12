@@ -782,7 +782,7 @@ describe('App', () => {
          * @returns Captured click callbacks and the app logger.
          */
         const decorateAndCaptureActions = async (
-            container: Element
+            container: HTMLElement
         ): Promise<{
             onEditClick: (_displayTitle: string) => Promise<void>;
             onRefreshClick: (_displayTitle: string) => Promise<void>;

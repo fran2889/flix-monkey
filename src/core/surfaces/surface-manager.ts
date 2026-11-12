@@ -14,7 +14,7 @@ import type { Logger } from '../logger';
  */
 export const titleFromAttribute =
     (attribute: string) =>
-    (element: Element): string | undefined => {
+    (element: HTMLElement): string | undefined => {
         const value = element.getAttribute(attribute);
         return value ?? undefined;
     };
@@ -23,12 +23,13 @@ export const titleFromAttribute =
  * Creates a resolver that finds the closest ancestor matching a selector.
  *
  * @param selector - Selector for the surface container.
- * @returns Resolver returning the closest matching element, or undefined.
+ * @returns Resolver returning the closest matching HTML element, or undefined.
  */
 export const containerFromClosest =
     (selector: string) =>
-    (element: Element): Element | undefined => {
-        return element.closest(selector) ?? undefined;
+    (element: HTMLElement): HTMLElement | undefined => {
+        const match = element.closest(selector);
+        return match instanceof HTMLElement ? match : undefined;
     };
 
 /**
@@ -37,7 +38,7 @@ export const containerFromClosest =
  * @param element - Title element.
  * @returns Parent element, or undefined when the element has no parent.
  */
-export const containerFromParent = (element: Element): Element | undefined => {
+export const containerFromParent = (element: HTMLElement): HTMLElement | undefined => {
     return element.parentElement ?? undefined;
 };
 
@@ -71,14 +72,11 @@ export class SurfaceManager {
                 return;
             }
             titleEls.forEach(titleEl => {
+                if (!(titleEl instanceof HTMLElement)) return;
                 const rawTitle = surface.getTitle(titleEl);
                 const title = rawTitle?.trim();
                 if (!title) return;
-                let container = surface.getContainer(titleEl);
-                if (!container) {
-                    this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
-                    container = titleEl.parentElement ?? undefined;
-                }
+                const container = this.#resolveContainer(titleEl, surface, title);
                 if (!container || seen.has(container)) return;
                 surface.decorateContainer?.(container, titleEl);
                 seen.add(container);
@@ -91,5 +89,12 @@ export class SurfaceManager {
             });
         });
         return results;
+    }
+
+    #resolveContainer(titleEl: HTMLElement, surface: SurfaceDefinition, title: string): HTMLElement | undefined {
+        const resolved = surface.getContainer(titleEl);
+        if (resolved instanceof HTMLElement) return resolved;
+        this.#logger.warn(`Surface container resolver failed for ${title}, falling back to parentElement`);
+        return titleEl.parentElement ?? undefined;
     }
 }

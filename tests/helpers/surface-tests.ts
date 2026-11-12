@@ -43,10 +43,8 @@ export function testSurfaceFixtures(
         expect(surface.title).toBe(entry.expected.title);
         expect(surface.fadeable).toBe(entry.expected.fadeable);
         expect(surface.showFadeToggle).toBe(entry.expected.showFadeToggle);
-        // surface.container is typed as Element but injectOverlay expects HTMLElement.
-        // In practice, all discovered containers are HTMLElements.
         overlayRenderer.injectOverlay(
-            surface.container as unknown as HTMLElement,
+            surface.container,
             new Title({ displayTitle: surface.title, imdbRating: 8.5, imdbId: 'tt1234567' }),
             {
                 displayTitle: surface.title,
