@@ -169,23 +169,6 @@ Greasy Fork version once. The Greasy Fork check does not poll or retry.
 The run deploys to the `store-publish` environment. There are no required
 reviewers, so it starts as soon as it is dispatched.
 
-## Failure Handling
-
-- A job that fails before its first step with an environment protection error
-  was not dispatched from `main` or a `v*` tag. Dispatch it from `main`.
-- An empty store credential fails the store command. Confirm the secret exists
-  on the `store-publish` environment and not only at repository level.
-- The job checks the Greasy Fork listing only. It does not download or inspect
-  the release asset, so a missing or wrong asset is reported as a version
-  mismatch. Check the release asset if the listing is stale.
-- An unset `GREASYFORK_SCRIPT_ID` fails the job with the variable name.
-- If Greasy Fork is unreachable or returns an error, the job fails with the
-  endpoint and curl's error.
-- If Greasy Fork serves a different version, the job prints both versions. Check
-  the release asset, the webhook delivery, and the listing sync URL, then re-run
-  only that job.
-- The job checks once. It does not poll or retry.
-
 ### Recovering a failed release build
 
 A failed `Release Please` run is not retried. The workflow only builds when
@@ -212,6 +195,23 @@ assets are already attached. Publish the draft from the Releases page, or run
 
 The workflow builds from the commit that triggered the run, which is the commit
 release-please tags, so a successful release matches its tag.
+
+## Failure Handling
+
+- A job that fails before its first step with an environment protection error
+  was not dispatched from `main` or a `v*` tag. Dispatch it from `main`.
+- An empty store credential fails the store command. Confirm the secret exists
+  on the `store-publish` environment and not only at repository level.
+- The job checks the Greasy Fork listing only. It does not download or inspect
+  the release asset, so a missing or wrong asset is reported as a version
+  mismatch. Check the release asset if the listing is stale.
+- An unset `GREASYFORK_SCRIPT_ID` fails the job with the variable name.
+- If Greasy Fork is unreachable or returns an error, the job fails with the
+  endpoint and curl's error.
+- If Greasy Fork serves a different version, the job prints both versions. Check
+  the release asset, the webhook delivery, and the listing sync URL, then re-run
+  only that job.
+- The job checks once. It does not poll or retry.
 
 ## Updating Store Metadata
 
