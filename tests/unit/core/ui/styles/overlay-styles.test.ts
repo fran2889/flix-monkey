@@ -4,7 +4,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { buildOverlayStyles, isOverlayCorner } from '../../../../../src/core/ui/overlay-styles';
+import { CONFIG_SELECT_ALLOWED } from '../../../../../src/core/config/index';
+import { buildOverlayStyles, isOverlayCorner, OVERLAY_CORNERS } from '../../../../../src/core/ui/overlay-styles';
 
 describe('buildOverlayStyles', () => {
     it('recognizes only the four overlay corners', () => {
@@ -13,6 +14,10 @@ describe('buildOverlayStyles', () => {
         expect(isOverlayCorner('bottom-left')).toBe(true);
         expect(isOverlayCorner('bottom-right')).toBe(true);
         expect(isOverlayCorner('middle')).toBe(false);
+    });
+
+    it('matches the overlay corner select options', () => {
+        expect(CONFIG_SELECT_ALLOWED.overlayCorner).toEqual(OVERLAY_CORNERS);
     });
 
     it('builds bottom-corner positioning and direction', () => {
