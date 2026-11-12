@@ -38,22 +38,27 @@ export class RequestQueue {
      * @returns Result returned by fetchFn.
      */
     async enqueue<T>(url: string, priority: number, fetchFn: (_urlParam: string) => Promise<T>): Promise<T> {
-        return new Promise((resolve: (_value: T | PromiseLike<T>) => void, reject) => {
+        return new Promise<T>((resolve, reject) => {
             this.#queue.push({
                 url,
                 priority,
-                resolve: resolve as (_value2: unknown) => void,
                 reject,
-                fetchFn: fetchFn,
+                run: async (urlParam: string): Promise<void> => {
+                    try {
+                        resolve(await fetchFn(urlParam));
+                    } catch (error: unknown) {
+                        reject(error);
+                    }
+                },
             });
             if (this.#queue.length > 1) {
                 this.#queue.sort((a, b) => b.priority - a.priority);
             }
-            void this.#process<T>();
+            void this.#process();
         });
     }
 
-    async #process<T>(): Promise<void> {
+    async #process(): Promise<void> {
         if (this.#isProcessing) return;
         this.#isProcessing = true;
 
@@ -75,7 +80,7 @@ export class RequestQueue {
 
             this.#lastLocalReqTime = Date.now();
             await this.#syncClaimedRequestSlot();
-            await this.#dispatchNextRequest<T>();
+            await this.#dispatchNextRequest();
         }
         this.#isProcessing = false;
     }
@@ -91,15 +96,10 @@ export class RequestQueue {
         await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
     }
 
-    async #dispatchNextRequest<T>(): Promise<void> {
+    async #dispatchNextRequest(): Promise<void> {
         const item = this.#queue.shift();
         if (!item) return;
-        try {
-            const result = await (item.fetchFn as (_url: string) => Promise<T>)(item.url);
-            (item.resolve as (_value: T | PromiseLike<T>) => void)(result);
-        } catch (error) {
-            item.reject(error);
-        }
+        await item.run(item.url);
     }
 
     /**
@@ -119,10 +119,9 @@ export class RequestQueue {
 }
 
 /** Internal queue item type */
-interface QueueItem<T = unknown> {
+interface QueueItem {
     url: string;
     priority: number;
-    resolve: (_value: T | PromiseLike<T>) => void;
     reject: (_reason: unknown) => void;
-    fetchFn: (_url: string) => Promise<T>;
+    run: (_url: string) => Promise<void>;
 }

@@ -29,6 +29,13 @@ describe('RequestQueue', () => {
         expect(count).toBe(1);
     });
 
+    it('rejects the caller with the original fetch error', async () => {
+        const queue = buildQueue(0);
+        const error = new Error('fetch failed');
+
+        await expect(queue.enqueue('url', 1, () => Promise.reject(error))).rejects.toBe(error);
+    });
+
     it('should synchronize across instances using storage', async () => {
         let sharedTime = Date.now().toString();
         const mockAdapter = buildMockAdapter().build();
