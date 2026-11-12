@@ -63,7 +63,7 @@ const OMDB_FAILURE = 'False';
 export class OmdbApiClient extends BaseApiClient {
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
-        super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.OMDB);
+        super(deps, new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey), ApiSource.OMDB);
     }
 
     /**

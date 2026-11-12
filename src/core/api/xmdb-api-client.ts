@@ -58,7 +58,7 @@ type XmdbDetailsResponse = XmdbDetailsFound | XmdbDetailsNotFound;
 export class XmdbApiClient extends BaseApiClient {
     constructor(deps: ApiClientDeps) {
         const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.XMDB];
-        super(deps, new RequestQueue(deps.adapter, minIntervalMs, syncKey), ApiSource.XMDB);
+        super(deps, new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey), ApiSource.XMDB);
     }
 
     /**

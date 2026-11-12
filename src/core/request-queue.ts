@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { PlatformAdapter } from '../platform/adapter';
+import type { Logger } from './logger';
 
 /**
  * Rate-limited request queue with priority-based execution and cross-tab synchronization.
@@ -14,18 +15,21 @@ export class RequestQueue {
     readonly #minInterval: number;
     readonly #globalSyncKey: string;
     readonly #adapter: PlatformAdapter;
+    readonly #logger: Logger;
 
     /**
      * Creates a queue with the given pacing and cross-tab sync key.
      *
      * @param adapter - Storage adapter used for cross-tab coordination.
+     * @param logger - Logger for storage failures that abort a processing pass.
      * @param minInterval - Minimum delay between dispatched requests.
      * @param globalSyncKey - Storage key used to coordinate the delay across tabs.
      */
-    constructor(adapter: PlatformAdapter, minInterval: number, globalSyncKey: string) {
+    constructor(adapter: PlatformAdapter, logger: Logger, minInterval: number, globalSyncKey: string) {
+        this.#adapter = adapter;
+        this.#logger = logger;
         this.#minInterval = minInterval;
         this.#globalSyncKey = globalSyncKey;
-        this.#adapter = adapter;
     }
 
     /**
@@ -62,27 +66,36 @@ export class RequestQueue {
         if (this.#isProcessing) return;
         this.#isProcessing = true;
 
-        while (this.#queue.length > 0) {
-            const now = Date.now();
-            const lastGlobal = await this.#getLastGlobalRequestTime();
+        try {
+            while (this.#queue.length > 0) {
+                const now = Date.now();
+                const lastGlobal = await this.#getLastGlobalRequestTime();
 
-            const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
-            if (wait > 0) {
-                await new Promise(r => setTimeout(r, wait));
-                // Re-read storage after waiting, then restart the loop: another tab may
-                // have claimed the slot while this one slept.
-                continue;
+                const wait = Math.max(0, this.#minInterval - (now - Math.max(this.#lastLocalReqTime, lastGlobal)));
+                if (wait > 0) {
+                    await new Promise(r => setTimeout(r, wait));
+                    // Re-read storage after waiting, then restart the loop: another tab may
+                    // have claimed the slot while this one slept.
+                    continue;
+                }
+
+                // Re-read storage before claiming the timeslot to reduce cross-tab races
+                const freshGlobal = await this.#getLastGlobalRequestTime();
+                if (Date.now() - freshGlobal < this.#minInterval) continue;
+
+                this.#lastLocalReqTime = Date.now();
+                await this.#syncClaimedRequestSlot();
+                await this.#dispatchNextRequest();
             }
-
-            // Re-read storage before claiming the timeslot to reduce cross-tab races
-            const freshGlobal = await this.#getLastGlobalRequestTime();
-            if (Date.now() - freshGlobal < this.#minInterval) continue;
-
-            this.#lastLocalReqTime = Date.now();
-            await this.#syncClaimedRequestSlot();
-            await this.#dispatchNextRequest();
+        } catch (err) {
+            this.#logger.warn('RequestQueue pass aborted after a storage failure', {
+                key: this.#globalSyncKey,
+                pending: this.#queue.length,
+                err,
+            });
+        } finally {
+            this.#isProcessing = false;
         }
-        this.#isProcessing = false;
     }
 
     async #getLastGlobalRequestTime(): Promise<number> {
