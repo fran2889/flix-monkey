@@ -6,10 +6,7 @@ import type { ServicePresentation } from '../types/overlay';
 import type { ConfigManager } from './config/config-manager';
 import type { Title } from './title';
 import { createLoadingOverlayElement, createOverlayElement, type OverlayOptions } from './ui/overlay-elements';
-import { buildOverlayStyles } from './ui/overlay-styles';
-
-/** Valid overlay corner positions. */
-type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+import { buildOverlayStyles, isOverlayCorner } from './ui/overlay-styles';
 
 /** Interaction-driven overlay options passed to `injectOverlay`. */
 export type OverlayInteraction = Pick<
@@ -37,9 +34,10 @@ export class OverlayRenderer {
      */
     injectStyles(): void {
         const existing = document.getElementById('fm-overlay-styles');
+        const corner = this.#config.get('overlayCorner');
         const cssText = buildOverlayStyles({
             overlayClass: this.#OVERLAY_CLASS,
-            corner: this.#config.get('overlayCorner') as OverlayCorner,
+            corner: isOverlayCorner(corner) ? corner : 'top-left',
             top10Selectors: [...(this.#serviceConstants.TOP_10_SELECTORS ?? [])],
             top10Offset: this.#serviceConstants.TOP_10_OFFSET ?? '50%',
         });

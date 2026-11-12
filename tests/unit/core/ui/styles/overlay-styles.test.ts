@@ -4,9 +4,17 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { buildOverlayStyles } from '../../../../../src/core/ui/overlay-styles';
+import { buildOverlayStyles, isOverlayCorner } from '../../../../../src/core/ui/overlay-styles';
 
 describe('buildOverlayStyles', () => {
+    it('recognizes only the four overlay corners', () => {
+        expect(isOverlayCorner('top-left')).toBe(true);
+        expect(isOverlayCorner('top-right')).toBe(true);
+        expect(isOverlayCorner('bottom-left')).toBe(true);
+        expect(isOverlayCorner('bottom-right')).toBe(true);
+        expect(isOverlayCorner('middle')).toBe(false);
+    });
+
     it('builds bottom-corner positioning and direction', () => {
         const css = buildOverlayStyles({
             overlayClass: 'fm-rating-overlay',

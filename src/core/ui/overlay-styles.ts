@@ -20,14 +20,29 @@ const CSS_VARS: string = `
     }
 `;
 
+export const OVERLAY_CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const;
+
+/** Corner of a surface container where the overlay badge is anchored. */
+export type OverlayCorner = (typeof OVERLAY_CORNERS)[number];
+
 /**
  * Options for building overlay styles.
  */
 export interface BuildOverlayStylesOptions {
     overlayClass: string;
-    corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    corner: OverlayCorner;
     top10Selectors?: string[] | undefined;
     top10Offset?: string | undefined;
+}
+
+/**
+ * Narrows an untrusted configuration value to a supported overlay corner.
+ *
+ * @param value - Configured corner value.
+ * @returns True when the value is one of the supported corners.
+ */
+export function isOverlayCorner(value: string): value is OverlayCorner {
+    return OVERLAY_CORNERS.some(corner => corner === value);
 }
 
 function buildBaseStyles(overlayClass: string, positionCss: string, flexDirection: string): string {
