@@ -65,7 +65,7 @@ async function zipDirectory(sourceDir, outPath) {
 
 async function main() {
     const requested = process.argv[2] ?? 'all';
-    if (requested !== 'all' && !(requested in OUTPUTS)) {
+    if (requested !== 'all' && !Object.hasOwn(OUTPUTS, requested)) {
         throw new Error(`Unknown package target: ${requested}`);
     }
 
