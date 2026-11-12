@@ -48,6 +48,7 @@ describe('assertRecord', () => {
 
 describe('isRecord', () => {
     it('accepts a plain object', () => expect(isRecord({ a: 1 })).toBe(true));
+    it('accepts any non-array object', () => expect(isRecord(new Map())).toBe(true));
     it('rejects null', () => expect(isRecord(null)).toBe(false));
     it('rejects an array', () => expect(isRecord([])).toBe(false));
     it('rejects a primitive', () => expect(isRecord('text')).toBe(false));

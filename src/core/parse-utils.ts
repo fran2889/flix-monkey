@@ -21,7 +21,7 @@ export class ParseError extends Error {
  * Checks that a value is a non-null, non-array object.
  *
  * @param value - Untrusted value.
- * @returns True when the value is a plain object.
+ * @returns True when the value is a non-null, non-array object.
  */
 export function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
