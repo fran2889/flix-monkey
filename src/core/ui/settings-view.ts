@@ -416,9 +416,9 @@ export class SettingsView {
 
     #fieldInput(field: SettingConfigField): HTMLInputElement | HTMLSelectElement | undefined {
         if (field.disabled) return undefined;
-        return (
-            this.#container?.querySelector<HTMLInputElement | HTMLSelectElement>(`[id="fm-${field.key}"]`) ?? undefined
-        );
+        const input = this.#container?.querySelector(`[id="fm-${field.key}"]`);
+        if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement) return input;
+        return undefined;
     }
 
     #readInputValue(field: SettingConfigField, input: HTMLInputElement | HTMLSelectElement): ConfigValueType {
