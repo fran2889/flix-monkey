@@ -37,12 +37,7 @@ can read the credentials.
 The store credentials belong on the `store-publish` environment, not on the
 repository. OAuth2 credentials and API keys are environment secrets. Public
 identifiers, which are the two Chrome IDs and the AMO add-on ID, are environment
-variables instead: the workflows read them through the `vars` context. To
-migrate existing repository values, create each one on the environment first,
-merge the workflow change, confirm a run succeeds and the environment page lists
-the same names, then delete the repository copies. Environment values take
-precedence over same-named repository values, so while both exist the
-environment value is live and the repository copy is only a fallback.
+variables instead.
 
 ## Required Environment Secrets
 
