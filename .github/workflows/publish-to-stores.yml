@@ -42,8 +42,8 @@ jobs:
             - name: Publish to Chrome Web Store
               env:
                   TAG: ${{ inputs.tag }}
-                  EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-                  PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+                  EXTENSION_ID: ${{ vars.CHROME_EXTENSION_ID }}
+                  PUBLISHER_ID: ${{ vars.CHROME_PUBLISHER_ID }}
                   CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
                   CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
                   REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
@@ -69,8 +69,6 @@ jobs:
             - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
               with:
                   node-version: '24.x'
-                  cache: 'npm'
-            - run: npm ci --ignore-scripts
             - name: Download Firefox artifacts from release
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,15 +83,13 @@ jobs:
             # web-ext is intentionally not a devDependency: every published version
             # pulls in node-forge and shell-quote advisories, which would make the
             # 'npm run audit' CI gate permanently red. It is not bundled into the
-            # extension, so pinning it here keeps the release path working.
-            - name: Install web-ext
-              run: npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0
+            # extension.
             - name: Publish to Firefox Add-ons
               env:
                   TAG: ${{ inputs.tag }}
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0
+              run: npx --yes --ignore-scripts web-ext@10.7.0 sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0
 
     publish-greasyfork:
         runs-on: ubuntu-latest

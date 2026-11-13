@@ -34,13 +34,10 @@ only from `main` and `v*` tags, and it has no required reviewers. A workflow
 dispatched from any other branch or tag fails at the environment gate before it
 can read the credentials.
 
-The store credentials belong on the `store-publish` environment as environment
-secrets, not as repository secrets. To migrate existing repository secrets,
-create each one on the environment first, merge the workflow change, confirm a
-run succeeds and the environment page lists the same names, then delete the
-repository copies. Environment secrets take precedence over same-named
-repository secrets, so while both exist the environment value is live and the
-repository copy is only a fallback.
+The store credentials belong on the `store-publish` environment, not on the
+repository. OAuth2 credentials and API keys are environment secrets. Public
+identifiers, which are the two Chrome IDs and the AMO add-on ID, are environment
+variables instead.
 
 ## Required Environment Secrets
 
@@ -48,13 +45,11 @@ Store these as secrets on the `store-publish` environment.
 
 ### Chrome Web Store
 
-| Secret                 | Where to get it                                          |
-| ---------------------- | -------------------------------------------------------- |
-| `CHROME_EXTENSION_ID`  | The item ID on the Chrome Web Store Developer Dashboard. |
-| `CHROME_PUBLISHER_ID`  | The publisher ID in the dashboard account settings.      |
-| `CHROME_CLIENT_ID`     | OAuth2 client ID (see below).                            |
-| `CHROME_CLIENT_SECRET` | OAuth2 client secret (see below).                        |
-| `CHROME_REFRESH_TOKEN` | OAuth2 refresh token (see below).                        |
+| Secret                 | Where to get it                   |
+| ---------------------- | --------------------------------- |
+| `CHROME_CLIENT_ID`     | OAuth2 client ID (see below).     |
+| `CHROME_CLIENT_SECRET` | OAuth2 client secret (see below). |
+| `CHROME_REFRESH_TOKEN` | OAuth2 refresh token (see below). |
 
 To obtain the OAuth2 credentials:
 
@@ -80,7 +75,6 @@ npx chrome-webstore-upload-keys
 | ---------------- | ------------------------------------------------ |
 | `AMO_JWT_ISSUER` | API key (JWT issuer) from addons.mozilla.org.    |
 | `AMO_JWT_SECRET` | API secret (JWT secret) from addons.mozilla.org. |
-| `AMO_ADDON_ID`   | Add-on ID on AMO (e.g., `flixmonkey@fran`).      |
 
 Generate `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` at
 <https://addons.mozilla.org/developers/addon/api/key/> (Manage API Keys).
@@ -88,6 +82,16 @@ The add-on's stable ID is set in
 [`src/targets/firefox/manifest.json`](../src/targets/firefox/manifest.json) as
 `browser_specific_settings.gecko.id` (`flixmonkey@fran`); AMO uses it to
 match version updates to the listing.
+
+## Required Environment Variables
+
+Store these as variables, not secrets, on the `store-publish` environment.
+
+| Variable              | Where to get it                                          |
+| --------------------- | -------------------------------------------------------- |
+| `CHROME_EXTENSION_ID` | The item ID on the Chrome Web Store Developer Dashboard. |
+| `CHROME_PUBLISHER_ID` | The publisher ID in the dashboard account settings.      |
+| `AMO_ADDON_ID`        | Add-on ID on AMO (e.g., `flixmonkey@fran`).              |
 
 ## Required Repository Variables
 
