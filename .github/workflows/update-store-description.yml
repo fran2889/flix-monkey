@@ -9,9 +9,14 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: update-store-description
+    cancel-in-progress: false
+
 jobs:
     update-firefox-description:
         runs-on: ubuntu-latest
+        if: github.repository == 'fran2889/flix-monkey'
         environment: store-publish
         timeout-minutes: 5
         steps:
