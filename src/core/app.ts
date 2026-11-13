@@ -22,7 +22,7 @@ import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './
 import { ServiceRegistry } from './services/index';
 import type { SurfaceManager } from './surfaces/index';
 import type { Title } from './title';
-import { FADE_STATE_LABELS } from './ui/overlay-elements';
+import { applyFadeToggleState } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
 
 type HistoryMethod = (data: unknown, unused: string, url?: string | URL | null) => void;
@@ -303,13 +303,7 @@ export class FlixMonkeyApp {
         const currentState: FadeOverrideState = domState === 'always' || domState === 'never' ? domState : undefined;
         const nextState = nextFadeState(currentState);
         await this.#fadeManager.setOverride(dedupKey, nextState);
-        toggleBadgeEl.dataset.state = nextState ?? 'auto';
-        toggleBadgeEl.title = `Fade: ${FADE_STATE_LABELS[nextState ?? 'auto']}`;
-        const icon = toggleBadgeEl.querySelector('.fm-fade-toggle-icon');
-        if (icon) {
-            icon.textContent = nextState === undefined ? '⭐' : '👁️';
-            icon.classList.toggle('fm-fade-toggle--faded', nextState === 'always');
-        }
+        applyFadeToggleState(toggleBadgeEl, nextState);
         const shouldFade = this.#fadeManager.shouldFade(nextState, imdbRating);
         document.querySelectorAll(`[data-fm-key="${dedupKey}"]`).forEach(c => {
             if (!(c instanceof HTMLElement)) return;

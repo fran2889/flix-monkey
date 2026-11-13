@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { Title, type TitleOptions } from '../../../../../src/core/title';
 import {
+    applyFadeToggleState,
     createLoadingOverlayElement,
     createOverlayElement,
     type OverlayOptions,
@@ -373,6 +374,16 @@ describe('createOverlayElement', () => {
             expect(iconButtons[1].textContent).toBe('🔄');
         });
 
+        it('renders each action button once', () => {
+            const element = createOverlay(
+                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test Movie' }
+            );
+
+            expect(element.querySelectorAll('[title="Override IMDb ID"]')).toHaveLength(1);
+            expect(element.querySelectorAll('[title="Refresh ratings (clears cache)"]')).toHaveLength(1);
+        });
+
         it('should add corner class', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
 
@@ -460,5 +471,37 @@ describe('createOverlayElement', () => {
             expect(ratingBadges.length).toBeGreaterThan(0);
             expect(ratingBadges[0].classList.contains('fm-imdb')).toBe(true);
         });
+    });
+});
+
+describe('applyFadeToggleState', () => {
+    it.each([
+        { state: undefined, datasetState: 'auto', expectedTitle: 'Fade: Auto', glyph: '⭐', faded: false },
+        { state: 'always', datasetState: 'always', expectedTitle: 'Fade: Always', glyph: '👁️', faded: true },
+        { state: 'never', datasetState: 'never', expectedTitle: 'Fade: Never', glyph: '👁️', faded: false },
+    ] as const)('renders the $datasetState state', ({ state, datasetState, expectedTitle, glyph, faded }) => {
+        const element = document.createElement('div');
+
+        applyFadeToggleState(element, state);
+
+        const icon = element.querySelector('.fm-fade-toggle-icon');
+        expect(element.dataset.state).toBe(datasetState);
+        expect(element.title).toBe(expectedTitle);
+        expect(icon?.textContent).toBe(glyph);
+        expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(faded);
+        expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
+    });
+
+    it('reuses the existing icon when the state changes', () => {
+        const element = document.createElement('div');
+
+        applyFadeToggleState(element, undefined);
+        applyFadeToggleState(element, 'always');
+        applyFadeToggleState(element, 'never');
+
+        expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
+        expect(element.dataset.state).toBe('never');
+        expect(element.title).toBe('Fade: Never');
+        expect(element.querySelector('.fm-fade-toggle-icon')?.textContent).toBe('👁️');
     });
 });

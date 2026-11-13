@@ -21,7 +21,6 @@ export const SETTINGS_STYLES: string = `/* =====================================
     /* Colors - Accent & Feedback */
     --color-accent: #e50914;
     --color-accent-hover: #f40612;
-    --color-accent-text: #ffffff;
     --color-link: #79f;
     --color-link-hover: #9cf;
     --color-success: #4caf50;
@@ -44,7 +43,6 @@ export const SETTINGS_STYLES: string = `/* =====================================
     --space-md: 0.5rem;
     --space-lg: 0.75rem;
     --space-xl: 1.125rem;
-    --space-2xl: 1.25rem;
 
     /* Borders */
     --border-width-thin: 1px;
@@ -52,13 +50,11 @@ export const SETTINGS_STYLES: string = `/* =====================================
     --border-radius-md: 0.375rem;
 
     /* Focus */
-    --focus-ring: 0.125rem;
     --focus-outline-width: 2px;
 
     /* Layout */
     --label-min-width: clamp(6rem, 20%, 10rem);
     --label-max-width: clamp(8rem, 25%, 12rem);
-    --container-max-width: min(100%, 60rem);
 
     /* Form Controls */
     --input-padding-inline: var(--space-lg);
@@ -494,20 +490,5 @@ export const SETTINGS_STYLES: string = `/* =====================================
 
 .fm-settings-container .status--error {
     color: var(--color-error);
-}
-
-/* =============================================
-   UTILITY: Visually Hidden
-   ============================================= */
-.fm-settings-container .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-    padding: 0;
 }
 `;
