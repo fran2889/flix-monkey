@@ -11,8 +11,6 @@ import {
     parseRequiredItems,
     requiredString,
 } from '../parse-utils';
-import { PROVIDER_RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapAgregarrTitleType } from './title-type-mappers';
@@ -45,8 +43,7 @@ const AGREGARR_TITLE_TYPES = new Set(['movie', 'tvMovie', 'tvSpecial', 'tvSeries
  */
 export class AgregarrApiClient extends BaseApiClient {
     constructor(deps: ApiClientDeps) {
-        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.AGREGARR];
-        super(deps, new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey), ApiSource.AGREGARR);
+        super(deps, ApiSource.AGREGARR);
     }
 
     /**
@@ -129,12 +126,7 @@ function titleFromImdbSuggestionsResult(displayTitle: string, result: ImdbSugges
         apiTitle: result.l,
         imdbId: result.id,
         year: result.y,
-        imdbRating: undefined,
-        imdbVotes: undefined,
-        rtRating: undefined,
-        mcRating: undefined,
         type: mapAgregarrTitleType(result.qid),
-        source: undefined,
     });
 }
 
@@ -163,9 +155,6 @@ function titleFromRatingsEntry(searchTitle: Title, entry: AgregarrRatingEntry): 
         year: searchTitle.year,
         imdbRating: entry.rating,
         imdbVotes: entry.votes,
-        rtRating: undefined,
-        mcRating: undefined,
         type: searchTitle.type,
-        source: undefined,
     });
 }

@@ -12,8 +12,6 @@ import {
     parseValidItems,
     requiredString,
 } from '../parse-utils';
-import { PROVIDER_RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapOmdbTitleType } from './title-type-mappers';
@@ -62,8 +60,7 @@ const OMDB_FAILURE = 'False';
  */
 export class OmdbApiClient extends BaseApiClient {
     constructor(deps: ApiClientDeps) {
-        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.OMDB];
-        super(deps, new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey), ApiSource.OMDB);
+        super(deps, ApiSource.OMDB);
     }
 
     /**
@@ -171,7 +168,7 @@ function parseOmdbRating(raw: unknown): OmdbRatingEntry {
 
 function titleFromOmdbSuccessResponse(response: OmdbSuccessResponse, displayTitle: string): Title {
     const { imdbRating, Ratings, imdbID, Year, Title: apiTitle, Type: apiType, imdbVotes: rawImdbVotes } = response;
-    const releaseYear = Year ? (Year.match(/^\d{4}/)?.[0] ?? undefined) : undefined;
+    const releaseYear = Year?.match(/^\d{4}/)?.[0];
     const votes = rawImdbVotes ? Number.parseInt(String(rawImdbVotes).replaceAll(',', ''), 10) : undefined;
     return new Title({
         displayTitle,
@@ -183,7 +180,6 @@ function titleFromOmdbSuccessResponse(response: OmdbSuccessResponse, displayTitl
         rtRating: ratingFromSource(Ratings, /Rotten Tomatoes/i),
         mcRating: ratingFromSource(Ratings, /Metacritic/i),
         type: mapOmdbTitleType(apiType),
-        source: undefined,
     });
 }
 
