@@ -29,7 +29,7 @@ export abstract class StreamingService {
     abstract get domains(): readonly string[];
 
     /**
-     * Surface definitions discovered by this service's SurfaceManager.
+     * Surface definitions used by this service's SurfaceManager.
      *
      * @returns Surface definitions keyed by surface name.
      */
