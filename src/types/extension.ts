@@ -10,10 +10,13 @@ export type DomainValidationResult = { valid: true } | { valid: false; error: st
 
 /**
  * Response from the extension background fetch proxy.
- * Response returned by the extension background relay. Error bodies are capped
- * at 200 characters when an HTTP response is available.
+ *
+ * Tagged union: `ok` identifies the branch, so a successful body that itself
+ * contains an `error` field is never mistaken for a transport failure. Error
+ * bodies are capped at 200 characters when an HTTP response is available.
  */
-export type FetchProxyResponse = { data: unknown } | { error: string; status?: number; body?: string | undefined };
+export type FetchProxyResponse =
+    { ok: true; data: unknown } | { ok: false; error: string; status?: number; body?: string | undefined };
 
 /**
  * Actions available in the settings UI.

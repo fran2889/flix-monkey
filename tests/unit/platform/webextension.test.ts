@@ -112,7 +112,7 @@ describe('WebExtensionAdapter', () => {
     });
 
     it('httpFetch should send message to background and return data', async () => {
-        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { success: true } });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data: { success: true } });
         const result = (await adapter.httpFetch('https://api.example.com', { responseType: 'json' })) as {
             success: boolean;
         };
@@ -125,8 +125,15 @@ describe('WebExtensionAdapter', () => {
         expect(result.success).toBe(true);
     });
 
+    it('httpFetch should return success data that contains an error field', async () => {
+        const data = { error: 'upstream rate limit', status: 429 };
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data });
+
+        await expect(adapter.httpFetch('https://api.example.com')).resolves.toEqual(data);
+    });
+
     it('httpFetch should throw error if background returns error', async () => {
-        mockedBrowser.runtime.sendMessage.mockResolvedValue({ error: 'Not Found', status: 404 });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: false, error: 'Not Found', status: 404 });
 
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('Not Found');
 
@@ -140,7 +147,7 @@ describe('WebExtensionAdapter', () => {
 
     it('httpFetch should pass timeout to background', async () => {
         const customTimeout = 3000;
-        mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: {} });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data: {} });
 
         await adapter.httpFetch('https://api.example.com', { timeout: customTimeout });
         expect(mockedBrowser.runtime.sendMessage).toHaveBeenCalledWith(
@@ -182,9 +189,27 @@ describe('WebExtensionAdapter', () => {
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
     });
 
+    it.each([
+        ['an untagged success payload', { data: { success: true } }],
+        ['an untagged error payload', { error: 'Not Found', status: 404 }],
+        ['a non-boolean discriminant', { ok: 'true', data: {} }],
+        ['a failure without an error', { ok: false }],
+        ['a failure with a non-string error', { ok: false, error: 42 }],
+        ['a failure with a non-number status', { ok: false, error: 'Not Found', status: '404' }],
+        ['a failure with a non-string body', { ok: false, error: 'Not Found', body: {} }],
+    ])('httpFetch should reject %s as an empty background response', async (_label, payload) => {
+        mockedBrowser.runtime.sendMessage.mockResolvedValue(payload);
+        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
+    });
+
     it('httpFetch should include url on HTTP error from background', async () => {
         expect.assertions(3);
-        mockedBrowser.runtime.sendMessage.mockResolvedValue({ error: 'HTTP 403', status: 403, body: 'Forbidden' });
+        mockedBrowser.runtime.sendMessage.mockResolvedValue({
+            ok: false,
+            error: 'HTTP 403',
+            status: 403,
+            body: 'Forbidden',
+        });
 
         try {
             await adapter.httpFetch('https://api.example.com/test');
@@ -213,7 +238,7 @@ describe('WebExtensionAdapter', () => {
         if (outcome === 'rejects') {
             mockedBrowser.runtime.sendMessage.mockRejectedValue(new Error('network failure'));
         } else {
-            mockedBrowser.runtime.sendMessage.mockResolvedValue({ data: { ok: true } });
+            mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data: { ok: true } });
         }
 
         const request = adapter.httpFetch('https://api.example.com');

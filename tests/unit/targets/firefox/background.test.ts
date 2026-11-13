@@ -89,12 +89,12 @@ describe('Firefox Background Script', () => {
 
     it('should reject requests to disallowed domains', async () => {
         const result = await messageListener({ type: 'FM_FETCH', url: 'http://malicious.com' });
-        expect(result).toEqual({ error: 'Domain not allowed' });
+        expect(result).toEqual({ ok: false, error: 'Domain not allowed' });
     });
 
     it('should handle invalid URLs', async () => {
         const result = await messageListener({ type: 'FM_FETCH', url: 'not-a-url' });
-        expect(result).toEqual({ error: 'Invalid URL' });
+        expect(result).toEqual({ ok: false, error: 'Invalid URL' });
     });
 
     it('ignores a message with malformed options', async () => {
@@ -151,7 +151,7 @@ describe('Firefox Background Script', () => {
             options: { responseType: 'json' },
         });
 
-        expect(result).toEqual({ data: mockData });
+        expect(result).toEqual({ ok: true, data: mockData });
     });
 
     it('should handle successful text response', async () => {
@@ -167,7 +167,7 @@ describe('Firefox Background Script', () => {
             options: { responseType: 'text' },
         });
 
-        expect(result).toEqual({ data: mockData });
+        expect(result).toEqual({ ok: true, data: mockData });
     });
 
     it('should handle HTTP error response', async () => {
@@ -179,7 +179,7 @@ describe('Firefox Background Script', () => {
 
         const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
-        expect(result).toEqual({ error: 'HTTP 404', status: 404, body: 'Not Found' });
+        expect(result).toEqual({ ok: false, error: 'HTTP 404', status: 404, body: 'Not Found' });
     });
 
     it('should handle fetch exception', async () => {
@@ -189,7 +189,7 @@ describe('Firefox Background Script', () => {
 
         const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
 
-        expect(result).toEqual({ error: 'Network error' });
+        expect(result).toEqual({ ok: false, error: 'Network error' });
     });
 
     it('should ignore messages from external senders', async () => {
