@@ -77,14 +77,14 @@ function parseCacheEntry(raw: unknown): ParsedCacheEntry | undefined {
     return { entry: parsed, data: parsed.data };
 }
 
-function renameRating(entry: Record<string, unknown>, data: Record<string, unknown>): CacheEntryOutcome {
+function migrateRatingToImdbRating(entry: Record<string, unknown>, data: Record<string, unknown>): CacheEntryOutcome {
     if (!Object.hasOwn(data, 'rating')) return { action: 'skip' };
     if (!Object.hasOwn(data, 'imdbRating')) data.imdbRating = data.rating;
     delete data.rating;
     return { action: 'update', entry };
 }
 
-function hoistIdentity(entry: Record<string, unknown>, data: Record<string, unknown>): CacheEntryOutcome {
+function migrateIdentityToEntryLevel(entry: Record<string, unknown>, data: Record<string, unknown>): CacheEntryOutcome {
     if (Object.hasOwn(entry, 'displayTitle') && Object.hasOwn(entry, 'imdbId')) return { action: 'skip' };
 
     // Old format: identity fields are nested inside `data`.
@@ -114,14 +114,14 @@ const MIGRATIONS: readonly StorageMigration[] = Object.freeze([
         version: 1,
         description: 'Rename cached Title.rating to Title.imdbRating',
         upgrade: async (adapter: PlatformAdapter): Promise<MigrationSummary> =>
-            migrateCacheEntries(adapter, renameRating),
+            migrateCacheEntries(adapter, migrateRatingToImdbRating),
         onFailure: async (adapter: PlatformAdapter): Promise<MigrationSummary> => clearCache(adapter),
     },
     {
         version: 2,
         description: 'Pull displayTitle and imdbId to cache entry top level',
         upgrade: async (adapter: PlatformAdapter): Promise<MigrationSummary> =>
-            migrateCacheEntries(adapter, hoistIdentity),
+            migrateCacheEntries(adapter, migrateIdentityToEntryLevel),
         onFailure: async (adapter: PlatformAdapter): Promise<MigrationSummary> => clearCache(adapter),
     },
 ]);
