@@ -10,6 +10,6 @@
         "noImplicitAny": false,
         "noEmit": true
     },
-    "include": ["scripts/**/*.js", "scripts/**/*.ts"],
+    "include": ["scripts/**/*.js"],
     "exclude": []
 }

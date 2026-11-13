@@ -10,26 +10,14 @@ import https from 'node:https';
 const DESCRIPTION_FILE = 'docs/store-description.txt';
 const JWT_EXPIRY_SECONDS = 180; // AMO API v5 requires JWT to expire within 3 minutes
 
-/**
- * @param {string} message
- * @returns {void}
- */
 function logInfo(message) {
     console.log(`[INFO] ${new Date().toISOString()} ${message}`);
 }
 
-/**
- * @param {string} message
- * @returns {void}
- */
 function logError(message) {
     console.error(`[ERROR] ${new Date().toISOString()} ${message}`);
 }
 
-/**
- * @param {string} name
- * @returns {string}
- */
 function getEnv(name) {
     const value = process.env[name];
     if (!value || value.trim() === '') {
@@ -39,11 +27,6 @@ function getEnv(name) {
     return value;
 }
 
-/**
- * @param {string} issuer
- * @param {string} secret
- * @returns {string}
- */
 function generateJWT(issuer, secret) {
     const header = { alg: 'HS256', typ: 'JWT' };
     const now = Math.floor(Date.now() / 1000);
@@ -126,10 +109,6 @@ async function makeAMORequest(method, path, jwt, payload = null) {
     });
 }
 
-/**
- * @param {string} content
- * @returns {string}
- */
 function validateDescription(content) {
     const MAX_DESCRIPTION_LENGTH = 10000; // AMO limit
     if (content.length > MAX_DESCRIPTION_LENGTH) {
