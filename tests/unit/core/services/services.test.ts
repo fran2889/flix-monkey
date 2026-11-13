@@ -41,14 +41,19 @@ describe('ServiceRegistry', () => {
             ['netflix.com', NetflixService],
             ['www.netflix.com', NetflixService],
             ['browse.netflix.com', NetflixService],
+            ['hbomax.com', HboMaxService],
             ['play.hbomax.com', HboMaxService],
+            ['www.hbomax.com', HboMaxService],
             ['www.disneyplus.com', DisneyPlusService],
         ])('returns the matching service for %s', (hostname, Service) => {
             assert(ServiceRegistry.detect(hostname) instanceof Service);
         });
 
-        it.each(['www.hbomax.com', 'evilnetflix.com', 'www.youtube.com', ''])('returns undefined for %s', hostname => {
-            assert.strictEqual(ServiceRegistry.detect(hostname), undefined);
-        });
+        it.each(['evilhbomax.com', 'hbomax.com.evil.com', 'evilnetflix.com', 'www.youtube.com', ''])(
+            'returns undefined for %s',
+            hostname => {
+                assert.strictEqual(ServiceRegistry.detect(hostname), undefined);
+            }
+        );
     });
 });
