@@ -30,7 +30,7 @@ interface SettingsGroup {
     readonly id: string;
     readonly label: string;
     readonly icon: string;
-    readonly fields: readonly SettingsFieldRow[];
+    readonly rows: readonly SettingsFieldRow[];
 }
 
 function isRowLabelKey(value: string): value is RowLabelKey {
@@ -71,7 +71,7 @@ export class SettingsView {
         const layout = document.createElement('div');
         layout.className = 'settings-layout';
 
-        for (const group of this.#groupFieldsByGroup()) {
+        for (const group of this.#buildGroups()) {
             layout.appendChild(this.#createGroupElement(group, settings));
         }
 
@@ -89,52 +89,32 @@ export class SettingsView {
         }
     }
 
-    #groupFieldsByGroup(): SettingsGroup[] {
-        const groups: SettingsGroup[] = [];
+    #buildGroups(): SettingsGroup[] {
         const fieldsByGroup = new Map<GroupKey, ConfigField[]>();
 
         for (const field of this.#fields) {
-            this.#addFieldToGroup(field, fieldsByGroup);
-        }
-
-        this.#buildGroupElements(groups, fieldsByGroup);
-
-        return groups;
-    }
-
-    #addFieldToGroup(field: ConfigField, fieldsByGroup: Map<GroupKey, ConfigField[]>): void {
-        const groupFields = fieldsByGroup.get(field.group);
-        if (groupFields) {
+            const groupFields = fieldsByGroup.get(field.group) ?? [];
             groupFields.push(field);
-        } else {
-            fieldsByGroup.set(field.group, [field]);
+            fieldsByGroup.set(field.group, groupFields);
         }
-    }
 
-    #buildGroupElements(groups: SettingsGroup[], fieldsByGroup: Map<GroupKey, ConfigField[]>): void {
-        for (const [groupId, fields] of fieldsByGroup) {
-            const groupInfo = GROUPS[groupId];
-            groups.push({
-                id: groupId,
-                label: groupInfo.label,
-                icon: groupInfo.icon,
-                fields: this.#groupFieldsByRow(fields),
-            });
-        }
-    }
+        return [...fieldsByGroup].map(([id, fields]) => {
+            const fieldsByRow = new Map<string, ConfigField[]>();
 
-    #groupFieldsByRow(fields: readonly ConfigField[]): SettingsFieldRow[] {
-        const rows = new Map<string, ConfigField[]>();
-        for (const field of fields) {
-            const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
-            const rowFields = rows.get(rowId);
-            if (rowFields) {
+            for (const field of fields) {
+                const rowId = field.type === 'checkbox' && field.row ? field.row : field.key;
+                const rowFields = fieldsByRow.get(rowId) ?? [];
                 rowFields.push(field);
-            } else {
-                rows.set(rowId, [field]);
+                fieldsByRow.set(rowId, rowFields);
             }
-        }
-        return [...rows].map(([id, rowFields]) => ({ id, fields: rowFields }));
+
+            return {
+                id,
+                label: GROUPS[id].label,
+                icon: GROUPS[id].icon,
+                rows: [...fieldsByRow].map(([rowId, rowFields]) => ({ id: rowId, fields: rowFields })),
+            };
+        });
     }
 
     #createGroupElement(group: SettingsGroup, settings: Record<string, unknown>): HTMLElement {
@@ -155,7 +135,7 @@ export class SettingsView {
         header.append(icon, title);
         container.appendChild(header);
 
-        for (const row of group.fields) {
+        for (const row of group.rows) {
             const fieldElement = this.#createFieldRow(row, settings);
             container.appendChild(fieldElement);
         }
@@ -203,7 +183,6 @@ export class SettingsView {
     #createSpacerLabel(): HTMLLabelElement {
         const label = this.#createLabelElement();
         label.textContent = '\u00A0';
-        label.style.visibility = 'hidden';
         return label;
     }
 
@@ -348,7 +327,7 @@ export class SettingsView {
     }
 
     #settingValue(key: string, settings: Record<string, unknown>, defaultValue: unknown): unknown {
-        return settings[key] !== undefined ? settings[key] : defaultValue;
+        return settings[key] ?? defaultValue;
     }
 
     #createSettingFields(fields: readonly ConfigField[], settings: Record<string, unknown>): HTMLElement[] {
