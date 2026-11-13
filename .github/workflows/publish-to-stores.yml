@@ -85,15 +85,16 @@ jobs:
             # web-ext is intentionally not a devDependency: every published version
             # pulls in node-forge and shell-quote advisories, which would make the
             # 'npm run audit' CI gate permanently red. It is not bundled into the
-            # extension, so pinning it here keeps the release path working.
+            # extension. Install it outside the repository tree so the project's
+            # minimatch override does not apply to web-ext's dependencies.
             - name: Install web-ext
-              run: npm install --no-save --no-package-lock --no-audit --no-fund web-ext@10.7.0
+              run: npm install --no-save --no-package-lock --no-audit --no-fund --prefix "$RUNNER_TEMP/web-ext" web-ext@10.7.0
             - name: Publish to Firefox Add-ons
               env:
                   TAG: ${{ inputs.tag }}
                   WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
                   WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-              run: npx --no-install web-ext sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0
+              run: '"$RUNNER_TEMP/web-ext/node_modules/.bin/web-ext" sign --source-dir dist/firefox --channel listed --upload-source-code "dist/FlixMonkey-$TAG-source.zip" --approval-timeout 0'
 
     publish-greasyfork:
         runs-on: ubuntu-latest
