@@ -97,15 +97,40 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         expect(mockOverrideManagerForTest.getImdbId).toHaveBeenCalledWith('Some Title');
     });
 
+    it('should return undefined for an explicit IMDb ID when details are not found', async () => {
+        const client = new XmdbApiClient(deps);
+        const search = vi.spyOn(client, 'search');
+        client.getDetails = vi.fn().mockResolvedValue(undefined);
+
+        const result = await client.fetch('Some Title', 'tt1234567');
+
+        expect(result).toBeUndefined();
+        expect(search).not.toHaveBeenCalled();
+    });
+
+    it('should prefer the stored override ID over an explicit IMDb ID', async () => {
+        const mockOverrideManagerForTest: IdOverrideManager = {
+            getImdbId: vi.fn().mockResolvedValue('tt9999999'),
+            setImdbId: vi.fn().mockResolvedValue(undefined),
+        } as unknown as IdOverrideManager;
+        const client = new XmdbApiClient({ ...deps, overrideManager: mockOverrideManagerForTest });
+        client.getDetails = vi.fn().mockResolvedValue(undefined);
+
+        const result = await client.fetch('Some Title', 'tt1234567');
+
+        expect(result?.imdbId).toBe('tt9999999');
+        expect(client.getDetails).toHaveBeenCalledWith(expect.objectContaining({ imdbId: 'tt9999999' }));
+    });
+
     describe('BaseApiClient surface', () => {
         class StubClient extends BaseApiClient {
             constructor(
-                queue: RequestQueue,
                 source: 'xmdb' | 'omdb' | 'agregarr',
                 logger: Logger,
+                queue?: RequestQueue,
                 adapter: PlatformAdapter = mockAdapter
             ) {
-                super({ ...deps, adapter, logger }, queue, source);
+                super({ ...deps, adapter, logger }, source, queue);
             }
             async search(): Promise<Title | undefined> {
                 return undefined;
@@ -127,13 +152,13 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         it('exposes its ApiSource identifier', () => {
             const queue = buildQueue(0);
             const logger: Logger = buildLogger().build();
-            expect(new StubClient(queue, 'omdb', logger).source).toBe('omdb');
-            expect(new StubClient(queue, 'agregarr', logger).source).toBe('agregarr');
+            expect(new StubClient('omdb', logger, queue).source).toBe('omdb');
+            expect(new StubClient('agregarr', logger, queue).source).toBe('agregarr');
         });
 
         it('returns the parser result', async () => {
             const adapter = buildMockAdapter().withHttpFetchResolvingTo({ id: 'tt1' }).build();
-            const client = new StubClient(buildQueue(0), 'xmdb', buildLogger().build(), adapter);
+            const client = new StubClient('xmdb', buildLogger().build(), buildQueue(0), adapter);
 
             const result = await client.fetchParsed(
                 'https://example.test',
@@ -148,7 +173,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         it('logs one warning and returns undefined for ParseError', async () => {
             const logger = buildLogger().build();
             const adapter = buildMockAdapter().withHttpFetchResolvingTo({ id: 42 }).build();
-            const client = new StubClient(buildQueue(0), 'xmdb', logger, adapter);
+            const client = new StubClient('xmdb', logger, buildQueue(0), adapter);
 
             const result = await client.fetchParsed(
                 'https://example.test',
@@ -169,7 +194,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
 
         it('rethrows a non-ParseError', async () => {
             const logger = buildLogger().build();
-            const client = new StubClient(buildQueue(0), 'xmdb', logger, mockAdapter);
+            const client = new StubClient('xmdb', logger, buildQueue(0), mockAdapter);
             const boom = new Error('boom');
 
             await expect(
@@ -189,29 +214,35 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
         it('does not catch a queue error', async () => {
             const logger = buildLogger().build();
             const adapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('network')).build();
-            const client = new StubClient(buildQueue(0), 'xmdb', logger, adapter);
+            const client = new StubClient('xmdb', logger, buildQueue(0), adapter);
 
             await expect(client.fetchParsed('https://example.test', 0, raw => raw, 'test')).rejects.toThrow('network');
 
             expect(logger.warn).not.toHaveBeenCalled();
         });
 
+        it('should build a default request queue when none is injected', async () => {
+            const logger: Logger = buildLogger().build();
+            await new StubClient('xmdb', logger).disable();
+            expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 0 queued requests');
+        });
+
         it('clears the queue on disable()', async () => {
             const queue = buildQueue(0);
             const logger: Logger = buildLogger().build();
-            await new StubClient(queue, 'xmdb', logger).disable();
+            await new StubClient('xmdb', logger, queue).disable();
             expect(queue.clear).toHaveBeenCalledOnce();
         });
 
         it('reports a single purged request without a plural suffix', async () => {
             const logger: Logger = buildLogger().build();
-            await new StubClient(buildQueue(1), 'xmdb', logger).disable();
+            await new StubClient('xmdb', logger, buildQueue(1)).disable();
             expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 1 queued request');
         });
 
         it('reports multiple purged requests with a plural suffix', async () => {
             const logger: Logger = buildLogger().build();
-            await new StubClient(buildQueue(3), 'xmdb', logger).disable();
+            await new StubClient('xmdb', logger, buildQueue(3)).disable();
             expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 3 queued requests');
         });
     });

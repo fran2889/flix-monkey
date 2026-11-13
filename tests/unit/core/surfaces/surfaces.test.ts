@@ -5,13 +5,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    DisneyPlusSurfaceManager,
+    DISNEY_PLUS_SURFACES,
     extractDisneyPlusTitle,
     extractHboMaxTitle,
     extractNetflixMoreLikeThisTitle,
-    HboMaxSurfaceManager,
+    HBO_MAX_SURFACES,
     NETFLIX_SURFACES,
-    NetflixSurfaceManager,
     SurfaceManager,
 } from '../../../../src/core/surfaces/index';
 import { buildLogger } from '../../../mocks/logger';
@@ -307,7 +306,7 @@ describe('Netflix More Like This title extraction', () => {
 describe('Netflix More Like This surfaces', () => {
     function discoverMoreLikeThis(html: string) {
         document.body.innerHTML = html;
-        return new NetflixSurfaceManager(buildLogger().build()).discover(document.body);
+        return new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES).discover(document.body);
     }
 
     it('discovers a tile with browse-card flags and the artwork container', () => {
@@ -377,7 +376,7 @@ describe('HBO Max surfaces', () => {
             </div>
         `;
 
-        const [surface] = new HboMaxSurfaceManager(buildLogger().build()).discover(document.body);
+        const [surface] = new SurfaceManager(buildLogger().build(), HBO_MAX_SURFACES).discover(document.body);
         expect(surface).toMatchObject({ title: 'Movie', fadeable: true, showFadeToggle: true });
     });
 
@@ -403,14 +402,14 @@ describe('HBO Max surfaces', () => {
             </div>
         `;
 
-        const [surface] = new HboMaxSurfaceManager(buildLogger().build()).discover(document.body);
+        const [surface] = new SurfaceManager(buildLogger().build(), HBO_MAX_SURFACES).discover(document.body);
         expect(surface.title).toBe('House of the Dragon');
         expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', (type: string) => {
         document.body.innerHTML = `<a data-testid="id_tile" data-sonic-type="${type}" aria-label="Title. 1 of 20."></a>`;
-        expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
+        expect(new SurfaceManager(buildLogger().build(), HBO_MAX_SURFACES).discover(document.body)).toEqual([]);
     });
 
     it('extracts no HBO Max title when the tile has no sonic-type', () => {
@@ -438,7 +437,7 @@ describe('HBO Max surfaces', () => {
         document.body.replaceChildren(tile);
 
         expect(extractHboMaxTitle(tile)).toBeUndefined();
-        expect(new HboMaxSurfaceManager(buildLogger().build()).discover(document.body)).toEqual([]);
+        expect(new SurfaceManager(buildLogger().build(), HBO_MAX_SURFACES).discover(document.body)).toEqual([]);
     });
 });
 
@@ -539,7 +538,7 @@ describe('Disney+ surfaces', () => {
             </div>
         `;
 
-        const [surface] = new DisneyPlusSurfaceManager(buildLogger().build()).discover(document.body);
+        const [surface] = new SurfaceManager(buildLogger().build(), DISNEY_PLUS_SURFACES).discover(document.body);
         expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
@@ -559,7 +558,7 @@ describe('Disney+ surfaces', () => {
         `;
 
         const logger = buildLogger().build();
-        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
+        const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
         expect(logger.warn).not.toHaveBeenCalled();
@@ -580,7 +579,7 @@ describe('Disney+ surfaces', () => {
         `;
 
         const logger = buildLogger().build();
-        const [surface] = new DisneyPlusSurfaceManager(logger).discover(document.body);
+        const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
 
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
         expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
