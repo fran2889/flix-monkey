@@ -4,11 +4,13 @@
  */
 import { CACHE_TTL_INFINITE } from '../constants';
 
+const CACHE_TTL_ERROR = 'Cache duration must be -1 or a positive integer';
+
 function validateCacheTtl(val: ConfigValueType): string | undefined {
     const raw = String(val);
-    if (raw.trim() === '') return 'Cache duration must be -1 or a positive integer';
+    if (raw.trim() === '') return CACHE_TTL_ERROR;
     const n = Number(raw);
-    return Number.isInteger(n) && (n >= 0 || n === -1) ? undefined : 'Cache duration must be -1 or a positive integer';
+    return Number.isInteger(n) && (n >= 0 || n === -1) ? undefined : CACHE_TTL_ERROR;
 }
 
 /** Settings field groups for UI organization. */

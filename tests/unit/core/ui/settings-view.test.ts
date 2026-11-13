@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     CONFIG_FIELDS,
     type ConfigField,
+    GROUPS,
     isActionField,
     isSettingField,
     ROW_LABELS,
@@ -97,6 +98,18 @@ describe('SettingsView', () => {
             });
         });
 
+        it('renders groups in the order their first field appears', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+                { key: 'cacheTtl', label: 'Cache TTL', type: 'text', default: '30', group: 'cache' },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, {});
+
+            const titles = [...container.querySelectorAll('.settings-group-title')].map(element => element.textContent);
+            expect(titles).toEqual([GROUPS.debug.label, GROUPS.cache.label]);
+        });
+
         it('associates a lone field label and leaves grouped row labels unassociated', () => {
             view.render(container, {});
 
@@ -149,7 +162,7 @@ describe('SettingsView', () => {
             expect(fieldEl).not.toBeNull();
         });
 
-        it('adds field--actions modifier and hides label for action rows', () => {
+        it('adds field--actions modifier and hides label for action rows through CSS', () => {
             const fields: readonly ConfigField[] = [
                 {
                     key: 'clearCache',
@@ -165,9 +178,10 @@ describe('SettingsView', () => {
             const actionField = container.querySelector('.field--actions');
             expect(actionField).not.toBeNull();
 
-            const label = actionField?.querySelector('.field-label');
+            const label = actionField?.querySelector('.field-label') as HTMLElement;
             expect(label).not.toBeNull();
-            expect((label as HTMLElement)?.style.visibility).toBe('hidden');
+            expect(label.style.visibility).toBe('');
+            expect(getComputedStyle(label).visibility).toBe('hidden');
         });
 
         it('renders action buttons and status placeholder', () => {
