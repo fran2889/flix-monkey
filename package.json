@@ -89,10 +89,13 @@
             "prettier --write",
             "eslint --fix"
         ],
-        "**/*.{json,md}": [
+        "*.{json,md}": [
             "prettier --write"
         ],
-        ".github/**/*.yml": [
+        ".github/**/*.{md,yml}": [
+            "prettier --write"
+        ],
+        "docs/**/*.md": [
             "prettier --write"
         ],
         "src/**/*.{html,json}": [
