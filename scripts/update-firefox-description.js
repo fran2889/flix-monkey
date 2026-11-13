@@ -88,7 +88,12 @@ async function makeAMORequest(method, path, jwt, payload = null) {
             let data = '';
             res.on('data', chunk => (data += chunk));
             res.on('end', () => {
-                const statusCode = res.statusCode ?? 0;
+                const statusCode = res.statusCode;
+                if (statusCode === undefined) {
+                    reject(new Error('AMO API response is missing a status code'));
+                    return;
+                }
+
                 logInfo(`AMO API response: ${statusCode} ${res.statusMessage}`);
                 if (data) {
                     logInfo(`Response data: ${data.substring(0, 200)}...`);
