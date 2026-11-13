@@ -83,9 +83,7 @@ jobs:
             # web-ext is intentionally not a devDependency: every published version
             # pulls in node-forge and shell-quote advisories, which would make the
             # 'npm run audit' CI gate permanently red. It is not bundled into the
-            # extension. npx installs it under the npm cache, outside the repository
-            # tree, so the project's minimatch override does not reach web-ext's
-            # dependencies. This is the same invocation as 'npm run lint:firefox'.
+            # extension.
             - name: Publish to Firefox Add-ons
               env:
                   TAG: ${{ inputs.tag }}
