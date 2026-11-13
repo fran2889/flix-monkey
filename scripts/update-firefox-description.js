@@ -71,17 +71,16 @@ async function makeAMORequest(method, path, jwt, payload = null) {
             let data = '';
             res.on('data', chunk => (data += chunk));
             res.on('end', () => {
-                const statusCode = res.statusCode;
-                logInfo(`AMO API response: ${statusCode} ${res.statusMessage}`);
+                logInfo(`AMO API response: ${res.statusCode} ${res.statusMessage}`);
                 if (data) {
                     logInfo(`Response data: ${data.substring(0, 200)}...`);
                 }
 
-                if (statusCode === undefined) {
+                if (res.statusCode === undefined) {
                     return reject(new Error('AMO API response is missing a status code'));
                 }
-                if (statusCode >= 400) {
-                    return reject(new Error(`AMO API request failed with status ${statusCode}: ${data}`));
+                if (res.statusCode >= 400) {
+                    return reject(new Error(`AMO API request failed with status ${res.statusCode}: ${data}`));
                 }
 
                 try {
@@ -93,7 +92,7 @@ async function makeAMORequest(method, path, jwt, payload = null) {
                     resolve(parsed);
                 } catch (parseError) {
                     logError(`Failed to parse response: ${parseError.message}`);
-                    resolve({ status: statusCode, raw: data });
+                    resolve({ status: res.statusCode, raw: data });
                 }
             });
         });
