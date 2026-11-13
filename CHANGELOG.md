@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/fran2889/flix-monkey/compare/v1.8.0...v1.8.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **services:** run on the redirected HBO Max host ([#290](https://github.com/fran2889/flix-monkey/issues/290)) ([8170cdd](https://github.com/fran2889/flix-monkey/commit/8170cddd069578c61c323b2e8f70375e494fc7ef))
+
 ## [1.8.0](https://github.com/fran2889/flix-monkey/compare/v1.7.0...v1.8.0) (2026-11-11)
 
 
