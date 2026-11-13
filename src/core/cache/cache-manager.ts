@@ -112,7 +112,9 @@ export class CacheManager implements CacheStore {
     async clear(): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
         const count = keys.length;
-        await Promise.all(keys.map(async (key: string) => this.#adapter.storageDelete(key)));
+        for (const key of keys) {
+            await this.#adapter.storageDelete(key);
+        }
         this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
     }
 
