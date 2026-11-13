@@ -20,7 +20,7 @@ import { validateDomain } from './domains';
 export async function handleFetchMessage(url: string, options: HttpFetchOptions): Promise<FetchProxyResponse> {
     const validation = validateDomain(url);
     if (!validation.valid) {
-        return { error: validation.error };
+        return { ok: false, error: validation.error };
     }
 
     const { responseType = 'json', timeout = DEFAULT_FETCH_TIMEOUT } = options;
@@ -34,13 +34,18 @@ export async function handleFetchMessage(url: string, options: HttpFetchOptions)
         clearTimeout(timeoutId);
         if (!res.ok) {
             const body = await res.text().catch(() => undefined);
-            return { error: `HTTP ${res.status}`, status: res.status, body: body ? body.slice(0, 200) : undefined };
+            return {
+                ok: false,
+                error: `HTTP ${res.status}`,
+                status: res.status,
+                body: body ? body.slice(0, 200) : undefined,
+            };
         }
         const data = responseType === 'json' ? await res.json() : await res.text();
-        return { data };
+        return { ok: true, data };
     } catch (err) {
         clearTimeout(timeoutId);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        return { error: errorMessage };
+        return { ok: false, error: errorMessage };
     }
 }

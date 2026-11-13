@@ -5,20 +5,11 @@
 import browser from 'webextension-polyfill';
 
 import { DEFAULT_FETCH_TIMEOUT } from '../core/constants';
-import { isRecord } from '../core/parse-utils';
+import { isRecord, optionalNumber, optionalString, ParseError, requiredString } from '../core/parse-utils';
 import { FlixMonkeyError } from '../core/utils/index';
+import type { FetchProxyResponse } from '../types/extension';
 import type { HttpFetchOptions, StorageValue } from './adapter';
 import { isStorageValue, PlatformAdapter } from './adapter';
-
-/**
- * Type for the fetch response from the background service worker.
- */
-interface FetchResponse {
-    error?: string;
-    status?: number;
-    body?: string | undefined;
-    data?: unknown;
-}
 
 /**
  * WebExtension platform adapter using browser.* APIs via polyfill.
@@ -143,11 +134,12 @@ export class WebExtensionAdapter extends PlatformAdapter {
         });
 
         try {
-            const response: unknown = await Promise.race([fetchPromise, timeoutPromise]);
-            if (!isFetchResponse(response)) {
+            const payload: unknown = await Promise.race([fetchPromise, timeoutPromise]);
+            const response = parseFetchResponse(payload);
+            if (!response) {
                 throw new FlixMonkeyError('empty background response', url);
             }
-            if (response.error) {
+            if (!response.ok) {
                 throw new FlixMonkeyError(response.error, url, response.status, response.body);
             }
             return response.data;
@@ -172,14 +164,24 @@ export class WebExtensionAdapter extends PlatformAdapter {
     }
 }
 
-function isFetchResponse(value: unknown): value is FetchResponse {
-    if (!isRecord(value)) return false;
-    const error = value['error'];
-    const status = value['status'];
-    const body = value['body'];
-    return (
-        (error === undefined || typeof error === 'string') &&
-        (status === undefined || typeof status === 'number') &&
-        (body === undefined || typeof body === 'string')
-    );
+function parseFetchResponse(value: unknown): FetchProxyResponse | undefined {
+    if (!isRecord(value)) return undefined;
+    if (value['ok'] === true) {
+        return { ok: true, data: value['data'] };
+    }
+    if (value['ok'] !== false) return undefined;
+
+    try {
+        const status = optionalNumber(value, 'status');
+        const body = optionalString(value, 'body');
+        return {
+            ok: false,
+            error: requiredString(value, 'error'),
+            ...(status === undefined ? {} : { status }),
+            ...(body === undefined ? {} : { body }),
+        };
+    } catch (error: unknown) {
+        if (error instanceof ParseError) return undefined;
+        throw error;
+    }
 }

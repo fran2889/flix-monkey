@@ -138,7 +138,7 @@ describe('Chrome Service Worker', () => {
         );
         expect(result).toBe(true);
         await Promise.resolve();
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'Domain not allowed' });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'Domain not allowed' });
     });
 
     it('should handle invalid URLs', async () => {
@@ -146,7 +146,7 @@ describe('Chrome Service Worker', () => {
         const result = messageListener({ type: 'FM_FETCH', url: 'not-a-url' }, { id: 'test-ext' }, sendResponse);
         expect(result).toBe(true);
         await Promise.resolve();
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'Invalid URL' });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'Invalid URL' });
     });
 
     it('ignores a message with malformed options', () => {
@@ -225,7 +225,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve(); // await res.json()
         await Promise.resolve(); // next tick
 
-        expect(sendResponse).toHaveBeenCalledWith({ data: mockData });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: mockData });
     });
 
     it('should handle successful text response', async () => {
@@ -247,7 +247,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(sendResponse).toHaveBeenCalledWith({ data: mockData });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: mockData });
     });
 
     it('should handle HTTP error response', async () => {
@@ -264,7 +264,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'HTTP 404', status: 404, body: 'Not Found' });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'HTTP 404', status: 404, body: 'Not Found' });
     });
 
     it('should handle fetch exception', async () => {
@@ -279,7 +279,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve();
         await Promise.resolve();
 
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'Network error' });
+        expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'Network error' });
     });
 
     it('should open options page when action icon is clicked', async () => {
