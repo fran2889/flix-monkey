@@ -42,3 +42,6 @@ updates:
           - dependency-name: typescript
             versions:
                 - '>=6.1.0'
+          # Keep the Node type declarations aligned with the pinned 24.x runtime.
+          # Bump this deliberately with the Node version, not on every release.
+          - dependency-name: '@types/node'
