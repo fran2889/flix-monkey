@@ -291,6 +291,14 @@ export const CONFIG_FIELDS = [
         row: 'debug-settings',
     },
     {
+        key: 'clearCacheIds',
+        label: 'Clear IDs',
+        group: 'debug',
+        type: 'checkbox',
+        default: false,
+        title: 'Also remove cached IMDb IDs when clearing the cache, so the next lookup searches by title again',
+    },
+    {
         key: 'clearCache',
         type: 'action',
         group: 'debug',

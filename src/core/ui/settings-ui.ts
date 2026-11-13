@@ -77,8 +77,12 @@ export class SettingsUI {
 
     async #clearCache(): Promise<void> {
         try {
-            await this.#cacheManager.clear();
-            this.#view.showStatus('Cache cleared.', 'success');
+            const clearIds = this.#view.readValues()['clearCacheIds'] === true;
+            await this.#cacheManager.clear(clearIds);
+            this.#view.showStatus(
+                clearIds ? 'Cache and cached IMDb IDs cleared.' : 'Cache cleared. IMDb IDs kept.',
+                'success'
+            );
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             this.#view.showStatus(`Error: ${errorMessage}`, 'error');

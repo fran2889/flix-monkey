@@ -59,6 +59,19 @@ export class CacheEntry {
     }
 
     /**
+     * Returns a copy that keeps the display title and cached IMDb ID but
+     * removes every rating field and the expiry. A retained entry is never a
+     * rating cache hit, so the next lookup still fetches fresh data, while its
+     * IMDb ID lets that fetch skip the title search.
+     *
+     * @returns Rating-free entry, or undefined when there is no IMDb ID to keep.
+     */
+    withoutRatings(): CacheEntry | undefined {
+        if (!this.#imdbId) return undefined;
+        return new CacheEntry(this.#displayTitle, this.#imdbId, emptyTitleData(), undefined);
+    }
+
+    /**
      * Converts the cache entry to a plain object suitable for JSON storage.
      * Absent fields are omitted by `JSON.stringify` rather than written as null.
      *
@@ -95,6 +108,20 @@ function parseCacheEntry(value: unknown): CacheEntry {
         parseTitleData(value['data']),
         optionalNumber(value, 'expires')
     );
+}
+
+function emptyTitleData(): TitleData {
+    return {
+        apiTitle: undefined,
+        imdbId: undefined,
+        year: undefined,
+        imdbRating: undefined,
+        imdbVotes: undefined,
+        rtRating: undefined,
+        mcRating: undefined,
+        source: undefined,
+        type: undefined,
+    };
 }
 
 function parseTitleData(raw: unknown): TitleData {

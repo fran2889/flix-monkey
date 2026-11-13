@@ -105,15 +105,59 @@ export class CacheManager implements CacheStore {
     }
 
     /**
-     * Removes all cached title entries from storage.
+     * Removes cached rating data. By default an entry that has a cached IMDb
+     * ID keeps its ID and display title so the next lookup can skip the title
+     * search, and an entry without an ID is removed. Passing true removes
+     * every entry, including the cached IDs.
      *
-     * @returns Resolves when every cached entry has been removed.
+     * @param clearIds - Whether to remove cached IMDb IDs along with the rating data.
+     * @returns Resolves when every cached entry has been updated or removed.
      */
-    async clear(): Promise<void> {
+    async clear(clearIds: boolean = false): Promise<void> {
         const keys = await this.#adapter.storageGetKeys(this.#prefix);
-        const count = keys.length;
-        await Promise.all(keys.map(async (key: string) => this.#adapter.storageDelete(key)));
-        this.#logger.debug(`Cache cleared: removed ${count} entr${count === 1 ? 'y' : 'ies'}`);
+        if (clearIds) {
+            await Promise.all(keys.map(async (key: string) => this.#adapter.storageDelete(key)));
+            this.#logger.debug(
+                `Cache and cached IMDb IDs cleared: removed ${keys.length} entr${keys.length === 1 ? 'y' : 'ies'}`
+            );
+            return;
+        }
+
+        const removed = await Promise.all(keys.map(async (key: string) => this.#clearRatings(key)));
+        const removedCount = removed.filter(Boolean).length;
+        const keptCount = keys.length - removedCount;
+        this.#logger.debug(
+            `Cache cleared: kept cached IMDb IDs for ${keptCount} entr${keptCount === 1 ? 'y' : 'ies'}, removed ${removedCount}`
+        );
+    }
+
+    /**
+     * Clears one entry's rating data, keeping its IMDb ID when it has one.
+     *
+     * @param key - Storage key of the entry.
+     * @returns True when the entry was removed instead of retained.
+     */
+    async #clearRatings(key: string): Promise<boolean> {
+        const raw = await this.#adapter.storageGet(key);
+        if (raw === undefined) {
+            await this.#adapter.storageDelete(key);
+            return true;
+        }
+
+        try {
+            const retained = CacheEntry.fromJSON(raw).withoutRatings();
+            if (!retained) {
+                await this.#adapter.storageDelete(key);
+                return true;
+            }
+            await this.#adapter.storageSet(key, JSON.stringify(retained));
+            return false;
+        } catch (error: unknown) {
+            if (!(error instanceof ParseError) && !(error instanceof SyntaxError)) throw error;
+            this.#logger.warn('Cache entry corrupt, removing entry', { key, error });
+            await this.#deleteInvalid(key);
+            return true;
+        }
     }
 
     /**

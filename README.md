@@ -117,7 +117,8 @@ Settings save automatically after a short delay. In the extension, badge positio
 
 ### Settings Actions
 
-- **Clear Cache**: Remove all cached ratings, forcing fresh lookups for every title
+- **Clear Cache**: Remove cached ratings while keeping each cached IMDb ID, so repeat lookups still skip the title search. Entries without a cached ID are removed.
+- **Clear IDs**: Tick this before **Clear Cache** to also remove the cached IMDb IDs, forcing the next lookup for each title to search by title again. Manually set IMDb IDs are kept.
 - **Reset Providers**: Re-enable rating providers that were automatically disabled after errors
 
 ---
@@ -149,7 +150,7 @@ FlixMonkey looks up titles by display name only, even when a service exposes add
 
 1. Hover the rating badge. The tooltip shows the title and year returned by the rating provider. Verify they match the title shown on the streaming service.
 2. If the tooltip confirms a match, the provider rating may be outdated because it is not read directly from IMDb. Recent releases have shorter cache times so ratings update sooner.
-3. If the tooltip shows a different title, hover the badge and click the pencil button to set the correct IMDb ID. You can also select a different provider and clear the cache, because providers order search results differently.
+3. If the tooltip shows a different title, hover the badge and click the pencil button to set the correct IMDb ID. You can also select a different provider, tick **Debug > Clear IDs**, and use **Clear Cache**, because providers order search results differently.
 
 **Metacritic and Rotten Tomatoes scores are not showing**
 
