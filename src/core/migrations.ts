@@ -17,17 +17,18 @@ interface ParsedCacheEntry {
 type CacheEntryOutcome =
     { action: 'delete' } | { action: 'skip' } | { action: 'update'; entry: Record<string, unknown> };
 
-type CacheEntryVisitor = (entry: Record<string, unknown>, data: Record<string, unknown>) => CacheEntryOutcome;
+type CacheEntryTransformer = (entry: Record<string, unknown>, data: Record<string, unknown>) => CacheEntryOutcome;
 
 async function clearCache(adapter: PlatformAdapter): Promise<MigrationSummary> {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
-    for (const key of keys) {
-        await adapter.storageDelete(key);
-    }
+    await Promise.all(keys.map(async key => adapter.storageDelete(key)));
     return { migrated: 0, skipped: 0, deleted: keys.length };
 }
 
-async function migrateCacheEntries(adapter: PlatformAdapter, visit: CacheEntryVisitor): Promise<MigrationSummary> {
+async function migrateCacheEntries(
+    adapter: PlatformAdapter,
+    transform: CacheEntryTransformer
+): Promise<MigrationSummary> {
     const keys = await adapter.storageGetKeys(CACHE_PREFIX);
     const updates: Record<string, string> = {};
     let migrated = 0;
@@ -43,7 +44,7 @@ async function migrateCacheEntries(adapter: PlatformAdapter, visit: CacheEntryVi
             continue;
         }
 
-        const outcome = visit(parsed.entry, parsed.data);
+        const outcome = transform(parsed.entry, parsed.data);
         if (outcome.action === 'skip') {
             skipped += 1;
             continue;
