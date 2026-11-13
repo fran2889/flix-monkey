@@ -15,8 +15,8 @@ import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
 import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
-import { NetflixService } from '../../../src/core/services/index';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
+import { DisneyPlusService, HboMaxService, NetflixService } from '../../../src/core/services/index';
+import { NETFLIX_SURFACES, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
 import { buildMockAdapter } from '../../mocks/adapter';
 import { buildLogger } from '../../mocks/logger';
@@ -30,7 +30,7 @@ function buildAppDependencies(): {
     fadeManager: FadeManager;
     overrideManager: IdOverrideManager;
     renderer: OverlayRenderer;
-    surfaces: NetflixSurfaceManager;
+    surfaces: SurfaceManager;
     api: ApiClientManager;
 } {
     const adapter = buildMockAdapter().build();
@@ -47,7 +47,7 @@ function buildAppDependencies(): {
         fadeManager: new FadeManager(adapter, config),
         overrideManager,
         renderer: new OverlayRenderer(config),
-        surfaces: new NetflixSurfaceManager(logger),
+        surfaces: new SurfaceManager(logger, NETFLIX_SURFACES),
         api: new ApiClientManager(logger, cache, disabledManager, client),
     };
 }
@@ -122,7 +122,7 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new NetflixSurfaceManager(buildLogger().build());
+        const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0]?.title).toBe('Movie Title');
@@ -415,6 +415,43 @@ describe('App', () => {
             expect(result).toBeInstanceOf(FlixMonkeyApp);
             expect(typeof result.redecorate).toBe('function');
         }
+    });
+
+    describe.each([
+        [
+            'Netflix',
+            NetflixService,
+            '<div class="title-card"><a aria-label="Netflix Title"></a></div>',
+            'Netflix Title',
+        ],
+        [
+            'HBO Max',
+            HboMaxService,
+            '<div><a data-testid="id_tile" data-sonic-type="movie" aria-label="HBO Title. 1 of 20."></a></div>',
+            'HBO Title',
+        ],
+        [
+            'Disney+',
+            DisneyPlusService,
+            '<div><a data-testid="set-item" data-item-id="1" href="/browse/entity-1" aria-label="Disney Title Select for details on this title."></a></div>',
+            'Disney Title',
+        ],
+    ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
+        it('should discover titles with the detected service surface definitions', async () => {
+            document.body.innerHTML = html;
+            const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+            vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
+            const getDataSpy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle(expectedTitle).build());
+
+            appRef = startApp(buildMockAdapter().build());
+
+            await vi.waitFor(() => {
+                if (getDataSpy.mock.calls.length === 0) throw new Error('Title not discovered');
+            });
+            expect(getDataSpy).toHaveBeenCalledWith(expectedTitle);
+        });
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
@@ -794,7 +831,7 @@ describe('App', () => {
         let fadeManager: FadeManager;
         let overrideManager: IdOverrideManager;
         let renderer: OverlayRenderer;
-        let surfaces: NetflixSurfaceManager;
+        let surfaces: SurfaceManager;
         let api: ApiClientManager;
 
         /**

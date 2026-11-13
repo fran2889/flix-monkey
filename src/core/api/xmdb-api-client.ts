@@ -12,8 +12,6 @@ import {
     parseRequiredItems,
     requiredString,
 } from '../parse-utils';
-import { PROVIDER_RATE_LIMITS } from '../rate-limits';
-import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 import { type ApiClientDeps, BaseApiClient } from './base-api-client';
 import { mapXmdbTitleType } from './title-type-mappers';
@@ -57,8 +55,7 @@ type XmdbDetailsResponse = XmdbDetailsFound | XmdbDetailsNotFound;
  */
 export class XmdbApiClient extends BaseApiClient {
     constructor(deps: ApiClientDeps) {
-        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[ApiSource.XMDB];
-        super(deps, new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey), ApiSource.XMDB);
+        super(deps, ApiSource.XMDB);
     }
 
     /**
@@ -154,12 +151,6 @@ function titleFromSearchResult(displayTitle: string, result: XmdbSearchResult): 
         apiTitle: result.name,
         imdbId: result.id,
         year: result.year,
-        imdbRating: undefined,
-        imdbVotes: undefined,
-        rtRating: undefined,
-        mcRating: undefined,
-        type: undefined,
-        source: undefined,
     });
 }
 
@@ -190,9 +181,7 @@ function titleFromDetailsResponse(searchTitle: Title, details: XmdbDetailsFound)
         year: release_year ?? searchTitle.year,
         imdbRating: rating,
         imdbVotes: vote_count,
-        rtRating: undefined,
         mcRating: metascore,
         type: mapXmdbTitleType(title_type),
-        source: undefined,
     });
 }

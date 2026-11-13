@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-export { DisneyPlusSurfaceManager, extractDisneyPlusTitle } from './surface-definitions/disney-plus-surfaces';
-export { extractHboMaxTitle, HboMaxSurfaceManager } from './surface-definitions/hbo-max-surfaces';
-export {
-    extractNetflixMoreLikeThisTitle,
-    NETFLIX_SURFACES,
-    NetflixSurfaceManager,
-} from './surface-definitions/netflix-surfaces';
+export { DISNEY_PLUS_SURFACES, extractDisneyPlusTitle } from './surface-definitions/disney-plus-surfaces';
+export { extractHboMaxTitle, HBO_MAX_SURFACES } from './surface-definitions/hbo-max-surfaces';
+export { extractNetflixMoreLikeThisTitle, NETFLIX_SURFACES } from './surface-definitions/netflix-surfaces';
 export { SurfaceManager } from './surface-manager';

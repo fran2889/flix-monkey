@@ -300,6 +300,7 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
         ['deletes a null payload', { value: null }],
         ['deletes entries without data', { value: { expires: 12345 } }],
         ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
+        ['deletes entries with non-object data', { value: { data: 'rating', expires: 12345 } }],
     ])('deletes invalid entries: %s', async (_desc, { value }) => {
         const key = 'fmc:test';
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
@@ -499,6 +500,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         ['deletes a null payload', { value: null }],
         ['deletes entries without data', { value: { expires: 12345 } }],
         ['deletes entries with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
+        ['deletes entries with non-object data', { value: { data: 'displayTitle', expires: 12345 } }],
     ])('deletes invalid entries: %s', async (_desc, { value }) => {
         const key = 'fmc:test';
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
