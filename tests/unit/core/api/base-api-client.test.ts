@@ -221,7 +221,7 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             expect(logger.warn).not.toHaveBeenCalled();
         });
 
-        it('builds a default request queue when none is injected', async () => {
+        it('should build a default request queue when none is injected', async () => {
             const logger: Logger = buildLogger().build();
             await new StubClient('xmdb', logger).disable();
             expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 0 queued requests');
