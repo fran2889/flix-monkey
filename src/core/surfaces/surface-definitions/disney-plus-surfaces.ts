@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
-import type { Logger } from '../../logger';
-import { containerFromClosest, containerFromParent, SurfaceManager } from '../surface-manager';
+import { containerFromClosest, containerFromParent } from '../surface-manager';
 
 const DISNEY_PLUS_PREFIX_BLOCK =
     /^(?:(?:Hulu Original Series|Disney\+ Original|(?:Subtitles|Dubbing) Available Badge|New (?:Movie|Series) Badge|New (?:Episode|Season)(?: Badge)?|New Badge) )+/u;
@@ -55,7 +54,8 @@ export function extractDisneyPlusTitle(element: HTMLElement): string | undefined
     return title ? canonicalizeDisneyPlusTitle(title) : undefined;
 }
 
-const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
+/** Surface definitions for Disney+ shelf cards and Continue Watching cards. */
+export const DISNEY_PLUS_SURFACES: Readonly<Record<string, SurfaceDefinition>> = Object.freeze({
     SHELF_CARD: Object.freeze({
         titleSelector: 'a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]',
         getTitle: extractDisneyPlusTitle,
@@ -77,17 +77,3 @@ const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
         showFadeToggle: true,
     }),
 });
-
-/**
- * Disney+ specific surface manager for discovering Disney+ streaming service surfaces.
- */
-export class DisneyPlusSurfaceManager extends SurfaceManager {
-    /**
-     * Creates Disney+ surface manager with Disney+-specific surfaces.
-     *
-     * @param logger - For logging surface discovery issues.
-     */
-    constructor(logger: Logger) {
-        super(logger, DISNEY_PLUS_SURFACES);
-    }
-}
