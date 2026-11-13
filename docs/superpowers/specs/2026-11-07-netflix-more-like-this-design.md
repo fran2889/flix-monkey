@@ -74,11 +74,11 @@ and the same rating retrieval path, with no recommendation-specific behavior.
 - Name: `MORE_LIKE_THIS`.
 - Title selector: `.moreLikeThis--wrapper .titleCard--container`.
 - Title extraction: exported `extractNetflixMoreLikeThisTitle(element)`.
-  - Use a trimmed `aria-label` when it has content.
-  - Otherwise use the trimmed `alt` of the first
-    `.titleCard-imageWrapper img[alt]`, or any `img[alt]` inside the tile when the
-    wrapper is absent.
-  - Return `undefined` when neither source has usable text.
+    - Use a trimmed `aria-label` when it has content.
+    - Otherwise use the trimmed `alt` of the first
+      `.titleCard-imageWrapper img[alt]`, or any `img[alt]` inside the tile when the
+      wrapper is absent.
+    - Return `undefined` when neither source has usable text.
 - Container: the tile's `.titleCard-imageWrapper`, falling back to the tile itself
   when the wrapper is absent. The fallback keeps the overlay on the tile instead of
   letting the generic parent fallback put it on the surrounding row.

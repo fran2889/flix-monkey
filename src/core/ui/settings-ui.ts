@@ -80,8 +80,7 @@ export class SettingsUI {
             await this.#cacheManager.clear();
             this.#view.showStatus('Cache cleared.', 'success');
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            this.#view.showStatus(`Error: ${errorMessage}`, 'error');
+            this.#view.showStatus(`Error: ${toErrorMessage(err)}`, 'error');
         }
     }
 
@@ -94,8 +93,11 @@ export class SettingsUI {
                     : 'No disabled API clients found to re-enable.';
             this.#view.showStatus(message, 'success');
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            this.#view.showStatus(`Error: ${errorMessage}`, 'error');
+            this.#view.showStatus(`Error: ${toErrorMessage(err)}`, 'error');
         }
     }
+}
+
+function toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
 }
