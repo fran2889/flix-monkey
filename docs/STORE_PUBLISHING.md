@@ -35,14 +35,14 @@ dispatched from any other branch or tag fails at the environment gate before it
 can read the credentials.
 
 The store credentials belong on the `store-publish` environment, not on the
-repository. OAuth2 credentials and API keys are environment secrets. The two
-Chrome identifiers are public values, so they are environment variables instead:
-the workflow reads them through the `vars` context. To migrate existing
-repository values, create each one on the environment first, merge the workflow
-change, confirm a run succeeds and the environment page lists the same names,
-then delete the repository copies. Environment values take precedence over
-same-named repository values, so while both exist the environment value is live
-and the repository copy is only a fallback.
+repository. OAuth2 credentials and API keys are environment secrets. Public
+identifiers, which are the two Chrome IDs and the AMO add-on ID, are environment
+variables instead: the workflows read them through the `vars` context. To
+migrate existing repository values, create each one on the environment first,
+merge the workflow change, confirm a run succeeds and the environment page lists
+the same names, then delete the repository copies. Environment values take
+precedence over same-named repository values, so while both exist the
+environment value is live and the repository copy is only a fallback.
 
 ## Required Environment Secrets
 
@@ -80,7 +80,6 @@ npx chrome-webstore-upload-keys
 | ---------------- | ------------------------------------------------ |
 | `AMO_JWT_ISSUER` | API key (JWT issuer) from addons.mozilla.org.    |
 | `AMO_JWT_SECRET` | API secret (JWT secret) from addons.mozilla.org. |
-| `AMO_ADDON_ID`   | Add-on ID on AMO (e.g., `flixmonkey@fran`).      |
 
 Generate `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` at
 <https://addons.mozilla.org/developers/addon/api/key/> (Manage API Keys).
@@ -97,6 +96,7 @@ Store these as variables, not secrets, on the `store-publish` environment.
 | --------------------- | -------------------------------------------------------- |
 | `CHROME_EXTENSION_ID` | The item ID on the Chrome Web Store Developer Dashboard. |
 | `CHROME_PUBLISHER_ID` | The publisher ID in the dashboard account settings.      |
+| `AMO_ADDON_ID`        | Add-on ID on AMO (e.g., `flixmonkey@fran`).              |
 
 ## Required Repository Variables
 
