@@ -121,13 +121,11 @@ export class RequestQueue {
      * @returns Rejected count.
      */
     clear(): number {
-        const count = this.#queue.length;
-        while (this.#queue.length > 0) {
-            const item = this.#queue.shift();
-            if (!item) break;
+        const pending = this.#queue.splice(0);
+        for (const item of pending) {
             item.reject(new Error('Client Disabled'));
         }
-        return count;
+        return pending.length;
     }
 }
 

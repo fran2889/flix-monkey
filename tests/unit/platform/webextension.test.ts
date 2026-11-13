@@ -166,10 +166,16 @@ describe('WebExtensionAdapter', () => {
         expect(adapter.configGet('missing')).toBeUndefined();
     });
 
-    it('configGet should return undefined for all keys before setConfigData is called', () => {
+    it('configGet should treat an unseeded snapshot differently from an empty one', () => {
         const freshAdapter = new WebExtensionAdapter();
         expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
         expect(freshAdapter.configGet('xmdbApiKey')).toBeUndefined();
+
+        freshAdapter.setConfigData({});
+        expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
+
+        freshAdapter.setConfigData({ overlayCorner: 'bottom-left' });
+        expect(freshAdapter.configGet('overlayCorner')).toBe('bottom-left');
     });
 
     it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
