@@ -15,7 +15,6 @@ concurrency:
 jobs:
     release-please:
         runs-on: ubuntu-latest
-        if: github.repository == 'fran2889/flix-monkey'
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,13 +49,13 @@ jobs:
               run: npm run package:source
             - name: Upload to Release
               if: ${{ steps.release.outputs.release_created }}
-              run: gh release upload "$TAG_NAME" dist/*.zip dist/*.xpi dist/*.user.js
+              run: gh release upload "$TAG" dist/*.zip dist/*.xpi dist/*.user.js
               env:
-                  TAG_NAME: ${{ steps.release.outputs.tag_name }}
+                  TAG: ${{ steps.release.outputs.tag_name }}
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
             - name: Publish Release
               if: ${{ steps.release.outputs.release_created }}
-              run: gh release edit "$TAG_NAME" --draft=false
+              run: gh release edit "$TAG" --draft=false
               env:
-                  TAG_NAME: ${{ steps.release.outputs.tag_name }}
+                  TAG: ${{ steps.release.outputs.tag_name }}
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
