@@ -36,13 +36,13 @@ function verifyDistFiles(dir, target) {
 }
 
 async function zipDirectory(sourceDir, outPath) {
-    const archiveWritten = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         const output = fs.createWriteStream(outPath);
         const archive = new ZipArchive({ zlib: { level: 9 } });
 
         output.on('close', () => {
             console.info(`Created ${outPath} (${archive.pointer()} total bytes)`);
-            resolve(undefined);
+            resolve();
         });
 
         output.on('error', err => {
@@ -61,7 +61,6 @@ async function zipDirectory(sourceDir, outPath) {
         archive.directory(sourceDir, false, entry => (entry.name.endsWith('.map') ? false : entry));
         void archive.finalize();
     });
-    return archiveWritten;
 }
 
 async function main() {

@@ -92,8 +92,7 @@ async function makeAMORequest(method, path, jwt, payload = null) {
                     }
                     resolve(parsed);
                 } catch (parseError) {
-                    const message = parseError instanceof Error ? parseError.message : String(parseError);
-                    logError(`Failed to parse response: ${message}`);
+                    logError(`Failed to parse response: ${parseError.message}`);
                     resolve({ status: statusCode, raw: data });
                 }
             });
@@ -122,8 +121,7 @@ async function main() {
     try {
         content = readFileSync(DESCRIPTION_FILE, 'utf8');
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        logError(`Failed to read ${DESCRIPTION_FILE}: ${message}`);
+        logError(`Failed to read ${DESCRIPTION_FILE}: ${error.message}`);
         process.exit(1);
     }
 
@@ -161,7 +159,6 @@ async function main() {
 }
 
 main().catch(error => {
-    const message = error instanceof Error ? error.message : String(error);
-    logError(`Failed to update Firefox description: ${message}`);
+    logError(`Failed to update Firefox description: ${error.message}`);
     process.exit(1);
 });
