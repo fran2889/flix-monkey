@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import type { ServiceSurfaceManager } from '../../types/services';
+import type { SurfaceDefinition } from '../../types/surfaces';
 import type { ConfigManager } from '../config/config-manager';
-import { DisneyPlusSurfaceManager } from '../surfaces/index';
+import { DISNEY_PLUS_SURFACES } from '../surfaces/index';
 import { StreamingService } from './base-streaming-service';
 
 /** Disney+ streaming service implementation. */
@@ -17,7 +17,7 @@ export class DisneyPlusService extends StreamingService {
         return Object.freeze(['disneyplus.com']);
     }
 
-    override get SurfaceManager(): ServiceSurfaceManager {
-        return DisneyPlusSurfaceManager;
+    override get surfaceDefinitions(): Record<string, SurfaceDefinition> {
+        return DISNEY_PLUS_SURFACES;
     }
 }

@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
-import type { Logger } from '../../logger';
-import { containerFromClosest, SurfaceManager, titleFromAttribute } from '../surface-manager';
+import { containerFromClosest, titleFromAttribute } from '../surface-manager';
 
 /**
  * Extracts the title from a Netflix More Like This tile.
@@ -26,6 +25,7 @@ const containerFromMoreLikeThisArtwork = (element: HTMLElement): HTMLElement | u
     return artwork instanceof HTMLElement ? artwork : element;
 };
 
+/** Surface definitions for Netflix cards, modals, and recommendations. */
 export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
@@ -85,12 +85,3 @@ export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze
         showFadeToggle: false,
     }),
 });
-
-/**
- * Netflix-specific surface manager for discovering and managing Netflix UI surfaces.
- */
-export class NetflixSurfaceManager extends SurfaceManager {
-    constructor(logger: Logger) {
-        super(logger, NETFLIX_SURFACES);
-    }
-}

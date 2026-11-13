@@ -16,7 +16,7 @@ import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
 import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
 import { NetflixService } from '../../../src/core/services/index';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
+import { NETFLIX_SURFACES, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
 import { buildMockAdapter } from '../../mocks/adapter';
 import { buildLogger } from '../../mocks/logger';
@@ -30,7 +30,7 @@ function buildAppDependencies(): {
     fadeManager: FadeManager;
     overrideManager: IdOverrideManager;
     renderer: OverlayRenderer;
-    surfaces: NetflixSurfaceManager;
+    surfaces: SurfaceManager;
     api: ApiClientManager;
 } {
     const adapter = buildMockAdapter().build();
@@ -47,7 +47,7 @@ function buildAppDependencies(): {
         fadeManager: new FadeManager(adapter, config),
         overrideManager,
         renderer: new OverlayRenderer(config),
-        surfaces: new NetflixSurfaceManager(logger),
+        surfaces: new SurfaceManager(logger, NETFLIX_SURFACES),
         api: new ApiClientManager(logger, cache, disabledManager, client),
     };
 }
@@ -122,7 +122,7 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new NetflixSurfaceManager(buildLogger().build());
+        const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Movie Title');
@@ -794,7 +794,7 @@ describe('App', () => {
         let fadeManager: FadeManager;
         let overrideManager: IdOverrideManager;
         let renderer: OverlayRenderer;
-        let surfaces: NetflixSurfaceManager;
+        let surfaces: SurfaceManager;
         let api: ApiClientManager;
 
         /**
