@@ -13,8 +13,8 @@
     "type": "module",
     "scripts": {
         "prepare": "husky",
-        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.md\"",
-        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.md\"",
+        "format": "prettier --write \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.{md,yml}\" \"docs/**/*.md\"",
+        "format:check": "prettier --check \"{src,tests,scripts}/**/*.{js,ts}\" \"*.{config.js,json,md}\" \"src/**/*.{html,json}\" \".github/**/*.{md,yml}\" \"docs/**/*.md\"",
         "lint": "eslint \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "lint:fix": "eslint --fix \"{src,tests,scripts}/**/*.{js,ts}\" \"*.config.js\"",
         "lint:firefox": "npx --yes --ignore-scripts web-ext@10.7.0 lint --source-dir dist/firefox",
@@ -44,7 +44,7 @@
         "@rollup/plugin-typescript": "^12.3.1",
         "@testing-library/dom": "^10.4.2",
         "@testing-library/jest-dom": "^7.0.1",
-        "@types/node": "^26.6.6",
+        "@types/node": "24.19.2",
         "@types/webextension-polyfill": "^0.12.6",
         "@typescript-eslint/eslint-plugin": "^8.72.1",
         "@typescript-eslint/parser": "^8.71.1",
@@ -78,7 +78,7 @@
         "minimatch": "^11.0.4"
     },
     "engines": {
-        "node": ">= 24"
+        "node": "24.x"
     },
     "lint-staged": {
         "{src,tests,scripts}/**/*.{js,ts}": [
@@ -89,7 +89,13 @@
             "prettier --write",
             "eslint --fix"
         ],
-        "**/*.{json,md}": [
+        "*.{json,md}": [
+            "prettier --write"
+        ],
+        ".github/**/*.{md,yml}": [
+            "prettier --write"
+        ],
+        "docs/**/*.md": [
             "prettier --write"
         ],
         "src/**/*.{html,json}": [
