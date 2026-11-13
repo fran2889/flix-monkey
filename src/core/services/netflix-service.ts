@@ -18,7 +18,7 @@ export class NetflixService extends StreamingService {
         return Object.freeze(['netflix.com', 'www.netflix.com']);
     }
 
-    override get surfaceDefinitions(): Record<string, SurfaceDefinition> {
+    override get surfaceDefinitions(): Readonly<Record<string, SurfaceDefinition>> {
         return NETFLIX_SURFACES;
     }
 

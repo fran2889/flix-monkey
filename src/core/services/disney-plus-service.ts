@@ -17,7 +17,7 @@ export class DisneyPlusService extends StreamingService {
         return Object.freeze(['disneyplus.com']);
     }
 
-    override get surfaceDefinitions(): Record<string, SurfaceDefinition> {
+    override get surfaceDefinitions(): Readonly<Record<string, SurfaceDefinition>> {
         return DISNEY_PLUS_SURFACES;
     }
 }

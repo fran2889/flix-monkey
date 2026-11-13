@@ -18,7 +18,7 @@ export class HboMaxService extends StreamingService {
         return Object.freeze(['hbomax.com']);
     }
 
-    override get surfaceDefinitions(): Record<string, SurfaceDefinition> {
+    override get surfaceDefinitions(): Readonly<Record<string, SurfaceDefinition>> {
         return HBO_MAX_SURFACES;
     }
 

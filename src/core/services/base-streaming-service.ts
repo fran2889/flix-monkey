@@ -33,7 +33,7 @@ export abstract class StreamingService {
      *
      * @returns Surface definitions keyed by surface name.
      */
-    abstract get surfaceDefinitions(): Record<string, SurfaceDefinition>;
+    abstract get surfaceDefinitions(): Readonly<Record<string, SurfaceDefinition>>;
 
     get constants(): ServicePresentation {
         return Object.freeze({});

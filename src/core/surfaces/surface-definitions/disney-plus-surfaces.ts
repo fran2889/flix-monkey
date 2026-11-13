@@ -55,7 +55,7 @@ export function extractDisneyPlusTitle(element: HTMLElement): string | undefined
 }
 
 /** Surface definitions for Disney+ shelf cards and Continue Watching cards. */
-export const DISNEY_PLUS_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
+export const DISNEY_PLUS_SURFACES: Readonly<Record<string, SurfaceDefinition>> = Object.freeze({
     SHELF_CARD: Object.freeze({
         titleSelector: 'a[data-testid="set-item"][data-item-id][href*="/browse/entity-"]',
         getTitle: extractDisneyPlusTitle,

@@ -26,7 +26,7 @@ const containerFromMoreLikeThisArtwork = (element: HTMLElement): HTMLElement | u
 };
 
 /** Surface definitions for Netflix cards, modals, and recommendations. */
-export const NETFLIX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
+export const NETFLIX_SURFACES: Readonly<Record<string, SurfaceDefinition>> = Object.freeze({
     // Browse and genre page row cards: the <a> element carries the full title via aria-label.
     TITLE_CARD: Object.freeze({
         titleSelector: '.title-card a[aria-label]',

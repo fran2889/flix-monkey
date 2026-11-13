@@ -66,7 +66,7 @@ function isHboMaxTop10Tile(element: HTMLElement): boolean {
 }
 
 /** Surface definitions for HBO Max tiles. */
-export const HBO_MAX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
+export const HBO_MAX_SURFACES: Readonly<Record<string, SurfaceDefinition>> = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
