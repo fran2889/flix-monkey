@@ -15,7 +15,7 @@ import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
 import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
-import { NetflixService } from '../../../src/core/services/index';
+import { DisneyPlusService, HboMaxService, NetflixService } from '../../../src/core/services/index';
 import { NETFLIX_SURFACES, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
 import { buildMockAdapter } from '../../mocks/adapter';
@@ -415,6 +415,43 @@ describe('App', () => {
             expect(result).toBeInstanceOf(FlixMonkeyApp);
             expect(typeof result.redecorate).toBe('function');
         }
+    });
+
+    describe.each([
+        [
+            'Netflix',
+            NetflixService,
+            '<div class="title-card"><a aria-label="Netflix Title"></a></div>',
+            'Netflix Title',
+        ],
+        [
+            'HBO Max',
+            HboMaxService,
+            '<div><a data-testid="id_tile" data-sonic-type="movie" aria-label="HBO Title. 1 of 20."></a></div>',
+            'HBO Title',
+        ],
+        [
+            'Disney+',
+            DisneyPlusService,
+            '<div><a data-testid="set-item" data-item-id="1" href="/browse/entity-1" aria-label="Disney Title Select for details on this title."></a></div>',
+            'Disney Title',
+        ],
+    ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
+        it('should discover titles with the detected service surface definitions', async () => {
+            document.body.innerHTML = html;
+            const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+            vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
+            const getDataSpy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle(expectedTitle).build());
+
+            appRef = startApp(buildMockAdapter().build());
+
+            await vi.waitFor(() => {
+                if (getDataSpy.mock.calls.length === 0) throw new Error('Title not discovered');
+            });
+            expect(getDataSpy).toHaveBeenCalledWith(expectedTitle);
+        });
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
