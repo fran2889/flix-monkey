@@ -179,7 +179,8 @@ export class SettingsView {
     #getFieldClassName(row: SettingsFieldRow): string {
         if (this.#isActionRow(row)) return 'field field--actions';
 
-        const isLoneCheckbox = row.fields.length === 1 && row.fields[0].type === 'checkbox' && !row.fields[0].row;
+        const [field] = row.fields;
+        const isLoneCheckbox = row.fields.length === 1 && field?.type === 'checkbox' && !field.row;
         if (isLoneCheckbox) return 'field field--checkbox';
         return 'field';
     }
@@ -215,16 +216,17 @@ export class SettingsView {
 
     #rowLabel(row: SettingsFieldRow): SettingsRowLabel {
         const rowLabelObj = isRowLabelKey(row.id) ? ROW_LABELS[row.id] : undefined;
+        const [field] = row.fields;
         return {
-            text: rowLabelObj?.label ?? row.fields[0].label,
-            tooltip: rowLabelObj?.title ?? row.fields[0].title ?? '',
+            text: rowLabelObj?.label ?? field?.label ?? '',
+            tooltip: rowLabelObj?.title ?? field?.title ?? '',
         };
     }
 
     #singleSettingField(row: SettingsFieldRow): SettingConfigField | undefined {
         if (row.fields.length !== 1) return undefined;
         const [field] = row.fields;
-        return isSettingField(field) ? field : undefined;
+        return field && isSettingField(field) ? field : undefined;
     }
 
     #createLinkedLabel(text: string, labelUrl: string, tooltip: string): HTMLLabelElement {

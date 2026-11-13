@@ -130,13 +130,15 @@ describe('userscript entry point', () => {
             expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
         });
 
-        expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(loggerConstructor.mock.results[0].value);
-        expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect((appModule.startApp as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
-            (migrationsModule.runMigrations as Mock).mock.invocationCallOrder[0]
+        expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(
+            loggerConstructor.mock.results[0]?.value
         );
-        expect((adapter.registerMenuCommand as Mock).mock.invocationCallOrder[0]).toBeGreaterThan(
-            (appModule.startApp as Mock).mock.invocationCallOrder[0]
+        expect(loggerConstructor).toHaveBeenCalledWith(adapter);
+        expect((appModule.startApp as Mock).mock.invocationCallOrder[0] ?? 0).toBeGreaterThan(
+            (migrationsModule.runMigrations as Mock).mock.invocationCallOrder[0] ?? 0
+        );
+        expect((adapter.registerMenuCommand as Mock).mock.invocationCallOrder[0] ?? 0).toBeGreaterThan(
+            (appModule.startApp as Mock).mock.invocationCallOrder[0] ?? 0
         );
     });
 
@@ -155,14 +157,14 @@ describe('userscript entry point', () => {
         expect(cacheConstructor).not.toHaveBeenCalled();
         expect(disabledConstructor).not.toHaveBeenCalled();
 
-        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0][1];
+        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
         menuCallback();
 
-        const logger = loggerConstructor.mock.results[0].value;
-        expect((migrationsModule.runMigrations as Mock).mock.calls[0][1]).toBe(logger);
-        const config = configConstructor.mock.results[0].value;
-        const cacheManager = cacheConstructor.mock.results[0].value;
-        const disabledManager = disabledConstructor.mock.results[0].value;
+        const logger = loggerConstructor.mock.results[0]?.value;
+        expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(logger);
+        const config = configConstructor.mock.results[0]?.value;
+        const cacheManager = cacheConstructor.mock.results[0]?.value;
+        const disabledManager = disabledConstructor.mock.results[0]?.value;
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
         expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
         expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger);
@@ -183,10 +185,10 @@ describe('userscript entry point', () => {
         await import('../../../../src/targets/userscript/entry');
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
-        const menuCallback = adapter.registerMenuCommand.mock.calls[0][1];
+        const menuCallback = adapter.registerMenuCommand.mock.calls[0]?.[1];
         menuCallback();
 
-        const logger = loggerConstructor.mock.results[0].value;
+        const logger = loggerConstructor.mock.results[0]?.value;
         expect(settingsConstructor).toHaveBeenCalledWith({
             adapter,
             logger,
@@ -214,7 +216,7 @@ describe('userscript entry point', () => {
         resolveMigrations();
         await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
 
-        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0][1];
+        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
         menuCallback();
 
         await vi.waitFor(() => {

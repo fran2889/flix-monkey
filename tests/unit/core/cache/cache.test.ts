@@ -413,10 +413,10 @@ describe('CacheManager', () => {
     it('should produce the same cache key for titles that differ only by punctuation', async () => {
         const title = buildTitle().withApiTitle('Test Title').build();
         await cacheManager.write('Test: Title', title);
-        const key1 = adapter.storageSet.mock.calls[0][0];
+        const key1 = adapter.storageSet.mock.calls[0]?.[0];
         adapter.storageSet.mockClear();
         await cacheManager.write('Test Title', title);
-        const key2 = adapter.storageSet.mock.calls[0][0];
+        const key2 = adapter.storageSet.mock.calls[0]?.[0];
         expect(key1).toBe(key2);
         expect(key1).toBe('fmc:test_title');
     });
@@ -431,7 +431,7 @@ describe('CacheManager', () => {
         adapter.storageSet.mockResolvedValue(undefined);
         await cacheManager.write('Test', title);
         const call = adapter.storageSet.mock.calls[0];
-        const entry = JSON.parse(call[1] as string);
+        const entry = JSON.parse(call?.[1] as string);
         expect(entry.displayTitle).toBe('Test');
         expect(entry.imdbId).toBe('tt123');
         expect(entry.data).not.toHaveProperty('displayTitle');

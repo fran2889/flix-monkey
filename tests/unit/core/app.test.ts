@@ -125,7 +125,7 @@ describe('App', () => {
         const surfaces = new NetflixSurfaceManager(buildLogger().build());
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Movie Title');
+        expect(results[0]?.title).toBe('Movie Title');
     });
 
     it('should deduplicate in-flight requests for the same title', async () => {
@@ -829,10 +829,12 @@ describe('App', () => {
             const app = new FlixMonkeyApp(appLogger, cache, fadeManager, overrideManager, renderer, surfaces, api);
             app.init();
 
+            const { injectOverlay } = mockRenderer;
+            if (injectOverlay === undefined) throw new Error('overlay not injected');
             await vi.waitFor(() => {
-                if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
+                if (injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const calls = mockRenderer.injectOverlay.mock.calls[0];
+            const calls = injectOverlay.mock.calls[0];
             const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
             return {
                 onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
