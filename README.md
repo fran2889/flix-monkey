@@ -181,7 +181,7 @@ Please report these issues with as much detail as possible.
 
 FlixMonkey is written in TypeScript (ES2022, ES modules) and bundled by Rollup, with ESLint for linting, Prettier for formatting, and Vitest for testing.
 
-This project requires Node.js 24 or newer.
+This project requires Node.js 24.x.
 
 ```bash
 npm install

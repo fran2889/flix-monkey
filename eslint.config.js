@@ -150,6 +150,17 @@ export default [
         },
         rules: typescriptRules,
     },
+    // 2.1. Script type declarations belong to the scripts project, not the app project.
+    {
+        files: ['scripts/**/*.d.ts'],
+        languageOptions: {
+            parser: typescriptParser,
+            parserOptions: {
+                project: './tsconfig.scripts.json',
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+    },
     // 2.5. Relax some rules in test files (non-null-assertion and narrowing assertions for mocks, promise-returning)
     {
         files: ['tests/**/*.ts'],

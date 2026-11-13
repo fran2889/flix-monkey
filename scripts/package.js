@@ -10,11 +10,17 @@ import { ZipArchive } from 'archiver';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const { version } = pkg;
 
+/** @type {Record<string, string>} */
 const OUTPUTS = {
     chrome: `FlixMonkey-v${version}-chrome.zip`,
     firefox: `FlixMonkey-v${version}-firefox.xpi`,
 };
 
+/**
+ * @param {string} dir
+ * @param {string} target
+ * @returns {void}
+ */
 function verifyDistFiles(dir, target) {
     const required = [
         'manifest.json',
@@ -35,8 +41,14 @@ function verifyDistFiles(dir, target) {
     }
 }
 
+/**
+ * @param {string} sourceDir
+ * @param {string} outPath
+ * @returns {Promise<void>}
+ */
 async function zipDirectory(sourceDir, outPath) {
-    return new Promise((resolve, reject) => {
+    /** @type {Promise<void>} */
+    const archiveWritten = new Promise((resolve, reject) => {
         const output = fs.createWriteStream(outPath);
         const archive = new ZipArchive({ zlib: { level: 9 } });
 
@@ -61,6 +73,7 @@ async function zipDirectory(sourceDir, outPath) {
         archive.directory(sourceDir, false, entry => (entry.name.endsWith('.map') ? false : entry));
         void archive.finalize();
     });
+    return archiveWritten;
 }
 
 async function main() {

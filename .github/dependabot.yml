@@ -41,4 +41,4 @@ updates:
           # Lift this cap only after that range allows a newer TypeScript.
           - dependency-name: typescript
             versions:
-                - ">=6.1.0"
+                - '>=6.1.0'

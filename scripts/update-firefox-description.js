@@ -10,14 +10,26 @@ import https from 'node:https';
 const DESCRIPTION_FILE = 'docs/store-description.txt';
 const JWT_EXPIRY_SECONDS = 180; // AMO API v5 requires JWT to expire within 3 minutes
 
+/**
+ * @param {string} message
+ * @returns {void}
+ */
 function logInfo(message) {
     console.log(`[INFO] ${new Date().toISOString()} ${message}`);
 }
 
+/**
+ * @param {string} message
+ * @returns {void}
+ */
 function logError(message) {
     console.error(`[ERROR] ${new Date().toISOString()} ${message}`);
 }
 
+/**
+ * @param {string} name
+ * @returns {string}
+ */
 function getEnv(name) {
     const value = process.env[name];
     if (!value || value.trim() === '') {
@@ -27,6 +39,11 @@ function getEnv(name) {
     return value;
 }
 
+/**
+ * @param {string} issuer
+ * @param {string} secret
+ * @returns {string}
+ */
 function generateJWT(issuer, secret) {
     const header = { alg: 'HS256', typ: 'JWT' };
     const now = Math.floor(Date.now() / 1000);
@@ -71,13 +88,14 @@ async function makeAMORequest(method, path, jwt, payload = null) {
             let data = '';
             res.on('data', chunk => (data += chunk));
             res.on('end', () => {
-                logInfo(`AMO API response: ${res.statusCode} ${res.statusMessage}`);
+                const statusCode = res.statusCode ?? 0;
+                logInfo(`AMO API response: ${statusCode} ${res.statusMessage}`);
                 if (data) {
                     logInfo(`Response data: ${data.substring(0, 200)}...`);
                 }
 
-                if (res.statusCode >= 400) {
-                    return reject(new Error(`AMO API request failed with status ${res.statusCode}: ${data}`));
+                if (statusCode >= 400) {
+                    return reject(new Error(`AMO API request failed with status ${statusCode}: ${data}`));
                 }
 
                 try {
@@ -88,8 +106,9 @@ async function makeAMORequest(method, path, jwt, payload = null) {
                     }
                     resolve(parsed);
                 } catch (parseError) {
-                    logError(`Failed to parse response: ${parseError.message}`);
-                    resolve({ status: res.statusCode, raw: data });
+                    const message = parseError instanceof Error ? parseError.message : String(parseError);
+                    logError(`Failed to parse response: ${message}`);
+                    resolve({ status: statusCode, raw: data });
                 }
             });
         });
@@ -102,6 +121,10 @@ async function makeAMORequest(method, path, jwt, payload = null) {
     });
 }
 
+/**
+ * @param {string} content
+ * @returns {string}
+ */
 function validateDescription(content) {
     const MAX_DESCRIPTION_LENGTH = 10000; // AMO limit
     if (content.length > MAX_DESCRIPTION_LENGTH) {
@@ -117,7 +140,8 @@ async function main() {
     try {
         content = readFileSync(DESCRIPTION_FILE, 'utf8');
     } catch (error) {
-        logError(`Failed to read ${DESCRIPTION_FILE}: ${error.message}`);
+        const message = error instanceof Error ? error.message : String(error);
+        logError(`Failed to read ${DESCRIPTION_FILE}: ${message}`);
         process.exit(1);
     }
 
@@ -155,6 +179,7 @@ async function main() {
 }
 
 main().catch(error => {
-    logError(`Failed to update Firefox description: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    logError(`Failed to update Firefox description: ${message}`);
     process.exit(1);
 });

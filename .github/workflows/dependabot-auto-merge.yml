@@ -10,6 +10,12 @@ permissions:
 jobs:
     auto-merge:
         runs-on: ubuntu-latest
+        timeout-minutes: 5
+        # SECURITY: never check out PR code in this job. This workflow uses
+        # pull_request_target, so it runs in the base branch's context with
+        # repository secrets. Checking out the pull request head would execute
+        # untrusted code with that access. The steps below only read PR metadata
+        # and act through the GitHub CLI.
         if: github.actor == 'dependabot[bot]'
         steps:
             - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
