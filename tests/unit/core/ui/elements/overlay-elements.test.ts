@@ -372,14 +372,6 @@ describe('createOverlayElement', () => {
             expect(iconButtons).toHaveLength(2);
             expect(iconButtons[0]?.textContent).toBe('✏️');
             expect(iconButtons[1]?.textContent).toBe('🔄');
-        });
-
-        it('renders each action button once', () => {
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test Movie' }
-            );
-
             expect(element.querySelectorAll('[title="Override IMDb ID"]')).toHaveLength(1);
             expect(element.querySelectorAll('[title="Refresh ratings (clears cache)"]')).toHaveLength(1);
         });
