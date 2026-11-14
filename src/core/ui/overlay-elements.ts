@@ -70,6 +70,21 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
+function createFadeToggle(state: FadeOverrideState, onClick: (_el: HTMLElement) => void): HTMLElement {
+    const el = document.createElement('div');
+    el.className = 'fm-fade-toggle';
+    const label = document.createElement('span');
+    label.className = 'fm-label';
+    label.textContent = 'Fade ';
+    el.appendChild(label);
+    applyFadeToggleState(el, state);
+    el.addEventListener('click', (e: Event) => {
+        e.stopPropagation();
+        onClick(el);
+    });
+    return el;
+}
+
 /**
  * Renders a fade override state on a fade toggle element.
  *
@@ -92,21 +107,6 @@ export function applyFadeToggleState(el: HTMLElement, state: FadeOverrideState):
     }
     icon.textContent = state === undefined ? '⭐' : '👁️';
     icon.classList.toggle('fm-fade-toggle--faded', state === 'always');
-}
-
-function createFadeToggle(state: FadeOverrideState, onClick: (_el: HTMLElement) => void): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'fm-fade-toggle';
-    const label = document.createElement('span');
-    label.className = 'fm-label';
-    label.textContent = 'Fade ';
-    el.appendChild(label);
-    applyFadeToggleState(el, state);
-    el.addEventListener('click', (e: Event) => {
-        e.stopPropagation();
-        onClick(el);
-    });
-    return el;
 }
 
 function calculateRatingColor(rating: number, isPercentage: boolean): string {
