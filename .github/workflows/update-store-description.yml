@@ -9,6 +9,10 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: update-store-description
+    cancel-in-progress: false
+
 jobs:
     update-firefox-description:
         runs-on: ubuntu-latest

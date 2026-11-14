@@ -18,8 +18,7 @@ import { isStorageValue, PlatformAdapter } from './adapter';
  * for CORS-capable HTTP requests via the background service worker.
  */
 export class WebExtensionAdapter extends PlatformAdapter {
-    #configData: Record<string, StorageValue> = {};
-    #configLoaded = false;
+    #configData?: Record<string, StorageValue>;
 
     /**
      * Seeds the config snapshot from `browser.storage.local`.
@@ -35,7 +34,6 @@ export class WebExtensionAdapter extends PlatformAdapter {
      */
     override setConfigData(data: Record<string, StorageValue>): void {
         this.#configData = data;
-        this.#configLoaded = true;
     }
 
     /**
@@ -157,10 +155,7 @@ export class WebExtensionAdapter extends PlatformAdapter {
      * @returns The current config value, or `undefined` if absent.
      */
     override configGet(key: string): StorageValue | undefined {
-        if (!this.#configLoaded) {
-            return undefined;
-        }
-        return this.#configData[key];
+        return this.#configData?.[key];
     }
 }
 

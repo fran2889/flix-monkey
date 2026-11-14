@@ -49,11 +49,13 @@ jobs:
               run: npm run package:source
             - name: Upload to Release
               if: ${{ steps.release.outputs.release_created }}
-              run: gh release upload "${{ steps.release.outputs.tag_name }}" dist/*.zip dist/*.xpi dist/*.user.js
+              run: gh release upload "$TAG" dist/*.zip dist/*.xpi dist/*.user.js
               env:
+                  TAG: ${{ steps.release.outputs.tag_name }}
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
             - name: Publish Release
               if: ${{ steps.release.outputs.release_created }}
-              run: gh release edit "${{ steps.release.outputs.tag_name }}" --draft=false
+              run: gh release edit "$TAG" --draft=false
               env:
+                  TAG: ${{ steps.release.outputs.tag_name }}
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}

@@ -7,7 +7,6 @@ import { expect } from 'vitest';
 import type { OverlayRenderer } from '../../src/core/overlay';
 import type { SurfaceManager } from '../../src/core/surfaces/index';
 import { Title } from '../../src/core/title';
-import type { DiscoveredSurface } from '../../src/types/surfaces';
 
 /**
  * Fixture entry for surface testing.
@@ -39,7 +38,8 @@ export function testSurfaceFixtures(
         document.body.innerHTML = `<html><body>${entry.html}</body></html>`;
         const surfaces = surfaceManager.discover(document.body);
         expect(surfaces, `Expected exactly one surface for ${entry.name}`).toHaveLength(1);
-        const surface: DiscoveredSurface = surfaces[0];
+        const [surface] = surfaces;
+        if (surface === undefined) throw new Error(`Expected a surface for ${entry.name}`);
         expect(surface.title).toBe(entry.expected.title);
         expect(surface.fadeable).toBe(entry.expected.fadeable);
         expect(surface.showFadeToggle).toBe(entry.expected.showFadeToggle);
