@@ -4,8 +4,12 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ApiClient } from '../../../../src/core/api/base-api-client';
+import { ApiClientManager } from '../../../../src/core/api-manager';
 import { CacheEntry, CacheManager } from '../../../../src/core/cache/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
+import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
+import { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
 import { ParseError } from '../../../../src/core/parse-utils';
 import { Title } from '../../../../src/core/title';
@@ -14,6 +18,27 @@ import { buildCacheEntry } from '../../../mocks/cache';
 import { buildConfig } from '../../../mocks/config';
 import { buildLogger } from '../../../mocks/logger';
 import { buildTitle } from '../../../mocks/title';
+
+function buildMemoryAdapter(): { adapter: MockPlatformAdapter; store: Map<string, string> } {
+    const store = new Map<string, string>();
+    const adapter = buildMockAdapter()
+        .withStorageGetResolvingTo(vi.fn(async (key: string) => store.get(key)))
+        .withStorageSetResolvingTo(
+            vi.fn(async (key: string, value: string) => {
+                store.set(key, value);
+            })
+        )
+        .withStorageDeleteResolvingTo(
+            vi.fn(async (key: string) => {
+                store.delete(key);
+            })
+        )
+        .withStorageGetKeysResolvingTo(
+            vi.fn(async (prefix: string) => [...store.keys()].filter(key => key.startsWith(prefix)))
+        )
+        .build();
+    return { adapter, store };
+}
 
 describe('CacheManager', () => {
     let adapter: MockPlatformAdapter;
@@ -497,5 +522,149 @@ describe('CacheManager', () => {
         adapter.storageGet.mockResolvedValue(undefined);
         const result = await cacheManager.read('Missing Movie');
         expect(result).toBeUndefined();
+    });
+
+    describe('clearing cached data', () => {
+        function buildManager(): { adapter: MockPlatformAdapter; store: Map<string, string>; manager: CacheManager } {
+            const { adapter: memoryAdapter, store } = buildMemoryAdapter();
+            return { adapter: memoryAdapter, store, manager: new CacheManager(memoryAdapter, config, mockLogger) };
+        }
+
+        async function writeRatedTitle(manager: CacheManager, displayTitle: string, imdbId: string): Promise<void> {
+            await manager.write(
+                displayTitle,
+                buildTitle()
+                    .withDisplayTitle(displayTitle)
+                    .withApiTitle(displayTitle)
+                    .withImdbId(imdbId)
+                    .withImdbRating(8)
+                    .withSource('agregarr')
+                    .build()
+            );
+        }
+
+        it('keeps the display title and cached IMDb ID but removes rating data', async () => {
+            const { store, manager } = buildManager();
+            await writeRatedTitle(manager, 'Kept Movie', 'tt123');
+
+            await manager.clear();
+
+            expect(store.has('fmc:kept_movie')).toBe(true);
+            const entry = JSON.parse(store.get('fmc:kept_movie') as string);
+            expect(entry).toMatchObject({ displayTitle: 'Kept Movie', imdbId: 'tt123' });
+            expect(entry.data).toEqual({});
+            expect(entry.expires).toBeUndefined();
+
+            const retained = await manager.read('Kept Movie');
+            expect(retained?.getTitle().hasRating).toBe(false);
+            expect(retained?.getTitle().source).toBeUndefined();
+        });
+
+        it('removes entries that have no cached IMDb ID', async () => {
+            const { store, manager } = buildManager();
+            await writeRatedTitle(manager, 'Kept Movie', 'tt123');
+            store.set(
+                'fmc:no_id_movie',
+                JSON.stringify(
+                    buildCacheEntry()
+                        .withDisplayTitle('No ID Movie')
+                        .withImdbId(undefined)
+                        .withData(
+                            buildTitle()
+                                .withDisplayTitle('No ID Movie')
+                                .withImdbRating(7)
+                                .withSource('agregarr')
+                                .build()
+                                .toCacheJSON()
+                        )
+                        .withExpiry(Date.now() + 100000)
+                        .build()
+                )
+            );
+
+            await manager.clear();
+
+            expect(store.has('fmc:kept_movie')).toBe(true);
+            expect(store.has('fmc:no_id_movie')).toBe(false);
+        });
+
+        it('removes every entry, including cached IMDb IDs, when clearIds is true', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            await writeRatedTitle(manager, 'Kept Movie', 'tt123');
+            await writeRatedTitle(manager, 'Another Movie', 'tt456');
+            memoryAdapter.storageSet.mockClear();
+
+            await manager.clear(true);
+
+            expect(store.size).toBe(0);
+            expect(memoryAdapter.storageSet).not.toHaveBeenCalled();
+        });
+
+        it('removes corrupt entries instead of failing', async () => {
+            const { store, manager } = buildManager();
+            store.set('fmc:corrupt', 'invalid-json{');
+
+            await manager.clear();
+
+            expect(store.has('fmc:corrupt')).toBe(false);
+            expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, removing entry', {
+                key: 'fmc:corrupt',
+                error: expect.any(SyntaxError),
+            });
+        });
+
+        it('keeps manual IMDb ID overrides', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            const overrideManager = new IdOverrideManager(memoryAdapter);
+            await overrideManager.setImdbId('Corrected Movie', 'tt999');
+            await manager.write(
+                'Corrected Movie',
+                buildTitle()
+                    .withDisplayTitle('Corrected Movie')
+                    .withImdbId('tt111')
+                    .withImdbRating(8)
+                    .withSource('agregarr')
+                    .build()
+            );
+
+            await manager.clear(true);
+
+            await expect(overrideManager.getImdbId('Corrected Movie')).resolves.toBe('tt999');
+            expect(store.size).toBe(1);
+        });
+
+        it('fetches fresh data with the retained IMDb ID and does not serve the cleared rating', async () => {
+            const { adapter: memoryAdapter, manager } = buildManager();
+            await writeRatedTitle(manager, 'Kept Movie', 'tt123');
+
+            await manager.clear();
+
+            const client: ApiClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi
+                    .fn()
+                    .mockResolvedValue(
+                        buildTitle()
+                            .withDisplayTitle('Kept Movie')
+                            .withImdbId('tt123')
+                            .withImdbRating(7.5)
+                            .withSource('agregarr')
+                            .build()
+                    ),
+                disable: vi.fn(),
+            };
+            const apiManager = new ApiClientManager(
+                mockLogger,
+                manager,
+                new DisabledClientsManager(memoryAdapter),
+                client
+            );
+
+            const result = await apiManager.getData('Kept Movie');
+
+            expect(client.fetch).toHaveBeenCalledWith('Kept Movie', 'tt123');
+            expect(result.imdbRating).toBe(7.5);
+        });
     });
 });
