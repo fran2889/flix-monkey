@@ -166,7 +166,7 @@ describe('WebExtensionAdapter', () => {
         expect(adapter.configGet('missing')).toBeUndefined();
     });
 
-    it('configGet should treat an unseeded snapshot differently from an empty one', () => {
+    it('configGet should return undefined before seeding and for absent keys after seeding', () => {
         const freshAdapter = new WebExtensionAdapter();
         expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
         expect(freshAdapter.configGet('xmdbApiKey')).toBeUndefined();
