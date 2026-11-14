@@ -29,7 +29,7 @@ export interface OverlayOptions {
     displayTitle: string;
 }
 
-export const FADE_STATE_LABELS = Object.freeze({
+const FADE_STATE_LABELS = Object.freeze({
     auto: 'Auto',
     always: 'Always',
     never: 'Never',
@@ -70,20 +70,38 @@ function createSearchRatingElement(label: string, className: string): HTMLElemen
     return createBadgeElement(label, '🔍', className, 'fm-search');
 }
 
+/**
+ * Renders a fade override state on a fade toggle element.
+ *
+ * Updates the state data attribute, tooltip, icon glyph, and faded class together
+ * so creation and click handling cannot drift. Creates the icon span when the
+ * element does not have one yet.
+ *
+ * @param el - Fade toggle element to update.
+ * @param state - Fade override state to render, or undefined for auto.
+ */
+export function applyFadeToggleState(el: HTMLElement, state: FadeOverrideState): void {
+    const stateName = state ?? 'auto';
+    el.dataset.state = stateName;
+    el.title = `Fade: ${FADE_STATE_LABELS[stateName]}`;
+    let icon = el.querySelector<HTMLElement>('.fm-fade-toggle-icon');
+    if (!icon) {
+        icon = document.createElement('span');
+        icon.className = 'fm-fade-toggle-icon';
+        el.appendChild(icon);
+    }
+    icon.textContent = state === undefined ? '⭐' : '👁️';
+    icon.classList.toggle('fm-fade-toggle--faded', state === 'always');
+}
+
 function createFadeToggle(state: FadeOverrideState, onClick: (_el: HTMLElement) => void): HTMLElement {
     const el = document.createElement('div');
     el.className = 'fm-fade-toggle';
-    el.dataset.state = state ?? 'auto';
-    el.title = `Fade: ${FADE_STATE_LABELS[state ?? 'auto']}`;
     const label = document.createElement('span');
     label.className = 'fm-label';
     label.textContent = 'Fade ';
-    const icon = document.createElement('span');
-    icon.className = 'fm-fade-toggle-icon';
-    icon.textContent = state === undefined ? '⭐' : '👁️';
-    if (state === 'always') icon.classList.add('fm-fade-toggle--faded');
     el.appendChild(label);
-    el.appendChild(icon);
+    applyFadeToggleState(el, state);
     el.addEventListener('click', (e: Event) => {
         e.stopPropagation();
         onClick(el);
