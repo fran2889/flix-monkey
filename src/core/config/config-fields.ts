@@ -7,7 +7,7 @@ import { CACHE_TTL_INFINITE } from '../constants';
 const CACHE_TTL_ERROR = 'Cache duration must be -1 or a positive integer';
 
 function validateCacheTtl(val: ConfigValueType | undefined): string | undefined {
-    const raw = String(val);
+    const raw = String(val ?? '');
     if (raw.trim() === '') return CACHE_TTL_ERROR;
     const n = Number(raw);
     return Number.isInteger(n) && (n >= 0 || n === -1) ? undefined : CACHE_TTL_ERROR;
@@ -185,7 +185,7 @@ export const CONFIG_FIELDS = [
         title: 'Required for OMDb ratings',
         validate: (val: ConfigValueType | undefined, allValues?: Record<string, unknown>): string | undefined => {
             if (allValues?.apiClient !== 'omdb') return undefined;
-            return String(val).length > 0 ? undefined : 'OMDb API Key is required';
+            return String(val ?? '').length > 0 ? undefined : 'OMDb API Key is required';
         },
     },
     {
@@ -198,7 +198,7 @@ export const CONFIG_FIELDS = [
         title: 'Required for XMDb ratings',
         validate: (val: ConfigValueType | undefined, allValues?: Record<string, unknown>): string | undefined => {
             if (allValues?.apiClient !== 'xmdb') return undefined;
-            return String(val).length > 0 ? undefined : 'XMDb API Key is required';
+            return String(val ?? '').length > 0 ? undefined : 'XMDb API Key is required';
         },
     },
     {
@@ -234,7 +234,7 @@ export const CONFIG_FIELDS = [
         title: 'IMDb rating threshold (0.0-10.0)',
         short: true,
         validate: (val: ConfigValueType | undefined): string | undefined => {
-            const raw = String(val);
+            const raw = String(val ?? '');
             if (raw.trim() === '') return 'Fade threshold must be a number between 0 and 10';
             const n = Number(raw);
             return !Number.isNaN(n) && n >= 0.0 && n <= 10.0

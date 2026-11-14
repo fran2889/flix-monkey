@@ -106,6 +106,10 @@ describe('core/config-fields', () => {
                 expect(typeof field.validate?.('', { apiClient: provider })).toBe('string');
             });
 
+            it('should reject a missing key when provider is selected', () => {
+                expect(typeof field.validate?.(undefined, { apiClient: provider })).toBe('string');
+            });
+
             it('should accept empty key when provider is not selected', () => {
                 expect(field.validate!('', { apiClient: 'agregarr' })).toBeUndefined();
             });
