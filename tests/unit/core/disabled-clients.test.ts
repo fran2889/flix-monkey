@@ -4,6 +4,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { ApiSource } from '../../../src/core/constants';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients';
 import type { MockPlatformAdapter } from '../../mocks/adapter';
 import { buildMockAdapter } from '../../mocks/adapter';
@@ -53,5 +54,26 @@ describe('core/disabled-clients', () => {
         expect(reenabled).toEqual(['xmdb']);
         expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm_disabled_xmdb', '0');
         expect(mockAdapter.storageSet).not.toHaveBeenCalledWith('fm_disabled_omdb', '0');
+    });
+
+    it('should reset all disabled clients sequentially in ApiSource order', async () => {
+        mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
+
+        const reenabled = await manager.resetAll();
+
+        expect(reenabled).toEqual(Object.values(ApiSource));
+        expect(mockAdapter.storageSet.mock.calls).toEqual([
+            ['fm_disabled_xmdb', '0'],
+            ['fm_disabled_omdb', '0'],
+            ['fm_disabled_agregarr', '0'],
+        ]);
+    });
+
+    it('should stop at the first storage error during reset', async () => {
+        mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
+        mockAdapter.storageSet.mockRejectedValue(new Error('storage failed'));
+
+        await expect(manager.resetAll()).rejects.toThrow('storage failed');
+        expect(mockAdapter.storageSet).toHaveBeenCalledOnce();
     });
 });
