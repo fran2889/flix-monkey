@@ -91,6 +91,12 @@ vi.mock('../../../../src/core/ui/settings-ui', () => ({
     },
 }));
 
+function invocationOrder(mock: Mock): number {
+    const [order] = mock.mock.invocationCallOrder;
+    if (order === undefined) throw new Error('Expected mock to have been called');
+    return order;
+}
+
 describe('userscript entry point', () => {
     beforeEach(() => {
         vi.resetModules();
@@ -134,11 +140,11 @@ describe('userscript entry point', () => {
             loggerConstructor.mock.results[0]?.value
         );
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect((appModule.startApp as Mock).mock.invocationCallOrder[0] ?? 0).toBeGreaterThan(
-            (migrationsModule.runMigrations as Mock).mock.invocationCallOrder[0] ?? 0
+        expect(invocationOrder(appModule.startApp as Mock)).toBeGreaterThan(
+            invocationOrder(migrationsModule.runMigrations as Mock)
         );
-        expect((adapter.registerMenuCommand as Mock).mock.invocationCallOrder[0] ?? 0).toBeGreaterThan(
-            (appModule.startApp as Mock).mock.invocationCallOrder[0] ?? 0
+        expect(invocationOrder(adapter.registerMenuCommand as Mock)).toBeGreaterThan(
+            invocationOrder(appModule.startApp as Mock)
         );
     });
 
