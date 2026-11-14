@@ -35,6 +35,29 @@ describe('RequestQueue', () => {
         await expect(pending).rejects.toThrow('Client Disabled');
     });
 
+    it('should reject cleared requests in queue order', async () => {
+        const firstFetch = vi.fn(() => new Promise(() => {}));
+        const queue = buildQueue(999999);
+        void queue.enqueue('active', 1, firstFetch).catch(() => {});
+        await vi.waitFor(() => expect(firstFetch).toHaveBeenCalledOnce());
+
+        const rejected: string[] = [];
+        const first = queue
+            .enqueue('first', 0, () => new Promise(() => {}))
+            .catch(() => {
+                rejected.push('first');
+            });
+        const second = queue
+            .enqueue('second', 0, () => new Promise(() => {}))
+            .catch(() => {
+                rejected.push('second');
+            });
+
+        expect(queue.clear()).toBe(2);
+        await Promise.all([first, second]);
+        expect(rejected).toEqual(['first', 'second']);
+    });
+
     it('rejects the caller with the original fetch error', async () => {
         const queue = buildQueue(0);
         const error = new Error('fetch failed');
