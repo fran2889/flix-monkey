@@ -125,7 +125,7 @@ describe('App', () => {
         const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Movie Title');
+        expect(results[0]?.title).toBe('Movie Title');
     });
 
     it('should deduplicate in-flight requests for the same title', async () => {
@@ -866,11 +866,15 @@ describe('App', () => {
             const app = new FlixMonkeyApp(appLogger, cache, fadeManager, overrideManager, renderer, surfaces, api);
             app.init();
 
+            const { injectOverlay } = mockRenderer;
+            // Narrow the Record index (noUncheckedIndexedAccess) before using the spy.
+            if (injectOverlay === undefined) throw new Error('injectOverlay spy is not configured');
             await vi.waitFor(() => {
-                if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
+                if (injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const calls = mockRenderer.injectOverlay.mock.calls[0];
-            const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
+            const [firstCall] = injectOverlay.mock.calls;
+            if (firstCall === undefined) throw new Error('injectOverlay was not called');
+            const [, , interaction] = firstCall as [HTMLElement, Title, OverlayInteraction];
             return {
                 onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: interaction.onRefreshClick as (_displayTitle: string) => Promise<void>,

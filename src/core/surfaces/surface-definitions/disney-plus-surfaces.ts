@@ -50,7 +50,7 @@ export function extractDisneyPlusTitle(element: HTMLElement): string | undefined
         .trim()
         .replace(DISNEY_PLUS_PREFIX_BLOCK, '')
         .split(DISNEY_PLUS_TITLE_END)[0]
-        .trim();
+        ?.trim();
     return title ? canonicalizeDisneyPlusTitle(title) : undefined;
 }
 

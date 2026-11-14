@@ -80,7 +80,7 @@ describe('SettingsUI', () => {
             await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
-            const saved = mockAdapter.storageSetMany.mock.calls[0][0];
+            const saved = mockAdapter.storageSetMany.mock.calls[0]?.[0];
             CONFIG_FIELDS.forEach((field: ConfigField) => {
                 if (isSettingField(field) && !field.disabled) {
                     expect(Object.hasOwn(saved, field.key)).toBe(true);
@@ -107,7 +107,10 @@ describe('SettingsUI', () => {
                 type: 'text' as const,
                 default: 'initial',
                 group: 'cache' as const,
-                validate: (_value: ConfigValueType, _allValues?: Record<string, unknown>): string | undefined => {
+                validate: (
+                    _value: ConfigValueType | undefined,
+                    _allValues?: Record<string, unknown>
+                ): string | undefined => {
                     container.querySelector('#fm-snapshot')?.setAttribute('value', 'changed-during-validation');
                     return undefined;
                 },

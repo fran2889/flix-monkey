@@ -61,7 +61,7 @@ describe('runMigrations', () => {
         await runMigrations(adapter, logger, migrations);
 
         expect(calls).toEqual([2, 3]);
-        expect(migrations[0].upgrade).not.toHaveBeenCalled();
+        expect(migrations[0]?.upgrade).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenNthCalledWith(1, DATA_VERSION_KEY, '2');
         expect(adapter.storageSet).toHaveBeenNthCalledWith(2, DATA_VERSION_KEY, '3');
     });

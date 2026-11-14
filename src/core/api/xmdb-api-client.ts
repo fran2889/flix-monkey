@@ -96,8 +96,8 @@ export class XmdbApiClient extends BaseApiClient {
             this.logger.info(`No supported title-type results found in XMDb for "${displayTitle}"`);
             return undefined;
         }
-        const match = titleResults[0];
-        return titleFromSearchResult(displayTitle, match);
+        const [match] = titleResults;
+        return match ? titleFromSearchResult(displayTitle, match) : undefined;
     }
 
     /**

@@ -145,7 +145,7 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
         await client.search('Movie 1');
-        const calledUrl = httpFetch.mock.calls[0][0];
+        const calledUrl = httpFetch.mock.calls[0]?.[0];
         expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/movie%201.json');
     });
 
@@ -223,7 +223,7 @@ describe('AgregarrApiClient', () => {
         mockAdapter.httpFetch = httpFetch;
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
         await client.search('Élite');
-        const calledUrl = httpFetch.mock.calls[0][0];
+        const calledUrl = httpFetch.mock.calls[0]?.[0];
         expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
     });
 

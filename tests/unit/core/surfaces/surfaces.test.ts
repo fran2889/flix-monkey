@@ -78,7 +78,7 @@ describe('SurfaceManager', () => {
             </div>
         `);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('First');
+        expect(results[0]?.title).toBe('First');
     });
 
     it('should fall back to parentElement when the container resolver finds nothing', () => {
@@ -93,8 +93,8 @@ describe('SurfaceManager', () => {
         document.body.innerHTML = '<section data-container><div data-title="Orphan"></div></section>';
         const results = sm.discover(document.body);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Orphan');
-        expect(results[0].container).toBe(document.querySelector('[data-container]'));
+        expect(results[0]?.title).toBe('Orphan');
+        expect(results[0]?.container).toBe(document.querySelector('[data-container]'));
         expect(logger.warn).toHaveBeenCalledWith(
             'Surface container resolver failed for Orphan, falling back to parentElement'
         );
@@ -133,7 +133,7 @@ describe('SurfaceManager', () => {
             },
         });
         document.body.innerHTML = '<div data-title="Callback Title"></div>';
-        expect(sm.discover(document.body)[0].title).toBe('Callback Title');
+        expect(sm.discover(document.body)[0]?.title).toBe('Callback Title');
     });
 
     it('defaults optional surface display flags to false', () => {
@@ -164,7 +164,7 @@ describe('SurfaceManager', () => {
             },
         });
 
-        expect(sm.discover(document.body)[0].container).toBe(resolvedContainer);
+        expect(sm.discover(document.body)[0]?.container).toBe(resolvedContainer);
     });
 
     it('decorates a resolved container through the optional surface hook', () => {
@@ -179,7 +179,7 @@ describe('SurfaceManager', () => {
         });
 
         const [surface] = sm.discover(document.body);
-        expect(surface.container).toHaveClass('decorated');
+        expect(surface?.container).toHaveClass('decorated');
     });
 
     it('falls back to parentElement when a surface getContainer callback returns undefined', () => {
@@ -196,21 +196,21 @@ describe('SurfaceManager', () => {
             },
         });
 
-        expect(sm.discover(document.body)[0].container).toBe(document.querySelector('[data-container]'));
+        expect(sm.discover(document.body)[0]?.container).toBe(document.querySelector('[data-container]'));
     });
 
     it('does not expose a fade toggle for title cards', () => {
         const results = discover(`
             <div class="title-card"><a aria-label="Movie"></a></div>
         `);
-        expect(results[0].showFadeToggle).toBe(false);
+        expect(results[0]?.showFadeToggle).toBe(false);
     });
 
     it('does not expose a fade toggle for search cards', () => {
         const results = discover(`
             <div data-uia="standard-card" aria-label="Movie"></div>
         `);
-        expect(results[0].showFadeToggle).toBe(false);
+        expect(results[0]?.showFadeToggle).toBe(false);
     });
 
     it('exposes a fade toggle for mini-modal surfaces', () => {
@@ -221,7 +221,7 @@ describe('SurfaceManager', () => {
                 </div>
             </div>
         `);
-        expect(results[0].showFadeToggle).toBe(true);
+        expect(results[0]?.showFadeToggle).toBe(true);
     });
 
     it('does not expose a fade toggle for detail-modal surfaces', () => {
@@ -232,7 +232,7 @@ describe('SurfaceManager', () => {
                 </div>
             </div>
         `);
-        expect(results[0].showFadeToggle).toBe(false);
+        expect(results[0]?.showFadeToggle).toBe(false);
     });
 });
 
@@ -318,7 +318,7 @@ describe('Netflix More Like This surfaces', () => {
             </div>
         `);
         expect(surface).toMatchObject({ title: 'Caramelo', fadeable: true, showFadeToggle: false });
-        expect(surface.container).toBe(document.querySelector('.titleCard-imageWrapper'));
+        expect(surface?.container).toBe(document.querySelector('.titleCard-imageWrapper'));
     });
 
     it('discovers a tile from the artwork alt when the label is missing', () => {
@@ -329,7 +329,7 @@ describe('Netflix More Like This surfaces', () => {
                 </div>
             </div>
         `);
-        expect(surface.title).toBe('Alt Only Title');
+        expect(surface?.title).toBe('Alt Only Title');
     });
 
     it('anchors to the tile itself when the image wrapper is missing', () => {
@@ -340,7 +340,7 @@ describe('Netflix More Like This surfaces', () => {
                 </div>
             </div>
         `);
-        expect(surface.container).toBe(document.querySelector('.titleCard--container'));
+        expect(surface?.container).toBe(document.querySelector('.titleCard--container'));
     });
 
     it('does not discover a tile without a usable label or alt', () => {
@@ -403,8 +403,8 @@ describe('HBO Max surfaces', () => {
         `;
 
         const [surface] = new SurfaceManager(buildLogger().build(), HBO_MAX_SURFACES).discover(document.body);
-        expect(surface.title).toBe('House of the Dragon');
-        expect(surface.container.classList.contains('fm-hbo-top-10')).toBe(true);
+        expect(surface?.title).toBe('House of the Dragon');
+        expect(surface?.container.classList.contains('fm-hbo-top-10')).toBe(true);
     });
 
     it.each(['video', 'sport', 'topical'])('ignores unsupported HBO Max tile types: %s', (type: string) => {
@@ -540,7 +540,7 @@ describe('Disney+ surfaces', () => {
 
         const [surface] = new SurfaceManager(buildLogger().build(), DISNEY_PLUS_SURFACES).discover(document.body);
         expect(surface).toMatchObject({ title: 'Loki', fadeable: true, showFadeToggle: true });
-        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 
     it('discovers a Continue Watching title from its metadata', () => {
@@ -560,7 +560,7 @@ describe('Disney+ surfaces', () => {
         const logger = buildLogger().build();
         const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
-        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
+        expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
@@ -582,7 +582,7 @@ describe('Disney+ surfaces', () => {
         const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
 
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
-        expect(surface.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
         expect(logger.warn).not.toHaveBeenCalled();
     });
 });
