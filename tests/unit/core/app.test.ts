@@ -867,12 +867,14 @@ describe('App', () => {
             app.init();
 
             const { injectOverlay } = mockRenderer;
-            if (injectOverlay === undefined) throw new Error('overlay not injected');
+            // Narrow the Record index (noUncheckedIndexedAccess) before using the spy.
+            if (injectOverlay === undefined) throw new Error('injectOverlay spy is not configured');
             await vi.waitFor(() => {
                 if (injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const calls = injectOverlay.mock.calls[0];
-            const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
+            const [firstCall] = injectOverlay.mock.calls;
+            if (firstCall === undefined) throw new Error('injectOverlay was not called');
+            const [, , interaction] = firstCall as [HTMLElement, Title, OverlayInteraction];
             return {
                 onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: interaction.onRefreshClick as (_displayTitle: string) => Promise<void>,
