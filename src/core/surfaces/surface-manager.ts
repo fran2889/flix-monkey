@@ -49,7 +49,7 @@ export class SurfaceManager {
     readonly #SURFACES: SurfaceDefinition[];
     readonly #logger: Logger;
 
-    constructor(logger: Logger, surfaceDefs: Record<string, SurfaceDefinition>) {
+    constructor(logger: Logger, surfaceDefs: Readonly<Record<string, SurfaceDefinition>>) {
         this.#SURFACES = Object.values(surfaceDefs);
         this.#logger = logger;
     }

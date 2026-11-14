@@ -4,7 +4,7 @@ Instructions for AI agents working in this repository. Human contributor guidanc
 
 **FlixMonkey** is a browser extension and userscript that overlays IMDb, Metacritic, and Rotten Tomatoes ratings on Netflix, HBO Max, and Disney+ thumbnails and banners. A shared TypeScript codebase in `src/` is bundled by Rollup into three targets: a userscript (`dist/FlixMonkey.user.js`), a Firefox MV3 extension (`dist/firefox/`), and a Chrome MV3 extension (`dist/chrome/`). Platform differences are hidden behind a `PlatformAdapter` abstraction.
 
-Stack: TypeScript (ES2022, ESM), Node.js >= 24, Rollup, ESLint, Prettier, Vitest + jsdom.
+Stack: TypeScript (ES2022, ESM), Node.js 24.x, Rollup, ESLint, Prettier, Vitest + jsdom.
 
 ## Commands
 

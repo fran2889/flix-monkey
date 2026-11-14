@@ -219,7 +219,7 @@ export interface MoreLikeThisSectionFixture {
 }
 
 export const NETFLIX_MORE_LIKE_THIS_SECTION: MoreLikeThisSectionFixture = {
-    name: "Netflix More Like This section",
+    name: 'Netflix More Like This section',
     collapsedHtml: `
         <div class="moreLikeThis--wrapper">
             <div class="moreLikeThis--container">
@@ -260,7 +260,7 @@ export const NETFLIX_MORE_LIKE_THIS_SECTION: MoreLikeThisSectionFixture = {
                     <span class="duration ellipsized">1h 30m</span>
                 </div>
             </div>
-        </div>`
+        </div>`,
 };
 ```
 

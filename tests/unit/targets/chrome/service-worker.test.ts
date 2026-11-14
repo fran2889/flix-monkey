@@ -198,7 +198,8 @@ describe('Chrome Service Worker', () => {
         const fetchMock = global.fetch as unknown as {
             mock: { calls: Array<[string, { signal: { aborted: boolean } }]> };
         };
-        const fetchOptions = fetchMock.mock.calls[0][1];
+        const fetchOptions = fetchMock.mock.calls[0]?.[1];
+        if (fetchOptions === undefined) throw new Error('fetch was not called');
         expect(fetchOptions.signal.aborted).toBe(false);
 
         await vi.advanceTimersByTimeAsync(customTimeout + 10);

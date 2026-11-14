@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { SurfaceDefinition } from '../../../types/surfaces';
-import type { Logger } from '../../logger';
-import { containerFromParent, SurfaceManager } from '../surface-manager';
+import { containerFromParent } from '../surface-manager';
 
 const HBO_MAX_TITLE_PATTERNS = Object.freeze([
     /^Number \d+: (.+)\. \d+ of \d+\.?$/u,
@@ -66,7 +65,8 @@ function isHboMaxTop10Tile(element: HTMLElement): boolean {
     return /^Number\s+\d+:\s+/u.test(label ?? '');
 }
 
-const HBO_MAX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
+/** Surface definitions for HBO Max tiles. */
+export const HBO_MAX_SURFACES: Readonly<Record<string, SurfaceDefinition>> = Object.freeze({
     TILE: Object.freeze({
         titleSelector: 'a[data-testid$="_tile"][data-sonic-type]',
         getTitle: extractHboMaxTitle,
@@ -78,17 +78,3 @@ const HBO_MAX_SURFACES: Record<string, SurfaceDefinition> = Object.freeze({
         showFadeToggle: true,
     }),
 });
-
-/**
- * HBO Max specific surface manager for discovering HBO Max streaming service surfaces.
- */
-export class HboMaxSurfaceManager extends SurfaceManager {
-    /**
-     * Creates HBO Max surface manager with HBO Max-specific surfaces.
-     *
-     * @param logger - For logging surface discovery issues.
-     */
-    constructor(logger: Logger) {
-        super(logger, HBO_MAX_SURFACES);
-    }
-}

@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { ServicePresentation } from '../../types/overlay';
-import type { ServiceSurfaceManager } from '../../types/services';
+import type { SurfaceDefinition } from '../../types/surfaces';
 import type { ConfigManager } from '../config/config-manager';
 
 /**
  * Abstract contract for a supported streaming service. Implementations provide
- * hostname suffixes used by ServiceRegistry; a surface-manager constructor;
- * presentation constants; and an enablement predicate backed by
- * ConfigManager.
+ * hostname suffixes used by ServiceRegistry; surface definitions; presentation
+ * constants; and an enablement predicate backed by ConfigManager.
  */
 export abstract class StreamingService {
     /**
@@ -30,11 +29,11 @@ export abstract class StreamingService {
     abstract get domains(): readonly string[];
 
     /**
-     * Constructor that accepts a Logger and creates this service's SurfaceManager.
+     * Surface definitions used by this service's SurfaceManager.
      *
-     * @returns Surface manager constructor for this service.
+     * @returns Surface definitions keyed by surface name.
      */
-    abstract get SurfaceManager(): ServiceSurfaceManager;
+    abstract get surfaceDefinitions(): Readonly<Record<string, SurfaceDefinition>>;
 
     get constants(): ServicePresentation {
         return Object.freeze({});
