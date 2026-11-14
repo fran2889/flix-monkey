@@ -786,6 +786,7 @@ describe('App', () => {
         `;
         const storageGet = vi.fn().mockResolvedValue(undefined);
         const storageSet = vi.fn().mockResolvedValue(undefined);
+        const storageDelete = vi.fn().mockResolvedValue(undefined);
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => {
                 if (key === 'enableFadeToggle') return true;
@@ -794,6 +795,7 @@ describe('App', () => {
             })
             .withStorageGetResolvingTo(storageGet)
             .withStorageSetResolvingTo(storageSet)
+            .withStorageDeleteResolvingTo(storageDelete)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
@@ -805,14 +807,39 @@ describe('App', () => {
             if (!modal?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
         });
         const toggle = modal?.querySelector('.fm-fade-toggle') as HTMLElement | null;
-        expect(toggle?.dataset.state).toBe('auto');
-        toggle?.click();
-        await vi.waitFor(() => {
-            if (toggle?.dataset.state !== 'always') throw new Error('State not updated');
-        });
+        if (!toggle) throw new Error('Toggle missing');
+        const icon = toggle.querySelector('.fm-fade-toggle-icon');
+        if (!icon) throw new Error('Toggle icon missing');
+        const card = document.querySelector('.title-card');
+        if (!(card instanceof HTMLElement)) throw new Error('Title card missing');
+        const waitForState = (expected: string): Promise<void> =>
+            vi.waitFor(() => {
+                if (toggle.dataset.state !== expected) throw new Error('State not updated');
+            });
+        expect(toggle.dataset.state).toBe('auto');
+        expect(toggle.title).toBe('Fade: Auto');
+        expect(icon.textContent).toBe('⭐');
+
+        toggle.click();
+        await waitForState('always');
+        expect(toggle.title).toBe('Fade: Always');
+        expect(icon.textContent).toBe('👁️');
+        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
         expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
-        const card = document.querySelector('.title-card') as HTMLElement | null;
-        expect(card?.classList.contains('fm-faded')).toBe(true);
+        expect(card.classList.contains('fm-faded')).toBe(true);
+
+        toggle.click();
+        await waitForState('never');
+        expect(toggle.title).toBe('Fade: Never');
+        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
+        expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'never');
+        expect(card.classList.contains('fm-faded')).toBe(false);
+
+        toggle.click();
+        await waitForState('auto');
+        expect(toggle.title).toBe('Fade: Auto');
+        expect(icon.textContent).toBe('⭐');
+        expect(storageDelete).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'));
     });
 
     it('should return undefined when ServiceRegistry.detect finds no service', async () => {
