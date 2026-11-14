@@ -28,7 +28,7 @@ describe('core/disabled-clients', () => {
 
         expect(mockAdapter.storageSet).toHaveBeenCalledWith('fm_disabled_xmdb', expect.any(String));
 
-        const expiry = Number.parseInt(mockAdapter.storageSet.mock.calls[0][1] as string, 10);
+        const expiry = Number.parseInt(mockAdapter.storageSet.mock.calls[0]?.[1] as string, 10);
         expect(expiry).toBeGreaterThanOrEqual(now + 1000);
     });
 

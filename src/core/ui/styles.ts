@@ -116,7 +116,6 @@ export const SETTINGS_STYLES: string = `/* =====================================
     font-size: var(--font-size-lg);
     cursor: pointer;
     position: absolute;
-    right: 0;
     inset-inline-end: 0;
 }
 
@@ -215,10 +214,7 @@ export const SETTINGS_STYLES: string = `/* =====================================
 }
 
 /* Field modifiers */
-.fm-settings-container .field--checkbox {
-    grid-template-columns: minmax(var(--label-min-width), var(--label-max-width)) auto;
-}
-
+.fm-settings-container .field--checkbox,
 .fm-settings-container .field--actions {
     grid-template-columns: minmax(var(--label-min-width), var(--label-max-width)) auto;
 }
@@ -426,10 +422,6 @@ export const SETTINGS_STYLES: string = `/* =====================================
         text-align: left;
         white-space: normal;
         padding-inline-end: var(--space-md);
-        margin-top: 0;
-    }
-
-    .fm-settings-container .field:not(.field--checkbox):not(.field--actions) .field-label {
         margin-top: 0;
     }
 

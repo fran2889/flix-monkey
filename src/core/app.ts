@@ -20,7 +20,7 @@ import { IdOverrideManager, type IdOverrideManager as IdOverrideManagerType } fr
 import { Logger } from './logger';
 import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './overlay';
 import { ServiceRegistry } from './services/index';
-import type { SurfaceManager } from './surfaces/index';
+import { SurfaceManager } from './surfaces/index';
 import type { Title } from './title';
 import { applyFadeToggleState } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
@@ -400,7 +400,7 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     };
     const client = createApiClient(clientDeps);
     const api = new ApiClientManager(logger, cache, disabledManager, client);
-    const surfaces = new currentService.SurfaceManager(logger);
+    const surfaces = new SurfaceManager(logger, currentService.surfaceDefinitions);
     const renderer = new OverlayRenderer(configManager, currentService.constants);
     const fadeManager = new FadeManager(adapter, configManager);
     const app = new FlixMonkeyApp(logger, cache, fadeManager, overrideManager, renderer, surfaces, api);

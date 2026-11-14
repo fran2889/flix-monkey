@@ -25,9 +25,9 @@ describe('Color Utilities', () => {
             const result = interpolateColor(0.5, '#ff0000', '#00dd00');
             const match = result.match(/^rgb\((\d+), (\d+), (\d+)\)$/);
             expect(match).not.toBeNull();
-            const r = parseInt(match![1], 10);
-            const g = parseInt(match![2], 10);
-            const b = parseInt(match![3], 10);
+            const r = Number(match?.[1]);
+            const g = Number(match?.[2]);
+            const b = Number(match?.[3]);
 
             expect(r).toBeGreaterThanOrEqual(0);
             expect(r).toBeLessThanOrEqual(255);

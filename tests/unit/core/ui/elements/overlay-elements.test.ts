@@ -370,8 +370,8 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-icon-btn')).not.toBeNull();
             const iconButtons = element.querySelectorAll('.fm-icon-btn');
             expect(iconButtons).toHaveLength(2);
-            expect(iconButtons[0].textContent).toBe('✏️');
-            expect(iconButtons[1].textContent).toBe('🔄');
+            expect(iconButtons[0]?.textContent).toBe('✏️');
+            expect(iconButtons[1]?.textContent).toBe('🔄');
         });
 
         it('renders each action button once', () => {
@@ -469,7 +469,7 @@ describe('createOverlayElement', () => {
 
             const ratingBadges = element.querySelectorAll('.fm-rating-badge');
             expect(ratingBadges.length).toBeGreaterThan(0);
-            expect(ratingBadges[0].classList.contains('fm-imdb')).toBe(true);
+            expect(ratingBadges[0]?.classList.contains('fm-imdb')).toBe(true);
         });
     });
 });

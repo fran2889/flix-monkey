@@ -81,7 +81,9 @@ describe('content.js entry point', () => {
     }
 
     function startedAdapter(): { configGet: (_key: string) => unknown } {
-        return startAppSpy.mock.calls[0][0] as { configGet: (_key: string) => unknown };
+        const [startCall] = startAppSpy.mock.calls;
+        if (startCall === undefined) throw new Error('startApp was not called');
+        return startCall[0] as { configGet: (_key: string) => unknown };
     }
 
     it('waits for migrations before reading storage and starting the app', async () => {

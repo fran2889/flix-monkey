@@ -36,7 +36,7 @@ function permittedHosts(manifest: TargetManifest): string[] {
 function userscriptHosts(): string[] {
     const matches = Array.from(
         readFileSync(USERSCRIPT_METADATA, 'utf8').matchAll(/^\/\/ @match\s+(\S+)$/gmu),
-        match => match[1]
+        match => match[1] ?? ''
     );
     return hostsOf(matches);
 }

@@ -80,7 +80,7 @@ describe('SettingsUI', () => {
             await settingsUI.save();
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
-            const saved = mockAdapter.storageSetMany.mock.calls[0][0];
+            const saved = mockAdapter.storageSetMany.mock.calls[0]?.[0];
             CONFIG_FIELDS.forEach((field: ConfigField) => {
                 if (isSettingField(field) && !field.disabled) {
                     expect(Object.hasOwn(saved, field.key)).toBe(true);
@@ -107,7 +107,10 @@ describe('SettingsUI', () => {
                 type: 'text' as const,
                 default: 'initial',
                 group: 'cache' as const,
-                validate: (_value: ConfigValueType, _allValues?: Record<string, unknown>): string | undefined => {
+                validate: (
+                    _value: ConfigValueType | undefined,
+                    _allValues?: Record<string, unknown>
+                ): string | undefined => {
                     container.querySelector('#fm-snapshot')?.setAttribute('value', 'changed-during-validation');
                     return undefined;
                 },
@@ -235,6 +238,17 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status')?.textContent).toBe('Error: disk full');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
         });
+
+        it('shows a thrown string when clearing fails with a non-Error value', async () => {
+            (mockCacheManager.clear as Mock).mockRejectedValue('disk full');
+            await settingsUI.render(container);
+
+            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(container.querySelector('#fm-status')?.textContent).toBe('Error: disk full');
+            expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
+        });
     });
 
     describe('Dependency wiring', () => {
@@ -279,6 +293,17 @@ describe('SettingsUI', () => {
 
         it('shows an error when reset fails', async () => {
             (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue(new Error('storage unavailable'));
+            await settingsUI.render(container);
+
+            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(container.querySelector('#fm-status')?.textContent).toBe('Error: storage unavailable');
+            expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
+        });
+
+        it('shows a thrown string when reset fails with a non-Error value', async () => {
+            (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue('storage unavailable');
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();

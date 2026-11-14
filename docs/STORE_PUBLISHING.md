@@ -136,7 +136,7 @@ The submitted code is bundled by Rollup, so AMO requires the human-readable
 source. To reproduce `dist/firefox/` from the accompanying source archive:
 
 ```bash
-npm ci            # Node.js >= 24
+npm ci            # Node.js 24.x
 npm run build:firefox
 ```
 
@@ -147,7 +147,7 @@ The built extension is written to `dist/firefox/`.
 To reproduce the Chrome extension from the source archive:
 
 ```bash
-npm ci            # Node.js >= 24
+npm ci            # Node.js 24.x
 npm run build:chrome
 ```
 

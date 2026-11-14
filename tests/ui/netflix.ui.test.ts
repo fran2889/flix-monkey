@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ConfigManager } from '../../src/core/config/index';
 import { OverlayRenderer } from '../../src/core/overlay';
 import { NetflixService } from '../../src/core/services/index';
-import { NetflixSurfaceManager } from '../../src/core/surfaces/index';
+import { NETFLIX_SURFACES, SurfaceManager } from '../../src/core/surfaces/index';
 import { Title } from '../../src/core/title';
 import type { DiscoveredSurface } from '../../src/types/surfaces';
 import fixtures, { NETFLIX_MORE_LIKE_THIS_SECTION } from '../fixtures/netflix-surfaces';
@@ -16,11 +16,11 @@ import { buildMockAdapter } from '../mocks/adapter';
 import { buildLogger } from '../mocks/logger';
 
 describe('Netflix surfaces', () => {
-    let surfaceManager: NetflixSurfaceManager;
+    let surfaceManager: SurfaceManager;
     let overlayRenderer: OverlayRenderer;
 
     beforeEach(() => {
-        surfaceManager = new NetflixSurfaceManager(buildLogger().build());
+        surfaceManager = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         overlayRenderer = new OverlayRenderer(
             new ConfigManager(buildMockAdapter().build(), buildLogger().build()),
             new NetflixService().constants
