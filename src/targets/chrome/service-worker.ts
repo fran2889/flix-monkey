@@ -68,7 +68,8 @@ chrome.runtime.onMessage.addListener(
         handleFetchMessage(url, options ?? {})
             .then(sendResponse)
             .catch((error: unknown) => {
-                sendResponse({ error: error instanceof Error ? error.message : String(error) });
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                sendResponse({ ok: false, error: errorMessage });
             });
         return true; // keep message channel open for async sendResponse
     }
