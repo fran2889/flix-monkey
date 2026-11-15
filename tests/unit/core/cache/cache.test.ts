@@ -683,5 +683,36 @@ describe('CacheManager', () => {
             expect(client.fetch).toHaveBeenCalledWith('Kept Movie', 'tt123');
             expect(result.imdbRating).toBe(7.5);
         });
+
+        it('replaces the retained IMDb ID with a cached miss when the ID lookup finds nothing', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            await writeRatedTitle(manager, 'Missing Movie', 'tt404');
+
+            await manager.clear();
+
+            const client: ApiClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(undefined),
+                disable: vi.fn(),
+            };
+            const apiManager = new ApiClientManager(
+                mockLogger,
+                manager,
+                new DisabledClientsManager(memoryAdapter),
+                client
+            );
+
+            const first = await apiManager.getData('Missing Movie');
+            const second = await apiManager.getData('Missing Movie');
+
+            expect(client.fetch).toHaveBeenCalledOnce();
+            expect(client.fetch).toHaveBeenCalledWith('Missing Movie', 'tt404');
+            expect(first.hasRating).toBe(false);
+            expect(second.hasRating).toBe(false);
+            const entry = JSON.parse(store.get('fmc:missing_movie') as string);
+            expect(entry.imdbId).toBeUndefined();
+            expect(entry.data).toMatchObject({ source: 'agregarr' });
+        });
     });
 });
