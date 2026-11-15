@@ -10,7 +10,8 @@ How to use this template
 - Summary is 1-3 bullets, one sentence each, naming one behavior change and,
   where it is not obvious, why the old behavior was wrong. If it needs more than
   three bullets, consider splitting into two pull requests.
-- Keep the body under roughly 1000 characters and 20 lines.
+- Keep the written body under roughly 1000 characters and 20 lines, not
+  counting section headings.
 - Reference related issues and pull requests by number, for example `#123`. Do
   not use vague pointers such as "previous work" or "remaining changes". Do not
   cite any document as context, including plans, reviews, scratch notes, and

@@ -10,8 +10,9 @@ How to use this template
 - Fill in every applicable section. Delete a section that does not apply rather
   than leaving it empty.
 - Keep the written body under roughly 1500 characters and 30 lines, not
-  counting section headings, the Environment fields, or pasted console output
-  and stack traces. Go over only when the issue is genuinely complex.
+  counting section headings, the Environment fields, or pasted diagnostics such
+  as console output, failed requests, and stack traces. Go over only when the
+  issue is genuinely complex.
 - Link related issues and pull requests by number, for example `#123`. Do not
   use vague pointers such as "previous work" or "remaining changes". Do not
   cite any document as context, including plans, reviews, scratch notes, and
