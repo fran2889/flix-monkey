@@ -11,15 +11,14 @@ How to use this template
   where it is not obvious, why the old behavior was wrong. If it needs more than
   three bullets, consider splitting into two pull requests.
 - Keep the body under roughly 1000 characters and 20 lines.
+- Reference related issues and pull requests by number, for example `#123`. Do
+  not use vague pointers such as "previous work" or "remaining changes". Do not
+  cite any document as context, including plans, reviews, scratch notes, and
+  committed design specs; restate the relevant point in the body.
 - Replace the "Manual:" line with the checks this PR needs, or delete it. Never
   leave a generic "manual testing" placeholder.
 - `npm run audit` must pass at moderate or higher. Fix the dependency rather than
   lowering the level.
-
-Reference related issues and pull requests by number, for example `#123`. Do
-not use vague pointers such as "previous work" or "remaining changes", and do
-not cite a temporary or local document (a plan, a review, scratch notes) as
-context; restate the relevant point in the body.
 
 Use `Resolves #123` or `Resolves #123, #456` for closing links. If no related
 issue exists, omit the line and say what the PR implements in Summary.
