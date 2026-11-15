@@ -16,6 +16,11 @@ How to use this template
 - `npm run audit` must pass at moderate or higher. Fix the dependency rather than
   lowering the level.
 
+Reference related issues and pull requests by number, for example `#123`. Do
+not use vague pointers such as "previous work" or "remaining changes", and do
+not cite a temporary or local document (a plan, a review, scratch notes) as
+context; restate the relevant point in the body.
+
 Use `Resolves #123` or `Resolves #123, #456` for closing links. If no related
 issue exists, omit the line and say what the PR implements in Summary.
 

@@ -9,13 +9,19 @@ How to use this template
 
 - Fill in every applicable section. Delete a section that does not apply rather
   than leaving it empty.
+- Keep the prose under roughly 1500 characters and 30 lines. Go over only when
+  the issue is genuinely complex. Pasted console output, reports, and stack
+  traces do not count toward the cap.
+- Link related issues and pull requests by number, for example `#123`. Do not
+  use vague pointers such as "previous work" or "remaining changes", and do not
+  cite a temporary or local document (a plan, a review, scratch notes) as
+  context. Restate the relevant point in the body.
 - Steps to Reproduce must start from a fresh page load.
 - Environment: fill in both Service and Target even when the bug looks unrelated.
 - Version is the extension version, or the userscript version for the userscript
   target. If the bug reproduces on more than one target, say so.
 - Console and Network Errors: paste the relevant console output and failed
   requests.
-- Cite related issues inline, if any.
 -->
 
 ## Description

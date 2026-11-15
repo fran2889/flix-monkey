@@ -93,7 +93,7 @@ Apply these rules when adding or moving code; do not reorder untouched code to s
 
 ## GitHub
 
-Issue and PR body shape is defined by the templates in [`.github/`](.github/), not by this file. Read the relevant template and follow its HTML comment. `gh pr create` does not apply the template; pass a filled copy with `--body-file`.
+Issue and PR body rules, including how to reference related work and the soft size limit, come from the templates in [`.github/`](.github/), not from this file. Read the relevant template and follow its HTML comment. Neither `gh pr create` nor `gh issue create` applies its template; pass a filled copy with `--body-file`.
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
