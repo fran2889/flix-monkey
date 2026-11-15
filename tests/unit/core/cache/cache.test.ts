@@ -28,6 +28,11 @@ function buildMemoryAdapter(): { adapter: MockPlatformAdapter; store: Map<string
                 store.set(key, value);
             })
         )
+        .withStorageSetManyResolvingTo(
+            vi.fn(async (values: Record<string, string>) => {
+                for (const [key, value] of Object.entries(values)) store.set(key, value);
+            })
+        )
         .withStorageDeleteResolvingTo(
             vi.fn(async (key: string) => {
                 store.delete(key);
@@ -547,11 +552,15 @@ describe('CacheManager', () => {
         }
 
         it('keeps the display title and cached IMDb ID but removes rating data', async () => {
-            const { store, manager } = buildManager();
+            const { adapter: memoryAdapter, store, manager } = buildManager();
             await writeRatedTitle(manager, 'Kept Movie', 'tt123');
+            memoryAdapter.storageSet.mockClear();
 
             await manager.clear();
 
+            expect(memoryAdapter.storageSet).not.toHaveBeenCalled();
+            expect(memoryAdapter.storageSetMany).toHaveBeenCalledOnce();
+            expect(memoryAdapter.storageSetMany).toHaveBeenCalledWith({ 'fmc:kept_movie': expect.any(String) });
             expect(store.has('fmc:kept_movie')).toBe(true);
             const entry = JSON.parse(store.get('fmc:kept_movie') as string);
             expect(entry).toMatchObject({ displayTitle: 'Kept Movie', imdbId: 'tt123' });
@@ -601,6 +610,7 @@ describe('CacheManager', () => {
 
             expect(store.size).toBe(0);
             expect(memoryAdapter.storageSet).not.toHaveBeenCalled();
+            expect(memoryAdapter.storageSetMany).not.toHaveBeenCalled();
         });
 
         it('removes corrupt entries instead of failing', async () => {

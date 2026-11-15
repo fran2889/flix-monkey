@@ -123,7 +123,10 @@ export class CacheManager implements CacheStore {
             return;
         }
 
-        const removed = await Promise.all(keys.map(async (key: string) => this.#clearRatings(key)));
+        const updates: Record<string, string> = {};
+        const removed = await Promise.all(keys.map(async (key: string) => this.#clearRatings(key, updates)));
+        if (Object.keys(updates).length > 0) await this.#adapter.storageSetMany(updates);
+
         const removedCount = removed.filter(Boolean).length;
         const keptCount = keys.length - removedCount;
         this.#logger.debug(
@@ -135,9 +138,10 @@ export class CacheManager implements CacheStore {
      * Clears one entry's rating data, keeping its IMDb ID when it has one.
      *
      * @param key - Storage key of the entry.
+     * @param updates - Retained entries to write in one batch after the walk.
      * @returns True when the entry was removed instead of retained.
      */
-    async #clearRatings(key: string): Promise<boolean> {
+    async #clearRatings(key: string, updates: Record<string, string>): Promise<boolean> {
         const raw = await this.#adapter.storageGet(key);
         if (raw === undefined) {
             await this.#adapter.storageDelete(key);
@@ -150,7 +154,7 @@ export class CacheManager implements CacheStore {
                 await this.#adapter.storageDelete(key);
                 return true;
             }
-            await this.#adapter.storageSet(key, JSON.stringify(retained));
+            updates[key] = JSON.stringify(retained);
             return false;
         } catch (error: unknown) {
             if (!(error instanceof ParseError) && !(error instanceof SyntaxError)) throw error;
