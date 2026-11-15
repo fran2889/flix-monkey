@@ -68,7 +68,12 @@ export class CacheEntry {
      */
     withoutRatings(): CacheEntry | undefined {
         if (!this.#imdbId) return undefined;
-        return new CacheEntry(this.#displayTitle, this.#imdbId, emptyTitleData(), undefined);
+        return new CacheEntry(
+            this.#displayTitle,
+            this.#imdbId,
+            new Title({ displayTitle: this.#displayTitle }).toCacheJSON(),
+            undefined
+        );
     }
 
     /**
@@ -108,20 +113,6 @@ function parseCacheEntry(value: unknown): CacheEntry {
         parseTitleData(value['data']),
         optionalNumber(value, 'expires')
     );
-}
-
-function emptyTitleData(): TitleData {
-    return {
-        apiTitle: undefined,
-        imdbId: undefined,
-        year: undefined,
-        imdbRating: undefined,
-        imdbVotes: undefined,
-        rtRating: undefined,
-        mcRating: undefined,
-        source: undefined,
-        type: undefined,
-    };
 }
 
 function parseTitleData(raw: unknown): TitleData {
