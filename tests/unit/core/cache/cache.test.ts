@@ -95,10 +95,14 @@ describe('CacheManager', () => {
         expect(adapter.storageSet).toHaveBeenCalledWith('fmc:test_title', expect.stringContaining('Test Title'));
     });
 
-    it('should clear cache', async () => {
+    it('deletes a listed key that disappeared before it could be read', async () => {
         adapter.storageGetKeys.mockResolvedValue(['fmc:key1']);
+        adapter.storageGet.mockResolvedValue(undefined);
+
         await cacheManager.clear();
+
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:key1');
+        expect(adapter.storageSetMany).not.toHaveBeenCalled();
     });
 
     it('should delete single cache entry', async () => {
