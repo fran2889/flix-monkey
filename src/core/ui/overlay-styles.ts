@@ -195,29 +195,6 @@ function buildIconButtonStyles(overlayClass: string): string {
         `;
 }
 
-function buildIconBadgeStyles(overlayClass: string): string {
-    return `
-            .${overlayClass} .fm-icon-badge {
-                display: none;
-                cursor: pointer;
-                font-size: 0.8em;
-                opacity: 0.8;
-                pointer-events: auto;
-                margin-left: 2px;
-            }
-            .${overlayClass} .fm-icon-badge:hover {
-                opacity: 1;
-            }
-            .${overlayClass} a.fm-icons-visible .fm-icon-badge {
-                display: inline;
-            }
-            .${overlayClass}.fm-top-right a .fm-icon-badge,
-            .${overlayClass}.fm-bottom-right a .fm-icon-badge {
-                order: -1;
-            }
-        `;
-}
-
 function buildRatingBadgeStyles(overlayClass: string): string {
     return `
             .${overlayClass} .fm-rating-badge {
@@ -273,6 +250,5 @@ export function buildOverlayStyles({
         buildRatingBadgeStyles(overlayClass),
         buildActionsStyles(overlayClass),
         buildIconButtonStyles(overlayClass),
-        buildIconBadgeStyles(overlayClass),
     ].join('');
 }

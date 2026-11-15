@@ -15,8 +15,8 @@ import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
 import { Logger } from '../../../src/core/logger';
 import { type OverlayInteraction, OverlayRenderer } from '../../../src/core/overlay';
-import { NetflixService } from '../../../src/core/services/index';
-import { NetflixSurfaceManager, SurfaceManager } from '../../../src/core/surfaces/index';
+import { DisneyPlusService, HboMaxService, NetflixService } from '../../../src/core/services/index';
+import { NETFLIX_SURFACES, SurfaceManager } from '../../../src/core/surfaces/index';
 import type { Title } from '../../../src/core/title';
 import { buildMockAdapter } from '../../mocks/adapter';
 import { buildLogger } from '../../mocks/logger';
@@ -30,7 +30,7 @@ function buildAppDependencies(): {
     fadeManager: FadeManager;
     overrideManager: IdOverrideManager;
     renderer: OverlayRenderer;
-    surfaces: NetflixSurfaceManager;
+    surfaces: SurfaceManager;
     api: ApiClientManager;
 } {
     const adapter = buildMockAdapter().build();
@@ -47,7 +47,7 @@ function buildAppDependencies(): {
         fadeManager: new FadeManager(adapter, config),
         overrideManager,
         renderer: new OverlayRenderer(config),
-        surfaces: new NetflixSurfaceManager(logger),
+        surfaces: new SurfaceManager(logger, NETFLIX_SURFACES),
         api: new ApiClientManager(logger, cache, disabledManager, client),
     };
 }
@@ -122,10 +122,10 @@ describe('App', () => {
             <a aria-label="Movie Title"></a>
         </div>
     `;
-        const surfaces = new NetflixSurfaceManager(buildLogger().build());
+        const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
-        expect(results[0].title).toBe('Movie Title');
+        expect(results[0]?.title).toBe('Movie Title');
     });
 
     it('should deduplicate in-flight requests for the same title', async () => {
@@ -415,6 +415,43 @@ describe('App', () => {
             expect(result).toBeInstanceOf(FlixMonkeyApp);
             expect(typeof result.redecorate).toBe('function');
         }
+    });
+
+    describe.each([
+        [
+            'Netflix',
+            NetflixService,
+            '<div class="title-card"><a aria-label="Netflix Title"></a></div>',
+            'Netflix Title',
+        ],
+        [
+            'HBO Max',
+            HboMaxService,
+            '<div><a data-testid="id_tile" data-sonic-type="movie" aria-label="HBO Title. 1 of 20."></a></div>',
+            'HBO Title',
+        ],
+        [
+            'Disney+',
+            DisneyPlusService,
+            '<div><a data-testid="set-item" data-item-id="1" href="/browse/entity-1" aria-label="Disney Title Select for details on this title."></a></div>',
+            'Disney Title',
+        ],
+    ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
+        it('should discover titles with the detected service surface definitions', async () => {
+            document.body.innerHTML = html;
+            const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+            vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
+            const getDataSpy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle(expectedTitle).build());
+
+            appRef = startApp(buildMockAdapter().build());
+
+            await vi.waitFor(() => {
+                if (getDataSpy.mock.calls.length === 0) throw new Error('Title not discovered');
+            });
+            expect(getDataSpy).toHaveBeenCalledWith(expectedTitle);
+        });
     });
 
     it('should catch and log errors thrown in the mutation handler', () => {
@@ -749,6 +786,7 @@ describe('App', () => {
         `;
         const storageGet = vi.fn().mockResolvedValue(undefined);
         const storageSet = vi.fn().mockResolvedValue(undefined);
+        const storageDelete = vi.fn().mockResolvedValue(undefined);
         const adapter = buildMockAdapter()
             .withConfigGetReturning((key: string) => {
                 if (key === 'enableFadeToggle') return true;
@@ -757,6 +795,7 @@ describe('App', () => {
             })
             .withStorageGetResolvingTo(storageGet)
             .withStorageSetResolvingTo(storageSet)
+            .withStorageDeleteResolvingTo(storageDelete)
             .build();
         vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
             buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
@@ -768,14 +807,39 @@ describe('App', () => {
             if (!modal?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
         });
         const toggle = modal?.querySelector('.fm-fade-toggle') as HTMLElement | null;
-        expect(toggle?.dataset.state).toBe('auto');
-        toggle?.click();
-        await vi.waitFor(() => {
-            if (toggle?.dataset.state !== 'always') throw new Error('State not updated');
-        });
+        if (!toggle) throw new Error('Toggle missing');
+        const icon = toggle.querySelector('.fm-fade-toggle-icon');
+        if (!icon) throw new Error('Toggle icon missing');
+        const card = document.querySelector('.title-card');
+        if (!(card instanceof HTMLElement)) throw new Error('Title card missing');
+        const waitForState = (expected: string): Promise<void> =>
+            vi.waitFor(() => {
+                if (toggle.dataset.state !== expected) throw new Error('State not updated');
+            });
+        expect(toggle.dataset.state).toBe('auto');
+        expect(toggle.title).toBe('Fade: Auto');
+        expect(icon.textContent).toBe('⭐');
+
+        toggle.click();
+        await waitForState('always');
+        expect(toggle.title).toBe('Fade: Always');
+        expect(icon.textContent).toBe('👁️');
+        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
         expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
-        const card = document.querySelector('.title-card') as HTMLElement | null;
-        expect(card?.classList.contains('fm-faded')).toBe(true);
+        expect(card.classList.contains('fm-faded')).toBe(true);
+
+        toggle.click();
+        await waitForState('never');
+        expect(toggle.title).toBe('Fade: Never');
+        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
+        expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'never');
+        expect(card.classList.contains('fm-faded')).toBe(false);
+
+        toggle.click();
+        await waitForState('auto');
+        expect(toggle.title).toBe('Fade: Auto');
+        expect(icon.textContent).toBe('⭐');
+        expect(storageDelete).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'));
     });
 
     it('should return undefined when ServiceRegistry.detect finds no service', async () => {
@@ -794,7 +858,7 @@ describe('App', () => {
         let fadeManager: FadeManager;
         let overrideManager: IdOverrideManager;
         let renderer: OverlayRenderer;
-        let surfaces: NetflixSurfaceManager;
+        let surfaces: SurfaceManager;
         let api: ApiClientManager;
 
         /**
@@ -829,11 +893,15 @@ describe('App', () => {
             const app = new FlixMonkeyApp(appLogger, cache, fadeManager, overrideManager, renderer, surfaces, api);
             app.init();
 
+            const { injectOverlay } = mockRenderer;
+            // Narrow the Record index (noUncheckedIndexedAccess) before using the spy.
+            if (injectOverlay === undefined) throw new Error('injectOverlay spy is not configured');
             await vi.waitFor(() => {
-                if (mockRenderer.injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
+                if (injectOverlay.mock.calls.length === 0) throw new Error('overlay not injected');
             });
-            const calls = mockRenderer.injectOverlay.mock.calls[0];
-            const [, , interaction] = calls as [HTMLElement, Title, OverlayInteraction];
+            const [firstCall] = injectOverlay.mock.calls;
+            if (firstCall === undefined) throw new Error('injectOverlay was not called');
+            const [, , interaction] = firstCall as [HTMLElement, Title, OverlayInteraction];
             return {
                 onEditClick: interaction.onEditClick as (_displayTitle: string) => Promise<void>,
                 onRefreshClick: interaction.onRefreshClick as (_displayTitle: string) => Promise<void>,

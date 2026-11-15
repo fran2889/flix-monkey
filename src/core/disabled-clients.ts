@@ -22,7 +22,7 @@ export class DisabledClientsManager {
      * @returns True if the source is currently disabled (lockout active), false otherwise.
      */
     async isDisabled(source: ApiSourceType): Promise<boolean> {
-        const key = `fm_disabled_${source}`;
+        const key = this.#key(source);
         const val = await this.#adapter.storageGet(key);
         const disabledUntil = Number.parseInt(typeof val === 'string' ? val : '0', 10);
         if (disabledUntil === 0) return false;
@@ -33,6 +33,10 @@ export class DisabledClientsManager {
         return true;
     }
 
+    #key(source: ApiSourceType): string {
+        return `fm_disabled_${source}`;
+    }
+
     /**
      * Disables an API client for the specified duration to prevent redundant requests after failures.
      *
@@ -41,26 +45,25 @@ export class DisabledClientsManager {
      */
     async disable(source: ApiSourceType, durationMs: number): Promise<void> {
         const until = Date.now() + durationMs;
-        await this.#adapter.storageSet(`fm_disabled_${source}`, until.toString());
+        await this.#adapter.storageSet(this.#key(source), until.toString());
     }
 
     /**
      * Clears all client lockouts and returns list of sources that were previously disabled.
      *
+     * Sources are checked and reset sequentially in `ApiSource` order, so the
+     * returned list is deterministic and a storage failure rejects immediately.
+     *
      * @returns Array of API source identifiers that were disabled and have been reset.
      */
     async resetAll(): Promise<ApiSourceType[]> {
-        const sources = Object.values(ApiSource) as ApiSourceType[];
         const disabled: ApiSourceType[] = [];
-        await Promise.all(
-            sources.map(async source => {
-                const isDisabled = await this.isDisabled(source);
-                if (isDisabled) {
-                    disabled.push(source);
-                    await this.#adapter.storageSet(`fm_disabled_${source}`, '0');
-                }
-            })
-        );
+        for (const source of Object.values(ApiSource)) {
+            if (await this.isDisabled(source)) {
+                disabled.push(source);
+                await this.#adapter.storageSet(this.#key(source), '0');
+            }
+        }
         return disabled;
     }
 }

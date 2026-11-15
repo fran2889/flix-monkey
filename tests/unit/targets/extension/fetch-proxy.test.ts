@@ -29,7 +29,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage('https://evil.example.com/?steal=1', { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'Domain not allowed' });
+        expect(result).toEqual({ ok: false, error: 'Domain not allowed' });
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -38,7 +38,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage('not a url', { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'Invalid URL' });
+        expect(result).toEqual({ ok: false, error: 'Invalid URL' });
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -47,7 +47,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
-        expect(result).toEqual({ data: { Title: 'The Matrix' } });
+        expect(result).toEqual({ ok: true, data: { Title: 'The Matrix' } });
     });
 
     it('returns text for a successful response when responseType is text', async () => {
@@ -55,7 +55,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'text' });
 
-        expect(result).toEqual({ data: 'plain body' });
+        expect(result).toEqual({ ok: true, data: 'plain body' });
     });
 
     it('reports an HTTP error with the status and truncated body', async () => {
@@ -69,6 +69,7 @@ describe('handleFetchMessage', () => {
 
         expect('error' in result).toBe(true);
         if (!('error' in result)) throw new Error('expected an error response');
+        expect(result.ok).toBe(false);
         expect(result.error).toBe('HTTP 401');
         expect(result.status).toBe(401);
         expect(result.body).toHaveLength(200);
@@ -79,7 +80,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'HTTP 500', status: 500, body: undefined });
+        expect(result).toEqual({ ok: false, error: 'HTTP 500', status: 500, body: undefined });
     });
 
     it('omits the body when reading the error body rejects', async () => {
@@ -91,7 +92,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'HTTP 502', status: 502, body: undefined });
+        expect(result).toEqual({ ok: false, error: 'HTTP 502', status: 502, body: undefined });
     });
 
     it('returns the message of a thrown Error', async () => {
@@ -99,7 +100,7 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'network down' });
+        expect(result).toEqual({ ok: false, error: 'network down' });
     });
 
     it('stringifies a non-Error rejection', async () => {
@@ -107,6 +108,6 @@ describe('handleFetchMessage', () => {
 
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
-        expect(result).toEqual({ error: 'offline' });
+        expect(result).toEqual({ ok: false, error: 'offline' });
     });
 });

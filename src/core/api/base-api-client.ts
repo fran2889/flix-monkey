@@ -10,7 +10,8 @@ import type { DisabledClientsManager } from '../disabled-clients';
 import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import { ParseError } from '../parse-utils';
-import type { RequestQueue } from '../request-queue';
+import { PROVIDER_RATE_LIMITS } from '../rate-limits';
+import { RequestQueue } from '../request-queue';
 import { Title } from '../title';
 
 /**
@@ -73,13 +74,14 @@ export abstract class BaseApiClient implements ApiClient {
     readonly #logger: Logger;
     readonly #overrideManager: IdOverrideManager;
 
-    constructor(deps: ApiClientDeps, queue: RequestQueue, source: ApiSourceType) {
+    constructor(deps: ApiClientDeps, source: ApiSourceType, queue?: RequestQueue) {
+        const { minIntervalMs, syncKey } = PROVIDER_RATE_LIMITS[source];
         this.#adapter = deps.adapter;
         this.#config = deps.config;
         this.#disabledManager = deps.disabledManager;
         this.#logger = deps.logger;
         this.#overrideManager = deps.overrideManager;
-        this.#queue = queue;
+        this.#queue = queue ?? new RequestQueue(deps.adapter, deps.logger, minIntervalMs, syncKey);
         this.#source = source;
     }
 
@@ -99,22 +101,16 @@ export abstract class BaseApiClient implements ApiClient {
         const overrideId = await this.#overrideManager.getImdbId(displayTitle);
         if (overrideId) {
             this.#logger.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
-            const searchTitle = new Title({
-                displayTitle,
-                imdbId: overrideId,
-            });
-            const detailedTitle = await this.getDetails(searchTitle);
+        }
+
+        const resolvedId = overrideId ?? imdbId;
+        if (resolvedId) {
+            const minimalTitle = new Title({ displayTitle, imdbId: resolvedId });
+            const detailedTitle = await this.getDetails(minimalTitle);
             if (detailedTitle) {
                 return detailedTitle.withSource(this.#source);
             }
-            return searchTitle.withSource(this.#source);
-        }
-
-        if (imdbId) {
-            const minimalTitle = new Title({ displayTitle, imdbId });
-            const detailedTitle = await this.getDetails(minimalTitle);
-            if (!detailedTitle) return undefined;
-            return detailedTitle.withSource(this.#source);
+            return overrideId ? minimalTitle.withSource(this.#source) : undefined;
         }
 
         const searchTitle = await this.search(displayTitle);
