@@ -217,9 +217,8 @@ describe('SettingsUI', () => {
     });
 
     describe('Cache clearing', () => {
-        it('keeps cached IMDb IDs by default', async () => {
+        it('keeps cached IMDb IDs when Clear Cache is clicked', async () => {
             await settingsUI.render(container);
-            expect((container.querySelector('#fm-clearCacheIds') as HTMLInputElement).checked).toBe(false);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
             await new Promise(resolve => setTimeout(resolve, 0));
@@ -229,11 +228,10 @@ describe('SettingsUI', () => {
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
 
-        it('clears cached IMDb IDs when Clear IDs is checked', async () => {
+        it('clears cached IMDb IDs when Clear Cache + IDs is clicked', async () => {
             await settingsUI.render(container);
-            (container.querySelector('#fm-clearCacheIds') as HTMLInputElement).checked = true;
 
-            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+            (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
             await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(mockCacheManager.clear).toHaveBeenCalledWith(true);

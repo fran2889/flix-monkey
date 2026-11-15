@@ -260,6 +260,8 @@ export class SettingsView {
         btn.addEventListener('click', () => {
             if (field.key === 'clearCache') {
                 void this.#actions.onClearCache();
+            } else if (field.key === 'clearCacheWithIds') {
+                void this.#actions.onClearCacheWithIds();
             } else if (field.key === 'resetClients') {
                 void this.#actions.onResetClients();
             }

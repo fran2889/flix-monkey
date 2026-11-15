@@ -407,7 +407,7 @@ export const SETTINGS_STYLES: string = `/* =====================================
 .fm-settings-container .field--actions .action-btn {
     grid-column: 2;
     justify-self: start;
-    width: var(--btn-action-width);
+    min-width: var(--btn-action-width);
 }
 
 /* =============================================
@@ -460,7 +460,7 @@ export const SETTINGS_STYLES: string = `/* =====================================
     .fm-settings-container .field--actions .action-btn {
         grid-column: 2;
         justify-self: start;
-        width: var(--btn-action-width);
+        min-width: var(--btn-action-width);
         min-block-size: var(--touch-target-min);
     }
 }

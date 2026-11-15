@@ -20,6 +20,7 @@ describe('SettingsView', () => {
     let actions: {
         onSave: () => void;
         onClearCache: () => void;
+        onClearCacheWithIds: () => void;
         onResetClients: () => void;
     };
     let container: HTMLDivElement;
@@ -29,6 +30,7 @@ describe('SettingsView', () => {
         actions = {
             onSave: vi.fn(),
             onClearCache: vi.fn(),
+            onClearCacheWithIds: vi.fn(),
             onResetClients: vi.fn(),
         };
         container = document.createElement('div');
@@ -45,6 +47,7 @@ describe('SettingsView', () => {
         const localView = new SettingsView(fields, {
             onSave: vi.fn(),
             onClearCache: vi.fn(),
+            onClearCacheWithIds: vi.fn(),
             onResetClients: vi.fn(),
         });
         const localContainer = document.createElement('div');
@@ -188,6 +191,7 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             expect(container.querySelector('#fm-clearCache')).not.toBeNull();
+            expect(container.querySelector('#fm-clearCacheWithIds')).not.toBeNull();
             expect(container.querySelector('#fm-resetClients')).not.toBeNull();
             expect(container.querySelector('#fm-status')).not.toBeNull();
         });
@@ -346,9 +350,11 @@ describe('SettingsView', () => {
             view.render(container, {});
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+            (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
 
             expect(actions.onClearCache).toHaveBeenCalledOnce();
+            expect(actions.onClearCacheWithIds).toHaveBeenCalledOnce();
             expect(actions.onResetClients).toHaveBeenCalledOnce();
         });
     });
