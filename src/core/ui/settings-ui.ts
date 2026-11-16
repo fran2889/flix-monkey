@@ -43,6 +43,7 @@ export class SettingsUI {
         this.#view = new SettingsView(fields, {
             onSave: async (): Promise<void> => this.save(),
             onClearCache: async (): Promise<void> => this.#clearCache(),
+            onClearCacheWithIds: async (): Promise<void> => this.#clearCacheWithIds(),
             onResetClients: async (): Promise<void> => this.#resetClients(),
         });
     }
@@ -76,9 +77,20 @@ export class SettingsUI {
     }
 
     async #clearCache(): Promise<void> {
+        await this.#clearCacheEntries(false);
+    }
+
+    async #clearCacheWithIds(): Promise<void> {
+        await this.#clearCacheEntries(true);
+    }
+
+    async #clearCacheEntries(clearIds: boolean): Promise<void> {
         try {
-            await this.#cacheManager.clear();
-            this.#view.showStatus('Cache cleared.', 'success');
+            await this.#cacheManager.clear(clearIds);
+            this.#view.showStatus(
+                clearIds ? 'Cache and cached IMDb IDs cleared.' : 'Cache cleared. IMDb IDs kept.',
+                'success'
+            );
         } catch (err) {
             this.#view.showStatus(`Error: ${toErrorMessage(err)}`, 'error');
         }

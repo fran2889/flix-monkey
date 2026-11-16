@@ -300,6 +300,13 @@ export const CONFIG_FIELDS = [
         actionLabel: 'Clear Cache',
     },
     {
+        key: 'clearCacheWithIds',
+        type: 'action',
+        group: 'debug',
+        label: '',
+        actionLabel: 'Clear Cache + IDs',
+    },
+    {
         key: 'resetClients',
         type: 'action',
         group: 'debug',

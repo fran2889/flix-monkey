@@ -24,5 +24,6 @@ export type FetchProxyResponse =
 export interface SettingsActions {
     onSave: () => void | Promise<void>;
     onClearCache: () => void | Promise<void>;
+    onClearCacheWithIds: () => void | Promise<void>;
     onResetClients: () => void | Promise<void>;
 }
