@@ -24,6 +24,8 @@ How to use this template
   not progress checklists, and a closed issue with unchecked boxes misreports
   its state. Keep them implementation-agnostic: say what must be true, not
   which file changes.
+- Do not add a requirement that a CI command passes. CI already enforces the
+  merge gates; put command output and test notes in the pull request.
 - Open Questions is for decisions you want input on before work starts.
 -->
 
