@@ -19,9 +19,11 @@ How to use this template
   Do not restate the title.
 - Scope is optional: name the service(s) and target(s) when the request is
   specific to them. Delete the section otherwise.
-- Requirements are acceptance criteria, one per bullet, phrased so each can be
-  checked. Keep them implementation-agnostic: say what must be true, not which
-  file changes.
+- Requirements are acceptance criteria, one per plain `-` bullet, phrased so
+  each can be verified. Never use a task list (`- [ ]` or `- [x]`): issues are
+  not progress checklists, and a closed issue with unchecked boxes misreports
+  its state. Keep them implementation-agnostic: say what must be true, not
+  which file changes.
 - Open Questions is for decisions you want input on before work starts.
 -->
 
