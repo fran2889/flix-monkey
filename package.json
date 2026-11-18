@@ -32,7 +32,7 @@
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run -c vitest.integration.config.js",
         "test:coverage": "vitest run tests/unit tests/ui --coverage",
-        "audit": "npm audit --audit-level=moderate",
+        "audit": "npm audit --omit=dev --audit-level=moderate",
         "audit:fix": "npm audit fix --force-will-break-dependencies=false"
     },
     "devDependencies": {
