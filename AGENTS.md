@@ -16,6 +16,7 @@ Stack: TypeScript (ES2022, ESM), Node.js 24.x, Rollup, ESLint, Prettier, Vitest 
 - Test: `npm test`
 - Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
 - Lint workflows: `actionlint` 1.7.12, installed separately; run it from the repo root. CI runs it through `raven-actions/actionlint`
+- Check doc links: `lychee --config .lychee.toml README.md CONTRIBUTING.md AGENTS.md docs .github` (lychee 0.24+, installed separately); run it from the repo root. CI runs it through `lycheeverse/lychee-action`
 - Lint the Firefox extension: `npm run build:firefox && npm run lint:firefox`
 
 Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
@@ -97,7 +98,7 @@ Issue and PR body rules, including how to reference related work and the soft si
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
-- CI enforces six merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, and actionlint), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
+- CI enforces seven merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, and actionlint), doc-links (offline file and anchor checks), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
 ### Releases
