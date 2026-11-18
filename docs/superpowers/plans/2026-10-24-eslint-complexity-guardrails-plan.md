@@ -276,7 +276,7 @@ git add eslint.config.js src/core/app.ts
 git commit -m "build: enforce a four-parameter limit"
 ```
 
-Then push and open the PR with `.github/pull_request_template.md` filled in. Title: `build: enforce a four-parameter limit`.
+Then push and open the PR with `.github/PULL_REQUEST_TEMPLATE.md` filled in. Title: `build: enforce a four-parameter limit`.
 
 ---
 
@@ -599,7 +599,7 @@ git add eslint.config.js
 git commit -m "build: enforce complexity limits"
 ```
 
-Push and open the PR with `.github/pull_request_template.md` filled in. Title: `build: enforce complexity limits`.
+Push and open the PR with `.github/PULL_REQUEST_TEMPLATE.md` filled in. Title: `build: enforce complexity limits`.
 
 ---
 
