@@ -32,7 +32,7 @@
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run -c vitest.integration.config.js",
         "test:coverage": "vitest run tests/unit tests/ui --coverage",
-        "audit": "npm audit --audit-level=moderate",
+        "audit": "better-npm-audit audit --level moderate --require-notes --require-expiry",
         "audit:fix": "npm audit fix --force-will-break-dependencies=false"
     },
     "devDependencies": {
@@ -51,6 +51,7 @@
         "@violentmonkey/types": "^0.3.5",
         "@vitest/coverage-v8": "^5.1.0",
         "archiver": "^8.0.0",
+        "better-npm-audit": "4.2.1",
         "chrome-webstore-upload-cli": "^4.0.2",
         "dotenv": "^18.0.10",
         "eslint": "^10.14.0",
