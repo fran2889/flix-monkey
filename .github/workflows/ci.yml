@@ -54,7 +54,7 @@ jobs:
               with:
                   args: >-
                       --config .lychee.toml
-                      README.md CONTRIBUTING.md AGENTS.md docs .github
+                      '*.md' docs .github
                   fail: true
 
     build:

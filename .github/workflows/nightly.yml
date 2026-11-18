@@ -28,7 +28,7 @@ jobs:
                   XMDB_API_KEY: ${{ secrets.XMDB_API_KEY }}
                   OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
 
-    check-external-links:
+    external-doc-links:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
@@ -41,5 +41,5 @@ jobs:
                   args: >-
                       --config .lychee.toml
                       --offline=false
-                      README.md CONTRIBUTING.md AGENTS.md docs .github
+                      '*.md' docs .github
                   fail: true
