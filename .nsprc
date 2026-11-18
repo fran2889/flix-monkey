@@ -1,0 +1,4 @@
+'GHSA-fc5q-39xc-vjpf':
+    active: true
+    notes: 'picomatch ReDoS in <=4.0.7; no patched release yet. Refs #311.'
+    expiry: '2026-12-02T23:59:59Z'
