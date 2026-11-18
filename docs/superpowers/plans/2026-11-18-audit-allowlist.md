@@ -72,7 +72,7 @@ git commit -m "docs: add the audit allowlist implementation plan"
 
 Expected: one commit containing only this file (plus nothing from `docs/reviews/`).
 
-- [ ] **Step 2: Install the exact pin**
+- [x] **Step 2: Install the exact pin**
 
 ```bash
 npm_config_engine_strict=false npm install --save-dev --save-exact better-npm-audit@4.2.1
@@ -80,7 +80,7 @@ npm_config_engine_strict=false npm install --save-dev --save-exact better-npm-au
 
 Expected: `package.json` gains `"better-npm-audit": "4.2.1"` under `devDependencies`. `git diff package.json` shows only that line. If npm rewrote unrelated lines, restore them with `git checkout -- package.json` and re-apply only the dependency line by hand.
 
-- [ ] **Step 3: Verify the pin**
+- [x] **Step 3: Verify the pin**
 
 ```bash
 node -p "require('./package.json').devDependencies['better-npm-audit']"
@@ -89,7 +89,7 @@ npm ls better-npm-audit --depth=0
 
 Expected: `4.2.1`, then `better-npm-audit@4.2.1`.
 
-- [ ] **Step 4: Point the script at the tool**
+- [x] **Step 4: Point the script at the tool**
 
 Replace exactly this line in `package.json`:
 
@@ -100,7 +100,7 @@ Replace exactly this line in `package.json`:
 
 Leave `audit:fix` untouched. The explicit `--level moderate` matters: the tool defaults to `info`.
 
-- [ ] **Step 5: Run it and confirm the gate is live (RED)**
+- [x] **Step 5: Run it and confirm the gate is live (RED)**
 
 ```bash
 npm run audit; echo "exit=$?"
@@ -110,7 +110,7 @@ Expected: `exit=1` and `1 vulnerabilities found. Node security advisories: 12477
 
 `1` is the right number, not 19: the tool reports root advisories, and only `picomatch` carries the advisory object; the other 18 packages reach it through string `via` entries that the tool deliberately skips. If this run reports **no** vulnerability, stop and report: the gate is not seeing the tree the design assumed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json
