@@ -131,7 +131,7 @@ git commit -m "build: run dependency audits through better-npm-audit"
 - Consumes: `npm run audit` from Task 1.
 - Produces: `.nsprc` with exactly one key, `GHSA-fc5q-39xc-vjpf`, `active: true`, notes, `expiry: '2026-12-02T23:59:59Z'`.
 
-- [ ] **Step 1: Create `.nsprc` with exactly this content**
+- [x] **Step 1: Create `.nsprc` with exactly this content**
 
 ```yaml
 'GHSA-fc5q-39xc-vjpf':
@@ -142,7 +142,7 @@ git commit -m "build: run dependency audits through better-npm-audit"
 
 Four-space indent to match the repo's YAML. The key matches `npm audit`'s advisory URL (`https://github.com/advisories/GHSA-fc5q-39xc-vjpf`) by suffix, which is how the tool resolves GHSA keys.
 
-- [ ] **Step 2: Green**
+- [x] **Step 2: Green**
 
 ```bash
 npm run audit; echo "exit=$?"
@@ -150,7 +150,7 @@ npm run audit; echo "exit=$?"
 
 Expected: `exit=0`, an exception table row for `GHSA-fc5q-39xc-vjpf` with status `active` and expiry `Wed, 02 Dec 2026 23:59:59 GMT`, and the final line `🤝  All good!`.
 
-- [ ] **Step 3: Assert it mechanically, not by eye**
+- [x] **Step 3: Assert it mechanically, not by eye**
 
 ```bash
 npx better-npm-audit audit --level moderate --require-notes --require-expiry --json 2>/dev/null | node -e "
@@ -160,7 +160,7 @@ console.log(JSON.stringify({passed:j.passed,unhandled:j.unhandledIds,unused:j.un
 
 Expected exactly: `{"passed":true,"unhandled":[],"unused":[],"total":1,"excepted":[true]}`. `total:1` is correct: the tool reports only the root advisory; the other 18 are derived chains.
 
-- [ ] **Step 4: Confirm nothing is hidden from npm itself**
+- [x] **Step 4: Confirm nothing is hidden from npm itself**
 
 ```bash
 npm audit --json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);console.log(Object.keys(j.vulnerabilities).length)})"
@@ -168,7 +168,7 @@ npm audit --json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d
 
 Expected: `19`. The exception is policy, not data removal.
 
-- [ ] **Step 5: Snapshot before mutating**
+- [x] **Step 5: Snapshot before mutating**
 
 ```bash
 cp .nsprc /tmp/opencode/nsprc.bak
@@ -176,7 +176,7 @@ cp .nsprc /tmp/opencode/nsprc.bak
 
 Each remaining step edits `.nsprc`, runs the audit, then restores with `cp /tmp/opencode/nsprc.bak .nsprc`.
 
-- [ ] **Step 6: An expired exception must not apply**
+- [x] **Step 6: An expired exception must not apply**
 
 Set `expiry: '2026-11-01T00:00:00Z'`, then:
 
@@ -186,25 +186,25 @@ npm run audit; echo "exit=$?"
 
 Expected: `exit=1`, status `expired` in the exception table, and `1 vulnerabilities found. Node security advisories: 1247710`. Restore.
 
-- [ ] **Step 7: Missing notes must fail**
+- [x] **Step 7: Missing notes must fail**
 
 Delete the `notes:` line, then run the same command.
 
 Expected: `exit=1` and `Exclusion GHSA-fc5q-39xc-vjpf in .nsprc is missing notes`. Restore.
 
-- [ ] **Step 8: Missing expiry must fail**
+- [x] **Step 8: Missing expiry must fail**
 
 Delete the `expiry:` line, then run the same command.
 
 Expected: `exit=1` and `Exclusion GHSA-fc5q-39xc-vjpf in .nsprc is missing an expiry date`. Restore.
 
-- [ ] **Step 9: A wrong key must not silently suppress**
+- [x] **Step 9: A wrong key must not silently suppress**
 
 Change the key to `'GHSA-0000-0000-0000'`, then run the same command.
 
 Expected: `exit=1`, `1 vulnerabilities found. Node security advisories: 1247710`, and an unused-exception warning naming `GHSA-0000-0000-0000`. Restore.
 
-- [ ] **Step 10: Confirm the restored file is byte-identical and green**
+- [x] **Step 10: Confirm the restored file is byte-identical and green**
 
 ```bash
 diff .nsprc /tmp/opencode/nsprc.bak && npm run audit; echo "exit=$?"
@@ -212,7 +212,7 @@ diff .nsprc /tmp/opencode/nsprc.bak && npm run audit; echo "exit=$?"
 
 Expected: no `diff` output, then `exit=0`.
 
-- [ ] **Step 11: Confirm lint and format ignore the new file**
+- [x] **Step 11: Confirm lint and format ignore the new file**
 
 ```bash
 npm run format:check && npm run lint
@@ -220,7 +220,7 @@ npm run format:check && npm run lint
 
 Expected: both pass. `.nsprc` matches none of the Prettier/ESLint globs, so no config change is needed.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add .nsprc
