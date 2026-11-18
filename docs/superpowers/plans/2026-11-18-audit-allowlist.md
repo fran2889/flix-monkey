@@ -237,7 +237,7 @@ git commit -m "build: except the picomatch advisory until 2 December 2026"
 
 - Consumes: `npm run audit` and `.nsprc` from Task 2.
 
-- [ ] **Step 1: Prove the CI install path**
+- [x] **Step 1: Prove the CI install path**
 
 ```bash
 npm_config_engine_strict=false npm ci --ignore-scripts
@@ -246,7 +246,7 @@ npm run audit; echo "exit=$?"
 
 Expected: install succeeds; `exit=0`. `npm ci` wipes and rebuilds `node_modules`, so this is the same install CI performs.
 
-- [ ] **Step 2: Run the documented local check**
+- [x] **Step 2: Run the documented local check**
 
 ```bash
 npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage
@@ -254,7 +254,7 @@ npm run type-check && npm run lint && npm run format:check && npm run audit && n
 
 Expected: all pass. This machine runs Node 26 against an `engines: 24.x` project; if a failure is clearly a Node-version mismatch unrelated to this change, record it and let CI on Node 24 decide rather than editing source.
 
-- [ ] **Step 3: Rewrite issue #311's requirements**
+- [x] **Step 3: Rewrite issue #311's requirements**
 
 Save this body to `/tmp/opencode/issue-311.md`:
 
@@ -279,7 +279,7 @@ gh issue edit 311 --body-file /tmp/opencode/issue-311.md
 
 Expected: `https://github.com/fran2889/flix-monkey/issues/311` printed.
 
-- [ ] **Step 4: Push and open the replacement PR**
+- [x] **Step 4: Push and open the replacement PR**
 
 Save this body to `/tmp/opencode/pr-audit-allowlist.md`:
 
@@ -312,7 +312,7 @@ gh pr create --base main --head build/audit-allowlist \
 
 Expected: a new PR URL. Do not use `Resolves #311`: the audit exception, not the dependency, is what this PR adds.
 
-- [ ] **Step 5: Close #312 as superseded**
+- [x] **Step 5: Close #312 as superseded**
 
 ```bash
 gh pr close 312 --comment "Superseded by #<new-number>: the gate keeps auditing dev dependencies through a scoped exception instead of \`--omit=dev\`."
@@ -320,7 +320,7 @@ gh pr close 312 --comment "Superseded by #<new-number>: the gate keeps auditing 
 
 Expected: PR #312 closed with the comment.
 
-- [ ] **Step 6: Confirm CI**
+- [x] **Step 6: Confirm CI**
 
 ```bash
 gh pr checks <new-number>
