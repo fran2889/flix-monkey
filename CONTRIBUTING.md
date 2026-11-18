@@ -85,6 +85,13 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 
     If you changed a workflow, also run `actionlint`.
 
+    If you changed documentation, also run the link check (lychee 0.24+,
+    installed separately):
+
+    ```bash
+    lychee --config .lychee.toml '*.md' docs .github
+    ```
+
     If you changed the Firefox manifest, also run:
 
     ```bash

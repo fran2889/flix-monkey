@@ -27,3 +27,19 @@ jobs:
               env:
                   XMDB_API_KEY: ${{ secrets.XMDB_API_KEY }}
                   OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+
+    external-doc-links:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Check external documentation links
+              uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+              with:
+                  # Override the offline default from .lychee.toml so remote
+                  # URLs are checked once a day instead of on every pull request.
+                  args: >-
+                      --config .lychee.toml
+                      --offline=false
+                      '*.md' docs .github
+                  fail: true
