@@ -18,12 +18,13 @@ How to use this template
   committed design specs; restate the relevant point in the body.
 - Description: say what is missing or wrong today, and why it matters.
   Do not restate the title.
-- Scope is optional: name the service(s), surface(s), and target(s) when the
+- Scope is optional: name the service(s), the surface(s) (browse row, Top 10
+  row, hover preview, search grid, settings panel), and target(s) when the
   request is specific to them. For an internal refactor, name the affected
   modules instead. Delete the section otherwise.
-- Requirements are acceptance criteria, one per plain `-` bullet, phrased so
-  each can be verified. Keep them implementation-agnostic: say what must be
-  true, not which file changes.
+- Requirements are acceptance criteria, one per `-` bullet, never a task list
+  (`- [ ]`). Phrase each so it can be verified, and keep it
+  implementation-agnostic: say what must be true, not which file changes.
 - Do not add a requirement that a CI command passes; CI already enforces the
   merge gates.
 - Open Questions is for decisions you want input on before work starts. Delete
