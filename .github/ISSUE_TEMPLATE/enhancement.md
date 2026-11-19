@@ -5,37 +5,16 @@ labels: enhancement
 ---
 
 <!--
-How to use this template
-
-- Fill in every applicable section. Delete a section that does not apply rather
-  than leaving it empty.
-- Record decisions made after the issue was filed in a comment.
-- Keep the written body under roughly 1500 characters and 30 lines, not
-  counting section headings. Go over only when the issue is genuinely complex.
-- Link related issues and pull requests by number, for example `#123`. Do not
-  use vague pointers such as "previous work" or "remaining changes". Do not
-  cite any document as context, including plans, reviews, scratch notes, and
-  committed design specs; restate the relevant point in the body.
-- Description: say what is missing or wrong today, and why it matters.
-  Do not restate the title.
-- Scope is optional: name the service(s), the surface(s) (browse row, Top 10
-  row, hover preview, search grid, settings panel), and target(s) when the
-  request is specific to them. For an internal refactor, name the affected
-  modules instead. Delete the section otherwise.
-- Requirements are acceptance criteria, one per `-` bullet, never a task list
-  (`- [ ]`). Phrase each so it can be verified, and keep it
-  implementation-agnostic: say what must be true, not which file changes.
-- Do not add a requirement that a CI command passes; CI already enforces the
-  merge gates.
-- Open Questions is for decisions you want input on before work starts. Delete
-  the section when there are none.
+Shared body rules: CONTRIBUTING.md § Issue and PR bodies.
+What is missing or wrong today, and why does it matter? Do not restate the title.
+Requirements are verifiable `-` bullets: what must be true, not which file changes.
+Delete Scope unless the request is specific to a service, surface, or target, and
+delete Open Questions when there are none.
 -->
 
 ## Description
 
 ## Scope
-
-<!-- Optional: service(s), surface(s), and target(s) this applies to. -->
 
 ## Requirements
 
