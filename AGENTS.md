@@ -96,11 +96,11 @@ Apply these rules when adding or moving code; do not reorder untouched code to s
 
 ### Issue and PR bodies
 
-Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr-bodies). The templates in [`.github/`](.github/) add the per-template shape. Bug reports use an issue form, which only renders on the web: `gh issue create --template` cannot read it, so pass a body matching the form's fields with `--body-file`. The enhancement and PR templates are markdown; `gh` applies them only with `--template`, which cannot combine with `--body-file`, so pass a filled copy with `--body-file`.
+Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr-bodies). The templates in [`.github/`](.github/) add the per-template shape. Bug reports use an issue form, which only renders on the web: `gh issue create --template` cannot read it, so write a body matching the form's fields and pass it with `--body-file`. The enhancement and PR templates are Markdown; `gh` can start from one with `--template`, but that flag cannot combine with `--body-file`, so write a filled copy to a file and pass `--body-file`.
 
 - Do not cite a plan, review, scratch note, or committed design spec as context; restate the relevant point in the body.
-- Budget, when writing an issue or PR body: at most 30 lines and 1500 characters for an issue, 20 lines and 1000 characters for a pull request, excluding headings, the bug form's fields, and pasted diagnostics.
-- An acceptance criterion states what must be true, not which file changes, and never "CI passes": the CI jobs below are the merge gate.
+- Hard cap on top of the shared line budget: 1500 characters for an issue, 1000 for a pull request, excluding headings, the bug form's fields, and pasted diagnostics.
+- An acceptance criterion never says "CI passes": the CI jobs below are the merge gate.
 
 ### Branches, titles, and CI
 

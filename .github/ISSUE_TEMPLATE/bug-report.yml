@@ -48,7 +48,7 @@ body:
       attributes:
           label: Version
           description: The extension version, or the userscript version for the userscript target.
-          placeholder: '1.7.2'
+          placeholder: '1.0.0'
       validations:
           required: true
     - type: input
@@ -76,29 +76,32 @@ body:
       id: steps
       attributes:
           label: Steps to Reproduce
-          description: Start from a fresh page load.
-          value: |
-              1.
-              2.
-              3.
+          description: Start from a fresh page load, then list each step in order.
       validations:
           required: true
     - type: textarea
       id: expected
       attributes:
           label: Expected Behavior
-      validations:
-          required: true
     - type: textarea
       id: actual
       attributes:
           label: Actual Behavior
+      validations:
+          required: true
     - type: textarea
       id: diagnostics
       attributes:
           label: Console and Network Errors
           description: Console output and failed requests from the Network tab.
           render: shell
+    - type: upload
+      id: attachments
+      attributes:
+          label: Screenshots or recordings
+          description: Drag in a capture that shows the problem. Paste console output into Console and Network Errors instead.
+      validations:
+          required: false
     - type: checkboxes
       id: preflight
       attributes:

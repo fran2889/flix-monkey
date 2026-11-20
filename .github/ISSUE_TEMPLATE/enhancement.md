@@ -5,11 +5,12 @@ labels: enhancement
 ---
 
 <!--
-Shared body rules: CONTRIBUTING.md § Issue and PR bodies.
-What is missing or wrong today, and why does it matter? Do not restate the title.
-Requirements are verifiable `-` bullets: what must be true, not which file changes.
-Delete Scope unless the request is specific to a service, surface, or target, and
-delete Open Questions when there are none.
+Shared body rules: CONTRIBUTING.md, Issue and PR bodies.
+Say what is missing or wrong today, and why it matters. Do not restate the title.
+Scope: name the services, where in the UI (browse row, Top 10 row, hover preview,
+search grid, settings panel), and targets this applies to. Delete the section when
+none apply.
+Delete Open Questions when there are none.
 -->
 
 ## Description
