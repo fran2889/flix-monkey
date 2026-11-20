@@ -49,7 +49,8 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
 
 ## Issue and PR bodies
 
-Every template under [`.github/`](.github/) follows these rules.
+Every issue and pull request template under [`.github/`](.github/) follows these
+rules.
 
 - Reference related issues and pull requests by number, for example `#123`. Write
   `Resolves #123` so the issue closes when the pull request merges. Do not point at
