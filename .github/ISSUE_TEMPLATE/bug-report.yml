@@ -1,0 +1,113 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ['bug']
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Ratings that do not appear and provider failures are usually configuration. Check the
+              [troubleshooting section](https://github.com/fran2889/flix-monkey#troubleshooting) first.
+    - type: dropdown
+      id: service
+      attributes:
+          label: Service
+          options:
+              - Netflix
+              - HBO Max
+              - Disney+
+              - Other
+      validations:
+          required: true
+    - type: dropdown
+      id: surface
+      attributes:
+          label: Where in the UI
+          options:
+              - Browse row
+              - Top 10 row
+              - Hover preview
+              - Search grid
+              - Settings panel
+              - Other
+      validations:
+          required: true
+    - type: dropdown
+      id: target
+      attributes:
+          label: Target
+          description: Select every target the bug reproduces on.
+          multiple: true
+          options:
+              - Userscript
+              - Firefox extension
+              - Chrome extension
+      validations:
+          required: true
+    - type: input
+      id: version
+      attributes:
+          label: Version
+          description: The extension version, or the userscript version for the userscript target.
+          placeholder: '1.0.0'
+      validations:
+          required: true
+    - type: input
+      id: browser
+      attributes:
+          label: Browser and version
+          placeholder: 'Firefox 134'
+      validations:
+          required: true
+    - type: input
+      id: os
+      attributes:
+          label: Operating System
+          placeholder: 'Windows 11'
+      validations:
+          required: true
+    - type: textarea
+      id: description
+      attributes:
+          label: Description
+          description: What goes wrong, and where?
+      validations:
+          required: true
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to Reproduce
+          description: Start from a fresh page load, then list each step in order.
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected Behavior
+    - type: textarea
+      id: actual
+      attributes:
+          label: Actual Behavior
+      validations:
+          required: true
+    - type: textarea
+      id: diagnostics
+      attributes:
+          label: Console and Network Errors
+          description: Console output and failed requests from the Network tab.
+          render: shell
+    - type: upload
+      id: attachments
+      attributes:
+          label: Screenshots or recordings
+          description: Drag in a capture that shows the problem. Paste console output into Console and Network Errors instead.
+      validations:
+          required: false
+    - type: checkboxes
+      id: preflight
+      attributes:
+          label: Before submitting
+          options:
+              - label: I checked the troubleshooting section and this is not a known issue
+                required: true
+              - label: I am on the latest version
+                required: true

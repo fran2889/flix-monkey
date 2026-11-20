@@ -94,7 +94,15 @@ Apply these rules when adding or moving code; do not reorder untouched code to s
 
 ## GitHub
 
-Issue and PR body rules, including how to reference related work and the soft size limit, come from the templates in [`.github/`](.github/), not from this file. Read the relevant template and follow its HTML comment. Neither command applies the repository template unless you pass `--template`, which cannot be combined with `--body-file`; pass a filled copy with `--body-file`.
+### Issue and PR bodies
+
+Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr-bodies). The issue and pull request templates in [`.github/`](.github/) add the per-template shape. Bug reports use an issue form, which only renders on the web: `gh issue create --template` cannot read it, so write a body matching the form's fields and pass it with `--body-file`. The enhancement and PR templates are Markdown; `gh` can start from one with `--template`, but that flag cannot combine with `--body-file`, so write a filled copy to a file and pass `--body-file`.
+
+- Do not cite a plan, review, scratch note, or committed design spec as context; restate the relevant point in the body.
+- Hard cap on top of the shared line budget: 1500 characters for an issue, 1000 for a pull request, excluding headings, the bug form's fields, and pasted diagnostics.
+- An acceptance criterion never says "CI passes": the CI jobs below are the merge gate.
+
+### Branches, titles, and CI
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).

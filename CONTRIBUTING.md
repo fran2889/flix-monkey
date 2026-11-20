@@ -47,6 +47,24 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     the [code ordering rules](./AGENTS.md#code-ordering); ESLint enforces the
     group order, and step-down order is reviewed by hand.
 
+## Issue and PR bodies
+
+Every issue and pull request template under [`.github/`](.github/) follows these
+rules.
+
+- Reference related issues and pull requests by number, for example `#123`. Write
+  `Resolves #123` so the issue closes when the pull request merges. Do not point at
+  "previous work" or "remaining changes", and give the context in the body instead
+  of naming another document.
+- Keep the body short. Roughly 30 lines is plenty for an issue and 20 for a pull
+  request; write at length only when the problem is genuinely complex. Pasted
+  diagnostics, headings, and the bug form's fixed fields do not count.
+- In a Markdown template, omit a section that does not apply instead of leaving it
+  empty.
+- Issues state acceptance criteria as plain `-` bullets: what must be true, not
+  which file changes. Do not add checkbox items (`- [ ]`) to a body; they belong to
+  a pull request Test Plan, where each box records a check that was run.
+
 ## Pull Request Process
 
 1.  **Create a feature branch:**
@@ -103,7 +121,7 @@ Thank you for your interest in contributing to FlixMonkey! This document provide
     Push your branch and open a Pull Request against the `main` branch. Follow the
     [body template](.github/PULL_REQUEST_TEMPLATE.md) and its inline guidance.
 
-    Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.md) and
+    Issue templates for [bugs](.github/ISSUE_TEMPLATE/bug-report.yml) and
     [feature requests](.github/ISSUE_TEMPLATE/enhancement.md) live in `.github/`.
     Choose the template that matches your report and fill in the requested details.
 

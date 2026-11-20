@@ -1,42 +1,18 @@
 <!--
-How to use this template
-
-- Automated checks are enforced by CI: formatting, lint, type-check, audit,
-  all-target build, and the unit/UI suites with coverage. Run them locally for
-  faster feedback, but do not list them in the PR body.
-- Tick the manual box only after performing the check. If someone else did, say
-  who.
-- Delete a heading that does not apply rather than leaving it empty.
-- Summary is 1-3 bullets, one sentence each, naming one behavior change and,
-  where it is not obvious, why the old behavior was wrong. If it needs more than
-  three bullets, consider splitting into two pull requests.
-- Keep the written body under roughly 1000 characters and 20 lines, not
-  counting section headings.
-- Reference related issues and pull requests by number, for example `#123`. Do
-  not use vague pointers such as "previous work" or "remaining changes". Do not
-  cite any document as context, including plans, reviews, scratch notes, and
-  committed design specs; restate the relevant point in the body.
-- Replace the "Manual:" line with the checks this PR needs, or delete it. Never
-  leave a generic "manual testing" placeholder.
-- `npm run audit` must pass at moderate or higher. Fix the dependency rather than
-  lowering the level.
-
-Use `Resolves #123` or `Resolves #123, #456` for closing links. If no related
-issue exists, omit the line and say what the PR implements in Summary.
-
-Add a "## Breaking Changes" section only if something genuinely breaks for a
-user.
-
-Add a "## Notes" section only for context the diff cannot give: something
-unverified, a non-obvious decision, or a constraint a follow-up must respect. At
-most 3 bullets; omit analysis process and rejected alternatives.
+Shared body rules: CONTRIBUTING.md, Issue and PR bodies.
+Summary: 1-3 bullets, one behavior change each and why the old one was wrong.
+More than three, split the pull request.
+CI owns formatting, lint, type-check, audit, build, and the test suites: leave
+them out of the body.
+Test Plan: one box per manual check, written as the behavior to verify. Tick a
+box after that check passes; delete the section when no manual check applies.
+Add "## Breaking Changes" or "## Notes" only when needed.
 -->
 
 ## Summary
 
-- What this PR changes, one bullet per behavior change
-- Why the previous behavior was wrong, where it was wrong
+-
 
 ## Test Plan
 
-- [ ] Manual: `<target>` on `<service>`: ratings for a known title match the selected provider, and the console shows no errors
+- [ ] Manual: <behavior to verify> on <service> with <target>
