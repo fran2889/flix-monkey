@@ -59,7 +59,7 @@ The cache enforces its own write invariants and ordering. `ApiClientManager` bec
 - `ApiClientManager.#fetch` awaits `cache.write` directly. Refresh and edit await `CacheManager.delete`.
 - Refresh and IMDb ID edit set the override where applicable, await `cache.delete`, then redecorate.
 - `#decorateContainer` keeps the narrowed lookup try and the uncached not-found fallback for a failed or timed-out lookup.
-- The 2026-11-16 design and plan are superseded and removed.
+- Request generations and the retained in-flight lookup are removed; this spec replaces them.
 
 ## Residual Risk
 
