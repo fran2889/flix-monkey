@@ -24,7 +24,7 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn(),
@@ -38,7 +38,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should fetch and return result from client', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -51,7 +51,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should handle fail if client returns undefined', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const client: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -67,7 +67,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should cache genuine not-found result with source', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const client: ApiClient = {
             source: 'omdb',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -85,7 +85,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should skip unhealthy client and not cache the result', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const unhealthyClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: false }),
@@ -101,7 +101,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should not cache result when fetch throws an error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -123,7 +123,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should disable client on 4xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const error = new FlixMonkeyError('HTTP 401', 'https://api.example.com', 401, 'Unauthorized');
         const mockClient: ApiClient = {
             source: 'xmdb',
@@ -139,7 +139,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should NOT disable client on 5xx HTTP error', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const error = new FlixMonkeyError('HTTP 500', 'https://api.example.com', 500, 'Internal Server Error');
         const mockClient: ApiClient = {
             source: 'xmdb',
@@ -154,7 +154,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should log at error level for HTTP errors with status, url, and body', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const error = new FlixMonkeyError('HTTP 403', 'https://api.example.com/search', 403, 'Forbidden');
         const mockClient: ApiClient = {
             source: 'xmdb',
@@ -173,7 +173,7 @@ describe('ApiClientManager', () => {
     });
 
     it('handles a non-Error rejection without metadata', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'xmdb',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -194,7 +194,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should log at warn level for non-HTTP errors', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const error = new Error('network error');
         const mockClient: ApiClient = {
             source: 'xmdb',
@@ -214,7 +214,7 @@ describe('ApiClientManager', () => {
     });
 
     it('should log on successful data retrieval', async () => {
-        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn(), delete: vi.fn() };
         const title = buildTitle().withApiTitle('Logged Movie').withSource('agregarr').build();
         const mockClient: ApiClient = {
             source: 'agregarr',
@@ -238,7 +238,7 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockLogger = buildLogger().build();
         const manager = new ApiClientManager(mockLogger, mockCache, disabledManager, {
             source: 'agregarr',
@@ -259,7 +259,7 @@ describe('ApiClientManager', () => {
             .withData(emptyTitleData)
             .withExpiry(Date.now() - 1000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -285,7 +285,7 @@ describe('ApiClientManager', () => {
             .withData(expiredEntry.data)
             .withExpiry(expiredEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -310,7 +310,7 @@ describe('ApiClientManager', () => {
             .withData(expiredEntry.data)
             .withExpiry(expiredEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -335,7 +335,7 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn(),
@@ -361,7 +361,7 @@ describe('ApiClientManager', () => {
             .withData(emptyEntry.data)
             .withExpiry(emptyEntry.expires)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -381,7 +381,7 @@ describe('ApiClientManager', () => {
             .withData(titleObj.toCacheJSON())
             .withExpiry(Date.now() - 1000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -406,7 +406,7 @@ describe('ApiClientManager', () => {
             .withData(cachedTitle.toCacheJSON())
             .withExpiry(Date.now() + 100000)
             .build();
-        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+        const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn(), delete: vi.fn() };
         const mockClient: ApiClient = {
             source: 'agregarr',
             getStatus: vi.fn().mockResolvedValue({ healthy: true }),
@@ -427,5 +427,24 @@ describe('ApiClientManager', () => {
         expect(mockClient.fetch).toHaveBeenCalledWith('Provider Switch Movie', 'tt1234567');
         expect(result.imdbRating).toBe(7.5);
         expect(result.source).toBe('agregarr');
+    });
+
+    it('removes the cached title when invalidated', async () => {
+        const mockCache = {
+            read: vi.fn().mockResolvedValue(undefined),
+            write: vi.fn(),
+            delete: vi.fn().mockResolvedValue(undefined),
+        };
+        const mockClient: ApiClient = {
+            source: 'agregarr',
+            getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+            fetch: vi.fn(),
+            disable: vi.fn(),
+        };
+        const manager = new ApiClientManager(buildLogger().build(), mockCache, disabledManager, mockClient);
+
+        await manager.invalidate('Test Movie');
+
+        expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
     });
 });

@@ -13,7 +13,7 @@ import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
 
 /**
- * Cache read and write operations required by consumers such as ApiClientManager.
+ * Cache read, write, and delete operations required by consumers such as ApiClientManager.
  */
 export interface CacheStore {
     /**
@@ -35,6 +35,15 @@ export interface CacheStore {
      *   declines to store it.
      */
     write(displayTitle: string, titleObj: Title): Promise<void>;
+
+    /**
+     * Removes a cached title entry.
+     *
+     * @param displayTitle - Title as shown by the streaming service.
+     * @returns Resolves when the entry has been removed. Runs after any write
+     *   already queued for the title.
+     */
+    delete(displayTitle: string): Promise<void>;
 }
 
 /**
