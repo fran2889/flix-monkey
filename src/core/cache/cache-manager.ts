@@ -13,7 +13,7 @@ import { slugify } from '../utils/index';
 import { CacheEntry } from './cache-entry';
 
 /**
- * Cache read, write, and delete operations required by consumers such as ApiClientManager.
+ * Cache read and write operations required by consumers such as ApiClientManager.
  */
 export interface CacheStore {
     /**
@@ -35,15 +35,6 @@ export interface CacheStore {
      *   declines to store it.
      */
     write(displayTitle: string, titleObj: Title): Promise<void>;
-
-    /**
-     * Removes a cached title entry.
-     *
-     * @param displayTitle - Title as shown by the streaming service.
-     * @returns Resolves when the entry has been removed. Runs after any write
-     *   already queued for the title.
-     */
-    delete(displayTitle: string): Promise<void>;
 }
 
 /**
@@ -206,17 +197,15 @@ export class CacheManager implements CacheStore {
      * @returns Resolves when the entry has been removed.
      */
     async delete(displayTitle: string): Promise<void> {
-        await this.#enqueue(displayTitle, async () => {
-            const key = this.#getCacheKey(displayTitle);
-            await this.#adapter.storageDelete(key);
-            this.#logger.debug(`Cache entry deleted: ${key}`);
-        });
+        const key = this.#getCacheKey(displayTitle);
+        await this.#adapter.storageDelete(key);
+        this.#logger.debug(`Cache entry deleted: ${key}`);
     }
 
     /*
-     * Writes and deletes for one title share a promise chain. The stored tail
-     * never rejects, so a failed operation cannot block the next one, and it is
-     * cleared only when no later operation has replaced it.
+     * Writes for one title share a promise chain. The stored tail never rejects,
+     * so a failed write cannot block the next one, and it is cleared only when no
+     * later write has replaced it.
      */
     async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
         const key = this.#getCacheKey(displayTitle);

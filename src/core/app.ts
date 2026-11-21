@@ -252,7 +252,7 @@ export class FlixMonkeyApp {
 
         const dedupKey = slugify(displayTitle);
         await this.#overrideManager.setImdbId(displayTitle, extracted);
-        await this.#api.invalidate(displayTitle);
+        await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
     }
 
@@ -298,7 +298,7 @@ export class FlixMonkeyApp {
      */
     async #handleRefreshClick(displayTitle: string): Promise<void> {
         const dedupKey = slugify(displayTitle);
-        await this.#api.invalidate(displayTitle);
+        await this.#cache.delete(dedupKey);
         this.#redecorateTitle(dedupKey, displayTitle);
     }
 

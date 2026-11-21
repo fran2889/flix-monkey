@@ -12,7 +12,7 @@ The cache becomes the single owner of write order and write policy. Lookup code 
 
 - A valid cache entry that has ratings is never replaced by a bare miss.
 - A result whose IMDb ID differs from the current stored override is not cached.
-- Writes and deletes for a title are serialized: an invalidation is ordered after every write that has already reached the cache.
+- Writes for a title are serialized, so the bare-miss check cannot be bypassed by a save interleaving between its read and its write.
 - A late lookup cannot undo an IMDb ID edit.
 - Preserve the 30 second per-caller timeout and the not-found fallback render.
 
@@ -27,9 +27,9 @@ The cache becomes the single owner of write order and write policy. Lookup code 
 
 ## Constraints
 
-- The checks run inside `CacheManager.write`; `CacheManager` serializes `write` and `delete` per slug.
+- The checks run inside `CacheManager.write`; `CacheManager` serializes `write` per slug.
 - `IdOverrideManager` is passed to `CacheManager` as a fourth constructor argument, within the four-parameter limit.
-- `ApiClientManager` loses request ids, the write chain, and `invalidate`'s wait. `invalidate` becomes `cache.delete`.
+- `ApiClientManager` loses request ids and `invalidate`; the app deletes through `CacheManager.delete` directly.
 - `FlixMonkeyApp` loses the in-flight map and its cleanup. Each decoration gets its own timeout race.
 - No new dependencies.
 
@@ -49,15 +49,15 @@ The cache enforces its own write invariants and ordering. `ApiClientManager` bec
 
 ## Decisions
 
-- `CacheManager` keeps a per-slug promise chain. `write` and `delete` enqueue on it. The tail is registered synchronously and its rejection normalized, so one failed operation does not reject later ones.
+- `CacheManager` keeps a per-slug promise chain that only `write` enqueues on. The tail is registered synchronously and its rejection normalized, so one failed write does not reject later ones.
 - `write` reads the cached entry after any earlier queued operation:
     - If the incoming title has no rating and no IMDb ID, and the existing entry is not expired and has a rating, skip the write and log at debug. An ID-only entry is deliberately not protected: when the retained ID lookup misses, the miss replaces the hint, which is the existing behavior and avoids repeating a failing ID lookup.
     - If an override exists and differs from the incoming `imdbId`, skip the write and log at debug.
     - Otherwise write as before.
-- `delete` runs on the same chain, so it follows any write already queued for the title.
+- `delete` writes storage directly. It is not ordered against saves, so a save already in progress can repopulate the entry after a refresh or edit.
 - `CacheStore.write` is documented as best effort: it may decline to store the title.
-- `ApiClientManager.#fetch` awaits `cache.write` directly. `invalidate(displayTitle)` awaits `cache.delete(displayTitle)`.
-- Refresh and IMDb ID edit set the override where applicable, await `invalidate`, then redecorate.
+- `ApiClientManager.#fetch` awaits `cache.write` directly. Refresh and edit await `CacheManager.delete`.
+- Refresh and IMDb ID edit set the override where applicable, await `cache.delete`, then redecorate.
 - `#decorateContainer` keeps the narrowed lookup try and the uncached not-found fallback for a failed or timed-out lookup.
 - The 2026-11-16 design and plan are superseded and removed.
 
@@ -71,6 +71,6 @@ The cache enforces its own write invariants and ordering. `ApiClientManager` bec
 
 ## Testing
 
-- Cache: a bare miss does not replace a rated entry; a bare miss replaces an ID-only entry; an expired entry is replaceable; an override mismatch is skipped; a matching override is written; a delete queued behind a write wins; a write queued behind a rejected write still runs; settling an operation keeps a later queued operation on the chain.
+- Cache: a bare miss does not replace a rated entry; a bare miss replaces an ID-only entry; an expired entry is replaceable; an override mismatch is skipped; a matching override is written; a write queued behind a rejected write still runs; settling a write keeps a later queued write on the chain.
 - Manager: cache hit, fetch, miss, and unhealthy client, without generation or fence cases.
-- App: timeout and rejection render the fallback; refresh and edit invalidate and redecorate; a render failure is not mistaken for a lookup failure.
+- App: timeout and rejection render the fallback; refresh and edit delete the entry and redecorate; a render failure is not mistaken for a lookup failure.

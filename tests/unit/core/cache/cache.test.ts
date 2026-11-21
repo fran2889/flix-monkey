@@ -554,28 +554,6 @@ describe('CacheManager', () => {
     });
 
     describe('write ordering', () => {
-        it('runs a delete after a write already queued for the title', async () => {
-            const { adapter: memoryAdapter, store, manager } = buildManager();
-            let release: () => void = () => undefined;
-            const gate = new Promise<void>(resolve => {
-                release = resolve;
-            });
-            memoryAdapter.storageSet.mockImplementationOnce(async (key: string, value: string) => {
-                await gate;
-                store.set(key, value);
-            });
-
-            const write = manager.write(
-                'Race Movie',
-                buildTitle().withDisplayTitle('Race Movie').withImdbRating(7).build()
-            );
-            const deletion = manager.delete('Race Movie');
-            release();
-            await Promise.all([write, deletion]);
-
-            await expect(manager.read('Race Movie')).resolves.toBeUndefined();
-        });
-
         it('deletes a missing title without error', async () => {
             const { manager } = buildManager();
             await expect(manager.delete('Missing Movie')).resolves.toBeUndefined();

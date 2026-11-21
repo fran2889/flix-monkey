@@ -4,18 +4,20 @@
 
 **Goal:** Replace request tracking with two cache save invariants: never downgrade a rated entry to a bare miss, and never store a result that contradicts the current IMDb override.
 
-**Architecture:** `CacheManager` serializes `write` and `delete` per title and applies the invariants inside `write`. `ApiClientManager.invalidate` deletes through the cache. `FlixMonkeyApp` drops the in-flight map, keeps a per-caller timeout, and keeps the not-found fallback render.
+**Architecture:** `CacheManager` serializes `write` per title and applies the invariants inside `write`. `FlixMonkeyApp` drops the in-flight map, keeps a per-caller timeout, and keeps the not-found fallback render.
 
 **Tech Stack:** TypeScript, Vitest with jsdom, Rollup, ESLint, Prettier.
 
 **Spec:** `docs/superpowers/specs/2026-11-21-cache-write-invariants-design.md`
+
+> **Final revision:** cache deletes stay outside the write chain. `ApiClientManager` gains no `invalidate`; refresh and edit call `CacheManager.delete` directly. Steps below that introduce `invalidate` or put `delete` on the chain describe an intermediate revision.
 
 ## Global Constraints
 
 - All source changes stay in `src/` and `tests/unit/core/`.
 - No new dependencies.
 - `CacheManager` owns write order and write policy. Constructor: `(adapter, config, logger, overrides)`.
-- `ApiClientManager` keeps its four-parameter constructor and gains only `invalidate(displayTitle)`.
+- `ApiClientManager` keeps its four-parameter constructor and is unchanged.
 - No request ids, no in-flight map, no deduplication anywhere.
 - The 4xx disable policy is unchanged; it is tracked separately in #316.
 - Keep the 30 second per-caller timeout and the not-found fallback render.

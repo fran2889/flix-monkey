@@ -52,17 +52,6 @@ export class ApiClientManager {
         return this.#fetch(displayTitle);
     }
 
-    /**
-     * Removes the cached title so the next lookup starts fresh. Any write queued for
-     * the title completes or is skipped before the entry is deleted.
-     *
-     * @param displayTitle - Title whose cache entry should be removed.
-     * @returns Resolves when the entry has been removed.
-     */
-    async invalidate(displayTitle: string): Promise<void> {
-        await this.#cache.delete(displayTitle);
-    }
-
     async #fetch(displayTitle: string, imdbId?: string): Promise<Title> {
         const status = await this.#client.getStatus();
         if (!status.healthy) {
