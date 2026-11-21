@@ -34,7 +34,6 @@ export class FlixMonkeyApp {
     readonly #renderer: OverlayRendererType;
     readonly #surfaces: SurfaceManager;
     readonly #logger: Logger;
-    readonly #inFlight = new Map<string, Promise<Title>>();
     readonly #pendingRoots = new Set<Element | Document>();
     readonly #debouncedDecorate: () => void;
     #observer: MutationObserver | undefined;
@@ -157,7 +156,7 @@ export class FlixMonkeyApp {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : undefined;
-        const request = this.#getTitleRequest(dedupKey, displayTitle);
+        const request = this.#raceWithTimeout(this.#api.getData(displayTitle));
 
         try {
             const data = await request;
@@ -167,20 +166,16 @@ export class FlixMonkeyApp {
         }
     }
 
-    async #getTitleRequest(dedupKey: string, displayTitle: string): Promise<Title> {
-        const existing = this.#inFlight.get(dedupKey);
-        if (existing) return existing;
-
+    async #raceWithTimeout(promise: Promise<Title>): Promise<Title> {
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         const timeout = new Promise<never>((_, reject) => {
             timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
         });
-        const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+        try {
+            return await Promise.race([promise, timeout]);
+        } finally {
             clearTimeout(timeoutId);
-            this.#inFlight.delete(dedupKey);
-        });
-        this.#inFlight.set(dedupKey, request);
-        return request;
+        }
     }
 
     #renderTitle(
