@@ -5,6 +5,7 @@
 import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
+import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import { ParseError } from '../parse-utils';
 import type { Title } from '../title';
@@ -44,12 +45,14 @@ export class CacheManager implements CacheStore {
     readonly #adapter: PlatformAdapter;
     readonly #config: ConfigManager;
     readonly #logger: Logger;
+    readonly #overrides: IdOverrideManager;
     readonly #writeChains = new Map<string, Promise<void>>();
 
-    constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger) {
+    constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger, overrides: IdOverrideManager) {
         this.#adapter = adapter;
         this.#config = config;
         this.#logger = logger;
+        this.#overrides = overrides;
     }
 
     async read(displayTitle: string): Promise<CacheEntry | undefined> {
@@ -81,6 +84,14 @@ export class CacheManager implements CacheStore {
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {
         await this.#enqueue(displayTitle, async () => {
+            const override = await this.#overrides.getImdbId(displayTitle);
+            if (override && override !== titleObj.imdbId) {
+                this.#logger.debug(
+                    `Skipped cache write for "${displayTitle}": override ${override} differs from ${titleObj.imdbId}`
+                );
+                return;
+            }
+
             const isBareMiss = !titleObj.hasRating && !titleObj.imdbId;
             if (isBareMiss) {
                 const existing = await this.read(displayTitle);

@@ -7,6 +7,7 @@ import browser from 'webextension-polyfill';
 import { CacheManager } from '../../core/cache/index';
 import { ConfigManager } from '../../core/config/index';
 import { DisabledClientsManager } from '../../core/disabled-clients';
+import { IdOverrideManager } from '../../core/id-override-manager';
 import { Logger } from '../../core/logger';
 import { SettingsUI } from '../../core/ui/settings-ui';
 import { WebExtensionAdapter } from '../../platform/webextension';
@@ -28,7 +29,8 @@ const logger = new Logger(adapter);
     }
 
     const config = new ConfigManager(adapter, logger);
-    const cacheManager = new CacheManager(adapter, config, logger);
+    const overrideManager = new IdOverrideManager(adapter);
+    const cacheManager = new CacheManager(adapter, config, logger, overrideManager);
     const disabledClientsManager = new DisabledClientsManager(adapter);
 
     const ui = new SettingsUI({ adapter, logger, cacheManager, disabledClientsManager });

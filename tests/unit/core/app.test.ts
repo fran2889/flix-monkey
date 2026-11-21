@@ -36,9 +36,9 @@ function buildAppDependencies(): {
     const adapter = buildMockAdapter().build();
     const logger = buildLogger().build();
     const config = new ConfigManager(adapter, logger);
-    const cache = new CacheManager(adapter, config, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
+    const cache = new CacheManager(adapter, config, logger, overrideManager);
     const deps: ApiClientDeps = { adapter, config, disabledManager, logger, overrideManager };
     const client = new AgregarrApiClient(deps);
     return {

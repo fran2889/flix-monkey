@@ -388,9 +388,9 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     if (!currentService.isEnabled(configManager)) {
         return undefined;
     }
-    const cache = new CacheManager(adapter, configManager, logger);
-    const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
+    const cache = new CacheManager(adapter, configManager, logger, overrideManager);
+    const disabledManager = new DisabledClientsManager(adapter);
     const clientDeps: ApiClientDeps = {
         adapter,
         config: configManager,

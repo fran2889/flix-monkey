@@ -64,12 +64,24 @@ describe('CacheManager', () => {
             .withCacheTtlRatedNewYear('30')
             .withCacheTtlRatedOldYear('-1')
             .build();
-        cacheManager = new CacheManager(adapter, config, mockLogger);
+        const overrides = new IdOverrideManager(adapter);
+        cacheManager = new CacheManager(adapter, config, mockLogger, overrides);
     });
 
-    function buildManager(): { adapter: MockPlatformAdapter; store: Map<string, string>; manager: CacheManager } {
+    function buildManager(): {
+        adapter: MockPlatformAdapter;
+        store: Map<string, string>;
+        manager: CacheManager;
+        overrides: IdOverrideManager;
+    } {
         const { adapter: memoryAdapter, store } = buildMemoryAdapter();
-        return { adapter: memoryAdapter, store, manager: new CacheManager(memoryAdapter, config, mockLogger) };
+        const overrides = new IdOverrideManager(memoryAdapter);
+        return {
+            adapter: memoryAdapter,
+            store,
+            manager: new CacheManager(memoryAdapter, config, mockLogger, overrides),
+            overrides,
+        };
     }
 
     it('should return undefined when cache is empty', async () => {
@@ -632,6 +644,40 @@ describe('CacheManager', () => {
             const entry = await manager.read('Corrupt');
             expect(entry?.getTitle().imdbRating).toBe(6);
         });
+
+        it('skips a result whose IMDb ID differs from the override', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write(
+                'Override Movie',
+                buildTitle().withDisplayTitle('Override Movie').withImdbId('tt111').withImdbRating(8).build()
+            );
+
+            await expect(manager.read('Override Movie')).resolves.toBeUndefined();
+        });
+
+        it('writes a result that matches the override', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write(
+                'Override Movie',
+                buildTitle().withDisplayTitle('Override Movie').withImdbId('tt999').withImdbRating(8).build()
+            );
+
+            const entry = await manager.read('Override Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('skips a bare miss when an override exists', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write('Override Movie', Title.notFound('Override Movie'));
+
+            await expect(manager.read('Override Movie')).resolves.toBeUndefined();
+        });
     });
 
     describe('clearing cached data', () => {
@@ -731,7 +777,7 @@ describe('CacheManager', () => {
                 'Corrected Movie',
                 buildTitle()
                     .withDisplayTitle('Corrected Movie')
-                    .withImdbId('tt111')
+                    .withImdbId('tt999')
                     .withImdbRating(8)
                     .withSource('agregarr')
                     .build()

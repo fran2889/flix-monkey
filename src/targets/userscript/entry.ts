@@ -7,6 +7,7 @@ import { startApp } from '../../core/app';
 import { CacheManager } from '../../core/cache/index';
 import { ConfigManager } from '../../core/config/index';
 import { DisabledClientsManager } from '../../core/disabled-clients';
+import { IdOverrideManager } from '../../core/id-override-manager';
 import { Logger } from '../../core/logger';
 import { runMigrations } from '../../core/migrations';
 import { Modal } from '../../core/ui/modal';
@@ -34,7 +35,7 @@ function getSettingsDependencies(): {
     }
     const config = new ConfigManager(adapter, logger);
     return {
-        cacheManager: new CacheManager(adapter, config, logger),
+        cacheManager: new CacheManager(adapter, config, logger, new IdOverrideManager(adapter)),
         disabledClientsManager: new DisabledClientsManager(adapter),
     };
 }
