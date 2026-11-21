@@ -98,7 +98,7 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledAfter(browser.runtime.sendMessage);
     });
 
-    it('logs startup failures through the logger', async () => {
+    it('does not render settings and logs when startup fails', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         let rejectMigrations!: (_reason: unknown) => void;
         migrationPromise = new Promise((_resolve, reject) => {

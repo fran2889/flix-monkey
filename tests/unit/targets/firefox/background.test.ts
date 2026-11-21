@@ -59,14 +59,11 @@ describe('Firefox Background Script', () => {
         await import('../../../../src/targets/firefox/background');
     });
 
-    it.each([{ reason: 'install' }, { reason: 'update' }])(
-        'runs migrations when the extension is $reason',
-        async details => {
-            await installedListener(details);
-            await Promise.resolve();
-            expect(executeMigrations).toHaveBeenCalledOnce();
-        }
-    );
+    it.each([{ reason: 'install' }, { reason: 'update' }])('runs migrations on extension $reason', async details => {
+        await installedListener(details);
+        await Promise.resolve();
+        expect(executeMigrations).toHaveBeenCalledOnce();
+    });
 
     it('runs migrations for authenticated migration messages', async () => {
         const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: undefined });
@@ -82,7 +79,7 @@ describe('Firefox Background Script', () => {
         expect(executeMigrations).not.toHaveBeenCalled();
     });
 
-    it('should ignore non-FM_FETCH messages', async () => {
+    it('ignores non-FM_FETCH messages', async () => {
         const result = await messageListener({ type: 'OTHER' });
         expect(result).toBeUndefined();
     });
@@ -97,7 +94,7 @@ describe('Firefox Background Script', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should ignore messages from external senders', async () => {
+    it('ignores messages from external senders', async () => {
         // browser.runtime.id is undefined in test env; sender.id must match it
         const result = await messageListener(
             { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
@@ -106,7 +103,7 @@ describe('Firefox Background Script', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should open options page when action icon is clicked', async () => {
+    it('opens the options page when the action icon is clicked', async () => {
         await actionListener();
         expect(browser.runtime.openOptionsPage).toHaveBeenCalled();
     });

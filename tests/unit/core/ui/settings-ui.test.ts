@@ -109,7 +109,7 @@ describe('SettingsUI', () => {
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith({ snapshot: 'initial' });
         });
 
-        it('saves settings with async storage', async () => {
+        it('persists settings when storage is asynchronous', async () => {
             let resolveStorage: () => void = () => {};
             mockAdapter.storageSetMany = vi.fn().mockReturnValue(
                 new Promise<void>(resolve => {
@@ -175,7 +175,7 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status')?.textContent).toBe('XMDb API Key is required');
         });
 
-        it('handles storage errors during save', async () => {
+        it('attempts the save and logs an error when storage fails', async () => {
             mockAdapter.storageSetMany = vi.fn().mockRejectedValue(new Error('storage error'));
             await settingsUI.render(container);
 
@@ -225,7 +225,7 @@ describe('SettingsUI', () => {
     });
 
     describe('Dependency wiring', () => {
-        it('gives the cache manager a working config logger', async () => {
+        it('writes the cache entry and warns when the config read fails', async () => {
             mockAdapter.configGet = vi.fn(() => {
                 throw new Error('config read failed');
             });

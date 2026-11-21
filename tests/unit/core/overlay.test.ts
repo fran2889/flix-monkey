@@ -45,7 +45,7 @@ describe('OverlayRenderer', () => {
             expect(document.head.querySelector('#fm-overlay-styles')).not.toBeNull();
         });
 
-        it('updates the existing style tag when injectStyles is called again', () => {
+        it('updates the existing style tag when styles are injected again', () => {
             const rendererA = new OverlayRenderer(buildConfig().withOverlayCorner('top-left').build());
             const rendererB = new OverlayRenderer(buildConfig().withOverlayCorner('top-right').build());
 

@@ -21,7 +21,7 @@ function buildQueue(
 }
 
 describe('RequestQueue', () => {
-    it('should clear queue and reject pending requests', async () => {
+    it('clears the queue and rejects pending requests', async () => {
         const firstFetch = vi.fn(() => new Promise(() => {}));
         const queue = buildQueue(999999);
         void queue.enqueue('url1', 1, firstFetch).catch(() => {});
@@ -35,7 +35,7 @@ describe('RequestQueue', () => {
         await expect(pending).rejects.toThrow('Client Disabled');
     });
 
-    it('should reject cleared requests in queue order', async () => {
+    it('rejects cleared requests in queue order', async () => {
         const firstFetch = vi.fn(() => new Promise(() => {}));
         const queue = buildQueue(999999);
         void queue.enqueue('active', 1, firstFetch).catch(() => {});
@@ -93,7 +93,7 @@ describe('RequestQueue', () => {
         expect(firstFetch).toHaveBeenCalledOnce();
     });
 
-    it('should synchronize across instances using storage', async () => {
+    it('synchronizes across instances using storage', async () => {
         let sharedTime = Date.now().toString();
         const mockAdapter = buildMockAdapter().build();
         mockAdapter.storageGet = vi.fn(async () => sharedTime);
@@ -160,7 +160,7 @@ describe('RequestQueue', () => {
         }
     });
 
-    it('should respect priority and jump the queue', async () => {
+    it('dispatches higher-priority requests first', async () => {
         const interval = 50;
         const queue = buildQueue(interval);
         const results: string[] = [];
@@ -182,7 +182,7 @@ describe('RequestQueue', () => {
         expect(results).toEqual(['high', 'first', 'low']);
     });
 
-    it('should fall back to 0 when stored timestamp is not a valid number', async () => {
+    it('falls back to 0 when the stored timestamp is not a valid number', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo('corrupted').build();
         const queue = buildQueue(100, mockAdapter);
         const fetchFn = vi.fn().mockResolvedValue({ ok: true });
@@ -190,7 +190,7 @@ describe('RequestQueue', () => {
         expect(fetchFn).toHaveBeenCalledOnce();
     });
 
-    it('should resolve multiple concurrently enqueued requests', async () => {
+    it('resolves multiple concurrently enqueued requests', async () => {
         const mockAdapter = buildMockAdapter()
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
@@ -208,7 +208,7 @@ describe('RequestQueue', () => {
         expect(results[1].status).toBe(200);
     });
 
-    it('should re-read global storage before claiming timeslot on no-wait path', async () => {
+    it('re-reads global storage before claiming a timeslot on the no-wait path', async () => {
         const mockAdapter = buildMockAdapter()
             .withStorageGetResolvingTo('0')
             .withStorageSetResolvingTo(undefined)
@@ -221,7 +221,7 @@ describe('RequestQueue', () => {
         expect(fetchFn).toHaveBeenCalledOnce();
     });
 
-    it('should re-loop when pre-claim read shows another tab fired recently', async () => {
+    it('re-loops when a pre-claim read shows another tab fired recently', async () => {
         let callCount = 0;
         const recentTime = Date.now();
         const staleTime = (recentTime - 2000).toString();

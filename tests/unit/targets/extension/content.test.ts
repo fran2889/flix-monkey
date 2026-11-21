@@ -103,7 +103,7 @@ describe('content.js entry point', () => {
         expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
     });
 
-    it('logs a startup failure when migrations reject', async () => {
+    it('does not start the app or read storage and logs when migrations reject', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         migrationPromise = Promise.reject(new Error('migration boom'));
 
@@ -118,7 +118,7 @@ describe('content.js entry point', () => {
         errorSpy.mockRestore();
     });
 
-    it('should call startApp once', async () => {
+    it('starts the app once', async () => {
         await startAfterMigrations();
         expect(startAppSpy).toHaveBeenCalledOnce();
     });
@@ -156,7 +156,7 @@ describe('content.js entry point', () => {
         ['showMcRating', false],
         ['enableFadeUnderRating', true],
         ['fadeRatingThreshold', '50'],
-    ])('should call redecorate when %s changes', async (key, value) => {
+    ])('calls redecorate when %s changes', async (key, value) => {
         await startAfterMigrations();
 
         onChangedListener({ [key]: { newValue: value } });
@@ -164,7 +164,7 @@ describe('content.js entry point', () => {
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 
-    it('should not call redecorate when an unrelated key changes', async () => {
+    it('does not call redecorate when an unrelated key changes', async () => {
         await startAfterMigrations();
         onChangedListener({ someOtherKey: { newValue: 'value' } });
         expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
@@ -181,7 +181,7 @@ describe('content.js entry point', () => {
             expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
         });
 
-        it('updates multiple keys in stored object', async () => {
+        it('updates multiple keys in the stored config snapshot', async () => {
             await startAfterMigrations();
 
             onChangedListener({
@@ -193,7 +193,7 @@ describe('content.js entry point', () => {
             expect(startedAdapter().configGet('showRtRating')).toBe(true);
         });
 
-        it('updates stored object for non-visual settings', async () => {
+        it('updates the stored config snapshot for non-visual settings', async () => {
             await startAfterMigrations();
 
             onChangedListener({ apiClient: { newValue: 'omdb' } });
@@ -238,7 +238,7 @@ describe('content.js entry point', () => {
             expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
         });
 
-        it('calls redecorate exactly once for each change event with multiple visual settings', async () => {
+        it('calls redecorate once per change event with multiple visual settings', async () => {
             await startAfterMigrations();
 
             onChangedListener({

@@ -61,14 +61,11 @@ describe('Chrome Service Worker', () => {
         await import('../../../../src/targets/chrome/service-worker');
     });
 
-    it.each([{ reason: 'install' }, { reason: 'update' }])(
-        'runs migrations when the extension is $reason',
-        async details => {
-            await installedListener(details);
-            await Promise.resolve();
-            expect(executeMigrations).toHaveBeenCalledOnce();
-        }
-    );
+    it.each([{ reason: 'install' }, { reason: 'update' }])('runs migrations on extension $reason', async details => {
+        await installedListener(details);
+        await Promise.resolve();
+        expect(executeMigrations).toHaveBeenCalledOnce();
+    });
 
     it('runs migrations for authenticated migration messages', async () => {
         const sendResponse = vi.fn();
@@ -103,7 +100,7 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).toHaveBeenCalledWith({ error: 'plain failure' });
     });
 
-    it('logs an error when the install-time migration run rejects', async () => {
+    it('runs migrations and logs an error when the install-time migration rejects', async () => {
         executeMigrations.mockRejectedValue(new Error('migration boom'));
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -125,7 +122,7 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).not.toHaveBeenCalled();
     });
 
-    it('should ignore non-FM_FETCH messages', () => {
+    it('ignores non-FM_FETCH messages', () => {
         const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
         expect(result).toBe(false);
     });
@@ -142,12 +139,12 @@ describe('Chrome Service Worker', () => {
         expect(sendResponse).not.toHaveBeenCalled();
     });
 
-    it('should open options page when action icon is clicked', async () => {
+    it('opens the options page when the action icon is clicked', async () => {
         await actionListener();
         expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
     });
 
-    it('should reject FM_FETCH messages from a foreign sender', () => {
+    it('rejects FM_FETCH messages from a foreign sender', () => {
         const fetchSpy = vi.spyOn(global, 'fetch');
         const sendResponse = vi.fn();
         const result = messageListener(

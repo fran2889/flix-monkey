@@ -17,7 +17,7 @@ describe('core/utils/general-utils', () => {
     });
 
     describe('debounce', () => {
-        it('should debounce function calls', () => {
+        it('runs the function once after the delay', () => {
             const func = vi.fn();
             const debounced = debounce(func, 100);
 
@@ -34,7 +34,7 @@ describe('core/utils/general-utils', () => {
             expect(func).toHaveBeenCalledTimes(1);
         });
 
-        it('should pass arguments to the debounced function', () => {
+        it('passes arguments to the debounced function', () => {
             const func = vi.fn();
             const debounced = debounce(func, 100);
 
@@ -49,7 +49,7 @@ describe('core/utils/general-utils', () => {
             expect(debounced()).toBeUndefined();
         });
 
-        it('should maintain context', () => {
+        it('preserves the call context', () => {
             const context = { value: 'test' };
             let capturedContext: unknown;
 
@@ -66,7 +66,7 @@ describe('core/utils/general-utils', () => {
     });
 
     describe('runIdle', () => {
-        it('should use requestIdleCallback if available', () => {
+        it('uses requestIdleCallback when it is available', () => {
             const mockRIC = vi.fn(callback => callback());
             vi.stubGlobal('requestIdleCallback', mockRIC);
 
@@ -79,7 +79,7 @@ describe('core/utils/general-utils', () => {
             vi.unstubAllGlobals();
         });
 
-        it('should fallback to setTimeout if requestIdleCallback is not available', () => {
+        it('falls back to setTimeout when requestIdleCallback is unavailable', () => {
             vi.stubGlobal('requestIdleCallback', undefined);
 
             const func = vi.fn();
@@ -94,7 +94,7 @@ describe('core/utils/general-utils', () => {
     });
 
     describe('FlixMonkeyError', () => {
-        it('should store all constructor params', () => {
+        it('stores all constructor parameters', () => {
             const err = new FlixMonkeyError('HTTP 401', 'https://api.example.com/foo', 401, 'Unauthorized');
             expect(err).toBeInstanceOf(Error);
             expect(err.name).toBe('FlixMonkeyError');
@@ -104,7 +104,7 @@ describe('core/utils/general-utils', () => {
             expect(err.body).toBe('Unauthorized');
         });
 
-        it('should default optional params to undefined', () => {
+        it('defaults optional parameters to undefined', () => {
             const err = new FlixMonkeyError('test error');
             expect(err.url).toBeUndefined();
             expect(err.status).toBeUndefined();

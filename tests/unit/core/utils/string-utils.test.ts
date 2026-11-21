@@ -32,12 +32,12 @@ describe('core/utils/string-utils', () => {
             expect(slugify("Am\u00E9lie: Director's Cut")).toBe('am%C3%A9lie_director_s_cut');
         });
 
-        it('should trim leading and trailing underscores', () => {
+        it('trims leading and trailing underscores', () => {
             expect(slugify('  Hello  ')).toBe('hello');
             expect(slugify('!Movie!')).toBe('movie');
         });
 
-        it('should produce the same slug for titles differing only by punctuation', () => {
+        it('produces the same slug for titles that differ only by punctuation', () => {
             expect(slugify('Test: Movie')).toBe(slugify('Test Movie'));
         });
     });

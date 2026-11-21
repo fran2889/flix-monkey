@@ -356,7 +356,7 @@ describe('createOverlayElement', () => {
     });
 
     describe('IMDb ID override and refresh actions', () => {
-        it('should render edit and refresh icons when onEditClick and onRefreshClick are provided', () => {
+        it('renders edit and refresh icons when both click handlers are provided', () => {
             const onEditClick = vi.fn();
             const onRefreshClick = vi.fn();
             const element = createOverlay(
@@ -377,19 +377,19 @@ describe('createOverlayElement', () => {
             expect(element.querySelectorAll('[title="Refresh ratings (clears cache)"]')).toHaveLength(1);
         });
 
-        it('should add corner class', () => {
+        it('adds the configured corner class', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
 
             expect(element.classList.contains('fm-bottom-right')).toBe(true);
         });
 
-        it('should add ratings wrapper element', () => {
+        it('wraps ratings in a ratings wrapper element', () => {
             const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
 
             expect(element.querySelector('.fm-ratings-wrapper')).not.toBeNull();
         });
 
-        it('should add imdb-row element when actions are present', () => {
+        it('adds an IMDb row when actions are present', () => {
             const onEditClick = vi.fn();
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
@@ -399,7 +399,7 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-imdb-row')).not.toBeNull();
         });
 
-        it('should add actions container when handlers are present', () => {
+        it('adds an actions container when handlers are present', () => {
             const onEditClick = vi.fn();
             const onRefreshClick = vi.fn();
             const element = createOverlay(
@@ -410,7 +410,7 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-actions')).not.toBeNull();
         });
 
-        it('should call onEditClick when edit icon is clicked', () => {
+        it('calls onEditClick when the edit icon is clicked', () => {
             const onEditClick = vi.fn();
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
@@ -423,7 +423,7 @@ describe('createOverlayElement', () => {
             expect(onEditClick).toHaveBeenCalledWith('Test Movie');
         });
 
-        it('should call onRefreshClick when refresh icon is clicked', () => {
+        it('calls onRefreshClick when the refresh icon is clicked', () => {
             const onEditClick = vi.fn();
             const onRefreshClick = vi.fn();
             const element = createOverlay(
@@ -438,7 +438,7 @@ describe('createOverlayElement', () => {
             expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
         });
 
-        it('should prevent default and stop propagation on icon button click', () => {
+        it('prevents default and stops propagation on an icon button click', () => {
             const onEditClick = vi.fn();
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
@@ -454,7 +454,7 @@ describe('createOverlayElement', () => {
             expect(onEditClick).toHaveBeenCalled();
         });
 
-        it('should add fm-rating-badge class to rating badges', () => {
+        it('adds the fm-rating-badge class to rating badges', () => {
             const element = createOverlay(
                 { imdbId: 'tt1234567', imdbRating: 7.5, rtRating: 80, mcRating: 70 },
                 { showRtRating: true, showMcRating: true }

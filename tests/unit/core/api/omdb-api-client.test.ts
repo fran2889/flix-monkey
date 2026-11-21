@@ -40,7 +40,7 @@ const deps: ApiClientDeps = {
 };
 
 describe('OmdbApiClient', () => {
-    it('should fetch details correctly', async () => {
+    it('returns the rating and IMDb ID from a search response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -57,7 +57,7 @@ describe('OmdbApiClient', () => {
         expect(result!.imdbId).toBe('tt1');
     });
 
-    it('should return unhealthy status when API key is missing', async () => {
+    it('returns an unhealthy status when the API key is missing', async () => {
         const mockConfigForTest: ConfigManager = {
             get: () => '',
         } as unknown as ConfigManager;
@@ -66,14 +66,14 @@ describe('OmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
-    it('should defer to the base health check when an API key is configured', async () => {
+    it('defers to the base health check when an API key is configured', async () => {
         // mockConfig.get() returns a non-empty key, so the client falls through to
         // BaseApiClient.getStatus(), which gates on the disabled manager.
         const client = new OmdbApiClient(deps);
         expect(await client.getStatus()).toEqual({ healthy: true });
     });
 
-    it('should report unhealthy when disabled even though an API key is configured', async () => {
+    it('reports unhealthy when disabled even though an API key is configured', async () => {
         const mockDisabledManagerForTest: DisabledClientsManager = {
             isDisabled: vi.fn().mockResolvedValue(true),
             disable: vi.fn().mockResolvedValue(undefined),
@@ -92,7 +92,7 @@ describe('OmdbApiClient', () => {
         ['2020-', 2020],
         ['2020-01-01', 2020],
         ['invalid', undefined],
-    ])('should convert Year %o -> %o', async (raw: string, expected: number | undefined) => {
+    ])('converts Year %o to %o', async (raw: string, expected: number | undefined) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
             .build();
@@ -102,7 +102,7 @@ describe('OmdbApiClient', () => {
         expect(result!.year).toBe(expected);
     });
 
-    it('should parse ratings from OMDB correctly', async () => {
+    it('parses Rotten Tomatoes and Metacritic ratings from an OMDb response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -122,7 +122,7 @@ describe('OmdbApiClient', () => {
         expect(result!.mcRating).toBe(85);
     });
 
-    it.each(['', ' ', 'N/A', null])('should treat imdbRating %o as missing', async (value: string | null) => {
+    it.each(['', ' ', 'N/A', null])('treats imdbRating %o as missing', async (value: string | null) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
@@ -138,7 +138,7 @@ describe('OmdbApiClient', () => {
     it.each([
         ['8.0', 8],
         ['8.7', 8.7],
-    ])('should convert imdbRating %o -> %o', async (raw: string, expected: number) => {
+    ])('converts imdbRating %o to %o', async (raw: string, expected: number) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
@@ -155,7 +155,7 @@ describe('OmdbApiClient', () => {
         [{ Source: 'Metacritic', Value: '85/100' }, 85],
         [{ Source: 'Metacritic', Value: '0/100' }, 0],
         [{ Source: 'Metacritic', Value: 'N/A' }, undefined],
-    ])('should convert Ratings entry %o -> %o', async (entry: object, expected: number | undefined) => {
+    ])('converts a Ratings entry %o to %o', async (entry: object, expected: number | undefined) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -176,7 +176,7 @@ describe('OmdbApiClient', () => {
         ['2,500,000', 2500000],
         ['2500000', 2500000],
         ['', undefined],
-    ])('should convert imdbVotes %o -> %o', async (raw: string, expected: number | undefined) => {
+    ])('converts imdbVotes %o to %o', async (raw: string, expected: number | undefined) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -195,7 +195,7 @@ describe('OmdbApiClient', () => {
     it.each([
         { type: 'movie', imdbId: 'tt1', title: 'Movie 1' },
         { type: 'series', imdbId: 'tt2', title: 'Show 1' },
-    ])('should map Type $type to TitleType', async ({ type, imdbId, title }) => {
+    ])('maps an OMDb Type of $type to a title type', async ({ type, imdbId, title }) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -211,7 +211,7 @@ describe('OmdbApiClient', () => {
         expect(result!.type).toBe(type);
     });
 
-    it('should return undefined and log info with the provider error message on an OMDb False response', async () => {
+    it('returns undefined and logs info with the provider error message on an OMDb False response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
             .build();
@@ -227,7 +227,7 @@ describe('OmdbApiClient', () => {
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
-    it('should handle missing imdbVotes from OMDB response', async () => {
+    it('leaves imdbVotes undefined when the OMDb response has none', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -241,7 +241,7 @@ describe('OmdbApiClient', () => {
         expect(result!.imdbVotes).toBeUndefined();
     });
 
-    it('should drop invalid Ratings entries and keep valid ones', async () => {
+    it('drops invalid Ratings entries and keeps valid ones', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
@@ -274,7 +274,7 @@ describe('OmdbApiClient', () => {
         expect(result!.rtRating).toBe(90);
     });
 
-    it('should keep the title when every Ratings entry is invalid', async () => {
+    it('keeps the title when every Ratings entry is invalid', async () => {
         const response = {
             Response: 'True',
             imdbID: 'tt1',
@@ -295,7 +295,7 @@ describe('OmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should use ID endpoint when searchTitle has imdbId', async () => {
+    it('uses the ID endpoint when the title has an IMDb ID', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt1234567',
@@ -318,7 +318,7 @@ describe('OmdbApiClient', () => {
         expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567');
     });
 
-    it('should return searchTitle directly when it has apiTitle', async () => {
+    it('returns the title unchanged when it already has an apiTitle', async () => {
         const mockAdapterForTest = buildMockAdapter().build();
         mockAdapterForTest.httpFetch = vi.fn();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
@@ -333,7 +333,7 @@ describe('OmdbApiClient', () => {
         expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
     });
 
-    it('should update apiTitle from OMDb response when fallback has no apiTitle', async () => {
+    it('updates apiTitle from the OMDb response when the fallback has no apiTitle', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt123',
@@ -349,7 +349,7 @@ describe('OmdbApiClient', () => {
         expect(result!.displayTitle).toBe('Test');
     });
 
-    it('should fetch details for a cached title without an apiTitle', async () => {
+    it('fetches details by IMDb ID for a cached title without an apiTitle', async () => {
         const mockResponse = {
             Response: 'True',
             imdbID: 'tt123',
@@ -367,7 +367,7 @@ describe('OmdbApiClient', () => {
         expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123');
     });
 
-    it('should warn once when the OMDb response is not an object', async () => {
+    it('warns once and returns undefined when the OMDb response is not an object', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
         const logger = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter, logger });
@@ -379,7 +379,7 @@ describe('OmdbApiClient', () => {
         });
     });
 
-    it('should log info and not warn for a Response "False" payload', async () => {
+    it('returns undefined and logs info without warning for a False response', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const logger = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter, logger });
@@ -390,7 +390,7 @@ describe('OmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should log info with the display title, IMDb ID, and provider message on a details miss', async () => {
+    it('returns undefined and logs the display title, IMDb ID, and provider message on a details miss', async () => {
         const adapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'False', Error: 'Incorrect IMDb ID.' })
             .build();
@@ -405,7 +405,7 @@ describe('OmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should log info without a provider message on a details miss that has no Error', async () => {
+    it('returns undefined and logs info without a provider message when a details miss has no Error', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
         const logger = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter, logger });
@@ -418,7 +418,7 @@ describe('OmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should log a malformed warning when a False response has a non-string Error', async () => {
+    it('warns once and returns undefined when a False response has a non-string Error', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False', Error: 42 }).build();
         const logger = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter, logger });
@@ -436,7 +436,7 @@ describe('OmdbApiClient', () => {
             ['a null body', null],
             ['an empty body', ''],
             ['an array body', []],
-        ])('should return undefined when search receives %s', async (_label, response) => {
+        ])('returns undefined when search receives %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
@@ -455,14 +455,14 @@ describe('OmdbApiClient', () => {
             ['a missing imdbID field', { Response: 'True', Title: 'Movie 1' }],
             ['an empty Title field', { Response: 'True', Title: '', imdbID: 'tt1' }],
             ['an empty imdbID field', { Response: 'True', Title: 'Movie 1', imdbID: '' }],
-        ])('should fail the lookup when search receives %s', async (_label, response) => {
+        ])('returns undefined when the search response has %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
             expect(await client.search('Movie 1')).toBeUndefined();
         });
 
-        it('should keep a valid search response that has no rating', async () => {
+        it('keeps a valid search response that has no rating', async () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchResolvingTo({ Response: 'True', Title: 'Movie 1', imdbID: 'tt1' })
                 .build();
@@ -481,7 +481,7 @@ describe('OmdbApiClient', () => {
             ['an object imdbRating field', { Response: 'True', Title: 'Movie 1', imdbID: 'tt1', imdbRating: {} }],
             ['a missing Title field', { Response: 'True', imdbID: 'tt1' }],
             ['a missing imdbID field', { Response: 'True', Title: 'Movie 1' }],
-        ])('should fail the details lookup when it receives %s', async (_label, response) => {
+        ])('returns undefined when the details lookup receives %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 

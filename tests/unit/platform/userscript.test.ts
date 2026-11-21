@@ -32,20 +32,20 @@ describe('UserscriptAdapter', () => {
         adapter = new UserscriptAdapter();
     });
 
-    it('storageGet should call GM_getValue', async () => {
+    it('reads a stored value through GM_getValue', async () => {
         GM_getValue.mockReturnValue('test-value');
         const result = await adapter.storageGet('key');
         expect(GM_getValue).toHaveBeenCalledWith('key');
         expect(result).toBe('test-value');
     });
 
-    it('storageGet should return undefined if key is not found', async () => {
+    it('returns undefined when the storage key is missing', async () => {
         GM_getValue.mockReturnValue(undefined);
         const result = await adapter.storageGet('nonexistent');
         expect(result).toBeUndefined();
     });
 
-    it('storageGetAll should call GM_listValues and GM_getValue for each key', async () => {
+    it('reads every stored key through GM_listValues and GM_getValue', async () => {
         GM_listValues.mockReturnValue(['key1', 'key2']);
         GM_getValue.mockImplementation((key: string) => `val-${key}`);
         const result = await adapter.storageGetAll();
@@ -55,7 +55,7 @@ describe('UserscriptAdapter', () => {
         expect(result).toEqual({ key1: 'val-key1', key2: 'val-key2' });
     });
 
-    it('storageGetAll should omit keys whose stored value is undefined', async () => {
+    it('omits stored keys whose value is undefined', async () => {
         GM_listValues.mockReturnValue(['key1', 'missing', 'key2']);
         GM_getValue.mockImplementation((key: string) => (key === 'missing' ? undefined : `val-${key}`));
         const result = await adapter.storageGetAll();
@@ -63,36 +63,36 @@ describe('UserscriptAdapter', () => {
         expect(result).not.toHaveProperty('missing');
     });
 
-    it('storageSet should call GM_setValue', async () => {
+    it('writes a value through GM_setValue', async () => {
         await adapter.storageSet('key', 'value');
         expect(GM_setValue).toHaveBeenCalledWith('key', 'value');
     });
 
-    it('storageSetMany should call GM_setValue for each entry', async () => {
+    it('writes each entry through GM_setValue', async () => {
         await adapter.storageSetMany({ k1: 'v1', k2: 'v2' });
         expect(GM_setValue).toHaveBeenCalledWith('k1', 'v1');
         expect(GM_setValue).toHaveBeenCalledWith('k2', 'v2');
     });
 
-    it('storageDelete should call GM_deleteValue', async () => {
+    it('deletes a key through GM_deleteValue', async () => {
         await adapter.storageDelete('key');
         expect(GM_deleteValue).toHaveBeenCalledWith('key');
     });
 
-    it('storageGetKeys should call GM_listValues and filter by prefix', async () => {
+    it('filters stored keys by prefix', async () => {
         GM_listValues.mockReturnValue(['fmc:1', 'other:2', 'fmc:3']);
         const result = await adapter.storageGetKeys('fmc:');
         expect(GM_listValues).toHaveBeenCalled();
         expect(result).toEqual(['fmc:1', 'fmc:3']);
     });
 
-    it('registerMenuCommand should call GM_registerMenuCommand', () => {
+    it('registers a menu command through GM_registerMenuCommand', () => {
         const fn = vi.fn();
         adapter.registerMenuCommand('test-label', fn);
         expect(GM_registerMenuCommand).toHaveBeenCalledWith('test-label', fn);
     });
 
-    it('httpFetch should resolve with JSON on success', async () => {
+    it('resolves with parsed JSON on success', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 200, response: { data: 'ok' } });
         });
@@ -102,7 +102,7 @@ describe('UserscriptAdapter', () => {
         expect(result).toEqual({ data: 'ok' });
     });
 
-    it('httpFetch should reject on HTTP error', async () => {
+    it('rejects on an HTTP error', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 404 });
         });
@@ -111,7 +111,7 @@ describe('UserscriptAdapter', () => {
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('HTTP 404');
     });
 
-    it('httpFetch should reject on network error', async () => {
+    it('rejects on a network error', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onerror }: XHRCallbacks) => {
             onerror?.();
         });
@@ -120,7 +120,7 @@ describe('UserscriptAdapter', () => {
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('network error');
     });
 
-    it('httpFetch should reject on timeout', async () => {
+    it('rejects on a timeout', async () => {
         GM_xmlhttpRequest.mockImplementation(({ ontimeout }: XHRCallbacks) => {
             ontimeout?.();
         });
@@ -129,7 +129,7 @@ describe('UserscriptAdapter', () => {
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow('timeout');
     });
 
-    it('httpFetch should pass timeout to GM_xmlhttpRequest', async () => {
+    it('passes the configured timeout to GM_xmlhttpRequest', async () => {
         const customTimeout = 5432;
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 200, response: {} });
@@ -139,7 +139,7 @@ describe('UserscriptAdapter', () => {
         expect(GM_xmlhttpRequest).toHaveBeenCalledWith(expect.objectContaining({ timeout: customTimeout }));
     });
 
-    it('httpFetch should resolve with text when responseType is not json', async () => {
+    it('resolves with text when responseType is text', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 200, responseText: 'plain text' });
         });
@@ -148,7 +148,7 @@ describe('UserscriptAdapter', () => {
         expect(result).toBe('plain text');
     });
 
-    it('httpFetch should resolve with JSON.parse(responseText) if response is missing', async () => {
+    it('parses responseText as JSON when response is missing', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 200, response: null, responseText: '{"data":"parsed"}' });
         });
@@ -157,7 +157,7 @@ describe('UserscriptAdapter', () => {
         expect(result).toEqual({ data: 'parsed' });
     });
 
-    it('httpFetch should reject when a JSON response has neither response nor responseText', async () => {
+    it('rejects when a JSON response has neither response nor responseText', async () => {
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 200, response: null, responseText: null });
         });
@@ -166,7 +166,7 @@ describe('UserscriptAdapter', () => {
         await expect(adapter.httpFetch('http://example.com')).rejects.toThrow(SyntaxError);
     });
 
-    it('httpFetch should include url on HTTP error', async () => {
+    it('includes the URL on an HTTP error', async () => {
         expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 403, responseText: '' });
@@ -180,7 +180,7 @@ describe('UserscriptAdapter', () => {
         }
     });
 
-    it('httpFetch should include truncated body on HTTP error', async () => {
+    it('includes the error body on an HTTP error', async () => {
         expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
             onload?.({ status: 401, responseText: 'Invalid API key' });
@@ -194,7 +194,7 @@ describe('UserscriptAdapter', () => {
         }
     });
 
-    it('httpFetch should truncate body to 200 characters', async () => {
+    it('truncates the error body to 200 characters', async () => {
         expect.assertions(1);
         const longBody = 'x'.repeat(500);
         GM_xmlhttpRequest.mockImplementation(({ onload }: XHRCallbacks) => {
@@ -209,7 +209,7 @@ describe('UserscriptAdapter', () => {
         }
     });
 
-    it('httpFetch should include url on network error', async () => {
+    it('includes the URL on a network error', async () => {
         expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ onerror }: XHRCallbacks) => {
             onerror?.();
@@ -223,7 +223,7 @@ describe('UserscriptAdapter', () => {
         }
     });
 
-    it('httpFetch should include url on timeout error', async () => {
+    it('includes the URL on a timeout error', async () => {
         expect.assertions(1);
         GM_xmlhttpRequest.mockImplementation(({ ontimeout }: XHRCallbacks) => {
             ontimeout?.();
@@ -237,7 +237,7 @@ describe('UserscriptAdapter', () => {
         }
     });
 
-    it('configGet should call GM_getValue', () => {
+    it('reads config through GM_getValue', () => {
         GM_getValue.mockReturnValue('val');
         const result = adapter.configGet('key');
         expect(GM_getValue).toHaveBeenCalledWith('key');

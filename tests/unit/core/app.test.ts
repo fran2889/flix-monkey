@@ -109,7 +109,7 @@ describe('App', () => {
         global.MutationObserver = ActualMutationObserver;
     });
 
-    it('should debounce navigation events', async () => {
+    it('debounces navigation events', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
 
         document.body.innerHTML = `
@@ -149,7 +149,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should respond to DOM mutations', async () => {
+    it('decorates a card added by a DOM mutation', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
@@ -190,7 +190,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should trigger new decoration when a container is replaced', async () => {
+    it('redecorates when a container is replaced', async () => {
         const mockAdapter = buildMockAdapter().build();
         const spy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
@@ -239,7 +239,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should inject loading overlay while fetching', async () => {
+    it('injects a loading overlay while the lookup is in flight', async () => {
         const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
 
         document.body.innerHTML = `
@@ -275,7 +275,7 @@ describe('App', () => {
         expect(card?.querySelector('.fm-rating-overlay')).not.toBeNull();
     });
 
-    it('should remove the loading overlay when getData rejects', async () => {
+    it('removes the loading overlay when the lookup rejects', async () => {
         const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
 
         document.body.innerHTML = `
@@ -297,7 +297,7 @@ describe('App', () => {
         });
     });
 
-    it('should trigger decoration on replaceState', async () => {
+    it('decorates on replaceState', async () => {
         const mockAdapter = buildMockAdapter().build();
         const getDataSpy = vi
             .spyOn(ApiClientManager.prototype, 'getData')
@@ -325,7 +325,7 @@ describe('App', () => {
         expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
     });
 
-    it('should throw if init() is called twice on the same instance', () => {
+    it('throws when the app is initialised twice', () => {
         const app = buildApp();
 
         app.init();
@@ -336,7 +336,7 @@ describe('App', () => {
     describe('startApp service gating', () => {
         it.each([
             {
-                description: 'Netflix is disabled via enableNetflix config',
+                description: 'Netflix is disabled',
                 setup: async () => {
                     const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                     vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
@@ -347,7 +347,7 @@ describe('App', () => {
                 expectedInstance: false,
             },
             {
-                description: 'Netflix is enabled via enableNetflix config',
+                description: 'Netflix is enabled',
                 setup: async () => {
                     const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                     vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
@@ -358,7 +358,7 @@ describe('App', () => {
                 expectedInstance: true,
             },
             {
-                description: 'ServiceRegistry.detect finds no service',
+                description: 'no service is detected',
                 setup: async () => {
                     const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                     vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
@@ -366,7 +366,7 @@ describe('App', () => {
                 },
                 expectedInstance: false,
             },
-        ])('should return the expected app when $description', async ({ setup, expectedInstance }) => {
+        ])('applies service gating when $description', async ({ setup, expectedInstance }) => {
             const result = startApp(await setup());
 
             if (!expectedInstance) {
@@ -402,7 +402,7 @@ describe('App', () => {
             'Disney Title',
         ],
     ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
-        it('should discover titles with the detected service surface definitions', async () => {
+        it('discovers titles with the detected service surface definitions', async () => {
             document.body.innerHTML = html;
             const { ServiceRegistry } = await import('../../../src/core/services/index.js');
             vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
@@ -419,7 +419,7 @@ describe('App', () => {
         });
     });
 
-    it('should catch and log errors thrown in the mutation handler', () => {
+    it('catches and logs errors thrown in the mutation handler', () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
@@ -435,7 +435,7 @@ describe('App', () => {
         expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
     });
 
-    it('should render a not-found fallback when the lookup fails', async () => {
+    it('renders a not-found fallback when the lookup fails', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Boom Movie"></a>
@@ -462,7 +462,7 @@ describe('App', () => {
         logSpy.mockRestore();
     });
 
-    it('should render a not-found fallback and log when a lookup times out', async () => {
+    it('renders a not-found fallback and logs when a lookup times out', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Hanging Film"></a>
@@ -512,7 +512,7 @@ describe('App', () => {
     it.each([
         ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
         ['rejects', { error: new Error('API failure') }],
-    ])('should clear the lookup timeout when a lookup %s', async (_outcome, settled) => {
+    ])('clears the lookup timeout when a lookup %s', async (_outcome, settled) => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Settled Movie"></a>
@@ -532,7 +532,7 @@ describe('App', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it('should disconnect the MutationObserver on unload', () => {
+    it('disconnects the MutationObserver on unload', () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
         appRef = startApp(mockAdapter);
 
@@ -541,7 +541,7 @@ describe('App', () => {
         expect(disconnectSpy).toHaveBeenCalled();
     });
 
-    it('should call decorateRoot on mutation target rather than full document when nodes are added', async () => {
+    it('decorates only the mutated subtree when nodes are added', async () => {
         const parent = document.createElement('div');
         document.body.appendChild(parent);
 
@@ -590,7 +590,7 @@ describe('App', () => {
         discoverSpy.mockRestore();
     });
 
-    it('should clear data-fm-injected attribute during redecorate so containers are eligible for re-decoration', () => {
+    it('clears the data-fm-injected attribute during redecorate so containers can be decorated again', () => {
         // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
         const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
 
@@ -619,7 +619,7 @@ describe('App', () => {
         discoverSpy.mockRestore();
     });
 
-    it('should not inject overlay when container is removed from DOM before data resolves', async () => {
+    it('does not inject an overlay when the container leaves the DOM before the data resolves', async () => {
         const container = document.createElement('div');
         container.className = 'title-card';
         container.innerHTML = '<a aria-label="Detach Test"></a>';
@@ -653,7 +653,7 @@ describe('App', () => {
         injectSpy.mockRestore();
     });
 
-    it('should stamp data-fm-key on fadeable card containers after decoration', async () => {
+    it('stamps data-fm-key on fadeable card containers after decoration', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Stamped Movie"></a>
@@ -675,7 +675,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should stamp data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
+    it('stamps data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
         document.body.innerHTML = `
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
@@ -699,7 +699,7 @@ describe('App', () => {
         spy.mockRestore();
     });
 
-    it('should render a fade toggle badge in the mini-modal when enableFadeToggle is true', async () => {
+    it('renders a fade toggle badge in the mini-modal when enableFadeToggle is true', async () => {
         document.body.innerHTML = `
             <div class="previewModal--wrapper mini-modal">
                 <div class="previewModal--player_container">
@@ -723,7 +723,7 @@ describe('App', () => {
         expect((container?.querySelector('.fm-fade-toggle') as HTMLElement | null)?.dataset.state).toBe('auto');
     });
 
-    it('should apply stored "always" fade override to browse title cards on reload', async () => {
+    it('applies a stored "always" fade override to browse title cards on reload', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Reload Movie"></a>
@@ -751,7 +751,7 @@ describe('App', () => {
         expect(card?.classList.contains('fm-faded')).toBe(true);
     });
 
-    it('should cycle fade toggle state on click and update sibling cards', async () => {
+    it('cycles the fade toggle state on click and updates sibling cards', async () => {
         document.body.innerHTML = `
             <div class="title-card" id="card1"><a aria-label="Cycle Movie"></a></div>
             <div class="previewModal--wrapper mini-modal">
@@ -911,7 +911,7 @@ describe('App', () => {
             };
         });
 
-        it('should cancel the override when the prompt is dismissed', async () => {
+        it('cancels the override when the prompt is dismissed', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -922,7 +922,7 @@ describe('App', () => {
             expect(mockCache.delete).not.toHaveBeenCalled();
         });
 
-        it('should alert on an invalid IMDb ID', async () => {
+        it('alerts on an invalid IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -941,7 +941,7 @@ describe('App', () => {
             }
         });
 
-        it('should set the override and evict the cache for a valid IMDb ID', async () => {
+        it('sets the override and evicts the cache for a valid IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -952,7 +952,7 @@ describe('App', () => {
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('should extract the IMDb ID from an IMDb URL', async () => {
+        it('extracts the IMDb ID from an IMDb URL', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -963,7 +963,7 @@ describe('App', () => {
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('should prefill the prompt with the current override before the API IMDb ID', async () => {
+        it('prefills the prompt with the current override before the API IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             mockOverrideManager.getImdbId.mockResolvedValue('tt0000001');
@@ -974,7 +974,7 @@ describe('App', () => {
             expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
         });
 
-        it('should evict the cache and re-decorate on refresh', async () => {
+        it('evicts the cache and re-decorates on refresh', async () => {
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);
@@ -986,7 +986,7 @@ describe('App', () => {
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
         });
 
-        it('logs a failure from the edit handler', async () => {
+        it('does not set an override or evict the cache and logs when editing the IMDb ID fails', async () => {
             mockOverrideManager.getImdbId.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);
@@ -1002,7 +1002,7 @@ describe('App', () => {
             expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
         });
 
-        it('logs a failure from the refresh handler', async () => {
+        it('evicts the cache and logs when refreshing ratings fails', async () => {
             mockCache.delete.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);

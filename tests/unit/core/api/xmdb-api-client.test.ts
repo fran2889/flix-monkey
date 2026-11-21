@@ -39,7 +39,7 @@ const deps: ApiClientDeps = {
 };
 
 describe('XmdbApiClient', () => {
-    it('should handle search with results', async () => {
+    it('returns the matching title from a search response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 results: [{ type: 'title', id: 'm1', name: 'Movie 1', year: 2020 }],
@@ -53,7 +53,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbRating).toBeUndefined();
     });
 
-    it('should return undefined and log info when no search results found', async () => {
+    it('returns undefined and logs info when no search results are found', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
@@ -64,7 +64,7 @@ describe('XmdbApiClient', () => {
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined and log info when search results have no titles', async () => {
+    it('returns undefined and logs info when search results contain no titles', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', id: 'nm1', name: 'Someone' }] })
             .build();
@@ -79,7 +79,7 @@ describe('XmdbApiClient', () => {
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
-    it('should handle details with Metacritic rating in ratings array', async () => {
+    it('reads metascore from a details response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'm1', name: 'Movie 1' }] })
             .withHttpFetchResolvingToOnce({
@@ -95,7 +95,7 @@ describe('XmdbApiClient', () => {
         expect(result!.mcRating).toBe(88);
     });
 
-    it('should map title_type to TitleType in getDetails', async () => {
+    it('maps title_type in the details response to a title type', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt1', name: 'Movie 1' }] })
             .withHttpFetchResolvingToOnce({
@@ -111,7 +111,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBe('movie');
     });
 
-    it('should map TV Series title_type to series', async () => {
+    it('maps a TV Series title_type to series', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt2', name: 'Show 1' }] })
             .withHttpFetchResolvingToOnce({
@@ -127,7 +127,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should return undefined for unknown title_type', async () => {
+    it('returns undefined for an unknown title_type', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingToOnce({ results: [{ type: 'title', id: 'tt3', name: 'Short 1' }] })
             .withHttpFetchResolvingToOnce({
@@ -142,7 +142,7 @@ describe('XmdbApiClient', () => {
         expect(result!.type).toBeUndefined();
     });
 
-    it('should log info when the details response has a null title', async () => {
+    it('returns undefined and logs info when the details response has a null title', async () => {
         const adapter = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 id: 'tt0000000',
@@ -163,7 +163,7 @@ describe('XmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined without fetching when the title has no IMDb ID', async () => {
+    it('returns undefined without fetching when the title has no IMDb ID', async () => {
         const adapter = buildMockAdapter().build();
         const client = new XmdbApiClient({ ...deps, adapter });
         const searchTitle = buildTitle().withDisplayTitle('Test').build();
@@ -172,7 +172,7 @@ describe('XmdbApiClient', () => {
         expect(adapter.httpFetch).not.toHaveBeenCalled();
     });
 
-    it('should return unhealthy status when API key is missing', async () => {
+    it('returns an unhealthy status when the API key is missing', async () => {
         const mockConfigForTest: ConfigManager = {
             get: () => '',
         } as unknown as ConfigManager;
@@ -181,7 +181,7 @@ describe('XmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
-    it('should extract vote_count from XMDB response', async () => {
+    it('reads vote_count from the XMDB response as imdbVotes', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 id: 'tt1',
@@ -195,7 +195,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbVotes).toBe(2500000);
     });
 
-    it('should use the id from the XMDb details response', async () => {
+    it('uses the id from the XMDb details response', async () => {
         const adapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ id: 'tt2', title: 'Movie 1', release_year: 2020 })
             .build();
@@ -206,7 +206,7 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbId).toBe('tt2');
     });
 
-    it('should log info with the provider message for an error payload', async () => {
+    it('returns undefined and logs info with the provider message for an error payload', async () => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 'Movie not found' }).build();
         const logger = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter, logger });
@@ -219,7 +219,7 @@ describe('XmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should prefer the provider message when the details response has an error and a null title', async () => {
+    it('logs the provider message when the details response has both an error and a null title', async () => {
         const adapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ id: 'tt1', title: null, error: 'Movie not found' })
             .build();
@@ -240,7 +240,7 @@ describe('XmdbApiClient', () => {
         ['a non-string error field', { error: 42 }],
         ['a null response', null],
         ['an undefined response', undefined],
-    ])('should log a malformed warning when the details response has %s', async (_label, response) => {
+    ])('warns once and returns undefined when the details response has %s', async (_label, response) => {
         const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
         const logger = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter, logger });
@@ -260,7 +260,7 @@ describe('XmdbApiClient', () => {
             ['a null body', null],
             ['an empty body', ''],
             ['an array body', []],
-        ])('should return undefined when search receives %s', async (_label, response) => {
+        ])('returns undefined when search receives %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
@@ -278,14 +278,14 @@ describe('XmdbApiClient', () => {
             ['a result with a numeric id', { results: [{ type: 'title', id: 42, name: 'Movie 1' }] }],
             ['a result with a numeric name', { results: [{ type: 'title', id: 'm1', name: 42 }] }],
             ['a result with a string year', { results: [{ type: 'title', id: 'm1', name: 'Movie 1', year: '2020' }] }],
-        ])('should return undefined when the search response has %s', async (_label, response) => {
+        ])('returns undefined when the search response has %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
             expect(await client.search('Movie 1')).toBeUndefined();
         });
 
-        it('should drop invalid search results and keep valid ones', async () => {
+        it('drops invalid search results and keeps valid ones', async () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     results: [
@@ -303,7 +303,7 @@ describe('XmdbApiClient', () => {
             expect(result!.year).toBe(2021);
         });
 
-        it('should keep a valid search result that has no year', async () => {
+        it('keeps a valid search result that has no year', async () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchResolvingTo({ results: [{ type: 'title', id: 'm1', name: 'Movie 1' }] })
                 .build();
@@ -315,7 +315,7 @@ describe('XmdbApiClient', () => {
             expect(result!.year).toBeUndefined();
         });
 
-        it('should warn once when every search result is invalid', async () => {
+        it('warns once and returns undefined when every search result is invalid', async () => {
             const response = { results: [{ type: 'title', id: '', name: '' }] };
             const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const logger = buildLogger().build();
@@ -338,7 +338,7 @@ describe('XmdbApiClient', () => {
             ['an empty title', { id: 'tt1', title: '' }],
             ['a string rating', { id: 'tt1', title: 'Movie 1', rating: '8.8' }],
             ['a string metascore', { id: 'tt1', title: 'Movie 1', metascore: '88' }],
-        ])('should fail the details lookup when it receives %s', async (_label, response) => {
+        ])('returns undefined when the details lookup receives %s', async (_label, response) => {
             const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
 
@@ -347,7 +347,7 @@ describe('XmdbApiClient', () => {
             expect(result).toBeUndefined();
         });
 
-        it('should keep a valid details response that has no rating', async () => {
+        it('keeps a valid details response that has no rating', async () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchResolvingTo({ id: 'tt1', title: 'Movie 1', release_year: 2020 })
                 .build();

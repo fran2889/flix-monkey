@@ -23,13 +23,13 @@ describe('core/config-fields', () => {
     describe('CONFIG_DEFAULTS', () => {
         // Action fields carry no stored value. If they leaked into CONFIG_DEFAULTS,
         // ConfigManager.get would accept them as keys and stringify the missing value.
-        it('should exclude action fields', () => {
+        it('excludes action fields', () => {
             const actionKeys = CONFIG_FIELDS.filter(isActionField).map(f => f.key);
             expect(actionKeys.length).toBeGreaterThan(0);
             expect(actionKeys.every(key => !(key in CONFIG_DEFAULTS))).toBe(true);
         });
 
-        it('should hold a concrete value for every settings key', () => {
+        it('holds a concrete value for every settings key', () => {
             const settingKeys = CONFIG_FIELDS.filter(isSettingField).map(f => f.key);
             expect(Object.keys(CONFIG_DEFAULTS).sort()).toEqual([...settingKeys].sort());
             for (const value of Object.values(CONFIG_DEFAULTS)) {
@@ -57,19 +57,19 @@ describe('core/config-fields', () => {
                 field = findSettingField(key);
             });
 
-            it('should accept valid key when provider is selected', () => {
+            it('accepts a valid key when the provider is selected', () => {
                 expect(field.validate!('valid-key', { apiClient: provider })).toBeUndefined();
             });
 
-            it('should reject empty key when provider is selected', () => {
+            it('rejects an empty key when the provider is selected', () => {
                 expect(typeof field.validate?.('', { apiClient: provider })).toBe('string');
             });
 
-            it('should reject a missing key when provider is selected', () => {
+            it('rejects a missing key when the provider is selected', () => {
                 expect(typeof field.validate?.(undefined, { apiClient: provider })).toBe('string');
             });
 
-            it('should accept empty key when provider is not selected', () => {
+            it('accepts an empty key when the provider is not selected', () => {
                 expect(field.validate!('', { apiClient: 'agregarr' })).toBeUndefined();
             });
         });
@@ -80,11 +80,11 @@ describe('core/config-fields', () => {
                 field = findSettingField('fadeRatingThreshold');
             });
 
-            it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
+            it.each(['5.0', '10.0', '0.0'])('accepts the valid threshold %s', val => {
                 expect(field.validate!(val)).toBeUndefined();
             });
 
-            it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
+            it.each(['-1.0', '11.0', 'not-a-number'])('rejects the invalid threshold %s', val => {
                 expect(typeof field.validate?.(val)).toBe('string');
                 expect(field.validate?.(val)).toBe('Fade threshold must be a number between 0 and 10');
             });
@@ -96,18 +96,18 @@ describe('core/config-fields', () => {
                 field = findSettingField(key);
             });
 
-            it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {
+            it.each(['0', '30', '-1'])('accepts the valid TTL value %s', val => {
                 expect(field.validate!(val)).toBeUndefined();
             });
 
-            it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {
+            it.each(['-2', 'not-a-number', '5.5', ' '])('rejects the invalid TTL value %s', val => {
                 expect(typeof field.validate?.(val)).toBe('string');
                 expect(field.validate?.(val)).toBe('Cache duration must be -1 or a positive integer');
             });
         });
     });
 
-    it('should not have duplicate keys', () => {
+    it('does not contain duplicate keys', () => {
         const keys = CONFIG_FIELDS.map(f => f.key);
         const uniqueKeys = new Set(keys);
         expect(uniqueKeys.size).toBe(keys.length);

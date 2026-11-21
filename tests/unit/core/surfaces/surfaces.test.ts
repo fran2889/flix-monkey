@@ -22,11 +22,11 @@ describe('SurfaceManager', () => {
         return sm.discover(document.body);
     }
 
-    it('should return empty array when no matching elements exist', () => {
+    it('returns an empty array when no matching elements exist', () => {
         expect(discover('<div>nothing</div>')).toEqual([]);
     });
 
-    it('should not discover preview modal surfaces without the scoped wrapper', () => {
+    it('does not discover preview modal surfaces without the scoped wrapper', () => {
         expect(
             discover(`
             <div class="previewModal--player_container">
@@ -36,15 +36,15 @@ describe('SurfaceManager', () => {
         ).toHaveLength(0);
     });
 
-    it('should skip element with empty title', () => {
+    it('skips an element with an empty title', () => {
         expect(discover('<div class="title-card"><a aria-label="   "></a></div>')).toHaveLength(0);
     });
 
-    it('should skip element with missing title attribute', () => {
+    it('skips an element with a missing title attribute', () => {
         expect(discover('<div data-uia="standard-card"></div>')).toHaveLength(0);
     });
 
-    it('should skip a surface whose getTitle returns undefined', () => {
+    it('skips a surface whose getTitle returns undefined', () => {
         const sm = new SurfaceManager(buildLogger().build(), {
             card: {
                 titleSelector: '[data-title]',
@@ -70,7 +70,7 @@ describe('SurfaceManager', () => {
         expect(sm.discover(document.body)).toHaveLength(0);
     });
 
-    it('should deduplicate when multiple title elements share the same container', () => {
+    it('deduplicates title elements that share the same container', () => {
         const results = discover(`
             <div class="title-card">
                 <a aria-label="First"></a>
@@ -81,7 +81,7 @@ describe('SurfaceManager', () => {
         expect(results[0]?.title).toBe('First');
     });
 
-    it('should fall back to parentElement when the container resolver finds nothing', () => {
+    it('falls back to parentElement when the container resolver finds nothing', () => {
         const logger = buildLogger().build();
         const sm = new SurfaceManager(logger, {
             card: {
@@ -113,7 +113,7 @@ describe('SurfaceManager', () => {
         );
     });
 
-    it('should return empty array when querySelectorAll throws', () => {
+    it('returns an empty array when querySelectorAll throws', () => {
         const sm = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
         expect(
             sm.discover({
@@ -376,7 +376,7 @@ describe('HBO Max surfaces', () => {
         ['Watch Peacemaker. Season 1, Episode 2: Best Friends for Never. 1 of 2.', 'Peacemaker'],
         ['Watch Mel Brooks: The 99 Year Old Man!, Episode 2. 2 of 2.', 'Mel Brooks: The 99 Year Old Man!'],
         ['Number 1: House of the Dragon. 1 of 10.', 'House of the Dragon'],
-    ])('extracts a title from a supported HBO Max label: %s', (ariaLabel, expected) => {
+    ])('extracts a title from a supported HBO Max label: "%s"', (ariaLabel, expected) => {
         const tile = document.createElement('a');
         tile.dataset.sonicType = ariaLabel.startsWith('Watch ') ? 'video' : 'show';
         tile.setAttribute('aria-label', ariaLabel);
@@ -494,7 +494,7 @@ describe('Disney+ surfaces', () => {
         ['Adults Hulu Original Series Select for details on this title.', 'Adults'],
         ['Moana Action and Adventure Select for details on this title.', 'Moana'],
         ['Lilo & Stitch Kids and Family Select for details on this title.', 'Lilo & Stitch'],
-    ])('parses a Disney+ title from an accessible-name fallback: %s', (ariaLabel, expected) => {
+    ])('parses a Disney+ title from an accessible-name fallback: "%s"', (ariaLabel, expected) => {
         const tile = document.createElement('a');
         tile.setAttribute('aria-label', ariaLabel);
         tile.innerHTML = '<img alt="">';
@@ -508,7 +508,7 @@ describe('Disney+ surfaces', () => {
         'Upcoming 09/08 | 8:00pm New York XIST vs. Michigan Hybrid',
         'Avatar: Fire and Ash',
         'Select for details on this title.',
-    ])('rejects unsupported Disney+ accessible-name fallbacks: %s', (ariaLabel: string | undefined) => {
+    ])('rejects unsupported Disney+ accessible-name fallbacks: "%s"', (ariaLabel: string | undefined) => {
         const tile = document.createElement('a');
         if (ariaLabel !== undefined) tile.setAttribute('aria-label', ariaLabel);
         tile.innerHTML = '<img alt="">';

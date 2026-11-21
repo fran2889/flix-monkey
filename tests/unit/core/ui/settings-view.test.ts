@@ -287,7 +287,7 @@ describe('SettingsView', () => {
             expect((container.querySelector('#fm-showMcRating') as HTMLInputElement).checked).toBe(true);
         });
 
-        it('skips disabled fields in readValues', () => {
+        it('omits disabled fields from the read values', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
                 {

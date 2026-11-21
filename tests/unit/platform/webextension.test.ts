@@ -34,14 +34,14 @@ describe('WebExtensionAdapter', () => {
         vi.useRealTimers();
     });
 
-    it('storageGet should call storage.local.get', async () => {
+    it('reads a stored value through storage.local.get', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ key: 'value' });
         const result = await adapter.storageGet('key');
         expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith('key');
         expect(result).toBe('value');
     });
 
-    it('storageGet should return a boolean value', async () => {
+    it('returns a stored boolean value', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ key: true });
         await expect(adapter.storageGet('key')).resolves.toBe(true);
     });
@@ -51,24 +51,24 @@ describe('WebExtensionAdapter', () => {
         ['null', null],
         ['an object', { nested: true }],
         ['an array', ['value']],
-    ])('storageGet should return undefined for %s', async (_label, value) => {
+    ])('returns undefined for %s', async (_label, value) => {
         mockedBrowser.storage.local.get.mockResolvedValue({ key: value });
         await expect(adapter.storageGet('key')).resolves.toBeUndefined();
     });
 
-    it('storageGet should return undefined when storage.local.get is not a record', async () => {
+    it('returns undefined when storage.local.get does not return a record', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue(null as unknown as Record<string, unknown>);
         await expect(adapter.storageGet('key')).resolves.toBeUndefined();
     });
 
-    it('storageGetAll should call storage.local.get(null)', async () => {
+    it('reads every stored value through storage.local.get', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ k1: 'v1', k2: 'v2' });
         const result = await adapter.storageGetAll();
         expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith(null);
         expect(result).toEqual({ k1: 'v1', k2: 'v2' });
     });
 
-    it('storageGetAll should omit values that are not storage values', async () => {
+    it('omits values that are not storage values', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({
             validString: 'value',
             validBoolean: false,
@@ -83,35 +83,35 @@ describe('WebExtensionAdapter', () => {
         });
     });
 
-    it('storageGetAll should return an empty record when storage is not an object', async () => {
+    it('returns an empty record when storage is not an object', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue(null as unknown as Record<string, unknown>);
         await expect(adapter.storageGetAll()).resolves.toEqual({});
     });
 
-    it('storageSet should call storage.local.set', async () => {
+    it('writes a value through storage.local.set', async () => {
         await adapter.storageSet('key', 'value');
         expect(mockedBrowser.storage.local.set).toHaveBeenCalledWith({ key: 'value' });
     });
 
-    it('storageSetMany should call storage.local.set with values', async () => {
+    it('writes all values through storage.local.set', async () => {
         const values = { k1: 'v1', k2: 'v2' };
         await adapter.storageSetMany(values);
         expect(mockedBrowser.storage.local.set).toHaveBeenCalledWith(values);
     });
 
-    it('storageDelete should call storage.local.remove', async () => {
+    it('deletes a key through storage.local.remove', async () => {
         await adapter.storageDelete('key');
         expect(mockedBrowser.storage.local.remove).toHaveBeenCalledWith('key');
     });
 
-    it('storageGetKeys should call storage.local.get(null) and filter by prefix', async () => {
+    it('filters stored keys by prefix', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({ 'fmc:1': 'v1', 'other:2': 'v2', 'fmc:3': 'v3' });
         const result = await adapter.storageGetKeys('fmc:');
         expect(mockedBrowser.storage.local.get).toHaveBeenCalledWith(null);
         expect(result.sort()).toEqual(['fmc:1', 'fmc:3'].sort());
     });
 
-    it('httpFetch should send message to background and return data', async () => {
+    it('sends a fetch message to the background and returns its data', async () => {
         mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data: { success: true } });
         const result = (await adapter.httpFetch('https://api.example.com', { responseType: 'json' })) as {
             success: boolean;
@@ -125,14 +125,14 @@ describe('WebExtensionAdapter', () => {
         expect(result.success).toBe(true);
     });
 
-    it('httpFetch should return success data that contains an error field', async () => {
+    it('returns success data that contains an error field', async () => {
         const data = { error: 'upstream rate limit', status: 429 };
         mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data });
 
         await expect(adapter.httpFetch('https://api.example.com')).resolves.toEqual(data);
     });
 
-    it('httpFetch should throw error if background returns error', async () => {
+    it('throws when the background returns an error', async () => {
         mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: false, error: 'Not Found', status: 404 });
 
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('Not Found');
@@ -145,7 +145,7 @@ describe('WebExtensionAdapter', () => {
         }
     });
 
-    it('httpFetch should pass timeout to background', async () => {
+    it('passes the configured timeout to the background', async () => {
         const customTimeout = 3000;
         mockedBrowser.runtime.sendMessage.mockResolvedValue({ ok: true, data: {} });
 
@@ -157,18 +157,18 @@ describe('WebExtensionAdapter', () => {
         );
     });
 
-    it('storageGet should return undefined if key is not found', async () => {
+    it('returns undefined when the storage key is missing', async () => {
         mockedBrowser.storage.local.get.mockResolvedValue({});
         const result = await adapter.storageGet('nonexistent');
         expect(result).toBeUndefined();
     });
 
-    it('configGet should return value from configData', () => {
+    it('returns a value from the seeded config data', () => {
         adapter.setConfigData({ key: 'value' });
         expect(adapter.configGet('key')).toBe('value');
     });
 
-    it('configGet should return undefined before seeding and for absent keys after seeding', () => {
+    it('returns undefined before seeding and for absent keys after seeding', () => {
         const freshAdapter = new WebExtensionAdapter();
         expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
         expect(freshAdapter.configGet('xmdbApiKey')).toBeUndefined();
@@ -190,12 +190,12 @@ describe('WebExtensionAdapter', () => {
         ['a failure with a non-string error', { ok: false, error: 42 }],
         ['a failure with a non-number status', { ok: false, error: 'Not Found', status: '404' }],
         ['a failure with a non-string body', { ok: false, error: 'Not Found', body: {} }],
-    ])('httpFetch should reject %s as an empty background response', async (_label, payload) => {
+    ])('rejects %s as an empty background response', async (_label, payload) => {
         mockedBrowser.runtime.sendMessage.mockResolvedValue(payload);
         await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
     });
 
-    it('httpFetch should include url on HTTP error from background', async () => {
+    it('includes the URL, status, and body on an HTTP error from the background', async () => {
         expect.assertions(3);
         mockedBrowser.runtime.sendMessage.mockResolvedValue({
             ok: false,
@@ -214,7 +214,7 @@ describe('WebExtensionAdapter', () => {
         }
     });
 
-    it('httpFetch should include url on empty background response', async () => {
+    it('includes the URL on an empty background response', async () => {
         expect.assertions(1);
         mockedBrowser.runtime.sendMessage.mockResolvedValue(undefined);
 
@@ -226,7 +226,7 @@ describe('WebExtensionAdapter', () => {
         }
     });
 
-    it.each(['resolves', 'rejects'])('httpFetch clears the timeout when the request %s', async outcome => {
+    it.each(['resolves', 'rejects'])('clears the timeout when the request %s', async outcome => {
         vi.useFakeTimers();
         if (outcome === 'rejects') {
             mockedBrowser.runtime.sendMessage.mockRejectedValue(new Error('network failure'));

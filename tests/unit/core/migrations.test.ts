@@ -88,7 +88,7 @@ describe('runMigrations', () => {
         expect(adapter.storageSet).toHaveBeenNthCalledWith(2, DATA_VERSION_KEY, '3');
     });
 
-    it('runs recovery, logs it, and advances after upgrade failure', async () => {
+    it('runs recovery and advances the version after an upgrade failure', async () => {
         const error = new Error('bad cache entry');
         const onFailure = vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, deleted: 4 });
         const adapter = buildMockAdapter().withStorageGetResolvingTo('0').build();
@@ -122,7 +122,7 @@ describe('runMigrations', () => {
         expect(adapter.storageSet).not.toHaveBeenCalled();
     });
 
-    it('advances without recovery when onFailure is absent', async () => {
+    it('advances the version without recovery when onFailure is absent', async () => {
         const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
         await runMigrations(adapter, logger, [
             { version: 1, description: 'Test migration', upgrade: vi.fn().mockRejectedValue(new Error('bad')) },
@@ -130,7 +130,7 @@ describe('runMigrations', () => {
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '1');
     });
 
-    it('logs recovery failure and continues to later migrations', async () => {
+    it('logs the recovery failure, advances the version, and continues to later migrations', async () => {
         const recoveryError = new Error('recovery bad');
         const calls: number[] = [];
         const adapter = buildMockAdapter().withStorageGetResolvingTo(0).build();
@@ -216,7 +216,7 @@ describe('runMigrations', () => {
                 },
             ],
         ],
-    ])('rejects %s registries', async (_name, migrations) => {
+    ])('rejects a registry with %s', async (_name, migrations) => {
         await expect(
             runMigrations(buildMockAdapter().build(), logger, migrations as unknown as StorageMigration[])
         ).rejects.toThrow();
@@ -232,21 +232,21 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
 
     it.each([
         [
-            'string rating',
+            'a string rating',
             {
                 inputData: { displayTitle: 'Test', rating: '8.5', rtRating: 90 },
                 expectedData: { displayTitle: 'Test', rtRating: 90, imdbRating: '8.5' },
             },
         ],
         [
-            'numeric rating',
+            'a numeric rating',
             {
                 inputData: { displayTitle: 'Test', rating: 9.1 },
                 expectedData: { displayTitle: 'Test', imdbRating: 9.1 },
             },
         ],
         [
-            'null rating',
+            'a null rating',
             {
                 inputData: { displayTitle: 'Test', rating: null },
                 expectedData: { displayTitle: 'Test', imdbRating: null },
@@ -259,7 +259,7 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
                 expectedData: { displayTitle: 'Test', imdbRating: 7.2 },
             },
         ],
-    ])('migrates entries with rating field: %s', async (_desc, { inputData, expectedData }) => {
+    ])('migrates an entry with %s', async (_desc, { inputData, expectedData }) => {
         const key = 'fmc:test';
         const expires = 12345;
         const entries = { [key]: JSON.stringify({ data: inputData, expires }) };
@@ -280,9 +280,9 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
     });
 
     it.each([
-        ['preserves imdbRating field', { data: { imdbRating: 8.5 } }],
-        ['skips entries without rating', { data: { displayTitle: 'Test' } }],
-    ])('skips valid entries without rating: %s', async (_desc, { data }) => {
+        ['an entry that already has imdbRating', { data: { imdbRating: 8.5 } }],
+        ['an entry without a rating', { data: { displayTitle: 'Test' } }],
+    ])('skips %s', async (_desc, { data }) => {
         const key = 'fmc:test';
         const expires = 12345;
         const entries = { [key]: JSON.stringify({ data, expires }) };
@@ -302,12 +302,12 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
     });
 
     it.each([
-        ['deletes malformed JSON', { value: '{bad json' }],
-        ['deletes a null payload', { value: null }],
-        ['deletes entries without data', { value: { expires: 12345 } }],
-        ['deletes entries with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
-        ['deletes entries with non-object data', { value: { data: 'rating', expires: 12345 } }],
-    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        ['malformed JSON', { value: '{bad json' }],
+        ['a null payload', { value: null }],
+        ['an entry without data', { value: { expires: 12345 } }],
+        ['an entry with array data', { value: { data: [{ rating: 8.5 }], expires: 12345 } }],
+        ['an entry with non-object data', { value: { data: 'rating', expires: 12345 } }],
+    ])('deletes %s', async (_desc, { value }) => {
         const key = 'fmc:test';
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
         const deletedKeys = [key];
@@ -368,7 +368,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
 
     it.each([
         [
-            'entry with displayTitle and imdbId in data',
+            'a displayTitle and imdbId in its data',
             {
                 inputData: { displayTitle: 'Test Movie', imdbId: 'tt1234567', imdbRating: 8.5 },
                 expectedDisplayTitle: 'Test Movie',
@@ -377,7 +377,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
             },
         ],
         [
-            'entry with only displayTitle in data',
+            'only a displayTitle in its data',
             {
                 inputData: { displayTitle: 'Another Movie' },
                 expectedDisplayTitle: 'Another Movie',
@@ -386,7 +386,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
             },
         ],
         [
-            'entry with displayTitle and imdbId and other fields in data',
+            'a displayTitle, imdbId, and other fields in its data',
             {
                 inputData: { displayTitle: 'Third Movie', imdbId: 'tt333', year: 2024, imdbRating: 9.0 },
                 expectedDisplayTitle: 'Third Movie',
@@ -395,7 +395,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
             },
         ],
     ])(
-        'migrates old format entries: %s',
+        'migrates an old format entry with %s',
         async (_desc, { inputData, expectedDisplayTitle, expectedImdbId, expectedData }) => {
             const key = 'fmc:test-movie';
             const expires = 12345;
@@ -424,7 +424,7 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         }
     );
 
-    it('skips entries already in new format', async () => {
+    it('skips an entry already in the new format', async () => {
         const key = 'fmc:new-format';
         const expires = 12345;
         const newEntry = { displayTitle: 'New Movie', imdbId: 'tt111', data: { imdbRating: 9.0 }, expires };
@@ -444,10 +444,10 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
     });
 
     it.each([
-        ['entries without displayTitle in data', { data: { imdbId: 'tt222', imdbRating: 7.5 }, expires: 12345 }],
-        ['entries with null displayTitle in data', { data: { displayTitle: null, imdbId: 'tt999' }, expires: 12345 }],
-        ['entries with non-string displayTitle in data', { data: { displayTitle: 123 }, expires: 12345 }],
-    ])('deletes entries that cannot be migrated: %s', async (_desc, entry) => {
+        ['a missing displayTitle', { data: { imdbId: 'tt222', imdbRating: 7.5 }, expires: 12345 }],
+        ['a null displayTitle', { data: { displayTitle: null, imdbId: 'tt999' }, expires: 12345 }],
+        ['a non-string displayTitle', { data: { displayTitle: 123 }, expires: 12345 }],
+    ])('deletes an entry with %s', async (_desc, entry) => {
         const key = 'fmc:test';
         const entries = { [key]: JSON.stringify(entry) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };
@@ -466,12 +466,12 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
     });
 
     it.each([
-        ['deletes malformed JSON', { value: '{bad json' }],
-        ['deletes a null payload', { value: null }],
-        ['deletes entries without data', { value: { expires: 12345 } }],
-        ['deletes entries with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
-        ['deletes entries with non-object data', { value: { data: 'displayTitle', expires: 12345 } }],
-    ])('deletes invalid entries: %s', async (_desc, { value }) => {
+        ['malformed JSON', { value: '{bad json' }],
+        ['a null payload', { value: null }],
+        ['an entry without data', { value: { expires: 12345 } }],
+        ['an entry with array data', { value: { data: [{ displayTitle: 'Test' }], expires: 12345 } }],
+        ['an entry with non-object data', { value: { data: 'displayTitle', expires: 12345 } }],
+    ])('deletes %s', async (_desc, { value }) => {
         const key = 'fmc:test';
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };

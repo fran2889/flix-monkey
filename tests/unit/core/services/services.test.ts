@@ -41,12 +41,12 @@ describe('ServiceRegistry', () => {
             ['play.hbomax.com', HboMaxService],
             ['www.hbomax.com', HboMaxService],
             ['www.disneyplus.com', DisneyPlusService],
-        ])('returns the matching service for %s', (hostname, Service) => {
+        ])('returns the matching service for the hostname %s', (hostname, Service) => {
             assert(ServiceRegistry.detect(hostname) instanceof Service);
         });
 
         it.each(['evilhbomax.com', 'hbomax.com.evil.com', 'evilnetflix.com', 'www.youtube.com', ''])(
-            'returns undefined for %s',
+            'returns undefined for the hostname "%s"',
             hostname => {
                 assert.strictEqual(ServiceRegistry.detect(hostname), undefined);
             }

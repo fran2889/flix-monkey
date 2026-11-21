@@ -66,7 +66,7 @@ describe.each(serviceCases)('$name surfaces', ({ createService, surfaces, fixtur
         overlayRenderer = buildRenderer(createService());
     });
 
-    it('should discover and inject on all surfaces', () => {
+    it('discovers and injects an overlay on every surface fixture', () => {
         testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures);
     });
 });
@@ -95,7 +95,7 @@ describe('Netflix More Like This surfaces', () => {
         );
     }
 
-    it('should decorate collapsed and expanded More Like This tiles once', () => {
+    it('decorates collapsed and expanded More Like This tiles once', () => {
         document.body.innerHTML = NETFLIX_MORE_LIKE_THIS_SECTION.collapsedHtml;
 
         let surfaces = surfaceManager.discover(document.body);

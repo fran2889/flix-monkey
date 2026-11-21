@@ -19,27 +19,27 @@ describe('Title', () => {
                 expected: 'https://www.imdb.com/find/?q=Movie%20Name',
                 description: 'imdbId is not provided',
             },
-        ])('should generate correct URL when $description', ({ props, expected }) => {
+        ])('generates the IMDb URL when $description', ({ props, expected }) => {
             const title = new Title(props);
             expect(title.imdbUrl).toBe(expected);
         });
     });
 
-    it('should create notFound title with default undefined source', () => {
+    it('creates a notFound title with an undefined source by default', () => {
         const title = Title.notFound('Missing Movie');
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.imdbRating).toBeUndefined();
         expect(title.source).toBeUndefined();
     });
 
-    it('should create notFound title with provided source', () => {
+    it('creates a notFound title with the provided source', () => {
         const title = Title.notFound('Missing Movie', 'omdb');
         expect(title.displayTitle).toBe('Missing Movie');
         expect(title.source).toBe('omdb');
         expect(title.imdbRating).toBeUndefined();
     });
 
-    it('should return an immutable copy with only its source changed', () => {
+    it('returns an immutable copy with only its source changed', () => {
         const original = new Title({
             displayTitle: 'Original',
             apiTitle: 'Canonical',
@@ -62,10 +62,10 @@ describe('Title', () => {
     });
 
     describe('hasRating', () => {
-        it.each(['imdbRating', 'rtRating', 'mcRating'] as const)('should be true when %s is 0', field => {
+        it.each(['imdbRating', 'rtRating', 'mcRating'] as const)('reports a rating when %s is 0', field => {
             expect(new Title({ displayTitle: 'Test', [field]: 0 }).hasRating).toBe(true);
         });
-        it('should be false when all ratings are undefined', () => {
+        it('reports no rating when all ratings are undefined', () => {
             expect(new Title({ displayTitle: 'Test' }).hasRating).toBe(false);
         });
     });
@@ -75,7 +75,7 @@ describe('Title', () => {
         // and converts it before constructing a Title. Anything that is not a finite
         // number carries no rating, including raw wire strings reaching an untyped caller.
         it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['8.5'], ['90%'], ['N/A'], ['']])(
-            'collapses non-numeric input %s to undefined',
+            'treats a missing or non-numeric rating as no rating',
             (input: unknown) => {
                 const options = {
                     displayTitle: 'Test',
@@ -97,7 +97,7 @@ describe('Title', () => {
             [0, 0],
             [8.5, 8.5],
             [90, 90],
-        ])('keeps the numeric rating %s -> %s', (input, expected) => {
+        ])('keeps the numeric rating %s', (input, expected) => {
             const title = new Title({
                 displayTitle: 'Test',
                 imdbRating: input,
@@ -118,7 +118,7 @@ describe('Title', () => {
         // Providers report years as partial strings such as "2020-"; extracting the
         // digits is the client's job, so Title rejects the raw wire value.
         it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['2020-'], ['2020']])(
-            'collapses non-numeric year %s to undefined',
+            'treats a missing or non-numeric year as undefined',
             (input: unknown) => {
                 expect(
                     new Title({ displayTitle: 'Test', year: input } as unknown as TitleOptions).year
@@ -158,15 +158,15 @@ describe('Title', () => {
     });
 
     describe('type field', () => {
-        it('should default to undefined', () => {
+        it('defaults the type to undefined', () => {
             expect(new Title({ displayTitle: 'Test' }).type).toBeUndefined();
         });
 
-        it('should accept a type value', () => {
+        it('stores a provided type value', () => {
             expect(new Title({ displayTitle: 'Test', type: 'movie' }).type).toBe('movie');
         });
 
-        it('should be undefined on notFound titles', () => {
+        it('leaves the type undefined on notFound titles', () => {
             expect(Title.notFound('Missing').type).toBeUndefined();
         });
     });
@@ -179,13 +179,13 @@ describe('Title', () => {
             [999, 999],
             [1000, 1000],
             [2500000, 2500000],
-        ])('keeps numeric imdbVotes %s -> %s', (input, expected) => {
+        ])('keeps numeric imdbVotes %s', (input, expected) => {
             expect(new Title({ displayTitle: 'Test', imdbVotes: input }).imdbVotes).toBe(expected);
         });
     });
 
     describe('immutability', () => {
-        it('should not allow mutation of fields after construction', () => {
+        it('does not allow mutation of fields after construction', () => {
             const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
             const mutableTitle = title as {
                 displayTitle: string;
@@ -206,7 +206,7 @@ describe('Title', () => {
         });
     });
 
-    it('should return object without displayTitle from toCacheJSON', () => {
+    it('omits displayTitle from the serialized cache object', () => {
         const title = new Title({
             displayTitle: 'Test Movie',
             apiTitle: 'Test Movie',

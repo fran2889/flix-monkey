@@ -16,49 +16,49 @@ describe('core/logger', () => {
         );
     }
 
-    it('should log warn without crashing', () => {
+    it('writes a prefixed warning to the console', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         makeLogger().warn('test warning');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test warning');
         spy.mockRestore();
     });
 
-    it('should handle multiple arguments', () => {
+    it('passes additional arguments through to the console', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         makeLogger().warn('test', { foo: 'bar' });
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test', { foo: 'bar' });
         spy.mockRestore();
     });
 
-    it('should log errors', () => {
+    it('writes a prefixed error to the console', () => {
         const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
         makeLogger().error('test error');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test error');
         spy.mockRestore();
     });
 
-    it('should log info', () => {
+    it('writes a prefixed info message to the console', () => {
         const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
         makeLogger().info('test info');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test info');
         spy.mockRestore();
     });
 
-    it('should log debug when adapter returns true', () => {
+    it('logs debug output when the adapter returns true', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         makeLogger(true).debug('test debug');
         expect(spy).toHaveBeenCalledWith('[FlixMonkey] test debug');
         spy.mockRestore();
     });
 
-    it('should not log debug when adapter returns false', () => {
+    it('does not log debug output when the adapter returns false', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         makeLogger(false).debug('test debug');
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
     });
 
-    it('should log debug when adapter returns string "true"', () => {
+    it('logs debug output when the adapter returns the string "true"', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const logger = new Logger(
             buildMockAdapter()
@@ -70,7 +70,7 @@ describe('core/logger', () => {
         spy.mockRestore();
     });
 
-    it('should not log debug when adapter returns string "false"', () => {
+    it('does not log debug output when the adapter returns the string "false"', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const logger = new Logger(
             buildMockAdapter()
@@ -82,7 +82,7 @@ describe('core/logger', () => {
         spy.mockRestore();
     });
 
-    it('should log debug when adapter returns undefined (fresh install default)', () => {
+    it('logs debug output when the adapter returns undefined on a fresh install', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const logger = new Logger(
             buildMockAdapter()
@@ -94,7 +94,7 @@ describe('core/logger', () => {
         spy.mockRestore();
     });
 
-    it('should log debug when adapter returns null', () => {
+    it('logs debug output when the adapter returns null', () => {
         const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const logger = new Logger(
             buildMockAdapter()

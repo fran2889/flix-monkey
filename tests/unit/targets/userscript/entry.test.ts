@@ -158,7 +158,7 @@ describe('userscript entry point', () => {
         );
     });
 
-    it('registers the settings menu when startApp returns undefined', async () => {
+    it('registers the settings menu when app startup returns nothing', async () => {
         const appModule = await import('../../../../src/core/app');
         const migrationsModule = await import('../../../../src/core/migrations');
 
@@ -195,7 +195,7 @@ describe('userscript entry point', () => {
         });
     });
 
-    it('uses the app managers in the settings menu when startApp returns an app handle', async () => {
+    it('uses the app managers in the settings menu when startup returns an app handle', async () => {
         const cacheManager = { source: 'app-cache' };
         const disabledManager = { source: 'app-disabled' };
         appHandle = { cacheManager, disabledManager };
@@ -217,7 +217,7 @@ describe('userscript entry point', () => {
         expect(disabledConstructor).not.toHaveBeenCalled();
     });
 
-    it('logs a startup failure when migrations reject', async () => {
+    it('does not start the app or register the menu and logs when migrations reject', async () => {
         migrationRunner = vi.fn().mockRejectedValue(new Error('migration boom'));
         const appModule = await import('../../../../src/core/app');
 
@@ -231,7 +231,7 @@ describe('userscript entry point', () => {
         expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
     });
 
-    it('logs a settings render failure', async () => {
+    it('calls renderSettings and logs when rendering the settings menu fails', async () => {
         renderSettings.mockRejectedValue(new Error('render boom'));
 
         await import('../../../../src/targets/userscript/entry');

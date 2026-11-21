@@ -40,7 +40,7 @@ const deps: ApiClientDeps = {
 };
 
 describe('AgregarrApiClient', () => {
-    it('should return the first supported IMDb Suggestions result', async () => {
+    it('returns the first supported IMDb Suggestions result', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 d: [
@@ -63,7 +63,7 @@ describe('AgregarrApiClient', () => {
         ['tvMiniSeries', 'series'],
         ['tvMovie', 'movie'],
         ['tvSpecial', 'movie'],
-    ])('should map IMDb Suggestions %s results to %s', async (qid, type) => {
+    ])('maps an IMDb Suggestions %s result to %s', async (qid, type) => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 d: [{ id: 'tt1', l: 'Show 1', qid, y: 2020 }],
@@ -76,7 +76,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe(type);
     });
 
-    it.each(['short', 'tvShort'])('should not accept %s IMDb Suggestions results', async qid => {
+    it.each(['short', 'tvShort'])('does not accept %s IMDb Suggestions results', async qid => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Short', qid, y: 2020 }] })
             .build();
@@ -85,7 +85,7 @@ describe('AgregarrApiClient', () => {
         expect(await client.search('Short')).toBeUndefined();
     });
 
-    it('should return undefined and log info when no results found', async () => {
+    it('returns undefined and logs info when no results are found', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
@@ -96,7 +96,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined and log info when IMDb Suggestions response has no d array', async () => {
+    it('returns undefined and logs info when the IMDb Suggestions response has no d array', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
@@ -107,7 +107,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should warn once when the IMDb Suggestions body is not an object', async () => {
+    it('warns once and returns undefined when the IMDb Suggestions body is not an object', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
@@ -119,7 +119,7 @@ describe('AgregarrApiClient', () => {
         );
     });
 
-    it('should return undefined when IMDb Suggestions has no supported title types', async () => {
+    it('returns undefined when IMDb Suggestions has no supported title types', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
             .build();
@@ -131,7 +131,7 @@ describe('AgregarrApiClient', () => {
         );
     });
 
-    it('should build the correct IMDb Suggestions URL', async () => {
+    it('builds the IMDb Suggestions URL', async () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = buildMockAdapter().build();
         mockAdapter.httpFetch = httpFetch;
@@ -141,7 +141,7 @@ describe('AgregarrApiClient', () => {
         expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/movie%201.json');
     });
 
-    it('should fetch rating from Agregarr and retain IMDb Suggestions metadata', async () => {
+    it('fetches the rating from Agregarr and retains the IMDb Suggestions metadata', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
             .build();
@@ -163,7 +163,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe('movie');
     });
 
-    it('should use the IMDb ID from the Agregarr details response', async () => {
+    it('uses the IMDb ID from the Agregarr details response', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo([{ imdbId: 'tt2', rating: 8.8, votes: 2500000 }])
             .build();
@@ -175,7 +175,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbId).toBe('tt2');
     });
 
-    it('should retain IMDb Suggestions type when Agregarr returns a null rating', async () => {
+    it('retains the IMDb Suggestions type when Agregarr returns a null rating', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo([{ imdbId: 'tt4', rating: null, votes: null }])
             .build();
@@ -192,7 +192,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should handle the full IMDb Suggestions and Agregarr fetch flow', async () => {
+    it('combines IMDb Suggestions metadata and Agregarr details into a complete title', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingToOnce({
                 d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
@@ -209,7 +209,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.type).toBe('movie');
     });
 
-    it('should lowercase and encode non-ASCII titles in IMDb Suggestions URLs', async () => {
+    it('lowercases and encodes non-ASCII titles in IMDb Suggestions URLs', async () => {
         const httpFetch = vi.fn().mockResolvedValue({ d: [] });
         const mockAdapter = buildMockAdapter().build();
         mockAdapter.httpFetch = httpFetch;
@@ -219,7 +219,7 @@ describe('AgregarrApiClient', () => {
         expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
     });
 
-    it('should handle null votes from Agregarr response', async () => {
+    it('leaves imdbVotes undefined when the Agregarr response has null votes', async () => {
         const mockAdapter = buildMockAdapter()
             .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: null }])
             .build();
@@ -234,7 +234,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbVotes).toBeUndefined();
     });
 
-    it('should return undefined when the Agregarr ratings array is empty', async () => {
+    it('returns undefined and logs info when the Agregarr ratings array is empty', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
@@ -245,7 +245,7 @@ describe('AgregarrApiClient', () => {
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined without fetching when the title has no IMDb ID', async () => {
+    it('returns undefined without fetching when the title has no IMDb ID', async () => {
         const mockAdapter = buildMockAdapter().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
         const searchResult = buildTitle().withDisplayTitle('Movie 1').build();
@@ -254,7 +254,7 @@ describe('AgregarrApiClient', () => {
         expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
     });
 
-    it('should return undefined when the Agregarr response carries no ratings array', async () => {
+    it('returns undefined and warns when the Agregarr response carries no ratings array', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(undefined).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
@@ -270,7 +270,7 @@ describe('AgregarrApiClient', () => {
         );
     });
 
-    it('should skip search when imdbId is provided', async () => {
+    it('skips search when an IMDb ID is provided', async () => {
         const mockConfigForTest: ConfigManager = {
             get: (_k: string) => 'key',
         } as unknown as ConfigManager;
@@ -306,7 +306,7 @@ describe('AgregarrApiClient', () => {
         expect(result!.imdbRating).toBe(8.0);
     });
 
-    it('should call search when imdbId is not provided', async () => {
+    it('calls search when no IMDb ID is provided', async () => {
         const mockConfigForTest: ConfigManager = {
             get: (_k: string) => 'key',
         } as unknown as ConfigManager;
@@ -354,7 +354,7 @@ describe('AgregarrApiClient', () => {
             mockLoggerForTests = buildLogger().build();
         });
 
-        it('should use override IMDb ID when available', async () => {
+        it('uses the override IMDb ID when one is available', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     ok: true,
@@ -389,7 +389,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.imdbRating).toBe(8.5);
         });
 
-        it('should use displayTitle from override fetch when details fetch fails', async () => {
+        it('returns the override IMDb ID and requested display title when the details fetch returns nothing', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     ok: true,
@@ -421,7 +421,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.displayTitle).toBe('Test Movie');
         });
 
-        it('should fall back to normal search when no override exists', async () => {
+        it('falls back to a normal search when no override exists', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     d: [{ id: 'tt1234567', l: 'Normal Movie', qid: 'movie', y: 2020 }],
@@ -454,7 +454,7 @@ describe('AgregarrApiClient', () => {
             expect(mockOverrideManagerForTests.getImdbId).toHaveBeenCalledWith('Test Movie');
         });
 
-        it('should disable client when override fetch fails', async () => {
+        it('returns the override title without disabling the client when the details fetch returns nothing', async () => {
             const mockDisabledManagerForTest: DisabledClientsManager = {
                 isDisabled: vi.fn().mockResolvedValue(false),
                 disable: vi.fn().mockResolvedValue(undefined),
@@ -485,7 +485,7 @@ describe('AgregarrApiClient', () => {
             expect(mockDisabledManagerForTest.disable).not.toHaveBeenCalled();
         });
 
-        it('should not attempt override or normal fetch when client is disabled', async () => {
+        it('does not fetch when the client is disabled', async () => {
             const mockDisabledManagerForTest: DisabledClientsManager = {
                 isDisabled: vi.fn().mockResolvedValue(true),
                 disable: vi.fn().mockResolvedValue(undefined),
@@ -518,7 +518,7 @@ describe('AgregarrApiClient', () => {
             ['a null body', null],
             ['an empty body', ''],
             ['an array body', []],
-        ])('should return undefined when search receives %s', async (_label, response) => {
+        ])('returns undefined when search receives %s', async (_label, response) => {
             const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
 
@@ -536,14 +536,14 @@ describe('AgregarrApiClient', () => {
             ['a result with a numeric id', { d: [{ qid: 'movie', id: 42, l: 'Movie 1' }] }],
             ['a result with a numeric l', { d: [{ qid: 'movie', id: 'tt1', l: 42 }] }],
             ['a result with a string year', { d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1', y: '2020' }] }],
-        ])('should return undefined when the search response has %s', async (_label, response) => {
+        ])('returns undefined when the search response has %s', async (_label, response) => {
             const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
 
             expect(await client.search('Movie 1')).toBeUndefined();
         });
 
-        it('should drop invalid search results and keep valid ones', async () => {
+        it('drops invalid search results and keeps valid ones', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({
                     d: [
@@ -561,7 +561,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.year).toBe(2021);
         });
 
-        it('should keep a valid search result that has no year', async () => {
+        it('keeps a valid search result that has no year', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo({ d: [{ qid: 'movie', id: 'tt1', l: 'Movie 1' }] })
                 .build();
@@ -573,7 +573,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.year).toBeUndefined();
         });
 
-        it('should warn once when every search result is invalid', async () => {
+        it('warns once and returns undefined when every search result is invalid', async () => {
             const response = { d: [{ qid: 'movie', id: '', l: 'Bad' }] };
             const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const logger = buildLogger().build();
@@ -595,7 +595,7 @@ describe('AgregarrApiClient', () => {
             ['an entry with a numeric imdbId', [{ imdbId: 42, rating: 8.8 }]],
             ['an entry with a string rating', [{ imdbId: 'tt1', rating: '8.8' }]],
             ['an entry with a string votes field', [{ imdbId: 'tt1', votes: 'many' }]],
-        ])('should return undefined when the details response has %s', async (_label, response) => {
+        ])('returns undefined when the details response has %s', async (_label, response) => {
             const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
 
@@ -604,7 +604,7 @@ describe('AgregarrApiClient', () => {
             expect(result).toBeUndefined();
         });
 
-        it('should drop invalid rating entries and keep valid ones', async () => {
+        it('drops invalid rating entries and keeps valid ones', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo([
                     { rating: 7.5 },
@@ -620,7 +620,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.imdbVotes).toBe(2500000);
         });
 
-        it('should keep a valid details entry that has no rating', async () => {
+        it('keeps a valid details entry that has no rating', async () => {
             const mockAdapter = buildMockAdapter()
                 .withHttpFetchResolvingTo([{ imdbId: 'tt1', votes: 1000 }])
                 .build();
@@ -632,7 +632,7 @@ describe('AgregarrApiClient', () => {
             expect(result!.imdbRating).toBeUndefined();
         });
 
-        it('should warn once when every rating entry is invalid', async () => {
+        it('warns once and returns undefined when every rating entry is invalid', async () => {
             const response = [{ imdbId: '', rating: 8.8 }];
             const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
             const logger = buildLogger().build();
