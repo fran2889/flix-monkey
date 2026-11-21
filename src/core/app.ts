@@ -8,7 +8,7 @@ import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } f
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
-import { ApiSource, type ApiSourceType, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants';
+import { ApiSource, type ApiSourceType, DECORATION_DEBOUNCE_MS, LOOKUP_TIMEOUT_MS } from './constants';
 import { DisabledClientsManager, type DisabledClientsManager as DisabledClientsManagerType } from './disabled-clients';
 import {
     FadeManager,
@@ -21,7 +21,7 @@ import { Logger } from './logger';
 import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './overlay';
 import { ServiceRegistry } from './services/index';
 import { SurfaceManager } from './surfaces/index';
-import type { Title } from './title';
+import { Title } from './title';
 import { applyFadeToggleState } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
 
@@ -34,7 +34,6 @@ export class FlixMonkeyApp {
     readonly #renderer: OverlayRendererType;
     readonly #surfaces: SurfaceManager;
     readonly #logger: Logger;
-    readonly #inFlight = new Map<string, Promise<Title>>();
     readonly #pendingRoots = new Set<Element | Document>();
     readonly #debouncedDecorate: () => void;
     #observer: MutationObserver | undefined;
@@ -157,30 +156,39 @@ export class FlixMonkeyApp {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : undefined;
-        const request = this.#getTitleRequest(dedupKey, displayTitle);
+        const request = this.#raceWithTimeout(this.#api.getData(displayTitle));
+
+        let data: Title;
+        try {
+            data = await request;
+        } catch (err) {
+            /*
+             * A failed or timed-out lookup renders an uncached not-found title so the
+             * card keeps a usable IMDb search badge instead of going blank. Nothing is
+             * cached here, so a refresh or a redecorate retries the lookup; until then
+             * the fallback overlay marks the card as decorated.
+             */
+            this.#logger.error(`Failed to decorate "${displayTitle}"`, err);
+            data = Title.notFound(displayTitle);
+        }
 
         try {
-            const data = await request;
             this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
         } finally {
             this.#renderer.removeLoadingOverlay(container);
         }
     }
 
-    async #getTitleRequest(dedupKey: string, displayTitle: string): Promise<Title> {
-        const existing = this.#inFlight.get(dedupKey);
-        if (existing) return existing;
-
+    async #raceWithTimeout(promise: Promise<Title>): Promise<Title> {
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         const timeout = new Promise<never>((_, reject) => {
-            timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+            timeoutId = setTimeout(() => reject(new Error('lookup timeout')), LOOKUP_TIMEOUT_MS);
         });
-        const request = Promise.race([this.#api.getData(displayTitle), timeout]).finally(() => {
+        try {
+            return await Promise.race([promise, timeout]);
+        } finally {
             clearTimeout(timeoutId);
-            this.#inFlight.delete(dedupKey);
-        });
-        this.#inFlight.set(dedupKey, request);
-        return request;
+        }
     }
 
     #renderTitle(
@@ -388,9 +396,9 @@ export function startApp(adapter: PlatformAdapter): FlixMonkeyApp | undefined {
     if (!currentService.isEnabled(configManager)) {
         return undefined;
     }
-    const cache = new CacheManager(adapter, configManager, logger);
-    const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
+    const cache = new CacheManager(adapter, configManager, logger, overrideManager);
+    const disabledManager = new DisabledClientsManager(adapter);
     const clientDeps: ApiClientDeps = {
         adapter,
         config: configManager,

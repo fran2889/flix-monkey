@@ -36,9 +36,9 @@ function buildAppDependencies(): {
     const adapter = buildMockAdapter().build();
     const logger = buildLogger().build();
     const config = new ConfigManager(adapter, logger);
-    const cache = new CacheManager(adapter, config, logger);
     const disabledManager = new DisabledClientsManager(adapter);
     const overrideManager = new IdOverrideManager(adapter);
+    const cache = new CacheManager(adapter, config, logger, overrideManager);
     const deps: ApiClientDeps = { adapter, config, disabledManager, logger, overrideManager };
     const client = new AgregarrApiClient(deps);
     return {
@@ -126,39 +126,6 @@ describe('App', () => {
         const results = surfaces.discover(document);
         expect(results).toHaveLength(1);
         expect(results[0]?.title).toBe('Movie Title');
-    });
-
-    it('should deduplicate in-flight requests for the same title', async () => {
-        const mockAdapter = buildMockAdapter().build();
-
-        // Initialize DOM with multiple containers sharing the same title
-        document.body.innerHTML = `
-        <div id="container">
-            <div class="title-card" id="card1"><a aria-label="Shared Title"></a></div>
-            <div class="title-card" id="card2"><a aria-label="Shared Title"></a></div>
-        </div>
-    `;
-
-        const getDataSpy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Resolved').build());
-
-        appRef = startApp(mockAdapter);
-
-        await vi.waitFor(() => {
-            if (getDataSpy.mock.calls.length === 0) throw new Error('Not called yet');
-        });
-
-        // Verify that concurrent discoveries are deduplicated into a single API/cache lookup
-        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(1);
-
-        // Verify that subsequent discoveries while a request is in-flight do not trigger new lookups
-        window.history.pushState({}, '', '/new');
-        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
-
-        await Promise.resolve();
-        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(2);
-        getDataSpy.mockRestore();
     });
 
     it('should debounce navigation events', async () => {
@@ -470,7 +437,7 @@ describe('App', () => {
         expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
     });
 
-    it('should log errors thrown by decorateContainer rather than propagating them', async () => {
+    it('should render a not-found fallback when the lookup fails', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Boom Movie"></a>
@@ -491,10 +458,13 @@ describe('App', () => {
             },
             { timeout: 2000 }
         );
+
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
         logSpy.mockRestore();
     });
 
-    it('should remove inFlight entry and log error if API call hangs past timeout', async () => {
+    it('should render a not-found fallback and log when a lookup times out', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Hanging Film"></a>
@@ -507,17 +477,44 @@ describe('App', () => {
         await Promise.resolve();
         vi.runAllTimers();
 
-        // Advance past INFLIGHT_TIMEOUT_MS (30000ms)
+        // Advance past LOOKUP_TIMEOUT_MS (30000ms)
         await vi.advanceTimersByTimeAsync(31_000);
 
         expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+        logSpy.mockRestore();
+    });
+
+    it('keeps a render failure out of the not-found fallback', async () => {
+        document.body.innerHTML = `
+        <div class="title-card">
+            <a aria-label="Broken Movie"></a>
+        </div>
+    `;
+        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+            buildTitle().withApiTitle('Broken Movie').build()
+        );
+        const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay').mockImplementation(() => {
+            throw new Error('render failure');
+        });
+
+        appRef = startApp(buildMockAdapter().build());
+
+        await vi.waitFor(() => {
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
+        });
+
+        expect(injectSpy).toHaveBeenCalledTimes(1);
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
         logSpy.mockRestore();
     });
 
     it.each([
         ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
         ['rejects', { error: new Error('API failure') }],
-    ])('should clear the inflight timeout when a lookup %s', async (_outcome, settled) => {
+    ])('should clear the lookup timeout when a lookup %s', async (_outcome, settled) => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Settled Movie"></a>
@@ -593,25 +590,6 @@ describe('App', () => {
         expect(roots).toContain(secondParent);
 
         discoverSpy.mockRestore();
-    });
-
-    it('should deduplicate in-flight requests for titles that differ only by punctuation', async () => {
-        const mockAdapter = buildMockAdapter().build();
-        document.body.innerHTML = `
-            <div id="container">
-                <div class="title-card" id="card1"><a aria-label="Test: Movie"></a></div>
-                <div class="title-card" id="card2"><a aria-label="Test Movie"></a></div>
-            </div>
-        `;
-        const getDataSpy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Test Movie').withImdbRating(7.0).build());
-        appRef = startApp(mockAdapter);
-        await vi.waitFor(() => {
-            if (getDataSpy.mock.calls.length === 0) throw new Error('Not called yet');
-        });
-        expect(getDataSpy.mock.calls.length).toBeLessThanOrEqual(1);
-        getDataSpy.mockRestore();
     });
 
     it('should clear data-fm-injected attribute during redecorate so containers are eligible for re-decoration', () => {

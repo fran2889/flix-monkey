@@ -10,6 +10,7 @@ let cacheConstructor: Mock<(..._args: unknown[]) => object>;
 let configConstructor: Mock<(..._args: unknown[]) => object>;
 let disabledConstructor: Mock<(..._args: unknown[]) => object>;
 let loggerConstructor: Mock<(..._args: unknown[]) => object>;
+let overrideConstructor: Mock<(..._args: unknown[]) => object>;
 let settingsConstructor: Mock<(..._args: unknown[]) => void>;
 let renderSettings: Mock<() => Promise<void>>;
 let loggerError: Mock;
@@ -51,6 +52,14 @@ vi.mock('../../../../src/core/disabled-clients', () => ({
     DisabledClientsManager: class {
         constructor(..._args: unknown[]) {
             return disabledConstructor(..._args);
+        }
+    },
+}));
+
+vi.mock('../../../../src/core/id-override-manager', () => ({
+    IdOverrideManager: class {
+        constructor(..._args: unknown[]) {
+            return overrideConstructor(..._args);
         }
     },
 }));
@@ -108,6 +117,7 @@ describe('userscript entry point', () => {
         cacheConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-cache' }));
         configConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-config' }));
         disabledConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-disabled' }));
+        overrideConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-override' }));
         loggerError = vi.fn();
         renderSettings = vi.fn().mockResolvedValue(undefined);
         loggerConstructor = vi.fn((..._: unknown[]) => ({ source: 'fallback-logger', error: loggerError }));
@@ -169,11 +179,13 @@ describe('userscript entry point', () => {
         const logger = loggerConstructor.mock.results[0]?.value;
         expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(logger);
         const config = configConstructor.mock.results[0]?.value;
+        const overrideManager = overrideConstructor.mock.results[0]?.value;
         const cacheManager = cacheConstructor.mock.results[0]?.value;
         const disabledManager = disabledConstructor.mock.results[0]?.value;
         expect(loggerConstructor).toHaveBeenCalledWith(adapter);
         expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
-        expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger);
+        expect(overrideConstructor).toHaveBeenCalledWith(adapter);
+        expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger, overrideManager);
         expect(disabledConstructor).toHaveBeenCalledWith(adapter);
         expect(settingsConstructor).toHaveBeenCalledWith({
             adapter,

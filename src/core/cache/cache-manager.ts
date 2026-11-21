@@ -5,6 +5,7 @@
 import type { PlatformAdapter } from '../../platform/adapter';
 import type { ConfigManager } from '../config/config-manager';
 import { CACHE_TTL_INFINITE, DAYS_TO_MS } from '../constants';
+import type { IdOverrideManager } from '../id-override-manager';
 import type { Logger } from '../logger';
 import { ParseError } from '../parse-utils';
 import type { Title } from '../title';
@@ -25,10 +26,13 @@ export interface CacheStore {
 
     /**
      * Persists a title using the TTL selected from its rating and release year.
+     * Storage is best effort: the cache may decline to store the title when a
+     * write invariant rejects it.
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param titleObj - Title data to serialize.
-     * @returns Promise that resolves when the entry has been stored.
+     * @returns Promise that resolves when the entry has been stored or the cache
+     *   declines to store it.
      */
     write(displayTitle: string, titleObj: Title): Promise<void>;
 }
@@ -41,11 +45,14 @@ export class CacheManager implements CacheStore {
     readonly #adapter: PlatformAdapter;
     readonly #config: ConfigManager;
     readonly #logger: Logger;
+    readonly #overrides: IdOverrideManager;
+    readonly #writeChains = new Map<string, Promise<void>>();
 
-    constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger) {
+    constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger, overrides: IdOverrideManager) {
         this.#adapter = adapter;
         this.#config = config;
         this.#logger = logger;
+        this.#overrides = overrides;
     }
 
     async read(displayTitle: string): Promise<CacheEntry | undefined> {
@@ -76,16 +83,54 @@ export class CacheManager implements CacheStore {
     }
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {
+        await this.#enqueue(displayTitle, async () => {
+            const override = await this.#overrides.getImdbId(displayTitle);
+            if (override && override !== titleObj.imdbId) {
+                this.#logger.debug(
+                    `Skipped cache write for "${displayTitle}": override ${override} differs from ${titleObj.imdbId}`
+                );
+                return;
+            }
+
+            const isBareMiss = !titleObj.hasRating && !titleObj.imdbId;
+            if (isBareMiss) {
+                const existing = await this.read(displayTitle);
+                if (existing && !existing.isExpired && existing.getTitle().hasRating) {
+                    this.#logger.debug(`Skipped cache downgrade for "${displayTitle}"`);
+                    return;
+                }
+            }
+
+            const key = this.#getCacheKey(displayTitle);
+            const now = Date.now();
+            const ttl = this.#calculateTtl(titleObj);
+            const entry = new CacheEntry(
+                displayTitle,
+                titleObj.imdbId,
+                titleObj.toCacheJSON(),
+                ttl === Infinity ? undefined : now + ttl
+            );
+            await this.#adapter.storageSet(key, JSON.stringify(entry));
+        });
+    }
+
+    /*
+     * Writes for one title share a promise chain. The stored tail never rejects,
+     * so a failed write cannot block the next one, and it is cleared only when no
+     * later write has replaced it.
+     */
+    async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
-        const now = Date.now();
-        const ttl = this.#calculateTtl(titleObj);
-        const entry = new CacheEntry(
-            displayTitle,
-            titleObj.imdbId,
-            titleObj.toCacheJSON(),
-            ttl === Infinity ? undefined : now + ttl
+        const previous = this.#writeChains.get(key) ?? Promise.resolve();
+        const run = previous.then(operation);
+        const tail = run.then(
+            () => undefined,
+            () => undefined
         );
-        await this.#adapter.storageSet(key, JSON.stringify(entry));
+        this.#writeChains.set(key, tail);
+        return run.finally(() => {
+            if (this.#writeChains.get(key) === tail) this.#writeChains.delete(key);
+        });
     }
 
     #calculateTtl(titleObj: Title): number {

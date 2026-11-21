@@ -15,6 +15,7 @@ import {
 } from '../../../../src/core/config/index';
 import { AUTOSAVE_DEBOUNCE_MS } from '../../../../src/core/constants';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
+import { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
@@ -33,7 +34,8 @@ describe('SettingsUI', () => {
         mockAdapter = buildMockAdapter().build();
         mockLogger = buildLogger().build();
         const config = new ConfigManager(mockAdapter, mockLogger);
-        mockCacheManager = new CacheManager(mockAdapter, config, mockLogger);
+        const overrideManager = new IdOverrideManager(mockAdapter);
+        mockCacheManager = new CacheManager(mockAdapter, config, mockLogger, overrideManager);
         mockDisabledClientsManager = new DisabledClientsManager(mockAdapter);
         vi.spyOn(mockCacheManager, 'clear').mockResolvedValue();
         vi.spyOn(mockDisabledClientsManager, 'resetAll').mockResolvedValue([]);

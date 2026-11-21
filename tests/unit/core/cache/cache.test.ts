@@ -64,8 +64,25 @@ describe('CacheManager', () => {
             .withCacheTtlRatedNewYear('30')
             .withCacheTtlRatedOldYear('-1')
             .build();
-        cacheManager = new CacheManager(adapter, config, mockLogger);
+        const overrides = new IdOverrideManager(adapter);
+        cacheManager = new CacheManager(adapter, config, mockLogger, overrides);
     });
+
+    function buildManager(): {
+        adapter: MockPlatformAdapter;
+        store: Map<string, string>;
+        manager: CacheManager;
+        overrides: IdOverrideManager;
+    } {
+        const { adapter: memoryAdapter, store } = buildMemoryAdapter();
+        const overrides = new IdOverrideManager(memoryAdapter);
+        return {
+            adapter: memoryAdapter,
+            store,
+            manager: new CacheManager(memoryAdapter, config, mockLogger, overrides),
+            overrides,
+        };
+    }
 
     it('should return undefined when cache is empty', async () => {
         adapter.storageGet.mockResolvedValue(undefined);
@@ -536,12 +553,187 @@ describe('CacheManager', () => {
         expect(result).toBeUndefined();
     });
 
-    describe('clearing cached data', () => {
-        function buildManager(): { adapter: MockPlatformAdapter; store: Map<string, string>; manager: CacheManager } {
-            const { adapter: memoryAdapter, store } = buildMemoryAdapter();
-            return { adapter: memoryAdapter, store, manager: new CacheManager(memoryAdapter, config, mockLogger) };
-        }
+    describe('write ordering', () => {
+        it('deletes a missing title without error', async () => {
+            const { manager } = buildManager();
+            await expect(manager.delete('Missing Movie')).resolves.toBeUndefined();
+        });
 
+        it('runs a write queued behind a rejected write', async () => {
+            const { adapter: memoryAdapter, manager } = buildManager();
+            let failFirst: (error: Error) => void = () => undefined;
+            const gate = new Promise<void>((_, reject) => {
+                failFirst = reject;
+            });
+            memoryAdapter.storageSet.mockImplementationOnce(async () => {
+                await gate;
+            });
+
+            const first = manager.write(
+                'Queued Movie',
+                buildTitle().withDisplayTitle('Queued Movie').withImdbRating(7).build()
+            );
+            const second = manager.write(
+                'Queued Movie',
+                buildTitle().withDisplayTitle('Queued Movie').withImdbRating(8).build()
+            );
+            failFirst(new Error('storage failed'));
+
+            await expect(first).rejects.toThrow('storage failed');
+            await expect(second).resolves.toBeUndefined();
+            const entry = await manager.read('Queued Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('keeps a later operation queued after an earlier one settles', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            let releaseFirst: () => void = () => undefined;
+            const firstGate = new Promise<void>(resolve => {
+                releaseFirst = resolve;
+            });
+            let releaseSecond: () => void = () => undefined;
+            const secondGate = new Promise<void>(resolve => {
+                releaseSecond = resolve;
+            });
+            let calls = 0;
+            memoryAdapter.storageSet.mockImplementation(async (key: string, value: string) => {
+                calls += 1;
+                if (calls === 1) await firstGate;
+                if (calls === 2) await secondGate;
+                store.set(key, value);
+            });
+
+            const first = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(7).build()
+            );
+            const second = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(8).build()
+            );
+            releaseFirst();
+            await first;
+            const third = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(9).build()
+            );
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            // The third write must wait for the gated second write, not start behind a cleared chain.
+            expect(calls).toBe(2);
+
+            releaseSecond();
+            await Promise.all([second, third]);
+
+            const entry = await manager.read('Chained Movie');
+            expect(entry?.getTitle().imdbRating).toBe(9);
+        });
+
+        it('keeps the chain usable after a write rejects', async () => {
+            const { adapter: memoryAdapter, manager } = buildManager();
+            const title = buildTitle().withDisplayTitle('Retry Movie').withImdbRating(7).build();
+            memoryAdapter.storageSet.mockRejectedValueOnce(new Error('storage failed'));
+
+            await expect(manager.write('Retry Movie', title)).rejects.toThrow('storage failed');
+            await expect(manager.write('Retry Movie', title)).resolves.toBeUndefined();
+            await expect(manager.read('Retry Movie')).resolves.toBeDefined();
+        });
+    });
+
+    describe('write invariants', () => {
+        it('does not replace a rated entry with a bare miss', async () => {
+            const { manager } = buildManager();
+            await manager.write(
+                'Keep Movie',
+                buildTitle().withDisplayTitle('Keep Movie').withImdbId('tt1').withImdbRating(8).build()
+            );
+
+            await manager.write('Keep Movie', Title.notFound('Keep Movie'));
+
+            const entry = await manager.read('Keep Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('replaces an ID-only entry with a bare miss', async () => {
+            const { manager } = buildManager();
+            await manager.write('Hint Movie', new Title({ displayTitle: 'Hint Movie', imdbId: 'tt2' }));
+
+            await manager.write('Hint Movie', Title.notFound('Hint Movie'));
+
+            const entry = await manager.read('Hint Movie');
+            expect(entry?.imdbId).toBeUndefined();
+        });
+
+        it('replaces an expired rated entry with a bare miss', async () => {
+            const { store, manager } = buildManager();
+            store.set(
+                'fmc:expired_movie',
+                JSON.stringify(
+                    buildCacheEntry()
+                        .withDisplayTitle('Expired Movie')
+                        .withImdbId('tt3')
+                        .withData(buildTitle().withImdbRating(9).build().toCacheJSON())
+                        .withExpiry(Date.now() - 1000)
+                        .build()
+                )
+            );
+
+            await manager.write('Expired Movie', Title.notFound('Expired Movie'));
+
+            const entry = await manager.read('Expired Movie');
+            expect(entry?.imdbId).toBeUndefined();
+        });
+
+        it('replaces a corrupt entry while checking for a downgrade', async () => {
+            const { store, manager } = buildManager();
+            store.set('fmc:corrupt', '{not json');
+
+            await manager.write('Corrupt', Title.notFound('Corrupt'));
+
+            await expect(manager.read('Corrupt')).resolves.toBeDefined();
+            expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+                key: 'fmc:corrupt',
+                displayTitle: 'Corrupt',
+                error: expect.any(SyntaxError),
+            });
+        });
+
+        it('skips a result whose IMDb ID differs from the override', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write(
+                'Override Movie',
+                buildTitle().withDisplayTitle('Override Movie').withImdbId('tt111').withImdbRating(8).build()
+            );
+
+            await expect(manager.read('Override Movie')).resolves.toBeUndefined();
+        });
+
+        it('writes a result that matches the override', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write(
+                'Override Movie',
+                buildTitle().withDisplayTitle('Override Movie').withImdbId('tt999').withImdbRating(8).build()
+            );
+
+            const entry = await manager.read('Override Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('skips a bare miss when an override exists', async () => {
+            const { manager, overrides } = buildManager();
+            await overrides.setImdbId('Override Movie', 'tt999');
+
+            await manager.write('Override Movie', Title.notFound('Override Movie'));
+
+            await expect(manager.read('Override Movie')).resolves.toBeUndefined();
+        });
+    });
+
+    describe('clearing cached data', () => {
         async function writeRatedTitle(manager: CacheManager, displayTitle: string, imdbId: string): Promise<void> {
             await manager.write(
                 displayTitle,
@@ -638,7 +830,7 @@ describe('CacheManager', () => {
                 'Corrected Movie',
                 buildTitle()
                     .withDisplayTitle('Corrected Movie')
-                    .withImdbId('tt111')
+                    .withImdbId('tt999')
                     .withImdbRating(8)
                     .withSource('agregarr')
                     .build()
