@@ -12,7 +12,7 @@ The cache becomes the single owner of write order and write policy. Lookup code 
 
 - A valid cache entry that has ratings is never replaced by a bare miss.
 - A result whose IMDb ID differs from the current stored override is not cached.
-- Writes and deletes for a title are serialized, so an invalidation cannot be undone by a write that started before it.
+- Writes and deletes for a title are serialized: an invalidation is ordered after every write that has already reached the cache.
 - A late lookup cannot undo an IMDb ID edit.
 - Preserve the 30 second per-caller timeout and the not-found fallback render.
 
@@ -64,13 +64,13 @@ The cache enforces its own write invariants and ordering. `ApiClientManager` bec
 ## Residual Risk
 
 - Concurrent decorations of one title can issue duplicate provider requests.
-- A stale success can overwrite a newer one after refresh.
+- A stale success can overwrite a newer one after refresh, including a lookup that started before the invalidation but reaches `cache.write` after it.
 - Cross-tab writes are not serialized; the invariants hold within one page.
 - `clear()` bypasses the chain and can race a write.
 - If a provider canonicalizes an override to a different IMDb ID, the save is skipped.
 
 ## Testing
 
-- Cache: a bare miss does not replace a rated entry; a bare miss replaces an ID-only entry; an expired entry is replaceable; an override mismatch is skipped; a matching override is written; a delete queued behind a write wins.
+- Cache: a bare miss does not replace a rated entry; a bare miss replaces an ID-only entry; an expired entry is replaceable; an override mismatch is skipped; a matching override is written; a delete queued behind a write wins; a write queued behind a rejected write still runs; settling an operation keeps a later queued operation on the chain.
 - Manager: cache hit, fetch, miss, and unhealthy client, without generation or fence cases.
 - App: timeout and rejection render the fallback; refresh and edit invalidate and redecorate; a render failure is not mistaken for a lookup failure.
