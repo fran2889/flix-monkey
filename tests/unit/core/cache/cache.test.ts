@@ -581,6 +581,76 @@ describe('CacheManager', () => {
             await expect(manager.delete('Missing Movie')).resolves.toBeUndefined();
         });
 
+        it('runs a write queued behind a rejected write', async () => {
+            const { adapter: memoryAdapter, manager } = buildManager();
+            let failFirst: (error: Error) => void = () => undefined;
+            const gate = new Promise<void>((_, reject) => {
+                failFirst = reject;
+            });
+            memoryAdapter.storageSet.mockImplementationOnce(async () => {
+                await gate;
+            });
+
+            const first = manager.write(
+                'Queued Movie',
+                buildTitle().withDisplayTitle('Queued Movie').withImdbRating(7).build()
+            );
+            const second = manager.write(
+                'Queued Movie',
+                buildTitle().withDisplayTitle('Queued Movie').withImdbRating(8).build()
+            );
+            failFirst(new Error('storage failed'));
+
+            await expect(first).rejects.toThrow('storage failed');
+            await expect(second).resolves.toBeUndefined();
+            const entry = await manager.read('Queued Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('keeps a later operation queued after an earlier one settles', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            let releaseFirst: () => void = () => undefined;
+            const firstGate = new Promise<void>(resolve => {
+                releaseFirst = resolve;
+            });
+            let releaseSecond: () => void = () => undefined;
+            const secondGate = new Promise<void>(resolve => {
+                releaseSecond = resolve;
+            });
+            let calls = 0;
+            memoryAdapter.storageSet.mockImplementation(async (key: string, value: string) => {
+                calls += 1;
+                if (calls === 1) await firstGate;
+                if (calls === 2) await secondGate;
+                store.set(key, value);
+            });
+
+            const first = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(7).build()
+            );
+            const second = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(8).build()
+            );
+            releaseFirst();
+            await first;
+            const third = manager.write(
+                'Chained Movie',
+                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(9).build()
+            );
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            // The third write must wait for the gated second write, not start behind a cleared chain.
+            expect(calls).toBe(2);
+
+            releaseSecond();
+            await Promise.all([second, third]);
+
+            const entry = await manager.read('Chained Movie');
+            expect(entry?.getTitle().imdbRating).toBe(9);
+        });
+
         it('keeps the chain usable after a write rejects', async () => {
             const { adapter: memoryAdapter, manager } = buildManager();
             const title = buildTitle().withDisplayTitle('Retry Movie').withImdbRating(7).build();
