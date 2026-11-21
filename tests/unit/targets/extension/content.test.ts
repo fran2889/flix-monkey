@@ -147,33 +147,17 @@ describe('content.js entry point', () => {
         expect(startedAdapter().configGet('showRtRating')).toBeUndefined();
     });
 
-    it('should call redecorate when overlayCorner changes', async () => {
+    it.each([
+        ['overlayCorner', 'bottom-left'],
+        ['showRtRating', true],
+        ['showMcRating', false],
+        ['enableFadeUnderRating', true],
+        ['fadeRatingThreshold', '50'],
+    ])('should call redecorate when %s changes', async (key, value) => {
         await startAfterMigrations();
-        onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
 
-    it('should call redecorate when showRtRating changes', async () => {
-        await startAfterMigrations();
-        onChangedListener({ showRtRating: { newValue: true } });
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
+        onChangedListener({ [key]: { newValue: value } });
 
-    it('should call redecorate when showMcRating changes', async () => {
-        await startAfterMigrations();
-        onChangedListener({ showMcRating: { newValue: false } });
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
-
-    it('should call redecorate when enableFadeUnderRating changes', async () => {
-        await startAfterMigrations();
-        onChangedListener({ enableFadeUnderRating: { newValue: true } });
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
-
-    it('should call redecorate when fadeRatingThreshold changes', async () => {
-        await startAfterMigrations();
-        onChangedListener({ fadeRatingThreshold: { newValue: '50' } });
         expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
     });
 

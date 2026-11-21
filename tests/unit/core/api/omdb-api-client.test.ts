@@ -192,36 +192,23 @@ describe('OmdbApiClient', () => {
         expect(result!.imdbVotes).toBe(expected);
     });
 
-    it('should map Type to TitleType in getDetails', async () => {
+    it.each([
+        { type: 'movie', imdbId: 'tt1', title: 'Movie 1' },
+        { type: 'series', imdbId: 'tt2', title: 'Show 1' },
+    ])('should map Type $type to TitleType', async ({ type, imdbId, title }) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
                 Response: 'True',
                 imdbRating: '8.0',
-                imdbID: 'tt1',
+                imdbID: imdbId,
                 Year: '2020',
-                Title: 'Movie 1',
-                Type: 'movie',
+                Title: title,
+                Type: type,
             })
             .build();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-        expect(result!.type).toBe('movie');
-    });
-
-    it('should map series Type to series', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: '8.0',
-                imdbID: 'tt2',
-                Year: '2020',
-                Title: 'Show 1',
-                Type: 'series',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Show 1');
-        expect(result!.type).toBe('series');
+        const result = await client.search(title);
+        expect(result!.type).toBe(type);
     });
 
     it('should return undefined and log info with the provider error message on an OMDb False response', async () => {

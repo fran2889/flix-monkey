@@ -10,11 +10,33 @@ import { buildMockAdapter } from '../../mocks/adapter';
 
 const migration1 = getMigrationByVersion(1);
 
-describe('runMigrations', () => {
-    const logger = {
+type MigrationLogger = Parameters<typeof runMigrations>[1];
+
+function createMigrationLogger(): MigrationLogger {
+    return {
         info: vi.fn((_message: string, ..._args: unknown[]) => {}),
         error: vi.fn((_message: string, _error: unknown) => {}),
     };
+}
+
+function buildMigrationHarness(entries: Record<string, string>, logger: MigrationLogger) {
+    const adapter = buildMockAdapter()
+        .withStorageGetResolvingTo(undefined)
+        .withStorageGetKeysResolvingTo(Object.keys(entries))
+        .withStorageDeleteResolvingTo(undefined)
+        .build();
+    adapter.storageGet = vi.fn(async (key: string) =>
+        key === DATA_VERSION_KEY ? undefined : entries[key as keyof typeof entries]
+    );
+
+    return {
+        adapter,
+        run: (migration: StorageMigration) => runMigrations(adapter, logger, [migration]),
+    };
+}
+
+describe('runMigrations', () => {
+    const logger = createMigrationLogger();
 
     it.each([null, 'bad', '-1', -1])('treats %j as version zero', async _stored => {
         const adapter = buildMockAdapter().withStorageGetResolvingTo(_stored).build();
@@ -202,10 +224,7 @@ describe('runMigrations', () => {
 });
 
 describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
-    const logger = {
-        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
-        error: vi.fn((_message: string, _error: unknown) => {}),
-    };
+    const logger = createMigrationLogger();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -247,15 +266,9 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
         const expected = { [key]: JSON.stringify({ data: expectedData, expires }) };
         const result = { migrated: 1, skipped: 0, deleted: 0 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration1!]);
+        await run(migration1!);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
         expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
@@ -275,16 +288,9 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
         const entries = { [key]: JSON.stringify({ data, expires }) };
         const result = { migrated: 0, skipped: 1, deleted: 0 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .withStorageDeleteResolvingTo(undefined)
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration1!]);
+        await run(migration1!);
 
         expect(adapter.storageDelete).not.toHaveBeenCalled();
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
@@ -307,16 +313,9 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
         const deletedKeys = [key];
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .withStorageDeleteResolvingTo(undefined)
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration1!]);
+        await run(migration1!);
 
         for (const k of deletedKeys) {
             expect(adapter.storageDelete).toHaveBeenCalledWith(k);
@@ -334,21 +333,14 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
             'fmc:first': JSON.stringify({ data: { rating: 8.5 }, expires: 12345 }),
             'fmc:second': JSON.stringify({ data: { rating: 7.2 }, expires: 67890 }),
         };
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .withStorageDeleteResolvingTo(undefined)
-            .build();
-        adapter.storageGet = vi.fn(async (key: string) =>
-            key === DATA_VERSION_KEY ? undefined : entries[key as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
         const failingMigration1 = {
             ...migration1!,
             upgrade: vi.fn().mockRejectedValue(new Error('migration failed')),
         };
 
-        await runMigrations(adapter, logger, [failingMigration1]);
+        await run(failingMigration1);
 
         expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
         expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:first');
@@ -368,10 +360,7 @@ describe(`migration ${migration1!.version}: ${migration1!.description}`, () => {
 const migration2 = getMigrationByVersion(2);
 
 describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
-    const logger = {
-        info: vi.fn((_message: string, ..._args: unknown[]) => {}),
-        error: vi.fn((_message: string, _error: unknown) => {}),
-    };
+    const logger = createMigrationLogger();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -421,15 +410,9 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
             const expected = { [key]: JSON.stringify(expectedEntry) };
             const result = { migrated: 1, skipped: 0, deleted: 0 };
 
-            const adapter = buildMockAdapter()
-                .withStorageGetResolvingTo(undefined)
-                .withStorageGetKeysResolvingTo(Object.keys(entries))
-                .build();
-            adapter.storageGet = vi.fn(async (k: string) =>
-                k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-            );
+            const { adapter, run } = buildMigrationHarness(entries, logger);
 
-            await runMigrations(adapter, logger, [migration2!]);
+            await run(migration2!);
 
             expect(adapter.storageGetKeys).toHaveBeenCalledWith('fmc:');
             expect(adapter.storageSetMany).toHaveBeenCalledWith(expected);
@@ -448,15 +431,9 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         const entries = { [key]: JSON.stringify(newEntry) };
         const result = { migrated: 0, skipped: 1, deleted: 0 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration2!]);
+        await run(migration2!);
 
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
         expect(adapter.storageSet).toHaveBeenCalledWith(DATA_VERSION_KEY, '2');
@@ -475,16 +452,9 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         const entries = { [key]: JSON.stringify(entry) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .withStorageDeleteResolvingTo(undefined)
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration2!]);
+        await run(migration2!);
 
         expect(adapter.storageDelete).toHaveBeenCalledWith(key);
         expect(adapter.storageSetMany).not.toHaveBeenCalled();
@@ -506,16 +476,9 @@ describe(`migration ${migration2!.version}: ${migration2!.description}`, () => {
         const entries = { [key]: typeof value === 'string' ? value : JSON.stringify(value) };
         const result = { migrated: 0, skipped: 0, deleted: 1 };
 
-        const adapter = buildMockAdapter()
-            .withStorageGetResolvingTo(undefined)
-            .withStorageGetKeysResolvingTo(Object.keys(entries))
-            .withStorageDeleteResolvingTo(undefined)
-            .build();
-        adapter.storageGet = vi.fn(async (k: string) =>
-            k === DATA_VERSION_KEY ? undefined : entries[k as keyof typeof entries]
-        );
+        const { adapter, run } = buildMigrationHarness(entries, logger);
 
-        await runMigrations(adapter, logger, [migration2!]);
+        await run(migration2!);
 
         expect(adapter.storageDelete).toHaveBeenCalledWith(key);
         expect(adapter.storageSetMany).not.toHaveBeenCalled();

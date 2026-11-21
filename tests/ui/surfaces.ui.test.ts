@@ -6,30 +6,78 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ConfigManager } from '../../src/core/config/index';
 import { OverlayRenderer } from '../../src/core/overlay';
-import { NetflixService } from '../../src/core/services/index';
-import { NETFLIX_SURFACES, SurfaceManager } from '../../src/core/surfaces/index';
+import { DisneyPlusService, HboMaxService, NetflixService, type StreamingService } from '../../src/core/services/index';
+import {
+    DISNEY_PLUS_SURFACES,
+    HBO_MAX_SURFACES,
+    NETFLIX_SURFACES,
+    SurfaceManager,
+} from '../../src/core/surfaces/index';
 import { Title } from '../../src/core/title';
-import type { DiscoveredSurface } from '../../src/types/surfaces';
-import fixtures, { NETFLIX_MORE_LIKE_THIS_SECTION } from '../fixtures/netflix-surfaces';
-import { testSurfaceFixtures } from '../helpers/surface-tests';
+import type { DiscoveredSurface, SurfaceDefinition } from '../../src/types/surfaces';
+import disneyPlusFixtures from '../fixtures/disneyplus-surfaces';
+import hboMaxFixtures from '../fixtures/hbomax-surfaces';
+import netflixFixtures, { NETFLIX_MORE_LIKE_THIS_SECTION } from '../fixtures/netflix-surfaces';
+import { type SurfaceFixture, testSurfaceFixtures } from '../helpers/surface-tests';
 import { buildMockAdapter } from '../mocks/adapter';
 import { buildLogger } from '../mocks/logger';
 
-describe('Netflix surfaces', () => {
+const serviceCases = [
+    {
+        name: 'Netflix',
+        createService: () => new NetflixService(),
+        surfaces: NETFLIX_SURFACES,
+        fixtures: netflixFixtures,
+    },
+    {
+        name: 'HBO Max',
+        createService: () => new HboMaxService(),
+        surfaces: HBO_MAX_SURFACES,
+        fixtures: hboMaxFixtures,
+    },
+    {
+        name: 'Disney+',
+        createService: () => new DisneyPlusService(),
+        surfaces: DISNEY_PLUS_SURFACES,
+        fixtures: disneyPlusFixtures,
+    },
+] satisfies Array<{
+    name: string;
+    createService: () => StreamingService;
+    surfaces: Readonly<Record<string, SurfaceDefinition>>;
+    fixtures: SurfaceFixture[];
+}>;
+
+function buildRenderer(service: StreamingService): OverlayRenderer {
+    const renderer = new OverlayRenderer(
+        new ConfigManager(buildMockAdapter().build(), buildLogger().build()),
+        service.constants
+    );
+    renderer.injectStyles();
+    return renderer;
+}
+
+describe.each(serviceCases)('$name surfaces', ({ createService, surfaces, fixtures }) => {
+    let surfaceManager: SurfaceManager;
+    let overlayRenderer: OverlayRenderer;
+
+    beforeEach(() => {
+        surfaceManager = new SurfaceManager(buildLogger().build(), surfaces);
+        overlayRenderer = buildRenderer(createService());
+    });
+
+    it('should discover and inject on all surfaces', () => {
+        testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures);
+    });
+});
+
+describe('Netflix More Like This surfaces', () => {
     let surfaceManager: SurfaceManager;
     let overlayRenderer: OverlayRenderer;
 
     beforeEach(() => {
         surfaceManager = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
-        overlayRenderer = new OverlayRenderer(
-            new ConfigManager(buildMockAdapter().build(), buildLogger().build()),
-            new NetflixService().constants
-        );
-        overlayRenderer.injectStyles();
-    });
-
-    it('should discover and inject on all Netflix surfaces', () => {
-        testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures);
+        overlayRenderer = buildRenderer(new NetflixService());
     });
 
     function attachOverlay(surface: DiscoveredSurface): void {

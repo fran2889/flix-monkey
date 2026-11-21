@@ -182,40 +182,45 @@ describe('SurfaceManager', () => {
         expect(surface?.container).toHaveClass('decorated');
     });
 
-    it('does not expose a fade toggle for title cards', () => {
-        const results = discover(`
-            <div class="title-card"><a aria-label="Movie"></a></div>
-        `);
-        expect(results[0]?.showFadeToggle).toBe(false);
-    });
-
-    it('does not expose a fade toggle for search cards', () => {
-        const results = discover(`
-            <div data-uia="standard-card" aria-label="Movie"></div>
-        `);
-        expect(results[0]?.showFadeToggle).toBe(false);
-    });
-
-    it('exposes a fade toggle for mini-modal surfaces', () => {
-        const results = discover(`
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Movie Title">
+    it.each([
+        {
+            description: 'title cards',
+            html: `
+                <div class="title-card"><a aria-label="Movie"></a></div>
+            `,
+            expected: false,
+        },
+        {
+            description: 'search cards',
+            html: `
+                <div data-uia="standard-card" aria-label="Movie"></div>
+            `,
+            expected: false,
+        },
+        {
+            description: 'mini-modal surfaces',
+            html: `
+                <div class="previewModal--wrapper mini-modal">
+                    <div class="previewModal--player_container">
+                        <img alt="Movie Title">
+                    </div>
                 </div>
-            </div>
-        `);
-        expect(results[0]?.showFadeToggle).toBe(true);
-    });
-
-    it('does not expose a fade toggle for detail-modal surfaces', () => {
-        const results = discover(`
-            <div class="previewModal--wrapper detail-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Movie Title">
+            `,
+            expected: true,
+        },
+        {
+            description: 'detail-modal surfaces',
+            html: `
+                <div class="previewModal--wrapper detail-modal">
+                    <div class="previewModal--player_container">
+                        <img alt="Movie Title">
+                    </div>
                 </div>
-            </div>
-        `);
-        expect(results[0]?.showFadeToggle).toBe(false);
+            `,
+            expected: false,
+        },
+    ])('sets showFadeToggle to $expected for $description', ({ html, expected }) => {
+        expect(discover(html)[0]?.showFadeToggle).toBe(expected);
     });
 });
 
@@ -526,9 +531,10 @@ describe('Disney+ surfaces', () => {
         expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
     });
 
-    it('discovers a Continue Watching title from its metadata', () => {
-        document.body.innerHTML = `
-            <section data-testid="set-section" data-set-style="continue_watching">
+    it.each([
+        {
+            description: 'the shelf pagination spy container',
+            containerHtml: `
                 <div data-testid="set-shelf-item-shelf-pagination-spy">
                     <span data-testid="cw-set-item-wrapper">
                         <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
@@ -537,19 +543,12 @@ describe('Disney+ surfaces', () => {
                         </a>
                     </span>
                 </div>
-            </section>
-        `;
-
-        const logger = buildLogger().build();
-        const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
-        expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
-        expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item-shelf-pagination-spy"]'));
-        expect(logger.warn).not.toHaveBeenCalled();
-    });
-
-    it('discovers a Continue Watching title from the standard shelf container', () => {
-        document.body.innerHTML = `
-            <section data-testid="set-section" data-set-style="continue_watching">
+            `,
+            containerSelector: '[data-testid="set-shelf-item-shelf-pagination-spy"]',
+        },
+        {
+            description: 'the standard shelf container',
+            containerHtml: `
                 <div data-testid="set-shelf-item">
                     <span data-testid="cw-set-item-wrapper">
                         <a data-testid="set-item" href="/play/title-id"><img alt=""></a>
@@ -558,14 +557,20 @@ describe('Disney+ surfaces', () => {
                         </a>
                     </span>
                 </div>
+            `,
+            containerSelector: '[data-testid="set-shelf-item"]',
+        },
+    ])('discovers a Continue Watching title from $description', ({ containerHtml, containerSelector }) => {
+        document.body.innerHTML = `
+            <section data-testid="set-section" data-set-style="continue_watching">
+                ${containerHtml}
             </section>
         `;
 
         const logger = buildLogger().build();
         const [surface] = new SurfaceManager(logger, DISNEY_PLUS_SURFACES).discover(document.body);
-
         expect(surface).toMatchObject({ title: 'How I Met Your Mother', fadeable: true, showFadeToggle: true });
-        expect(surface?.container).toBe(document.querySelector('[data-testid="set-shelf-item"]'));
+        expect(surface?.container).toBe(document.querySelector(containerSelector));
         expect(logger.warn).not.toHaveBeenCalled();
     });
 });

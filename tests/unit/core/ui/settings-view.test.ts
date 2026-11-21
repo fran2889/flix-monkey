@@ -394,63 +394,71 @@ describe('SettingsView', () => {
             vi.useRealTimers();
         });
 
-        it('uses change event for checkboxes', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false, group: 'display' },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
+        it.each([
+            {
+                fieldType: 'checkbox',
+                inputId: 'fm-checkboxField',
+                eventName: 'change',
+                value: true,
+                isSelect: false,
+            },
+            {
+                fieldType: 'text',
+                inputId: 'fm-textField',
+                eventName: 'input',
+                value: 'new-value',
+                isSelect: false,
+            },
+            {
+                fieldType: 'select',
+                inputId: 'fm-selectField',
+                eventName: 'input',
+                value: 'option2',
+                isSelect: true,
+            },
+        ])(
+            'uses the $eventName event to autosave $fieldType fields',
+            ({ fieldType, inputId, eventName, value, isSelect }) => {
+                let field: ConfigField;
+                if (isSelect) {
+                    field = {
+                        key: 'selectField',
+                        label: 'Select',
+                        type: 'select',
+                        default: 'option1',
+                        options: ['option1', 'option2'],
+                        group: 'display',
+                    };
+                } else if (fieldType === 'checkbox') {
+                    field = {
+                        key: 'checkboxField',
+                        label: 'Checkbox',
+                        type: 'checkbox',
+                        default: false,
+                        group: 'display',
+                    };
+                } else {
+                    field = { key: 'textField', label: 'Text', type: 'text', default: '', group: 'display' };
+                }
 
-            const checkbox = container.querySelector('#fm-checkboxField') as HTMLInputElement;
+                view = new SettingsView([field], actions);
+                view.render(container, {});
 
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                const input = container.querySelector(`#${inputId}`) as HTMLInputElement | HTMLSelectElement;
+                if (isSelect) {
+                    (input as HTMLSelectElement).value = String(value);
+                } else if (fieldType === 'checkbox') {
+                    (input as HTMLInputElement).checked = Boolean(value);
+                } else {
+                    (input as HTMLInputElement).value = String(value);
+                }
+                input.dispatchEvent(new Event(eventName, { bubbles: true }));
 
-            vi.advanceTimersByTime(1000);
+                vi.advanceTimersByTime(1000);
 
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses input event for text fields', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'textField', label: 'Text', type: 'text', default: '', group: 'display' },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
-
-            const textInput = container.querySelector('#fm-textField') as HTMLInputElement;
-
-            textInput.value = 'new-value';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses input event for select fields', () => {
-            const fields: readonly ConfigField[] = [
-                {
-                    key: 'selectField',
-                    label: 'Select',
-                    type: 'select',
-                    default: 'option1',
-                    options: ['option1', 'option2'],
-                    group: 'display',
-                },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
-
-            const select = container.querySelector('#fm-selectField') as HTMLSelectElement;
-
-            select.value = 'option2';
-            select.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
+                expect(actions.onSave).toHaveBeenCalledOnce();
+            }
+        );
 
         it('debounces save calls on rapid text input changes', () => {
             view.render(container, {});

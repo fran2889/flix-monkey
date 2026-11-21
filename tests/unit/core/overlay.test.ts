@@ -161,45 +161,42 @@ describe('OverlayRenderer', () => {
     });
 
     describe('fade', () => {
-        it('adds fm-faded class when shouldFade is true', () => {
+        it.each([
+            {
+                description: 'adds fm-faded when shouldFade is true',
+                shouldFade: true,
+                startsFaded: false,
+                expected: true,
+            },
+            {
+                description: 'removes fm-faded when shouldFade is false',
+                shouldFade: false,
+                startsFaded: true,
+                expected: false,
+            },
+        ])('$description', ({ shouldFade, startsFaded, expected }) => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
+            if (startsFaded) container.classList.add('fm-faded');
 
-            renderer.applyFade(container, true);
+            renderer.applyFade(container, shouldFade);
 
-            expect(container.classList.contains('fm-faded')).toBe(true);
-        });
-
-        it('removes fm-faded class when shouldFade is false', () => {
-            const renderer = new OverlayRenderer(buildConfig().build());
-            const container = document.createElement('div');
-            container.classList.add('fm-faded');
-
-            renderer.applyFade(container, false);
-
-            expect(container.classList.contains('fm-faded')).toBe(false);
+            expect(container.classList.contains('fm-faded')).toBe(expected);
         });
     });
 
     describe('container positioning', () => {
-        it('ensures container has non-static position', () => {
+        it.each([
+            { description: 'ensures a static container becomes relative', initial: 'static', expected: 'relative' },
+            { description: 'leaves a non-static container unchanged', initial: 'absolute', expected: 'absolute' },
+        ])('$description', ({ initial, expected }) => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
-            container.style.position = 'static';
+            container.style.position = initial;
 
             renderer.ensureRelative(container);
 
-            expect(container.style.position).toBe('relative');
-        });
-
-        it('does not change position if already non-static', () => {
-            const renderer = new OverlayRenderer(buildConfig().build());
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-
-            renderer.ensureRelative(container);
-
-            expect(container.style.position).toBe('absolute');
+            expect(container.style.position).toBe(expected);
         });
     });
 

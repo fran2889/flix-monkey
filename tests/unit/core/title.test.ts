@@ -62,14 +62,8 @@ describe('Title', () => {
     });
 
     describe('hasRating', () => {
-        it('should be true when imdbRating is 0', () => {
-            expect(new Title({ displayTitle: 'Test', imdbRating: 0 }).hasRating).toBe(true);
-        });
-        it('should be true when rtRating is 0', () => {
-            expect(new Title({ displayTitle: 'Test', rtRating: 0 }).hasRating).toBe(true);
-        });
-        it('should be true when mcRating is 0', () => {
-            expect(new Title({ displayTitle: 'Test', mcRating: 0 }).hasRating).toBe(true);
+        it.each(['imdbRating', 'rtRating', 'mcRating'] as const)('should be true when %s is 0', field => {
+            expect(new Title({ displayTitle: 'Test', [field]: 0 }).hasRating).toBe(true);
         });
         it('should be false when all ratings are undefined', () => {
             expect(new Title({ displayTitle: 'Test' }).hasRating).toBe(false);

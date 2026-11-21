@@ -164,46 +164,52 @@ describe('createOverlayElement', () => {
             expect(element.querySelector('.fm-fade-toggle')).toBeNull();
         });
 
-        it('renders auto state with the star icon', () => {
-            const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick: vi.fn() });
+        it.each([
+            {
+                description: 'auto state with the star icon',
+                state: undefined,
+                datasetState: 'auto',
+                expectedTitle: 'Fade: Auto',
+                glyph: '⭐',
+                faded: false,
+            },
+            {
+                description: 'always state with a faded eye icon',
+                state: 'always',
+                datasetState: 'always',
+                expectedTitle: 'Fade: Always',
+                glyph: '👁️',
+                faded: true,
+            },
+            {
+                description: 'never state with a non-faded eye icon',
+                state: 'never',
+                datasetState: 'never',
+                expectedTitle: 'Fade: Never',
+                glyph: '👁️',
+                faded: false,
+            },
+        ] satisfies Array<{
+            description: string;
+            state: 'always' | 'never' | undefined;
+            datasetState: string;
+            expectedTitle: string;
+            glyph: string;
+            faded: boolean;
+        }>)('renders $description', ({ state, datasetState, expectedTitle, glyph, faded }) => {
+            const element = createOverlay(title, {
+                showFadeToggle: true,
+                fadeToggleState: state,
+                onFadeToggleClick: vi.fn(),
+            });
             const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
             const icon = toggle?.querySelector('.fm-fade-toggle-icon');
 
             expect(toggle?.tagName).toBe('DIV');
-            expect(toggle?.getAttribute('data-state')).toBe('auto');
-            expect(toggle?.title).toBe('Fade: Auto');
-            expect(icon?.textContent).toBe('⭐');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        });
-
-        it('renders always state with a faded eye icon', () => {
-            const element = createOverlay(title, {
-                showFadeToggle: true,
-                fadeToggleState: 'always',
-                onFadeToggleClick: vi.fn(),
-            });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
-
-            expect(toggle?.getAttribute('data-state')).toBe('always');
-            expect(toggle?.title).toBe('Fade: Always');
-            expect(icon?.textContent).toBe('👁️');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(true);
-        });
-
-        it('renders never state with a non-faded eye icon', () => {
-            const element = createOverlay(title, {
-                showFadeToggle: true,
-                fadeToggleState: 'never',
-                onFadeToggleClick: vi.fn(),
-            });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
-
-            expect(toggle?.getAttribute('data-state')).toBe('never');
-            expect(toggle?.title).toBe('Fade: Never');
-            expect(icon?.textContent).toBe('👁️');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(toggle?.getAttribute('data-state')).toBe(datasetState);
+            expect(toggle?.title).toBe(expectedTitle);
+            expect(icon?.textContent).toBe(glyph);
+            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(faded);
         });
 
         it('calls the fade-toggle callback with the badge element', () => {
@@ -265,16 +271,11 @@ describe('createOverlayElement', () => {
             [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
             [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
+            [{ imdbRating: 5, imdbVotes: 123 }, 'Test\nIMDb: 5.0 (123 votes) · Open IMDb'],
         ])('formats tooltip for vote data %o', (titleData: Partial<TitleOptions>, expectedTitle: string) => {
             const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
 
             expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
-        });
-
-        it('formats a small vote count', () => {
-            const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 });
-
-            expect((element.querySelector('a') as HTMLElement)?.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
         });
 
         it('formats apiTitle and year', () => {

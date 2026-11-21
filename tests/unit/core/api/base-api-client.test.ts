@@ -234,16 +234,13 @@ describe('BaseApiClient (via XmdbApiClient)', () => {
             expect(queue.clear).toHaveBeenCalledOnce();
         });
 
-        it('reports a single purged request without a plural suffix', async () => {
+        it.each([
+            { count: 1, noun: 'request' },
+            { count: 3, noun: 'requests' },
+        ])('reports $count purged $noun', async ({ count, noun }) => {
             const logger: Logger = buildLogger().build();
-            await new StubClient('xmdb', logger, buildQueue(1)).disable();
-            expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 1 queued request');
-        });
-
-        it('reports multiple purged requests with a plural suffix', async () => {
-            const logger: Logger = buildLogger().build();
-            await new StubClient('xmdb', logger, buildQueue(3)).disable();
-            expect(logger.warn).toHaveBeenCalledWith('xmdb disabled for 60 min, purging 3 queued requests');
+            await new StubClient('xmdb', logger, buildQueue(count)).disable();
+            expect(logger.warn).toHaveBeenCalledWith(`xmdb disabled for 60 min, purging ${count} queued ${noun}`);
         });
     });
 });

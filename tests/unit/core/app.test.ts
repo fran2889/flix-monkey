@@ -348,28 +348,53 @@ describe('App', () => {
         expect(typeof appRef?.disabledManager.resetAll).toBe('function');
     });
 
-    it('should return undefined when Netflix is disabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : undefined))
-            .build();
-        const result = startApp(adapter);
-        expect(result).toBeUndefined();
-    });
+    describe('startApp service gating', () => {
+        it.each([
+            {
+                description: 'Netflix is disabled via enableNetflix config',
+                setup: async () => {
+                    const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                    vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+                    return buildMockAdapter()
+                        .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : undefined))
+                        .build();
+                },
+                expectedInstance: false,
+            },
+            {
+                description: 'Netflix is enabled via enableNetflix config',
+                setup: async () => {
+                    const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                    vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+                    return buildMockAdapter()
+                        .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : undefined))
+                        .build();
+                },
+                expectedInstance: true,
+            },
+            {
+                description: 'ServiceRegistry.detect finds no service',
+                setup: async () => {
+                    const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                    vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
+                    return buildMockAdapter().build();
+                },
+                expectedInstance: false,
+            },
+        ])('should return the expected app when $description', async ({ setup, expectedInstance }) => {
+            const result = startApp(await setup());
 
-    it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : undefined))
-            .build();
-        const result = startApp(adapter);
-        expect(result).not.toBeUndefined();
-        if (result) {
-            expect(result).toBeInstanceOf(FlixMonkeyApp);
-            expect(typeof result.redecorate).toBe('function');
-        }
+            if (!expectedInstance) {
+                expect(result).toBeUndefined();
+                return;
+            }
+
+            expect(result).not.toBeUndefined();
+            if (result) {
+                expect(result).toBeInstanceOf(FlixMonkeyApp);
+                expect(typeof result.redecorate).toBe('function');
+            }
+        });
     });
 
     describe.each([
@@ -806,13 +831,6 @@ describe('App', () => {
         expect(toggle.title).toBe('Fade: Auto');
         expect(icon.textContent).toBe('⭐');
         expect(storageDelete).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'));
-    });
-
-    it('should return undefined when ServiceRegistry.detect finds no service', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
-        const result = startApp(buildMockAdapter().build());
-        expect(result).toBeUndefined();
     });
 
     describe('IMDb ID override handlers', () => {

@@ -208,44 +208,19 @@ describe('ConfigManager', () => {
     });
 
     describe('getBool', () => {
-        it('getBool should return true for boolean true', () => {
+        it.each([
+            { description: 'boolean true', stored: true, expected: true },
+            { description: 'boolean false', stored: false, expected: false },
+            { description: 'string "true"', stored: 'true', expected: true },
+            { description: 'string "false"', stored: 'false', expected: false },
+        ])('getBool should map $description to $expected', ({ stored, expected }) => {
             const config = new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(() => true)
+                    .withConfigGetReturning(() => stored)
                     .build(),
                 buildLogger().build()
             );
-            expect(config.getBool('showRtRating')).toBe(true);
-        });
-
-        it('getBool should return false for boolean false', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => false)
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(false);
-        });
-
-        it('getBool should return true for string "true"', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'true')
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(true);
-        });
-
-        it('getBool should return false for string "false"', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'false')
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(false);
+            expect(config.getBool('showRtRating')).toBe(expected);
         });
 
         it('getBool should use CONFIG_DEFAULTS when adapter returns null', () => {
