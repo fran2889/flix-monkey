@@ -85,32 +85,24 @@ describe('AgregarrApiClient', () => {
         expect(await client.search('Short')).toBeUndefined();
     });
 
-    it('should return undefined if no results found', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        expect(await client.search('Unknown')).toBeUndefined();
-    });
-
-    it('should log info when no results found', async () => {
+    it('should return undefined and log info when no results found', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-        await client.search('Unknown');
+
+        expect(await client.search('Unknown')).toBeUndefined();
+
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined if IMDb Suggestions response has no d array', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        expect(await client.search('Unknown')).toBeUndefined();
-    });
-
-    it('should log info when IMDb Suggestions response has no d array', async () => {
+    it('should return undefined and log info when IMDb Suggestions response has no d array', async () => {
         const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
         const mockLogger = buildLogger().build();
         const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-        await client.search('Unknown');
+
+        expect(await client.search('Unknown')).toBeUndefined();
+
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });

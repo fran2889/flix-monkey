@@ -224,25 +224,20 @@ describe('OmdbApiClient', () => {
         expect(result!.type).toBe('series');
     });
 
-    it('should log info with the provider error message on an OMDb False response', async () => {
+    it('should return undefined and log info with the provider error message on an OMDb False response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
             .build();
         const mockLoggerForTest = buildLogger().build();
         const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
-        await client.search('Unknown');
+
+        expect(await client.search('Unknown')).toBeUndefined();
+
         expect(mockLoggerForTest.info).toHaveBeenCalledTimes(1);
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(
             'No search results found in OMDb for "Unknown": Movie not found!'
         );
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
-    });
-
-    it('should return undefined on OMDB False response', async () => {
-        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Unknown');
-        expect(result).toBeUndefined();
     });
 
     it('should handle missing imdbVotes from OMDB response', async () => {
@@ -490,15 +485,6 @@ describe('OmdbApiClient', () => {
 
             expect(result!.imdbRating).toBeUndefined();
             expect(result!.hasRating).toBe(false);
-        });
-
-        it('should treat a False response as a failed lookup without requiring Title or imdbID', async () => {
-            const mockAdapterForTest = buildMockAdapter()
-                .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
-                .build();
-            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-
-            expect(await client.search('Movie 1')).toBeUndefined();
         });
 
         it.each([

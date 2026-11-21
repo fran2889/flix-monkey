@@ -53,36 +53,26 @@ describe('XmdbApiClient', () => {
         expect(result!.imdbRating).toBeUndefined();
     });
 
-    it('should return undefined if no search results found', async () => {
-        const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
-        const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        expect(await client.search('Movie 1')).toBeUndefined();
-    });
-
-    it('should log info when no search results found', async () => {
+    it('should return undefined and log info when no search results found', async () => {
         const mockAdapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
         const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
-        await client.search('Movie 1');
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+
         expect(mockLoggerForTest.info).toHaveBeenCalledWith('No search results found in XMDb for "Movie 1"');
         expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
     });
 
-    it('should return undefined if search results have no titles', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ results: [{ type: 'person', id: 'nm1', name: 'Someone' }] })
-            .build();
-        const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        expect(await client.search('Movie 1')).toBeUndefined();
-    });
-
-    it('should log info when search results have no titles', async () => {
+    it('should return undefined and log info when search results have no titles', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ results: [{ type: 'person', id: 'nm1', name: 'Someone' }] })
             .build();
         const mockLoggerForTest = buildLogger().build();
         const client = new XmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
-        await client.search('Movie 1');
+
+        expect(await client.search('Movie 1')).toBeUndefined();
+
         expect(mockLoggerForTest.info).toHaveBeenCalledWith(
             'No supported title-type results found in XMDb for "Movie 1"'
         );
@@ -243,24 +233,11 @@ describe('XmdbApiClient', () => {
         expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('should log a malformed warning when the details error field is not a string', async () => {
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ error: 42 }).build();
-        const logger = buildLogger().build();
-        const client = new XmdbApiClient({ ...deps, adapter, logger });
-
-        await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
-
-        expect(logger.info).not.toHaveBeenCalled();
-        expect(logger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Malformed XMDb details for "Test"'),
-            expect.anything()
-        );
-    });
-
     it.each([
         ['a missing title', { id: 'tt1', rating: 8.8 }],
         ['a wrong-typed title', { id: 'tt1', title: 42 }],
         ['an empty title', { id: 'tt1', title: '' }],
+        ['a non-string error field', { error: 42 }],
         ['a null response', null],
         ['an undefined response', undefined],
     ])('should log a malformed warning when the details response has %s', async (_label, response) => {
@@ -271,6 +248,7 @@ describe('XmdbApiClient', () => {
         const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
 
         expect(result).toBeUndefined();
+        expect(logger.info).not.toHaveBeenCalled();
         expect(logger.warn).toHaveBeenCalledWith(
             expect.stringContaining('Malformed XMDb details for "Test"'),
             expect.anything()
