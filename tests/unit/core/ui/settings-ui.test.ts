@@ -162,7 +162,7 @@ describe('SettingsUI', () => {
             );
         });
 
-        it('does not persist invalid values during autosave flow', async () => {
+        it('does not persist when the selected provider key is missing', async () => {
             await settingsUI.render(container);
             const apiClientInput = container.querySelector('[id="fm-apiClient"]') as HTMLSelectElement;
             apiClientInput.value = 'xmdb';

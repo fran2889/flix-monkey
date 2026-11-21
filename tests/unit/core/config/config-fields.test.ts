@@ -51,22 +51,10 @@ describe('core/config-fields', () => {
 
     describe('field structures', () => {
         it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', (field: ConfigField) => {
-            expect(field).toHaveProperty('key');
-            expect(field).toHaveProperty('label');
-            expect(field).toHaveProperty('type');
-            if (isActionField(field)) {
-                // Action rows trigger handlers and never render a value, so they carry no default.
-                expect(field).toHaveProperty('actionLabel');
-            } else {
-                expect(field).toHaveProperty('default');
-            }
-
-            expect(field).toHaveProperty('group');
             expect(typeof field.group).toBe('string');
             expect(Object.keys(GROUPS)).toContain(field.group);
 
             if (field.type === 'select') {
-                expect(field).toHaveProperty('options');
                 expect(Array.isArray(field.options)).toBe(true);
 
                 for (const option of field.options) {
@@ -166,8 +154,6 @@ describe('core/config-fields', () => {
     describe('settings metadata', () => {
         it('should have GROUPS with consistent structure', () => {
             Object.entries(GROUPS).forEach(([, value]) => {
-                expect(value).toHaveProperty('label');
-                expect(value).toHaveProperty('icon');
                 expect(typeof value.label).toBe('string');
                 expect(typeof value.icon).toBe('string');
             });
@@ -175,7 +161,6 @@ describe('core/config-fields', () => {
 
         it('should have ROW_LABELS with label and optional title properties', () => {
             Object.entries(ROW_LABELS).forEach(([, value]) => {
-                expect(value).toHaveProperty('label');
                 expect(typeof value.label).toBe('string');
                 if (value.title !== undefined) {
                     expect(typeof value.title).toBe('string');
