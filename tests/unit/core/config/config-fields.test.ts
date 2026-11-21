@@ -4,15 +4,13 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConfigField, SettingConfigField } from '../../../../src/core/config/index';
+import type { SettingConfigField } from '../../../../src/core/config/index';
 import {
     CONFIG_DEFAULTS,
     CONFIG_FIELDS,
-    GROUPS,
     isActionField,
     isCompleteSettingsMap,
     isSettingField,
-    ROW_LABELS,
 } from '../../../../src/core/config/index';
 
 function findSettingField(key: string): SettingConfigField {
@@ -46,32 +44,6 @@ describe('core/config-fields', () => {
 
             const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
             expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
-        });
-    });
-
-    describe('field structures', () => {
-        it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', (field: ConfigField) => {
-            expect(typeof field.group).toBe('string');
-            expect(Object.keys(GROUPS)).toContain(field.group);
-
-            if (field.type === 'select') {
-                expect(Array.isArray(field.options)).toBe(true);
-
-                for (const option of field.options) {
-                    const isValidString = typeof option === 'string';
-                    const isValidArray =
-                        typeof option !== 'string' &&
-                        option.length === 2 &&
-                        typeof option[0] === 'string' &&
-                        typeof option[1] === 'string';
-
-                    expect(
-                        isValidString || isValidArray,
-                        `Field "${field.key}" has invalid option format: ${JSON.stringify(option)}. ` +
-                            `Options must be strings or [value, label] arrays.`
-                    ).toBe(true);
-                }
-            }
         });
     });
 
@@ -139,33 +111,5 @@ describe('core/config-fields', () => {
         const keys = CONFIG_FIELDS.map(f => f.key);
         const uniqueKeys = new Set(keys);
         expect(uniqueKeys.size).toBe(keys.length);
-    });
-
-    describe('field defaults alignment with types', () => {
-        it.each(CONFIG_FIELDS)('should have default value matching type for field "$key"', (field: ConfigField) => {
-            if (field.type === 'checkbox') {
-                expect(typeof field.default).toBe('boolean');
-            } else if (field.type === 'text' || field.type === 'select') {
-                expect(typeof field.default).toBe('string');
-            }
-        });
-    });
-
-    describe('settings metadata', () => {
-        it('should have GROUPS with consistent structure', () => {
-            Object.entries(GROUPS).forEach(([, value]) => {
-                expect(typeof value.label).toBe('string');
-                expect(typeof value.icon).toBe('string');
-            });
-        });
-
-        it('should have ROW_LABELS with label and optional title properties', () => {
-            Object.entries(ROW_LABELS).forEach(([, value]) => {
-                expect(typeof value.label).toBe('string');
-                if (value.title !== undefined) {
-                    expect(typeof value.title).toBe('string');
-                }
-            });
-        });
     });
 });

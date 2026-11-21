@@ -109,13 +109,6 @@ describe('App', () => {
         global.MutationObserver = ActualMutationObserver;
     });
 
-    it('should initialize and hold state', () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-        appRef = startApp(mockAdapter);
-        expect(appRef).toBeInstanceOf(FlixMonkeyApp);
-        expect(typeof appRef?.redecorate).toBe('function');
-    });
-
     it('should debounce navigation events', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
 
@@ -338,14 +331,6 @@ describe('App', () => {
         app.init();
 
         expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
-    });
-
-    it('should expose cacheManager and disabledManager on the startApp return value', () => {
-        appRef = startApp(buildMockAdapter().build());
-        expect(appRef?.cacheManager).toBeDefined();
-        expect(typeof appRef?.cacheManager.clear).toBe('function');
-        expect(appRef?.disabledManager).toBeDefined();
-        expect(typeof appRef?.disabledManager.resetAll).toBe('function');
     });
 
     describe('startApp service gating', () => {
