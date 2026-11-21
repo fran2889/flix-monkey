@@ -4,6 +4,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { HOVER_ACTION_DELAY_MS } from '../../../../../src/core/constants';
 import { Title, type TitleOptions } from '../../../../../src/core/title';
 import {
     applyFadeToggleState,
@@ -410,6 +411,56 @@ describe('overlay elements', () => {
                 );
 
                 expect(element.querySelector('.fm-actions')).not.toBeNull();
+            });
+
+            describe('hover visibility', () => {
+                it('reveals the actions after hovering and hides them on leave', () => {
+                    vi.useFakeTimers();
+                    try {
+                        const element = createOverlay(
+                            { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                            { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test' }
+                        );
+                        const wrapper = element.querySelector('.fm-ratings-wrapper') as HTMLElement;
+                        const actions = element.querySelector('.fm-actions') as HTMLElement;
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(true);
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseleave'));
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+                    } finally {
+                        vi.useRealTimers();
+                    }
+                });
+
+                it('restarts the hover delay when the pointer re-enters before it elapses', () => {
+                    vi.useFakeTimers();
+                    try {
+                        const element = createOverlay(
+                            { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                            { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test' }
+                        );
+                        const wrapper = element.querySelector('.fm-ratings-wrapper') as HTMLElement;
+                        const actions = element.querySelector('.fm-actions') as HTMLElement;
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS - 1);
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+
+                        expect(vi.getTimerCount()).toBe(1);
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS - 1);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+
+                        vi.advanceTimersByTime(1);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(true);
+                    } finally {
+                        vi.useRealTimers();
+                    }
+                });
             });
 
             it('calls onEditClick when the edit icon is clicked', () => {
