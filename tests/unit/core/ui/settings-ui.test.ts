@@ -51,7 +51,7 @@ describe('SettingsUI', () => {
         document.body.appendChild(container);
     });
 
-    describe('Save', () => {
+    describe('save', () => {
         it('calls storageSetMany with all field values', async () => {
             await settingsUI.render(container);
 
@@ -65,7 +65,6 @@ describe('SettingsUI', () => {
                 }
             });
         });
-
         it('persists updated input values', async () => {
             await settingsUI.render(container);
             const input = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
@@ -77,7 +76,6 @@ describe('SettingsUI', () => {
                 expect.objectContaining({ xmdbApiKey: 'new-api-key' })
             );
         });
-
         it('persists the same value snapshot that was validated', async () => {
             const field = {
                 key: 'snapshot',
@@ -108,7 +106,6 @@ describe('SettingsUI', () => {
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith({ snapshot: 'initial' });
         });
-
         it('persists settings when storage is asynchronous', async () => {
             let resolveStorage: () => void = () => {};
             mockAdapter.storageSetMany = vi.fn().mockReturnValue(
@@ -124,7 +121,6 @@ describe('SettingsUI', () => {
             await savePromise;
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
         });
-
         it('shows joined validation errors and does not persist invalid values', async () => {
             await settingsUI.render(container);
             const fadeInput = container.querySelector('#fm-fadeRatingThreshold') as HTMLInputElement;
@@ -140,10 +136,31 @@ describe('SettingsUI', () => {
             );
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
         });
+        it('does not persist when the selected provider key is missing', async () => {
+            await settingsUI.render(container);
+            const apiClientInput = container.querySelector('[id="fm-apiClient"]') as HTMLSelectElement;
+            apiClientInput.value = 'xmdb';
+            const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
+            apiKeyInput.value = '';
+
+            await settingsUI.save();
+
+            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
+            expect(container.querySelector('#fm-status')?.textContent).toBe('XMDb API Key is required');
+        });
+        it('attempts the save and logs an error when storage fails', async () => {
+            mockAdapter.storageSetMany = vi.fn().mockRejectedValue(new Error('storage error'));
+            await settingsUI.render(container);
+
+            await settingsUI.save();
+
+            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
+            expect(mockLogger.error).toHaveBeenCalledWith('Settings save error:', expect.any(Error));
+        });
     });
 
-    describe('Autosave integration', () => {
-        it('autosaves through the view when a text input changes', async () => {
+    describe('autosave', () => {
+        it('saves through the view when a text input changes', async () => {
             await settingsUI.render(container);
             const input = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
             input.value = 'typed-key';
@@ -161,32 +178,9 @@ describe('SettingsUI', () => {
                 expect.objectContaining({ xmdbApiKey: 'typed-key' })
             );
         });
-
-        it('does not persist when the selected provider key is missing', async () => {
-            await settingsUI.render(container);
-            const apiClientInput = container.querySelector('[id="fm-apiClient"]') as HTMLSelectElement;
-            apiClientInput.value = 'xmdb';
-            const apiKeyInput = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
-            apiKeyInput.value = '';
-
-            await settingsUI.save();
-
-            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
-            expect(container.querySelector('#fm-status')?.textContent).toBe('XMDb API Key is required');
-        });
-
-        it('attempts the save and logs an error when storage fails', async () => {
-            mockAdapter.storageSetMany = vi.fn().mockRejectedValue(new Error('storage error'));
-            await settingsUI.render(container);
-
-            await settingsUI.save();
-
-            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
-            expect(mockLogger.error).toHaveBeenCalledWith('Settings save error:', expect.any(Error));
-        });
     });
 
-    describe('Cache clearing', () => {
+    describe('cache clearing', () => {
         it('keeps cached IMDb IDs when Clear Cache is clicked', async () => {
             await settingsUI.render(container);
 
@@ -197,7 +191,6 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status')?.textContent).toBe('Cache cleared. IMDb IDs kept.');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
-
         it('clears cached IMDb IDs when Clear Cache + IDs is clicked', async () => {
             await settingsUI.render(container);
 
@@ -208,7 +201,6 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status')?.textContent).toBe('Cache and cached IMDb IDs cleared.');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
-
         it.each([
             ['an Error', new Error('disk full')],
             ['a non-Error value', 'disk full'],
@@ -224,7 +216,7 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('Dependency wiring', () => {
+    describe('dependency wiring', () => {
         it('writes the cache entry and warns when the config read fails', async () => {
             mockAdapter.configGet = vi.fn(() => {
                 throw new Error('config read failed');
@@ -240,7 +232,7 @@ describe('SettingsUI', () => {
         });
     });
 
-    describe('Disabled provider reset', () => {
+    describe('disabled provider reset', () => {
         it('resets clients and shows re-enabled names', async () => {
             (mockDisabledClientsManager.resetAll as Mock).mockResolvedValue(['omdb', 'tmdb']);
             await settingsUI.render(container);
@@ -252,7 +244,6 @@ describe('SettingsUI', () => {
             expect(container.querySelector('#fm-status')?.textContent).toBe('Re-enabled API clients: omdb, tmdb');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
-
         it('shows the no-clients message when there is nothing to reset', async () => {
             await settingsUI.render(container);
 
@@ -264,7 +255,6 @@ describe('SettingsUI', () => {
             );
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
-
         it.each([
             ['an Error', new Error('storage unavailable')],
             ['a non-Error value', 'storage unavailable'],

@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Logger } from '../../../src/core/logger';
 import { buildMockAdapter } from '../../mocks/adapter';
 
-describe('core/logger', () => {
+describe('Logger', () => {
     function makeLogger(debugVal: boolean | string = false) {
         return new Logger(
             buildMockAdapter()

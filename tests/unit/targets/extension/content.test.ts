@@ -86,171 +86,170 @@ describe('content.js entry point', () => {
         return startCall[0] as { configGet: (_key: string) => unknown };
     }
 
-    it('waits for migrations before reading storage and starting the app', async () => {
-        const entryImport = import('../../../../src/targets/extension/content');
-        await entryImport;
+    describe('startup', () => {
+        it('waits for migrations before reading storage and starting the app', async () => {
+            const entryImport = import('../../../../src/targets/extension/content');
+            await entryImport;
 
-        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });
-        expect(browser.storage.local.get).not.toHaveBeenCalled();
-        expect(startAppSpy).not.toHaveBeenCalled();
+            expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ type: 'FM_RUN_MIGRATIONS' });
+            expect(browser.storage.local.get).not.toHaveBeenCalled();
+            expect(startAppSpy).not.toHaveBeenCalled();
 
-        resolveMigrations({});
-        await Promise.resolve();
-        await Promise.resolve();
+            resolveMigrations({});
+            await Promise.resolve();
+            await Promise.resolve();
 
-        expect(browser.storage.local.get).toHaveBeenCalledAfter(browser.runtime.sendMessage);
-        await vi.waitFor(() => expect(startAppSpy).toHaveBeenCalled());
-        expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
-    });
-
-    it('does not start the app or read storage and logs when migrations reject', async () => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        migrationPromise = Promise.reject(new Error('migration boom'));
-
-        await import('../../../../src/targets/extension/content');
-
-        await vi.waitFor(() => {
-            expect(errorSpy).toHaveBeenCalled();
+            expect(browser.storage.local.get).toHaveBeenCalledAfter(browser.runtime.sendMessage);
+            await vi.waitFor(() => expect(startAppSpy).toHaveBeenCalled());
+            expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
         });
-        expect(startAppSpy).not.toHaveBeenCalled();
-        expect(browser.storage.local.get).not.toHaveBeenCalled();
-        expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));
-        errorSpy.mockRestore();
-    });
+        it('does not start the app or read storage and logs when migrations reject', async () => {
+            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            migrationPromise = Promise.reject(new Error('migration boom'));
 
-    it('starts the app once', async () => {
-        await startAfterMigrations();
-        expect(startAppSpy).toHaveBeenCalledOnce();
-    });
+            await import('../../../../src/targets/extension/content');
 
-    it('seeds the config snapshot with only valid storage values', async () => {
-        storedObject = { overlayCorner: 42, showRtRating: true };
-        await startAfterMigrations();
-
-        const adapter = startedAdapter();
-        expect(adapter.configGet('overlayCorner')).toBeUndefined();
-        expect(adapter.configGet('showRtRating')).toBe(true);
-    });
-
-    it('removes a setting from the snapshot when the new value has the wrong type', async () => {
-        await startAfterMigrations();
-
-        onChangedListener({ overlayCorner: { newValue: 42 } });
-
-        expect(startedAdapter().configGet('overlayCorner')).toBeUndefined();
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
-
-    it('removes a setting from the snapshot when the key is deleted', async () => {
-        storedObject = { showRtRating: true };
-        await startAfterMigrations();
-
-        onChangedListener({ showRtRating: { newValue: undefined } });
-
-        expect(startedAdapter().configGet('showRtRating')).toBeUndefined();
-    });
-
-    it.each([
-        ['overlayCorner', 'bottom-left'],
-        ['showRtRating', true],
-        ['showMcRating', false],
-        ['enableFadeUnderRating', true],
-        ['fadeRatingThreshold', '50'],
-    ])('calls redecorate when %s changes', async (key, value) => {
-        await startAfterMigrations();
-
-        onChangedListener({ [key]: { newValue: value } });
-
-        expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-    });
-
-    it('does not call redecorate when an unrelated key changes', async () => {
-        await startAfterMigrations();
-        onChangedListener({ someOtherKey: { newValue: 'value' } });
-        expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
-    });
-
-    describe('stored object updates', () => {
-        it('updates the stored object when storage changes', async () => {
+            await vi.waitFor(() => {
+                expect(errorSpy).toHaveBeenCalled();
+            });
+            expect(startAppSpy).not.toHaveBeenCalled();
+            expect(browser.storage.local.get).not.toHaveBeenCalled();
+            expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));
+            errorSpy.mockRestore();
+        });
+        it('starts the app once', async () => {
+            await startAfterMigrations();
+            expect(startAppSpy).toHaveBeenCalledOnce();
+        });
+        it('seeds the config snapshot with only valid storage values', async () => {
+            storedObject = { overlayCorner: 42, showRtRating: true };
             await startAfterMigrations();
 
-            expect(startedAdapter().configGet('overlayCorner')).toBe('top-right');
-
-            onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
-
-            expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
+            const adapter = startedAdapter();
+            expect(adapter.configGet('overlayCorner')).toBeUndefined();
+            expect(adapter.configGet('showRtRating')).toBe(true);
         });
+    });
 
-        it('updates multiple keys in the stored config snapshot', async () => {
+    describe('storage changes', () => {
+        it('removes a setting from the snapshot when the new value has the wrong type', async () => {
             await startAfterMigrations();
 
-            onChangedListener({
-                overlayCorner: { newValue: 'bottom-left' },
-                showRtRating: { newValue: true },
+            onChangedListener({ overlayCorner: { newValue: 42 } });
+
+            expect(startedAdapter().configGet('overlayCorner')).toBeUndefined();
+            expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
+        });
+        it('removes a setting from the snapshot when the key is deleted', async () => {
+            storedObject = { showRtRating: true };
+            await startAfterMigrations();
+
+            onChangedListener({ showRtRating: { newValue: undefined } });
+
+            expect(startedAdapter().configGet('showRtRating')).toBeUndefined();
+        });
+        describe('stored object updates', () => {
+            it('updates the stored object when storage changes', async () => {
+                await startAfterMigrations();
+
+                expect(startedAdapter().configGet('overlayCorner')).toBe('top-right');
+
+                onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });
+
+                expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
             });
 
-            expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
-            expect(startedAdapter().configGet('showRtRating')).toBe(true);
-        });
+            it('updates multiple keys in the stored config snapshot', async () => {
+                await startAfterMigrations();
 
-        it('updates the stored config snapshot for non-visual settings', async () => {
-            await startAfterMigrations();
+                onChangedListener({
+                    overlayCorner: { newValue: 'bottom-left' },
+                    showRtRating: { newValue: true },
+                });
 
-            onChangedListener({ apiClient: { newValue: 'omdb' } });
+                expect(startedAdapter().configGet('overlayCorner')).toBe('bottom-left');
+                expect(startedAdapter().configGet('showRtRating')).toBe(true);
+            });
 
-            expect(startedAdapter().configGet('apiClient')).toBe('omdb');
+            it('updates the stored config snapshot for non-visual settings', async () => {
+                await startAfterMigrations();
+
+                onChangedListener({ apiClient: { newValue: 'omdb' } });
+
+                expect(startedAdapter().configGet('apiClient')).toBe('omdb');
+            });
         });
     });
 
-    describe('multiple visual setting changes', () => {
-        it('calls redecorate once for multiple visual setting changes', async () => {
+    describe('redecorate', () => {
+        it.each([
+            ['overlayCorner', 'bottom-left'],
+            ['showRtRating', true],
+            ['showMcRating', false],
+            ['enableFadeUnderRating', true],
+            ['fadeRatingThreshold', '50'],
+        ])('calls redecorate when %s changes', async (key, value) => {
             await startAfterMigrations();
 
-            onChangedListener({
-                overlayCorner: { newValue: 'bottom-left' },
-                showRtRating: { newValue: true },
-                showMcRating: { newValue: true },
-            });
+            onChangedListener({ [key]: { newValue: value } });
 
             expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
         });
-
-        it('calls redecorate for mixed visual and non-visual changes', async () => {
+        it('does not call redecorate when an unrelated key changes', async () => {
             await startAfterMigrations();
-
-            onChangedListener({
-                overlayCorner: { newValue: 'bottom-left' },
-                apiClient: { newValue: 'omdb' },
-                debug: { newValue: true },
-            });
-
-            expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
-        });
-
-        it('does not call redecorate when only non-visual settings change', async () => {
-            await startAfterMigrations();
-
-            onChangedListener({
-                apiClient: { newValue: 'omdb' },
-                debug: { newValue: false },
-            });
-
+            onChangedListener({ someOtherKey: { newValue: 'value' } });
             expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
         });
+        describe('multiple visual setting changes', () => {
+            it('calls redecorate once for multiple visual setting changes', async () => {
+                await startAfterMigrations();
 
-        it('calls redecorate once per change event with multiple visual settings', async () => {
-            await startAfterMigrations();
+                onChangedListener({
+                    overlayCorner: { newValue: 'bottom-left' },
+                    showRtRating: { newValue: true },
+                    showMcRating: { newValue: true },
+                });
 
-            onChangedListener({
-                overlayCorner: { newValue: 'bottom-left' },
-                showRtRating: { newValue: true },
+                expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
             });
 
-            onChangedListener({
-                showMcRating: { newValue: true },
+            it('calls redecorate for mixed visual and non-visual changes', async () => {
+                await startAfterMigrations();
+
+                onChangedListener({
+                    overlayCorner: { newValue: 'bottom-left' },
+                    apiClient: { newValue: 'omdb' },
+                    debug: { newValue: true },
+                });
+
+                expect(mockAppHandle.redecorate).toHaveBeenCalledOnce();
             });
 
-            expect(mockAppHandle.redecorate).toHaveBeenCalledTimes(2);
+            it('does not call redecorate when only non-visual settings change', async () => {
+                await startAfterMigrations();
+
+                onChangedListener({
+                    apiClient: { newValue: 'omdb' },
+                    debug: { newValue: false },
+                });
+
+                expect(mockAppHandle.redecorate).not.toHaveBeenCalled();
+            });
+
+            it('calls redecorate once per change event with multiple visual settings', async () => {
+                await startAfterMigrations();
+
+                onChangedListener({
+                    overlayCorner: { newValue: 'bottom-left' },
+                    showRtRating: { newValue: true },
+                });
+
+                onChangedListener({
+                    showMcRating: { newValue: true },
+                });
+
+                expect(mockAppHandle.redecorate).toHaveBeenCalledTimes(2);
+            });
         });
     });
 });

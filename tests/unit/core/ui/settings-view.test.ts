@@ -40,25 +40,7 @@ describe('SettingsView', () => {
         document.body.appendChild(container);
     });
 
-    it('reads one value snapshot from its rendered fields', () => {
-        const fields: readonly ConfigField[] = [
-            { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
-        ];
-        const localView = new SettingsView(fields, {
-            onSave: vi.fn(),
-            onClearCache: vi.fn(),
-            onClearCacheWithIds: vi.fn(),
-            onResetClients: vi.fn(),
-        });
-        const localContainer = document.createElement('div');
-        localView.render(localContainer, {});
-        const debugInput = localContainer.querySelector('#fm-debug') as HTMLInputElement;
-        debugInput.checked = true;
-
-        expect(localView.readValues()).toEqual({ debug: true });
-    });
-
-    describe('Rendering', () => {
+    describe('rendering', () => {
         it('renders each config field from its definition', () => {
             view.render(container, {});
 
@@ -234,8 +216,7 @@ describe('SettingsView', () => {
             expect(checkbox.disabled).toBe(true);
         });
     });
-
-    describe('Field population', () => {
+    describe('field population', () => {
         it('populates every field with its default when settings are empty', () => {
             view.render(container, {});
 
@@ -286,29 +267,8 @@ describe('SettingsView', () => {
 
             expect((container.querySelector('#fm-showMcRating') as HTMLInputElement).checked).toBe(true);
         });
-
-        it('omits disabled fields from the read values', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
-                {
-                    key: 'disabledField',
-                    type: 'text',
-                    label: 'Disabled Field',
-                    default: 'value',
-                    disabled: true,
-                    group: 'display',
-                },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
-
-            const values = view.readValues();
-            expect(values).toHaveProperty('enabledField');
-            expect(values).not.toHaveProperty('disabledField');
-        });
     });
-
-    describe('Validation', () => {
+    describe('validation', () => {
         it('returns errors and marks invalid fields', () => {
             view.render(container, {});
             const input = container.querySelector('#fm-fadeRatingThreshold') as HTMLInputElement;
@@ -344,8 +304,7 @@ describe('SettingsView', () => {
             expect(validate).toHaveBeenCalledWith(true, { testCheckbox: true });
         });
     });
-
-    describe('Actions', () => {
+    describe('actions', () => {
         it('wires each button to its supplied action', () => {
             view.render(container, {});
 
@@ -358,8 +317,7 @@ describe('SettingsView', () => {
             expect(actions.onResetClients).toHaveBeenCalledOnce();
         });
     });
-
-    describe('Scoping', () => {
+    describe('scoping', () => {
         it('scopes reads and status updates to its rendered container', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
@@ -384,8 +342,46 @@ describe('SettingsView', () => {
             expect(otherContainer.querySelector('[id="fm-status"]')?.textContent).toBe('');
         });
     });
+    describe('read values', () => {
+        it('returns one snapshot from its rendered fields', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+            ];
+            const localView = new SettingsView(fields, {
+                onSave: vi.fn(),
+                onClearCache: vi.fn(),
+                onClearCacheWithIds: vi.fn(),
+                onResetClients: vi.fn(),
+            });
+            const localContainer = document.createElement('div');
+            localView.render(localContainer, {});
+            const debugInput = localContainer.querySelector('#fm-debug') as HTMLInputElement;
+            debugInput.checked = true;
 
-    describe('Auto-save', () => {
+            expect(localView.readValues()).toEqual({ debug: true });
+        });
+        it('omits disabled fields', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
+                {
+                    key: 'disabledField',
+                    type: 'text',
+                    label: 'Disabled Field',
+                    default: 'value',
+                    disabled: true,
+                    group: 'display',
+                },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
+
+            const values = view.readValues();
+            expect(values).toHaveProperty('enabledField');
+            expect(values).not.toHaveProperty('disabledField');
+        });
+    });
+
+    describe('auto-save', () => {
         beforeEach(() => {
             vi.useFakeTimers();
         });

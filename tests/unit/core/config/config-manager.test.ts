@@ -120,7 +120,7 @@ describe('ConfigManager', () => {
     });
 
     describe('getInt', () => {
-        it('parses an integer with getInt', () => {
+        it('parses an integer', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => '42')
@@ -164,7 +164,7 @@ describe('ConfigManager', () => {
     });
 
     describe('getFloat', () => {
-        it('parses a float with getFloat', () => {
+        it('parses a float', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => '3.14')

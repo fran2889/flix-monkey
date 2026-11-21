@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { debounce, FlixMonkeyError, runIdle } from '../../../../src/core/utils/index';
 
-describe('core/utils/general-utils', () => {
+describe('general utilities', () => {
     beforeEach(() => {
         vi.useFakeTimers();
     });

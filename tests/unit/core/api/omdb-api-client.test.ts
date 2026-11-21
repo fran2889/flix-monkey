@@ -40,394 +40,385 @@ const deps: ApiClientDeps = {
 };
 
 describe('OmdbApiClient', () => {
-    it('returns the rating and IMDb ID from a search response', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
+    describe('search', () => {
+        it('returns the rating and IMDb ID from a search response', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbRating: '8.0',
+                    imdbID: 'tt1',
+                    Year: '2020',
+                    Title: 'Movie 1',
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.imdbRating).toBe(8.0);
+            expect(result!.imdbId).toBe('tt1');
+        });
+        // OMDb reports Year as a free-form string, so this client owns extracting the
+        // digits. Title only ever receives a number.
+        it.each([
+            ['2020', 2020],
+            ['2020-', 2020],
+            ['2020-01-01', 2020],
+            ['invalid', undefined],
+        ])('converts Year %o to %o', async (raw: string, expected: number | undefined) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.year).toBe(expected);
+        });
+        it('parses Rotten Tomatoes and Metacritic ratings from an OMDb response', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbRating: '8.0',
+                    Ratings: [
+                        { Source: 'Rotten Tomatoes', Value: '90%' },
+                        { Source: 'Metacritic', Value: '85/100' },
+                    ],
+                    imdbID: 'tt1',
+                    Title: 'Movie 1',
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.rtRating).toBe(90);
+            expect(result!.mcRating).toBe(85);
+        });
+        it.each(['', ' ', 'N/A', null])('treats imdbRating %o as missing', async (value: string | null) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.imdbRating).toBeUndefined();
+            expect(result!.hasRating).toBe(false);
+        });
+        // The OMDb wire format is stringly typed, so this client owns converting it to
+        // numbers. Title only ever receives `number | undefined`.
+        it.each([
+            ['8.0', 8],
+            ['8.7', 8.7],
+        ])('converts imdbRating %o to %o', async (raw: string, expected: number) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.imdbRating).toBe(expected);
+        });
+        it.each([
+            [{ Source: 'Rotten Tomatoes', Value: '90%' }, 90],
+            [{ Source: 'Rotten Tomatoes', Value: '0%' }, 0],
+            [{ Source: 'Rotten Tomatoes', Value: 'N/A' }, undefined],
+            [{ Source: 'Metacritic', Value: '85/100' }, 85],
+            [{ Source: 'Metacritic', Value: '0/100' }, 0],
+            [{ Source: 'Metacritic', Value: 'N/A' }, undefined],
+        ])('converts a Ratings entry %o to %o', async (entry: object, expected: number | undefined) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbID: 'tt1',
+                    Title: 'Movie 1',
+                    Ratings: [entry],
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            const rating = entry as { Source: string };
+            const isRottenTomatoes = /Rotten Tomatoes/i.test(rating.Source);
+            expect(isRottenTomatoes ? result!.rtRating : result!.mcRating).toBe(expected);
+        });
+        it.each([
+            ['2,500,000', 2500000],
+            ['2500000', 2500000],
+            ['', undefined],
+        ])('converts imdbVotes %o to %o', async (raw: string, expected: number | undefined) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbRating: '8.0',
+                    imdbVotes: raw,
+                    imdbID: 'tt1',
+                    Title: 'Movie 1',
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Movie 1');
+
+            expect(result!.imdbVotes).toBe(expected);
+        });
+        it.each([
+            { type: 'movie', imdbId: 'tt1', title: 'Movie 1' },
+            { type: 'series', imdbId: 'tt2', title: 'Show 1' },
+        ])('maps an OMDb Type of $type to a title type', async ({ type, imdbId, title }) => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbRating: '8.0',
+                    imdbID: imdbId,
+                    Year: '2020',
+                    Title: title,
+                    Type: type,
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search(title);
+            expect(result!.type).toBe(type);
+        });
+        it('returns undefined and logs info with the provider error message on an OMDb False response', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
+                .build();
+            const mockLoggerForTest = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
+
+            expect(await client.search('Unknown')).toBeUndefined();
+
+            expect(mockLoggerForTest.info).toHaveBeenCalledTimes(1);
+            expect(mockLoggerForTest.info).toHaveBeenCalledWith(
+                'No search results found in OMDb for "Unknown": Movie not found!'
+            );
+            expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
+        });
+        it('leaves imdbVotes undefined when the OMDb response has none', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    imdbRating: '8.8',
+                    imdbID: 'tt1',
+                    Title: 'Test',
+                })
+                .build();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const result = await client.search('Test');
+            expect(result!.imdbVotes).toBeUndefined();
+        });
+        it('drops invalid Ratings entries and keeps valid ones', async () => {
+            const mockAdapterForTest = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    Response: 'True',
+                    Title: 'Some Title',
+                    imdbID: 'tt1234567',
+                    imdbRating: '7.5',
+                    Year: '2020',
+                    Type: 'movie',
+                    Ratings: [
+                        null,
+                        'nope',
+                        { Source: 'Metacritic', Value: '80/100' },
+                        { Source: 'Rotten Tomatoes', Value: '90%' },
+                    ],
+                })
+                .build();
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const client = new OmdbApiClient({
+                ...deps,
+                adapter: mockAdapterForTest,
+                disabledManager: mockDisabledManagerForTest,
+            });
+            const result = await client.fetch('Some Title');
+            expect(result).not.toBeUndefined();
+            expect(result!.mcRating).toBe(80);
+            expect(result!.rtRating).toBe(90);
+        });
+        it('keeps the title when every Ratings entry is invalid', async () => {
+            const response = {
                 Response: 'True',
-                imdbRating: '8.0',
                 imdbID: 'tt1',
-                Year: '2020',
                 Title: 'Movie 1',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.imdbRating).toBe(8.0);
-        expect(result!.imdbId).toBe('tt1');
-    });
-
-    it('returns an unhealthy status when the API key is missing', async () => {
-        const mockConfigForTest: ConfigManager = {
-            get: () => '',
-        } as unknown as ConfigManager;
-        const client = new OmdbApiClient({ ...deps, config: mockConfigForTest });
-        const status = await client.getStatus();
-        expect(status.healthy).toBe(false);
-    });
-
-    it('defers to the base health check when an API key is configured', async () => {
-        // mockConfig.get() returns a non-empty key, so the client falls through to
-        // BaseApiClient.getStatus(), which gates on the disabled manager.
-        const client = new OmdbApiClient(deps);
-        expect(await client.getStatus()).toEqual({ healthy: true });
-    });
-
-    it('reports unhealthy when disabled even though an API key is configured', async () => {
-        const mockDisabledManagerForTest: DisabledClientsManager = {
-            isDisabled: vi.fn().mockResolvedValue(true),
-            disable: vi.fn().mockResolvedValue(undefined),
-            resetAll: vi.fn().mockResolvedValue([]),
-        } as unknown as DisabledClientsManager;
-        const client = new OmdbApiClient({ ...deps, disabledManager: mockDisabledManagerForTest });
-        const status = await client.getStatus();
-        expect(status.healthy).toBe(false);
-        expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
-    });
-
-    // OMDb reports Year as a free-form string, so this client owns extracting the
-    // digits. Title only ever receives a number.
-    it.each([
-        ['2020', 2020],
-        ['2020-', 2020],
-        ['2020-01-01', 2020],
-        ['invalid', undefined],
-    ])('converts Year %o to %o', async (raw: string, expected: number | undefined) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'True', Year: raw, Title: 'Movie 1', imdbID: 'tt1' })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.year).toBe(expected);
-    });
-
-    it('parses Rotten Tomatoes and Metacritic ratings from an OMDb response', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: '8.0',
-                Ratings: [
-                    { Source: 'Rotten Tomatoes', Value: '90%' },
-                    { Source: 'Metacritic', Value: '85/100' },
-                ],
-                imdbID: 'tt1',
-                Title: 'Movie 1',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.rtRating).toBe(90);
-        expect(result!.mcRating).toBe(85);
-    });
-
-    it.each(['', ' ', 'N/A', null])('treats imdbRating %o as missing', async (value: string | null) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.imdbRating).toBeUndefined();
-        expect(result!.hasRating).toBe(false);
-    });
-
-    // The OMDb wire format is stringly typed, so this client owns converting it to
-    // numbers. Title only ever receives `number | undefined`.
-    it.each([
-        ['8.0', 8],
-        ['8.7', 8.7],
-    ])('converts imdbRating %o to %o', async (raw: string, expected: number) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'True', imdbRating: raw, imdbID: 'tt1', Title: 'Movie 1' })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.imdbRating).toBe(expected);
-    });
-
-    it.each([
-        [{ Source: 'Rotten Tomatoes', Value: '90%' }, 90],
-        [{ Source: 'Rotten Tomatoes', Value: '0%' }, 0],
-        [{ Source: 'Rotten Tomatoes', Value: 'N/A' }, undefined],
-        [{ Source: 'Metacritic', Value: '85/100' }, 85],
-        [{ Source: 'Metacritic', Value: '0/100' }, 0],
-        [{ Source: 'Metacritic', Value: 'N/A' }, undefined],
-    ])('converts a Ratings entry %o to %o', async (entry: object, expected: number | undefined) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbID: 'tt1',
-                Title: 'Movie 1',
-                Ratings: [entry],
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        const rating = entry as { Source: string };
-        const isRottenTomatoes = /Rotten Tomatoes/i.test(rating.Source);
-        expect(isRottenTomatoes ? result!.rtRating : result!.mcRating).toBe(expected);
-    });
-
-    it.each([
-        ['2,500,000', 2500000],
-        ['2500000', 2500000],
-        ['', undefined],
-    ])('converts imdbVotes %o to %o', async (raw: string, expected: number | undefined) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: '8.0',
-                imdbVotes: raw,
-                imdbID: 'tt1',
-                Title: 'Movie 1',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.imdbVotes).toBe(expected);
-    });
-
-    it.each([
-        { type: 'movie', imdbId: 'tt1', title: 'Movie 1' },
-        { type: 'series', imdbId: 'tt2', title: 'Show 1' },
-    ])('maps an OMDb Type of $type to a title type', async ({ type, imdbId, title }) => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: '8.0',
-                imdbID: imdbId,
-                Year: '2020',
-                Title: title,
-                Type: type,
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search(title);
-        expect(result!.type).toBe(type);
-    });
-
-    it('returns undefined and logs info with the provider error message on an OMDb False response', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'False', Error: 'Movie not found!' })
-            .build();
-        const mockLoggerForTest = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest, logger: mockLoggerForTest });
-
-        expect(await client.search('Unknown')).toBeUndefined();
-
-        expect(mockLoggerForTest.info).toHaveBeenCalledTimes(1);
-        expect(mockLoggerForTest.info).toHaveBeenCalledWith(
-            'No search results found in OMDb for "Unknown": Movie not found!'
-        );
-        expect(mockLoggerForTest.warn).not.toHaveBeenCalled();
-    });
-
-    it('leaves imdbVotes undefined when the OMDb response has none', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: '8.8',
-                imdbID: 'tt1',
-                Title: 'Test',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Test');
-        expect(result!.imdbVotes).toBeUndefined();
-    });
-
-    it('drops invalid Ratings entries and keeps valid ones', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                Title: 'Some Title',
-                imdbID: 'tt1234567',
                 imdbRating: '7.5',
-                Year: '2020',
+                Ratings: [null, 'nope'],
+            };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+            const result = await client.search('Movie 1');
+
+            expect(result?.apiTitle).toBe('Movie 1');
+            expect(result?.imdbRating).toBe(7.5);
+            expect(result?.rtRating).toBeUndefined();
+            expect(result?.mcRating).toBeUndefined();
+            expect(logger.warn).not.toHaveBeenCalled();
+        });
+        it('warns once and returns undefined when the OMDb response is not an object', async () => {
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
+                response: [],
+                error: 'expected an object',
+            });
+        });
+        it('returns undefined and logs info without warning for a False response', async () => {
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.info).toHaveBeenCalledTimes(1);
+            expect(logger.info).toHaveBeenCalledWith('No search results found in OMDb for "Movie 1"');
+            expect(logger.warn).not.toHaveBeenCalled();
+        });
+        it('warns once and returns undefined when a False response has a non-string Error', async () => {
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False', Error: 42 }).build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.info).not.toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
+                response: { Response: 'False', Error: 42 },
+                error: 'expected string at "Error"',
+            });
+        });
+    });
+
+    describe('details', () => {
+        it('uses the ID endpoint when the title has an IMDb ID', async () => {
+            const mockResponse = {
+                Response: 'True',
+                imdbID: 'tt1234567',
+                Title: 'Test Movie',
+                Year: '2024',
+                imdbRating: '8.5',
+                imdbVotes: '1000',
+                Ratings: [],
                 Type: 'movie',
-                Ratings: [
-                    null,
-                    'nope',
-                    { Source: 'Metacritic', Value: '80/100' },
-                    { Source: 'Rotten Tomatoes', Value: '90%' },
-                ],
-            })
-            .build();
-        const mockDisabledManagerForTest: DisabledClientsManager = {
-            isDisabled: vi.fn().mockResolvedValue(false),
-            disable: vi.fn().mockResolvedValue(undefined),
-            resetAll: vi.fn().mockResolvedValue([]),
-        } as unknown as DisabledClientsManager;
-        const client = new OmdbApiClient({
-            ...deps,
-            adapter: mockAdapterForTest,
-            disabledManager: mockDisabledManagerForTest,
+            };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+            const client = new OmdbApiClient({ ...deps, adapter });
+            const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
+            const result = await client.getDetails(minimalTitle);
+
+            expect(result).not.toBeUndefined();
+            expect(result!.imdbId).toBe('tt1234567');
+            expect(result!.imdbRating).toBe(8.5);
+            expect(result!.apiTitle).toBe('Test Movie');
+            expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567');
         });
-        const result = await client.fetch('Some Title');
-        expect(result).not.toBeUndefined();
-        expect(result!.mcRating).toBe(80);
-        expect(result!.rtRating).toBe(90);
-    });
+        it('returns the title unchanged when it already has an apiTitle', async () => {
+            const mockAdapterForTest = buildMockAdapter().build();
+            mockAdapterForTest.httpFetch = vi.fn();
+            const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
+            const searchTitle = buildTitle()
+                .withDisplayTitle('Test Movie')
+                .withApiTitle('Test Movie')
+                .withImdbId('tt123')
+                .withYear(2020)
+                .build();
+            const result = await client.getDetails(searchTitle);
+            expect(result).toBe(searchTitle);
+            expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
+        });
+        it('updates apiTitle from the OMDb response when the fallback has no apiTitle', async () => {
+            const mockResponse = {
+                Response: 'True',
+                imdbID: 'tt123',
+                Title: 'Updated Title',
+                Type: 'movie',
+            };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+            const client = new OmdbApiClient({ ...deps, adapter });
+            const minimalTitle = buildTitle()
+                .withDisplayTitle('Test')
+                .withImdbId('tt123')
+                .withApiTitle(undefined)
+                .build();
+            const result = await client.getDetails(minimalTitle);
+            expect(result!.apiTitle).toBe('Updated Title');
+            expect(result!.imdbId).toBe('tt123');
+            expect(result!.displayTitle).toBe('Test');
+        });
+        it('fetches details by IMDb ID for a cached title without an apiTitle', async () => {
+            const mockResponse = {
+                Response: 'True',
+                imdbID: 'tt123',
+                Title: 'Updated Title',
+                imdbRating: '8.5',
+                Type: 'movie',
+            };
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
+            const client = new OmdbApiClient({ ...deps, adapter });
+            const cachedTitle = new Title({ displayTitle: 'Test', imdbId: 'tt123' });
+            const result = await client.getDetails(cachedTitle);
 
-    it('keeps the title when every Ratings entry is invalid', async () => {
-        const response = {
-            Response: 'True',
-            imdbID: 'tt1',
-            Title: 'Movie 1',
-            imdbRating: '7.5',
-            Ratings: [null, 'nope'],
-        };
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo(response).build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
+            expect(result!.apiTitle).toBe('Updated Title');
+            expect(result!.imdbRating).toBe(8.5);
+            expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123');
+        });
+        it('returns undefined and logs the display title, IMDb ID, and provider message on a details miss', async () => {
+            const adapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({ Response: 'False', Error: 'Incorrect IMDb ID.' })
+                .build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
 
-        const result = await client.search('Movie 1');
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
 
-        expect(result?.apiTitle).toBe('Movie 1');
-        expect(result?.imdbRating).toBe(7.5);
-        expect(result?.rtRating).toBeUndefined();
-        expect(result?.mcRating).toBeUndefined();
-        expect(logger.warn).not.toHaveBeenCalled();
-    });
+            expect(result).toBeUndefined();
+            expect(logger.info).toHaveBeenCalledTimes(1);
+            expect(logger.info).toHaveBeenCalledWith(
+                'No OMDb results found for "Movie 1" (ID: tt1): Incorrect IMDb ID.'
+            );
+            expect(logger.warn).not.toHaveBeenCalled();
+        });
+        it('returns undefined and logs info without a provider message when a details miss has no Error', async () => {
+            const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
+            const logger = buildLogger().build();
+            const client = new OmdbApiClient({ ...deps, adapter, logger });
 
-    it('uses the ID endpoint when the title has an IMDb ID', async () => {
-        const mockResponse = {
-            Response: 'True',
-            imdbID: 'tt1234567',
-            Title: 'Test Movie',
-            Year: '2024',
-            imdbRating: '8.5',
-            imdbVotes: '1000',
-            Ratings: [],
-            Type: 'movie',
-        };
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
-        const client = new OmdbApiClient({ ...deps, adapter });
-        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
-        const result = await client.getDetails(minimalTitle);
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
 
-        expect(result).not.toBeUndefined();
-        expect(result!.imdbId).toBe('tt1234567');
-        expect(result!.imdbRating).toBe(8.5);
-        expect(result!.apiTitle).toBe('Test Movie');
-        expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567');
-    });
-
-    it('returns the title unchanged when it already has an apiTitle', async () => {
-        const mockAdapterForTest = buildMockAdapter().build();
-        mockAdapterForTest.httpFetch = vi.fn();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const searchTitle = buildTitle()
-            .withDisplayTitle('Test Movie')
-            .withApiTitle('Test Movie')
-            .withImdbId('tt123')
-            .withYear(2020)
-            .build();
-        const result = await client.getDetails(searchTitle);
-        expect(result).toBe(searchTitle);
-        expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
-    });
-
-    it('updates apiTitle from the OMDb response when the fallback has no apiTitle', async () => {
-        const mockResponse = {
-            Response: 'True',
-            imdbID: 'tt123',
-            Title: 'Updated Title',
-            Type: 'movie',
-        };
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
-        const client = new OmdbApiClient({ ...deps, adapter });
-        const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt123').withApiTitle(undefined).build();
-        const result = await client.getDetails(minimalTitle);
-        expect(result!.apiTitle).toBe('Updated Title');
-        expect(result!.imdbId).toBe('tt123');
-        expect(result!.displayTitle).toBe('Test');
-    });
-
-    it('fetches details by IMDb ID for a cached title without an apiTitle', async () => {
-        const mockResponse = {
-            Response: 'True',
-            imdbID: 'tt123',
-            Title: 'Updated Title',
-            imdbRating: '8.5',
-            Type: 'movie',
-        };
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
-        const client = new OmdbApiClient({ ...deps, adapter });
-        const cachedTitle = new Title({ displayTitle: 'Test', imdbId: 'tt123' });
-        const result = await client.getDetails(cachedTitle);
-
-        expect(result!.apiTitle).toBe('Updated Title');
-        expect(result!.imdbRating).toBe(8.5);
-        expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123');
-    });
-
-    it('warns once and returns undefined when the OMDb response is not an object', async () => {
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
-
-        expect(await client.search('Movie 1')).toBeUndefined();
-        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
-            response: [],
-            error: 'expected an object',
+            expect(result).toBeUndefined();
+            expect(logger.info).toHaveBeenCalledTimes(1);
+            expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1)');
+            expect(logger.warn).not.toHaveBeenCalled();
         });
     });
 
-    it('returns undefined and logs info without warning for a False response', async () => {
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
-
-        expect(await client.search('Movie 1')).toBeUndefined();
-        expect(logger.info).toHaveBeenCalledTimes(1);
-        expect(logger.info).toHaveBeenCalledWith('No search results found in OMDb for "Movie 1"');
-        expect(logger.warn).not.toHaveBeenCalled();
-    });
-
-    it('returns undefined and logs the display title, IMDb ID, and provider message on a details miss', async () => {
-        const adapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({ Response: 'False', Error: 'Incorrect IMDb ID.' })
-            .build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
-
-        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
-
-        expect(result).toBeUndefined();
-        expect(logger.info).toHaveBeenCalledTimes(1);
-        expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1): Incorrect IMDb ID.');
-        expect(logger.warn).not.toHaveBeenCalled();
-    });
-
-    it('returns undefined and logs info without a provider message when a details miss has no Error', async () => {
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False' }).build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
-
-        const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Movie 1').build());
-
-        expect(result).toBeUndefined();
-        expect(logger.info).toHaveBeenCalledTimes(1);
-        expect(logger.info).toHaveBeenCalledWith('No OMDb results found for "Movie 1" (ID: tt1)');
-        expect(logger.warn).not.toHaveBeenCalled();
-    });
-
-    it('warns once and returns undefined when a False response has a non-string Error', async () => {
-        const adapter = buildMockAdapter().withHttpFetchResolvingTo({ Response: 'False', Error: 42 }).build();
-        const logger = buildLogger().build();
-        const client = new OmdbApiClient({ ...deps, adapter, logger });
-
-        expect(await client.search('Movie 1')).toBeUndefined();
-        expect(logger.info).not.toHaveBeenCalled();
-        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
-            response: { Response: 'False', Error: 42 },
-            error: 'expected string at "Error"',
+    describe('health', () => {
+        it('returns an unhealthy status when the API key is missing', async () => {
+            const mockConfigForTest: ConfigManager = {
+                get: () => '',
+            } as unknown as ConfigManager;
+            const client = new OmdbApiClient({ ...deps, config: mockConfigForTest });
+            const status = await client.getStatus();
+            expect(status.healthy).toBe(false);
+        });
+        it('defers to the base health check when an API key is configured', async () => {
+            // mockConfig.get() returns a non-empty key, so the client falls through to
+            // BaseApiClient.getStatus(), which gates on the disabled manager.
+            const client = new OmdbApiClient(deps);
+            expect(await client.getStatus()).toEqual({ healthy: true });
+        });
+        it('reports unhealthy when disabled even though an API key is configured', async () => {
+            const mockDisabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(true),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const client = new OmdbApiClient({ ...deps, disabledManager: mockDisabledManagerForTest });
+            const status = await client.getStatus();
+            expect(status.healthy).toBe(false);
+            expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
         });
     });
 

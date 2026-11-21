@@ -66,6 +66,12 @@ describe('IdOverrideManager', () => {
             mockAdapter.storageGet.mockResolvedValue(payload);
             await expect(manager.getImdbId('Non Object Movie')).resolves.toBeUndefined();
         });
+
+        it('returns undefined when the stored data is corrupt JSON', async () => {
+            mockAdapter.storageGet.mockResolvedValue('not-valid-json{');
+            const result = await manager.getImdbId('Corrupt Movie');
+            expect(result).toBeUndefined();
+        });
     });
 
     describe('setImdbId', () => {
@@ -83,12 +89,6 @@ describe('IdOverrideManager', () => {
                 'fm-idoverride:the_matrix_reloaded',
                 '{"imdbId":"tt0242653"}'
             );
-        });
-
-        it('returns undefined when the stored data is corrupt JSON', async () => {
-            mockAdapter.storageGet.mockResolvedValue('not-valid-json{');
-            const result = await manager.getImdbId('Corrupt Movie');
-            expect(result).toBeUndefined();
         });
     });
 });

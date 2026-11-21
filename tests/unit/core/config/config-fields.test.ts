@@ -19,7 +19,7 @@ function findSettingField(key: string): SettingConfigField {
     return field;
 }
 
-describe('core/config-fields', () => {
+describe('CONFIG_FIELDS', () => {
     describe('CONFIG_DEFAULTS', () => {
         // Action fields carry no stored value. If they leaked into CONFIG_DEFAULTS,
         // ConfigManager.get would accept them as keys and stringify the missing value.
@@ -47,7 +47,7 @@ describe('core/config-fields', () => {
         });
     });
 
-    describe('validate functions', () => {
+    describe('validators', () => {
         describe.each([
             ['xmdbApiKey', 'xmdb'],
             ['omdbApiKey', 'omdb'],

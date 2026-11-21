@@ -85,7 +85,7 @@ function _expectImdbVotes(votes: number | undefined, label: string = 'IMDb votes
     expect(votes, `${label} out of range`).toBeGreaterThanOrEqual(0);
 }
 
-describe('api-clients integration', () => {
+describe('API clients integration', () => {
     let configManager: ConfigManager;
     let badKeyConfigManager: ConfigManager;
     let logger: Logger;

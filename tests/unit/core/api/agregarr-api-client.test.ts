@@ -40,309 +40,311 @@ const deps: ApiClientDeps = {
 };
 
 describe('AgregarrApiClient', () => {
-    it('returns the first supported IMDb Suggestions result', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                d: [
-                    { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
-                    { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
-                    { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
-                    { id: 'tt0004', l: 'Show 1', qid: 'tvSeries', y: 2021 },
-                ],
-            })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const result = await client.search('Movie 1');
-        expect(result!.imdbId).toBe('tt0003');
-        expect(result!.apiTitle).toBe('Movie 1');
-        expect(result!.type).toBe('movie');
+    describe('search', () => {
+        it('returns the first supported IMDb Suggestions result', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    d: [
+                        { id: 'tt0001', l: 'Some Video', qid: 'video', y: 2020 },
+                        { id: 'tt0002', l: 'Some Short', qid: 'short', y: 2020 },
+                        { id: 'tt0003', l: 'Movie 1', qid: 'movie', y: 2020 },
+                        { id: 'tt0004', l: 'Show 1', qid: 'tvSeries', y: 2021 },
+                    ],
+                })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const result = await client.search('Movie 1');
+            expect(result!.imdbId).toBe('tt0003');
+            expect(result!.apiTitle).toBe('Movie 1');
+            expect(result!.type).toBe('movie');
+        });
+        it.each([
+            ['tvSeries', 'series'],
+            ['tvMiniSeries', 'series'],
+            ['tvMovie', 'movie'],
+            ['tvSpecial', 'movie'],
+        ])('maps an IMDb Suggestions %s result to %s', async (qid, type) => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({
+                    d: [{ id: 'tt1', l: 'Show 1', qid, y: 2020 }],
+                })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            const result = await client.search('Show 1');
+
+            expect(result!.type).toBe(type);
+        });
+        it.each(['short', 'tvShort'])('does not accept %s IMDb Suggestions results', async qid => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Short', qid, y: 2020 }] })
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+
+            expect(await client.search('Short')).toBeUndefined();
+        });
+        it('returns undefined and logs info when no results are found', async () => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+
+            expect(await client.search('Unknown')).toBeUndefined();
+
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+        });
+        it('returns undefined and logs info when the IMDb Suggestions response has no d array', async () => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+
+            expect(await client.search('Unknown')).toBeUndefined();
+
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+        });
+        it('warns once and returns undefined when the IMDb Suggestions body is not an object', async () => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+
+            expect(await client.search('Movie 1')).toBeUndefined();
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
+                { response: [], error: 'expected an object' }
+            );
+        });
+        it('returns undefined when IMDb Suggestions has no supported title types', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
+                .build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+            expect(await client.search('Unknown')).toBeUndefined();
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                'No supported title-type results found in IMDb Suggestions for "Unknown"'
+            );
+        });
+        it('builds the IMDb Suggestions URL', async () => {
+            const httpFetch = vi.fn().mockResolvedValue({ d: [] });
+            const mockAdapter = buildMockAdapter().build();
+            mockAdapter.httpFetch = httpFetch;
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            await client.search('Movie 1');
+            const calledUrl = httpFetch.mock.calls[0]?.[0];
+            expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/movie%201.json');
+        });
+        it('lowercases and encodes non-ASCII titles in IMDb Suggestions URLs', async () => {
+            const httpFetch = vi.fn().mockResolvedValue({ d: [] });
+            const mockAdapter = buildMockAdapter().build();
+            mockAdapter.httpFetch = httpFetch;
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            await client.search('Élite');
+            const calledUrl = httpFetch.mock.calls[0]?.[0];
+            expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
+        });
     });
 
-    it.each([
-        ['tvSeries', 'series'],
-        ['tvMiniSeries', 'series'],
-        ['tvMovie', 'movie'],
-        ['tvSpecial', 'movie'],
-    ])('maps an IMDb Suggestions %s result to %s', async (qid, type) => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                d: [{ id: 'tt1', l: 'Show 1', qid, y: 2020 }],
-            })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+    describe('details', () => {
+        it('fetches the rating from Agregarr and retains the IMDb Suggestions metadata', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const searchResult = buildTitle()
+                .withImdbId('tt1')
+                .withApiTitle('Movie 1')
+                .withYear(2020)
+                .withDisplayTitle('Movie 1')
+                .withType('movie')
+                .build();
+            const result = await client.getDetails(searchResult);
+            expect(result!.apiTitle).toBe('Movie 1');
+            expect(result!.imdbId).toBe('tt1');
+            expect(result!.year).toBe(2020);
+            expect(result!.imdbRating).toBe(8.8);
+            expect(result!.rtRating).toBeUndefined();
+            expect(result!.mcRating).toBeUndefined();
+            expect(result!.type).toBe('movie');
+        });
+        it('uses the IMDb ID from the Agregarr details response', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt2', rating: 8.8, votes: 2500000 }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const searchResult = buildTitle()
+                .withImdbId('tt1')
+                .withApiTitle('Movie 1')
+                .withDisplayTitle('Movie 1')
+                .build();
 
-        const result = await client.search('Show 1');
+            const result = await client.getDetails(searchResult);
 
-        expect(result!.type).toBe(type);
+            expect(result!.imdbId).toBe('tt2');
+        });
+        it('retains the IMDb Suggestions type when Agregarr returns a null rating', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt4', rating: null, votes: null }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const searchResult = buildTitle()
+                .withImdbId('tt4')
+                .withApiTitle('Movie 1')
+                .withYear(2020)
+                .withDisplayTitle('Movie 1')
+                .withType('series')
+                .build();
+            const result = await client.getDetails(searchResult);
+            expect(result!.imdbRating).toBeUndefined();
+            expect(result!.type).toBe('series');
+        });
+        it('leaves imdbVotes undefined when the Agregarr response has null votes', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: null }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const searchResult = buildTitle()
+                .withImdbId('tt1')
+                .withApiTitle('Test')
+                .withYear(2020)
+                .withDisplayTitle('Test')
+                .build();
+            const result = await client.getDetails(searchResult);
+            expect(result!.imdbVotes).toBeUndefined();
+        });
+        it('returns undefined and logs info when the Agregarr ratings array is empty', async () => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+            const searchResult = buildTitle()
+                .withImdbId('tt1')
+                .withApiTitle('Movie 1')
+                .withDisplayTitle('Movie 1')
+                .build();
+
+            expect(await client.getDetails(searchResult)).toBeUndefined();
+            expect(mockLogger.info).toHaveBeenCalledWith('No Agregarr ratings found for "Movie 1" (ID: tt1)');
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+        });
+        it('returns undefined without fetching when the title has no IMDb ID', async () => {
+            const mockAdapter = buildMockAdapter().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const searchResult = buildTitle().withDisplayTitle('Movie 1').build();
+
+            expect(await client.getDetails(searchResult)).toBeUndefined();
+            expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
+        });
+        it('returns undefined and warns when the Agregarr response carries no ratings array', async () => {
+            const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(undefined).build();
+            const mockLogger = buildLogger().build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
+            const searchResult = buildTitle()
+                .withImdbId('tt1')
+                .withApiTitle('Movie 1')
+                .withDisplayTitle('Movie 1')
+                .build();
+
+            expect(await client.getDetails(searchResult)).toBeUndefined();
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('Malformed Agregarr details for "Movie 1"'),
+                {
+                    response: undefined,
+                    error: 'expected an array',
+                }
+            );
+        });
     });
 
-    it.each(['short', 'tvShort'])('does not accept %s IMDb Suggestions results', async qid => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({ d: [{ id: 'tt1', l: 'Short', qid, y: 2020 }] })
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-
-        expect(await client.search('Short')).toBeUndefined();
-    });
-
-    it('returns undefined and logs info when no results are found', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({ d: [] }).build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-
-        expect(await client.search('Unknown')).toBeUndefined();
-
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-    });
-
-    it('returns undefined and logs info when the IMDb Suggestions response has no d array', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo({}).build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-
-        expect(await client.search('Unknown')).toBeUndefined();
-
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Unknown'));
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-    });
-
-    it('warns once and returns undefined when the IMDb Suggestions body is not an object', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-
-        expect(await client.search('Movie 1')).toBeUndefined();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Malformed IMDb Suggestions search for "Movie 1"'),
-            { response: [], error: 'expected an object' }
-        );
-    });
-
-    it('returns undefined when IMDb Suggestions has no supported title types', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo({ d: [{ id: 'nm1', l: 'Some Person', qid: 'name' }] })
-            .build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-        expect(await client.search('Unknown')).toBeUndefined();
-        expect(mockLogger.info).toHaveBeenCalledWith(
-            'No supported title-type results found in IMDb Suggestions for "Unknown"'
-        );
-    });
-
-    it('builds the IMDb Suggestions URL', async () => {
-        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
-        const mockAdapter = buildMockAdapter().build();
-        mockAdapter.httpFetch = httpFetch;
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        await client.search('Movie 1');
-        const calledUrl = httpFetch.mock.calls[0]?.[0];
-        expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/movie%201.json');
-    });
-
-    it('fetches the rating from Agregarr and retains the IMDb Suggestions metadata', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle()
-            .withImdbId('tt1')
-            .withApiTitle('Movie 1')
-            .withYear(2020)
-            .withDisplayTitle('Movie 1')
-            .withType('movie')
-            .build();
-        const result = await client.getDetails(searchResult);
-        expect(result!.apiTitle).toBe('Movie 1');
-        expect(result!.imdbId).toBe('tt1');
-        expect(result!.year).toBe(2020);
-        expect(result!.imdbRating).toBe(8.8);
-        expect(result!.rtRating).toBeUndefined();
-        expect(result!.mcRating).toBeUndefined();
-        expect(result!.type).toBe('movie');
-    });
-
-    it('uses the IMDb ID from the Agregarr details response', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo([{ imdbId: 'tt2', rating: 8.8, votes: 2500000 }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
-
-        const result = await client.getDetails(searchResult);
-
-        expect(result!.imdbId).toBe('tt2');
-    });
-
-    it('retains the IMDb Suggestions type when Agregarr returns a null rating', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo([{ imdbId: 'tt4', rating: null, votes: null }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle()
-            .withImdbId('tt4')
-            .withApiTitle('Movie 1')
-            .withYear(2020)
-            .withDisplayTitle('Movie 1')
-            .withType('series')
-            .build();
-        const result = await client.getDetails(searchResult);
-        expect(result!.imdbRating).toBeUndefined();
-        expect(result!.type).toBe('series');
-    });
-
-    it('combines IMDb Suggestions metadata and Agregarr details into a complete title', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingToOnce({
-                d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
-            })
-            .withHttpFetchResolvingToOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const result = await client.fetch('Movie 1');
-        expect(result!.displayTitle).toBe('Movie 1');
-        expect(result!.apiTitle).toBe('Movie 1');
-        expect(result!.imdbId).toBe('tt1');
-        expect(result!.imdbRating).toBe(8.8);
-        expect(result!.source).toBe('agregarr');
-        expect(result!.type).toBe('movie');
-    });
-
-    it('lowercases and encodes non-ASCII titles in IMDb Suggestions URLs', async () => {
-        const httpFetch = vi.fn().mockResolvedValue({ d: [] });
-        const mockAdapter = buildMockAdapter().build();
-        mockAdapter.httpFetch = httpFetch;
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        await client.search('Élite');
-        const calledUrl = httpFetch.mock.calls[0]?.[0];
-        expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
-    });
-
-    it('leaves imdbVotes undefined when the Agregarr response has null votes', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: null }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle()
-            .withImdbId('tt1')
-            .withApiTitle('Test')
-            .withYear(2020)
-            .withDisplayTitle('Test')
-            .build();
-        const result = await client.getDetails(searchResult);
-        expect(result!.imdbVotes).toBeUndefined();
-    });
-
-    it('returns undefined and logs info when the Agregarr ratings array is empty', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo([]).build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
-
-        expect(await client.getDetails(searchResult)).toBeUndefined();
-        expect(mockLogger.info).toHaveBeenCalledWith('No Agregarr ratings found for "Movie 1" (ID: tt1)');
-        expect(mockLogger.warn).not.toHaveBeenCalled();
-    });
-
-    it('returns undefined without fetching when the title has no IMDb ID', async () => {
-        const mockAdapter = buildMockAdapter().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle().withDisplayTitle('Movie 1').build();
-
-        expect(await client.getDetails(searchResult)).toBeUndefined();
-        expect(mockAdapter.httpFetch).not.toHaveBeenCalled();
-    });
-
-    it('returns undefined and warns when the Agregarr response carries no ratings array', async () => {
-        const mockAdapter = buildMockAdapter().withHttpFetchResolvingTo(undefined).build();
-        const mockLogger = buildLogger().build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter, logger: mockLogger });
-        const searchResult = buildTitle().withImdbId('tt1').withApiTitle('Movie 1').withDisplayTitle('Movie 1').build();
-
-        expect(await client.getDetails(searchResult)).toBeUndefined();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Malformed Agregarr details for "Movie 1"'),
-            {
-                response: undefined,
-                error: 'expected an array',
+    describe('fetch', () => {
+        it('combines IMDb Suggestions metadata and Agregarr details into a complete title', async () => {
+            const mockAdapter = buildMockAdapter()
+                .withHttpFetchResolvingToOnce({
+                    d: [{ id: 'tt1', l: 'Movie 1', qid: 'movie', y: 2020 }],
+                })
+                .withHttpFetchResolvingToOnce([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
+                .build();
+            const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
+            const result = await client.fetch('Movie 1');
+            expect(result!.displayTitle).toBe('Movie 1');
+            expect(result!.apiTitle).toBe('Movie 1');
+            expect(result!.imdbId).toBe('tt1');
+            expect(result!.imdbRating).toBe(8.8);
+            expect(result!.source).toBe('agregarr');
+            expect(result!.type).toBe('movie');
+        });
+        it('skips search when an IMDb ID is provided', async () => {
+            const mockConfigForTest: ConfigManager = {
+                get: (_k: string) => 'key',
+            } as unknown as ConfigManager;
+            class TestClient extends AgregarrApiClient {
+                searchCalled = false;
+                getDetailsCalled = false;
+                constructor() {
+                    super({
+                        adapter: buildMockAdapter().build(),
+                        config: mockConfigForTest,
+                        disabledManager: mockDisabledManager,
+                        logger: buildLogger().build(),
+                        overrideManager: mockOverrideManager,
+                    });
+                }
+                override async search(): Promise<Title> {
+                    this.searchCalled = true;
+                    return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
+                }
+                override async getDetails(searchTitle: Title): Promise<Title | undefined> {
+                    this.getDetailsCalled = true;
+                    return buildTitle()
+                        .withDisplayTitle(searchTitle.displayTitle)
+                        .withImdbId(searchTitle.imdbId)
+                        .withImdbRating(8.0)
+                        .build();
+                }
             }
-        );
+            const client = new TestClient();
+            const result = await client.fetch('Test Movie', 'tt123');
+            expect(client.searchCalled).toBe(false);
+            expect(client.getDetailsCalled).toBe(true);
+            expect(result!.imdbRating).toBe(8.0);
+        });
+        it('calls search when no IMDb ID is provided', async () => {
+            const mockConfigForTest: ConfigManager = {
+                get: (_k: string) => 'key',
+            } as unknown as ConfigManager;
+            class TestClient extends AgregarrApiClient {
+                searchCalled = false;
+                getDetailsCalled = false;
+                constructor() {
+                    super({
+                        adapter: buildMockAdapter().build(),
+                        config: mockConfigForTest,
+                        disabledManager: mockDisabledManager,
+                        logger: buildLogger().build(),
+                        overrideManager: mockOverrideManager,
+                    });
+                }
+                override async search(displayTitle: string): Promise<Title> {
+                    this.searchCalled = true;
+                    return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
+                }
+                override async getDetails(searchTitle: Title): Promise<Title | undefined> {
+                    this.getDetailsCalled = true;
+                    return buildTitle()
+                        .withDisplayTitle(searchTitle.displayTitle)
+                        .withImdbId(searchTitle.imdbId)
+                        .withImdbRating(8.0)
+                        .build();
+                }
+            }
+            const client = new TestClient();
+            const result = await client.fetch('Test Movie');
+            expect(client.searchCalled).toBe(true);
+            expect(client.getDetailsCalled).toBe(true);
+            expect(result!.imdbRating).toBe(8.0);
+        });
     });
 
-    it('skips search when an IMDb ID is provided', async () => {
-        const mockConfigForTest: ConfigManager = {
-            get: (_k: string) => 'key',
-        } as unknown as ConfigManager;
-        class TestClient extends AgregarrApiClient {
-            searchCalled = false;
-            getDetailsCalled = false;
-            constructor() {
-                super({
-                    adapter: buildMockAdapter().build(),
-                    config: mockConfigForTest,
-                    disabledManager: mockDisabledManager,
-                    logger: buildLogger().build(),
-                    overrideManager: mockOverrideManager,
-                });
-            }
-            override async search(): Promise<Title> {
-                this.searchCalled = true;
-                return buildTitle().withDisplayTitle('Test').withImdbId('tt123').build();
-            }
-            override async getDetails(searchTitle: Title): Promise<Title | undefined> {
-                this.getDetailsCalled = true;
-                return buildTitle()
-                    .withDisplayTitle(searchTitle.displayTitle)
-                    .withImdbId(searchTitle.imdbId)
-                    .withImdbRating(8.0)
-                    .build();
-            }
-        }
-        const client = new TestClient();
-        const result = await client.fetch('Test Movie', 'tt123');
-        expect(client.searchCalled).toBe(false);
-        expect(client.getDetailsCalled).toBe(true);
-        expect(result!.imdbRating).toBe(8.0);
-    });
-
-    it('calls search when no IMDb ID is provided', async () => {
-        const mockConfigForTest: ConfigManager = {
-            get: (_k: string) => 'key',
-        } as unknown as ConfigManager;
-        class TestClient extends AgregarrApiClient {
-            searchCalled = false;
-            getDetailsCalled = false;
-            constructor() {
-                super({
-                    adapter: buildMockAdapter().build(),
-                    config: mockConfigForTest,
-                    disabledManager: mockDisabledManager,
-                    logger: buildLogger().build(),
-                    overrideManager: mockOverrideManager,
-                });
-            }
-            override async search(displayTitle: string): Promise<Title> {
-                this.searchCalled = true;
-                return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt123').build();
-            }
-            override async getDetails(searchTitle: Title): Promise<Title | undefined> {
-                this.getDetailsCalled = true;
-                return buildTitle()
-                    .withDisplayTitle(searchTitle.displayTitle)
-                    .withImdbId(searchTitle.imdbId)
-                    .withImdbRating(8.0)
-                    .build();
-            }
-        }
-        const client = new TestClient();
-        const result = await client.fetch('Test Movie');
-        expect(client.searchCalled).toBe(true);
-        expect(client.getDetailsCalled).toBe(true);
-        expect(result!.imdbRating).toBe(8.0);
-    });
-
-    describe('IMDb ID override support', () => {
+    describe('override handling', () => {
         let mockOverrideManagerForTests: IdOverrideManager;
         let mockLoggerForTests: Logger;
 

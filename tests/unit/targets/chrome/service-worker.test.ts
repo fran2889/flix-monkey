@@ -14,7 +14,7 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
     createExtensionMigrationExecutor: () => executeMigrations,
 }));
 
-describe('Chrome Service Worker', () => {
+describe('Chrome service worker', () => {
     let messageListener: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void;
     let installedListener: (_details: { reason: string }) => Promise<unknown> | void;
     let actionListener: () => Promise<unknown> | void;
@@ -61,99 +61,101 @@ describe('Chrome Service Worker', () => {
         await import('../../../../src/targets/chrome/service-worker');
     });
 
-    it.each([{ reason: 'install' }, { reason: 'update' }])('runs migrations on extension $reason', async details => {
-        await installedListener(details);
-        await Promise.resolve();
-        expect(executeMigrations).toHaveBeenCalledOnce();
-    });
-
-    it('runs migrations for authenticated migration messages', async () => {
-        const sendResponse = vi.fn();
-        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
-
-        expect(result).toBe(true);
-        await Promise.resolve();
-        expect(executeMigrations).toHaveBeenCalledOnce();
-        expect(sendResponse).toHaveBeenCalledWith({});
-    });
-
-    it('responds with the migration error message when the run rejects', async () => {
-        executeMigrations.mockRejectedValue(new Error('migration boom'));
-        const sendResponse = vi.fn();
-
-        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
-
-        expect(result).toBe(true);
-        await Promise.resolve();
-        await Promise.resolve();
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'migration boom' });
-    });
-
-    it('stringifies a non-Error migration rejection', async () => {
-        executeMigrations.mockRejectedValue('plain failure');
-        const sendResponse = vi.fn();
-
-        await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
-
-        await Promise.resolve();
-        await Promise.resolve();
-        expect(sendResponse).toHaveBeenCalledWith({ error: 'plain failure' });
-    });
-
-    it('runs migrations and logs an error when the install-time migration rejects', async () => {
-        executeMigrations.mockRejectedValue(new Error('migration boom'));
-        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-        await installedListener({ reason: 'install' });
-        await Promise.resolve();
-        await Promise.resolve();
-
-        expect(executeMigrations).toHaveBeenCalledOnce();
-        expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
-        consoleError.mockRestore();
-    });
-
-    it('ignores migration messages from a foreign sender', () => {
-        const sendResponse = vi.fn();
-        const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' }, sendResponse);
-
-        expect(result).toBe(false);
-        expect(executeMigrations).not.toHaveBeenCalled();
-        expect(sendResponse).not.toHaveBeenCalled();
-    });
-
-    it('ignores non-FM_FETCH messages', () => {
-        const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
-        expect(result).toBe(false);
-    });
-
-    it('ignores a message with malformed options', () => {
-        const sendResponse = vi.fn();
-        const result = messageListener(
-            { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'xml' } },
-            { id: 'test-ext' },
-            sendResponse
+    describe('startup', () => {
+        it.each([{ reason: 'install' }, { reason: 'update' }])(
+            'runs migrations on extension $reason',
+            async details => {
+                await installedListener(details);
+                await Promise.resolve();
+                expect(executeMigrations).toHaveBeenCalledOnce();
+            }
         );
+        it('runs migrations and logs an error when the install-time migration rejects', async () => {
+            executeMigrations.mockRejectedValue(new Error('migration boom'));
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        expect(result).toBe(false);
-        expect(sendResponse).not.toHaveBeenCalled();
+            await installedListener({ reason: 'install' });
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(executeMigrations).toHaveBeenCalledOnce();
+            expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
+            consoleError.mockRestore();
+        });
     });
 
-    it('opens the options page when the action icon is clicked', async () => {
-        await actionListener();
-        expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+    describe('message handling', () => {
+        it('runs migrations for authenticated migration messages', async () => {
+            const sendResponse = vi.fn();
+            const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+            expect(result).toBe(true);
+            await Promise.resolve();
+            expect(executeMigrations).toHaveBeenCalledOnce();
+            expect(sendResponse).toHaveBeenCalledWith({});
+        });
+        it('responds with the migration error message when the run rejects', async () => {
+            executeMigrations.mockRejectedValue(new Error('migration boom'));
+            const sendResponse = vi.fn();
+
+            const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+            expect(result).toBe(true);
+            await Promise.resolve();
+            await Promise.resolve();
+            expect(sendResponse).toHaveBeenCalledWith({ error: 'migration boom' });
+        });
+        it('stringifies a non-Error migration rejection', async () => {
+            executeMigrations.mockRejectedValue('plain failure');
+            const sendResponse = vi.fn();
+
+            await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
+
+            await Promise.resolve();
+            await Promise.resolve();
+            expect(sendResponse).toHaveBeenCalledWith({ error: 'plain failure' });
+        });
+        it('ignores migration messages from a foreign sender', () => {
+            const sendResponse = vi.fn();
+            const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' }, sendResponse);
+
+            expect(result).toBe(false);
+            expect(executeMigrations).not.toHaveBeenCalled();
+            expect(sendResponse).not.toHaveBeenCalled();
+        });
+        it('ignores non-FM_FETCH messages', () => {
+            const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
+            expect(result).toBe(false);
+        });
+        it('ignores a message with malformed options', () => {
+            const sendResponse = vi.fn();
+            const result = messageListener(
+                { type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { responseType: 'xml' } },
+                { id: 'test-ext' },
+                sendResponse
+            );
+
+            expect(result).toBe(false);
+            expect(sendResponse).not.toHaveBeenCalled();
+        });
+        it('rejects FM_FETCH messages from a foreign sender', () => {
+            const fetchSpy = vi.spyOn(global, 'fetch');
+            const sendResponse = vi.fn();
+            const result = messageListener(
+                { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
+                { id: 'other-extension' },
+                sendResponse
+            );
+            expect(result).toBe(false);
+            expect(fetchSpy).not.toHaveBeenCalled();
+            fetchSpy.mockRestore();
+        });
     });
 
-    it('rejects FM_FETCH messages from a foreign sender', () => {
-        const fetchSpy = vi.spyOn(global, 'fetch');
-        const sendResponse = vi.fn();
-        const result = messageListener(
-            { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
-            { id: 'other-extension' },
-            sendResponse
-        );
-        expect(result).toBe(false);
-        expect(fetchSpy).not.toHaveBeenCalled();
-        fetchSpy.mockRestore();
+    describe('action clicks', () => {
+        it('opens the options page when the action icon is clicked', async () => {
+            await actionListener();
+            expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+        });
     });
 });
