@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-21-cache-write-invariants-design.md`
 
-> **Final revision:** cache deletes stay outside the write chain. `ApiClientManager` gains no `invalidate`; refresh and edit call `CacheManager.delete` directly. Steps below that introduce `invalidate` or put `delete` on the chain describe an intermediate revision.
+> **Final revision:** commit `9eed14a` keeps cache deletes outside the write chain. It removes the delete-ordering test, the `invalidate` wrapper, and the delete routing described in Tasks 1, 4, and 6. `ApiClientManager` is unchanged; refresh and edit call `CacheManager.delete` directly. Steps below that introduce `invalidate` or put `delete` on the chain describe the intermediate revision.
 
 ## Global Constraints
 
@@ -30,7 +30,7 @@
 - A rejected storage write must not poison later queued writes for the same title.
 - Deleting a title with no cached entry must resolve cleanly, which refresh on an uncached title relies on.
 - A user override whose lookup returns no IMDb ID must not be stored as an unrated entry.
-- Two rapid refreshes must not let the first delete run before the second write or the reverse; the chain orders both.
+- Two rapid saves for the same title must not interleave between the pre-write read and the write; the chain orders writes.
 
 ---
 
