@@ -68,6 +68,18 @@ describe('Firefox background script', () => {
                 expect(executeMigrations).toHaveBeenCalledOnce();
             }
         );
+        it('runs migrations and logs an error when the install-time migration rejects', async () => {
+            executeMigrations.mockRejectedValue(new Error('migration boom'));
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await installedListener({ reason: 'install' });
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(executeMigrations).toHaveBeenCalledOnce();
+            expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
+            consoleError.mockRestore();
+        });
     });
 
     describe('message handling', () => {
