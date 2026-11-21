@@ -209,8 +209,9 @@ describe('XmdbApiClient', () => {
             const logger = buildLogger().build();
             const client = new XmdbApiClient({ ...deps, adapter, logger });
 
-            await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
+            const result = await client.getDetails(buildTitle().withImdbId('tt1').withDisplayTitle('Test').build());
 
+            expect(result).toBeUndefined();
             expect(logger.info).toHaveBeenCalledTimes(1);
             expect(logger.info).toHaveBeenCalledWith('No XMDb details found for "Test" (ID: tt1): Movie not found');
             expect(logger.warn).not.toHaveBeenCalled();
