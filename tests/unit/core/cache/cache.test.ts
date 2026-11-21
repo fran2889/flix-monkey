@@ -635,14 +635,18 @@ describe('CacheManager', () => {
             expect(entry?.imdbId).toBeUndefined();
         });
 
-        it('stores the new value when the existing entry is corrupt', async () => {
+        it('replaces a corrupt entry while checking for a downgrade', async () => {
             const { store, manager } = buildManager();
             store.set('fmc:corrupt', '{not json');
 
-            await manager.write('Corrupt', buildTitle().withDisplayTitle('Corrupt').withImdbRating(6).build());
+            await manager.write('Corrupt', Title.notFound('Corrupt'));
 
-            const entry = await manager.read('Corrupt');
-            expect(entry?.getTitle().imdbRating).toBe(6);
+            await expect(manager.read('Corrupt')).resolves.toBeDefined();
+            expect(mockLogger.warn).toHaveBeenCalledWith('Cache entry corrupt, treating as miss', {
+                key: 'fmc:corrupt',
+                displayTitle: 'Corrupt',
+                error: expect.any(SyntaxError),
+            });
         });
 
         it('skips a result whose IMDb ID differs from the override', async () => {
