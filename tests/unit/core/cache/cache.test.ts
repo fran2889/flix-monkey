@@ -624,6 +624,7 @@ describe('CacheManager', () => {
                     buildCacheEntry()
                         .withDisplayTitle('Expired Movie')
                         .withImdbId('tt3')
+                        .withData(buildTitle().withImdbRating(9).build().toCacheJSON())
                         .withExpiry(Date.now() - 1000)
                         .build()
                 )
