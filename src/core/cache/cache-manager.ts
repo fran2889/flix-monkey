@@ -114,6 +114,25 @@ export class CacheManager implements CacheStore {
         });
     }
 
+    /*
+     * Writes for one title share a promise chain. The stored tail never rejects,
+     * so a failed write cannot block the next one, and it is cleared only when no
+     * later write has replaced it.
+     */
+    async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
+        const key = this.#getCacheKey(displayTitle);
+        const previous = this.#writeChains.get(key) ?? Promise.resolve();
+        const run = previous.then(operation);
+        const tail = run.then(
+            () => undefined,
+            () => undefined
+        );
+        this.#writeChains.set(key, tail);
+        return run.finally(() => {
+            if (this.#writeChains.get(key) === tail) this.#writeChains.delete(key);
+        });
+    }
+
     #calculateTtl(titleObj: Title): number {
         const getTtlMs = (days: number): number => (days === CACHE_TTL_INFINITE ? Infinity : days * DAYS_TO_MS);
         if (!titleObj.hasRating) {
@@ -200,24 +219,5 @@ export class CacheManager implements CacheStore {
         const key = this.#getCacheKey(displayTitle);
         await this.#adapter.storageDelete(key);
         this.#logger.debug(`Cache entry deleted: ${key}`);
-    }
-
-    /*
-     * Writes for one title share a promise chain. The stored tail never rejects,
-     * so a failed write cannot block the next one, and it is cleared only when no
-     * later write has replaced it.
-     */
-    async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
-        const key = this.#getCacheKey(displayTitle);
-        const previous = this.#writeChains.get(key) ?? Promise.resolve();
-        const run = previous.then(operation);
-        const tail = run.then(
-            () => undefined,
-            () => undefined
-        );
-        this.#writeChains.set(key, tail);
-        return run.finally(() => {
-            if (this.#writeChains.get(key) === tail) this.#writeChains.delete(key);
-        });
     }
 }
