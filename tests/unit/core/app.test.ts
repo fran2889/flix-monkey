@@ -76,6 +76,16 @@ describe('FlixMonkeyApp', () => {
     let appRef: FlixMonkeyApp | undefined;
     const ActualMutationObserver = global.MutationObserver;
 
+    function requireMockObserver(): MutationObserver & { trigger: (_mutations: MutationRecord[]) => void } {
+        if (!mockMutationObserverInstance) throw new Error('MutationObserver was not created');
+        return mockMutationObserverInstance;
+    }
+
+    function requireApp(): FlixMonkeyApp {
+        if (!appRef) throw new Error('app was not started');
+        return appRef;
+    }
+
     beforeEach(async () => {
         appRef = undefined;
         vi.useFakeTimers();
@@ -266,21 +276,19 @@ describe('FlixMonkeyApp', () => {
         `;
             document.body.appendChild(container);
 
-            if (mockMutationObserverInstance) {
-                mockMutationObserverInstance.trigger([
-                    {
-                        addedNodes: [container] as unknown as NodeList,
-                        target: document.body,
-                        type: 'childList',
-                        removedNodes: [] as unknown as NodeList,
-                        previousSibling: null,
-                        nextSibling: null,
-                        attributeName: null,
-                        attributeNamespace: null,
-                        oldValue: null,
-                    },
-                ]);
-            }
+            requireMockObserver().trigger([
+                {
+                    addedNodes: [container] as unknown as NodeList,
+                    target: document.body,
+                    type: 'childList',
+                    removedNodes: [] as unknown as NodeList,
+                    previousSibling: null,
+                    nextSibling: null,
+                    attributeName: null,
+                    attributeNamespace: null,
+                    oldValue: null,
+                },
+            ]);
 
             await vi.waitFor(() => {
                 if (spy.mock.calls.length === 0) throw new Error('Not called');
@@ -312,22 +320,20 @@ describe('FlixMonkeyApp', () => {
                 </div>
             `;
 
-            if (mockMutationObserverInstance) {
-                const titleCard = document.querySelector('.title-card');
-                mockMutationObserverInstance.trigger([
-                    {
-                        addedNodes: titleCard ? ([titleCard] as unknown as NodeList) : ([] as unknown as NodeList),
-                        target: document.body,
-                        type: 'childList',
-                        removedNodes: [] as unknown as NodeList,
-                        previousSibling: null,
-                        nextSibling: null,
-                        attributeName: null,
-                        attributeNamespace: null,
-                        oldValue: null,
-                    },
-                ]);
-            }
+            const titleCard = document.querySelector('.title-card');
+            requireMockObserver().trigger([
+                {
+                    addedNodes: titleCard ? ([titleCard] as unknown as NodeList) : ([] as unknown as NodeList),
+                    target: document.body,
+                    type: 'childList',
+                    removedNodes: [] as unknown as NodeList,
+                    previousSibling: null,
+                    nextSibling: null,
+                    attributeName: null,
+                    attributeNamespace: null,
+                    oldValue: null,
+                },
+            ]);
 
             await vi.waitFor(() => {
                 if (spy.mock.calls.length < 2) throw new Error('Not called second time');
@@ -344,9 +350,7 @@ describe('FlixMonkeyApp', () => {
 
             // addedNodes: null causes Array.from(null) to throw inside the handler
             expect(() => {
-                if (mockMutationObserverInstance) {
-                    mockMutationObserverInstance.trigger([{ addedNodes: null } as unknown as MutationRecord]);
-                }
+                requireMockObserver().trigger([{ addedNodes: null } as unknown as MutationRecord]);
             }).not.toThrow();
 
             expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
@@ -361,11 +365,7 @@ describe('FlixMonkeyApp', () => {
             const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
 
             // Trigger mutation on parent, with target set
-            if (mockMutationObserverInstance) {
-                mockMutationObserverInstance.trigger([
-                    { addedNodes: [parent], target: parent } as unknown as MutationRecord,
-                ]);
-            }
+            requireMockObserver().trigger([{ addedNodes: [parent], target: parent } as unknown as MutationRecord]);
 
             vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
             await vi.runAllTimersAsync();
@@ -384,7 +384,7 @@ describe('FlixMonkeyApp', () => {
             const firstParent = document.createElement('div');
             const secondParent = document.createElement('div');
 
-            mockMutationObserverInstance?.trigger([
+            requireMockObserver().trigger([
                 { addedNodes: [document.createElement('span')], target: firstParent } as unknown as MutationRecord,
                 { addedNodes: [document.createElement('span')], target: secondParent } as unknown as MutationRecord,
             ]);
@@ -453,9 +453,7 @@ describe('FlixMonkeyApp', () => {
             expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
             expect(container.hasAttribute('data-fm-injected')).toBe(true);
 
-            if (appRef) {
-                appRef.redecorate();
-            }
+            requireApp().redecorate();
 
             // clearAllOverlays() must remove the overlay element AND the attribute,
             // leaving the container eligible for re-decoration
