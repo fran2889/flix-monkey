@@ -25,10 +25,13 @@ export interface CacheStore {
 
     /**
      * Persists a title using the TTL selected from its rating and release year.
+     * Storage is best effort: the cache may decline to store the title when a
+     * write invariant rejects it.
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param titleObj - Title data to serialize.
-     * @returns Promise that resolves when the entry has been stored.
+     * @returns Promise that resolves when the entry has been stored or the cache
+     *   declines to store it.
      */
     write(displayTitle: string, titleObj: Title): Promise<void>;
 }
@@ -78,6 +81,15 @@ export class CacheManager implements CacheStore {
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {
         await this.#enqueue(displayTitle, async () => {
+            const isBareMiss = !titleObj.hasRating && !titleObj.imdbId;
+            if (isBareMiss) {
+                const existing = await this.read(displayTitle);
+                if (existing && !existing.isExpired && existing.getTitle().hasRating) {
+                    this.#logger.debug(`Skipped cache downgrade for "${displayTitle}"`);
+                    return;
+                }
+            }
+
             const key = this.#getCacheKey(displayTitle);
             const now = Date.now();
             const ttl = this.#calculateTtl(titleObj);

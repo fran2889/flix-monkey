@@ -580,6 +580,60 @@ describe('CacheManager', () => {
         });
     });
 
+    describe('write invariants', () => {
+        it('does not replace a rated entry with a bare miss', async () => {
+            const { manager } = buildManager();
+            await manager.write(
+                'Keep Movie',
+                buildTitle().withDisplayTitle('Keep Movie').withImdbId('tt1').withImdbRating(8).build()
+            );
+
+            await manager.write('Keep Movie', Title.notFound('Keep Movie'));
+
+            const entry = await manager.read('Keep Movie');
+            expect(entry?.getTitle().imdbRating).toBe(8);
+        });
+
+        it('replaces an ID-only entry with a bare miss', async () => {
+            const { manager } = buildManager();
+            await manager.write('Hint Movie', new Title({ displayTitle: 'Hint Movie', imdbId: 'tt2' }));
+
+            await manager.write('Hint Movie', Title.notFound('Hint Movie'));
+
+            const entry = await manager.read('Hint Movie');
+            expect(entry?.imdbId).toBeUndefined();
+        });
+
+        it('replaces an expired rated entry with a bare miss', async () => {
+            const { store, manager } = buildManager();
+            store.set(
+                'fmc:expired_movie',
+                JSON.stringify(
+                    buildCacheEntry()
+                        .withDisplayTitle('Expired Movie')
+                        .withImdbId('tt3')
+                        .withExpiry(Date.now() - 1000)
+                        .build()
+                )
+            );
+
+            await manager.write('Expired Movie', Title.notFound('Expired Movie'));
+
+            const entry = await manager.read('Expired Movie');
+            expect(entry?.imdbId).toBeUndefined();
+        });
+
+        it('stores the new value when the existing entry is corrupt', async () => {
+            const { store, manager } = buildManager();
+            store.set('fmc:corrupt', '{not json');
+
+            await manager.write('Corrupt', buildTitle().withDisplayTitle('Corrupt').withImdbRating(6).build());
+
+            const entry = await manager.read('Corrupt');
+            expect(entry?.getTitle().imdbRating).toBe(6);
+        });
+    });
+
     describe('clearing cached data', () => {
         async function writeRatedTitle(manager: CacheManager, displayTitle: string, imdbId: string): Promise<void> {
             await manager.write(
