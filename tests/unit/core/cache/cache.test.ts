@@ -67,6 +67,11 @@ describe('CacheManager', () => {
         cacheManager = new CacheManager(adapter, config, mockLogger);
     });
 
+    function buildManager(): { adapter: MockPlatformAdapter; store: Map<string, string>; manager: CacheManager } {
+        const { adapter: memoryAdapter, store } = buildMemoryAdapter();
+        return { adapter: memoryAdapter, store, manager: new CacheManager(memoryAdapter, config, mockLogger) };
+    }
+
     it('should return undefined when cache is empty', async () => {
         adapter.storageGet.mockResolvedValue(undefined);
         const result = await cacheManager.read('Some Title');
@@ -536,12 +541,46 @@ describe('CacheManager', () => {
         expect(result).toBeUndefined();
     });
 
-    describe('clearing cached data', () => {
-        function buildManager(): { adapter: MockPlatformAdapter; store: Map<string, string>; manager: CacheManager } {
-            const { adapter: memoryAdapter, store } = buildMemoryAdapter();
-            return { adapter: memoryAdapter, store, manager: new CacheManager(memoryAdapter, config, mockLogger) };
-        }
+    describe('write ordering', () => {
+        it('runs a delete after a write already queued for the title', async () => {
+            const { adapter: memoryAdapter, store, manager } = buildManager();
+            let release: () => void = () => undefined;
+            const gate = new Promise<void>(resolve => {
+                release = resolve;
+            });
+            memoryAdapter.storageSet.mockImplementationOnce(async (key: string, value: string) => {
+                await gate;
+                store.set(key, value);
+            });
 
+            const write = manager.write(
+                'Race Movie',
+                buildTitle().withDisplayTitle('Race Movie').withImdbRating(7).build()
+            );
+            const deletion = manager.delete('Race Movie');
+            release();
+            await Promise.all([write, deletion]);
+
+            await expect(manager.read('Race Movie')).resolves.toBeUndefined();
+        });
+
+        it('deletes a missing title without error', async () => {
+            const { manager } = buildManager();
+            await expect(manager.delete('Missing Movie')).resolves.toBeUndefined();
+        });
+
+        it('keeps the chain usable after a write rejects', async () => {
+            const { adapter: memoryAdapter, manager } = buildManager();
+            const title = buildTitle().withDisplayTitle('Retry Movie').withImdbRating(7).build();
+            memoryAdapter.storageSet.mockRejectedValueOnce(new Error('storage failed'));
+
+            await expect(manager.write('Retry Movie', title)).rejects.toThrow('storage failed');
+            await expect(manager.write('Retry Movie', title)).resolves.toBeUndefined();
+            await expect(manager.read('Retry Movie')).resolves.toBeDefined();
+        });
+    });
+
+    describe('clearing cached data', () => {
         async function writeRatedTitle(manager: CacheManager, displayTitle: string, imdbId: string): Promise<void> {
             await manager.write(
                 displayTitle,

@@ -41,6 +41,7 @@ export class CacheManager implements CacheStore {
     readonly #adapter: PlatformAdapter;
     readonly #config: ConfigManager;
     readonly #logger: Logger;
+    readonly #writeChains = new Map<string, Promise<void>>();
 
     constructor(adapter: PlatformAdapter, config: ConfigManager, logger: Logger) {
         this.#adapter = adapter;
@@ -76,16 +77,18 @@ export class CacheManager implements CacheStore {
     }
 
     async write(displayTitle: string, titleObj: Title): Promise<void> {
-        const key = this.#getCacheKey(displayTitle);
-        const now = Date.now();
-        const ttl = this.#calculateTtl(titleObj);
-        const entry = new CacheEntry(
-            displayTitle,
-            titleObj.imdbId,
-            titleObj.toCacheJSON(),
-            ttl === Infinity ? undefined : now + ttl
-        );
-        await this.#adapter.storageSet(key, JSON.stringify(entry));
+        await this.#enqueue(displayTitle, async () => {
+            const key = this.#getCacheKey(displayTitle);
+            const now = Date.now();
+            const ttl = this.#calculateTtl(titleObj);
+            const entry = new CacheEntry(
+                displayTitle,
+                titleObj.imdbId,
+                titleObj.toCacheJSON(),
+                ttl === Infinity ? undefined : now + ttl
+            );
+            await this.#adapter.storageSet(key, JSON.stringify(entry));
+        });
     }
 
     #calculateTtl(titleObj: Title): number {
@@ -171,8 +174,24 @@ export class CacheManager implements CacheStore {
      * @returns Resolves when the entry has been removed.
      */
     async delete(displayTitle: string): Promise<void> {
+        await this.#enqueue(displayTitle, async () => {
+            const key = this.#getCacheKey(displayTitle);
+            await this.#adapter.storageDelete(key);
+            this.#logger.debug(`Cache entry deleted: ${key}`);
+        });
+    }
+
+    async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
-        await this.#adapter.storageDelete(key);
-        this.#logger.debug(`Cache entry deleted: ${key}`);
+        const previous = this.#writeChains.get(key) ?? Promise.resolve();
+        const run = previous.then(operation);
+        const tail = run.then(
+            () => undefined,
+            () => undefined
+        );
+        this.#writeChains.set(key, tail);
+        return run.finally(() => {
+            if (this.#writeChains.get(key) === tail) this.#writeChains.delete(key);
+        });
     }
 }
