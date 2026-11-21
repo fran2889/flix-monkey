@@ -103,9 +103,9 @@ describe('content.js entry point', () => {
             await vi.waitFor(() => expect(startAppSpy).toHaveBeenCalled());
             expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
         });
-        it('does not start the app or read storage and logs when migrations reject', async () => {
+        it('does not start the app or read storage and logs when migrations report an error', async () => {
             const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-            migrationPromise = Promise.reject(new Error('migration boom'));
+            migrationPromise = Promise.resolve({ error: 'migration boom' });
 
             await import('../../../../src/targets/extension/content');
 

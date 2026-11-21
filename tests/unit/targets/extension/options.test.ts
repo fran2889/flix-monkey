@@ -98,15 +98,11 @@ describe('options.js entry point', () => {
         expect(renderSpy).toHaveBeenCalledAfter(browser.runtime.sendMessage);
     });
 
-    it('does not render settings and logs when startup fails', async () => {
+    it('does not render settings and logs when migrations report an error', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        let rejectMigrations!: (_reason: unknown) => void;
-        migrationPromise = new Promise((_resolve, reject) => {
-            rejectMigrations = reject;
-        });
+        migrationPromise = Promise.resolve({ error: 'migration boom' });
 
         await import('../../../../src/targets/extension/options');
-        rejectMigrations(new Error('migration boom'));
 
         await vi.waitFor(() => {
             expect(errorSpy).toHaveBeenCalled();
