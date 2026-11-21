@@ -437,7 +437,7 @@ describe('App', () => {
         expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
     });
 
-    it('should log errors thrown by decorateContainer rather than propagating them', async () => {
+    it('should render a not-found fallback when the lookup fails', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Boom Movie"></a>
@@ -458,6 +458,9 @@ describe('App', () => {
             },
             { timeout: 2000 }
         );
+
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
         logSpy.mockRestore();
     });
 
@@ -478,6 +481,33 @@ describe('App', () => {
         await vi.advanceTimersByTimeAsync(31_000);
 
         expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+        logSpy.mockRestore();
+    });
+
+    it('keeps a render failure out of the not-found fallback', async () => {
+        document.body.innerHTML = `
+        <div class="title-card">
+            <a aria-label="Broken Movie"></a>
+        </div>
+    `;
+        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+            buildTitle().withApiTitle('Broken Movie').build()
+        );
+        const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay').mockImplementation(() => {
+            throw new Error('render failure');
+        });
+
+        appRef = startApp(buildMockAdapter().build());
+
+        await vi.waitFor(() => {
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
+        });
+
+        expect(injectSpy).toHaveBeenCalledTimes(1);
+        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
         logSpy.mockRestore();
     });
 

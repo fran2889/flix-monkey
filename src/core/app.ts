@@ -21,7 +21,7 @@ import { Logger } from './logger';
 import { OverlayRenderer, type OverlayRenderer as OverlayRendererType } from './overlay';
 import { ServiceRegistry } from './services/index';
 import { SurfaceManager } from './surfaces/index';
-import type { Title } from './title';
+import { Title } from './title';
 import { applyFadeToggleState } from './ui/overlay-elements';
 import { debounce, runIdle, slugify } from './utils/index';
 
@@ -158,8 +158,21 @@ export class FlixMonkeyApp {
         const fadeOverride = fadeable || showFadeToggle ? await this.#fadeManager.getOverride(dedupKey) : undefined;
         const request = this.#raceWithTimeout(this.#api.getData(displayTitle));
 
+        let data: Title;
         try {
-            const data = await request;
+            data = await request;
+        } catch (err) {
+            /*
+             * A failed or timed-out lookup renders an uncached not-found title so the
+             * card keeps a usable IMDb search badge instead of going blank. Nothing is
+             * cached here, so a refresh or a redecorate retries the lookup; until then
+             * the fallback overlay marks the card as decorated.
+             */
+            this.#logger.error(`Failed to decorate "${displayTitle}"`, err);
+            data = Title.notFound(displayTitle);
+        }
+
+        try {
             this.#renderTitle(container, data, { dedupKey, fadeable, showFadeToggle, fadeOverride });
         } finally {
             this.#renderer.removeLoadingOverlay(container);
