@@ -176,5 +176,16 @@ describe('Chrome service worker', () => {
             await actionListener();
             expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
         });
+        it('logs an error when opening the options page fails', async () => {
+            vi.mocked(chrome.runtime.openOptionsPage).mockRejectedValue(new Error('open boom'));
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await actionListener();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(consoleError).toHaveBeenCalledWith('Failed to open options page', expect.any(Error));
+            consoleError.mockRestore();
+        });
     });
 });
