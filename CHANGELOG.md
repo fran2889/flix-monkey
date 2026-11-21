@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/fran2889/flix-monkey/compare/v1.8.1...v1.9.0) (2026-11-21)
+
+
+### Features
+
+* **cache:** preserve cached IMDb IDs when clearing the cache ([#292](https://github.com/fran2889/flix-monkey/issues/292)) ([8c8bf4a](https://github.com/fran2889/flix-monkey/commit/8c8bf4a14e6df5ee9fd1c060b876e273836fe25f))
+
+
+### Bug Fixes
+
+* **cache:** prevent abandoned lookups from overwriting cached ratings ([#309](https://github.com/fran2889/flix-monkey/issues/309)) ([8d7c2a7](https://github.com/fran2889/flix-monkey/commit/8d7c2a71b0bf7ad8a6e6898d89ab98f3a878cb43))
+
 ## [1.8.1](https://github.com/fran2889/flix-monkey/compare/v1.8.0...v1.8.1) (2026-11-13)
 
 
