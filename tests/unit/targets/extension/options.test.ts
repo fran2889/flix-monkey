@@ -109,11 +109,13 @@ describe('options.js entry point', () => {
         rejectMigrations(new Error('migration boom'));
 
         await vi.waitFor(() => {
-            expect(errorSpy).toHaveBeenCalledWith(
-                '[FlixMonkey] FlixMonkey options page failed to start',
-                expect.any(Error)
-            );
+            expect(errorSpy).toHaveBeenCalled();
         });
+        expect(renderSpy).not.toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[FlixMonkey] FlixMonkey options page failed to start',
+            expect.any(Error)
+        );
         errorSpy.mockRestore();
     });
 });

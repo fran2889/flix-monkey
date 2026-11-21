@@ -232,6 +232,7 @@ describe('SettingsUI', () => {
 
             await mockCacheManager.write('Some Title', buildTitle().withApiTitle('Some Title').build());
 
+            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fmc:some_title', expect.any(String));
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 'ConfigManager.get error, using fallback',
                 expect.objectContaining({ key: 'cacheTtlNoRating' })

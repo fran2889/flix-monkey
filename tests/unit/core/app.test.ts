@@ -995,8 +995,11 @@ describe('App', () => {
             void onEditClick('Test Movie');
 
             await vi.waitFor(() => {
-                expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
+                expect(logger.error).toHaveBeenCalled();
             });
+            expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+            expect(mockCache.delete).not.toHaveBeenCalled();
+            expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
         });
 
         it('logs a failure from the refresh handler', async () => {
@@ -1008,11 +1011,10 @@ describe('App', () => {
             void onRefreshClick('Test Movie');
 
             await vi.waitFor(() => {
-                expect(logger.error).toHaveBeenCalledWith(
-                    'Failed to refresh ratings for "Test Movie"',
-                    expect.any(Error)
-                );
+                expect(logger.error).toHaveBeenCalled();
             });
+            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(logger.error).toHaveBeenCalledWith('Failed to refresh ratings for "Test Movie"', expect.any(Error));
         });
     });
 });

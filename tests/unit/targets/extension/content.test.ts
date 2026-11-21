@@ -110,8 +110,11 @@ describe('content.js entry point', () => {
         await import('../../../../src/targets/extension/content');
 
         await vi.waitFor(() => {
-            expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));
+            expect(errorSpy).toHaveBeenCalled();
         });
+        expect(startAppSpy).not.toHaveBeenCalled();
+        expect(browser.storage.local.get).not.toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));
         errorSpy.mockRestore();
     });
 

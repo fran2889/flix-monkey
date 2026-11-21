@@ -111,6 +111,7 @@ describe('Chrome Service Worker', () => {
         await Promise.resolve();
         await Promise.resolve();
 
+        expect(executeMigrations).toHaveBeenCalledOnce();
         expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
         consoleError.mockRestore();
     });

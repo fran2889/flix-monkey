@@ -219,12 +219,16 @@ describe('userscript entry point', () => {
 
     it('logs a startup failure when migrations reject', async () => {
         migrationRunner = vi.fn().mockRejectedValue(new Error('migration boom'));
+        const appModule = await import('../../../../src/core/app');
 
         await import('../../../../src/targets/userscript/entry');
 
         await vi.waitFor(() => {
-            expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
+            expect(loggerError).toHaveBeenCalled();
         });
+        expect(appModule.startApp).not.toHaveBeenCalled();
+        expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
+        expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
     });
 
     it('logs a settings render failure', async () => {
@@ -238,7 +242,9 @@ describe('userscript entry point', () => {
         menuCallback();
 
         await vi.waitFor(() => {
-            expect(loggerError).toHaveBeenCalledWith('Failed to render settings', expect.any(Error));
+            expect(loggerError).toHaveBeenCalled();
         });
+        expect(renderSettings).toHaveBeenCalledOnce();
+        expect(loggerError).toHaveBeenCalledWith('Failed to render settings', expect.any(Error));
     });
 });
