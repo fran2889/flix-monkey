@@ -477,7 +477,7 @@ describe('App', () => {
         await Promise.resolve();
         vi.runAllTimers();
 
-        // Advance past INFLIGHT_TIMEOUT_MS (30000ms)
+        // Advance past LOOKUP_TIMEOUT_MS (30000ms)
         await vi.advanceTimersByTimeAsync(31_000);
 
         expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
@@ -514,7 +514,7 @@ describe('App', () => {
     it.each([
         ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
         ['rejects', { error: new Error('API failure') }],
-    ])('should clear the inflight timeout when a lookup %s', async (_outcome, settled) => {
+    ])('should clear the lookup timeout when a lookup %s', async (_outcome, settled) => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Settled Movie"></a>

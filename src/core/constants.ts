@@ -9,7 +9,7 @@ export const DECORATION_DEBOUNCE_MS: number = 250;
 export const AUTOSAVE_DEBOUNCE_MS: number = 1000;
 export const HOVER_ACTION_DELAY_MS: number = 1000;
 export const IDLE_CALLBACK_TIMEOUT_MS: number = 2000;
-export const INFLIGHT_TIMEOUT_MS: number = 30_000;
+export const LOOKUP_TIMEOUT_MS: number = 30_000;
 export const CLIENT_DISABLE_DURATION: number = 60 * 60 * 1000;
 export const DEFAULT_FETCH_TIMEOUT: number = 8000;
 

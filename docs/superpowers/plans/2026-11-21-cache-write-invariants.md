@@ -424,7 +424,7 @@ Remove the `#inFlight` field and `#getTitleRequest`. Add:
 async #raceWithTimeout(promise: Promise<Title>): Promise<Title> {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+        timeoutId = setTimeout(() => reject(new Error('lookup timeout')), LOOKUP_TIMEOUT_MS);
     });
     try {
         return await Promise.race([promise, timeout]);

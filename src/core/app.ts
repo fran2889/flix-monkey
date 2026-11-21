@@ -8,7 +8,7 @@ import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } f
 import { ApiClientManager, type ApiClientManager as ApiClientManagerType } from './api-manager';
 import { CacheManager, type CacheManager as CacheManagerType } from './cache/index';
 import { ConfigManager } from './config/index';
-import { ApiSource, type ApiSourceType, DECORATION_DEBOUNCE_MS, INFLIGHT_TIMEOUT_MS } from './constants';
+import { ApiSource, type ApiSourceType, DECORATION_DEBOUNCE_MS, LOOKUP_TIMEOUT_MS } from './constants';
 import { DisabledClientsManager, type DisabledClientsManager as DisabledClientsManagerType } from './disabled-clients';
 import {
     FadeManager,
@@ -182,7 +182,7 @@ export class FlixMonkeyApp {
     async #raceWithTimeout(promise: Promise<Title>): Promise<Title> {
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         const timeout = new Promise<never>((_, reject) => {
-            timeoutId = setTimeout(() => reject(new Error('inflight timeout')), INFLIGHT_TIMEOUT_MS);
+            timeoutId = setTimeout(() => reject(new Error('lookup timeout')), LOOKUP_TIMEOUT_MS);
         });
         try {
             return await Promise.race([promise, timeout]);
