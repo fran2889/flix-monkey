@@ -213,6 +213,11 @@ export class CacheManager implements CacheStore {
         });
     }
 
+    /*
+     * Writes and deletes for one title share a promise chain. The stored tail
+     * never rejects, so a failed operation cannot block the next one, and it is
+     * cleared only when no later operation has replaced it.
+     */
     async #enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void> {
         const key = this.#getCacheKey(displayTitle);
         const previous = this.#writeChains.get(key) ?? Promise.resolve();
