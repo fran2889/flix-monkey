@@ -464,7 +464,7 @@ describe('App', () => {
         logSpy.mockRestore();
     });
 
-    it('should remove inFlight entry and log error if API call hangs past timeout', async () => {
+    it('should render a not-found fallback and log when a lookup times out', async () => {
         document.body.innerHTML = `
             <div class="title-card">
                 <a aria-label="Hanging Film"></a>
