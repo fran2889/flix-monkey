@@ -123,6 +123,25 @@ describe('Chrome service worker', () => {
             expect(executeMigrations).not.toHaveBeenCalled();
             expect(sendResponse).not.toHaveBeenCalled();
         });
+        it('forwards an authenticated FM_FETCH message through the proxy', async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve({ Title: 'The Matrix' }),
+            } as unknown as Response);
+            const sendResponse = vi.fn();
+
+            const result = messageListener(
+                { type: 'FM_FETCH', url: 'https://www.omdbapi.com/?apikey=k&i=tt0133093' },
+                { id: 'test-ext' },
+                sendResponse
+            );
+
+            expect(result).toBe(true);
+            await vi.waitFor(() => {
+                expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: { Title: 'The Matrix' } });
+            });
+        });
         it('ignores non-FM_FETCH messages', () => {
             const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
             expect(result).toBe(false);

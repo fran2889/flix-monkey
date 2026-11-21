@@ -83,6 +83,20 @@ describe('Firefox background script', () => {
             expect(result).toBeUndefined();
             expect(executeMigrations).not.toHaveBeenCalled();
         });
+        it('forwards an authenticated FM_FETCH message through the proxy', async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve({ Title: 'The Matrix' }),
+            } as unknown as Response);
+
+            const result = await messageListener(
+                { type: 'FM_FETCH', url: 'https://www.omdbapi.com/?apikey=k&i=tt0133093' },
+                { id: undefined }
+            );
+
+            expect(result).toEqual({ ok: true, data: { Title: 'The Matrix' } });
+        });
         it('ignores non-FM_FETCH messages', async () => {
             const result = await messageListener({ type: 'OTHER' });
             expect(result).toBeUndefined();
