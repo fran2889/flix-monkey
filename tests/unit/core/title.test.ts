@@ -172,10 +172,6 @@ describe('Title', () => {
             expect(new Title({ displayTitle: 'Test', type: 'movie' }).type).toBe('movie');
         });
 
-        it('should normalize undefined to undefined', () => {
-            expect(new Title({ displayTitle: 'Test', type: undefined }).type).toBeUndefined();
-        });
-
         it('should be undefined on notFound titles', () => {
             expect(Title.notFound('Missing').type).toBeUndefined();
         });

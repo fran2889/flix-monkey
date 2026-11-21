@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 // Module-level spies captured by the hoisted vi.mock() factories.
 let renderSpy: Mock;
-let capturedInstance: { render: Mock };
 let tabsQuerySpy: Mock;
 let tabsReloadSpy: Mock;
 let migrationPromise: Promise<unknown>;
@@ -14,9 +13,6 @@ let resolveMigrations: (_value: unknown) => void;
 
 vi.mock('../../../../src/core/ui/settings-ui', () => ({
     SettingsUI: class {
-        constructor() {
-            capturedInstance = this as unknown as { render: Mock };
-        }
         render(..._args: unknown[]) {
             return renderSpy(..._args);
         }
@@ -76,7 +72,6 @@ describe('options.js entry point', () => {
             resolveMigrations = resolve;
         });
 
-        capturedInstance = vi.fn() as unknown as { render: Mock };
         renderSpy = vi.fn().mockResolvedValue(undefined);
         tabsQuerySpy = vi.fn().mockResolvedValue([{ id: 1 }, { id: 42 }]);
         tabsReloadSpy = vi.fn().mockResolvedValue(undefined);
@@ -87,14 +82,6 @@ describe('options.js entry point', () => {
             tabs: { query: Mock; reload: Mock };
         };
     });
-
-    async function startAfterMigrations() {
-        const entryImport = import('../../../../src/targets/extension/options');
-        await entryImport;
-        resolveMigrations({});
-        await Promise.resolve();
-        await Promise.resolve();
-    }
 
     it('waits for migrations before rendering settings', async () => {
         const entryImport = import('../../../../src/targets/extension/options');
@@ -109,17 +96,6 @@ describe('options.js entry point', () => {
 
         expect(renderSpy).toHaveBeenCalledWith(document.body);
         expect(renderSpy).toHaveBeenCalledAfter(browser.runtime.sendMessage);
-    });
-
-    it('should call SettingsUI.render with document.body', async () => {
-        await startAfterMigrations();
-        expect(renderSpy).toHaveBeenCalledWith(document.body);
-    });
-
-    it('should render settings UI without onSave callback', async () => {
-        await startAfterMigrations();
-        expect(capturedInstance).not.toBeNull();
-        expect(renderSpy).toHaveBeenCalledWith(document.body);
     });
 
     it('logs startup failures through the logger', async () => {

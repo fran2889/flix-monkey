@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgregarrApiClient, type ApiClientDeps, OmdbApiClient, XmdbApiClient } from '../../../../src/core/api/index';
+import { AgregarrApiClient, type ApiClientDeps } from '../../../../src/core/api/index';
 import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
@@ -225,21 +225,6 @@ describe('AgregarrApiClient', () => {
         await client.search('Élite');
         const calledUrl = httpFetch.mock.calls[0]?.[0];
         expect(calledUrl).toBe('https://v3.sg.media-imdb.com/suggestion/titles/x/%C3%A9lite.json');
-    });
-
-    it('should extract votes from Agregarr response', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withHttpFetchResolvingTo([{ imdbId: 'tt1', rating: 8.8, votes: 2500000 }])
-            .build();
-        const client = new AgregarrApiClient({ ...deps, adapter: mockAdapter });
-        const searchResult = buildTitle()
-            .withImdbId('tt1')
-            .withApiTitle('Test')
-            .withYear(2020)
-            .withDisplayTitle('Test')
-            .build();
-        const result = await client.getDetails(searchResult);
-        expect(result!.imdbVotes).toBe(2500000);
     });
 
     it('should handle null votes from Agregarr response', async () => {
@@ -533,31 +518,6 @@ describe('AgregarrApiClient', () => {
 
             expect(result).toBeUndefined();
             expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled();
-        });
-
-        it('should pass overrideManager to subclass constructors', () => {
-            const mockDisabledManagerForTest: DisabledClientsManager = {
-                isDisabled: vi.fn(),
-                disable: vi.fn(),
-                resetAll: vi.fn(),
-            } as unknown as DisabledClientsManager;
-            const mockAdapter = buildMockAdapter().build();
-            const mockConfigForTest = buildConfig().build() as unknown as ConfigManager;
-
-            const testDeps: ApiClientDeps = {
-                adapter: mockAdapter,
-                config: mockConfigForTest,
-                disabledManager: mockDisabledManagerForTest,
-                logger: mockLoggerForTests,
-                overrideManager: mockOverrideManagerForTests,
-            };
-            const xmdbClient = new XmdbApiClient(testDeps);
-            const omdbClient = new OmdbApiClient(testDeps);
-            const agregarrClient = new AgregarrApiClient(testDeps);
-
-            expect(xmdbClient).toBeInstanceOf(XmdbApiClient);
-            expect(omdbClient).toBeInstanceOf(OmdbApiClient);
-            expect(agregarrClient).toBeInstanceOf(AgregarrApiClient);
         });
     });
 

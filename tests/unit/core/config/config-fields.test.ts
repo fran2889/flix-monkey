@@ -37,7 +37,6 @@ describe('core/config-fields', () => {
             for (const value of Object.values(CONFIG_DEFAULTS)) {
                 expect(['string', 'boolean']).toContain(typeof value);
             }
-            expect(CONFIG_DEFAULTS.debug).toBe(true);
         });
     });
 

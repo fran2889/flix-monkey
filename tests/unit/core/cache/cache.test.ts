@@ -84,12 +84,6 @@ describe('CacheManager', () => {
         };
     }
 
-    it('should return undefined when cache is empty', async () => {
-        adapter.storageGet.mockResolvedValue(undefined);
-        const result = await cacheManager.read('Some Title');
-        expect(result).toBeUndefined();
-    });
-
     it('should treat an entry without title data as a cache miss', async () => {
         adapter.storageGet.mockResolvedValue(
             JSON.stringify({ displayTitle: 'Missing Data', expires: Date.now() + 10000 })
@@ -148,24 +142,6 @@ describe('CacheManager', () => {
         const result = entry!.getTitle();
         expect(result?.displayTitle).toEqual(titleObj.displayTitle);
         expect(result?.year).toEqual(titleObj.year);
-    });
-
-    it('should return expired CacheEntry for expired cache', async () => {
-        vi.useFakeTimers();
-        const now = Date.now();
-        vi.setSystemTime(now);
-        const titleObj = buildTitle().withDisplayTitle('Old Title').withApiTitle('Old Title').withYear(2020).build();
-        const entry = buildCacheEntry()
-            .withDisplayTitle('Old Title')
-            .withImdbId(undefined)
-            .withData(titleObj.toCacheJSON())
-            .withExpiry(now - 1000)
-            .build();
-        adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-        const result = await cacheManager.read('Old Title');
-        expect(result).not.toBeUndefined();
-        expect(result!.isExpired).toBe(true);
-        vi.useRealTimers();
     });
 
     it('should store indefinite TTL as undefined in storage', async () => {

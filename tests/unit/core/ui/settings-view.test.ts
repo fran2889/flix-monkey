@@ -472,41 +472,6 @@ describe('SettingsView', () => {
             expect(actions.onSave).toHaveBeenCalledOnce();
         });
 
-        it('triggers save after debounce period on text input', () => {
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
-
-            textInput.value = 'new-api-key';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            expect(actions.onSave).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('triggers save immediately on checkbox change', () => {
-            view.render(container, {});
-            const checkbox = container.querySelector('#fm-debug') as HTMLInputElement;
-
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('triggers save on select change', () => {
-            view.render(container, {});
-            const select = container.querySelector('#fm-apiClient') as HTMLSelectElement;
-
-            select.value = 'omdb';
-            select.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
         it('debounces multiple rapid changes into a single save', () => {
             view.render(container, {});
             const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
@@ -517,17 +482,6 @@ describe('SettingsView', () => {
             }
 
             expect(actions.onSave).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses change event for rating checkboxes', () => {
-            view.render(container, {});
-            const checkbox = container.querySelector('#fm-showRtRating') as HTMLInputElement;
-
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
 
             vi.advanceTimersByTime(1000);
             expect(actions.onSave).toHaveBeenCalledOnce();

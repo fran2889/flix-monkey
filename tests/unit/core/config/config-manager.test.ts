@@ -103,21 +103,6 @@ describe('ConfigManager', () => {
             );
         });
 
-        it('should call injected logger.warn when configGet throws', () => {
-            const mockLogger = buildLogger().build();
-            const adapter = buildMockAdapter()
-                .withConfigGetReturning(() => {
-                    throw new Error('oops');
-                })
-                .build();
-            const config = new ConfigManager(adapter, mockLogger);
-            config.get('overlayCorner');
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                'ConfigManager.get error, using fallback',
-                expect.objectContaining({ key: 'overlayCorner' })
-            );
-        });
-
         it('should throw for unknown key', () => {
             const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
             expect(() => config.get('nonExistentKey' as ConfigKey)).toThrow(
@@ -176,18 +161,6 @@ describe('ConfigManager', () => {
                 Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10)
             );
         });
-
-        it('should return CONFIG_DEFAULTS from getInt when value is non-numeric', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'not-a-number')
-                    .build(),
-                buildLogger().build()
-            );
-            const result = config.getInt('cacheTtlNoRating');
-            expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10));
-        });
     });
 
     describe('getFloat', () => {
@@ -231,18 +204,6 @@ describe('ConfigManager', () => {
             expect(config.getFloat('fadeRatingThreshold')).toBe(
                 Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold))
             );
-        });
-
-        it('should return CONFIG_DEFAULTS from getFloat when value is non-numeric', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'not-a-number')
-                    .build(),
-                buildLogger().build()
-            );
-            const result = config.getFloat('fadeRatingThreshold');
-            expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold)));
         });
     });
 

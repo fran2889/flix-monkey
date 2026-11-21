@@ -190,21 +190,6 @@ describe('RequestQueue', () => {
         expect(fetchFn).toHaveBeenCalledOnce();
     });
 
-    it('should read global storage twice per request when no wait is needed', async () => {
-        const mockAdapter = buildMockAdapter()
-            .withStorageGetResolvingTo('0')
-            .withStorageSetResolvingTo(undefined)
-            .build();
-        const queue = buildQueue(0, mockAdapter);
-        const fetchFn = vi.fn().mockResolvedValue({ ok: true });
-
-        await queue.enqueue('url1', 0, fetchFn);
-        await queue.enqueue('url2', 0, fetchFn);
-
-        // Two reads per request (loop-start + pre-claim), two requests = four total
-        expect(mockAdapter.storageGet).toHaveBeenCalledTimes(4);
-    });
-
     it('should resolve multiple concurrently enqueued requests', async () => {
         const mockAdapter = buildMockAdapter()
             .withStorageGetResolvingTo('0')

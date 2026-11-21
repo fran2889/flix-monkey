@@ -168,11 +168,6 @@ describe('WebExtensionAdapter', () => {
         expect(adapter.configGet('key')).toBe('value');
     });
 
-    it('configGet should return undefined if key is missing', () => {
-        adapter.setConfigData({});
-        expect(adapter.configGet('missing')).toBeUndefined();
-    });
-
     it('configGet should return undefined before seeding and for absent keys after seeding', () => {
         const freshAdapter = new WebExtensionAdapter();
         expect(freshAdapter.configGet('overlayCorner')).toBeUndefined();
@@ -185,17 +180,9 @@ describe('WebExtensionAdapter', () => {
         expect(freshAdapter.configGet('overlayCorner')).toBe('bottom-left');
     });
 
-    it('httpFetch should throw FlixMonkeyError when background returns undefined', async () => {
-        mockedBrowser.runtime.sendMessage.mockResolvedValue(undefined);
-        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
-    });
-
-    it('httpFetch should reject a non-object background response', async () => {
-        mockedBrowser.runtime.sendMessage.mockResolvedValue([]);
-        await expect(adapter.httpFetch('https://api.example.com')).rejects.toThrow('empty background response');
-    });
-
     it.each([
+        ['an undefined response', undefined],
+        ['an array response', []],
         ['an untagged success payload', { data: { success: true } }],
         ['an untagged error payload', { error: 'Not Found', status: 404 }],
         ['a non-boolean discriminant', { ok: 'true', data: {} }],

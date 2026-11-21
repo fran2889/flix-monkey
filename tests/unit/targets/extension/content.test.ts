@@ -147,11 +147,6 @@ describe('content.js entry point', () => {
         expect(startedAdapter().configGet('showRtRating')).toBeUndefined();
     });
 
-    it('should register a storage.onChanged listener', async () => {
-        await startAfterMigrations();
-        expect(onChangedListener).toBeDefined();
-    });
-
     it('should call redecorate when overlayCorner changes', async () => {
         await startAfterMigrations();
         onChangedListener({ overlayCorner: { newValue: 'bottom-left' } });

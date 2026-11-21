@@ -20,11 +20,6 @@ describe('IdOverrideManager', () => {
     });
 
     describe('getImdbId', () => {
-        it('returns undefined when no override exists', async () => {
-            const result = await manager.getImdbId('The Matrix');
-            expect(result).toBeUndefined();
-        });
-
         it('returns stored imdbId when override exists', async () => {
             mockAdapter.storageGet.mockResolvedValue('{"imdbId":"tt0133093"}');
             const result = await manager.getImdbId('The Matrix');

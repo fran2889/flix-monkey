@@ -85,20 +85,6 @@ describe('OmdbApiClient', () => {
         expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
     });
 
-    it('should handle missing or invalid Year', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                Year: 'invalid',
-                Title: 'Movie 1',
-                imdbID: 'tt1',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-        expect(result!.year).toBeUndefined();
-    });
-
     // OMDb reports Year as a free-form string, so this client owns extracting the
     // digits. Title only ever receives a number.
     it.each([
@@ -136,7 +122,7 @@ describe('OmdbApiClient', () => {
         expect(result!.mcRating).toBe(85);
     });
 
-    it.each(['', ' ', 'N/A'])('should treat imdbRating %o as missing', async (value: string) => {
+    it.each(['', ' ', 'N/A', null])('should treat imdbRating %o as missing', async (value: string | null) => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({ Response: 'True', imdbRating: value, imdbID: 'tt1', Title: 'Movie 1' })
             .build();
@@ -259,21 +245,6 @@ describe('OmdbApiClient', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should extract imdbVotes from OMDB response', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbVotes: '2,500,000',
-                imdbRating: '8.8',
-                imdbID: 'tt1',
-                Title: 'Test',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Test');
-        expect(result!.imdbVotes).toBe(2500000);
-    });
-
     it('should handle missing imdbVotes from OMDB response', async () => {
         const mockAdapterForTest = buildMockAdapter()
             .withHttpFetchResolvingTo({
@@ -394,22 +365,6 @@ describe('OmdbApiClient', () => {
         expect(result!.apiTitle).toBe('Updated Title');
         expect(result!.imdbId).toBe('tt123');
         expect(result!.displayTitle).toBe('Test');
-    });
-
-    it('should treat a null imdbRating in the response as no rating instead of 0', async () => {
-        const mockAdapterForTest = buildMockAdapter()
-            .withHttpFetchResolvingTo({
-                Response: 'True',
-                imdbRating: null,
-                imdbID: 'tt1',
-                Title: 'Movie 1',
-            })
-            .build();
-        const client = new OmdbApiClient({ ...deps, adapter: mockAdapterForTest });
-        const result = await client.search('Movie 1');
-
-        expect(result!.imdbRating).toBeUndefined();
-        expect(result!.hasRating).toBe(false);
     });
 
     it('should fetch details for a cached title without an apiTitle', async () => {

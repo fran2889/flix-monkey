@@ -116,18 +116,6 @@ describe('App', () => {
         expect(typeof appRef?.redecorate).toBe('function');
     });
 
-    it('should discover titles in JSDOM', () => {
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Movie Title"></a>
-        </div>
-    `;
-        const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
-        const results = surfaces.discover(document);
-        expect(results).toHaveLength(1);
-        expect(results[0]?.title).toBe('Movie Title');
-    });
-
     it('should debounce navigation events', async () => {
         const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
 

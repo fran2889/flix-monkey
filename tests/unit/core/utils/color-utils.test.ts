@@ -16,11 +16,6 @@ describe('Color Utilities', () => {
             expect(interpolateColor(progress, start, end)).toBe(expected);
         });
 
-        it('should return valid rgb string at progress 0.5', () => {
-            const result = interpolateColor(0.5, '#ff0000', '#00dd00');
-            expect(result).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
-        });
-
         it('should clamp RGB values to endpoint bounds', () => {
             const result = interpolateColor(0.5, '#ff0000', '#00dd00');
             const match = result.match(/^rgb\((\d+), (\d+), (\d+)\)$/);

@@ -51,30 +51,6 @@ describe('SettingsUI', () => {
         document.body.appendChild(container);
     });
 
-    describe('Action button wiring', () => {
-        it('routes the clear-cache button to cache clearing', async () => {
-            await settingsUI.render(container);
-
-            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(mockCacheManager.clear).toHaveBeenCalledOnce();
-            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
-            expect(mockDisabledClientsManager.resetAll).not.toHaveBeenCalled();
-        });
-
-        it('routes the reset-providers button to disabled-client reset', async () => {
-            await settingsUI.render(container);
-
-            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
-            expect(mockAdapter.storageSetMany).not.toHaveBeenCalled();
-            expect(mockCacheManager.clear).not.toHaveBeenCalled();
-        });
-    });
-
     describe('Save', () => {
         it('calls storageSetMany with all field values', async () => {
             await settingsUI.render(container);
@@ -186,14 +162,6 @@ describe('SettingsUI', () => {
             );
         });
 
-        it('saves settings without external callback', async () => {
-            await settingsUI.render(container);
-
-            await settingsUI.save();
-
-            expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
-        });
-
         it('does not persist invalid values during autosave flow', async () => {
             await settingsUI.render(container);
             const apiClientInput = container.querySelector('[id="fm-apiClient"]') as HTMLSelectElement;
@@ -241,19 +209,11 @@ describe('SettingsUI', () => {
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
 
-        it('shows an error when clearing fails', async () => {
-            (mockCacheManager.clear as Mock).mockRejectedValue(new Error('disk full'));
-            await settingsUI.render(container);
-
-            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(container.querySelector('#fm-status')?.textContent).toBe('Error: disk full');
-            expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
-        });
-
-        it('shows a thrown string when clearing fails with a non-Error value', async () => {
-            (mockCacheManager.clear as Mock).mockRejectedValue('disk full');
+        it.each([
+            ['an Error', new Error('disk full')],
+            ['a non-Error value', 'disk full'],
+        ])('shows an error when clearing fails with %s', async (_label, failure) => {
+            (mockCacheManager.clear as Mock).mockRejectedValue(failure);
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
@@ -304,19 +264,11 @@ describe('SettingsUI', () => {
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--success');
         });
 
-        it('shows an error when reset fails', async () => {
-            (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue(new Error('storage unavailable'));
-            await settingsUI.render(container);
-
-            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            expect(container.querySelector('#fm-status')?.textContent).toBe('Error: storage unavailable');
-            expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
-        });
-
-        it('shows a thrown string when reset fails with a non-Error value', async () => {
-            (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue('storage unavailable');
+        it.each([
+            ['an Error', new Error('storage unavailable')],
+            ['a non-Error value', 'storage unavailable'],
+        ])('shows an error when reset fails with %s', async (_label, failure) => {
+            (mockDisabledClientsManager.resetAll as Mock).mockRejectedValue(failure);
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();

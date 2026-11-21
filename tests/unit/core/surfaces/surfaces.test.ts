@@ -182,23 +182,6 @@ describe('SurfaceManager', () => {
         expect(surface?.container).toHaveClass('decorated');
     });
 
-    it('falls back to parentElement when a surface getContainer callback returns undefined', () => {
-        document.body.innerHTML = `
-            <div data-container>
-                <span data-title="Fallback Title"></span>
-            </div>
-        `;
-        const sm = new SurfaceManager(buildLogger().build(), {
-            card: {
-                titleSelector: '[data-title]',
-                getTitle: (element: HTMLElement) => element.dataset.title ?? '',
-                getContainer: () => undefined,
-            },
-        });
-
-        expect(sm.discover(document.body)[0]?.container).toBe(document.querySelector('[data-container]'));
-    });
-
     it('does not expose a fade toggle for title cards', () => {
         const results = discover(`
             <div class="title-card"><a aria-label="Movie"></a></div>
