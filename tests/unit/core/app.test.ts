@@ -924,22 +924,26 @@ describe('App', () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
+            const invalidateSpy = vi.spyOn(api, 'invalidate');
 
             await withPromptResult('tt0133093', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(invalidateSpy).toHaveBeenCalledWith('Test Movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
         });
 
         it('should extract the IMDb ID from an IMDb URL', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
+            const invalidateSpy = vi.spyOn(api, 'invalidate');
 
             await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(invalidateSpy).toHaveBeenCalledWith('Test Movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
         });
 
         it('should prefill the prompt with the current override before the API IMDb ID', async () => {
@@ -958,10 +962,12 @@ describe('App', () => {
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);
             const { onRefreshClick } = await decorateAndCaptureActions(container);
+            const invalidateSpy = vi.spyOn(api, 'invalidate');
 
             await onRefreshClick('Test Movie');
 
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(invalidateSpy).toHaveBeenCalledWith('Test Movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
         });
 
