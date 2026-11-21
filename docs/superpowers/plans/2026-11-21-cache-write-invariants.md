@@ -44,7 +44,7 @@
 - Consumes: nothing new.
 - Produces: private `#enqueue(displayTitle: string, operation: () => Promise<void>): Promise<void>`; `write` and `delete` keep their current signatures and return the queued operation.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add a `describe('write ordering')` inside `tests/unit/core/cache/cache.test.ts`, using `buildManager()` from the `clearing cached data` describe. Move `buildManager` to the top-level test scope so both describes can use it, and keep it returning `{ adapter, store, manager }`.
 
@@ -84,12 +84,12 @@ it('keeps the chain usable after a write rejects', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify the ordering test fails**
+- [x] **Step 2: Run the tests to verify the ordering test fails**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts -t "write ordering"`
 Expected: `runs a delete after a write already queued for the title` fails because the delete runs before the gated write resolves. The other two pass before the chain exists.
 
-- [ ] **Step 3: Implement the chain**
+- [x] **Step 3: Implement the chain**
 
 In `CacheManager`, add `readonly #writeChains = new Map<string, Promise<void>>();`. Add the helper:
 
@@ -112,12 +112,12 @@ In `CacheManager`, add `readonly #writeChains = new Map<string, Promise<void>>()
 Route `write` so its existing body runs inside `await this.#enqueue(displayTitle, async () => { ...existing body... });`.
 Route `delete` the same way, keeping its existing storage delete and debug log inside the callback.
 
-- [ ] **Step 4: Run the cache tests**
+- [x] **Step 4: Run the cache tests**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/cache/cache-manager.ts tests/unit/core/cache/cache.test.ts
@@ -138,7 +138,7 @@ git commit -m "fix(cache): serialize writes and deletes per title"
 - Consumes: `#enqueue` from Task 1.
 - Produces: `write` may resolve without storing the title.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add `describe('write invariants')` with:
 
@@ -196,12 +196,12 @@ it('stores the new value when the existing entry is corrupt', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts -t "write invariants"`
 Expected: `does not replace a rated entry with a bare miss` fails with the miss stored. The ID-only and expired cases pass before the rule exists.
 
-- [ ] **Step 3: Implement the rule**
+- [x] **Step 3: Implement the rule**
 
 Update the `CacheStore.write` JSDoc to say the cache may decline to store a title when an invariant rejects it. Inside the enqueued `write` callback, before storing:
 
@@ -216,12 +216,12 @@ if (isBareMiss) {
 }
 ```
 
-- [ ] **Step 4: Run the cache tests**
+- [x] **Step 4: Run the cache tests**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 Expected: PASS, including the existing retained-ID miss test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/cache/cache-manager.ts tests/unit/core/cache/cache.test.ts
@@ -247,7 +247,7 @@ git commit -m "fix(cache): keep rated entries over bare misses"
 - Consumes: `IdOverrideManager.getImdbId(displayTitle): Promise<string | undefined>`.
 - Produces: `CacheManager` constructor `(adapter: PlatformAdapter, config: ConfigManager, logger: Logger, overrides: IdOverrideManager)`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `tests/unit/core/cache/cache.test.ts`, have `buildManager` return `{ adapter, store, manager, overrides }` where `overrides` is an `IdOverrideManager` built on the same adapter and passed to the `CacheManager`. Add:
 
@@ -287,12 +287,12 @@ it('skips a bare miss when an override exists', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail to compile**
+- [x] **Step 2: Run the tests to verify they fail to compile**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts -t "override"`
 Expected: FAIL because `CacheManager` takes three constructor arguments and the override check does not exist.
 
-- [ ] **Step 3: Implement the dependency and the check**
+- [x] **Step 3: Implement the dependency and the check**
 
 In `cache-manager.ts` import `IdOverrideManager`, add `readonly #overrides: IdOverrideManager`, take it as the fourth constructor parameter, and inside the enqueued `write` callback, before the downgrade check:
 
@@ -310,12 +310,12 @@ Update every construction site: `startApp` creates `overrideManager` before `cac
 
 Update the existing `keeps manual IMDb ID overrides` test to write `tt999` instead of `tt111`, so the write is not skipped and the test still proves that `clear(true)` keeps overrides.
 
-- [ ] **Step 4: Run the cache and type checks**
+- [x] **Step 4: Run the cache and type checks**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts tests/unit/core/app.test.ts tests/unit/core/ui/settings-ui.test.ts && npm run type-check`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/cache/cache-manager.ts src/core/app.ts src/targets/extension/options.ts src/targets/userscript/entry.ts tests/unit/core/cache/cache.test.ts tests/unit/core/app.test.ts tests/unit/core/ui/settings-ui.test.ts
@@ -337,13 +337,13 @@ git commit -m "feat(cache): respect the IMDb override when saving"
 - Consumes: the chained `CacheManager.delete` from Task 1.
 - Produces: `CacheStore.delete(displayTitle: string): Promise<void>` and `ApiClientManager.invalidate(displayTitle: string): Promise<void>`.
 
-- [ ] **Step 1: Add the interface method and update mocks**
+- [x] **Step 1: Add the interface method and update mocks**
 
 Add `delete(displayTitle: string): Promise<void>` to `CacheStore` with JSDoc that says it resolves when the entry has been removed and runs after any queued write for the title. Update the interface summary to include delete.
 
 In `tests/unit/core/api-manager.test.ts`, add `delete: vi.fn()` to every inline cache mock. Run `npm run type-check` to confirm.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 it('removes the cached title when invalidated', async () => {
@@ -366,12 +366,12 @@ it('removes the cached title when invalidated', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.ts -t "invalidated"`
 Expected: FAIL with `manager.invalidate is not a function`.
 
-- [ ] **Step 4: Implement `invalidate`**
+- [x] **Step 4: Implement `invalidate`**
 
 ```ts
 /**
@@ -386,12 +386,12 @@ async invalidate(displayTitle: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 5: Run the manager tests and type check**
+- [x] **Step 5: Run the manager tests and type check**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.ts && npm run type-check`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/core/cache/cache-manager.ts src/core/api-manager.ts tests/unit/core/api-manager.test.ts
@@ -412,11 +412,11 @@ git commit -m "feat(core): expose cache invalidation on ApiClientManager"
 - Consumes: `ApiClientManager.getData(displayTitle): Promise<Title>`.
 - Produces: private `#raceWithTimeout(promise: Promise<Title>): Promise<Title>`; no `#inFlight` field and no `#getTitleRequest`.
 
-- [ ] **Step 1: Remove the deduplication tests**
+- [x] **Step 1: Remove the deduplication tests**
 
 Delete `should deduplicate in-flight requests for the same title` and `should deduplicate in-flight requests for titles that differ only by punctuation` from `tests/unit/core/app.test.ts`. Keep the timeout test as is; it must still pass.
 
-- [ ] **Step 2: Implement the simplification**
+- [x] **Step 2: Implement the simplification**
 
 Remove the `#inFlight` field and `#getTitleRequest`. Add:
 
@@ -436,12 +436,12 @@ async #raceWithTimeout(promise: Promise<Title>): Promise<Title> {
 
 In `#decorateContainer`, replace the `#getTitleRequest` call with `const request = this.#raceWithTimeout(this.#api.getData(displayTitle));`.
 
-- [ ] **Step 3: Run the app tests**
+- [x] **Step 3: Run the app tests**
 
 Run: `npx vitest run tests/unit/core/app.test.ts`
 Expected: PASS. The timeout test still logs through `#decorateRoot`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/app.ts tests/unit/core/app.test.ts
@@ -462,25 +462,25 @@ git commit -m "refactor(core): drop in-flight lookup deduplication"
 - Consumes: `ApiClientManager.invalidate(displayTitle): Promise<void>` from Task 4.
 - Produces: refresh and edit call `invalidate` before redecorating.
 
-- [ ] **Step 1: Update the tests**
+- [x] **Step 1: Update the tests**
 
 In the refresh test, expect `mockCache.delete` to have been called with `'Test Movie'` instead of `'test_movie'`, and add `vi.spyOn(api, 'invalidate')` with `expect(invalidateSpy).toHaveBeenCalledWith('Test Movie')`. Apply the same expectation change to the two edit tests that assert `mockCache.delete`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/app.test.ts -t "evict the cache"`
 Expected: FAIL because the app still deletes with the slugified key and does not call `invalidate`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `#handleEditClick` and `#handleRefreshClick`, replace `await this.#cache.delete(dedupKey);` with `await this.#api.invalidate(displayTitle);`. Keep `dedupKey` for `#redecorateTitle`.
 
-- [ ] **Step 4: Run the app tests**
+- [x] **Step 4: Run the app tests**
 
 Run: `npx vitest run tests/unit/core/app.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/app.ts tests/unit/core/app.test.ts
@@ -501,7 +501,7 @@ git commit -m "refactor(core): evict the cache through invalidate"
 - Consumes: `Title.notFound(displayTitle: string): Title`.
 - Produces: a failed or timed-out decoration renders an uncached not-found overlay; render failures keep propagating.
 
-- [ ] **Step 1: Update and add the tests**
+- [x] **Step 1: Update and add the tests**
 
 Replace `should log errors thrown by decorateContainer rather than propagating them` with a test that asserts the fallback: mock `getData` to reject, wait for `Logger.error` with `Failed to decorate "Boom Movie"`, then assert `.title-card .fm-loading` is null and `.title-card .fm-search` is not null. Update the timeout test to assert the same two DOM conditions after the timeout. Add:
 
@@ -532,12 +532,12 @@ it('keeps a render failure out of the not-found fallback', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/unit/core/app.test.ts -t "not-found fallback"`
 Expected: FAIL because a rejected lookup renders nothing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Change the `Title` import in `app.ts` to a value import. In `#decorateContainer`:
 
@@ -563,12 +563,12 @@ try {
 }
 ```
 
-- [ ] **Step 4: Run the app tests**
+- [x] **Step 4: Run the app tests**
 
 Run: `npx vitest run tests/unit/core/app.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/app.ts tests/unit/core/app.test.ts
@@ -581,26 +581,26 @@ git commit -m "fix(core): render a not-found fallback when a lookup fails"
 
 **Files:** none.
 
-- [ ] **Step 1: Type check and lint**
+- [x] **Step 1: Type check and lint**
 
 Run: `npm run type-check && npm run lint && npx prettier --check "{src,tests}/**/*.ts"`
 Expected: PASS. Ignore the pre-existing untracked `docs/reviews/2026-11-06-project-review.md`, which is not part of this work.
 
-- [ ] **Step 2: Run tests with coverage**
+- [x] **Step 2: Run tests with coverage**
 
 Run: `npm run test:coverage`
 Expected: PASS with no threshold regression.
 
-- [ ] **Step 3: Build all targets**
+- [x] **Step 3: Build all targets**
 
 Run: `npm run build`
 Expected: three targets created.
 
-- [ ] **Step 4: Dependency audit**
+- [x] **Step 4: Dependency audit**
 
 Run: `npm run audit`
 Expected: no new moderate or higher advisories.
 
-- [ ] **Step 5: Report**
+- [x] **Step 5: Report**
 
 Report the commit list, the commands run, and any deviation from this plan. Do not push.
