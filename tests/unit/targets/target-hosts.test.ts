@@ -11,6 +11,7 @@ import { ServiceRegistry } from '../../../src/core/services/index';
 interface TargetManifest {
     content_scripts: { matches: string[] }[];
     host_permissions: string[];
+    manifest_version: number;
 }
 
 const CHROME_MANIFEST = 'src/targets/chrome/manifest.json';
@@ -53,6 +54,13 @@ describe('target host coverage', () => {
 
     it('keeps the userscript covering the same hosts as the extensions', () => {
         expect(userscript).toEqual(matchedHosts(chrome));
+    });
+
+    it.each([
+        ['Chrome', chrome],
+        ['Firefox', firefox],
+    ])('uses manifest version 3 for %s', (_name: string, manifest: TargetManifest) => {
+        expect(manifest.manifest_version).toBe(3);
     });
 
     it.each([

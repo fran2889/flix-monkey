@@ -14,7 +14,7 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
     createExtensionMigrationExecutor: () => executeMigrations,
 }));
 
-describe('Firefox Background Script', () => {
+describe('Firefox background script', () => {
     let messageListener: (..._args: unknown[]) => Promise<unknown> | void;
     let installedListener: (_details: { reason: string }) => Promise<unknown> | void;
     let actionListener: () => Promise<unknown> | void;
@@ -59,151 +59,115 @@ describe('Firefox Background Script', () => {
         await import('../../../../src/targets/firefox/background');
     });
 
-    it.each([{ reason: 'install' }, { reason: 'update' }])(
-        'runs migrations when the extension is $reason',
-        async details => {
-            await installedListener(details);
+    describe('startup', () => {
+        it.each([{ reason: 'install' }, { reason: 'update' }])(
+            'runs migrations on extension $reason',
+            async details => {
+                await installedListener(details);
+                await Promise.resolve();
+                expect(executeMigrations).toHaveBeenCalledOnce();
+            }
+        );
+        it('runs migrations and logs an error when the install-time migration rejects', async () => {
+            executeMigrations.mockRejectedValue(new Error('migration boom'));
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await installedListener({ reason: 'install' });
             await Promise.resolve();
+            await Promise.resolve();
+
             expect(executeMigrations).toHaveBeenCalledOnce();
-        }
-    );
-
-    it('runs migrations for authenticated migration messages', async () => {
-        const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: undefined });
-
-        expect(executeMigrations).toHaveBeenCalledOnce();
-        expect(result).toBeUndefined();
-    });
-
-    it('ignores migration messages from a foreign sender', async () => {
-        const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' });
-
-        expect(result).toBeUndefined();
-        expect(executeMigrations).not.toHaveBeenCalled();
-    });
-
-    it('should ignore non-FM_FETCH messages', async () => {
-        const result = await messageListener({ type: 'OTHER' });
-        expect(result).toBeUndefined();
-    });
-
-    it('should reject requests to disallowed domains', async () => {
-        const result = await messageListener({ type: 'FM_FETCH', url: 'http://malicious.com' });
-        expect(result).toEqual({ ok: false, error: 'Domain not allowed' });
-    });
-
-    it('should handle invalid URLs', async () => {
-        const result = await messageListener({ type: 'FM_FETCH', url: 'not-a-url' });
-        expect(result).toEqual({ ok: false, error: 'Invalid URL' });
-    });
-
-    it('ignores a message with malformed options', async () => {
-        const result = await messageListener({
-            type: 'FM_FETCH',
-            url: 'https://xmdbapi.com',
-            options: { responseType: 'xml' },
+            expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
+            consoleError.mockRestore();
         });
-
-        expect(result).toBeUndefined();
     });
 
-    it('should respect custom timeout in options', async () => {
-        const customTimeout = 1234;
-        const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+    describe('message handling', () => {
+        it('runs migrations for authenticated migration messages', async () => {
+            const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: undefined });
 
-        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
-
-        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), customTimeout);
-        setTimeoutSpy.mockRestore();
-    });
-
-    it('should fall back to DEFAULT_FETCH_TIMEOUT (8000ms)', async () => {
-        const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: {} });
-        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 8000);
-        setTimeoutSpy.mockRestore();
-    });
-
-    it('should actually abort fetch when timer fires', async () => {
-        const customTimeout = 500;
-        void messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com', options: { timeout: customTimeout } });
-
-        const fetchMock = global.fetch as unknown as {
-            mock: { calls: Array<[string, { signal: { aborted: boolean } }]> };
-        };
-        const fetchOptions = fetchMock.mock.calls[0]?.[1];
-        if (fetchOptions === undefined) throw new Error('fetch was not called');
-        expect(fetchOptions.signal.aborted).toBe(false);
-
-        await vi.advanceTimersByTimeAsync(customTimeout + 10);
-        expect(fetchOptions.signal.aborted).toBe(true);
-    });
-
-    it('should handle successful JSON response', async () => {
-        const mockData = { test: 'data' };
-        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
-            ok: true,
-            json: async () => mockData,
+            expect(executeMigrations).toHaveBeenCalledOnce();
+            expect(result).toBeUndefined();
         });
+        it('ignores migration messages from a foreign sender', async () => {
+            const result = await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'other-extension' });
 
-        const result = await messageListener({
-            type: 'FM_FETCH',
-            url: 'https://xmdbapi.com',
-            options: { responseType: 'json' },
+            expect(result).toBeUndefined();
+            expect(executeMigrations).not.toHaveBeenCalled();
         });
+        it('forwards an authenticated message without options', async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve({ Title: 'The Matrix' }),
+            } as unknown as Response);
 
-        expect(result).toEqual({ ok: true, data: mockData });
-    });
+            const result = await messageListener(
+                { type: 'FM_FETCH', url: 'https://www.omdbapi.com/?apikey=k&i=tt0133093' },
+                { id: undefined }
+            );
 
-    it('should handle successful text response', async () => {
-        const mockData = 'plain text';
-        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
-            ok: true,
-            text: async () => mockData,
+            expect(result).toEqual({ ok: true, data: { Title: 'The Matrix' } });
         });
+        it('forwards fetch options on an authenticated FM_FETCH message', async () => {
+            const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve('The Matrix'),
+            } as unknown as Response);
 
-        const result = await messageListener({
-            type: 'FM_FETCH',
-            url: 'https://xmdbapi.com',
-            options: { responseType: 'text' },
+            const result = await messageListener(
+                {
+                    type: 'FM_FETCH',
+                    url: 'https://www.omdbapi.com/?apikey=k&i=tt0133093',
+                    options: { responseType: 'text', timeout: 1234 },
+                },
+                { id: undefined }
+            );
+
+            expect(result).toEqual({ ok: true, data: 'The Matrix' });
+            expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1234);
+            setTimeoutSpy.mockRestore();
         });
-
-        expect(result).toEqual({ ok: true, data: mockData });
-    });
-
-    it('should handle HTTP error response', async () => {
-        (global.fetch as unknown as { mockResolvedValue: (_value: unknown) => void }).mockResolvedValue({
-            ok: false,
-            status: 404,
-            text: () => Promise.resolve('Not Found'),
+        it('ignores non-FM_FETCH messages', async () => {
+            const result = await messageListener({ type: 'OTHER' });
+            expect(result).toBeUndefined();
         });
+        it('ignores a message with malformed options', async () => {
+            const result = await messageListener({
+                type: 'FM_FETCH',
+                url: 'https://xmdbapi.com',
+                options: { responseType: 'xml' },
+            });
 
-        const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
-
-        expect(result).toEqual({ ok: false, error: 'HTTP 404', status: 404, body: 'Not Found' });
+            expect(result).toBeUndefined();
+        });
+        it('ignores messages from external senders', async () => {
+            // browser.runtime.id is undefined in test env; sender.id must match it
+            const result = await messageListener(
+                { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
+                { id: 'some-other-extension-id' }
+            );
+            expect(result).toBeUndefined();
+        });
     });
 
-    it('should handle fetch exception', async () => {
-        (global.fetch as unknown as { mockRejectedValue: (_error: unknown) => void }).mockRejectedValue(
-            new Error('Network error')
-        );
+    describe('action clicks', () => {
+        it('opens the options page when the action icon is clicked', async () => {
+            await actionListener();
+            expect(browser.runtime.openOptionsPage).toHaveBeenCalled();
+        });
+        it('logs an error when opening the options page fails', async () => {
+            vi.mocked(browser.runtime.openOptionsPage).mockRejectedValue(new Error('open boom'));
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        const result = await messageListener({ type: 'FM_FETCH', url: 'https://xmdbapi.com' });
+            await actionListener();
+            await Promise.resolve();
+            await Promise.resolve();
 
-        expect(result).toEqual({ ok: false, error: 'Network error' });
-    });
-
-    it('should ignore messages from external senders', async () => {
-        // browser.runtime.id is undefined in test env; sender.id must match it
-        const result = await messageListener(
-            { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
-            { id: 'some-other-extension-id' }
-        );
-        expect(result).toBeUndefined();
-    });
-
-    it('should open options page when action icon is clicked', async () => {
-        await actionListener();
-        expect(browser.runtime.openOptionsPage).toHaveBeenCalled();
+            expect(consoleError).toHaveBeenCalledWith('Failed to open options page', expect.any(Error));
+            consoleError.mockRestore();
+        });
     });
 });

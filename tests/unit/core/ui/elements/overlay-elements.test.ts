@@ -4,6 +4,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { HOVER_ACTION_DELAY_MS } from '../../../../../src/core/constants';
 import { Title, type TitleOptions } from '../../../../../src/core/title';
 import {
     applyFadeToggleState,
@@ -35,465 +36,517 @@ function createOverlay(title: Partial<TitleOptions> = {}, options: Partial<Overl
     return createOverlayElement(createTitle(title), { ...defaultOverlayOptions, ...options });
 }
 
-describe('createOverlayElement', () => {
-    it('builds the IMDb rating link', () => {
-        const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
+describe('overlay elements', () => {
+    describe('createOverlayElement', () => {
+        it('builds the IMDb rating link', () => {
+            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
 
-        expect(element.className).toBe('fm-rating-overlay fm-top-left');
-        expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('/title/tt1234567/');
-        expect(element.textContent).toContain('IMDb 7.5');
-    });
-
-    it('renders IMDb badge for a zero rating', () => {
-        const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 0 });
-
-        expect(element.querySelector('.fm-value')).not.toBeNull();
-        expect(element.textContent).toContain('0.0');
-    });
-
-    it('renders RT and MC badges for zero percent ratings when enabled', () => {
-        const element = createOverlay(
-            { imdbId: 'tt1234567', imdbRating: 5, rtRating: 0, mcRating: 0 },
-            {
-                showRtRating: true,
-                showMcRating: true,
-            }
-        );
-
-        const percentBadges = [...element.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
-        expect(percentBadges).toHaveLength(2);
-    });
-
-    it('does not render optional ratings when disabled', () => {
-        const element = createOverlay({ imdbRating: 7, rtRating: 90, mcRating: 80 });
-
-        expect(element.textContent).toContain('7.0');
-        expect(element.textContent).not.toContain('RT');
-        expect(element.textContent).not.toContain('MC');
-    });
-
-    it('displays all ratings when provided and enabled', () => {
-        const element = createOverlay(
-            {
-                imdbRating: 8.5,
-                rtRating: 90,
-                mcRating: 80,
-                imdbId: 'tt1234567',
-            },
-            { showRtRating: true, showMcRating: true }
-        );
-
-        expect(element.textContent).toContain('8.5');
-        expect(element.textContent).toContain('90%');
-        expect(element.textContent).toContain('80%');
-        const labelTexts = Array.from(element.querySelectorAll('.fm-label')).map(label => label.textContent);
-        expect(labelTexts).toContain('IMDb ');
-        expect(labelTexts).toContain('RT ');
-        expect(labelTexts).toContain('MC ');
-    });
-
-    it('shows the search icon when imdbId is missing', () => {
-        const element = createOverlay({ imdbRating: undefined, imdbId: undefined });
-
-        expect(element.querySelector('.fm-search')).not.toBeNull();
-        expect((element.querySelector('.fm-search') as HTMLElement)?.textContent).toBe('🔍');
-    });
-
-    it('shows N/A when imdbId is present but rating is missing', () => {
-        const element = createOverlay({
-            imdbId: 'tt1234567',
-            imdbRating: undefined,
+            expect(element.className).toBe('fm-rating-overlay fm-top-left');
+            expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('/title/tt1234567/');
+            expect(element.textContent).toContain('IMDb 7.5');
         });
 
-        expect(element.textContent).toContain('N/A');
-        expect(element.querySelector('.fm-na')).not.toBeNull();
-    });
+        it('renders IMDb badge for a zero rating', () => {
+            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 0 });
 
-    it.each([
-        ['normal ratings', { imdbRating: 8.5, imdbVotes: 250000 }, 'IMDb: 8.5 (250k votes) · Open IMDb'],
-        ['no ratings but IMDb ID present', { imdbRating: undefined, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
-        ['missing IMDb ID', { imdbRating: undefined, imdbId: undefined }, 'IMDb: Not found · Search IMDb'],
-    ])('builds the tooltip title for %s', (_: string, title: Partial<TitleOptions>, expectedTitle: string) => {
-        const element = createOverlay(title, { showRtRating: true });
-
-        expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
-    });
-
-    describe('loading overlay', () => {
-        it('creates loading content', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
-
-            expect(element.className).toBe('fm-rating-overlay fm-loading');
-            expect(element.textContent).toContain('⏳');
-            expect(element.title).toBe('IMDb: Fetching ratings... · Search IMDb');
+            expect(element.querySelector('.fm-value')).not.toBeNull();
+            expect(element.textContent).toContain('0.0');
         });
 
-        it('styles the loading badge like a rating badge', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
-
-            expect(element.querySelector('a.fm-rating-badge')).not.toBeNull();
-        });
-
-        it('links the loading badge to an IMDb title search', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
-
-            expect((element.querySelector('a') as HTMLAnchorElement)?.href).toBe(
-                'https://www.imdb.com/find/?q=The%20Matrix'
-            );
-        });
-
-        it('url-encodes the search title', () => {
-            const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
-
-            expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('q=WALL-E%20%26%20co');
-        });
-    });
-
-    describe('fade toggle', () => {
-        const title = { imdbRating: 7 };
-
-        it('does not render the toggle when the click callback is absent', () => {
-            const element = createOverlay(title, { showFadeToggle: true });
-
-            expect(element.querySelector('.fm-fade-toggle')).toBeNull();
-        });
-
-        it('does not render the toggle when disabled', () => {
-            const element = createOverlay(title, { onFadeToggleClick: vi.fn() });
-
-            expect(element.querySelector('.fm-fade-toggle')).toBeNull();
-        });
-
-        it('renders auto state with the star icon', () => {
-            const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick: vi.fn() });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
-
-            expect(toggle?.tagName).toBe('DIV');
-            expect(toggle?.getAttribute('data-state')).toBe('auto');
-            expect(toggle?.title).toBe('Fade: Auto');
-            expect(icon?.textContent).toBe('⭐');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        });
-
-        it('renders always state with a faded eye icon', () => {
-            const element = createOverlay(title, {
-                showFadeToggle: true,
-                fadeToggleState: 'always',
-                onFadeToggleClick: vi.fn(),
-            });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
-
-            expect(toggle?.getAttribute('data-state')).toBe('always');
-            expect(toggle?.title).toBe('Fade: Always');
-            expect(icon?.textContent).toBe('👁️');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(true);
-        });
-
-        it('renders never state with a non-faded eye icon', () => {
-            const element = createOverlay(title, {
-                showFadeToggle: true,
-                fadeToggleState: 'never',
-                onFadeToggleClick: vi.fn(),
-            });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-            const icon = toggle?.querySelector('.fm-fade-toggle-icon');
-
-            expect(toggle?.getAttribute('data-state')).toBe('never');
-            expect(toggle?.title).toBe('Fade: Never');
-            expect(icon?.textContent).toBe('👁️');
-            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        });
-
-        it('calls the fade-toggle callback with the badge element', () => {
-            const onFadeToggleClick = vi.fn();
-            const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick });
-            const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
-
-            toggle?.click();
-
-            expect(onFadeToggleClick).toHaveBeenCalledWith(toggle);
-        });
-    });
-
-    describe('IMDb link', () => {
-        it('opens in a new tab without leaking the referrer', () => {
-            const link = createOverlay({ imdbId: 'tt1' }).querySelector('a') as HTMLAnchorElement;
-
-            expect(link?.target).toBe('_blank');
-            expect(link?.rel).toBe('noopener noreferrer');
-        });
-
-        it('stops propagation so the card does not navigate', () => {
-            const element = createOverlay({ imdbId: 'tt1' });
-            const link = element.querySelector('a') as HTMLElement;
-            const event = new MouseEvent('click', { bubbles: true });
-            const spy = vi.spyOn(event, 'stopPropagation');
-
-            link?.dispatchEvent(event);
-
-            expect(spy).toHaveBeenCalled();
-        });
-    });
-
-    describe('click propagation', () => {
-        it('stops propagation on enabled MC and RT rating clicks', () => {
+        it('renders RT and MC badges for zero percent ratings when enabled', () => {
             const element = createOverlay(
-                { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbId: 'tt1' },
+                { imdbId: 'tt1234567', imdbRating: 5, rtRating: 0, mcRating: 0 },
+                {
+                    showRtRating: true,
+                    showMcRating: true,
+                }
+            );
+
+            const percentBadges = [...element.querySelectorAll('.fm-value')].filter(el => el.textContent === '0%');
+            expect(percentBadges).toHaveLength(2);
+        });
+
+        it('does not render optional ratings when disabled', () => {
+            const element = createOverlay({ imdbRating: 7, rtRating: 90, mcRating: 80 });
+
+            expect(element.textContent).toContain('7.0');
+            expect(element.textContent).not.toContain('RT');
+            expect(element.textContent).not.toContain('MC');
+        });
+
+        it('displays all ratings when provided and enabled', () => {
+            const element = createOverlay(
+                {
+                    imdbRating: 8.5,
+                    rtRating: 90,
+                    mcRating: 80,
+                    imdbId: 'tt1234567',
+                },
                 { showRtRating: true, showMcRating: true }
             );
 
-            [element.querySelector('.fm-rt')?.parentElement, element.querySelector('.fm-mc')?.parentElement].forEach(
-                badge => {
+            expect(element.textContent).toContain('8.5');
+            expect(element.textContent).toContain('90%');
+            expect(element.textContent).toContain('80%');
+            const labelTexts = Array.from(element.querySelectorAll('.fm-label')).map(label => label.textContent);
+            expect(labelTexts).toContain('IMDb ');
+            expect(labelTexts).toContain('RT ');
+            expect(labelTexts).toContain('MC ');
+        });
+
+        it('shows the search icon when imdbId is missing', () => {
+            const element = createOverlay({ imdbRating: undefined, imdbId: undefined });
+
+            expect(element.querySelector('.fm-search')).not.toBeNull();
+            expect((element.querySelector('.fm-search') as HTMLElement)?.textContent).toBe('🔍');
+        });
+
+        it('shows N/A when imdbId is present but rating is missing', () => {
+            const element = createOverlay({
+                imdbId: 'tt1234567',
+                imdbRating: undefined,
+            });
+
+            expect(element.textContent).toContain('N/A');
+            expect(element.querySelector('.fm-na')).not.toBeNull();
+        });
+
+        it.each([
+            ['normal ratings', { imdbRating: 8.5, imdbVotes: 250000 }, 'IMDb: 8.5 (250k votes) · Open IMDb'],
+            ['no ratings but IMDb ID present', { imdbRating: undefined, imdbId: 'tt1' }, 'IMDb: No rating · Open IMDb'],
+            ['missing IMDb ID', { imdbRating: undefined, imdbId: undefined }, 'IMDb: Not found · Search IMDb'],
+        ])('builds the tooltip title for %s', (_: string, title: Partial<TitleOptions>, expectedTitle: string) => {
+            const element = createOverlay(title, { showRtRating: true });
+
+            expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
+        });
+
+        describe('loading overlay', () => {
+            it('creates loading content', () => {
+                const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+                expect(element.className).toBe('fm-rating-overlay fm-loading');
+                expect(element.textContent).toContain('⏳');
+                expect(element.title).toBe('IMDb: Fetching ratings... · Search IMDb');
+            });
+
+            it('styles the loading badge like a rating badge', () => {
+                const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+                expect(element.querySelector('a.fm-rating-badge')).not.toBeNull();
+            });
+
+            it('links the loading badge to an IMDb title search', () => {
+                const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'The Matrix');
+
+                expect((element.querySelector('a') as HTMLAnchorElement)?.href).toBe(
+                    'https://www.imdb.com/find/?q=The%20Matrix'
+                );
+            });
+
+            it('url-encodes the search title', () => {
+                const element = createLoadingOverlayElement('fm-rating-overlay', 'fm-loading', 'WALL-E & co');
+
+                expect((element.querySelector('a') as HTMLAnchorElement)?.href).toContain('q=WALL-E%20%26%20co');
+            });
+        });
+
+        describe('fade toggle', () => {
+            const title = { imdbRating: 7 };
+
+            it('does not render the toggle when the click callback is absent', () => {
+                const element = createOverlay(title, { showFadeToggle: true });
+
+                expect(element.querySelector('.fm-fade-toggle')).toBeNull();
+            });
+
+            it('does not render the toggle when disabled', () => {
+                const element = createOverlay(title, { onFadeToggleClick: vi.fn() });
+
+                expect(element.querySelector('.fm-fade-toggle')).toBeNull();
+            });
+
+            it.each([
+                {
+                    description: 'auto state with the star icon',
+                    state: undefined,
+                    datasetState: 'auto',
+                    expectedTitle: 'Fade: Auto',
+                    glyph: '⭐',
+                    faded: false,
+                },
+                {
+                    description: 'always state with a faded eye icon',
+                    state: 'always',
+                    datasetState: 'always',
+                    expectedTitle: 'Fade: Always',
+                    glyph: '👁️',
+                    faded: true,
+                },
+                {
+                    description: 'never state with a non-faded eye icon',
+                    state: 'never',
+                    datasetState: 'never',
+                    expectedTitle: 'Fade: Never',
+                    glyph: '👁️',
+                    faded: false,
+                },
+            ] satisfies Array<{
+                description: string;
+                state: 'always' | 'never' | undefined;
+                datasetState: string;
+                expectedTitle: string;
+                glyph: string;
+                faded: boolean;
+            }>)('renders $description', ({ state, datasetState, expectedTitle, glyph, faded }) => {
+                const element = createOverlay(title, {
+                    showFadeToggle: true,
+                    fadeToggleState: state,
+                    onFadeToggleClick: vi.fn(),
+                });
+                const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
+                const icon = toggle?.querySelector('.fm-fade-toggle-icon');
+
+                expect(toggle?.tagName).toBe('DIV');
+                expect(toggle?.getAttribute('data-state')).toBe(datasetState);
+                expect(toggle?.title).toBe(expectedTitle);
+                expect(icon?.textContent).toBe(glyph);
+                expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(faded);
+            });
+
+            it('calls the fade-toggle callback with the badge element', () => {
+                const onFadeToggleClick = vi.fn();
+                const element = createOverlay(title, { showFadeToggle: true, onFadeToggleClick });
+                const toggle = element.querySelector('.fm-fade-toggle') as HTMLElement;
+
+                toggle?.click();
+
+                expect(onFadeToggleClick).toHaveBeenCalledWith(toggle);
+            });
+        });
+
+        describe('IMDb link', () => {
+            it('opens in a new tab without leaking the referrer', () => {
+                const link = createOverlay({ imdbId: 'tt1' }).querySelector('a') as HTMLAnchorElement;
+
+                expect(link?.target).toBe('_blank');
+                expect(link?.rel).toBe('noopener noreferrer');
+            });
+
+            it('stops propagation so the card does not navigate', () => {
+                const element = createOverlay({ imdbId: 'tt1' });
+                const link = element.querySelector('a') as HTMLElement;
+                const event = new MouseEvent('click', { bubbles: true });
+                const spy = vi.spyOn(event, 'stopPropagation');
+
+                link?.dispatchEvent(event);
+
+                expect(spy).toHaveBeenCalled();
+            });
+
+            it('stops propagation on enabled MC and RT rating clicks', () => {
+                const element = createOverlay(
+                    { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbId: 'tt1' },
+                    { showRtRating: true, showMcRating: true }
+                );
+
+                [
+                    element.querySelector('.fm-rt')?.parentElement,
+                    element.querySelector('.fm-mc')?.parentElement,
+                ].forEach(badge => {
                     if (badge) {
                         const event = new MouseEvent('click', { bubbles: true });
                         const spy = vi.spyOn(event, 'stopPropagation');
                         badge.dispatchEvent(event);
                         expect(spy).toHaveBeenCalled();
                     }
+                });
+            });
+        });
+
+        describe('vote count formatting in tooltip', () => {
+            it.each([
+                [{ imdbRating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
+                [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
+                [{ imdbRating: 7.5, imdbVotes: undefined }, 'Test\nIMDb: 7.5 · Open IMDb'],
+                [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
+                [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
+                [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
+                [{ imdbRating: 5, imdbVotes: 123 }, 'Test\nIMDb: 5.0 (123 votes) · Open IMDb'],
+            ])('formats tooltip for vote data %o', (titleData: Partial<TitleOptions>, expectedTitle: string) => {
+                const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
+
+                expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
+            });
+
+            it('formats apiTitle and year', () => {
+                const element = createOverlay({
+                    apiTitle: 'The Shawshank Redemption',
+                    imdbId: 'tt0111161',
+                    imdbRating: 9.3,
+                    imdbVotes: 2700000,
+                    year: 1994,
+                });
+
+                expect((element.querySelector('a') as HTMLElement)?.title).toBe(
+                    'The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb'
+                );
+            });
+
+            it('formats apiTitle without a year', () => {
+                const element = createOverlay({
+                    apiTitle: 'Inception',
+                    imdbId: 'tt1375666',
+                    imdbRating: 8.8,
+                    imdbVotes: 2400000,
+                });
+
+                expect((element.querySelector('a') as HTMLElement)?.title).toBe(
+                    'Inception\nIMDb: 8.8 (2M votes) · Open IMDb'
+                );
+            });
+        });
+
+        describe('rating colors', () => {
+            // Expected colors are written out rather than derived from RATING_COLOR_* so the
+            // assertion stays independent of the colour parsing it exercises.
+            it.each([
+                ['IMDb low rating', 5, false, 'rgb(255, 0, 0)'],
+                ['IMDb high rating', 9, false, 'rgb(0, 221, 0)'],
+                ['percentage low rating', 50, true, 'rgb(255, 0, 0)'],
+                ['percentage high rating', 90, true, 'rgb(0, 221, 0)'],
+            ])(
+                'uses the threshold color for %s',
+                (_: string, rating: number, isPercentage: boolean, expectedColor: string) => {
+                    const element = isPercentage
+                        ? createOverlay({ imdbRating: 7, imdbId: 'tt1', rtRating: rating }, { showRtRating: true })
+                        : createOverlay({ imdbRating: rating, imdbId: 'tt1' });
+                    const valueSpans = element.querySelectorAll('.fm-value');
+                    const value = isPercentage ? valueSpans[1] : valueSpans[0];
+
+                    expect((value as HTMLElement)?.style.color).toBe(expectedColor);
                 }
             );
-        });
-    });
 
-    describe('vote count formatting in tooltip', () => {
-        it.each([
-            [{ imdbRating: 8.5, imdbVotes: 250000 }, 'Test\nIMDb: 8.5 (250k votes) · Open IMDb'],
-            [{ imdbRating: 9, imdbVotes: 2500000 }, 'Test\nIMDb: 9.0 (3M votes) · Open IMDb'],
-            [{ imdbRating: 7.5, imdbVotes: undefined }, 'Test\nIMDb: 7.5 · Open IMDb'],
-            [{ imdbRating: 6 }, 'Test\nIMDb: 6.0 · Open IMDb'],
-            [{ imdbRating: 7.5, imdbVotes: 0 }, 'Test\nIMDb: 7.5 (0 votes) · Open IMDb'],
-            [{ imdbRating: 7.5, imdbVotes: -5 }, 'Test\nIMDb: 7.5 · Open IMDb'],
-        ])('formats tooltip for vote data %o', (titleData: Partial<TitleOptions>, expectedTitle: string) => {
-            const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', ...titleData });
-
-            expect((element.querySelector('a') as HTMLElement)?.title).toBe(expectedTitle);
-        });
-
-        it('formats a small vote count', () => {
-            const element = createOverlay({ apiTitle: 'Test', imdbId: 'tt1234567', imdbRating: 5, imdbVotes: 123 });
-
-            expect((element.querySelector('a') as HTMLElement)?.title).toBe('Test\nIMDb: 5.0 (123 votes) · Open IMDb');
-        });
-
-        it('formats apiTitle and year', () => {
-            const element = createOverlay({
-                apiTitle: 'The Shawshank Redemption',
-                imdbId: 'tt0111161',
-                imdbRating: 9.3,
-                imdbVotes: 2700000,
-                year: 1994,
-            });
-
-            expect((element.querySelector('a') as HTMLElement)?.title).toBe(
-                'The Shawshank Redemption (1994)\nIMDb: 9.3 (3M votes) · Open IMDb'
-            );
-        });
-
-        it('formats apiTitle without a year', () => {
-            const element = createOverlay({
-                apiTitle: 'Inception',
-                imdbId: 'tt1375666',
-                imdbRating: 8.8,
-                imdbVotes: 2400000,
-            });
-
-            expect((element.querySelector('a') as HTMLElement)?.title).toBe(
-                'Inception\nIMDb: 8.8 (2M votes) · Open IMDb'
-            );
-        });
-    });
-
-    describe('rating colors', () => {
-        // Expected colors are written out rather than derived from RATING_COLOR_* so the
-        // assertion stays independent of the colour parsing it exercises.
-        it.each([
-            ['IMDb low rating', 5, false, 'rgb(255, 0, 0)'],
-            ['IMDb high rating', 9, false, 'rgb(0, 221, 0)'],
-            ['percentage low rating', 50, true, 'rgb(255, 0, 0)'],
-            ['percentage high rating', 90, true, 'rgb(0, 221, 0)'],
-        ])(
-            'uses the threshold color for %s',
-            (_: string, rating: number, isPercentage: boolean, expectedColor: string) => {
+            it.each([
+                ['IMDb rating', 7, false],
+                ['percentage rating', 70, true],
+            ])('uses a gradient color for %s', (_: string, rating: number, isPercentage: boolean) => {
                 const element = isPercentage
                     ? createOverlay({ imdbRating: 7, imdbId: 'tt1', rtRating: rating }, { showRtRating: true })
                     : createOverlay({ imdbRating: rating, imdbId: 'tt1' });
                 const valueSpans = element.querySelectorAll('.fm-value');
                 const value = isPercentage ? valueSpans[1] : valueSpans[0];
 
-                expect((value as HTMLElement)?.style.color).toBe(expectedColor);
-            }
-        );
+                expect((value as HTMLElement)?.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+            });
 
+            it('does not apply color to N/A', () => {
+                const element = createOverlay({ imdbRating: undefined, imdbId: 'tt1' });
+
+                expect((element.querySelector('.fm-na') as HTMLElement)?.style.color).toBe('');
+            });
+
+            it('applies a gradient color to MC ratings', () => {
+                const element = createOverlay({ imdbRating: 7, imdbId: 'tt1', mcRating: 74 }, { showMcRating: true });
+
+                expect((element.querySelectorAll('.fm-value')[1] as HTMLElement).style.color).toMatch(
+                    /^rgb\(\d+, \d+, \d+\)$/
+                );
+            });
+        });
+
+        describe('IMDb ID override and refresh actions', () => {
+            it('renders edit and refresh icons when both click handlers are provided', () => {
+                const onEditClick = vi.fn();
+                const onRefreshClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                    {
+                        onEditClick,
+                        onRefreshClick,
+                        displayTitle: 'Test Movie',
+                    }
+                );
+
+                expect(element.querySelector('.fm-icon-btn')).not.toBeNull();
+                const iconButtons = element.querySelectorAll('.fm-icon-btn');
+                expect(iconButtons).toHaveLength(2);
+                expect(iconButtons[0]?.textContent).toBe('✏️');
+                expect(iconButtons[1]?.textContent).toBe('🔄');
+                expect(element.querySelectorAll('[title="Override IMDb ID"]')).toHaveLength(1);
+                expect(element.querySelectorAll('[title="Refresh ratings (clears cache)"]')).toHaveLength(1);
+            });
+
+            it('adds the configured corner class', () => {
+                const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
+
+                expect(element.classList.contains('fm-bottom-right')).toBe(true);
+            });
+
+            it('wraps ratings in a ratings wrapper element', () => {
+                const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
+
+                expect(element.querySelector('.fm-ratings-wrapper')).not.toBeNull();
+            });
+
+            it('adds an IMDb row when actions are present', () => {
+                const onEditClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                    { onEditClick, displayTitle: 'Test' }
+                );
+
+                expect(element.querySelector('.fm-imdb-row')).not.toBeNull();
+            });
+
+            it('adds an actions container when handlers are present', () => {
+                const onEditClick = vi.fn();
+                const onRefreshClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                    { onEditClick, onRefreshClick, displayTitle: 'Test' }
+                );
+
+                expect(element.querySelector('.fm-actions')).not.toBeNull();
+            });
+
+            describe('hover visibility', () => {
+                it('reveals the actions after hovering and hides them on leave', () => {
+                    vi.useFakeTimers();
+                    try {
+                        const element = createOverlay(
+                            { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                            { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test' }
+                        );
+                        const wrapper = element.querySelector('.fm-ratings-wrapper') as HTMLElement;
+                        const actions = element.querySelector('.fm-actions') as HTMLElement;
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(true);
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseleave'));
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+                    } finally {
+                        vi.useRealTimers();
+                    }
+                });
+
+                it('restarts the hover delay when the pointer re-enters before it elapses', () => {
+                    vi.useFakeTimers();
+                    try {
+                        const element = createOverlay(
+                            { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
+                            { onEditClick: vi.fn(), onRefreshClick: vi.fn(), displayTitle: 'Test' }
+                        );
+                        const wrapper = element.querySelector('.fm-ratings-wrapper') as HTMLElement;
+                        const actions = element.querySelector('.fm-actions') as HTMLElement;
+
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS - 1);
+                        wrapper.dispatchEvent(new MouseEvent('mouseenter'));
+
+                        expect(vi.getTimerCount()).toBe(1);
+                        vi.advanceTimersByTime(HOVER_ACTION_DELAY_MS - 1);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(false);
+
+                        vi.advanceTimersByTime(1);
+                        expect(actions.classList.contains('fm-actions-visible')).toBe(true);
+                    } finally {
+                        vi.useRealTimers();
+                    }
+                });
+            });
+
+            it('calls onEditClick when the edit icon is clicked', () => {
+                const onEditClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                    { onEditClick, displayTitle: 'Test Movie' }
+                );
+
+                const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
+                editIcon?.click();
+
+                expect(onEditClick).toHaveBeenCalledWith('Test Movie');
+            });
+
+            it('calls onRefreshClick when the refresh icon is clicked', () => {
+                const onEditClick = vi.fn();
+                const onRefreshClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                    { onEditClick, onRefreshClick, displayTitle: 'Test Movie' }
+                );
+
+                const iconButtons = element.querySelectorAll('.fm-icon-btn');
+                // Refresh is the second button
+                (iconButtons[1] as HTMLElement).click();
+
+                expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
+            });
+
+            it('prevents default and stops propagation on an icon button click', () => {
+                const onEditClick = vi.fn();
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
+                    { onEditClick, displayTitle: 'Test Movie' }
+                );
+
+                const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
+                const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+
+                editIcon?.dispatchEvent(event);
+
+                expect(event.defaultPrevented).toBe(true);
+                expect(onEditClick).toHaveBeenCalled();
+            });
+
+            it('adds the fm-rating-badge class to rating badges', () => {
+                const element = createOverlay(
+                    { imdbId: 'tt1234567', imdbRating: 7.5, rtRating: 80, mcRating: 70 },
+                    { showRtRating: true, showMcRating: true }
+                );
+
+                const ratingBadges = element.querySelectorAll('.fm-rating-badge');
+                expect(ratingBadges.length).toBeGreaterThan(0);
+                expect(ratingBadges[0]?.classList.contains('fm-imdb')).toBe(true);
+            });
+        });
+    });
+
+    describe('applyFadeToggleState', () => {
         it.each([
-            ['IMDb rating', 7, false],
-            ['percentage rating', 70, true],
-        ])('uses a gradient color for %s', (_: string, rating: number, isPercentage: boolean) => {
-            const element = isPercentage
-                ? createOverlay({ imdbRating: 7, imdbId: 'tt1', rtRating: rating }, { showRtRating: true })
-                : createOverlay({ imdbRating: rating, imdbId: 'tt1' });
-            const valueSpans = element.querySelectorAll('.fm-value');
-            const value = isPercentage ? valueSpans[1] : valueSpans[0];
+            { state: undefined, datasetState: 'auto', expectedTitle: 'Fade: Auto', glyph: '⭐', faded: false },
+            { state: 'always', datasetState: 'always', expectedTitle: 'Fade: Always', glyph: '👁️', faded: true },
+            { state: 'never', datasetState: 'never', expectedTitle: 'Fade: Never', glyph: '👁️', faded: false },
+        ] as const)('renders the $datasetState state', ({ state, datasetState, expectedTitle, glyph, faded }) => {
+            const element = document.createElement('div');
 
-            expect((value as HTMLElement)?.style.color).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+            applyFadeToggleState(element, state);
+
+            const icon = element.querySelector('.fm-fade-toggle-icon');
+            expect(element.dataset.state).toBe(datasetState);
+            expect(element.title).toBe(expectedTitle);
+            expect(icon?.textContent).toBe(glyph);
+            expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(faded);
+            expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
         });
 
-        it('does not apply color to N/A', () => {
-            const element = createOverlay({ imdbRating: undefined, imdbId: 'tt1' });
+        it('reuses the existing icon when the state changes', () => {
+            const element = document.createElement('div');
 
-            expect((element.querySelector('.fm-na') as HTMLElement)?.style.color).toBe('');
+            applyFadeToggleState(element, undefined);
+            applyFadeToggleState(element, 'always');
+            applyFadeToggleState(element, 'never');
+
+            expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
+            expect(element.dataset.state).toBe('never');
+            expect(element.title).toBe('Fade: Never');
+            expect(element.querySelector('.fm-fade-toggle-icon')?.textContent).toBe('👁️');
         });
-
-        it('applies a gradient color to MC ratings', () => {
-            const element = createOverlay({ imdbRating: 7, imdbId: 'tt1', mcRating: 74 }, { showMcRating: true });
-
-            expect((element.querySelectorAll('.fm-value')[1] as HTMLElement).style.color).toMatch(
-                /^rgb\(\d+, \d+, \d+\)$/
-            );
-        });
-    });
-
-    describe('IMDb ID override and refresh actions', () => {
-        it('should render edit and refresh icons when onEditClick and onRefreshClick are provided', () => {
-            const onEditClick = vi.fn();
-            const onRefreshClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                {
-                    onEditClick,
-                    onRefreshClick,
-                    displayTitle: 'Test Movie',
-                }
-            );
-
-            expect(element.querySelector('.fm-icon-btn')).not.toBeNull();
-            const iconButtons = element.querySelectorAll('.fm-icon-btn');
-            expect(iconButtons).toHaveLength(2);
-            expect(iconButtons[0]?.textContent).toBe('✏️');
-            expect(iconButtons[1]?.textContent).toBe('🔄');
-            expect(element.querySelectorAll('[title="Override IMDb ID"]')).toHaveLength(1);
-            expect(element.querySelectorAll('[title="Refresh ratings (clears cache)"]')).toHaveLength(1);
-        });
-
-        it('should add corner class', () => {
-            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 }, { corner: 'bottom-right' });
-
-            expect(element.classList.contains('fm-bottom-right')).toBe(true);
-        });
-
-        it('should add ratings wrapper element', () => {
-            const element = createOverlay({ imdbId: 'tt1234567', imdbRating: 7.5 });
-
-            expect(element.querySelector('.fm-ratings-wrapper')).not.toBeNull();
-        });
-
-        it('should add imdb-row element when actions are present', () => {
-            const onEditClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
-                { onEditClick, displayTitle: 'Test' }
-            );
-
-            expect(element.querySelector('.fm-imdb-row')).not.toBeNull();
-        });
-
-        it('should add actions container when handlers are present', () => {
-            const onEditClick = vi.fn();
-            const onRefreshClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test' },
-                { onEditClick, onRefreshClick, displayTitle: 'Test' }
-            );
-
-            expect(element.querySelector('.fm-actions')).not.toBeNull();
-        });
-
-        it('should call onEditClick when edit icon is clicked', () => {
-            const onEditClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onEditClick, displayTitle: 'Test Movie' }
-            );
-
-            const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
-            editIcon?.click();
-
-            expect(onEditClick).toHaveBeenCalledWith('Test Movie');
-        });
-
-        it('should call onRefreshClick when refresh icon is clicked', () => {
-            const onEditClick = vi.fn();
-            const onRefreshClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onEditClick, onRefreshClick, displayTitle: 'Test Movie' }
-            );
-
-            const iconButtons = element.querySelectorAll('.fm-icon-btn');
-            // Refresh is the second button
-            (iconButtons[1] as HTMLElement).click();
-
-            expect(onRefreshClick).toHaveBeenCalledWith('Test Movie');
-        });
-
-        it('should prevent default and stop propagation on icon button click', () => {
-            const onEditClick = vi.fn();
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, displayTitle: 'Test Movie' },
-                { onEditClick, displayTitle: 'Test Movie' }
-            );
-
-            const editIcon = element.querySelector('.fm-icon-btn') as HTMLElement;
-            const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-
-            editIcon?.dispatchEvent(event);
-
-            expect(event.defaultPrevented).toBe(true);
-            expect(onEditClick).toHaveBeenCalled();
-        });
-
-        it('should add fm-rating-badge class to rating badges', () => {
-            const element = createOverlay(
-                { imdbId: 'tt1234567', imdbRating: 7.5, rtRating: 80, mcRating: 70 },
-                { showRtRating: true, showMcRating: true }
-            );
-
-            const ratingBadges = element.querySelectorAll('.fm-rating-badge');
-            expect(ratingBadges.length).toBeGreaterThan(0);
-            expect(ratingBadges[0]?.classList.contains('fm-imdb')).toBe(true);
-        });
-    });
-});
-
-describe('applyFadeToggleState', () => {
-    it.each([
-        { state: undefined, datasetState: 'auto', expectedTitle: 'Fade: Auto', glyph: '⭐', faded: false },
-        { state: 'always', datasetState: 'always', expectedTitle: 'Fade: Always', glyph: '👁️', faded: true },
-        { state: 'never', datasetState: 'never', expectedTitle: 'Fade: Never', glyph: '👁️', faded: false },
-    ] as const)('renders the $datasetState state', ({ state, datasetState, expectedTitle, glyph, faded }) => {
-        const element = document.createElement('div');
-
-        applyFadeToggleState(element, state);
-
-        const icon = element.querySelector('.fm-fade-toggle-icon');
-        expect(element.dataset.state).toBe(datasetState);
-        expect(element.title).toBe(expectedTitle);
-        expect(icon?.textContent).toBe(glyph);
-        expect(icon?.classList.contains('fm-fade-toggle--faded')).toBe(faded);
-        expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
-    });
-
-    it('reuses the existing icon when the state changes', () => {
-        const element = document.createElement('div');
-
-        applyFadeToggleState(element, undefined);
-        applyFadeToggleState(element, 'always');
-        applyFadeToggleState(element, 'never');
-
-        expect(element.querySelectorAll('.fm-fade-toggle-icon')).toHaveLength(1);
-        expect(element.dataset.state).toBe('never');
-        expect(element.title).toBe('Fade: Never');
-        expect(element.querySelector('.fm-fade-toggle-icon')?.textContent).toBe('👁️');
     });
 });

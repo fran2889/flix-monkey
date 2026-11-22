@@ -11,7 +11,7 @@ import { buildLogger } from '../../../mocks/logger';
 
 describe('ConfigManager', () => {
     describe('get', () => {
-        it('should return value from adapter.configGet', () => {
+        it('returns the value from adapter.configGet', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning((key: ConfigKey) => (key === 'overlayCorner' ? 'bottom-right' : undefined))
@@ -21,7 +21,7 @@ describe('ConfigManager', () => {
             expect(config.get('overlayCorner')).toBe('bottom-right');
         });
 
-        it('should handle falsy but valid values (0 and empty string)', () => {
+        it('keeps falsy but valid values such as 0 and the empty string', () => {
             const values: Partial<Record<ConfigKey, string | number | boolean>> = {
                 cacheTtlNoRating: 0,
                 omdbApiKey: '',
@@ -36,7 +36,7 @@ describe('ConfigManager', () => {
             expect(config.get('omdbApiKey')).toBe('');
         });
 
-        it('should normalize legacy string checkbox values to strings', () => {
+        it('keeps legacy string checkbox values as strings', () => {
             const values: Partial<Record<ConfigKey, string>> = {
                 showRtRating: 'true',
                 showMcRating: 'false',
@@ -51,12 +51,12 @@ describe('ConfigManager', () => {
             expect(config.get('showMcRating')).toBe('false');
         });
 
-        it('should return CONFIG_DEFAULTS when adapter returns undefined', () => {
+        it('returns the default when the adapter returns undefined', () => {
             const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
             expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
         });
 
-        it('should fall back to CONFIG_DEFAULTS when configGet returns null', () => {
+        it('falls back to the default when configGet returns null', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => null)
@@ -66,7 +66,7 @@ describe('ConfigManager', () => {
             expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
         });
 
-        it('should return default when stored value is not in select options (overlayCorner)', () => {
+        it('returns the default when a stored overlayCorner is not a select option', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 'invalid-corner')
@@ -76,7 +76,7 @@ describe('ConfigManager', () => {
             expect(config.get('overlayCorner')).toBe(CONFIG_DEFAULTS.overlayCorner);
         });
 
-        it('should return default when stored value is not in select options (apiClient)', () => {
+        it('returns the default when a stored apiClient is not a select option', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 'unknown-provider')
@@ -86,7 +86,7 @@ describe('ConfigManager', () => {
             expect(config.get('apiClient')).toBe(CONFIG_DEFAULTS.apiClient);
         });
 
-        it('should use CONFIG_DEFAULTS when configGet throws', () => {
+        it('falls back to the default and warns when configGet throws', () => {
             const mockLogger = buildLogger().build();
             const config = new ConfigManager(
                 buildMockAdapter()
@@ -103,22 +103,7 @@ describe('ConfigManager', () => {
             );
         });
 
-        it('should call injected logger.warn when configGet throws', () => {
-            const mockLogger = buildLogger().build();
-            const adapter = buildMockAdapter()
-                .withConfigGetReturning(() => {
-                    throw new Error('oops');
-                })
-                .build();
-            const config = new ConfigManager(adapter, mockLogger);
-            config.get('overlayCorner');
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                'ConfigManager.get error, using fallback',
-                expect.objectContaining({ key: 'overlayCorner' })
-            );
-        });
-
-        it('should throw for unknown key', () => {
+        it('throws for an unknown key', () => {
             const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
             expect(() => config.get('nonExistentKey' as ConfigKey)).toThrow(
                 'ConfigManager: unknown config key "nonExistentKey"'
@@ -126,7 +111,7 @@ describe('ConfigManager', () => {
         });
 
         it.each(Object.entries(CONFIG_DEFAULTS) as [ConfigKey, string | boolean][])(
-            'should return correct default for key "%s"',
+            'returns the default for the key "%s"',
             (key, expectedValue) => {
                 const config = new ConfigManager(buildMockAdapter().build(), buildLogger().build());
                 expect(config.get(key as ConfigKey)).toBe(String(expectedValue));
@@ -135,7 +120,7 @@ describe('ConfigManager', () => {
     });
 
     describe('getInt', () => {
-        it('should parse integer via getInt', () => {
+        it('parses an integer', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => '42')
@@ -145,7 +130,7 @@ describe('ConfigManager', () => {
             expect(config.getInt('cacheTtlNoRating')).toBe(42);
         });
 
-        it('should handle non-string numeric value', () => {
+        it('parses a numeric value that is not a string', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 42)
@@ -155,7 +140,7 @@ describe('ConfigManager', () => {
             expect(config.getInt('cacheTtlNoRating')).toBe(42);
         });
 
-        it('should handle falsy value 0', () => {
+        it('parses a stored 0', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 0)
@@ -165,7 +150,7 @@ describe('ConfigManager', () => {
             expect(config.getInt('cacheTtlNoRating')).toBe(0);
         });
 
-        it('should return CONFIG_DEFAULTS value for invalid integer', () => {
+        it('falls back to the default for an invalid integer', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 'not-a-number')
@@ -176,22 +161,10 @@ describe('ConfigManager', () => {
                 Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10)
             );
         });
-
-        it('should return CONFIG_DEFAULTS from getInt when value is non-numeric', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'not-a-number')
-                    .build(),
-                buildLogger().build()
-            );
-            const result = config.getInt('cacheTtlNoRating');
-            expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseInt(String(CONFIG_DEFAULTS.cacheTtlNoRating), 10));
-        });
     });
 
     describe('getFloat', () => {
-        it('should parse float via getFloat', () => {
+        it('parses a float', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => '3.14')
@@ -201,7 +174,7 @@ describe('ConfigManager', () => {
             expect(config.getFloat('fadeRatingThreshold')).toBe(3.14);
         });
 
-        it('should handle non-string numeric value', () => {
+        it('parses a numeric float that is not a string', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 1.5)
@@ -211,7 +184,7 @@ describe('ConfigManager', () => {
             expect(config.getFloat('fadeRatingThreshold')).toBe(1.5);
         });
 
-        it('should handle falsy value 0', () => {
+        it('parses a stored float 0', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 0)
@@ -221,7 +194,7 @@ describe('ConfigManager', () => {
             expect(config.getFloat('cacheTtlNoRating')).toBe(0);
         });
 
-        it('should return CONFIG_DEFAULTS value for invalid float', () => {
+        it('falls back to the default for an invalid float', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => 'not-a-number')
@@ -232,62 +205,25 @@ describe('ConfigManager', () => {
                 Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold))
             );
         });
-
-        it('should return CONFIG_DEFAULTS from getFloat when value is non-numeric', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'not-a-number')
-                    .build(),
-                buildLogger().build()
-            );
-            const result = config.getFloat('fadeRatingThreshold');
-            expect(typeof result).toBe('number');
-            expect(result).toBe(Number.parseFloat(String(CONFIG_DEFAULTS.fadeRatingThreshold)));
-        });
     });
 
     describe('getBool', () => {
-        it('getBool should return true for boolean true', () => {
+        it.each([
+            { description: 'boolean true', stored: true, expected: true },
+            { description: 'boolean false', stored: false, expected: false },
+            { description: 'string "true"', stored: 'true', expected: true },
+            { description: 'string "false"', stored: 'false', expected: false },
+        ])('maps $description to $expected', ({ stored, expected }) => {
             const config = new ConfigManager(
                 buildMockAdapter()
-                    .withConfigGetReturning(() => true)
+                    .withConfigGetReturning(() => stored)
                     .build(),
                 buildLogger().build()
             );
-            expect(config.getBool('showRtRating')).toBe(true);
+            expect(config.getBool('showRtRating')).toBe(expected);
         });
 
-        it('getBool should return false for boolean false', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => false)
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(false);
-        });
-
-        it('getBool should return true for string "true"', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'true')
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(true);
-        });
-
-        it('getBool should return false for string "false"', () => {
-            const config = new ConfigManager(
-                buildMockAdapter()
-                    .withConfigGetReturning(() => 'false')
-                    .build(),
-                buildLogger().build()
-            );
-            expect(config.getBool('showRtRating')).toBe(false);
-        });
-
-        it('getBool should use CONFIG_DEFAULTS when adapter returns null', () => {
+        it('uses the default for getBool when the adapter returns null', () => {
             const config = new ConfigManager(
                 buildMockAdapter()
                     .withConfigGetReturning(() => null)

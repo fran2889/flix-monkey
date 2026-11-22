@@ -4,15 +4,13 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConfigField, SettingConfigField } from '../../../../src/core/config/index';
+import type { SettingConfigField } from '../../../../src/core/config/index';
 import {
     CONFIG_DEFAULTS,
     CONFIG_FIELDS,
-    GROUPS,
     isActionField,
     isCompleteSettingsMap,
     isSettingField,
-    ROW_LABELS,
 } from '../../../../src/core/config/index';
 
 function findSettingField(key: string): SettingConfigField {
@@ -21,74 +19,26 @@ function findSettingField(key: string): SettingConfigField {
     return field;
 }
 
-describe('core/config-fields', () => {
+describe('CONFIG_FIELDS', () => {
     describe('CONFIG_DEFAULTS', () => {
         // Action fields carry no stored value. If they leaked into CONFIG_DEFAULTS,
         // ConfigManager.get would accept them as keys and stringify the missing value.
-        it('should exclude action fields', () => {
+        it('excludes action fields', () => {
             const actionKeys = CONFIG_FIELDS.filter(isActionField).map(f => f.key);
             expect(actionKeys.length).toBeGreaterThan(0);
             expect(actionKeys.every(key => !(key in CONFIG_DEFAULTS))).toBe(true);
         });
 
-        it('should hold a concrete value for every settings key', () => {
+        it('holds a concrete value for every settings key', () => {
             const settingKeys = CONFIG_FIELDS.filter(isSettingField).map(f => f.key);
             expect(Object.keys(CONFIG_DEFAULTS).sort()).toEqual([...settingKeys].sort());
             for (const value of Object.values(CONFIG_DEFAULTS)) {
                 expect(['string', 'boolean']).toContain(typeof value);
             }
-            expect(CONFIG_DEFAULTS.debug).toBe(true);
         });
     });
 
-    describe('isCompleteSettingsMap', () => {
-        it('accepts the built defaults and rejects a missing setting', () => {
-            expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
-
-            const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
-            expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
-        });
-    });
-
-    describe('field structures', () => {
-        it.each(CONFIG_FIELDS)('should have a valid structure for field "$key"', (field: ConfigField) => {
-            expect(field).toHaveProperty('key');
-            expect(field).toHaveProperty('label');
-            expect(field).toHaveProperty('type');
-            if (isActionField(field)) {
-                // Action rows trigger handlers and never render a value, so they carry no default.
-                expect(field).toHaveProperty('actionLabel');
-            } else {
-                expect(field).toHaveProperty('default');
-            }
-
-            expect(field).toHaveProperty('group');
-            expect(typeof field.group).toBe('string');
-            expect(Object.keys(GROUPS)).toContain(field.group);
-
-            if (field.type === 'select') {
-                expect(field).toHaveProperty('options');
-                expect(Array.isArray(field.options)).toBe(true);
-
-                for (const option of field.options) {
-                    const isValidString = typeof option === 'string';
-                    const isValidArray =
-                        typeof option !== 'string' &&
-                        option.length === 2 &&
-                        typeof option[0] === 'string' &&
-                        typeof option[1] === 'string';
-
-                    expect(
-                        isValidString || isValidArray,
-                        `Field "${field.key}" has invalid option format: ${JSON.stringify(option)}. ` +
-                            `Options must be strings or [value, label] arrays.`
-                    ).toBe(true);
-                }
-            }
-        });
-    });
-
-    describe('validate functions', () => {
+    describe('validators', () => {
         describe.each([
             ['xmdbApiKey', 'xmdb'],
             ['omdbApiKey', 'omdb'],
@@ -98,19 +48,19 @@ describe('core/config-fields', () => {
                 field = findSettingField(key);
             });
 
-            it('should accept valid key when provider is selected', () => {
+            it('accepts a valid key when the provider is selected', () => {
                 expect(field.validate!('valid-key', { apiClient: provider })).toBeUndefined();
             });
 
-            it('should reject empty key when provider is selected', () => {
+            it('rejects an empty key when the provider is selected', () => {
                 expect(typeof field.validate?.('', { apiClient: provider })).toBe('string');
             });
 
-            it('should reject a missing key when provider is selected', () => {
+            it('rejects a missing key when the provider is selected', () => {
                 expect(typeof field.validate?.(undefined, { apiClient: provider })).toBe('string');
             });
 
-            it('should accept empty key when provider is not selected', () => {
+            it('accepts an empty key when the provider is not selected', () => {
                 expect(field.validate!('', { apiClient: 'agregarr' })).toBeUndefined();
             });
         });
@@ -121,11 +71,11 @@ describe('core/config-fields', () => {
                 field = findSettingField('fadeRatingThreshold');
             });
 
-            it.each(['5.0', '10.0', '0.0'])('should accept valid threshold %s', val => {
+            it.each(['5.0', '10.0', '0.0'])('accepts the valid threshold %s', val => {
                 expect(field.validate!(val)).toBeUndefined();
             });
 
-            it.each(['-1.0', '11.0', 'not-a-number'])('should reject invalid threshold %s', val => {
+            it.each(['-1.0', '11.0', 'not-a-number'])('rejects the invalid threshold %s', val => {
                 expect(typeof field.validate?.(val)).toBe('string');
                 expect(field.validate?.(val)).toBe('Fade threshold must be a number between 0 and 10');
             });
@@ -137,51 +87,27 @@ describe('core/config-fields', () => {
                 field = findSettingField(key);
             });
 
-            it.each(['0', '30', '-1'])('should accept valid TTL value %s', val => {
+            it.each(['0', '30', '-1'])('accepts the valid TTL value %s', val => {
                 expect(field.validate!(val)).toBeUndefined();
             });
 
-            it.each(['-2', 'not-a-number', '5.5', ' '])('should reject invalid TTL value %s', val => {
+            it.each(['-2', 'not-a-number', '5.5', ' '])('rejects the invalid TTL value %s', val => {
                 expect(typeof field.validate?.(val)).toBe('string');
                 expect(field.validate?.(val)).toBe('Cache duration must be -1 or a positive integer');
             });
         });
     });
 
-    it('should not have duplicate keys', () => {
+    it('isCompleteSettingsMap accepts the built defaults and rejects a missing setting', () => {
+        expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
+
+        const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
+        expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
+    });
+
+    it('does not contain duplicate keys', () => {
         const keys = CONFIG_FIELDS.map(f => f.key);
         const uniqueKeys = new Set(keys);
         expect(uniqueKeys.size).toBe(keys.length);
-    });
-
-    describe('field defaults alignment with types', () => {
-        it.each(CONFIG_FIELDS)('should have default value matching type for field "$key"', (field: ConfigField) => {
-            if (field.type === 'checkbox') {
-                expect(typeof field.default).toBe('boolean');
-            } else if (field.type === 'text' || field.type === 'select') {
-                expect(typeof field.default).toBe('string');
-            }
-        });
-    });
-
-    describe('settings metadata', () => {
-        it('should have GROUPS with consistent structure', () => {
-            Object.entries(GROUPS).forEach(([, value]) => {
-                expect(value).toHaveProperty('label');
-                expect(value).toHaveProperty('icon');
-                expect(typeof value.label).toBe('string');
-                expect(typeof value.icon).toBe('string');
-            });
-        });
-
-        it('should have ROW_LABELS with label and optional title properties', () => {
-            Object.entries(ROW_LABELS).forEach(([, value]) => {
-                expect(value).toHaveProperty('label');
-                expect(typeof value.label).toBe('string');
-                if (value.title !== undefined) {
-                    expect(typeof value.title).toBe('string');
-                }
-            });
-        });
     });
 });

@@ -7,65 +7,67 @@ import { describe, expect, it } from 'vitest';
 import { mapAgregarrTitleType, mapOmdbTitleType, mapXmdbTitleType } from '../../../../src/core/api/title-type-mappers';
 import { TitleType } from '../../../../src/core/constants';
 
-describe('mapXmdbTitleType', () => {
-    it('should map Movie to MOVIE', () => {
-        expect(mapXmdbTitleType('Movie')).toBe(TitleType.MOVIE);
+describe('title type mappers', () => {
+    describe('mapXmdbTitleType', () => {
+        it('maps Movie to MOVIE', () => {
+            expect(mapXmdbTitleType('Movie')).toBe(TitleType.MOVIE);
+        });
+
+        it('maps TV Series to SERIES', () => {
+            expect(mapXmdbTitleType('TV Series')).toBe(TitleType.SERIES);
+        });
+
+        it.each(['TV Mini Series', 'movie', 'MOVIE', 'tv series', 'Series'])(
+            'returns undefined for the unrecognised value %s',
+            value => {
+                expect(mapXmdbTitleType(value)).toBeUndefined();
+            }
+        );
+
+        it('returns undefined for undefined', () => {
+            expect(mapXmdbTitleType(undefined)).toBeUndefined();
+        });
     });
 
-    it('should map TV Series to SERIES', () => {
-        expect(mapXmdbTitleType('TV Series')).toBe(TitleType.SERIES);
+    describe('mapOmdbTitleType', () => {
+        it('maps movie to MOVIE', () => {
+            expect(mapOmdbTitleType('movie')).toBe(TitleType.MOVIE);
+        });
+
+        it('maps series to SERIES', () => {
+            expect(mapOmdbTitleType('series')).toBe(TitleType.SERIES);
+        });
+
+        it.each(['Movie', 'Series', 'MOVIE', 'TV Series', 'episode'])(
+            'returns undefined for the unrecognised value %s',
+            value => {
+                expect(mapOmdbTitleType(value)).toBeUndefined();
+            }
+        );
+
+        it('returns undefined for undefined', () => {
+            expect(mapOmdbTitleType(undefined)).toBeUndefined();
+        });
     });
 
-    it.each(['TV Mini Series', 'movie', 'MOVIE', 'tv series', 'Series'])(
-        'should return undefined for unrecognised value %s',
-        value => {
-            expect(mapXmdbTitleType(value)).toBeUndefined();
-        }
-    );
+    describe('mapAgregarrTitleType', () => {
+        it.each(['movie', 'tvMovie', 'tvSpecial'])('maps %s to MOVIE', value => {
+            expect(mapAgregarrTitleType(value)).toBe(TitleType.MOVIE);
+        });
 
-    it('should return undefined for undefined', () => {
-        expect(mapXmdbTitleType(undefined)).toBeUndefined();
-    });
-});
+        it.each(['tvSeries', 'tvMiniSeries'])('maps %s to SERIES', value => {
+            expect(mapAgregarrTitleType(value)).toBe(TitleType.SERIES);
+        });
 
-describe('mapOmdbTitleType', () => {
-    it('should map movie to MOVIE', () => {
-        expect(mapOmdbTitleType('movie')).toBe(TitleType.MOVIE);
-    });
+        it.each(['tvShow', 'Movie', 'series', 'tvShort', 'short', 'videoGame'])(
+            'returns undefined for the unrecognised value %s',
+            value => {
+                expect(mapAgregarrTitleType(value)).toBeUndefined();
+            }
+        );
 
-    it('should map series to SERIES', () => {
-        expect(mapOmdbTitleType('series')).toBe(TitleType.SERIES);
-    });
-
-    it.each(['Movie', 'Series', 'MOVIE', 'TV Series', 'episode'])(
-        'should return undefined for unrecognised value %s',
-        value => {
-            expect(mapOmdbTitleType(value)).toBeUndefined();
-        }
-    );
-
-    it('should return undefined for undefined', () => {
-        expect(mapOmdbTitleType(undefined)).toBeUndefined();
-    });
-});
-
-describe('mapAgregarrTitleType', () => {
-    it.each(['movie', 'tvMovie', 'tvSpecial'])('should map %s to MOVIE', value => {
-        expect(mapAgregarrTitleType(value)).toBe(TitleType.MOVIE);
-    });
-
-    it.each(['tvSeries', 'tvMiniSeries'])('should map %s to SERIES', value => {
-        expect(mapAgregarrTitleType(value)).toBe(TitleType.SERIES);
-    });
-
-    it.each(['tvShow', 'Movie', 'series', 'tvShort', 'short', 'videoGame'])(
-        'should return undefined for unrecognised value %s',
-        value => {
-            expect(mapAgregarrTitleType(value)).toBeUndefined();
-        }
-    );
-
-    it('should return undefined for undefined', () => {
-        expect(mapAgregarrTitleType(undefined)).toBeUndefined();
+        it('returns undefined for undefined', () => {
+            expect(mapAgregarrTitleType(undefined)).toBeUndefined();
+        });
     });
 });
