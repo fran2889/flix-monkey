@@ -226,6 +226,19 @@ describe('FlixMonkeyApp', () => {
             spy.mockRestore();
         });
 
+        it('decorates the document when navigation queues no mutated root', async () => {
+            const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+            appRef = startApp(buildMockAdapter().build());
+            await vi.runAllTimersAsync();
+            discoverSpy.mockClear();
+
+            window.history.pushState({}, '', '/no-mutated-root');
+            await vi.runAllTimersAsync();
+
+            expect(discoverSpy).toHaveBeenCalledWith(document);
+            discoverSpy.mockRestore();
+        });
+
         it('decorates on replaceState', async () => {
             const mockAdapter = buildMockAdapter().build();
             const getDataSpy = vi
