@@ -2,7 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+import { flushAsyncWork } from '../../../helpers/async';
 
 let adapter: { registerMenuCommand: Mock };
 let appHandle: { cacheManager: unknown; disabledManager: unknown } | undefined;
@@ -110,6 +112,7 @@ describe('userscript entry point', () => {
     beforeEach(() => {
         vi.resetModules();
         vi.clearAllMocks();
+        vi.useFakeTimers();
         adapter = {
             registerMenuCommand: vi.fn(),
         };
@@ -130,6 +133,10 @@ describe('userscript entry point', () => {
         );
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     describe('startup', () => {
         it('waits for migrations before starting the app and registering the menu', async () => {
             const migrationsModule = await import('../../../../src/core/migrations');
@@ -142,10 +149,10 @@ describe('userscript entry point', () => {
             expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
 
             resolveMigrations();
-            await vi.waitFor(() => {
-                expect(appModule.startApp).toHaveBeenCalledWith(adapter);
-                expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
-            });
+            await flushAsyncWork();
+
+            expect(appModule.startApp).toHaveBeenCalledWith(adapter);
+            expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
 
             expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(
                 loggerConstructor.mock.results[0]?.value
@@ -164,9 +171,8 @@ describe('userscript entry point', () => {
 
             await import('../../../../src/targets/userscript/entry');
 
-            await vi.waitFor(() => {
-                expect(loggerError).toHaveBeenCalled();
-            });
+            await flushAsyncWork();
+            expect(loggerError).toHaveBeenCalled();
             expect(appModule.startApp).not.toHaveBeenCalled();
             expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
             expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
@@ -180,7 +186,7 @@ describe('userscript entry point', () => {
 
             await import('../../../../src/targets/userscript/entry');
             resolveMigrations();
-            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+            await flushAsyncWork();
 
             expect(appModule.startApp).toHaveBeenCalledOnce();
             expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
@@ -217,7 +223,7 @@ describe('userscript entry point', () => {
 
             await import('../../../../src/targets/userscript/entry');
             resolveMigrations();
-            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+            await flushAsyncWork();
             const menuCallback = adapter.registerMenuCommand.mock.calls[0]?.[1];
             menuCallback();
 
@@ -236,14 +242,12 @@ describe('userscript entry point', () => {
 
             await import('../../../../src/targets/userscript/entry');
             resolveMigrations();
-            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+            await flushAsyncWork();
 
             const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
             menuCallback();
 
-            await vi.waitFor(() => {
-                expect(loggerError).toHaveBeenCalled();
-            });
+            await flushAsyncWork();
             expect(renderSettings).toHaveBeenCalledOnce();
             expect(loggerError).toHaveBeenCalledWith('Failed to render settings', expect.any(Error));
         });
