@@ -210,17 +210,20 @@ describe('RequestQueue', () => {
             await queue.enqueue('url', 0, fetchFn);
             expect(fetchFn).toHaveBeenCalledOnce();
         });
-        it('re-reads global storage before claiming a timeslot on the no-wait path', async () => {
+        it('re-reads global storage twice per request on the no-wait path', async () => {
             const mockAdapter = buildMockAdapter()
                 .withStorageGetResolvingTo('0')
                 .withStorageSetResolvingTo(undefined)
                 .build();
             const queue = buildQueue(0, mockAdapter);
             const fetchFn = vi.fn().mockResolvedValue({ ok: true });
-            await queue.enqueue('url', 0, fetchFn);
-            // Two reads per request: one at loop start, one pre-claim
-            expect(mockAdapter.storageGet).toHaveBeenCalledTimes(2);
-            expect(fetchFn).toHaveBeenCalledOnce();
+
+            await queue.enqueue('url1', 0, fetchFn);
+            await queue.enqueue('url2', 0, fetchFn);
+
+            // Two reads per request (loop-start + pre-claim), two requests = four total
+            expect(mockAdapter.storageGet).toHaveBeenCalledTimes(4);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
         });
         it('re-loops when a pre-claim read shows another tab fired recently', async () => {
             let callCount = 0;
