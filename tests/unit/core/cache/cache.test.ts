@@ -13,6 +13,7 @@ import { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
 import { ParseError } from '../../../../src/core/parse-utils';
 import { Title } from '../../../../src/core/title';
+import { flushAsyncWork } from '../../../helpers/async';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
 import { buildCacheEntry } from '../../../mocks/cache';
 import { buildConfig } from '../../../mocks/config';
@@ -554,47 +555,52 @@ describe('CacheManager', () => {
         });
 
         it('keeps a later operation queued after an earlier one settles', async () => {
-            const { adapter: memoryAdapter, store, manager } = buildManager();
-            let releaseFirst: () => void = () => undefined;
-            const firstGate = new Promise<void>(resolve => {
-                releaseFirst = resolve;
-            });
-            let releaseSecond: () => void = () => undefined;
-            const secondGate = new Promise<void>(resolve => {
-                releaseSecond = resolve;
-            });
-            let calls = 0;
-            memoryAdapter.storageSet.mockImplementation(async (key: string, value: string) => {
-                calls += 1;
-                if (calls === 1) await firstGate;
-                if (calls === 2) await secondGate;
-                store.set(key, value);
-            });
+            vi.useFakeTimers();
+            try {
+                const { adapter: memoryAdapter, store, manager } = buildManager();
+                let releaseFirst: () => void = () => undefined;
+                const firstGate = new Promise<void>(resolve => {
+                    releaseFirst = resolve;
+                });
+                let releaseSecond: () => void = () => undefined;
+                const secondGate = new Promise<void>(resolve => {
+                    releaseSecond = resolve;
+                });
+                let calls = 0;
+                memoryAdapter.storageSet.mockImplementation(async (key: string, value: string) => {
+                    calls += 1;
+                    if (calls === 1) await firstGate;
+                    if (calls === 2) await secondGate;
+                    store.set(key, value);
+                });
 
-            const first = manager.write(
-                'Chained Movie',
-                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(7).build()
-            );
-            const second = manager.write(
-                'Chained Movie',
-                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(8).build()
-            );
-            releaseFirst();
-            await first;
-            const third = manager.write(
-                'Chained Movie',
-                buildTitle().withDisplayTitle('Chained Movie').withImdbRating(9).build()
-            );
-            await new Promise(resolve => setTimeout(resolve, 0));
+                const first = manager.write(
+                    'Chained Movie',
+                    buildTitle().withDisplayTitle('Chained Movie').withImdbRating(7).build()
+                );
+                const second = manager.write(
+                    'Chained Movie',
+                    buildTitle().withDisplayTitle('Chained Movie').withImdbRating(8).build()
+                );
+                releaseFirst();
+                await first;
+                const third = manager.write(
+                    'Chained Movie',
+                    buildTitle().withDisplayTitle('Chained Movie').withImdbRating(9).build()
+                );
+                await flushAsyncWork();
 
-            // The third write must wait for the gated second write, not start behind a cleared chain.
-            expect(calls).toBe(2);
+                // The third write must wait for the gated second write, not start behind a cleared chain.
+                expect(calls).toBe(2);
 
-            releaseSecond();
-            await Promise.all([second, third]);
+                releaseSecond();
+                await Promise.all([second, third]);
 
-            const entry = await manager.read('Chained Movie');
-            expect(entry?.getTitle().imdbRating).toBe(9);
+                const entry = await manager.read('Chained Movie');
+                expect(entry?.getTitle().imdbRating).toBe(9);
+            } finally {
+                vi.useRealTimers();
+            }
         });
 
         it('keeps the chain usable after a write rejects', async () => {
