@@ -13,6 +13,10 @@ import { buildLogger } from '../../mocks/logger';
 
 const SYNC_KEY = 'sync-key';
 
+// Keeps pacing from releasing a queued request during a test, even if the
+// active fetch is changed to settle.
+const PACING_DISABLED_MS = 999_999;
+
 function buildQueue(
     interval: number,
     adapter = buildMockAdapter().build(),
@@ -33,7 +37,7 @@ describe('RequestQueue', () => {
     describe('clear', () => {
         it('clears the queue and rejects pending requests', async () => {
             const firstFetch = vi.fn(() => new Promise(() => {}));
-            const queue = buildQueue(999999);
+            const queue = buildQueue(PACING_DISABLED_MS);
             void queue.enqueue('url1', 1, firstFetch).catch(() => {});
             const pending = queue.enqueue('url2', 1, () => new Promise(() => {}));
 
@@ -47,7 +51,7 @@ describe('RequestQueue', () => {
         });
         it('rejects cleared requests in queue order', async () => {
             const firstFetch = vi.fn(() => new Promise(() => {}));
-            const queue = buildQueue(999999);
+            const queue = buildQueue(PACING_DISABLED_MS);
             void queue.enqueue('active', 1, firstFetch).catch(() => {});
             await flushAsyncWork();
             expect(firstFetch).toHaveBeenCalledOnce();
