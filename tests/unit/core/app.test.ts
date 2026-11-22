@@ -127,6 +127,7 @@ describe('FlixMonkeyApp', () => {
 
             expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
         });
+
         describe('service gating', () => {
             it.each([
                 {
@@ -229,6 +230,7 @@ describe('FlixMonkeyApp', () => {
             expect(spy).toHaveBeenCalled();
             spy.mockRestore();
         });
+
         it('decorates on replaceState', async () => {
             const mockAdapter = buildMockAdapter().build();
             const getDataSpy = vi
@@ -297,6 +299,7 @@ describe('FlixMonkeyApp', () => {
             expect(spy).toHaveBeenCalled();
             spy.mockRestore();
         });
+
         it('redecorates when a container is replaced', async () => {
             const mockAdapter = buildMockAdapter().build();
             const spy = vi
@@ -343,6 +346,7 @@ describe('FlixMonkeyApp', () => {
             expect(spy).toHaveBeenCalledTimes(2);
             spy.mockRestore();
         });
+
         it('catches and logs errors thrown in the mutation handler', () => {
             const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
             const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -356,6 +360,7 @@ describe('FlixMonkeyApp', () => {
 
             expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
         });
+
         it('decorates only the mutated subtree when nodes are added', async () => {
             const parent = document.createElement('div');
             document.body.appendChild(parent);
@@ -377,6 +382,7 @@ describe('FlixMonkeyApp', () => {
 
             discoverSpy.mockRestore();
         });
+
         it('collects every mutated root in one observer batch', async () => {
             appRef = startApp(buildMockAdapter().build());
             await Promise.resolve();
@@ -437,6 +443,7 @@ describe('FlixMonkeyApp', () => {
 
             expect(card?.querySelector('.fm-rating-overlay')).not.toBeNull();
         });
+
         it('clears the data-fm-injected attribute during redecorate so containers can be decorated again', () => {
             // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
             const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
@@ -463,6 +470,7 @@ describe('FlixMonkeyApp', () => {
 
             discoverSpy.mockRestore();
         });
+
         it('does not inject an overlay when the container leaves the DOM before the data resolves', async () => {
             const container = document.createElement('div');
             container.className = 'title-card';
@@ -496,6 +504,7 @@ describe('FlixMonkeyApp', () => {
             expect(injectSpy).not.toHaveBeenCalled();
             injectSpy.mockRestore();
         });
+
         it('stamps data-fm-key on fadeable card containers after decoration', async () => {
             document.body.innerHTML = `
                 <div class="title-card">
@@ -517,6 +526,7 @@ describe('FlixMonkeyApp', () => {
             expect(card?.dataset.fmKey).toBeTruthy();
             spy.mockRestore();
         });
+
         it('stamps data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
             document.body.innerHTML = `
                 <div class="previewModal--wrapper mini-modal">
@@ -569,6 +579,7 @@ describe('FlixMonkeyApp', () => {
             expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
             logSpy.mockRestore();
         });
+
         it('renders a not-found fallback and logs when a lookup times out', async () => {
             document.body.innerHTML = `
                 <div class="title-card">
@@ -590,6 +601,7 @@ describe('FlixMonkeyApp', () => {
             expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
             logSpy.mockRestore();
         });
+
         it('keeps a render failure out of the not-found fallback', async () => {
             document.body.innerHTML = `
             <div class="title-card">
@@ -699,6 +711,7 @@ describe('FlixMonkeyApp', () => {
             expect(container?.querySelector('.fm-fade-toggle')).not.toBeNull();
             expect((container?.querySelector('.fm-fade-toggle') as HTMLElement | null)?.dataset.state).toBe('auto');
         });
+
         it('applies a stored "always" fade override to browse title cards on reload', async () => {
             document.body.innerHTML = `
                 <div class="title-card">
@@ -726,6 +739,7 @@ describe('FlixMonkeyApp', () => {
             });
             expect(card?.classList.contains('fm-faded')).toBe(true);
         });
+
         it('cycles the fade toggle state on click and updates sibling cards', async () => {
             document.body.innerHTML = `
                 <div class="title-card" id="card1"><a aria-label="Cycle Movie"></a></div>
