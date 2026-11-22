@@ -131,6 +131,7 @@ describe('FlixMonkeyApp', () => {
             it.each([
                 {
                     description: 'Netflix is disabled',
+                    outcome: 'returns no app',
                     setup: async () => {
                         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
@@ -142,6 +143,7 @@ describe('FlixMonkeyApp', () => {
                 },
                 {
                     description: 'Netflix is enabled',
+                    outcome: 'returns an app',
                     setup: async () => {
                         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                         vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
@@ -153,6 +155,7 @@ describe('FlixMonkeyApp', () => {
                 },
                 {
                     description: 'no service is detected',
+                    outcome: 'returns no app',
                     setup: async () => {
                         const { ServiceRegistry } = await import('../../../src/core/services/index.js');
                         vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
@@ -160,7 +163,7 @@ describe('FlixMonkeyApp', () => {
                     },
                     expectedInstance: false,
                 },
-            ])('returns the expected app when $description', async ({ setup, expectedInstance }) => {
+            ])('$outcome when $description', async ({ setup, expectedInstance }) => {
                 const result = startApp(await setup());
 
                 if (!expectedInstance) {
