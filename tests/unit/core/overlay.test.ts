@@ -73,7 +73,7 @@ describe('OverlayRenderer', () => {
         });
     });
 
-    describe('overlay lifecycle', () => {
+    describe('overlay injection', () => {
         it('replaces an existing overlay and marks the container as injected', () => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');

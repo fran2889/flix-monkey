@@ -29,7 +29,7 @@ describe('services', () => {
     });
 
     describe('ServiceRegistry', () => {
-        describe('detect()', () => {
+        describe('detect', () => {
             it('defaults to the current page hostname', () => {
                 assert(ServiceRegistry.detect() instanceof NetflixService);
             });

@@ -98,7 +98,7 @@ describe('CONFIG_FIELDS', () => {
         });
     });
 
-    it('accepts the built defaults and rejects a missing setting', () => {
+    it('isCompleteSettingsMap accepts the built defaults and rejects a missing setting', () => {
         expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
 
         const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
