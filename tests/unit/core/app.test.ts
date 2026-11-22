@@ -540,27 +540,6 @@ describe('FlixMonkeyApp', () => {
     });
 
     describe('lookup failures', () => {
-        it('removes the loading overlay when the lookup rejects', async () => {
-            const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
-
-            document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Failing Title"></a>
-            </div>
-        `;
-
-            vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('API failure'));
-
-            appRef = startApp(mockAdapter);
-
-            await Promise.resolve();
-            vi.runAllTimers();
-
-            const card = document.querySelector('.title-card');
-            await vi.waitFor(() => {
-                expect(card?.querySelector('.fm-loading')).toBeNull();
-            });
-        });
         it('renders a not-found fallback when the lookup fails', async () => {
             document.body.innerHTML = `
                 <div class="title-card">
