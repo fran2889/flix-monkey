@@ -95,7 +95,7 @@ describe('Firefox background script', () => {
             expect(result).toBeUndefined();
             expect(executeMigrations).not.toHaveBeenCalled();
         });
-        it('forwards an authenticated FM_FETCH message through the proxy', async () => {
+        it('forwards an authenticated message without options', async () => {
             global.fetch = vi.fn().mockResolvedValue({
                 ok: true,
                 status: 200,
@@ -108,6 +108,27 @@ describe('Firefox background script', () => {
             );
 
             expect(result).toEqual({ ok: true, data: { Title: 'The Matrix' } });
+        });
+        it('forwards fetch options on an authenticated FM_FETCH message', async () => {
+            const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve('The Matrix'),
+            } as unknown as Response);
+
+            const result = await messageListener(
+                {
+                    type: 'FM_FETCH',
+                    url: 'https://www.omdbapi.com/?apikey=k&i=tt0133093',
+                    options: { responseType: 'text', timeout: 1234 },
+                },
+                { id: undefined }
+            );
+
+            expect(result).toEqual({ ok: true, data: 'The Matrix' });
+            expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1234);
+            setTimeoutSpy.mockRestore();
         });
         it('ignores non-FM_FETCH messages', async () => {
             const result = await messageListener({ type: 'OTHER' });
