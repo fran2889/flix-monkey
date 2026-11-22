@@ -4,6 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { flushAsyncWork } from '../../../helpers/async';
 import { chrome } from '../../../mocks/chrome';
 
 const { executeMigrations } = vi.hoisted(() => ({
@@ -66,7 +67,7 @@ describe('Chrome service worker', () => {
             'runs migrations on extension $reason',
             async details => {
                 await installedListener(details);
-                await Promise.resolve();
+                await flushAsyncWork();
                 expect(executeMigrations).toHaveBeenCalledOnce();
             }
         );
@@ -75,8 +76,7 @@ describe('Chrome service worker', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await installedListener({ reason: 'install' });
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(executeMigrations).toHaveBeenCalledOnce();
             expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
@@ -90,7 +90,7 @@ describe('Chrome service worker', () => {
             const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
 
             expect(result).toBe(true);
-            await Promise.resolve();
+            await flushAsyncWork();
             expect(executeMigrations).toHaveBeenCalledOnce();
             expect(sendResponse).toHaveBeenCalledWith({});
         });
@@ -101,8 +101,7 @@ describe('Chrome service worker', () => {
             const result = messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
 
             expect(result).toBe(true);
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
             expect(sendResponse).toHaveBeenCalledWith({ error: 'migration boom' });
         });
         it('stringifies a non-Error migration rejection', async () => {
@@ -111,8 +110,7 @@ describe('Chrome service worker', () => {
 
             await messageListener({ type: 'FM_RUN_MIGRATIONS' }, { id: 'test-ext' }, sendResponse);
 
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
             expect(sendResponse).toHaveBeenCalledWith({ error: 'plain failure' });
         });
         it('ignores migration messages from a foreign sender', () => {
@@ -138,9 +136,8 @@ describe('Chrome service worker', () => {
             );
 
             expect(result).toBe(true);
-            await vi.waitFor(() => {
-                expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: { Title: 'The Matrix' } });
-            });
+            await flushAsyncWork();
+            expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: { Title: 'The Matrix' } });
         });
         it('forwards fetch options on an authenticated FM_FETCH message', async () => {
             const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
@@ -162,9 +159,8 @@ describe('Chrome service worker', () => {
             );
 
             expect(result).toBe(true);
-            await vi.waitFor(() => {
-                expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: 'The Matrix' });
-            });
+            await flushAsyncWork();
+            expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: 'The Matrix' });
             expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1234);
             setTimeoutSpy.mockRestore();
         });
@@ -207,8 +203,7 @@ describe('Chrome service worker', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await actionListener();
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(consoleError).toHaveBeenCalledWith('Failed to open options page', expect.any(Error));
             consoleError.mockRestore();

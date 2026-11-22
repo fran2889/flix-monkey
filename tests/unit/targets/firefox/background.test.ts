@@ -4,6 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { flushAsyncWork } from '../../../helpers/async';
 import { browser } from '../../../mocks/webextension';
 
 const { executeMigrations } = vi.hoisted(() => ({
@@ -64,7 +65,7 @@ describe('Firefox background script', () => {
             'runs migrations on extension $reason',
             async details => {
                 await installedListener(details);
-                await Promise.resolve();
+                await flushAsyncWork();
                 expect(executeMigrations).toHaveBeenCalledOnce();
             }
         );
@@ -73,8 +74,7 @@ describe('Firefox background script', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await installedListener({ reason: 'install' });
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(executeMigrations).toHaveBeenCalledOnce();
             expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
@@ -163,8 +163,7 @@ describe('Firefox background script', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await actionListener();
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(consoleError).toHaveBeenCalledWith('Failed to open options page', expect.any(Error));
             consoleError.mockRestore();
