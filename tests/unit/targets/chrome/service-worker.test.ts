@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { flushAsyncWork } from '../../../helpers/async';
 import { chrome } from '../../../mocks/chrome';
@@ -60,6 +60,10 @@ describe('Chrome service worker', () => {
         } as unknown as { prototype: AbortController; new (): AbortController };
 
         await import('../../../../src/targets/chrome/service-worker');
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('startup', () => {

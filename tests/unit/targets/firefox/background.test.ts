@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { flushAsyncWork } from '../../../helpers/async';
 import { browser } from '../../../mocks/webextension';
@@ -58,6 +58,10 @@ describe('Firefox background script', () => {
         } as unknown as { prototype: AbortController; new (): AbortController };
 
         await import('../../../../src/targets/firefox/background');
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('startup', () => {
