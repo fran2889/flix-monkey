@@ -44,7 +44,7 @@
 
 - Produces: `flushAsyncWork(): Promise<void>`. Requires fake timers to be active. Later tasks import it from `tests/helpers/async`.
 
-- [ ] **Step 1: Create the branch and commit the approved documents**
+- [x] **Step 1: Create the branch and commit the approved documents**
 
 ```bash
 git switch -c test/deterministic-test-time
@@ -53,12 +53,12 @@ git add docs/superpowers/specs/2026-11-22-deterministic-test-time-design.md \
 git commit -m "docs: plan deterministic test time"
 ```
 
-- [ ] **Step 2: Record the baseline**
+- [x] **Step 2: Record the baseline**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts`
 Expected: PASS with all current tests.
 
-- [ ] **Step 3: Create `tests/helpers/async.ts`**
+- [x] **Step 3: Create `tests/helpers/async.ts`**
 
 ```ts
 /**
@@ -79,7 +79,7 @@ export async function flushAsyncWork(): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Put the whole request-queue file on fake timers**
+- [x] **Step 4: Put the whole request-queue file on fake timers**
 
 Add `afterEach` and `beforeEach` to the Vitest import and import `flushAsyncWork` from `../../helpers/async`. Add at the top of the top-level `describe`:
 
@@ -95,11 +95,11 @@ afterEach(() => {
 
 Remove the inner `vi.useFakeTimers({ now: Date.now() })` and its `try`/`finally` from the pacing test.
 
-- [ ] **Step 5: Replace the clear-test waits**
+- [x] **Step 5: Replace the clear-test waits**
 
 In both `clear` tests, after the active request is enqueued, replace `await vi.waitFor(...)` with `await flushAsyncWork()` and keep the existing assertions.
 
-- [ ] **Step 6: Replace the storage-recovery waits**
+- [x] **Step 6: Replace the storage-recovery waits**
 
 In "recovers when a storage read fails during processing":
 
@@ -118,7 +118,7 @@ await flushAsyncWork();
 expect(secondFetch).toHaveBeenCalledOnce();
 ```
 
-- [ ] **Step 7: Replace the priority and concurrency sleeps**
+- [x] **Step 7: Replace the priority and concurrency sleeps**
 
 In "dispatches higher-priority requests first", enqueue all three, then:
 
@@ -139,7 +139,7 @@ await vi.advanceTimersByTimeAsync(100);
 const results = await Promise.all([first, second]);
 ```
 
-- [ ] **Step 8: Replace the elapsed cross-instance measurement**
+- [x] **Step 8: Replace the elapsed cross-instance measurement**
 
 Rewrite "synchronizes across instances using storage" as:
 
@@ -169,16 +169,16 @@ it('synchronizes across instances using storage', async () => {
 });
 ```
 
-- [ ] **Step 9: Flush the pacing test explicitly**
+- [x] **Step 9: Flush the pacing test explicitly**
 
 Replace the three `await vi.advanceTimersByTimeAsync(0)` calls in the pacing test with `await flushAsyncWork()`. Keep the `await vi.advanceTimersByTimeAsync(interval)` step.
 
-- [ ] **Step 10: Run the file**
+- [x] **Step 10: Run the file**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts`
 Expected: PASS with every test and no test taking a real interval.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add tests/helpers/async.ts tests/unit/core/request-queue.test.ts
@@ -199,53 +199,53 @@ git commit -m "test: run request queue tests on fake timers"
 - Consumes: `flushAsyncWork()` from Task 1.
 - Produces: nothing for later tasks.
 
-- [ ] **Step 1: Import the helper and `LOOKUP_TIMEOUT_MS`**
+- [x] **Step 1: Import the helper and `LOOKUP_TIMEOUT_MS`**
 
 Add `LOOKUP_TIMEOUT_MS` to the existing `constants` import and import `flushAsyncWork` from `../../helpers/async`.
 
-- [ ] **Step 2: Replace waits in the navigation and mutation tests**
+- [x] **Step 2: Replace waits in the navigation and mutation tests**
 
 - "debounces navigation events": replace the initial `await Promise.resolve()` with `await flushAsyncWork()`; after the two `pushState` calls, replace `vi.advanceTimersByTime(5000)` plus `vi.waitFor(...)` with `await vi.runAllTimersAsync()` and assert `spy` was called.
 - "decorates a card added by a DOM mutation": replace the `vi.waitFor(...)` after the observer trigger with `await vi.runAllTimersAsync()`.
 - "redecorates when a container is replaced": replace the first `vi.waitFor(...)` after `startApp` with `await vi.runAllTimersAsync()`; replace the second `vi.waitFor(...)` after the trigger with `await vi.runAllTimersAsync()`.
 - Leave "decorates on replaceState", "decorates only the mutated subtree when nodes are added", and "collects every mutated root in one observer batch" as they are; they already use explicit advancement.
 
-- [ ] **Step 3: Keep the pending-lookup tests bounded**
+- [x] **Step 3: Keep the pending-lookup tests bounded**
 
 - "injects a loading overlay while the lookup is in flight": replace `await Promise.resolve(); vi.runAllTimers()` with `await flushAsyncWork()`. After `resolveApi(...)`, replace the `vi.waitFor(...)` with `await flushAsyncWork()` and keep the two assertions.
 - "does not inject an overlay when the container leaves the DOM before the data resolves": replace `vi.advanceTimersByTime(1); await Promise.resolve(); await Promise.resolve();` with `await flushAsyncWork()`. After `resolveData(...)`, replace the two `await Promise.resolve()` calls with `await flushAsyncWork()`.
 
-- [ ] **Step 4: Replace waits in the decoration tests**
+- [x] **Step 4: Replace waits in the decoration tests**
 
 - "stamps data-fm-key on fadeable card containers after decoration": after `startApp`, replace the `vi.waitFor(...)` and the following `vi.runAllTimersAsync()` with one `await vi.runAllTimersAsync()`. Replace the final `vi.waitFor(...)` on `card.dataset.fmKey` with a direct assertion.
 - "stamps data-fm-key on non-fadeable mini-modal containers for refresh support": same replacement, asserting the overlay and `dataset.fmKey` directly.
 
-- [ ] **Step 5: Replace waits in the lookup-failure tests**
+- [x] **Step 5: Replace waits in the lookup-failure tests**
 
 - "renders a not-found fallback when the lookup fails": replace `await Promise.resolve(); vi.runAllTimers(); await vi.runAllTimersAsync(); await vi.waitFor(...)` with `await vi.runAllTimersAsync()` and keep the three assertions.
 - "renders a not-found fallback and logs when a lookup times out": replace `await Promise.resolve(); vi.runAllTimers(); await vi.advanceTimersByTimeAsync(31_000)` with `await vi.advanceTimersByTimeAsync(LOOKUP_TIMEOUT_MS + 1)`.
 - "keeps a render failure out of the not-found fallback": replace `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`.
 - "clears the lookup timeout when a lookup resolves/rejects": keep `await vi.advanceTimersByTimeAsync(1)`.
 
-- [ ] **Step 6: Replace waits in the service and fade tests**
+- [x] **Step 6: Replace waits in the service and fade tests**
 
 - Each `%s surface wiring` case: replace `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`.
 - "renders a fade toggle badge in the mini-modal when enableFadeToggle is true": replace `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`.
 - "applies a stored "always" fade override to browse title cards on reload": replace `vi.advanceTimersToNextTimer()` plus `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`.
 - "cycles the fade toggle state on click and updates sibling cards": replace `vi.advanceTimersToNextTimer()` plus `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`. Delete the local `waitForState` helper. After each `toggle.click()`, replace `await waitForState(...)` with `await flushAsyncWork()`.
 
-- [ ] **Step 7: Replace waits in the override handlers**
+- [x] **Step 7: Replace waits in the override handlers**
 
 - In `decorateAndCaptureActions`, replace `await vi.waitFor(...)` with `await vi.runAllTimersAsync()`.
 - In "does not set an override or evict the cache and logs when editing the IMDb ID fails", replace `await vi.waitFor(...)` with `await flushAsyncWork()`.
 - In "evicts the cache and logs when refreshing ratings fails", replace `await vi.waitFor(...)` with `await flushAsyncWork()`.
 
-- [ ] **Step 8: Run the file**
+- [x] **Step 8: Run the file**
 
 Run: `npx vitest run tests/unit/core/app.test.ts`
 Expected: PASS with no `vi.waitFor` and a lower duration than the recorded baseline.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add tests/unit/core/app.test.ts
@@ -265,24 +265,24 @@ git commit -m "test: advance app timers explicitly"
 
 - Consumes: `flushAsyncWork()` from Task 1.
 
-- [ ] **Step 1: Enable fake timers for the file**
+- [x] **Step 1: Enable fake timers for the file**
 
 Add `afterEach` to the Vitest import and import `flushAsyncWork`. Add `vi.useFakeTimers()` at the start of `beforeEach` and `vi.useRealTimers()` in a new `afterEach`.
 
-- [ ] **Step 2: Remove the per-test autosave timer setup**
+- [x] **Step 2: Remove the per-test autosave timer setup**
 
 In "saves through the view when a text input changes", delete the inner `vi.useFakeTimers()` / `try` / `finally`. Keep `await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS + 10)`.
 
-- [ ] **Step 3: Replace the six real flushes**
+- [x] **Step 3: Replace the six real flushes**
 
 In the `cache clearing` and `disabled provider reset` groups, replace every `await new Promise(resolve => setTimeout(resolve, 0))` with `await flushAsyncWork()`.
 
-- [ ] **Step 4: Run the file**
+- [x] **Step 4: Run the file**
 
 Run: `npx vitest run tests/unit/core/ui/settings-ui.test.ts`
 Expected: PASS with no real timer in the file.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/core/ui/settings-ui.test.ts
@@ -302,11 +302,11 @@ git commit -m "test: flush settings ui actions under fake timers"
 
 - Consumes: `flushAsyncWork()` from Task 1.
 
-- [ ] **Step 1: Import the helper**
+- [x] **Step 1: Import the helper**
 
 Add the `flushAsyncWork` import from `../../../helpers/async`.
 
-- [ ] **Step 2: Scope fake timers to the chained-write test**
+- [x] **Step 2: Scope fake timers to the chained-write test**
 
 Wrap the body of "keeps a later operation queued after an earlier one settles" in:
 
@@ -321,12 +321,12 @@ try {
 
 Replace `await new Promise(resolve => setTimeout(resolve, 0))` with `await flushAsyncWork()` and keep the comment and `expect(calls).toBe(2)` assertion.
 
-- [ ] **Step 3: Run the file**
+- [x] **Step 3: Run the file**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/cache/cache.test.ts
@@ -347,11 +347,11 @@ git commit -m "test: flush chained cache writes deterministically"
 
 - Consumes: `flushAsyncWork()` from Task 1.
 
-- [ ] **Step 1: Enable fake timers in `content.test.ts`**
+- [x] **Step 1: Enable fake timers in `content.test.ts`**
 
 Add `afterEach` to the Vitest import and import `flushAsyncWork`. Add `vi.useFakeTimers()` in `beforeEach` before the first `await import(...)`. Add `afterEach(() => vi.useRealTimers())`.
 
-- [ ] **Step 2: Replace content startup waits**
+- [x] **Step 2: Replace content startup waits**
 
 In `startAfterMigrations`, replace the two `await Promise.resolve()` calls with `await flushAsyncWork()`.
 
@@ -359,22 +359,22 @@ In "waits for migrations before reading storage and starting the app", replace t
 
 In "does not start the app or read storage and logs when migrations report an error", replace the `vi.waitFor(...)` with `await flushAsyncWork()` and keep the three assertions.
 
-- [ ] **Step 3: Enable fake timers in `options.test.ts`**
+- [x] **Step 3: Enable fake timers in `options.test.ts`**
 
 Add `afterEach` to the Vitest import and import `flushAsyncWork`. Add `vi.useFakeTimers()` at the start of `beforeEach` and `afterEach(() => vi.useRealTimers())`.
 
-- [ ] **Step 4: Replace options waits**
+- [x] **Step 4: Replace options waits**
 
 In "waits for migrations before rendering settings", replace the two `await Promise.resolve()` calls after `resolveMigrations({})` with `await flushAsyncWork()`.
 
 In "does not render settings and logs when migrations report an error", replace the `vi.waitFor(...)` with `await flushAsyncWork()`.
 
-- [ ] **Step 5: Run both files**
+- [x] **Step 5: Run both files**
 
 Run: `npx vitest run tests/unit/targets/extension/content.test.ts tests/unit/targets/extension/options.test.ts`
 Expected: PASS with no `vi.waitFor` and no fixed tick pairs.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/targets/extension/content.test.ts tests/unit/targets/extension/options.test.ts
@@ -395,11 +395,11 @@ git commit -m "test: flush extension entry startup deterministically"
 
 - Consumes: `flushAsyncWork()` from Task 1.
 
-- [ ] **Step 1: Import the helper in both files**
+- [x] **Step 1: Import the helper in both files**
 
 Import `flushAsyncWork` from `../../../helpers/async` in each file. Both already enable fake timers in `beforeEach`.
 
-- [ ] **Step 2: Replace Chrome fixed ticks and waits**
+- [x] **Step 2: Replace Chrome fixed ticks and waits**
 
 Replace every `await Promise.resolve()` and every `await vi.waitFor(...)` with `await flushAsyncWork()`.
 
@@ -412,18 +412,18 @@ Keep these assertions after the flush:
 - the fetch-options case still asserts `setTimeoutSpy` was called with `1234`.
 - action failure logs `Failed to open options page`.
 
-- [ ] **Step 3: Replace Firefox fixed ticks**
+- [x] **Step 3: Replace Firefox fixed ticks**
 
 For `installedListener`, replace the trailing `await Promise.resolve()` calls with `await flushAsyncWork()`.
 
 For `messageListener` calls that are already awaited, delete the trailing `await Promise.resolve()` calls instead of replacing them, because awaiting the listener already drains its async work.
 
-- [ ] **Step 4: Run both files**
+- [x] **Step 4: Run both files**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts`
 Expected: PASS with no fixed tick counts and no `vi.waitFor`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts
@@ -443,28 +443,28 @@ git commit -m "test: flush extension worker startup deterministically"
 
 - Consumes: `flushAsyncWork()` from Task 1.
 
-- [ ] **Step 1: Enable fake timers**
+- [x] **Step 1: Enable fake timers**
 
 Add `afterEach` to the Vitest import and import `flushAsyncWork`. Add `vi.useFakeTimers()` at the start of `beforeEach` and `afterEach(() => vi.useRealTimers())`.
 
-- [ ] **Step 2: Replace startup waits**
+- [x] **Step 2: Replace startup waits**
 
 In "waits for migrations before starting the app and registering the menu", replace the `vi.waitFor(...)` after `resolveMigrations()` with `await flushAsyncWork()` and keep the assertions.
 
 In "does not start the app or register the menu and logs when migrations reject", replace the `vi.waitFor(...)` with `await flushAsyncWork()`.
 
-- [ ] **Step 3: Replace settings-menu waits**
+- [x] **Step 3: Replace settings-menu waits**
 
 In all three `settings menu` tests, replace each `vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled())` with `await flushAsyncWork()`.
 
 In "calls renderSettings and logs when rendering the settings menu fails", replace the final `vi.waitFor(...)` after `menuCallback()` with `await flushAsyncWork()`.
 
-- [ ] **Step 4: Run the file**
+- [x] **Step 4: Run the file**
 
 Run: `npx vitest run tests/unit/targets/userscript/entry.test.ts`
 Expected: PASS with no `vi.waitFor`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/targets/userscript/entry.test.ts
@@ -479,7 +479,7 @@ git commit -m "test: flush userscript startup deterministically"
 
 - Modify: `AGENTS.md`
 
-- [ ] **Step 1: Document the convention**
+- [x] **Step 1: Document the convention**
 
 Add one bullet under `## Testing`:
 
@@ -491,7 +491,7 @@ Add one bullet under `## Testing`:
   boundaries.
 ```
 
-- [ ] **Step 2: Verify the affected files are clean**
+- [x] **Step 2: Verify the affected files are clean**
 
 Run:
 
@@ -510,7 +510,7 @@ rg "vi\\.waitFor|setTimeout\\(resolve" \
 
 Expected: no matches.
 
-- [ ] **Step 3: Repeat the affected files five times**
+- [x] **Step 3: Repeat the affected files five times**
 
 Run:
 
@@ -531,12 +531,12 @@ done
 
 Expected: five consecutive passes.
 
-- [ ] **Step 4: Run the full local gate**
+- [x] **Step 4: Run the full local gate**
 
 Run: `npm run type-check && npm run lint && npm run format:check && npm test`
 Expected: all pass, 981 tests, coverage above thresholds.
 
-- [ ] **Step 5: Commit the convention**
+- [x] **Step 5: Commit the convention**
 
 ```bash
 git add AGENTS.md
