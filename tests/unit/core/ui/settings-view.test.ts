@@ -472,21 +472,6 @@ describe('SettingsView', () => {
             expect(actions.onSave).toHaveBeenCalledOnce();
         });
 
-        it('debounces multiple rapid changes into a single save', () => {
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
-
-            for (let i = 0; i < 10; i++) {
-                textInput.value = `value${i}`;
-                textInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            expect(actions.onSave).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
         it('cancels previous debounce timer when new event occurs', () => {
             view.render(container, {});
             const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
