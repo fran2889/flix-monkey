@@ -120,12 +120,13 @@ describe('RequestQueue', () => {
                 .withStorageGetResolvingTo('0')
                 .withStorageSetResolvingTo(undefined)
                 .build();
-            const queue = buildQueue(100, mockAdapter);
+            const interval = 100;
+            const queue = buildQueue(interval, mockAdapter);
             const mockFetch = async () => ({ status: 200 });
 
             const first = queue.enqueue('https://example.com/a', 0, mockFetch);
             const second = queue.enqueue('https://example.com/b', 0, mockFetch);
-            await vi.advanceTimersByTimeAsync(100);
+            await vi.advanceTimersByTimeAsync(interval);
             const results = await Promise.all([first, second]);
 
             expect(results).toHaveLength(2);

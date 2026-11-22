@@ -605,7 +605,8 @@ describe('FlixMonkeyApp', () => {
             }
 
             buildApp().redecorate();
-            await vi.advanceTimersByTimeAsync(1);
+            // Cross the paint yield so the settled lookup renders.
+            await flushAsyncWork();
 
             expect(getDataSpy).toHaveBeenCalled();
             expect(vi.getTimerCount()).toBe(0);

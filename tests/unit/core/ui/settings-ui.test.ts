@@ -169,7 +169,7 @@ describe('SettingsUI', () => {
             input.dispatchEvent(new Event('input', { bubbles: true }));
 
             // The view debounces before delegating to SettingsUI.save().
-            await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS + 10);
+            await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS);
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
                 expect.objectContaining({ xmdbApiKey: 'typed-key' })
