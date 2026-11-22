@@ -2,7 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+import { flushAsyncWork } from '../../../helpers/async';
 
 // Module-level spies captured by the hoisted vi.mock() factories.
 let renderSpy: Mock;
@@ -67,6 +69,7 @@ describe('options.js entry point', () => {
     beforeEach(async () => {
         vi.resetModules();
         vi.clearAllMocks();
+        vi.useFakeTimers();
 
         migrationPromise = new Promise(resolve => {
             resolveMigrations = resolve;
@@ -83,6 +86,10 @@ describe('options.js entry point', () => {
         };
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('waits for migrations before rendering settings', async () => {
         const entryImport = import('../../../../src/targets/extension/options');
         await entryImport;
@@ -91,8 +98,7 @@ describe('options.js entry point', () => {
         expect(renderSpy).not.toHaveBeenCalled();
 
         resolveMigrations({});
-        await Promise.resolve();
-        await Promise.resolve();
+        await flushAsyncWork();
 
         expect(renderSpy).toHaveBeenCalledWith(document.body);
         expect(renderSpy).toHaveBeenCalledAfter(browser.runtime.sendMessage);
@@ -104,9 +110,8 @@ describe('options.js entry point', () => {
 
         await import('../../../../src/targets/extension/options');
 
-        await vi.waitFor(() => {
-            expect(errorSpy).toHaveBeenCalled();
-        });
+        await flushAsyncWork();
+        expect(errorSpy).toHaveBeenCalled();
         expect(renderSpy).not.toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(
             '[FlixMonkey] FlixMonkey options page failed to start',
