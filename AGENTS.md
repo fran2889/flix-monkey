@@ -94,6 +94,7 @@ Apply these rules when adding or moving code; do not reorder untouched code to s
 - Do not duplicate coverage across tests or layers; each behavior has one test that proves it.
 - Location rule: a test belongs in `tests/ui/` if it loads a streaming-service surface fixture from `tests/fixtures/`; otherwise `tests/unit/`. Integration tests are separate (see below). The deciding question is whether the assertion needs real service markup. If it would pass against a synthetic `<div>`, it is a unit test.
 - Fixtures are TypeScript modules exporting `{name, html, expected}` entries, one surface per entry. Shared assertions live in `tests/helpers/surface-tests.ts`; mock factories live in `tests/mocks/`.
+- Control time with fake timers and advance them explicitly. Do not use real sleeps, elapsed-time assertions, fixed promise tick counts, or `vi.waitFor` while fake timers are active; use `advanceTimersByTimeAsync`, `runAllTimersAsync`, or the shared `flushAsyncWork()` helper (`tests/helpers/async.ts`) for boundaries that only need queued work flushed.
 - `tests/integration/` hits live APIs. It runs only via `npm run test:integration` and the Nightly Integration workflow, needs `XMDB_API_KEY` and `OMDB_API_KEY`, and fails fast when a key is missing. Do not mock HTTP there.
 - Coverage thresholds and the jsdom environment are configured in `vitest.config.js`.
 

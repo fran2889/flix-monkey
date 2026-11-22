@@ -2,8 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { flushAsyncWork } from '../../../helpers/async';
 import { browser } from '../../../mocks/webextension';
 
 const { executeMigrations } = vi.hoisted(() => ({
@@ -59,12 +60,16 @@ describe('Firefox background script', () => {
         await import('../../../../src/targets/firefox/background');
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     describe('startup', () => {
         it.each([{ reason: 'install' }, { reason: 'update' }])(
             'runs migrations on extension $reason',
             async details => {
                 await installedListener(details);
-                await Promise.resolve();
+                await flushAsyncWork();
                 expect(executeMigrations).toHaveBeenCalledOnce();
             }
         );
@@ -73,8 +78,7 @@ describe('Firefox background script', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await installedListener({ reason: 'install' });
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(executeMigrations).toHaveBeenCalledOnce();
             expect(consoleError).toHaveBeenCalledWith('Failed to run storage migrations', expect.any(Error));
@@ -163,8 +167,7 @@ describe('Firefox background script', () => {
             const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             await actionListener();
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(consoleError).toHaveBeenCalledWith('Failed to open options page', expect.any(Error));
             consoleError.mockRestore();

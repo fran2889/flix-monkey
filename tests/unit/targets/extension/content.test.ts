@@ -2,7 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+import { flushAsyncWork } from '../../../helpers/async';
 
 // These module-level variables are captured by the hoisted vi.mock() factory.
 // They are mutated in beforeEach so each test run gets a fresh state.
@@ -45,6 +47,7 @@ describe('content.js entry point', () => {
     beforeEach(async () => {
         vi.resetModules();
         vi.clearAllMocks();
+        vi.useFakeTimers();
 
         migrationPromise = new Promise(resolve => {
             resolveMigrations = resolve;
@@ -72,12 +75,15 @@ describe('content.js entry point', () => {
         };
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     async function startAfterMigrations() {
         const entryImport = import('../../../../src/targets/extension/content');
         await entryImport;
         resolveMigrations({});
-        await Promise.resolve();
-        await Promise.resolve();
+        await flushAsyncWork();
     }
 
     function startedAdapter(): { configGet: (_key: string) => unknown } {
@@ -96,11 +102,10 @@ describe('content.js entry point', () => {
             expect(startAppSpy).not.toHaveBeenCalled();
 
             resolveMigrations({});
-            await Promise.resolve();
-            await Promise.resolve();
+            await flushAsyncWork();
 
             expect(browser.storage.local.get).toHaveBeenCalledAfter(browser.runtime.sendMessage);
-            await vi.waitFor(() => expect(startAppSpy).toHaveBeenCalled());
+            expect(startAppSpy).toHaveBeenCalled();
             expect(startAppSpy).toHaveBeenCalledAfter(browser.storage.local.get);
         });
         it('does not start the app or read storage and logs when migrations report an error', async () => {
@@ -109,9 +114,8 @@ describe('content.js entry point', () => {
 
             await import('../../../../src/targets/extension/content');
 
-            await vi.waitFor(() => {
-                expect(errorSpy).toHaveBeenCalled();
-            });
+            await flushAsyncWork();
+            expect(errorSpy).toHaveBeenCalled();
             expect(startAppSpy).not.toHaveBeenCalled();
             expect(browser.storage.local.get).not.toHaveBeenCalled();
             expect(errorSpy).toHaveBeenCalledWith('FlixMonkey content script failed to start', expect.any(Error));

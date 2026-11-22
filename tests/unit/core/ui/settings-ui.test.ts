@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 import type { Mock } from 'vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CacheManager } from '../../../../src/core/cache/index';
 import {
@@ -18,6 +18,7 @@ import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
+import { flushAsyncWork } from '../../../helpers/async';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
 
@@ -30,6 +31,7 @@ describe('SettingsUI', () => {
     let mockLogger: Logger;
 
     beforeEach(() => {
+        vi.useFakeTimers();
         mockAdapter = buildMockAdapter().build();
         mockLogger = buildLogger().build();
         const config = new ConfigManager(mockAdapter, mockLogger);
@@ -48,6 +50,10 @@ describe('SettingsUI', () => {
         document.head.innerHTML = '';
         document.body.innerHTML = '';
         document.body.appendChild(container);
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('save', () => {
@@ -160,15 +166,10 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
             const input = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
             input.value = 'typed-key';
-            vi.useFakeTimers();
-            try {
-                input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
 
-                // The view debounces before delegating to SettingsUI.save().
-                await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS + 10);
-            } finally {
-                vi.useRealTimers();
-            }
+            // The view debounces before delegating to SettingsUI.save().
+            await vi.advanceTimersByTimeAsync(AUTOSAVE_DEBOUNCE_MS);
 
             expect(mockAdapter.storageSetMany).toHaveBeenCalledWith(
                 expect.objectContaining({ xmdbApiKey: 'typed-key' })
@@ -181,7 +182,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(mockCacheManager.clear).toHaveBeenCalledWith(false);
             expect(container.querySelector('#fm-status')?.textContent).toBe('Cache cleared. IMDb IDs kept.');
@@ -191,7 +192,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(mockCacheManager.clear).toHaveBeenCalledWith(true);
             expect(container.querySelector('#fm-status')?.textContent).toBe('Cache and cached IMDb IDs cleared.');
@@ -205,7 +206,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(container.querySelector('#fm-status')?.textContent).toBe('Error: disk full');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
@@ -218,7 +219,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(mockDisabledClientsManager.resetAll).toHaveBeenCalledOnce();
             expect(container.querySelector('#fm-status')?.textContent).toBe('Re-enabled API clients: omdb, tmdb');
@@ -228,7 +229,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(container.querySelector('#fm-status')?.textContent).toBe(
                 'No disabled API clients found to re-enable.'
@@ -243,7 +244,7 @@ describe('SettingsUI', () => {
             await settingsUI.render(container);
 
             (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await flushAsyncWork();
 
             expect(container.querySelector('#fm-status')?.textContent).toBe('Error: storage unavailable');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
