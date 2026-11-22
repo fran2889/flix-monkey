@@ -86,9 +86,14 @@ Apply these rules when adding or moving code; do not reorder untouched code to s
 ## Testing
 
 - Add or update tests for every business-logic change.
+- Name a test for the behavior it proves: third-person present tense, no leading `should`, and a title that reads as a statement (`writes a prefixed warning to the console`).
+- Use one top-level `describe` per file, named after the unit or module under test. Group with nested `describe` blocks by behavior or operation in lower-case sentence case, and add a nested group only when it holds several related tests or a parameterized group. Group by method or function only when it is the public boundary; move a test to the group it belongs to instead of renaming it to fit.
+- Collapse repeated cases into `it.each`, with titles that read correctly after interpolation.
+- Pair a log assertion with the observable result or side effect it accompanies, and assert the side effect before the log. A log call alone does not prove the behavior.
+- Do not test what TypeScript already enforces, such as interface shapes, field types, or trivial getter and method existence, and do not add a test for a trivial accessor only to raise coverage.
+- Do not duplicate coverage across tests or layers; each behavior has one test that proves it.
 - Location rule: a test belongs in `tests/ui/` if it loads a streaming-service surface fixture from `tests/fixtures/`; otherwise `tests/unit/`. Integration tests are separate (see below). The deciding question is whether the assertion needs real service markup. If it would pass against a synthetic `<div>`, it is a unit test.
 - Fixtures are TypeScript modules exporting `{name, html, expected}` entries, one surface per entry. Shared assertions live in `tests/helpers/surface-tests.ts`; mock factories live in `tests/mocks/`.
-- Do not duplicate coverage across layers.
 - `tests/integration/` hits live APIs. It runs only via `npm run test:integration` and the Nightly Integration workflow, needs `XMDB_API_KEY` and `OMDB_API_KEY`, and fails fast when a key is missing. Do not mock HTTP there.
 - Coverage thresholds and the jsdom environment are configured in `vitest.config.js`.
 

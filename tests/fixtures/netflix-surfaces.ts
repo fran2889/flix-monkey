@@ -14,13 +14,11 @@ export interface SurfaceFixture {
 }
 
 export interface MoreLikeThisSectionFixture {
-    name: string;
     collapsedHtml: string;
     expandedHtml: string;
 }
 
 export const NETFLIX_MORE_LIKE_THIS_SECTION: MoreLikeThisSectionFixture = {
-    name: "Netflix More Like This section",
     collapsedHtml: `
         <div class="moreLikeThis--wrapper">
             <div class="moreLikeThis--container">

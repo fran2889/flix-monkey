@@ -9,7 +9,7 @@ import { DisabledClientsManager } from '../../../src/core/disabled-clients';
 import type { MockPlatformAdapter } from '../../mocks/adapter';
 import { buildMockAdapter } from '../../mocks/adapter';
 
-describe('core/disabled-clients', () => {
+describe('DisabledClientsManager', () => {
     let mockAdapter: MockPlatformAdapter;
     let manager: DisabledClientsManager;
 
@@ -18,12 +18,12 @@ describe('core/disabled-clients', () => {
         manager = new DisabledClientsManager(mockAdapter);
     });
 
-    it('should initially not be disabled', async () => {
+    it('reports a source as not disabled before any disable', async () => {
         mockAdapter.storageGet.mockResolvedValue(undefined);
         expect(await manager.isDisabled('xmdb')).toBe(false);
     });
 
-    it('should disable a source and store expiry', async () => {
+    it('disables a source and stores its expiry', async () => {
         const now = Date.now();
         await manager.disable('xmdb', 1000);
 
@@ -33,17 +33,17 @@ describe('core/disabled-clients', () => {
         expect(expiry).toBeGreaterThanOrEqual(now + 1000);
     });
 
-    it('should report as disabled if not expired', async () => {
+    it('reports a source as disabled before its expiry', async () => {
         mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
         expect(await manager.isDisabled('xmdb')).toBe(true);
     });
 
-    it('should report as NOT disabled if expired', async () => {
+    it('reports a source as not disabled after its expiry', async () => {
         mockAdapter.storageGet.mockResolvedValue((Date.now() - 1000).toString());
         expect(await manager.isDisabled('xmdb')).toBe(false);
     });
 
-    it('should reset all disabled clients and return their list', async () => {
+    it('resets all disabled clients and returns their names', async () => {
         mockAdapter.storageGet.mockImplementation(async (key: string) => {
             if (key === 'fm_disabled_xmdb') return (Date.now() + 5000).toString();
             if (key === 'fm_disabled_omdb') return '0';
@@ -56,7 +56,7 @@ describe('core/disabled-clients', () => {
         expect(mockAdapter.storageSet).not.toHaveBeenCalledWith('fm_disabled_omdb', '0');
     });
 
-    it('should reset all disabled clients sequentially in ApiSource order', async () => {
+    it('resets every client in ApiSource order', async () => {
         mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
 
         const reenabled = await manager.resetAll();
@@ -69,7 +69,7 @@ describe('core/disabled-clients', () => {
         ]);
     });
 
-    it('should stop at the first storage error during reset', async () => {
+    it('stops at the first storage error during reset', async () => {
         mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
         mockAdapter.storageSet.mockRejectedValue(new Error('storage failed'));
 

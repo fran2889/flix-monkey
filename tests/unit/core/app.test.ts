@@ -70,11 +70,21 @@ function buildApp(): FlixMonkeyApp {
     );
 }
 
-describe('App', () => {
+describe('FlixMonkeyApp', () => {
     let mockMutationObserverInstance:
         (MutationObserver & { trigger: (_mutations: MutationRecord[]) => void }) | undefined;
     let appRef: FlixMonkeyApp | undefined;
     const ActualMutationObserver = global.MutationObserver;
+
+    function requireMockObserver(): MutationObserver & { trigger: (_mutations: MutationRecord[]) => void } {
+        if (!mockMutationObserverInstance) throw new Error('MutationObserver was not created');
+        return mockMutationObserverInstance;
+    }
+
+    function requireApp(): FlixMonkeyApp {
+        if (!appRef) throw new Error('app was not started');
+        return appRef;
+    }
 
     beforeEach(async () => {
         appRef = undefined;
@@ -109,85 +119,167 @@ describe('App', () => {
         global.MutationObserver = ActualMutationObserver;
     });
 
-    it('should initialize and hold state', () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-        appRef = startApp(mockAdapter);
-        expect(appRef).toBeInstanceOf(FlixMonkeyApp);
-        expect(typeof appRef?.redecorate).toBe('function');
+    describe('startup', () => {
+        it('throws when the app is initialised twice', () => {
+            const app = buildApp();
+
+            app.init();
+
+            expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
+        });
+
+        describe('service gating', () => {
+            it.each([
+                {
+                    description: 'Netflix is disabled',
+                    outcome: 'returns no app',
+                    setup: async () => {
+                        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+                        return buildMockAdapter()
+                            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : undefined))
+                            .build();
+                    },
+                    expectedInstance: false,
+                },
+                {
+                    description: 'Netflix is enabled',
+                    outcome: 'returns an app',
+                    setup: async () => {
+                        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
+                        return buildMockAdapter()
+                            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : undefined))
+                            .build();
+                    },
+                    expectedInstance: true,
+                },
+                {
+                    description: 'no service is detected',
+                    outcome: 'returns no app',
+                    setup: async () => {
+                        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+                        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
+                        return buildMockAdapter().build();
+                    },
+                    expectedInstance: false,
+                },
+            ])('$outcome when $description', async ({ setup, expectedInstance }) => {
+                const result = startApp(await setup());
+
+                if (!expectedInstance) {
+                    expect(result).toBeUndefined();
+                    return;
+                }
+
+                expect(result).not.toBeUndefined();
+                if (result) {
+                    expect(result).toBeInstanceOf(FlixMonkeyApp);
+                    expect(typeof result.redecorate).toBe('function');
+                }
+            });
+        });
     });
 
-    it('should discover titles in JSDOM', () => {
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Movie Title"></a>
-        </div>
-    `;
-        const surfaces = new SurfaceManager(buildLogger().build(), NETFLIX_SURFACES);
-        const results = surfaces.discover(document);
-        expect(results).toHaveLength(1);
-        expect(results[0]?.title).toBe('Movie Title');
+    it('disconnects the MutationObserver on unload', () => {
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+        appRef = startApp(mockAdapter);
+
+        const disconnectSpy = vi.spyOn(mockMutationObserverInstance as MutationObserver, 'disconnect');
+        window.dispatchEvent(new Event('beforeunload'));
+        expect(disconnectSpy).toHaveBeenCalled();
     });
 
-    it('should debounce navigation events', async () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+    describe('navigation', () => {
+        it('debounces navigation events', async () => {
+            const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
 
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Test"></a>
-        </div>
-    `;
-        const spy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
+            document.body.innerHTML = `
+            <div class="title-card">
+                <a aria-label="Test"></a>
+            </div>
+        `;
+            const spy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
-        appRef = startApp(mockAdapter);
-        await Promise.resolve();
-        spy.mockClear();
+            appRef = startApp(mockAdapter);
+            await Promise.resolve();
+            spy.mockClear();
 
-        // Change DOM to ensure a new card is discovered upon navigation
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="New Test"></a>
-        </div>
-    `;
+            // Change DOM to ensure a new card is discovered upon navigation
+            document.body.innerHTML = `
+            <div class="title-card">
+                <a aria-label="New Test"></a>
+            </div>
+        `;
 
-        window.history.pushState({}, '', '/new-page');
-        expect(spy).not.toHaveBeenCalled();
+            window.history.pushState({}, '', '/new-page');
+            expect(spy).not.toHaveBeenCalled();
 
-        window.history.pushState({}, '', '/another-page');
-        expect(spy).not.toHaveBeenCalled();
+            window.history.pushState({}, '', '/another-page');
+            expect(spy).not.toHaveBeenCalled();
 
-        vi.advanceTimersByTime(5000);
-        await vi.waitFor(
-            () => {
-                if (spy.mock.calls.length === 0) throw new Error('Not called');
-            },
-            { timeout: 2000 }
-        );
-        expect(spy).toHaveBeenCalled();
-        spy.mockRestore();
+            vi.advanceTimersByTime(5000);
+            await vi.waitFor(
+                () => {
+                    if (spy.mock.calls.length === 0) throw new Error('Not called');
+                },
+                { timeout: 2000 }
+            );
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('decorates on replaceState', async () => {
+            const mockAdapter = buildMockAdapter().build();
+            const getDataSpy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle('Test').build());
+
+            appRef = startApp(mockAdapter);
+
+            // Initial decoration from init()
+            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+            await vi.runAllTimersAsync();
+
+            const callCountAfterInit = getDataSpy.mock.calls.length;
+
+            // Add a NEW title card so it's not skipped by the "already has overlay" check
+            document.body.innerHTML += `
+                <div class="title-card" id="new-card">
+                    <a aria-label="New Title"></a>
+                </div>
+            `;
+
+            window.history.replaceState({}, '', '/replaced');
+            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+            await vi.runAllTimersAsync();
+
+            expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+        });
     });
 
-    it('should respond to DOM mutations', async () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-        const spy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
+    describe('mutation handling', () => {
+        it('decorates a card added by a DOM mutation', async () => {
+            const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+            const spy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
-        appRef = startApp(mockAdapter);
-        await Promise.resolve();
-        spy.mockClear();
+            appRef = startApp(mockAdapter);
+            await Promise.resolve();
+            spy.mockClear();
 
-        const container = document.createElement('div');
-        container.innerHTML = `
-        <div class="title-card">
-            <a aria-label="New Movie"></a>
-        </div>
-    `;
-        document.body.appendChild(container);
+            const container = document.createElement('div');
+            container.innerHTML = `
+            <div class="title-card">
+                <a aria-label="New Movie"></a>
+            </div>
+        `;
+            document.body.appendChild(container);
 
-        if (mockMutationObserverInstance) {
-            mockMutationObserverInstance.trigger([
+            requireMockObserver().trigger([
                 {
                     addedNodes: [container] as unknown as NodeList,
                     target: document.body,
@@ -200,42 +292,40 @@ describe('App', () => {
                     oldValue: null,
                 },
             ]);
-        }
 
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length === 0) throw new Error('Not called');
+            await vi.waitFor(() => {
+                if (spy.mock.calls.length === 0) throw new Error('Not called');
+            });
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
         });
-        expect(spy).toHaveBeenCalled();
-        spy.mockRestore();
-    });
 
-    it('should trigger new decoration when a container is replaced', async () => {
-        const mockAdapter = buildMockAdapter().build();
-        const spy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
+        it('redecorates when a container is replaced', async () => {
+            const mockAdapter = buildMockAdapter().build();
+            const spy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle('Test').build());
 
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Original Title"></a>
-            </div>
-        `;
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Original Title"></a>
+                </div>
+            `;
 
-        appRef = startApp(mockAdapter);
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length < 1) throw new Error('Not called yet');
-        });
-        expect(spy).toHaveBeenCalledTimes(1);
+            appRef = startApp(mockAdapter);
+            await vi.waitFor(() => {
+                if (spy.mock.calls.length < 1) throw new Error('Not called yet');
+            });
+            expect(spy).toHaveBeenCalledTimes(1);
 
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Original Title"></a>
-            </div>
-        `;
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Original Title"></a>
+                </div>
+            `;
 
-        if (mockMutationObserverInstance) {
             const titleCard = document.querySelector('.title-card');
-            mockMutationObserverInstance.trigger([
+            requireMockObserver().trigger([
                 {
                     addedNodes: titleCard ? ([titleCard] as unknown as NodeList) : ([] as unknown as NodeList),
                     target: document.body,
@@ -248,140 +338,316 @@ describe('App', () => {
                     oldValue: null,
                 },
             ]);
-        }
 
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length < 2) throw new Error('Not called second time');
+            await vi.waitFor(() => {
+                if (spy.mock.calls.length < 2) throw new Error('Not called second time');
+            });
+
+            expect(spy).toHaveBeenCalledTimes(2);
+            spy.mockRestore();
         });
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        spy.mockRestore();
+        it('catches and logs errors thrown in the mutation handler', () => {
+            const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+            const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+
+            appRef = startApp(mockAdapter);
+
+            // addedNodes: null causes Array.from(null) to throw inside the handler
+            expect(() => {
+                requireMockObserver().trigger([{ addedNodes: null } as unknown as MutationRecord]);
+            }).not.toThrow();
+
+            expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
+        });
+
+        it('decorates only the mutated subtree when nodes are added', async () => {
+            const parent = document.createElement('div');
+            document.body.appendChild(parent);
+
+            appRef = startApp(buildMockAdapter().build());
+            await Promise.resolve();
+
+            const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+
+            // Trigger mutation on parent, with target set
+            requireMockObserver().trigger([{ addedNodes: [parent], target: parent } as unknown as MutationRecord]);
+
+            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+            await vi.runAllTimersAsync();
+
+            // discover should be called with parent, not document
+            const roots = discoverSpy.mock.calls.map(c => c[0]);
+            expect(roots.some(r => r === parent)).toBe(true);
+
+            discoverSpy.mockRestore();
+        });
+
+        it('collects every mutated root in one observer batch', async () => {
+            appRef = startApp(buildMockAdapter().build());
+            await Promise.resolve();
+
+            const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+            const firstParent = document.createElement('div');
+            const secondParent = document.createElement('div');
+
+            requireMockObserver().trigger([
+                { addedNodes: [document.createElement('span')], target: firstParent } as unknown as MutationRecord,
+                { addedNodes: [document.createElement('span')], target: secondParent } as unknown as MutationRecord,
+            ]);
+
+            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
+            await vi.runAllTimersAsync();
+
+            const roots = discoverSpy.mock.calls.map(c => c[0]);
+            expect(roots).toContain(firstParent);
+            expect(roots).toContain(secondParent);
+
+            discoverSpy.mockRestore();
+        });
     });
 
-    it('should inject loading overlay while fetching', async () => {
-        const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
+    describe('decoration', () => {
+        it('injects a loading overlay while the lookup is in flight', async () => {
+            const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
 
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Test Title"></a>
-        </div>
-    `;
-
-        let resolveApi: (_value: Title) => void = () => {};
-        const apiPromise = new Promise<Title>(resolve => {
-            resolveApi = resolve;
-        });
-
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(apiPromise);
-
-        appRef = startApp(mockAdapter);
-
-        // Wait for the next tick to allow the app to initialize and call decorateRoot
-        await Promise.resolve();
-        vi.runAllTimers();
-
-        const card = document.querySelector('.title-card');
-        expect(card?.querySelector('.fm-loading')).not.toBeNull();
-
-        resolveApi!(buildTitle().withApiTitle('Test Title').build());
-        await apiPromise;
-
-        // Wait for the app to finish processing and update the UI
-        await vi.waitFor(() => {
-            expect(card?.querySelector('.fm-loading')).toBeNull();
-        });
-
-        expect(card?.querySelector('.fm-rating-overlay')).not.toBeNull();
-    });
-
-    it('should remove the loading overlay when getData rejects', async () => {
-        const mockAdapter = buildMockAdapter().withConfigGetReturning(undefined).build();
-
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Failing Title"></a>
-        </div>
-    `;
-
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('API failure'));
-
-        appRef = startApp(mockAdapter);
-
-        await Promise.resolve();
-        vi.runAllTimers();
-
-        const card = document.querySelector('.title-card');
-        await vi.waitFor(() => {
-            expect(card?.querySelector('.fm-loading')).toBeNull();
-        });
-    });
-
-    it('should trigger decoration on replaceState', async () => {
-        const mockAdapter = buildMockAdapter().build();
-        const getDataSpy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withApiTitle('Test').build());
-
-        appRef = startApp(mockAdapter);
-
-        // Initial decoration from init()
-        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
-        await vi.runAllTimersAsync();
-
-        const callCountAfterInit = getDataSpy.mock.calls.length;
-
-        // Add a NEW title card so it's not skipped by the "already has overlay" check
-        document.body.innerHTML += `
-            <div class="title-card" id="new-card">
-                <a aria-label="New Title"></a>
+            document.body.innerHTML = `
+            <div class="title-card">
+                <a aria-label="Test Title"></a>
             </div>
         `;
 
-        window.history.replaceState({}, '', '/replaced');
-        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
-        await vi.runAllTimersAsync();
+            let resolveApi: (_value: Title) => void = () => {};
+            const apiPromise = new Promise<Title>(resolve => {
+                resolveApi = resolve;
+            });
 
-        expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(apiPromise);
+
+            appRef = startApp(mockAdapter);
+
+            // Wait for the next tick to allow the app to initialize and call decorateRoot
+            await Promise.resolve();
+            vi.runAllTimers();
+
+            const card = document.querySelector('.title-card');
+            expect(card?.querySelector('.fm-loading')).not.toBeNull();
+
+            resolveApi!(buildTitle().withApiTitle('Test Title').build());
+            await apiPromise;
+
+            // Wait for the app to finish processing and update the UI
+            await vi.waitFor(() => {
+                expect(card?.querySelector('.fm-loading')).toBeNull();
+            });
+
+            expect(card?.querySelector('.fm-rating-overlay')).not.toBeNull();
+        });
+
+        it('clears the data-fm-injected attribute during redecorate so containers can be decorated again', () => {
+            // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
+            const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
+
+            appRef = startApp(buildMockAdapter().build());
+
+            // Manually set up a container in the "decorated" state
+            const container = document.createElement('div');
+            const overlayEl = document.createElement('div');
+            overlayEl.className = 'fm-rating-overlay';
+            container.appendChild(overlayEl);
+            container.setAttribute('data-fm-injected', '1');
+            document.body.appendChild(container);
+
+            expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
+            expect(container.hasAttribute('data-fm-injected')).toBe(true);
+
+            requireApp().redecorate();
+
+            // clearAllOverlays() must remove the overlay element AND the attribute,
+            // leaving the container eligible for re-decoration
+            expect(container.querySelector('.fm-rating-overlay')).toBeNull();
+            expect(container.hasAttribute('data-fm-injected')).toBe(false);
+
+            discoverSpy.mockRestore();
+        });
+
+        it('does not inject an overlay when the container leaves the DOM before the data resolves', async () => {
+            const container = document.createElement('div');
+            container.className = 'title-card';
+            container.innerHTML = '<a aria-label="Detach Test"></a>';
+            document.body.appendChild(container);
+
+            let resolveData: (_value: Title) => void = () => {};
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(
+                new Promise<Title>(resolve => {
+                    resolveData = resolve;
+                })
+            );
+            const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay');
+
+            appRef = startApp(buildMockAdapter().build());
+
+            // Advance fake timers so the setTimeout(resolve, 0) yield in #decorateContainer fires,
+            // moving execution past the yield and into the getData await
+            vi.advanceTimersByTime(1);
+            await Promise.resolve();
+            await Promise.resolve();
+
+            // Detach the container before the data resolves
+            document.body.removeChild(container);
+
+            // Now resolve the data - document.contains(container) is now false
+            resolveData(buildTitle().withApiTitle('Detach Test').withImdbRating(7.0).build());
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(injectSpy).not.toHaveBeenCalled();
+            injectSpy.mockRestore();
+        });
+
+        it('stamps data-fm-key on fadeable card containers after decoration', async () => {
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Stamped Movie"></a>
+                </div>
+            `;
+            const spy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withImdbRating(7.0).withImdbId('tt1').build());
+            appRef = startApp(buildMockAdapter().build());
+            await vi.waitFor(() => {
+                if (spy.mock.calls.length === 0) throw new Error('Not called');
+            });
+            await vi.runAllTimersAsync();
+            const card = document.querySelector('.title-card') as HTMLElement | null;
+            await vi.waitFor(() => {
+                if (!card?.dataset.fmKey) throw new Error('Not stamped yet');
+            });
+            expect(card?.dataset.fmKey).toBeTruthy();
+            spy.mockRestore();
+        });
+
+        it('stamps data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
+            document.body.innerHTML = `
+                <div class="previewModal--wrapper mini-modal">
+                    <div class="previewModal--player_container">
+                        <img alt="Mini Movie">
+                    </div>
+                </div>
+            `;
+            const spy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withImdbRating(5.0).withImdbId('tt2').build());
+            appRef = startApp(buildMockAdapter().build());
+            await vi.waitFor(() => {
+                if (spy.mock.calls.length === 0) throw new Error('Not called');
+            });
+            await vi.runAllTimersAsync();
+            const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
+            await vi.waitFor(() => {
+                if (!container?.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
+            });
+            expect(container?.dataset.fmKey).toBeTruthy();
+            spy.mockRestore();
+        });
     });
 
-    it('should throw if init() is called twice on the same instance', () => {
-        const app = buildApp();
+    describe('lookup failures', () => {
+        it('renders a not-found fallback when the lookup fails', async () => {
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Boom Movie"></a>
+                </div>
+            `;
+            const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('boom'));
 
-        app.init();
+            appRef = startApp(buildMockAdapter().build());
 
-        expect(() => app.init()).toThrow('FlixMonkeyApp already initialised');
-    });
+            await Promise.resolve();
+            vi.runAllTimers();
+            await vi.runAllTimersAsync();
 
-    it('should expose cacheManager and disabledManager on the startApp return value', () => {
-        appRef = startApp(buildMockAdapter().build());
-        expect(appRef?.cacheManager).toBeDefined();
-        expect(typeof appRef?.cacheManager.clear).toBe('function');
-        expect(appRef?.disabledManager).toBeDefined();
-        expect(typeof appRef?.disabledManager.resetAll).toBe('function');
-    });
+            await vi.waitFor(
+                () => {
+                    expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+                },
+                { timeout: 2000 }
+            );
 
-    it('should return undefined when Netflix is disabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? false : undefined))
-            .build();
-        const result = startApp(adapter);
-        expect(result).toBeUndefined();
-    });
+            expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
+            logSpy.mockRestore();
+        });
 
-    it('should return app instance when Netflix is enabled via enableNetflix config', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new NetflixService());
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableNetflix' ? true : undefined))
-            .build();
-        const result = startApp(adapter);
-        expect(result).not.toBeUndefined();
-        if (result) {
-            expect(result).toBeInstanceOf(FlixMonkeyApp);
-            expect(typeof result.redecorate).toBe('function');
-        }
+        it('renders a not-found fallback and logs when a lookup times out', async () => {
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Hanging Film"></a>
+                </div>
+            `;
+            const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(new Promise(() => {})); // never resolves
+
+            appRef = startApp(buildMockAdapter().build());
+            await Promise.resolve();
+            vi.runAllTimers();
+
+            // Advance past LOOKUP_TIMEOUT_MS (30000ms)
+            await vi.advanceTimersByTimeAsync(31_000);
+
+            expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+            expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
+            logSpy.mockRestore();
+        });
+
+        it('keeps a render failure out of the not-found fallback', async () => {
+            document.body.innerHTML = `
+            <div class="title-card">
+                <a aria-label="Broken Movie"></a>
+            </div>
+        `;
+            const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+                buildTitle().withApiTitle('Broken Movie').build()
+            );
+            const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay').mockImplementation(() => {
+                throw new Error('render failure');
+            });
+
+            appRef = startApp(buildMockAdapter().build());
+
+            await vi.waitFor(() => {
+                expect(injectSpy).toHaveBeenCalledTimes(1);
+                expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+            });
+
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
+            logSpy.mockRestore();
+        });
+        it.each([
+            ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
+            ['rejects', { error: new Error('API failure') }],
+        ])('clears the lookup timeout when a lookup %s', async (_outcome, settled) => {
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Settled Movie"></a>
+                </div>
+            `;
+            const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData');
+            if ('error' in settled) {
+                getDataSpy.mockRejectedValue(settled.error);
+            } else {
+                getDataSpy.mockResolvedValue(settled.title);
+            }
+
+            buildApp().redecorate();
+            await vi.advanceTimersByTimeAsync(1);
+
+            expect(getDataSpy).toHaveBeenCalled();
+            expect(vi.getTimerCount()).toBe(0);
+        });
     });
 
     describe.each([
@@ -404,7 +670,7 @@ describe('App', () => {
             'Disney Title',
         ],
     ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
-        it('should discover titles with the detected service surface definitions', async () => {
+        it('discovers titles with the detected service surface definitions', async () => {
             document.body.innerHTML = html;
             const { ServiceRegistry } = await import('../../../src/core/services/index.js');
             vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
@@ -421,413 +687,128 @@ describe('App', () => {
         });
     });
 
-    it('should catch and log errors thrown in the mutation handler', () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-
-        appRef = startApp(mockAdapter);
-
-        // addedNodes: null causes Array.from(null) to throw inside the handler
-        expect(() => {
-            if (mockMutationObserverInstance) {
-                mockMutationObserverInstance.trigger([{ addedNodes: null } as unknown as MutationRecord]);
-            }
-        }).not.toThrow();
-
-        expect(logSpy).toHaveBeenCalledWith('Mutation observer error', expect.any(Error));
-    });
-
-    it('should render a not-found fallback when the lookup fails', async () => {
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Boom Movie"></a>
-            </div>
-        `;
-        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockRejectedValue(new Error('boom'));
-
-        appRef = startApp(buildMockAdapter().build());
-
-        await Promise.resolve();
-        vi.runAllTimers();
-        await vi.runAllTimersAsync();
-
-        await vi.waitFor(
-            () => {
-                expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
-            },
-            { timeout: 2000 }
-        );
-
-        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
-        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
-        logSpy.mockRestore();
-    });
-
-    it('should render a not-found fallback and log when a lookup times out', async () => {
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Hanging Film"></a>
-            </div>
-        `;
-        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(new Promise(() => {})); // never resolves
-
-        appRef = startApp(buildMockAdapter().build());
-        await Promise.resolve();
-        vi.runAllTimers();
-
-        // Advance past LOOKUP_TIMEOUT_MS (30000ms)
-        await vi.advanceTimersByTimeAsync(31_000);
-
-        expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
-        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
-        expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
-        logSpy.mockRestore();
-    });
-
-    it('keeps a render failure out of the not-found fallback', async () => {
-        document.body.innerHTML = `
-        <div class="title-card">
-            <a aria-label="Broken Movie"></a>
-        </div>
-    `;
-        const logSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            buildTitle().withApiTitle('Broken Movie').build()
-        );
-        const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay').mockImplementation(() => {
-            throw new Error('render failure');
-        });
-
-        appRef = startApp(buildMockAdapter().build());
-
-        await vi.waitFor(() => {
-            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
-        });
-
-        expect(injectSpy).toHaveBeenCalledTimes(1);
-        expect(document.querySelector('.title-card .fm-loading')).toBeNull();
-        logSpy.mockRestore();
-    });
-
-    it.each([
-        ['resolves', { title: buildTitle().withApiTitle('Settled Movie').withImdbRating(7.0).build() }],
-        ['rejects', { error: new Error('API failure') }],
-    ])('should clear the lookup timeout when a lookup %s', async (_outcome, settled) => {
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Settled Movie"></a>
-            </div>
-        `;
-        const getDataSpy = vi.spyOn(ApiClientManager.prototype, 'getData');
-        if ('error' in settled) {
-            getDataSpy.mockRejectedValue(settled.error);
-        } else {
-            getDataSpy.mockResolvedValue(settled.title);
-        }
-
-        buildApp().redecorate();
-        await vi.advanceTimersByTimeAsync(1);
-
-        expect(getDataSpy).toHaveBeenCalled();
-        expect(vi.getTimerCount()).toBe(0);
-    });
-
-    it('should disconnect the MutationObserver on unload', () => {
-        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-        appRef = startApp(mockAdapter);
-
-        const disconnectSpy = vi.spyOn(mockMutationObserverInstance as MutationObserver, 'disconnect');
-        window.dispatchEvent(new Event('beforeunload'));
-        expect(disconnectSpy).toHaveBeenCalled();
-    });
-
-    it('should call decorateRoot on mutation target rather than full document when nodes are added', async () => {
-        const parent = document.createElement('div');
-        document.body.appendChild(parent);
-
-        appRef = startApp(buildMockAdapter().build());
-        await Promise.resolve();
-
-        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
-
-        // Trigger mutation on parent, with target set
-        if (mockMutationObserverInstance) {
-            mockMutationObserverInstance.trigger([
-                { addedNodes: [parent], target: parent } as unknown as MutationRecord,
-            ]);
-        }
-
-        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
-        await vi.runAllTimersAsync();
-
-        // discover should be called with parent, not document
-        const roots = discoverSpy.mock.calls.map(c => c[0]);
-        expect(roots.some(r => r === parent)).toBe(true);
-
-        discoverSpy.mockRestore();
-    });
-
-    it('collects every mutated root in one observer batch', async () => {
-        appRef = startApp(buildMockAdapter().build());
-        await Promise.resolve();
-
-        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
-        const firstParent = document.createElement('div');
-        const secondParent = document.createElement('div');
-
-        mockMutationObserverInstance?.trigger([
-            { addedNodes: [document.createElement('span')], target: firstParent } as unknown as MutationRecord,
-            { addedNodes: [document.createElement('span')], target: secondParent } as unknown as MutationRecord,
-        ]);
-
-        vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
-        await vi.runAllTimersAsync();
-
-        const roots = discoverSpy.mock.calls.map(c => c[0]);
-        expect(roots).toContain(firstParent);
-        expect(roots).toContain(secondParent);
-
-        discoverSpy.mockRestore();
-    });
-
-    it('should clear data-fm-injected attribute during redecorate so containers are eligible for re-decoration', () => {
-        // Prevent auto-decoration from init() and the subsequent decorateRoot() inside redecorate()
-        const discoverSpy = vi.spyOn(SurfaceManager.prototype, 'discover').mockReturnValue([]);
-
-        appRef = startApp(buildMockAdapter().build());
-
-        // Manually set up a container in the "decorated" state
-        const container = document.createElement('div');
-        const overlayEl = document.createElement('div');
-        overlayEl.className = 'fm-rating-overlay';
-        container.appendChild(overlayEl);
-        container.setAttribute('data-fm-injected', '1');
-        document.body.appendChild(container);
-
-        expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
-        expect(container.hasAttribute('data-fm-injected')).toBe(true);
-
-        if (appRef) {
-            appRef.redecorate();
-        }
-
-        // clearAllOverlays() must remove the overlay element AND the attribute,
-        // leaving the container eligible for re-decoration
-        expect(container.querySelector('.fm-rating-overlay')).toBeNull();
-        expect(container.hasAttribute('data-fm-injected')).toBe(false);
-
-        discoverSpy.mockRestore();
-    });
-
-    it('should not inject overlay when container is removed from DOM before data resolves', async () => {
-        const container = document.createElement('div');
-        container.className = 'title-card';
-        container.innerHTML = '<a aria-label="Detach Test"></a>';
-        document.body.appendChild(container);
-
-        let resolveData: (_value: Title) => void = () => {};
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockReturnValue(
-            new Promise<Title>(resolve => {
-                resolveData = resolve;
-            })
-        );
-        const injectSpy = vi.spyOn(OverlayRenderer.prototype, 'injectOverlay');
-
-        appRef = startApp(buildMockAdapter().build());
-
-        // Advance fake timers so the setTimeout(resolve, 0) yield in #decorateContainer fires,
-        // moving execution past the yield and into the getData await
-        vi.advanceTimersByTime(1);
-        await Promise.resolve();
-        await Promise.resolve();
-
-        // Detach the container before the data resolves
-        document.body.removeChild(container);
-
-        // Now resolve the data - document.contains(container) is now false
-        resolveData(buildTitle().withApiTitle('Detach Test').withImdbRating(7.0).build());
-        await Promise.resolve();
-        await Promise.resolve();
-
-        expect(injectSpy).not.toHaveBeenCalled();
-        injectSpy.mockRestore();
-    });
-
-    it('should stamp data-fm-key on fadeable card containers after decoration', async () => {
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Stamped Movie"></a>
-            </div>
-        `;
-        const spy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withImdbRating(7.0).withImdbId('tt1').build());
-        appRef = startApp(buildMockAdapter().build());
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length === 0) throw new Error('Not called');
-        });
-        await vi.runAllTimersAsync();
-        const card = document.querySelector('.title-card') as HTMLElement | null;
-        await vi.waitFor(() => {
-            if (!card?.dataset.fmKey) throw new Error('Not stamped yet');
-        });
-        expect(card?.dataset.fmKey).toBeTruthy();
-        spy.mockRestore();
-    });
-
-    it('should stamp data-fm-key on non-fadeable mini-modal containers for refresh support', async () => {
-        document.body.innerHTML = `
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Mini Movie">
+    describe('fade toggle', () => {
+        it('renders a fade toggle badge in the mini-modal when enableFadeToggle is true', async () => {
+            document.body.innerHTML = `
+                <div class="previewModal--wrapper mini-modal">
+                    <div class="previewModal--player_container">
+                        <img alt="Toggle Movie">
+                    </div>
                 </div>
-            </div>
-        `;
-        const spy = vi
-            .spyOn(ApiClientManager.prototype, 'getData')
-            .mockResolvedValue(buildTitle().withImdbRating(5.0).withImdbId('tt2').build());
-        appRef = startApp(buildMockAdapter().build());
-        await vi.waitFor(() => {
-            if (spy.mock.calls.length === 0) throw new Error('Not called');
-        });
-        await vi.runAllTimersAsync();
-        const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
-        await vi.waitFor(() => {
-            if (!container?.querySelector('.fm-rating-overlay')) throw new Error('Overlay not injected');
-        });
-        expect(container?.dataset.fmKey).toBeTruthy();
-        spy.mockRestore();
-    });
-
-    it('should render a fade toggle badge in the mini-modal when enableFadeToggle is true', async () => {
-        document.body.innerHTML = `
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Toggle Movie">
-                </div>
-            </div>
-        `;
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : undefined))
-            .withStorageGetResolvingTo(undefined)
-            .build();
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
-        );
-        appRef = startApp(adapter);
-        const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
-        await vi.waitFor(() => {
-            if (!container?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
-        });
-        expect(container?.querySelector('.fm-fade-toggle')).not.toBeNull();
-        expect((container?.querySelector('.fm-fade-toggle') as HTMLElement | null)?.dataset.state).toBe('auto');
-    });
-
-    it('should apply stored "always" fade override to browse title cards on reload', async () => {
-        document.body.innerHTML = `
-            <div class="title-card">
-                <a aria-label="Reload Movie"></a>
-            </div>
-        `;
-        const storageGet = vi
-            .fn()
-            .mockImplementation((key: string) =>
-                key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(undefined)
+            `;
+            const adapter = buildMockAdapter()
+                .withConfigGetReturning((key: string) => (key === 'enableFadeToggle' ? true : undefined))
+                .withStorageGetResolvingTo(undefined)
+                .build();
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+                buildTitle().withImdbRating(7.0).withImdbId('tt3').build()
             );
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : undefined))
-            .withStorageGetResolvingTo(storageGet)
-            .build();
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            buildTitle().withImdbRating(7.0).withImdbId('tt5').build()
-        );
-        appRef = startApp(adapter);
-        vi.advanceTimersToNextTimer();
-        const card = document.querySelector('.title-card') as HTMLElement | null;
-        await vi.waitFor(() => {
-            if (!card?.querySelector('.fm-rating-overlay:not(.fm-loading)'))
-                throw new Error('Final overlay not injected');
-        });
-        expect(card?.classList.contains('fm-faded')).toBe(true);
-    });
-
-    it('should cycle fade toggle state on click and update sibling cards', async () => {
-        document.body.innerHTML = `
-            <div class="title-card" id="card1"><a aria-label="Cycle Movie"></a></div>
-            <div class="previewModal--wrapper mini-modal">
-                <div class="previewModal--player_container">
-                    <img alt="Cycle Movie">
-                </div>
-            </div>
-        `;
-        const storageGet = vi.fn().mockResolvedValue(undefined);
-        const storageSet = vi.fn().mockResolvedValue(undefined);
-        const storageDelete = vi.fn().mockResolvedValue(undefined);
-        const adapter = buildMockAdapter()
-            .withConfigGetReturning((key: string) => {
-                if (key === 'enableFadeToggle') return true;
-                if (key === 'enableFadeUnderRating') return false;
-                return undefined;
-            })
-            .withStorageGetResolvingTo(storageGet)
-            .withStorageSetResolvingTo(storageSet)
-            .withStorageDeleteResolvingTo(storageDelete)
-            .build();
-        vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
-            buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
-        );
-        appRef = startApp(adapter);
-        vi.advanceTimersToNextTimer();
-        const modal = document.querySelector('.previewModal--player_container') as HTMLElement | null;
-        await vi.waitFor(() => {
-            if (!modal?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
-        });
-        const toggle = modal?.querySelector('.fm-fade-toggle') as HTMLElement | null;
-        if (!toggle) throw new Error('Toggle missing');
-        const icon = toggle.querySelector('.fm-fade-toggle-icon');
-        if (!icon) throw new Error('Toggle icon missing');
-        const card = document.querySelector('.title-card');
-        if (!(card instanceof HTMLElement)) throw new Error('Title card missing');
-        const waitForState = (expected: string): Promise<void> =>
-            vi.waitFor(() => {
-                if (toggle.dataset.state !== expected) throw new Error('State not updated');
+            appRef = startApp(adapter);
+            const container = document.querySelector('.previewModal--player_container') as HTMLElement | null;
+            await vi.waitFor(() => {
+                if (!container?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
             });
-        expect(toggle.dataset.state).toBe('auto');
-        expect(toggle.title).toBe('Fade: Auto');
-        expect(icon.textContent).toBe('⭐');
+            expect(container?.querySelector('.fm-fade-toggle')).not.toBeNull();
+            expect((container?.querySelector('.fm-fade-toggle') as HTMLElement | null)?.dataset.state).toBe('auto');
+        });
 
-        toggle.click();
-        await waitForState('always');
-        expect(toggle.title).toBe('Fade: Always');
-        expect(icon.textContent).toBe('👁️');
-        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
-        expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
-        expect(card.classList.contains('fm-faded')).toBe(true);
+        it('applies a stored "always" fade override to browse title cards on reload', async () => {
+            document.body.innerHTML = `
+                <div class="title-card">
+                    <a aria-label="Reload Movie"></a>
+                </div>
+            `;
+            const storageGet = vi
+                .fn()
+                .mockImplementation((key: string) =>
+                    key === 'fm-fade:reload_movie' ? Promise.resolve('always') : Promise.resolve(undefined)
+                );
+            const adapter = buildMockAdapter()
+                .withConfigGetReturning((key: string) => (key === 'enableFadeUnderRating' ? false : undefined))
+                .withStorageGetResolvingTo(storageGet)
+                .build();
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+                buildTitle().withImdbRating(7.0).withImdbId('tt5').build()
+            );
+            appRef = startApp(adapter);
+            vi.advanceTimersToNextTimer();
+            const card = document.querySelector('.title-card') as HTMLElement | null;
+            await vi.waitFor(() => {
+                if (!card?.querySelector('.fm-rating-overlay:not(.fm-loading)'))
+                    throw new Error('Final overlay not injected');
+            });
+            expect(card?.classList.contains('fm-faded')).toBe(true);
+        });
 
-        toggle.click();
-        await waitForState('never');
-        expect(toggle.title).toBe('Fade: Never');
-        expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
-        expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'never');
-        expect(card.classList.contains('fm-faded')).toBe(false);
+        it('cycles the fade toggle state on click and updates sibling cards', async () => {
+            document.body.innerHTML = `
+                <div class="title-card" id="card1"><a aria-label="Cycle Movie"></a></div>
+                <div class="previewModal--wrapper mini-modal">
+                    <div class="previewModal--player_container">
+                        <img alt="Cycle Movie">
+                    </div>
+                </div>
+            `;
+            const storageGet = vi.fn().mockResolvedValue(undefined);
+            const storageSet = vi.fn().mockResolvedValue(undefined);
+            const storageDelete = vi.fn().mockResolvedValue(undefined);
+            const adapter = buildMockAdapter()
+                .withConfigGetReturning((key: string) => {
+                    if (key === 'enableFadeToggle') return true;
+                    if (key === 'enableFadeUnderRating') return false;
+                    return undefined;
+                })
+                .withStorageGetResolvingTo(storageGet)
+                .withStorageSetResolvingTo(storageSet)
+                .withStorageDeleteResolvingTo(storageDelete)
+                .build();
+            vi.spyOn(ApiClientManager.prototype, 'getData').mockResolvedValue(
+                buildTitle().withImdbRating(5.0).withImdbId('tt4').build()
+            );
+            appRef = startApp(adapter);
+            vi.advanceTimersToNextTimer();
+            const modal = document.querySelector('.previewModal--player_container') as HTMLElement | null;
+            await vi.waitFor(() => {
+                if (!modal?.querySelector('.fm-fade-toggle')) throw new Error('Toggle not found');
+            });
+            const toggle = modal?.querySelector('.fm-fade-toggle') as HTMLElement | null;
+            if (!toggle) throw new Error('Toggle missing');
+            const icon = toggle.querySelector('.fm-fade-toggle-icon');
+            if (!icon) throw new Error('Toggle icon missing');
+            const card = document.querySelector('.title-card');
+            if (!(card instanceof HTMLElement)) throw new Error('Title card missing');
+            const waitForState = (expected: string): Promise<void> =>
+                vi.waitFor(() => {
+                    if (toggle.dataset.state !== expected) throw new Error('State not updated');
+                });
+            expect(toggle.dataset.state).toBe('auto');
+            expect(toggle.title).toBe('Fade: Auto');
+            expect(icon.textContent).toBe('⭐');
 
-        toggle.click();
-        await waitForState('auto');
-        expect(toggle.title).toBe('Fade: Auto');
-        expect(icon.textContent).toBe('⭐');
-        expect(storageDelete).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'));
+            toggle.click();
+            await waitForState('always');
+            expect(toggle.title).toBe('Fade: Always');
+            expect(icon.textContent).toBe('👁️');
+            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(true);
+            expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'always');
+            expect(card.classList.contains('fm-faded')).toBe(true);
+
+            toggle.click();
+            await waitForState('never');
+            expect(toggle.title).toBe('Fade: Never');
+            expect(icon.classList.contains('fm-fade-toggle--faded')).toBe(false);
+            expect(storageSet).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'), 'never');
+            expect(card.classList.contains('fm-faded')).toBe(false);
+
+            toggle.click();
+            await waitForState('auto');
+            expect(toggle.title).toBe('Fade: Auto');
+            expect(icon.textContent).toBe('⭐');
+            expect(storageDelete).toHaveBeenCalledWith(expect.stringContaining('fm-fade:'));
+        });
     });
 
-    it('should return undefined when ServiceRegistry.detect finds no service', async () => {
-        const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-        vi.spyOn(ServiceRegistry, 'detect').mockReturnValueOnce(undefined);
-        const result = startApp(buildMockAdapter().build());
-        expect(result).toBeUndefined();
-    });
-
-    describe('IMDb ID override handlers', () => {
+    describe('IMDb ID override and refresh handlers', () => {
         let mockOverrideManager: { getImdbId: Mock; setImdbId: Mock };
         let mockCache: { delete: Mock };
         let mockRenderer: Record<string, { mock: { calls: unknown[][] } }>;
@@ -920,7 +901,7 @@ describe('App', () => {
             };
         });
 
-        it('should cancel the override when the prompt is dismissed', async () => {
+        it('cancels the override when the prompt is dismissed', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -931,7 +912,7 @@ describe('App', () => {
             expect(mockCache.delete).not.toHaveBeenCalled();
         });
 
-        it('should alert on an invalid IMDb ID', async () => {
+        it('alerts on an invalid IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -950,7 +931,7 @@ describe('App', () => {
             }
         });
 
-        it('should set the override and evict the cache for a valid IMDb ID', async () => {
+        it('sets the override and evicts the cache for a valid IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -961,7 +942,7 @@ describe('App', () => {
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('should extract the IMDb ID from an IMDb URL', async () => {
+        it('extracts the IMDb ID from an IMDb URL', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             const { onEditClick } = await decorateAndCaptureActions(container);
@@ -972,7 +953,7 @@ describe('App', () => {
             expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
         });
 
-        it('should prefill the prompt with the current override before the API IMDb ID', async () => {
+        it('prefills the prompt with the current override before the API IMDb ID', async () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             mockOverrideManager.getImdbId.mockResolvedValue('tt0000001');
@@ -983,7 +964,7 @@ describe('App', () => {
             expect(promptMock).toHaveBeenCalledWith('IMDb ID for Test Movie:', 'tt0000001');
         });
 
-        it('should evict the cache and re-decorate on refresh', async () => {
+        it('evicts the cache and re-decorates on refresh', async () => {
             const container = document.createElement('div');
             container.setAttribute('data-fm-key', 'test_movie');
             document.body.appendChild(container);
@@ -995,7 +976,7 @@ describe('App', () => {
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
         });
 
-        it('logs a failure from the edit handler', async () => {
+        it('does not set an override or evict the cache and logs when editing the IMDb ID fails', async () => {
             mockOverrideManager.getImdbId.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);
@@ -1004,11 +985,14 @@ describe('App', () => {
             void onEditClick('Test Movie');
 
             await vi.waitFor(() => {
-                expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
+                expect(logger.error).toHaveBeenCalled();
             });
+            expect(mockOverrideManager.setImdbId).not.toHaveBeenCalled();
+            expect(mockCache.delete).not.toHaveBeenCalled();
+            expect(logger.error).toHaveBeenCalledWith('Failed to edit IMDb ID for "Test Movie"', expect.any(Error));
         });
 
-        it('logs a failure from the refresh handler', async () => {
+        it('evicts the cache and logs when refreshing ratings fails', async () => {
             mockCache.delete.mockRejectedValue(new Error('storage failure'));
             const container = document.createElement('div');
             document.body.appendChild(container);
@@ -1017,11 +1001,10 @@ describe('App', () => {
             void onRefreshClick('Test Movie');
 
             await vi.waitFor(() => {
-                expect(logger.error).toHaveBeenCalledWith(
-                    'Failed to refresh ratings for "Test Movie"',
-                    expect.any(Error)
-                );
+                expect(logger.error).toHaveBeenCalled();
             });
+            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(logger.error).toHaveBeenCalledWith('Failed to refresh ratings for "Test Movie"', expect.any(Error));
         });
     });
 });

@@ -130,114 +130,121 @@ describe('userscript entry point', () => {
         );
     });
 
-    it('waits for migrations before starting the app and registering the menu', async () => {
-        const migrationsModule = await import('../../../../src/core/migrations');
-        const appModule = await import('../../../../src/core/app');
+    describe('startup', () => {
+        it('waits for migrations before starting the app and registering the menu', async () => {
+            const migrationsModule = await import('../../../../src/core/migrations');
+            const appModule = await import('../../../../src/core/app');
 
-        await import('../../../../src/targets/userscript/entry');
+            await import('../../../../src/targets/userscript/entry');
 
-        expect(migrationsModule.runMigrations).toHaveBeenCalledWith(adapter, expect.anything());
-        expect(appModule.startApp).not.toHaveBeenCalled();
-        expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
+            expect(migrationsModule.runMigrations).toHaveBeenCalledWith(adapter, expect.anything());
+            expect(appModule.startApp).not.toHaveBeenCalled();
+            expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
 
-        resolveMigrations();
-        await vi.waitFor(() => {
-            expect(appModule.startApp).toHaveBeenCalledWith(adapter);
-            expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
+            resolveMigrations();
+            await vi.waitFor(() => {
+                expect(appModule.startApp).toHaveBeenCalledWith(adapter);
+                expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
+            });
+
+            expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(
+                loggerConstructor.mock.results[0]?.value
+            );
+            expect(loggerConstructor).toHaveBeenCalledWith(adapter);
+            expect(invocationOrder(appModule.startApp as Mock)).toBeGreaterThan(
+                invocationOrder(migrationsModule.runMigrations as Mock)
+            );
+            expect(invocationOrder(adapter.registerMenuCommand as Mock)).toBeGreaterThan(
+                invocationOrder(appModule.startApp as Mock)
+            );
         });
+        it('does not start the app or register the menu and logs when migrations reject', async () => {
+            migrationRunner = vi.fn().mockRejectedValue(new Error('migration boom'));
+            const appModule = await import('../../../../src/core/app');
 
-        expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(
-            loggerConstructor.mock.results[0]?.value
-        );
-        expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect(invocationOrder(appModule.startApp as Mock)).toBeGreaterThan(
-            invocationOrder(migrationsModule.runMigrations as Mock)
-        );
-        expect(invocationOrder(adapter.registerMenuCommand as Mock)).toBeGreaterThan(
-            invocationOrder(appModule.startApp as Mock)
-        );
-    });
+            await import('../../../../src/targets/userscript/entry');
 
-    it('registers the settings menu when startApp returns undefined', async () => {
-        const appModule = await import('../../../../src/core/app');
-        const migrationsModule = await import('../../../../src/core/migrations');
-
-        await import('../../../../src/targets/userscript/entry');
-        resolveMigrations();
-        await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
-
-        expect(appModule.startApp).toHaveBeenCalledOnce();
-        expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
-        expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect(configConstructor).not.toHaveBeenCalled();
-        expect(cacheConstructor).not.toHaveBeenCalled();
-        expect(disabledConstructor).not.toHaveBeenCalled();
-
-        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
-        menuCallback();
-
-        const logger = loggerConstructor.mock.results[0]?.value;
-        expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(logger);
-        const config = configConstructor.mock.results[0]?.value;
-        const overrideManager = overrideConstructor.mock.results[0]?.value;
-        const cacheManager = cacheConstructor.mock.results[0]?.value;
-        const disabledManager = disabledConstructor.mock.results[0]?.value;
-        expect(loggerConstructor).toHaveBeenCalledWith(adapter);
-        expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
-        expect(overrideConstructor).toHaveBeenCalledWith(adapter);
-        expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger, overrideManager);
-        expect(disabledConstructor).toHaveBeenCalledWith(adapter);
-        expect(settingsConstructor).toHaveBeenCalledWith({
-            adapter,
-            logger,
-            cacheManager,
-            disabledClientsManager: disabledManager,
-        });
-    });
-
-    it('uses the app managers in the settings menu when startApp returns an app handle', async () => {
-        const cacheManager = { source: 'app-cache' };
-        const disabledManager = { source: 'app-disabled' };
-        appHandle = { cacheManager, disabledManager };
-
-        await import('../../../../src/targets/userscript/entry');
-        resolveMigrations();
-        await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
-        const menuCallback = adapter.registerMenuCommand.mock.calls[0]?.[1];
-        menuCallback();
-
-        const logger = loggerConstructor.mock.results[0]?.value;
-        expect(settingsConstructor).toHaveBeenCalledWith({
-            adapter,
-            logger,
-            cacheManager,
-            disabledClientsManager: disabledManager,
-        });
-        expect(cacheConstructor).not.toHaveBeenCalled();
-        expect(disabledConstructor).not.toHaveBeenCalled();
-    });
-
-    it('logs a startup failure when migrations reject', async () => {
-        migrationRunner = vi.fn().mockRejectedValue(new Error('migration boom'));
-
-        await import('../../../../src/targets/userscript/entry');
-
-        await vi.waitFor(() => {
+            await vi.waitFor(() => {
+                expect(loggerError).toHaveBeenCalled();
+            });
+            expect(appModule.startApp).not.toHaveBeenCalled();
+            expect(adapter.registerMenuCommand).not.toHaveBeenCalled();
             expect(loggerError).toHaveBeenCalledWith('FlixMonkey startup failed', expect.any(Error));
         });
     });
 
-    it('logs a settings render failure', async () => {
-        renderSettings.mockRejectedValue(new Error('render boom'));
+    describe('settings menu', () => {
+        it('registers the settings menu when app startup returns nothing', async () => {
+            const appModule = await import('../../../../src/core/app');
+            const migrationsModule = await import('../../../../src/core/migrations');
 
-        await import('../../../../src/targets/userscript/entry');
-        resolveMigrations();
-        await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+            await import('../../../../src/targets/userscript/entry');
+            resolveMigrations();
+            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
 
-        const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
-        menuCallback();
+            expect(appModule.startApp).toHaveBeenCalledOnce();
+            expect(adapter.registerMenuCommand).toHaveBeenCalledWith('FlixMonkey Settings', expect.any(Function));
+            expect(loggerConstructor).toHaveBeenCalledWith(adapter);
+            expect(configConstructor).not.toHaveBeenCalled();
+            expect(cacheConstructor).not.toHaveBeenCalled();
+            expect(disabledConstructor).not.toHaveBeenCalled();
 
-        await vi.waitFor(() => {
+            const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
+            menuCallback();
+
+            const logger = loggerConstructor.mock.results[0]?.value;
+            expect((migrationsModule.runMigrations as Mock).mock.calls[0]?.[1]).toBe(logger);
+            const config = configConstructor.mock.results[0]?.value;
+            const overrideManager = overrideConstructor.mock.results[0]?.value;
+            const cacheManager = cacheConstructor.mock.results[0]?.value;
+            const disabledManager = disabledConstructor.mock.results[0]?.value;
+            expect(loggerConstructor).toHaveBeenCalledWith(adapter);
+            expect(configConstructor).toHaveBeenCalledWith(adapter, logger);
+            expect(overrideConstructor).toHaveBeenCalledWith(adapter);
+            expect(cacheConstructor).toHaveBeenCalledWith(adapter, config, logger, overrideManager);
+            expect(disabledConstructor).toHaveBeenCalledWith(adapter);
+            expect(settingsConstructor).toHaveBeenCalledWith({
+                adapter,
+                logger,
+                cacheManager,
+                disabledClientsManager: disabledManager,
+            });
+        });
+        it('uses the app managers in the settings menu when startup returns an app handle', async () => {
+            const cacheManager = { source: 'app-cache' };
+            const disabledManager = { source: 'app-disabled' };
+            appHandle = { cacheManager, disabledManager };
+
+            await import('../../../../src/targets/userscript/entry');
+            resolveMigrations();
+            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+            const menuCallback = adapter.registerMenuCommand.mock.calls[0]?.[1];
+            menuCallback();
+
+            const logger = loggerConstructor.mock.results[0]?.value;
+            expect(settingsConstructor).toHaveBeenCalledWith({
+                adapter,
+                logger,
+                cacheManager,
+                disabledClientsManager: disabledManager,
+            });
+            expect(cacheConstructor).not.toHaveBeenCalled();
+            expect(disabledConstructor).not.toHaveBeenCalled();
+        });
+        it('calls renderSettings and logs when rendering the settings menu fails', async () => {
+            renderSettings.mockRejectedValue(new Error('render boom'));
+
+            await import('../../../../src/targets/userscript/entry');
+            resolveMigrations();
+            await vi.waitFor(() => expect(adapter.registerMenuCommand).toHaveBeenCalled());
+
+            const menuCallback = (adapter.registerMenuCommand as Mock).mock.calls[0]?.[1];
+            menuCallback();
+
+            await vi.waitFor(() => {
+                expect(loggerError).toHaveBeenCalled();
+            });
+            expect(renderSettings).toHaveBeenCalledOnce();
             expect(loggerError).toHaveBeenCalledWith('Failed to render settings', expect.any(Error));
         });
     });

@@ -40,25 +40,7 @@ describe('SettingsView', () => {
         document.body.appendChild(container);
     });
 
-    it('reads one value snapshot from its rendered fields', () => {
-        const fields: readonly ConfigField[] = [
-            { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
-        ];
-        const localView = new SettingsView(fields, {
-            onSave: vi.fn(),
-            onClearCache: vi.fn(),
-            onClearCacheWithIds: vi.fn(),
-            onResetClients: vi.fn(),
-        });
-        const localContainer = document.createElement('div');
-        localView.render(localContainer, {});
-        const debugInput = localContainer.querySelector('#fm-debug') as HTMLInputElement;
-        debugInput.checked = true;
-
-        expect(localView.readValues()).toEqual({ debug: true });
-    });
-
-    describe('Rendering', () => {
+    describe('rendering', () => {
         it('renders each config field from its definition', () => {
             view.render(container, {});
 
@@ -234,8 +216,7 @@ describe('SettingsView', () => {
             expect(checkbox.disabled).toBe(true);
         });
     });
-
-    describe('Field population', () => {
+    describe('field population', () => {
         it('populates every field with its default when settings are empty', () => {
             view.render(container, {});
 
@@ -286,29 +267,8 @@ describe('SettingsView', () => {
 
             expect((container.querySelector('#fm-showMcRating') as HTMLInputElement).checked).toBe(true);
         });
-
-        it('skips disabled fields in readValues', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
-                {
-                    key: 'disabledField',
-                    type: 'text',
-                    label: 'Disabled Field',
-                    default: 'value',
-                    disabled: true,
-                    group: 'display',
-                },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
-
-            const values = view.readValues();
-            expect(values).toHaveProperty('enabledField');
-            expect(values).not.toHaveProperty('disabledField');
-        });
     });
-
-    describe('Validation', () => {
+    describe('validation', () => {
         it('returns errors and marks invalid fields', () => {
             view.render(container, {});
             const input = container.querySelector('#fm-fadeRatingThreshold') as HTMLInputElement;
@@ -344,22 +304,54 @@ describe('SettingsView', () => {
             expect(validate).toHaveBeenCalledWith(true, { testCheckbox: true });
         });
     });
+    it('wires each button to its supplied action', () => {
+        view.render(container, {});
 
-    describe('Actions', () => {
-        it('wires each button to its supplied action', () => {
-            view.render(container, {});
+        (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+        (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
+        (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
 
-            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
-            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
-
-            expect(actions.onClearCache).toHaveBeenCalledOnce();
-            expect(actions.onClearCacheWithIds).toHaveBeenCalledOnce();
-            expect(actions.onResetClients).toHaveBeenCalledOnce();
-        });
+        expect(actions.onClearCache).toHaveBeenCalledOnce();
+        expect(actions.onClearCacheWithIds).toHaveBeenCalledOnce();
+        expect(actions.onResetClients).toHaveBeenCalledOnce();
     });
+    describe('view state', () => {
+        it('returns one snapshot from its rendered fields', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+            ];
+            const localView = new SettingsView(fields, {
+                onSave: vi.fn(),
+                onClearCache: vi.fn(),
+                onClearCacheWithIds: vi.fn(),
+                onResetClients: vi.fn(),
+            });
+            const localContainer = document.createElement('div');
+            localView.render(localContainer, {});
+            const debugInput = localContainer.querySelector('#fm-debug') as HTMLInputElement;
+            debugInput.checked = true;
 
-    describe('Scoping', () => {
+            expect(localView.readValues()).toEqual({ debug: true });
+        });
+        it('omits disabled fields', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'enabledField', type: 'text', label: 'Enabled Field', default: 'value', group: 'display' },
+                {
+                    key: 'disabledField',
+                    type: 'text',
+                    label: 'Disabled Field',
+                    default: 'value',
+                    disabled: true,
+                    group: 'display',
+                },
+            ];
+            view = new SettingsView(fields, actions);
+            view.render(container, { enabledField: 'test', disabledField: 'ignored' });
+
+            const values = view.readValues();
+            expect(values).toHaveProperty('enabledField');
+            expect(values).not.toHaveProperty('disabledField');
+        });
         it('scopes reads and status updates to its rendered container', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
@@ -385,7 +377,7 @@ describe('SettingsView', () => {
         });
     });
 
-    describe('Auto-save', () => {
+    describe('auto-save', () => {
         beforeEach(() => {
             vi.useFakeTimers();
         });
@@ -394,63 +386,71 @@ describe('SettingsView', () => {
             vi.useRealTimers();
         });
 
-        it('uses change event for checkboxes', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'checkboxField', label: 'Checkbox', type: 'checkbox', default: false, group: 'display' },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
+        it.each([
+            {
+                fieldType: 'checkbox',
+                inputId: 'fm-checkboxField',
+                eventName: 'change',
+                value: true,
+                isSelect: false,
+            },
+            {
+                fieldType: 'text',
+                inputId: 'fm-textField',
+                eventName: 'input',
+                value: 'new-value',
+                isSelect: false,
+            },
+            {
+                fieldType: 'select',
+                inputId: 'fm-selectField',
+                eventName: 'input',
+                value: 'option2',
+                isSelect: true,
+            },
+        ])(
+            'uses the $eventName event to autosave $fieldType fields',
+            ({ fieldType, inputId, eventName, value, isSelect }) => {
+                let field: ConfigField;
+                if (isSelect) {
+                    field = {
+                        key: 'selectField',
+                        label: 'Select',
+                        type: 'select',
+                        default: 'option1',
+                        options: ['option1', 'option2'],
+                        group: 'display',
+                    };
+                } else if (fieldType === 'checkbox') {
+                    field = {
+                        key: 'checkboxField',
+                        label: 'Checkbox',
+                        type: 'checkbox',
+                        default: false,
+                        group: 'display',
+                    };
+                } else {
+                    field = { key: 'textField', label: 'Text', type: 'text', default: '', group: 'display' };
+                }
 
-            const checkbox = container.querySelector('#fm-checkboxField') as HTMLInputElement;
+                view = new SettingsView([field], actions);
+                view.render(container, {});
 
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                const input = container.querySelector(`#${inputId}`) as HTMLInputElement | HTMLSelectElement;
+                if (isSelect) {
+                    (input as HTMLSelectElement).value = String(value);
+                } else if (fieldType === 'checkbox') {
+                    (input as HTMLInputElement).checked = Boolean(value);
+                } else {
+                    (input as HTMLInputElement).value = String(value);
+                }
+                input.dispatchEvent(new Event(eventName, { bubbles: true }));
 
-            vi.advanceTimersByTime(1000);
+                vi.advanceTimersByTime(1000);
 
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses input event for text fields', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'textField', label: 'Text', type: 'text', default: '', group: 'display' },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
-
-            const textInput = container.querySelector('#fm-textField') as HTMLInputElement;
-
-            textInput.value = 'new-value';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses input event for select fields', () => {
-            const fields: readonly ConfigField[] = [
-                {
-                    key: 'selectField',
-                    label: 'Select',
-                    type: 'select',
-                    default: 'option1',
-                    options: ['option1', 'option2'],
-                    group: 'display',
-                },
-            ];
-            view = new SettingsView(fields, actions);
-            view.render(container, {});
-
-            const select = container.querySelector('#fm-selectField') as HTMLSelectElement;
-
-            select.value = 'option2';
-            select.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
+                expect(actions.onSave).toHaveBeenCalledOnce();
+            }
+        );
 
         it('debounces save calls on rapid text input changes', () => {
             view.render(container, {});
@@ -469,67 +469,6 @@ describe('SettingsView', () => {
             expect(actions.onSave).not.toHaveBeenCalled();
 
             vi.advanceTimersByTime(500);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('triggers save after debounce period on text input', () => {
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
-
-            textInput.value = 'new-api-key';
-            textInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-            expect(actions.onSave).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('triggers save immediately on checkbox change', () => {
-            view.render(container, {});
-            const checkbox = container.querySelector('#fm-debug') as HTMLInputElement;
-
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('triggers save on select change', () => {
-            view.render(container, {});
-            const select = container.querySelector('#fm-apiClient') as HTMLSelectElement;
-
-            select.value = 'omdb';
-            select.dispatchEvent(new Event('input', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('debounces multiple rapid changes into a single save', () => {
-            view.render(container, {});
-            const textInput = container.querySelector('#fm-xmdbApiKey') as HTMLInputElement;
-
-            for (let i = 0; i < 10; i++) {
-                textInput.value = `value${i}`;
-                textInput.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-
-            expect(actions.onSave).not.toHaveBeenCalled();
-
-            vi.advanceTimersByTime(1000);
-            expect(actions.onSave).toHaveBeenCalledOnce();
-        });
-
-        it('uses change event for rating checkboxes', () => {
-            view.render(container, {});
-            const checkbox = container.querySelector('#fm-showRtRating') as HTMLInputElement;
-
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-
-            vi.advanceTimersByTime(1000);
             expect(actions.onSave).toHaveBeenCalledOnce();
         });
 

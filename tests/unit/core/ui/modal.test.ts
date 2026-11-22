@@ -11,7 +11,7 @@ describe('Modal', () => {
         document.body.innerHTML = '';
     });
 
-    it('should correctly render the modal and its sub-elements', () => {
+    it('renders the modal with its title, close button, and body', () => {
         const modal = new Modal('Test Modal');
         modal.open();
 
@@ -24,33 +24,33 @@ describe('Modal', () => {
         expect(document.querySelector('.fm-modal-body')).not.toBeNull();
     });
 
-    it('should return the correct content container', () => {
+    it('returns the modal body as the content container', () => {
         const modal = new Modal('Test Modal');
         const container = modal.getContentContainer();
         expect(container.className).toBe('fm-modal-body');
     });
 
-    it('should throw when the body container is missing from the overlay', () => {
+    it('throws when the body container is missing from the overlay', () => {
         const modal = new Modal('Test Modal');
         modal.overlay.querySelector('.fm-modal-body')?.remove();
 
         expect(() => modal.getContentContainer()).toThrow('Modal body container not found');
     });
 
-    it('should show the modal when open() is called', () => {
+    it('shows the modal when open is called', () => {
         const modal = new Modal('Test Modal');
         modal.open();
         expect((document.querySelector('.fm-modal-overlay') as HTMLElement)?.style.display).toBe('flex');
     });
 
-    it('should remove the modal from DOM when the close button is used', () => {
+    it('removes the modal from the DOM when the close button is used', () => {
         const modal = new Modal('Test Modal');
         modal.open();
         (document.querySelector('.fm-modal-close') as HTMLElement)?.click();
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
-    it('should have role="dialog" and aria-modal on the content element', () => {
+    it('marks the content element as a dialog with aria-modal', () => {
         const modal = new Modal('A11y Modal');
         modal.open();
         const content = document.querySelector('.fm-modal-content') as HTMLElement;
@@ -63,21 +63,21 @@ describe('Modal', () => {
         expect(titleEl?.textContent).toBe('A11y Modal');
     });
 
-    it('should close when Escape is pressed', () => {
+    it('closes when Escape is pressed', () => {
         const modal = new Modal('Escape Modal');
         modal.open();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
-    it('should stay open when another key is pressed', () => {
+    it('stays open when another key is pressed', () => {
         const modal = new Modal('Other Key Modal');
         modal.open();
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         expect(document.querySelector('.fm-modal-overlay')).not.toBeNull();
     });
 
-    it('should not register duplicate Escape listeners when opened twice', () => {
+    it('does not register duplicate Escape listeners when opened twice', () => {
         const modal = new Modal('Double Open');
         modal.open();
         modal.open();
@@ -85,12 +85,12 @@ describe('Modal', () => {
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
-    it('should not be in the DOM before open() is called', () => {
+    it('remains outside the DOM before open is called', () => {
         new Modal('Pre-open Modal');
         expect(document.querySelector('.fm-modal-overlay')).toBeNull();
     });
 
-    it('should return focus to the trigger element after close', () => {
+    it('returns focus to the trigger element after close', () => {
         const trigger = document.createElement('button');
         document.body.appendChild(trigger);
         trigger.focus();

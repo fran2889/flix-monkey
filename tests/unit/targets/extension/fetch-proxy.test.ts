@@ -4,6 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_FETCH_TIMEOUT } from '../../../../src/core/constants';
 import { handleFetchMessage } from '../../../../src/targets/extension/fetch-proxy';
 
 const ALLOWED_URL = 'https://www.omdbapi.com/?apikey=k&i=tt0133093';
@@ -14,6 +15,7 @@ describe('handleFetchMessage', () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
     });
@@ -109,5 +111,47 @@ describe('handleFetchMessage', () => {
         const result = await handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
 
         expect(result).toEqual({ ok: false, error: 'offline' });
+    });
+
+    it('uses the requested timeout', async () => {
+        vi.useFakeTimers();
+        const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+        stubFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
+
+        const request = handleFetchMessage(ALLOWED_URL, { responseType: 'json', timeout: 1234 });
+
+        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1234);
+        await request;
+    });
+
+    it('falls back to DEFAULT_FETCH_TIMEOUT', async () => {
+        vi.useFakeTimers();
+        const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+        stubFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
+
+        const request = handleFetchMessage(ALLOWED_URL, { responseType: 'json' });
+
+        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), DEFAULT_FETCH_TIMEOUT);
+        await request;
+    });
+
+    it('aborts the request when the timeout fires', async () => {
+        vi.useFakeTimers();
+        const fetchMock = vi.fn(
+            (_url: string, init?: RequestInit) =>
+                new Promise<Response>((_resolve, reject) => {
+                    init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+                })
+        );
+        vi.stubGlobal('fetch', fetchMock);
+
+        const request = handleFetchMessage(ALLOWED_URL, { responseType: 'json', timeout: 500 });
+        const init = fetchMock.mock.calls[0]?.[1];
+        expect(init?.signal?.aborted).toBe(false);
+
+        await vi.advanceTimersByTimeAsync(500);
+
+        await expect(request).resolves.toEqual({ ok: false, error: 'aborted' });
+        expect(init?.signal?.aborted).toBe(true);
     });
 });

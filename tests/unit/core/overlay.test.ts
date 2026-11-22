@@ -45,7 +45,7 @@ describe('OverlayRenderer', () => {
             expect(document.head.querySelector('#fm-overlay-styles')).not.toBeNull();
         });
 
-        it('updates the existing style tag when injectStyles is called again', () => {
+        it('updates the existing style tag when styles are injected again', () => {
             const rendererA = new OverlayRenderer(buildConfig().withOverlayCorner('top-left').build());
             const rendererB = new OverlayRenderer(buildConfig().withOverlayCorner('top-right').build());
 
@@ -73,7 +73,7 @@ describe('OverlayRenderer', () => {
         });
     });
 
-    describe('overlay lifecycle', () => {
+    describe('overlay injection', () => {
         it('replaces an existing overlay and marks the container as injected', () => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
@@ -102,9 +102,7 @@ describe('OverlayRenderer', () => {
             expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
             expect(renderer.hasOverlay(container)).toBe(true);
         });
-    });
 
-    describe('interaction wiring', () => {
         it('forwards the interaction display title to the action handlers', () => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
@@ -161,45 +159,42 @@ describe('OverlayRenderer', () => {
     });
 
     describe('fade', () => {
-        it('adds fm-faded class when shouldFade is true', () => {
+        it.each([
+            {
+                description: 'adds fm-faded when shouldFade is true',
+                shouldFade: true,
+                startsFaded: false,
+                expected: true,
+            },
+            {
+                description: 'removes fm-faded when shouldFade is false',
+                shouldFade: false,
+                startsFaded: true,
+                expected: false,
+            },
+        ])('$description', ({ shouldFade, startsFaded, expected }) => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
+            if (startsFaded) container.classList.add('fm-faded');
 
-            renderer.applyFade(container, true);
+            renderer.applyFade(container, shouldFade);
 
-            expect(container.classList.contains('fm-faded')).toBe(true);
-        });
-
-        it('removes fm-faded class when shouldFade is false', () => {
-            const renderer = new OverlayRenderer(buildConfig().build());
-            const container = document.createElement('div');
-            container.classList.add('fm-faded');
-
-            renderer.applyFade(container, false);
-
-            expect(container.classList.contains('fm-faded')).toBe(false);
+            expect(container.classList.contains('fm-faded')).toBe(expected);
         });
     });
 
     describe('container positioning', () => {
-        it('ensures container has non-static position', () => {
+        it.each([
+            { description: 'ensures a static container becomes relative', initial: 'static', expected: 'relative' },
+            { description: 'leaves a non-static container unchanged', initial: 'absolute', expected: 'absolute' },
+        ])('$description', ({ initial, expected }) => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
-            container.style.position = 'static';
+            container.style.position = initial;
 
             renderer.ensureRelative(container);
 
-            expect(container.style.position).toBe('relative');
-        });
-
-        it('does not change position if already non-static', () => {
-            const renderer = new OverlayRenderer(buildConfig().build());
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-
-            renderer.ensureRelative(container);
-
-            expect(container.style.position).toBe('absolute');
+            expect(container.style.position).toBe(expected);
         });
     });
 

@@ -85,7 +85,7 @@ function _expectImdbVotes(votes: number | undefined, label: string = 'IMDb votes
     expect(votes, `${label} out of range`).toBeGreaterThanOrEqual(0);
 }
 
-describe('api-clients integration', () => {
+describe('API clients integration', () => {
     let configManager: ConfigManager;
     let badKeyConfigManager: ConfigManager;
     let logger: Logger;
@@ -113,17 +113,15 @@ describe('api-clients integration', () => {
         overrideManager,
     });
 
-    describe('XMDB search metadata', () => {
-        it('returns the search name, year, and id before the details lookup', async () => {
-            const client = new XmdbApiClient(clientDeps());
+    it('returns the XMDB search name, year, and id before the details lookup', async () => {
+        const client = new XmdbApiClient(clientDeps());
 
-            const result = await client.search('The Godfather');
+        const result = await client.search('The Godfather');
 
-            assertNonNullTitle(result);
-            expect(result.imdbId).toBe('tt0068646');
-            expect(result.apiTitle).toContain('Godfather');
-            expect(result.year).toBe(1972);
-        });
+        assertNonNullTitle(result);
+        expect(result.imdbId).toBe('tt0068646');
+        expect(result.apiTitle).toContain('Godfather');
+        expect(result.year).toBe(1972);
     });
 
     describe('movie with all ratings', () => {
@@ -142,7 +140,7 @@ describe('api-clients integration', () => {
             year: 1972,
         };
 
-        it('XMDB', async () => {
+        it('XMDB returns IMDb and Metacritic ratings', async () => {
             const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -152,7 +150,7 @@ describe('api-clients integration', () => {
             expect(result.rtRating).toBeUndefined();
         });
 
-        it('OMDB', async () => {
+        it('OMDb returns IMDb, Rotten Tomatoes, and Metacritic ratings', async () => {
             const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -162,7 +160,7 @@ describe('api-clients integration', () => {
             expectPercentageRating(result.mcRating, 'OMDB Metacritic');
         });
 
-        it('Agregarr', async () => {
+        it('Agregarr returns the IMDb rating without RT or Metacritic ratings', async () => {
             const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -189,21 +187,21 @@ describe('api-clients integration', () => {
             year: 2016,
         };
 
-        it('XMDB', async () => {
+        it('XMDB returns the series rating and type', async () => {
             const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
-        it('OMDB', async () => {
+        it('OMDb returns the series rating and type', async () => {
             const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
-        it('Agregarr', async () => {
+        it('Agregarr returns the series rating and type', async () => {
             const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -211,30 +209,27 @@ describe('api-clients integration', () => {
         });
     });
 
-    describe('invalid title search', () => {
+    describe('invalid lookups', () => {
         const TITLE = 'xyznonexistenttitle12345';
+        const INVALID_ID = 'tt0000000';
 
-        it('XMDB', async () => {
+        it('XMDB returns undefined for an unknown title', async () => {
             const client = new XmdbApiClient(clientDeps());
             expect(await client.search(TITLE)).toBeUndefined();
         });
 
-        it('OMDB', async () => {
+        it('OMDb returns undefined for an unknown title', async () => {
             const client = new OmdbApiClient(clientDeps());
             const result = await client.search(TITLE);
             expect(result).toBeUndefined();
         });
 
-        it('Agregarr', async () => {
+        it('Agregarr returns undefined for an unknown title', async () => {
             const client = new AgregarrApiClient(clientDeps());
             expect(await client.search(TITLE)).toBeUndefined();
         });
-    });
 
-    describe('invalid ID details', () => {
-        const INVALID_ID = 'tt0000000';
-
-        it('XMDB', async () => {
+        it('XMDB returns undefined for an unknown IMDb ID', async () => {
             const client = new XmdbApiClient(clientDeps());
             const searchResult = new Title({ imdbId: INVALID_ID, displayTitle: 'nonexistent' });
             const result = await client.getDetails(searchResult);
@@ -243,12 +238,12 @@ describe('api-clients integration', () => {
     });
 
     describe('invalid API key', () => {
-        it('XMDB', async () => {
+        it('XMDB rejects an invalid API key', async () => {
             const client = new XmdbApiClient({ ...clientDeps(), config: badKeyConfigManager });
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
 
-        it('OMDB', async () => {
+        it('OMDb rejects an invalid API key', async () => {
             const client = new OmdbApiClient({ ...clientDeps(), config: badKeyConfigManager });
             await expect(client.search('The Godfather')).rejects.toThrow();
         });
@@ -266,21 +261,21 @@ describe('api-clients integration', () => {
             imdbId: 'tt0211915',
         };
 
-        it('XMDB', async () => {
+        it('XMDB resolves a non-ASCII title', async () => {
             const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.XMDB, common);
         });
 
-        it('OMDB', async () => {
+        it('OMDb resolves a non-ASCII title', async () => {
             const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
             expectCommonTitleFields(result, ApiSource.OMDB, common);
         });
 
-        it('Agregarr', async () => {
+        it('Agregarr resolves a non-ASCII title', async () => {
             const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -303,7 +298,7 @@ describe('api-clients integration', () => {
             year: 1997,
         };
 
-        it('XMDB', async () => {
+        it('XMDB resolves the original foreign title', async () => {
             const client = new XmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -313,7 +308,7 @@ describe('api-clients integration', () => {
         // OMDB does not reliably resolve original foreign-language titles.
         // It matched a 1943 Italian film (tt0036502) instead of the 1997 Benigni film.
         // Assert it does NOT resolve to the expected ID so the test alerts us if this changes.
-        it('OMDB: does not resolve to expected ID', async () => {
+        it('OMDb does not resolve the foreign title to the expected IMDb ID', async () => {
             const client = new OmdbApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
@@ -321,7 +316,7 @@ describe('api-clients integration', () => {
             expect(result.imdbId).not.toBe(EXPECTED_IMDB_ID);
         });
 
-        it('Agregarr', async () => {
+        it('Agregarr resolves the original foreign title', async () => {
             const client = new AgregarrApiClient(clientDeps());
             const result = await client.fetch(TITLE);
             assertNonNullTitle(result);
