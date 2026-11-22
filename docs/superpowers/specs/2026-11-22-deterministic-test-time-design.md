@@ -152,8 +152,7 @@ shared flush for promise-only boundaries.
   `Date.now()` elapsed arithmetic, and confirm none remain.
 - Run the affected files repeatedly, then the full unit and UI suite.
 - Run type-check, lint, and Prettier.
-- Confirm the total test count is unchanged from the baseline and coverage
-  stays above thresholds.
+- Confirm the suite passes and coverage stays above thresholds.
 
 ## Left to the builder
 
