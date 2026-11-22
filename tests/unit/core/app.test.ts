@@ -9,7 +9,7 @@ import { ApiClientManager } from '../../../src/core/api-manager';
 import { FlixMonkeyApp, startApp } from '../../../src/core/app';
 import { CacheManager } from '../../../src/core/cache/index';
 import { ConfigManager } from '../../../src/core/config/index';
-import { DECORATION_DEBOUNCE_MS, LOOKUP_TIMEOUT_MS } from '../../../src/core/constants';
+import { LOOKUP_TIMEOUT_MS } from '../../../src/core/constants';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients';
 import { FadeManager } from '../../../src/core/fade-manager';
 import { IdOverrideManager } from '../../../src/core/id-override-manager';
@@ -235,7 +235,6 @@ describe('FlixMonkeyApp', () => {
             appRef = startApp(mockAdapter);
 
             // Initial decoration from init()
-            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
             await vi.runAllTimersAsync();
 
             const callCountAfterInit = getDataSpy.mock.calls.length;
@@ -248,7 +247,6 @@ describe('FlixMonkeyApp', () => {
             `;
 
             window.history.replaceState({}, '', '/replaced');
-            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
             await vi.runAllTimersAsync();
 
             expect(getDataSpy.mock.calls.length).toBeGreaterThan(callCountAfterInit);
@@ -361,7 +359,6 @@ describe('FlixMonkeyApp', () => {
             // Trigger mutation on parent, with target set
             requireMockObserver().trigger([{ addedNodes: [parent], target: parent } as unknown as MutationRecord]);
 
-            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
             await vi.runAllTimersAsync();
 
             // discover should be called with parent, not document
@@ -383,7 +380,6 @@ describe('FlixMonkeyApp', () => {
                 { addedNodes: [document.createElement('span')], target: secondParent } as unknown as MutationRecord,
             ]);
 
-            vi.advanceTimersByTime(DECORATION_DEBOUNCE_MS + 100);
             await vi.runAllTimersAsync();
 
             const roots = discoverSpy.mock.calls.map(c => c[0]);
