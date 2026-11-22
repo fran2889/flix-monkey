@@ -578,13 +578,13 @@ describe('FlixMonkeyApp', () => {
 
             await vi.waitFor(
                 () => {
-                    expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
+                    expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
                 },
                 { timeout: 2000 }
             );
 
             expect(document.querySelector('.title-card .fm-loading')).toBeNull();
-            expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Boom Movie"', expect.any(Error));
             logSpy.mockRestore();
         });
         it('renders a not-found fallback and logs when a lookup times out', async () => {
@@ -603,9 +603,9 @@ describe('FlixMonkeyApp', () => {
             // Advance past LOOKUP_TIMEOUT_MS (30000ms)
             await vi.advanceTimersByTimeAsync(31_000);
 
-            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
             expect(document.querySelector('.title-card .fm-loading')).toBeNull();
             expect(document.querySelector('.title-card .fm-search')).not.toBeNull();
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Hanging Film"', expect.any(Error));
             logSpy.mockRestore();
         });
         it('keeps a render failure out of the not-found fallback', async () => {
@@ -625,11 +625,11 @@ describe('FlixMonkeyApp', () => {
             appRef = startApp(buildMockAdapter().build());
 
             await vi.waitFor(() => {
-                expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
+                expect(injectSpy).toHaveBeenCalledTimes(1);
+                expect(document.querySelector('.title-card .fm-loading')).toBeNull();
             });
 
-            expect(injectSpy).toHaveBeenCalledTimes(1);
-            expect(document.querySelector('.title-card .fm-loading')).toBeNull();
+            expect(logSpy).toHaveBeenCalledWith('Failed to decorate "Broken Movie"', expect.any(Error));
             logSpy.mockRestore();
         });
         it.each([
