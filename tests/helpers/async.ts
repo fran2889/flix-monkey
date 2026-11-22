@@ -5,11 +5,12 @@
 import { vi } from 'vitest';
 
 /**
- * Flushes queued promise callbacks without moving the fake clock.
+ * Flushes queued promise callbacks and runs timers already due at the current
+ * instant, without advancing the fake clock.
  *
  * Requires fake timers to be active.
  *
- * @returns A promise that resolves after pending async work has run.
+ * @returns A promise that resolves after the queued work has run.
  */
 export async function flushAsyncWork(): Promise<void> {
     await vi.advanceTimersByTimeAsync(0);
