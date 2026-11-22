@@ -262,6 +262,7 @@ describe('OmdbApiClient', () => {
             const client = new OmdbApiClient({ ...deps, adapter, logger });
 
             expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledTimes(1);
             expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
                 response: [],
                 error: 'expected an object',
@@ -284,6 +285,7 @@ describe('OmdbApiClient', () => {
 
             expect(await client.search('Movie 1')).toBeUndefined();
             expect(logger.info).not.toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalledTimes(1);
             expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed OMDb search for "Movie 1"'), {
                 response: { Response: 'False', Error: 42 },
                 error: 'expected string at "Error"',

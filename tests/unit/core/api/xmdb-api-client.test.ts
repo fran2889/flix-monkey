@@ -232,6 +232,7 @@ describe('XmdbApiClient', () => {
 
             expect(result).toBeUndefined();
             expect(logger.info).not.toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalledTimes(1);
             expect(logger.warn).toHaveBeenCalledWith(
                 expect.stringContaining('Malformed XMDb details for "Test"'),
                 expect.anything()
@@ -315,6 +316,7 @@ describe('XmdbApiClient', () => {
             const client = new XmdbApiClient({ ...deps, adapter, logger });
 
             expect(await client.search('Movie 1')).toBeUndefined();
+            expect(logger.warn).toHaveBeenCalledTimes(1);
             expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Malformed XMDb search for "Movie 1"'), {
                 response,
                 error: 'no valid items in the "results" array',
