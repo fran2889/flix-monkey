@@ -74,24 +74,30 @@ describe('Title', () => {
         // Ratings arrive as numbers: each API client owns its provider's wire format
         // and converts it before constructing a Title. Anything that is not a finite
         // number carries no rating, including raw wire strings reaching an untyped caller.
-        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['8.5'], ['90%'], ['N/A'], ['']])(
-            'treats a missing or non-numeric rating as no rating',
-            (input: unknown) => {
-                const options = {
-                    displayTitle: 'Test',
-                    imdbRating: input,
-                    imdbVotes: input,
-                    rtRating: input,
-                    mcRating: input,
-                };
-                const title = new Title(options as unknown as TitleOptions);
-                expect(title.imdbRating).toBeUndefined();
-                expect(title.imdbVotes).toBeUndefined();
-                expect(title.rtRating).toBeUndefined();
-                expect(title.mcRating).toBeUndefined();
-                expect(title.hasRating).toBe(false);
-            }
-        );
+        it.each([
+            { description: 'an undefined', input: undefined },
+            { description: 'a null', input: null },
+            { description: 'a NaN', input: Number.NaN },
+            { description: 'an infinite', input: Number.POSITIVE_INFINITY },
+            { description: 'a numeric string', input: '8.5' },
+            { description: 'a percentage string', input: '90%' },
+            { description: 'an N/A string', input: 'N/A' },
+            { description: 'an empty string', input: '' },
+        ])('treats $description rating as no rating', ({ input }: { description: string; input: unknown }) => {
+            const options = {
+                displayTitle: 'Test',
+                imdbRating: input,
+                imdbVotes: input,
+                rtRating: input,
+                mcRating: input,
+            };
+            const title = new Title(options as unknown as TitleOptions);
+            expect(title.imdbRating).toBeUndefined();
+            expect(title.imdbVotes).toBeUndefined();
+            expect(title.rtRating).toBeUndefined();
+            expect(title.mcRating).toBeUndefined();
+            expect(title.hasRating).toBe(false);
+        });
 
         it.each([
             [0, 0],
@@ -117,14 +123,16 @@ describe('Title', () => {
 
         // Providers report years as partial strings such as "2020-"; extracting the
         // digits is the client's job, so Title rejects the raw wire value.
-        it.each([[undefined], [null], [Number.NaN], [Number.POSITIVE_INFINITY], ['2020-'], ['2020']])(
-            'treats a missing or non-numeric year as undefined',
-            (input: unknown) => {
-                expect(
-                    new Title({ displayTitle: 'Test', year: input } as unknown as TitleOptions).year
-                ).toBeUndefined();
-            }
-        );
+        it.each([
+            { description: 'an undefined', input: undefined },
+            { description: 'a null', input: null },
+            { description: 'a NaN', input: Number.NaN },
+            { description: 'an infinite', input: Number.POSITIVE_INFINITY },
+            { description: 'a partial string', input: '2020-' },
+            { description: 'a numeric string', input: '2020' },
+        ])('treats $description year as no year', ({ input }: { description: string; input: unknown }) => {
+            expect(new Title({ displayTitle: 'Test', year: input } as unknown as TitleOptions).year).toBeUndefined();
+        });
 
         it('normalizes untyped null inputs to undefined', () => {
             const title = new Title({
