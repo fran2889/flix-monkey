@@ -149,6 +149,7 @@ describe('RequestQueue', () => {
 
         const p3 = queue.enqueue('high', 10, fetchFn);
 
+        // Three dispatches at one interval each need two pacing gaps.
         await vi.advanceTimersByTimeAsync(interval * 2);
         await Promise.all([p1, p2, p3]);
 
@@ -189,6 +190,9 @@ describe('RequestQueue', () => {
             expect(secondFetch).toHaveBeenCalledOnce();
         });
         it('synchronizes across instances using storage', async () => {
+            // Seed the shared slot in the past so queue1 dispatches at once and
+            // queue2 waits a full interval, independent of the fake clock's
+            // default start value.
             let sharedTime = '0';
             const mockAdapter = buildMockAdapter().build();
             mockAdapter.storageGet = vi.fn(async () => sharedTime);

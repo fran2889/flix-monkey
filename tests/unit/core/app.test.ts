@@ -577,6 +577,10 @@ describe('FlixMonkeyApp', () => {
 
             appRef = startApp(buildMockAdapter().build());
 
+            // Advance only past the paint yield. Running every timer would loop:
+            // the thrown render failure removes the loading overlay, that DOM
+            // mutation schedules another debounced decoration, and the failure
+            // repeats until Vitest aborts after 10000 timers.
             await flushAsyncWork();
 
             expect(injectSpy).toHaveBeenCalledTimes(1);
