@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { slugify } from '../../../../src/core/utils/index';
 
-describe('slugify', () => {
+describe('string utilities', () => {
     it('preserves legacy ASCII title keys', () => {
         expect(slugify("Schitt's Creek")).toBe('schitt_s_creek');
         expect(slugify('Test: Movie')).toBe('test_movie');

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import { interpolateColor } from '../../../../src/core/utils/index';
 
-describe('interpolateColor', () => {
+describe('color utilities', () => {
     it.each([
         [0, '#ff0000', '#00dd00', 'rgb(255, 0, 0)'],
         [1, '#ff0000', '#00dd00', 'rgb(0, 221, 0)'],
