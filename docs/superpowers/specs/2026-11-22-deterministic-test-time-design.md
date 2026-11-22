@@ -6,15 +6,14 @@ Status: accepted
 
 ## Intent
 
-Finish the timing cleanup tracked in
-[`docs/reviews/2026-11-22-test-cleanup-remaining.md`](../../reviews/2026-11-22-test-cleanup-remaining.md)
-and extend it to every affected test. Tests should prove behavior with a clock
-we control, not with wall-clock waits, elapsed measurements, polling, or fixed
-microtask counts.
+Make every timing-sensitive test prove behavior with a clock we control, not
+with wall-clock waits, elapsed measurements, polling, or fixed microtask
+counts. Tests advance that clock explicitly at the boundary they mean to prove.
 
-The report is a starting point, not the full list. A rescan found real sleeps in
-`request-queue`, `settings-ui`, and `cache`, fixed tick counts in the entry and
-worker tests, and 19 `vi.waitFor` calls under global fake timers in `app.test.ts`.
+The inventory spans nine test files: real sleeps in `request-queue`,
+`settings-ui`, and `cache`; fixed tick counts in the extension, worker, and
+userscript entry tests; and 19 `vi.waitFor` calls under global fake timers in
+`app.test.ts`.
 
 ## Goals
 
@@ -22,15 +21,15 @@ worker tests, and 19 `vi.waitFor` calls under global fake timers in `app.test.ts
 - No real timer sleeps used to settle async work or pace requests.
 - No `vi.waitFor` while fake timers are active.
 - No fixed `Promise.resolve()` tick counts.
-- Preserve every existing behavior assertion and the 981-test count.
+- Preserve every existing behavior assertion and the baseline test count.
 - Record the convention so the pattern does not return.
 
 ## Non-goals
 
 - No production code changes and no new seams in `src/`.
 - No removal or merger of tests beyond what determinism requires.
-- No work on the report's other open sections: duplicate coverage, broad loop
-  tests, defensive branches, or getter coverage.
+- No work on the remaining test-cleanup themes outside timing: duplicate
+  coverage, broad loop tests, defensive branches, or getter coverage.
 - Integration tests stay out of scope; they need live API keys.
 
 ## Anti-goals
@@ -46,6 +45,10 @@ worker tests, and 19 `vi.waitFor` calls under global fake timers in `app.test.ts
 - `vi.runAllTimersAsync()` fires every pending timer. Tests that deliberately
   leave a lookup pending must not use it, because it fires the 30 s lookup
   timeout.
+- A test whose render path throws must not use `vi.runAllTimersAsync()`.
+  Removing the loading overlay mutates the card, which schedules another
+  debounced decoration that throws again, so the run aborts after 10000 timers.
+  Advance only past the paint yield in that case.
 - Fake timers must be restored after every test that enables them.
 - Test files keep the SPDX header, one top-level `describe`, behavior names,
   and the existing grouping conventions.
@@ -56,9 +59,9 @@ worker tests, and 19 `vi.waitFor` calls under global fake timers in `app.test.ts
 
 Every affected file runs on fake timers. Timer-driven behavior is stepped
 explicitly with `advanceTimersByTimeAsync`, `runAllTimersAsync`, or
-`advanceTimersToNextTimerAsync`. Promise-only boundaries use one shared
-`flushAsyncWork()` helper built on `vi.advanceTimersByTimeAsync(0)`. Elapsed
-assertions become boundary assertions.
+`advanceTimersToNextTimerAsync`. Boundaries that only need queued work use one
+shared `flushAsyncWork()` helper built on `vi.advanceTimersByTimeAsync(0)`.
+Elapsed assertions become boundary assertions.
 
 Chosen because it removes wall-clock dependence completely, makes the tested
 step explicit, and keeps the shared flush honest about requiring fake timers.
@@ -71,7 +74,7 @@ interval boundary.
 
 Rejected: the diff is smaller and tolerant of new `await`s, but it still polls
 on real time, keeps timeout failures, and preserves the fake-timer plus
-`waitFor` combination the report flagged.
+`waitFor` combination this change removes.
 
 ### C. Wrap the mechanism
 
@@ -85,10 +88,10 @@ which is the distinction this change exists to make visible.
 ### Shared flush
 
 Add `tests/helpers/async.ts` exporting `flushAsyncWork(): Promise<void>`, which
-awaits `vi.advanceTimersByTimeAsync(0)`. `tickAsync` yields to the event loop
-before running timers, so queued promise callbacks run without moving the
-clock. The helper documents that fake timers must be active and throws through
-Vitest otherwise.
+awaits `vi.advanceTimersByTimeAsync(0)`. That call drains queued promise
+callbacks and runs any timer already due at the current instant, without
+advancing the fake clock. The helper documents both effects and requires fake
+timers to be active; Vitest throws when they are not.
 
 ### Per-file changes
 
@@ -108,6 +111,8 @@ Vitest otherwise.
     - Keep the pending-lookup tests on bounded advancement so the 30 s timeout
       does not fire early: the in-flight loading test advances by 0, and the
       timeout test advances past `LOOKUP_TIMEOUT_MS`.
+    - Keep the render-failure test on the paint-yield flush: running every timer
+      would loop, because each failed render schedules another decoration.
     - Replace fixed `Promise.resolve()` pairs and `vi.runAllTimers()` calls with
       the same advancement helpers.
     - Replace the fade-toggle state polling with a flush after each click.
@@ -147,8 +152,8 @@ shared flush for promise-only boundaries.
   `Date.now()` elapsed arithmetic, and confirm none remain.
 - Run the affected files repeatedly, then the full unit and UI suite.
 - Run type-check, lint, and Prettier.
-- Confirm the suite still reports 981 passing tests and coverage stays above
-  thresholds.
+- Confirm the total test count is unchanged from the baseline and coverage
+  stays above thresholds.
 
 ## Left to the builder
 
