@@ -239,15 +239,13 @@ describe('XmdbApiClient', () => {
         });
     });
 
-    describe('health', () => {
-        it('returns an unhealthy status when the API key is missing', async () => {
-            const mockConfigForTest: ConfigManager = {
-                get: () => '',
-            } as unknown as ConfigManager;
-            const client = new XmdbApiClient({ ...deps, config: mockConfigForTest });
-            const status = await client.getStatus();
-            expect(status.healthy).toBe(false);
-        });
+    it('returns an unhealthy status when the API key is missing', async () => {
+        const mockConfigForTest: ConfigManager = {
+            get: () => '',
+        } as unknown as ConfigManager;
+        const client = new XmdbApiClient({ ...deps, config: mockConfigForTest });
+        const status = await client.getStatus();
+        expect(status.healthy).toBe(false);
     });
 
     describe('response parsing', () => {

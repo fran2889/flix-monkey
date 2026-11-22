@@ -58,19 +58,17 @@ function buildRenderer(service: StreamingService): OverlayRenderer {
 }
 
 describe('surface fixtures', () => {
-    describe('service matrix', () => {
-        describe.each(serviceCases)('$name surfaces', ({ createService, surfaces, fixtures }) => {
-            let surfaceManager: SurfaceManager;
-            let overlayRenderer: OverlayRenderer;
+    describe.each(serviceCases)('$name surfaces', ({ createService, surfaces, fixtures }) => {
+        let surfaceManager: SurfaceManager;
+        let overlayRenderer: OverlayRenderer;
 
-            beforeEach(() => {
-                surfaceManager = new SurfaceManager(buildLogger().build(), surfaces);
-                overlayRenderer = buildRenderer(createService());
-            });
+        beforeEach(() => {
+            surfaceManager = new SurfaceManager(buildLogger().build(), surfaces);
+            overlayRenderer = buildRenderer(createService());
+        });
 
-            it('discovers and injects an overlay on every surface fixture', () => {
-                testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures);
-            });
+        it('discovers and injects an overlay on every surface fixture', () => {
+            testSurfaceFixtures(surfaceManager, overlayRenderer, fixtures);
         });
     });
 
@@ -98,24 +96,33 @@ describe('surface fixtures', () => {
             );
         }
 
-        it('decorates collapsed and expanded More Like This tiles once', () => {
+        function appendExpandedTiles(): void {
+            const wrapper = document.querySelector('.moreLikeThis--wrapper');
+            if (!wrapper) throw new Error('More Like This wrapper missing');
+            wrapper.insertAdjacentHTML('beforeend', NETFLIX_MORE_LIKE_THIS_SECTION.expandedHtml);
+        }
+
+        it('discovers collapsed tiles with the artwork container', () => {
             document.body.innerHTML = NETFLIX_MORE_LIKE_THIS_SECTION.collapsedHtml;
 
-            let surfaces = surfaceManager.discover(document.body);
+            const surfaces = surfaceManager.discover(document.body);
+
             expect(surfaces).toHaveLength(2);
             expect(surfaces.map(surface => surface.title)).toEqual(['Caramelo', 'The Crown']);
             surfaces.forEach(surface => {
                 expect(surface.fadeable).toBe(true);
                 expect(surface.showFadeToggle).toBe(false);
                 expect(surface.container).toHaveClass('titleCard-imageWrapper');
-                attachOverlay(surface);
             });
+        });
 
-            const wrapper = document.querySelector('.moreLikeThis--wrapper');
-            if (!wrapper) throw new Error('More Like This wrapper missing');
-            wrapper.insertAdjacentHTML('beforeend', NETFLIX_MORE_LIKE_THIS_SECTION.expandedHtml);
+        it('discovers tiles appended after expansion', () => {
+            document.body.innerHTML = NETFLIX_MORE_LIKE_THIS_SECTION.collapsedHtml;
+            surfaceManager.discover(document.body).forEach(attachOverlay);
+            appendExpandedTiles();
 
-            surfaces = surfaceManager.discover(document.body);
+            const surfaces = surfaceManager.discover(document.body);
+
             expect(surfaces).toHaveLength(4);
             expect(surfaces.map(surface => surface.title)).toEqual([
                 'Caramelo',
@@ -124,13 +131,23 @@ describe('surface fixtures', () => {
                 'No Artwork Label',
             ]);
             surfaces.forEach(attachOverlay);
-
             document.querySelectorAll('.titleCard-imageWrapper').forEach(container => {
                 expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
             });
+        });
+
+        it('does not duplicate overlays when a tile is decorated again', () => {
+            document.body.innerHTML = NETFLIX_MORE_LIKE_THIS_SECTION.collapsedHtml;
+            appendExpandedTiles();
+            const surfaces = surfaceManager.discover(document.body);
 
             surfaces.forEach(attachOverlay);
+            surfaces.forEach(attachOverlay);
+
             expect(document.querySelectorAll('.fm-rating-overlay')).toHaveLength(4);
+            document.querySelectorAll('.titleCard-imageWrapper').forEach(container => {
+                expect(container.querySelectorAll('.fm-rating-overlay')).toHaveLength(1);
+            });
         });
     });
 });

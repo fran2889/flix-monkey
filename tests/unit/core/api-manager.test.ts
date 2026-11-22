@@ -16,38 +16,6 @@ import { buildTitle, emptyTitleData } from '../../mocks/title';
 const disabledManager = new DisabledClientsManager(buildMockAdapter().build());
 
 describe('ApiClientManager', () => {
-    describe('cache reads', () => {
-        it('returns cached data when the cache has an entry', async () => {
-            const titleObj = buildTitle()
-                .withApiTitle('Cached Movie')
-                .withImdbRating(8.0)
-                .withSource('agregarr')
-                .build();
-            const entry = buildCacheEntry()
-                .withDisplayTitle('Some Title')
-                .withImdbId(undefined)
-                .withData(titleObj.toCacheJSON())
-                .withExpiry(Date.now() + 100000)
-                .build();
-            const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
-            const mockClient: ApiClient = {
-                source: 'agregarr',
-                getStatus: vi.fn(),
-                fetch: vi.fn(),
-                disable: vi.fn(),
-            };
-            const mockLogger = buildLogger().build();
-            const manager = new ApiClientManager(mockLogger, mockCache, disabledManager, mockClient);
-            const result = await manager.getData('Some Title');
-            expect(result.apiTitle).toBe('Cached Movie');
-            expect(mockCache.read).toHaveBeenCalledWith('Some Title');
-            expect(mockClient.fetch).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining('Cache hit for "Some Title" from agregarr')
-            );
-        });
-    });
-
     describe('fetching', () => {
         it('fetches and returns the client result on a cache miss', async () => {
             const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
@@ -195,7 +163,36 @@ describe('ApiClientManager', () => {
         });
     });
 
-    describe('cached IMDb IDs', () => {
+    describe('cache reads', () => {
+        it('returns cached data when the cache has an entry', async () => {
+            const titleObj = buildTitle()
+                .withApiTitle('Cached Movie')
+                .withImdbRating(8.0)
+                .withSource('agregarr')
+                .build();
+            const entry = buildCacheEntry()
+                .withDisplayTitle('Some Title')
+                .withImdbId(undefined)
+                .withData(titleObj.toCacheJSON())
+                .withExpiry(Date.now() + 100000)
+                .build();
+            const mockCache = { read: vi.fn().mockResolvedValue(entry), write: vi.fn() };
+            const mockClient: ApiClient = {
+                source: 'agregarr',
+                getStatus: vi.fn(),
+                fetch: vi.fn(),
+                disable: vi.fn(),
+            };
+            const mockLogger = buildLogger().build();
+            const manager = new ApiClientManager(mockLogger, mockCache, disabledManager, mockClient);
+            const result = await manager.getData('Some Title');
+            expect(result.apiTitle).toBe('Cached Movie');
+            expect(mockCache.read).toHaveBeenCalledWith('Some Title');
+            expect(mockClient.fetch).not.toHaveBeenCalled();
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                expect.stringContaining('Cache hit for "Some Title" from agregarr')
+            );
+        });
         it('fetches with the cached IMDb ID when the entry is expired', async () => {
             const expiredEntry = {
                 displayTitle: 'Cached Movie',

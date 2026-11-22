@@ -113,17 +113,15 @@ describe('API clients integration', () => {
         overrideManager,
     });
 
-    describe('XMDB search metadata', () => {
-        it('returns the search name, year, and id before the details lookup', async () => {
-            const client = new XmdbApiClient(clientDeps());
+    it('returns the XMDB search name, year, and id before the details lookup', async () => {
+        const client = new XmdbApiClient(clientDeps());
 
-            const result = await client.search('The Godfather');
+        const result = await client.search('The Godfather');
 
-            assertNonNullTitle(result);
-            expect(result.imdbId).toBe('tt0068646');
-            expect(result.apiTitle).toContain('Godfather');
-            expect(result.year).toBe(1972);
-        });
+        assertNonNullTitle(result);
+        expect(result.imdbId).toBe('tt0068646');
+        expect(result.apiTitle).toContain('Godfather');
+        expect(result.year).toBe(1972);
     });
 
     describe('movie with all ratings', () => {
@@ -211,8 +209,9 @@ describe('API clients integration', () => {
         });
     });
 
-    describe('invalid title search', () => {
+    describe('invalid lookups', () => {
         const TITLE = 'xyznonexistenttitle12345';
+        const INVALID_ID = 'tt0000000';
 
         it('XMDB returns undefined for an unknown title', async () => {
             const client = new XmdbApiClient(clientDeps());
@@ -229,10 +228,6 @@ describe('API clients integration', () => {
             const client = new AgregarrApiClient(clientDeps());
             expect(await client.search(TITLE)).toBeUndefined();
         });
-    });
-
-    describe('invalid ID details', () => {
-        const INVALID_ID = 'tt0000000';
 
         it('XMDB returns undefined for an unknown IMDb ID', async () => {
             const client = new XmdbApiClient(clientDeps());

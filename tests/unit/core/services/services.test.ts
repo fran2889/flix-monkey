@@ -11,22 +11,20 @@ import { DISNEY_PLUS_SURFACES, HBO_MAX_SURFACES, NETFLIX_SURFACES } from '../../
 import { buildConfig } from '../../../mocks/config';
 
 describe('services', () => {
-    describe('service matrix', () => {
-        describe.each([
-            ['Netflix', NetflixService, NETFLIX_SURFACES, 'enableNetflix'],
-            ['HBO Max', HboMaxService, HBO_MAX_SURFACES, 'enableHboMax'],
-            ['Disney+', DisneyPlusService, DISNEY_PLUS_SURFACES, 'enableDisneyPlus'],
-        ])('%s service', (_name, Service, surfaceDefinitions, configKey) => {
-            it('selects its surface definitions and enablement setting', () => {
-                const service = new Service();
-                const config = buildConfig().build();
-                vi.spyOn(config, 'getBool').mockReturnValue(false);
+    describe.each([
+        ['Netflix', NetflixService, NETFLIX_SURFACES, 'enableNetflix'],
+        ['HBO Max', HboMaxService, HBO_MAX_SURFACES, 'enableHboMax'],
+        ['Disney+', DisneyPlusService, DISNEY_PLUS_SURFACES, 'enableDisneyPlus'],
+    ])('%s service', (_name, Service, surfaceDefinitions, configKey) => {
+        it('selects its surface definitions and enablement setting', () => {
+            const service = new Service();
+            const config = buildConfig().build();
+            vi.spyOn(config, 'getBool').mockReturnValue(false);
 
-                expect(service.surfaceDefinitions).toBe(surfaceDefinitions);
-                expect(service.isEnabled(config)).toBe(false);
-                expect(config.getBool).toHaveBeenCalledOnce();
-                expect(config.getBool).toHaveBeenCalledWith(configKey);
-            });
+            expect(service.surfaceDefinitions).toBe(surfaceDefinitions);
+            expect(service.isEnabled(config)).toBe(false);
+            expect(config.getBool).toHaveBeenCalledOnce();
+            expect(config.getBool).toHaveBeenCalledWith(configKey);
         });
     });
 

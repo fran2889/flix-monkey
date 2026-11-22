@@ -22,13 +22,11 @@ function parseTitle(raw: unknown): string {
 }
 
 describe('parse utilities', () => {
-    describe('ParseError', () => {
-        it('is an Error named ParseError', () => {
-            const error = new ParseError('expected an object');
-            expect(error).toBeInstanceOf(Error);
-            expect(error.name).toBe('ParseError');
-            expect(error.message).toBe('expected an object');
-        });
+    it('is an Error named ParseError', () => {
+        const error = new ParseError('expected an object');
+        expect(error).toBeInstanceOf(Error);
+        expect(error.name).toBe('ParseError');
+        expect(error.message).toBe('expected an object');
     });
 
     describe('assertRecord', () => {

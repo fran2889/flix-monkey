@@ -184,26 +184,24 @@ describe('Title', () => {
         });
     });
 
-    describe('immutability', () => {
-        it('does not allow mutation of fields after construction', () => {
-            const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
-            const mutableTitle = title as {
-                displayTitle: string;
-                imdbRating: number | undefined;
-            };
-            try {
-                mutableTitle.displayTitle = 'Mutated';
-            } catch {
-                /* frozen in strict mode */
-            }
-            try {
-                mutableTitle.imdbRating = 0;
-            } catch {
-                /* frozen in strict mode */
-            }
-            expect(title.displayTitle).toBe('Original');
-            expect(title.imdbRating).toBe(7.5);
-        });
+    it('does not allow mutation of fields after construction', () => {
+        const title = new Title({ displayTitle: 'Original', imdbRating: 7.5 });
+        const mutableTitle = title as {
+            displayTitle: string;
+            imdbRating: number | undefined;
+        };
+        try {
+            mutableTitle.displayTitle = 'Mutated';
+        } catch {
+            /* frozen in strict mode */
+        }
+        try {
+            mutableTitle.imdbRating = 0;
+        } catch {
+            /* frozen in strict mode */
+        }
+        expect(title.displayTitle).toBe('Original');
+        expect(title.imdbRating).toBe(7.5);
     });
 
     it('omits displayTitle from the serialized cache object', () => {

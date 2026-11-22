@@ -304,45 +304,18 @@ describe('SettingsView', () => {
             expect(validate).toHaveBeenCalledWith(true, { testCheckbox: true });
         });
     });
-    describe('actions', () => {
-        it('wires each button to its supplied action', () => {
-            view.render(container, {});
+    it('wires each button to its supplied action', () => {
+        view.render(container, {});
 
-            (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
-            (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
-            (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
+        (container.querySelector('#fm-clearCache') as HTMLElement)?.click();
+        (container.querySelector('#fm-clearCacheWithIds') as HTMLElement)?.click();
+        (container.querySelector('#fm-resetClients') as HTMLElement)?.click();
 
-            expect(actions.onClearCache).toHaveBeenCalledOnce();
-            expect(actions.onClearCacheWithIds).toHaveBeenCalledOnce();
-            expect(actions.onResetClients).toHaveBeenCalledOnce();
-        });
+        expect(actions.onClearCache).toHaveBeenCalledOnce();
+        expect(actions.onClearCacheWithIds).toHaveBeenCalledOnce();
+        expect(actions.onResetClients).toHaveBeenCalledOnce();
     });
-    describe('scoping', () => {
-        it('scopes reads and status updates to its rendered container', () => {
-            const fields: readonly ConfigField[] = [
-                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
-            ];
-            const otherContainer = document.createElement('div');
-            const otherView = new SettingsView(fields, actions);
-            view = new SettingsView(fields, actions);
-            document.body.appendChild(otherContainer);
-            view.render(container, {});
-            otherView.render(otherContainer, {});
-            const debugInput = container.querySelector('#fm-debug') as HTMLInputElement;
-            debugInput.checked = true;
-
-            view.showStatus('First', 'success');
-
-            expect(view.readValues()).toEqual({ debug: true });
-            expect(otherView.readValues()).toEqual({ debug: false });
-            expect(container.querySelector('[id="fm-status"]')?.textContent).toBe('First');
-            expect((container.querySelector('[id="fm-status"]') as HTMLElement)?.className).toBe(
-                'status status--success'
-            );
-            expect(otherContainer.querySelector('[id="fm-status"]')?.textContent).toBe('');
-        });
-    });
-    describe('read values', () => {
+    describe('view state', () => {
         it('returns one snapshot from its rendered fields', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
@@ -378,6 +351,29 @@ describe('SettingsView', () => {
             const values = view.readValues();
             expect(values).toHaveProperty('enabledField');
             expect(values).not.toHaveProperty('disabledField');
+        });
+        it('scopes reads and status updates to its rendered container', () => {
+            const fields: readonly ConfigField[] = [
+                { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
+            ];
+            const otherContainer = document.createElement('div');
+            const otherView = new SettingsView(fields, actions);
+            view = new SettingsView(fields, actions);
+            document.body.appendChild(otherContainer);
+            view.render(container, {});
+            otherView.render(otherContainer, {});
+            const debugInput = container.querySelector('#fm-debug') as HTMLInputElement;
+            debugInput.checked = true;
+
+            view.showStatus('First', 'success');
+
+            expect(view.readValues()).toEqual({ debug: true });
+            expect(otherView.readValues()).toEqual({ debug: false });
+            expect(container.querySelector('[id="fm-status"]')?.textContent).toBe('First');
+            expect((container.querySelector('[id="fm-status"]') as HTMLElement)?.className).toBe(
+                'status status--success'
+            );
+            expect(otherContainer.querySelector('[id="fm-status"]')?.textContent).toBe('');
         });
     });
 

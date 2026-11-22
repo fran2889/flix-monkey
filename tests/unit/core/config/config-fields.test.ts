@@ -38,15 +38,6 @@ describe('CONFIG_FIELDS', () => {
         });
     });
 
-    describe('isCompleteSettingsMap', () => {
-        it('accepts the built defaults and rejects a missing setting', () => {
-            expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
-
-            const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
-            expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
-        });
-    });
-
     describe('validators', () => {
         describe.each([
             ['xmdbApiKey', 'xmdb'],
@@ -105,6 +96,13 @@ describe('CONFIG_FIELDS', () => {
                 expect(field.validate?.(val)).toBe('Cache duration must be -1 or a positive integer');
             });
         });
+    });
+
+    it('accepts the built defaults and rejects a missing setting', () => {
+        expect(isCompleteSettingsMap(CONFIG_DEFAULTS)).toBe(true);
+
+        const { debug: _debug, ...withoutDebug } = CONFIG_DEFAULTS;
+        expect(isCompleteSettingsMap(withoutDebug)).toBe(false);
     });
 
     it('does not contain duplicate keys', () => {

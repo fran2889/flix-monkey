@@ -20,7 +20,6 @@ import type { Logger } from '../../../../src/core/logger';
 import { SettingsUI } from '../../../../src/core/ui/settings-ui';
 import { buildMockAdapter, type MockPlatformAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
-import { buildTitle } from '../../../mocks/title';
 
 describe('SettingsUI', () => {
     let mockAdapter: MockPlatformAdapter;
@@ -157,9 +156,6 @@ describe('SettingsUI', () => {
             expect(mockAdapter.storageSetMany).toHaveBeenCalledOnce();
             expect(mockLogger.error).toHaveBeenCalledWith('Settings save error:', expect.any(Error));
         });
-    });
-
-    describe('autosave', () => {
         it('saves through the view when a text input changes', async () => {
             await settingsUI.render(container);
             const input = container.querySelector('[id="fm-xmdbApiKey"]') as HTMLInputElement;
@@ -213,22 +209,6 @@ describe('SettingsUI', () => {
 
             expect(container.querySelector('#fm-status')?.textContent).toBe('Error: disk full');
             expect((container.querySelector('#fm-status') as HTMLElement)?.className).toBe('status status--error');
-        });
-    });
-
-    describe('dependency wiring', () => {
-        it('writes the cache entry and warns when the config read fails', async () => {
-            mockAdapter.configGet = vi.fn(() => {
-                throw new Error('config read failed');
-            });
-
-            await mockCacheManager.write('Some Title', buildTitle().withApiTitle('Some Title').build());
-
-            expect(mockAdapter.storageSet).toHaveBeenCalledWith('fmc:some_title', expect.any(String));
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                'ConfigManager.get error, using fallback',
-                expect.objectContaining({ key: 'cacheTtlNoRating' })
-            );
         });
     });
 

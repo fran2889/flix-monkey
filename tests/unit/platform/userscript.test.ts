@@ -81,12 +81,10 @@ describe('UserscriptAdapter', () => {
         });
     });
 
-    describe('menu', () => {
-        it('registers a menu command through GM_registerMenuCommand', () => {
-            const fn = vi.fn();
-            adapter.registerMenuCommand('test-label', fn);
-            expect(GM_registerMenuCommand).toHaveBeenCalledWith('test-label', fn);
-        });
+    it('registers a menu command through GM_registerMenuCommand', () => {
+        const fn = vi.fn();
+        adapter.registerMenuCommand('test-label', fn);
+        expect(GM_registerMenuCommand).toHaveBeenCalledWith('test-label', fn);
     });
 
     describe('http fetch', () => {
@@ -224,12 +222,10 @@ describe('UserscriptAdapter', () => {
         });
     });
 
-    describe('config', () => {
-        it('reads config through GM_getValue', () => {
-            GM_getValue.mockReturnValue('val');
-            const result = adapter.configGet('key');
-            expect(GM_getValue).toHaveBeenCalledWith('key');
-            expect(result).toBe('val');
-        });
+    it('reads config through GM_getValue', () => {
+        GM_getValue.mockReturnValue('val');
+        const result = adapter.configGet('key');
+        expect(GM_getValue).toHaveBeenCalledWith('key');
+        expect(result).toBe('val');
     });
 });

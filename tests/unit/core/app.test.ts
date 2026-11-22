@@ -177,15 +177,13 @@ describe('FlixMonkeyApp', () => {
         });
     });
 
-    describe('teardown', () => {
-        it('disconnects the MutationObserver on unload', () => {
-            const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
-            appRef = startApp(mockAdapter);
+    it('disconnects the MutationObserver on unload', () => {
+        const mockAdapter = buildMockAdapter().withStorageGetResolvingTo({}).build();
+        appRef = startApp(mockAdapter);
 
-            const disconnectSpy = vi.spyOn(mockMutationObserverInstance as MutationObserver, 'disconnect');
-            window.dispatchEvent(new Event('beforeunload'));
-            expect(disconnectSpy).toHaveBeenCalled();
-        });
+        const disconnectSpy = vi.spyOn(mockMutationObserverInstance as MutationObserver, 'disconnect');
+        window.dispatchEvent(new Event('beforeunload'));
+        expect(disconnectSpy).toHaveBeenCalled();
     });
 
     describe('navigation', () => {
@@ -658,42 +656,40 @@ describe('FlixMonkeyApp', () => {
         });
     });
 
-    describe('surface wiring', () => {
-        describe.each([
-            [
-                'Netflix',
-                NetflixService,
-                '<div class="title-card"><a aria-label="Netflix Title"></a></div>',
-                'Netflix Title',
-            ],
-            [
-                'HBO Max',
-                HboMaxService,
-                '<div><a data-testid="id_tile" data-sonic-type="movie" aria-label="HBO Title. 1 of 20."></a></div>',
-                'HBO Title',
-            ],
-            [
-                'Disney+',
-                DisneyPlusService,
-                '<div><a data-testid="set-item" data-item-id="1" href="/browse/entity-1" aria-label="Disney Title Select for details on this title."></a></div>',
-                'Disney Title',
-            ],
-        ])('%s', (_name, Service, html, expectedTitle) => {
-            it('discovers titles with the detected service surface definitions', async () => {
-                document.body.innerHTML = html;
-                const { ServiceRegistry } = await import('../../../src/core/services/index.js');
-                vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
-                const getDataSpy = vi
-                    .spyOn(ApiClientManager.prototype, 'getData')
-                    .mockResolvedValue(buildTitle().withApiTitle(expectedTitle).build());
+    describe.each([
+        [
+            'Netflix',
+            NetflixService,
+            '<div class="title-card"><a aria-label="Netflix Title"></a></div>',
+            'Netflix Title',
+        ],
+        [
+            'HBO Max',
+            HboMaxService,
+            '<div><a data-testid="id_tile" data-sonic-type="movie" aria-label="HBO Title. 1 of 20."></a></div>',
+            'HBO Title',
+        ],
+        [
+            'Disney+',
+            DisneyPlusService,
+            '<div><a data-testid="set-item" data-item-id="1" href="/browse/entity-1" aria-label="Disney Title Select for details on this title."></a></div>',
+            'Disney Title',
+        ],
+    ])('%s surface wiring', (_name, Service, html, expectedTitle) => {
+        it('discovers titles with the detected service surface definitions', async () => {
+            document.body.innerHTML = html;
+            const { ServiceRegistry } = await import('../../../src/core/services/index.js');
+            vi.spyOn(ServiceRegistry, 'detect').mockReturnValue(new Service());
+            const getDataSpy = vi
+                .spyOn(ApiClientManager.prototype, 'getData')
+                .mockResolvedValue(buildTitle().withApiTitle(expectedTitle).build());
 
-                appRef = startApp(buildMockAdapter().build());
+            appRef = startApp(buildMockAdapter().build());
 
-                await vi.waitFor(() => {
-                    if (getDataSpy.mock.calls.length === 0) throw new Error('Title not discovered');
-                });
-                expect(getDataSpy).toHaveBeenCalledWith(expectedTitle);
+            await vi.waitFor(() => {
+                if (getDataSpy.mock.calls.length === 0) throw new Error('Title not discovered');
             });
+            expect(getDataSpy).toHaveBeenCalledWith(expectedTitle);
         });
     });
 

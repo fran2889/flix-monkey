@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../../../../src/core/api/base-api-client';
 import { ApiClientManager } from '../../../../src/core/api-manager';
 import { CacheEntry, CacheManager } from '../../../../src/core/cache/index';
-import type { ConfigManager } from '../../../../src/core/config/config-manager';
+import { ConfigManager } from '../../../../src/core/config/config-manager';
 import { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
@@ -499,6 +499,30 @@ describe('CacheManager', () => {
             expect(entry.imdbId).toBe('tt123');
             expect(entry.data).not.toHaveProperty('displayTitle');
             expect(entry.data.apiTitle).toBe('Test');
+        });
+        it('falls back to the default no-rating TTL when the config read throws', async () => {
+            const throwingConfig = new ConfigManager(
+                buildMockAdapter()
+                    .withConfigGetReturning(() => {
+                        throw new Error('config read failed');
+                    })
+                    .build(),
+                mockLogger
+            );
+            const localCacheManager = new CacheManager(
+                adapter,
+                throwingConfig,
+                mockLogger,
+                new IdOverrideManager(adapter)
+            );
+
+            await localCacheManager.write('Some Title', buildTitle().withApiTitle('Some Title').build());
+
+            expect(adapter.storageSet).toHaveBeenCalledWith('fmc:some_title', expect.any(String));
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                'ConfigManager.get error, using fallback',
+                expect.objectContaining({ key: 'cacheTtlNoRating' })
+            );
         });
     });
 

@@ -102,9 +102,7 @@ describe('OverlayRenderer', () => {
             expect(container.querySelector('.fm-rating-overlay')).not.toBeNull();
             expect(renderer.hasOverlay(container)).toBe(true);
         });
-    });
 
-    describe('interaction wiring', () => {
         it('forwards the interaction display title to the action handlers', () => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');

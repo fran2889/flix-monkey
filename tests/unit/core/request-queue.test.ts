@@ -59,13 +59,11 @@ describe('RequestQueue', () => {
         });
     });
 
-    describe('failure handling', () => {
-        it('rejects the caller with the original fetch error', async () => {
-            const queue = buildQueue(0);
-            const error = new Error('fetch failed');
+    it('rejects the caller with the original fetch error', async () => {
+        const queue = buildQueue(0);
+        const error = new Error('fetch failed');
 
-            await expect(queue.enqueue('url', 1, () => Promise.reject(error))).rejects.toBe(error);
-        });
+        await expect(queue.enqueue('url', 1, () => Promise.reject(error))).rejects.toBe(error);
     });
 
     describe('pacing', () => {
@@ -130,28 +128,26 @@ describe('RequestQueue', () => {
         });
     });
 
-    describe('priority', () => {
-        it('dispatches higher-priority requests first', async () => {
-            const interval = 50;
-            const queue = buildQueue(interval);
-            const results: string[] = [];
-            const fetchFn = async (url: string) => {
-                results.push(url);
-                return { url };
-            };
+    it('dispatches higher-priority requests first', async () => {
+        const interval = 50;
+        const queue = buildQueue(interval);
+        const results: string[] = [];
+        const fetchFn = async (url: string) => {
+            results.push(url);
+            return { url };
+        };
 
-            const p1 = queue.enqueue('first', 0, fetchFn);
+        const p1 = queue.enqueue('first', 0, fetchFn);
 
-            const p2 = queue.enqueue('low', 0, fetchFn);
+        const p2 = queue.enqueue('low', 0, fetchFn);
 
-            const p3 = queue.enqueue('high', 10, fetchFn);
+        const p3 = queue.enqueue('high', 10, fetchFn);
 
-            await Promise.all([p1, p2, p3]);
+        await Promise.all([p1, p2, p3]);
 
-            // The storage read keeps the queue from dequeuing until all three requests
-            // are enqueued, so priority decides the first dispatch.
-            expect(results).toEqual(['high', 'first', 'low']);
-        });
+        // The storage read keeps the queue from dequeuing until all three requests
+        // are enqueued, so priority decides the first dispatch.
+        expect(results).toEqual(['high', 'first', 'low']);
     });
 
     describe('storage synchronization', () => {

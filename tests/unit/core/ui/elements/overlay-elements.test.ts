@@ -243,9 +243,7 @@ describe('overlay elements', () => {
 
                 expect(spy).toHaveBeenCalled();
             });
-        });
 
-        describe('click propagation', () => {
             it('stops propagation on enabled MC and RT rating clicks', () => {
                 const element = createOverlay(
                     { imdbRating: 8.5, rtRating: 90, mcRating: 80, imdbId: 'tt1' },
