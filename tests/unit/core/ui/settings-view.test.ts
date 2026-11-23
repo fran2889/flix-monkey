@@ -302,6 +302,9 @@ describe('SettingsView', () => {
         expect(actions.onResetClients).toHaveBeenCalledOnce();
     });
     describe('view state', () => {
+        it('returns an empty snapshot before the view renders', () => {
+            expect(view.readValues()).toEqual({});
+        });
         it('returns one snapshot from its rendered fields', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
