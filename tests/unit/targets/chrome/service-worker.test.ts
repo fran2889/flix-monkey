@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { flushAsyncWork } from '../../../helpers/async';
+import { type BackgroundListener, installBackgroundHarness } from '../../../helpers/background-harness';
 import { chrome } from '../../../mocks/chrome';
 
 const { executeMigrations } = vi.hoisted(() => ({
@@ -16,48 +17,20 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
 }));
 
 describe('Chrome service worker', () => {
-    let messageListener: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void;
-    let installedListener: (_details: { reason: string }) => Promise<unknown> | void;
-    let actionListener: () => Promise<unknown> | void;
+    let messageListener: BackgroundListener;
+    let installedListener: BackgroundListener;
+    let actionListener: BackgroundListener;
 
     beforeEach(async () => {
         vi.resetModules();
-        vi.useFakeTimers();
         executeMigrations.mockReset();
         executeMigrations.mockResolvedValue(undefined);
 
-        chrome.runtime.id = 'test-ext';
-        chrome.runtime.onMessage.addListener = vi.fn(
-            (fn: (_message: unknown, _sender: unknown, _sendResponse: unknown) => Promise<unknown> | void) => {
-                messageListener = fn;
-            }
-        );
-        chrome.runtime.onInstalled.addListener = vi.fn(
-            (fn: (_details: { reason: string }) => Promise<unknown> | void) => {
-                installedListener = fn;
-            }
-        );
-        chrome.runtime.openOptionsPage = vi.fn().mockResolvedValue(undefined);
-        chrome.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
-            actionListener = fn;
-        });
-
-        Object.defineProperty(global, 'chrome', {
-            value: chrome,
-            writable: true,
-            configurable: true,
-        });
-
-        global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
-        global.AbortController = class {
-            signal: { aborted: boolean };
-            constructor() {
-                this.signal = { aborted: false };
-            }
-            abort() {
-                this.signal.aborted = true;
-            }
-        } as unknown as { prototype: AbortController; new (): AbortController };
+        ({ messageListener, installedListener, actionListener } = installBackgroundHarness(
+            chrome,
+            'chrome',
+            'test-ext'
+        ));
 
         await import('../../../../src/targets/chrome/service-worker');
     });

@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { flushAsyncWork } from '../../../helpers/async';
+import { type BackgroundListener, installBackgroundHarness } from '../../../helpers/background-harness';
 import { browser } from '../../../mocks/webextension';
 
 const { executeMigrations } = vi.hoisted(() => ({
@@ -16,46 +17,20 @@ vi.mock('../../../../src/targets/extension/migrations', () => ({
 }));
 
 describe('Firefox background script', () => {
-    let messageListener: (..._args: unknown[]) => Promise<unknown> | void;
-    let installedListener: (_details: { reason: string }) => Promise<unknown> | void;
-    let actionListener: () => Promise<unknown> | void;
+    let messageListener: BackgroundListener;
+    let installedListener: BackgroundListener;
+    let actionListener: BackgroundListener;
 
     beforeEach(async () => {
         vi.resetModules();
-        vi.useFakeTimers();
         executeMigrations.mockReset();
         executeMigrations.mockResolvedValue(undefined);
 
-        browser.runtime.id = undefined;
-        browser.runtime.onMessage.addListener = vi.fn((fn: (..._args: unknown[]) => Promise<unknown> | void) => {
-            messageListener = fn;
-        });
-        browser.runtime.onInstalled.addListener = vi.fn(
-            (fn: (_details: { reason: string }) => Promise<unknown> | void) => {
-                installedListener = fn;
-            }
-        );
-        browser.runtime.openOptionsPage = vi.fn().mockResolvedValue(undefined);
-        browser.action.onClicked.addListener = vi.fn((fn: () => Promise<unknown> | void) => {
-            actionListener = fn;
-        });
-
-        Object.defineProperty(global, 'browser', {
-            value: browser,
-            writable: true,
-            configurable: true,
-        });
-
-        global.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
-        global.AbortController = class {
-            signal: { aborted: boolean };
-            constructor() {
-                this.signal = { aborted: false };
-            }
-            abort() {
-                this.signal.aborted = true;
-            }
-        } as unknown as { prototype: AbortController; new (): AbortController };
+        ({ messageListener, installedListener, actionListener } = installBackgroundHarness(
+            browser,
+            'browser',
+            undefined
+        ));
 
         await import('../../../../src/targets/firefox/background');
     });
