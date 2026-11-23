@@ -140,10 +140,11 @@ Each provider override still owns its own composition: it checks its API key and
 then delegates to the base check. Keep one configured-key test per provider so
 the `return super.getStatus()` fallthrough stays covered:
 
-- OMDb: keep the configured-key test, which proves the fallthrough. Delete only
-  the disabled-case test, which restates the base disabled result.
-- XMDB: keep the missing-key test, and add a sibling that configures a key and
-  expects the base healthy result.
+- OMDb: replace the configured-key test with a composition case that configures
+  a disabled manager and expects the base unhealthy result. This discriminates a
+  provider that skips `super.getStatus()`.
+- XMDB: keep the missing-key test, and add the same configured-key composition
+  case with a disabled manager.
 
 No branch loses coverage, and no test restates another layer's behavior.
 

@@ -293,18 +293,46 @@ it('returns an unhealthy status when the client is disabled', async () => {
 
 Keep the remaining `fetch` tests on `XmdbApiClient`.
 
-- [x] **Step 4: Delete the duplicate OMDb disabled test**
+- [x] **Step 4: Replace the OMDb configured-key test**
 
-In `omdb-api-client.test.ts`, delete `reports unhealthy when disabled even though an API key is configured`. Keep `returns an unhealthy status when the API key is missing` and `defers to the base health check when an API key is configured`.
+In `omdb-api-client.test.ts`, replace `defers to the base health check when an API key is configured` with:
 
-- [x] **Step 5: Add the XMDB fallthrough test**
+```ts
+it('reports the base disabled status when an API key is configured', async () => {
+    const disabledManagerForTest: DisabledClientsManager = {
+        isDisabled: vi.fn().mockResolvedValue(true),
+        disable: vi.fn().mockResolvedValue(undefined),
+        resetAll: vi.fn().mockResolvedValue([]),
+    } as unknown as DisabledClientsManager;
+    const client = new OmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+    expect(await client.getStatus()).toEqual({
+        healthy: false,
+        reason: 'Temporarily disabled due to errors',
+    });
+});
+```
+
+This case fails if the provider returns a healthy result without delegating to
+the base check. Keep `returns an unhealthy status when the API key is missing`.
+
+- [x] **Step 5: Add the XMDB composition test**
 
 In `xmdb-api-client.test.ts`, next to `returns an unhealthy status when the API key is missing`, add:
 
 ```ts
-it('defers to the base health check when an API key is configured', async () => {
-    const client = new XmdbApiClient(deps);
-    expect(await client.getStatus()).toEqual({ healthy: true });
+it('reports the base disabled status when an API key is configured', async () => {
+    const disabledManagerForTest: DisabledClientsManager = {
+        isDisabled: vi.fn().mockResolvedValue(true),
+        disable: vi.fn().mockResolvedValue(undefined),
+        resetAll: vi.fn().mockResolvedValue([]),
+    } as unknown as DisabledClientsManager;
+    const client = new XmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+    expect(await client.getStatus()).toEqual({
+        healthy: false,
+        reason: 'Temporarily disabled due to errors',
+    });
 });
 ```
 
