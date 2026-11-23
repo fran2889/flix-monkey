@@ -87,18 +87,18 @@ Expected: two new tests FAIL with `storageGet` call count mismatches; all other 
 Replace lines 71-77 (the no-wait section) with:
 
 ```js
-            // Re-read storage before claiming the timeslot to reduce cross-tab races
-            if (this.#globalSyncKey && this.#adapter) {
-                const str = await this.#adapter.storageGet(this.#globalSyncKey);
-                const parsed = parseInt(str, 10);
-                const freshGlobal = Number.isNaN(parsed) ? 0 : parsed;
-                if (Date.now() - freshGlobal < this.#minInterval) continue;
-            }
+// Re-read storage before claiming the timeslot to reduce cross-tab races
+if (this.#globalSyncKey && this.#adapter) {
+    const str = await this.#adapter.storageGet(this.#globalSyncKey);
+    const parsed = parseInt(str, 10);
+    const freshGlobal = Number.isNaN(parsed) ? 0 : parsed;
+    if (Date.now() - freshGlobal < this.#minInterval) continue;
+}
 
-            this.#lastLocalReqTime = Date.now();
-            if (this.#globalSyncKey && this.#adapter) {
-                await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
-            }
+this.#lastLocalReqTime = Date.now();
+if (this.#globalSyncKey && this.#adapter) {
+    await this.#adapter.storageSet(this.#globalSyncKey, this.#lastLocalReqTime.toString());
+}
 ```
 
 The full `while` body in `#process` now reads:
