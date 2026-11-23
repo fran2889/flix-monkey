@@ -41,20 +41,50 @@ const deps: ApiClientDeps = {
     overrideManager: mockOverrideManager,
 };
 
+interface StubClientOptions {
+    adapter?: PlatformAdapter;
+    disabledManager?: DisabledClientsManager;
+    queue?: RequestQueue;
+}
+
+class StubClient extends BaseApiClient {
+    constructor(source: 'xmdb' | 'omdb' | 'agregarr', logger: Logger, options: StubClientOptions = {}) {
+        const { adapter = mockAdapter, disabledManager = mockDisabledManager, queue } = options;
+        super({ ...deps, adapter, disabledManager, logger }, source, queue);
+    }
+    async search(): Promise<Title | undefined> {
+        return undefined;
+    }
+    async getDetails(): Promise<Title | undefined> {
+        return undefined;
+    }
+}
+
+function buildQueue(clearedCount: number): RequestQueue {
+    return {
+        clear: vi.fn().mockReturnValue(clearedCount),
+        enqueue: vi.fn((url: string, _priority: number, fetchFn: (requestUrl: string) => Promise<unknown>) =>
+            fetchFn(url)
+        ),
+    } as unknown as RequestQueue;
+}
+
 describe('BaseApiClient', () => {
     describe('status', () => {
         it('returns a healthy status when the client is not disabled', async () => {
-            const client = new XmdbApiClient(deps);
+            const client = new StubClient('xmdb', buildLogger().build());
             const status = await client.getStatus();
             expect(status).toEqual({ healthy: true });
         });
         it('returns an unhealthy status when the client is disabled', async () => {
-            const mockDisabledManagerForTest: DisabledClientsManager = {
+            const disabledManagerForTest: DisabledClientsManager = {
                 isDisabled: vi.fn().mockResolvedValue(true),
                 disable: vi.fn().mockResolvedValue(undefined),
                 resetAll: vi.fn().mockResolvedValue([]),
             } as unknown as DisabledClientsManager;
-            const client = new XmdbApiClient({ ...deps, disabledManager: mockDisabledManagerForTest });
+            const client = new StubClient('xmdb', buildLogger().build(), {
+                disabledManager: disabledManagerForTest,
+            });
             const status = await client.getStatus();
             expect(status.healthy).toBe(false);
             expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
@@ -124,42 +154,16 @@ describe('BaseApiClient', () => {
     });
 
     describe('request surface', () => {
-        class StubClient extends BaseApiClient {
-            constructor(
-                source: 'xmdb' | 'omdb' | 'agregarr',
-                logger: Logger,
-                queue?: RequestQueue,
-                adapter: PlatformAdapter = mockAdapter
-            ) {
-                super({ ...deps, adapter, logger }, source, queue);
-            }
-            async search(): Promise<Title | undefined> {
-                return undefined;
-            }
-            async getDetails(): Promise<Title | undefined> {
-                return undefined;
-            }
-        }
-
-        function buildQueue(clearedCount: number): RequestQueue {
-            return {
-                clear: vi.fn().mockReturnValue(clearedCount),
-                enqueue: vi.fn((url: string, _priority: number, fetchFn: (requestUrl: string) => Promise<unknown>) =>
-                    fetchFn(url)
-                ),
-            } as unknown as RequestQueue;
-        }
-
         it('exposes its ApiSource identifier', () => {
             const queue = buildQueue(0);
             const logger: Logger = buildLogger().build();
-            expect(new StubClient('omdb', logger, queue).source).toBe('omdb');
-            expect(new StubClient('agregarr', logger, queue).source).toBe('agregarr');
+            expect(new StubClient('omdb', logger, { queue }).source).toBe('omdb');
+            expect(new StubClient('agregarr', logger, { queue }).source).toBe('agregarr');
         });
 
         it('returns the parser result', async () => {
             const adapter = buildMockAdapter().withHttpFetchResolvingTo({ id: 'tt1' }).build();
-            const client = new StubClient('xmdb', buildLogger().build(), buildQueue(0), adapter);
+            const client = new StubClient('xmdb', buildLogger().build(), { adapter, queue: buildQueue(0) });
 
             const result = await client.fetchParsed(
                 'https://example.test',
@@ -174,7 +178,7 @@ describe('BaseApiClient', () => {
         it('logs one warning and returns undefined for ParseError', async () => {
             const logger = buildLogger().build();
             const adapter = buildMockAdapter().withHttpFetchResolvingTo({ id: 42 }).build();
-            const client = new StubClient('xmdb', logger, buildQueue(0), adapter);
+            const client = new StubClient('xmdb', logger, { adapter, queue: buildQueue(0) });
 
             const result = await client.fetchParsed(
                 'https://example.test',
@@ -195,7 +199,7 @@ describe('BaseApiClient', () => {
 
         it('rethrows a non-ParseError', async () => {
             const logger = buildLogger().build();
-            const client = new StubClient('xmdb', logger, buildQueue(0), mockAdapter);
+            const client = new StubClient('xmdb', logger, { adapter: mockAdapter, queue: buildQueue(0) });
             const boom = new Error('boom');
 
             await expect(
@@ -215,7 +219,7 @@ describe('BaseApiClient', () => {
         it('does not catch a queue error', async () => {
             const logger = buildLogger().build();
             const adapter = buildMockAdapter().withHttpFetchRejectingWith(new Error('network')).build();
-            const client = new StubClient('xmdb', logger, buildQueue(0), adapter);
+            const client = new StubClient('xmdb', logger, { adapter, queue: buildQueue(0) });
 
             await expect(client.fetchParsed('https://example.test', 0, raw => raw, 'test')).rejects.toThrow('network');
 
@@ -231,7 +235,7 @@ describe('BaseApiClient', () => {
         it('clears the queue when the client is disabled', async () => {
             const queue = buildQueue(0);
             const logger: Logger = buildLogger().build();
-            await new StubClient('xmdb', logger, queue).disable();
+            await new StubClient('xmdb', logger, { queue }).disable();
             expect(queue.clear).toHaveBeenCalledOnce();
         });
 
@@ -240,7 +244,7 @@ describe('BaseApiClient', () => {
             { count: 3, noun: 'requests' },
         ])('reports $count purged $noun', async ({ count, noun }) => {
             const logger: Logger = buildLogger().build();
-            await new StubClient('xmdb', logger, buildQueue(count)).disable();
+            await new StubClient('xmdb', logger, { queue: buildQueue(count) }).disable();
             expect(logger.warn).toHaveBeenCalledWith(`xmdb disabled for 60 min, purging ${count} queued ${noun}`);
         });
     });

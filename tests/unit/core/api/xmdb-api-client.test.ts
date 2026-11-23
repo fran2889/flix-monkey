@@ -249,6 +249,11 @@ describe('XmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
+    it('defers to the base health check when an API key is configured', async () => {
+        const client = new XmdbApiClient(deps);
+        expect(await client.getStatus()).toEqual({ healthy: true });
+    });
+
     describe('response parsing', () => {
         it.each([
             ['a null body', null],
