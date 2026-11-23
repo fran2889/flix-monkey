@@ -795,11 +795,12 @@ git commit -m "test(ui): allow reading settings before render"
 
 - [ ] **Step 1: Wrap the real proxy in a mock**
 
-Next to the existing migrations mock, add:
+Add `import type * as FetchProxy from '../../../../src/targets/extension/fetch-proxy';`
+and, next to the existing migrations mock, add:
 
 ```ts
 vi.mock('../../../../src/targets/extension/fetch-proxy', async importOriginal => {
-    const actual = await importOriginal<typeof import('../../../../src/targets/extension/fetch-proxy')>();
+    const actual = await importOriginal<typeof FetchProxy>();
     return {
         ...actual,
         handleFetchMessage: vi.fn(actual.handleFetchMessage),
