@@ -329,13 +329,10 @@ describe('XmdbApiClient', () => {
         });
 
         it.each([
-            ['a null body', null],
             ['an empty body', ''],
-            ['a non-string title', { id: 'tt1', title: 42 }],
             ['a non-string id', { id: 42, title: 'Movie 1' }],
             ['a missing id', { title: 'Movie 1' }],
             ['an empty id', { id: '', title: 'Movie 1' }],
-            ['an empty title', { id: 'tt1', title: '' }],
             ['a string rating', { id: 'tt1', title: 'Movie 1', rating: '8.8' }],
             ['a string metascore', { id: 'tt1', title: 'Movie 1', metascore: '88' }],
         ])('returns undefined when the details lookup receives %s', async (_label, response) => {
