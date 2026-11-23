@@ -1,6 +1,6 @@
 # Test Deduplication and Branch Coverage Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Remove restated test coverage, isolate settings-view field failures, and close the four uncovered defensive branches without changing production behavior.
 
@@ -34,14 +34,14 @@
 
 ## Before you start
 
-- [ ] **Create the branch**
+- [x] **Create the branch**
 
 ```bash
 git switch main
 git switch --create test/deduplicate-suite-coverage
 ```
 
-- [ ] **Commit the design and plan**
+- [x] **Commit the design and plan**
 
 ```bash
 git add docs/superpowers/specs/2026-11-23-test-deduplication-and-branch-coverage-design.md \
@@ -62,7 +62,7 @@ git commit -m "docs(test): add deduplication design and plan"
 - Consumes: `buildMockAdapter`, `buildTitle`, and `deps` already in the file.
 - Produces: no production interface.
 
-- [ ] **Step 1: Replace the three overlapping tests**
+- [x] **Step 1: Replace the three overlapping tests**
 
 In the `details` group, delete `uses the ID endpoint when the title has an IMDb ID`, `updates apiTitle from the OMDb response when the fallback has no apiTitle`, and `fetches details by IMDb ID for a cached title without an apiTitle`. Add one test in their place:
 
@@ -96,17 +96,17 @@ it('fetches details by IMDb ID and fills in the missing apiTitle', async () => {
 Keep `returns the title unchanged when it already has an apiTitle`. The `Title`
 import is no longer used after the cached-title test is deleted, so remove it.
 
-- [ ] **Step 2: Run the file**
+- [x] **Step 2: Run the file**
 
 Run: `npx vitest run tests/unit/core/api/omdb-api-client.test.ts`
 Expected: PASS, with two fewer tests than before this task.
 
-- [ ] **Step 3: Lint and format the file**
+- [x] **Step 3: Lint and format the file**
 
 Run: `npx eslint tests/unit/core/api/omdb-api-client.test.ts && npx prettier --check tests/unit/core/api/omdb-api-client.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/api/omdb-api-client.test.ts
@@ -126,7 +126,7 @@ git commit -m "test(api): merge overlapping OMDb details coverage"
 - Consumes: `buildCacheEntry`, `buildTitle`, `CacheEntry`, and `Title` already imported.
 - Produces: no production interface.
 
-- [ ] **Step 1: Merge the two never-expiring tests**
+- [x] **Step 1: Merge the two never-expiring tests**
 
 Replace `returns an entry with an indefinite expiry` and `treats a pre-migration entry with null expiry as never expiring` with:
 
@@ -154,7 +154,7 @@ it.each([
 });
 ```
 
-- [ ] **Step 2: Merge the two valid-hit tests**
+- [x] **Step 2: Merge the two valid-hit tests**
 
 Replace `returns the cache entry on a hit` and `returns a cache entry with a title for valid data` with:
 
@@ -187,17 +187,17 @@ it('returns a cache entry with its title and metadata', async () => {
 
 Keep `returns a title for an entry with empty title data`, which covers the shape `clear()` writes.
 
-- [ ] **Step 3: Run the file**
+- [x] **Step 3: Run the file**
 
 Run: `npx vitest run tests/unit/core/cache/cache.test.ts`
 Expected: PASS, with one fewer test than before this task.
 
-- [ ] **Step 4: Lint and format the file**
+- [x] **Step 4: Lint and format the file**
 
 Run: `npx eslint tests/unit/core/cache/cache.test.ts && npx prettier --check tests/unit/core/cache/cache.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/core/cache/cache.test.ts
@@ -219,7 +219,7 @@ git commit -m "test(cache): merge duplicate cache read coverage"
 - Consumes: `BaseApiClient`, `DisabledClientsManager`, `PlatformAdapter`, `RequestQueue`, and the existing `deps`.
 - Produces: a module-scope `StubClient` whose constructor is `(source: 'xmdb' | 'omdb' | 'agregarr', logger: Logger, options?: StubClientOptions)`, where `StubClientOptions` has optional `adapter`, `disabledManager`, and `queue` fields.
 
-- [ ] **Step 1: Move and reshape the base stub client**
+- [x] **Step 1: Move and reshape the base stub client**
 
 In `base-api-client.test.ts`, move `StubClient` and `buildQueue` out of the `request surface` group to module scope, above `describe('BaseApiClient', ...)`. Replace the class with:
 
@@ -253,7 +253,7 @@ function buildQueue(clearedCount: number): RequestQueue {
 }
 ```
 
-- [ ] **Step 2: Update the stub call sites in the base request-surface tests**
+- [x] **Step 2: Update the stub call sites in the base request-surface tests**
 
 Apply these replacements in the `request surface` group:
 
@@ -266,7 +266,7 @@ Apply these replacements in the `request surface` group:
 
 The `builds a default request queue when none is injected` case keeps `new StubClient('xmdb', logger)`.
 
-- [ ] **Step 3: Point the base status tests at the stub**
+- [x] **Step 3: Point the base status tests at the stub**
 
 Replace the two `XmdbApiClient` constructions in the `status` group:
 
@@ -293,11 +293,11 @@ it('returns an unhealthy status when the client is disabled', async () => {
 
 Keep the remaining `fetch` tests on `XmdbApiClient`.
 
-- [ ] **Step 4: Delete the duplicate OMDb disabled test**
+- [x] **Step 4: Delete the duplicate OMDb disabled test**
 
 In `omdb-api-client.test.ts`, delete `reports unhealthy when disabled even though an API key is configured`. Keep `returns an unhealthy status when the API key is missing` and `defers to the base health check when an API key is configured`.
 
-- [ ] **Step 5: Add the XMDB fallthrough test**
+- [x] **Step 5: Add the XMDB fallthrough test**
 
 In `xmdb-api-client.test.ts`, next to `returns an unhealthy status when the API key is missing`, add:
 
@@ -308,17 +308,17 @@ it('defers to the base health check when an API key is configured', async () => 
 });
 ```
 
-- [ ] **Step 6: Run the three files**
+- [x] **Step 6: Run the three files**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts tests/unit/core/api/omdb-api-client.test.ts tests/unit/core/api/xmdb-api-client.test.ts`
 Expected: PASS. The combined count is unchanged by this task, and both provider fallthroughs remain covered.
 
-- [ ] **Step 7: Lint and format the three files**
+- [x] **Step 7: Lint and format the three files**
 
 Run: `npx eslint tests/unit/core/api/base-api-client.test.ts tests/unit/core/api/omdb-api-client.test.ts tests/unit/core/api/xmdb-api-client.test.ts && npx prettier --check tests/unit/core/api/base-api-client.test.ts tests/unit/core/api/omdb-api-client.test.ts tests/unit/core/api/xmdb-api-client.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add tests/unit/core/api/base-api-client.test.ts \
@@ -340,7 +340,7 @@ git commit -m "test(api): keep provider health fallthrough covered"
 - Consumes: the existing `details` malformed table.
 - Produces: no production interface.
 
-- [ ] **Step 1: Remove the three duplicate rows**
+- [x] **Step 1: Remove the three duplicate rows**
 
 In the details table under `response parsing`, delete these rows:
 
@@ -352,12 +352,12 @@ In the details table under `response parsing`, delete these rows:
 
 The malformed-details table in the `details` group already asserts the observable result and the warning for the same inputs. Keep the empty-body, non-string-ID, missing-ID, empty-ID, string-rating, and string-metascore rows.
 
-- [ ] **Step 2: Run the file**
+- [x] **Step 2: Run the file**
 
 Run: `npx vitest run tests/unit/core/api/xmdb-api-client.test.ts`
 Expected: PASS, with three fewer tests than before this task.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/core/api/xmdb-api-client.test.ts
@@ -379,7 +379,7 @@ git commit -m "test(api): drop duplicate XMDB malformed details rows"
 - Consumes: `tests/mocks/chrome.ts` and `tests/mocks/webextension.ts`.
 - Produces: `installBackgroundHarness(namespace, globalName, runtimeId): BackgroundHarness`, where `BackgroundHarness` exposes `actionListener`, `installedListener`, and `messageListener` as `(...args: unknown[]) => unknown` functions.
 
-- [ ] **Step 1: Create the harness**
+- [x] **Step 1: Create the harness**
 
 Create `tests/helpers/background-harness.ts`:
 
@@ -485,7 +485,7 @@ export function installBackgroundHarness(
 }
 ```
 
-- [ ] **Step 2: Use the harness in the Chrome test**
+- [x] **Step 2: Use the harness in the Chrome test**
 
 In `tests/unit/targets/chrome/service-worker.test.ts`, replace the `beforeEach` setup with:
 
@@ -507,7 +507,7 @@ beforeEach(async () => {
 
 Add `import type { BackgroundListener } from '../../../helpers/background-harness';` and `import { installBackgroundHarness } from '../../../helpers/background-harness';`, then delete the direct `vi.useFakeTimers()`, listener registration, `Object.defineProperty`, `global.fetch`, and `global.AbortController` setup. Keep `afterEach(() => vi.useRealTimers())`.
 
-- [ ] **Step 3: Use the harness in the Firefox test**
+- [x] **Step 3: Use the harness in the Firefox test**
 
 In `tests/unit/targets/firefox/background.test.ts`, apply the same replacement:
 
@@ -529,17 +529,17 @@ beforeEach(async () => {
 
 Add the same two imports and delete the copied setup. Keep the existing behavior tests and `afterEach(() => vi.useRealTimers())`.
 
-- [ ] **Step 4: Run both target files**
+- [x] **Step 4: Run both target files**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts`
 Expected: PASS with the same counts as before this task.
 
-- [ ] **Step 5: Lint and format the three files**
+- [x] **Step 5: Lint and format the three files**
 
 Run: `npx eslint tests/helpers/background-harness.ts tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts && npx prettier --check tests/helpers/background-harness.ts tests/unit/targets/chrome/service-worker.test.ts tests/unit/targets/firefox/background.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/helpers/background-harness.ts \
@@ -561,7 +561,7 @@ git commit -m "test(targets): share background entry setup"
 - Consumes: `CONFIG_FIELDS`, `isSettingField`, and `SettingConfigField` from `src/core/config/index`.
 - Produces: no production interface.
 
-- [ ] **Step 1: Add the field list and stored-value helper**
+- [x] **Step 1: Add the field list and stored-value helper**
 
 Update the config import to keep `CONFIG_FIELDS`, `type ConfigField`, `GROUPS`,
 `isSettingField`, `ROW_LABELS`, and add `type SettingConfigField`. Remove
@@ -582,7 +582,7 @@ function storedValueFor(field: SettingConfigField): boolean | string {
 }
 ```
 
-- [ ] **Step 2: Replace the rendering loop**
+- [x] **Step 2: Replace the rendering loop**
 
 Replace `renders each config field from its definition` with:
 
@@ -619,7 +619,7 @@ it.each(settingFields)('renders $key from its definition', field => {
 
 Action fields stay covered by the existing action-button, action-row, and mixed-row tests.
 
-- [ ] **Step 3: Replace the default-population loop**
+- [x] **Step 3: Replace the default-population loop**
 
 Replace `populates every field with its default when settings are empty` with:
 
@@ -634,7 +634,7 @@ it.each(settingFields)('renders $key with its default', field => {
 });
 ```
 
-- [ ] **Step 4: Replace the stored-value loop**
+- [x] **Step 4: Replace the stored-value loop**
 
 Replace `populates every field with its stored value` with:
 
@@ -652,17 +652,17 @@ it.each(settingFields)('renders $key with its stored value', field => {
 
 Keep `uses configured defaults for optional rating fields`, which proves a local field subset rather than the full list.
 
-- [ ] **Step 5: Run the file**
+- [x] **Step 5: Run the file**
 
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts`
 Expected: PASS. The three replaced tests become 51 cases, so the file count rises by 48.
 
-- [ ] **Step 6: Lint and format the file**
+- [x] **Step 6: Lint and format the file**
 
 Run: `npx eslint tests/unit/core/ui/settings-view.test.ts && npx prettier --check tests/unit/core/ui/settings-view.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tests/unit/core/ui/settings-view.test.ts
@@ -682,7 +682,7 @@ git commit -m "test(ui): isolate settings-view field cases"
 - Consumes: `buildQueue`, `buildMockAdapter`, and `flushAsyncWork` already imported.
 - Produces: no production interface.
 
-- [ ] **Step 1: Add the test**
+- [x] **Step 1: Add the test**
 
 Add to the `clear` group:
 
@@ -723,17 +723,17 @@ The first request uses two storage reads. The second request's pass performs the
 loop-start read (third) and the pre-claim read (fourth). Clearing while the
 pre-claim read is pending empties the queue before dispatch.
 
-- [ ] **Step 2: Run the file**
+- [x] **Step 2: Run the file**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts`
 Expected: PASS with one more test than before this task.
 
-- [ ] **Step 3: Confirm the guard is covered**
+- [x] **Step 3: Confirm the guard is covered**
 
 Run: `npx vitest run tests/unit/core/request-queue.test.ts --coverage --coverage.include=src/core/request-queue.ts`
 Expected: line 114 is no longer listed as uncovered.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/request-queue.test.ts
@@ -753,7 +753,7 @@ git commit -m "test(queue): cover a pass cleared before dispatch"
 - Consumes: the `view` instance created in `beforeEach`.
 - Produces: no production interface.
 
-- [ ] **Step 1: Add the test**
+- [x] **Step 1: Add the test**
 
 Add to the `view state` group:
 
@@ -763,17 +763,17 @@ it('returns an empty snapshot before the view renders', () => {
 });
 ```
 
-- [ ] **Step 2: Run the file**
+- [x] **Step 2: Run the file**
 
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts`
 Expected: PASS with one more test than after Task 6.
 
-- [ ] **Step 3: Confirm the fallback is covered**
+- [x] **Step 3: Confirm the fallback is covered**
 
 Run: `npx vitest run tests/unit/core/ui/settings-view.test.ts --coverage --coverage.include=src/core/ui/settings-view.ts`
 Expected: line 404 is no longer listed as uncovered.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/core/ui/settings-view.test.ts
@@ -793,7 +793,7 @@ git commit -m "test(ui): allow reading settings before render"
 - Consumes: `installBackgroundHarness` from Task 5 and the `handleFetchMessage` export from `src/targets/extension/fetch-proxy`.
 - Produces: no production interface.
 
-- [ ] **Step 1: Wrap the real proxy in a mock**
+- [x] **Step 1: Wrap the real proxy in a mock**
 
 Add `import type * as FetchProxy from '../../../../src/targets/extension/fetch-proxy';`
 and, next to the existing migrations mock, add:
@@ -810,7 +810,7 @@ vi.mock('../../../../src/targets/extension/fetch-proxy', async importOriginal =>
 
 The forwarding tests keep the real handler through the wrapped implementation.
 
-- [ ] **Step 2: Add the rejection test**
+- [x] **Step 2: Add the rejection test**
 
 Add to the `message handling` group:
 
@@ -831,22 +831,22 @@ it.each([
 });
 ```
 
-- [ ] **Step 3: Run the file**
+- [x] **Step 3: Run the file**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.ts`
 Expected: PASS with two more tests than before this task.
 
-- [ ] **Step 4: Confirm the catch is covered**
+- [x] **Step 4: Confirm the catch is covered**
 
 Run: `npx vitest run tests/unit/targets/chrome/service-worker.test.ts --coverage --coverage.include=src/targets/chrome/service-worker.ts`
 Expected: lines 71 and 72 are no longer listed as uncovered.
 
-- [ ] **Step 5: Lint and format the file**
+- [x] **Step 5: Lint and format the file**
 
 Run: `npx eslint tests/unit/targets/chrome/service-worker.test.ts && npx prettier --check tests/unit/targets/chrome/service-worker.test.ts`
 Expected: both exit 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/targets/chrome/service-worker.test.ts
@@ -866,7 +866,7 @@ git commit -m "test(targets): cover worker proxy rejection"
 - Consumes: `isCompleteSettingsMap` and `configDefaults` already in the module.
 - Produces: no new interface.
 
-- [ ] **Step 1: Add the ignore hint**
+- [x] **Step 1: Add the ignore hint**
 
 Replace the module-load guard with:
 
@@ -879,17 +879,17 @@ if (!isCompleteSettingsMap(configDefaults)) {
 }
 ```
 
-- [ ] **Step 2: Confirm the line is ignored**
+- [x] **Step 2: Confirm the line is ignored**
 
 Run: `npx vitest run tests/unit/core/config/config-fields.test.ts --coverage --coverage.include=src/core/config/config-fields.ts`
 Expected: PASS, and the report does not list line 348 as uncovered.
 
-- [ ] **Step 3: Lint and format the file**
+- [x] **Step 3: Lint and format the file**
 
 Run: `npx eslint src/core/config/config-fields.ts && npx prettier --check src/core/config/config-fields.ts`
 Expected: both exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/core/config/config-fields.ts
@@ -909,32 +909,32 @@ git commit -m "test(config): mark defaults invariant as ignored"
 - Consumes: every earlier task.
 - Produces: no interface.
 
-- [ ] **Step 1: Run type-check, lint, and format**
+- [x] **Step 1: Run type-check, lint, and format**
 
 Run: `npm run type-check && npm run lint && npm run format:check`
 Expected: all exit 0.
 
-- [ ] **Step 2: Run the full suite and confirm the count**
+- [x] **Step 2: Run the full suite and confirm the count**
 
 Run: `npm test`
 Expected: PASS with 1028 tests. The count is 982 before this branch, minus six removed duplicate tests, plus 52 new cases.
 
-- [ ] **Step 3: Run coverage and check the four branch sites**
+- [x] **Step 3: Run coverage and check the four branch sites**
 
 Run: `npm run test:coverage`
 Expected: thresholds pass. The report no longer lists `request-queue.ts:114`, `settings-view.ts:404`, or `service-worker.ts:71-72` as uncovered. `config-fields.ts` may still list line 348 only if the ignore hint is misplaced; it must not.
 
-- [ ] **Step 4: Confirm production changes are comments only**
+- [x] **Step 4: Confirm production changes are comments only**
 
 Run: `git diff main -- src/`
 Expected: the only change is the comment and `/* v8 ignore next 3 */` in `src/core/config/config-fields.ts`.
 
-- [ ] **Step 5: Build all targets**
+- [x] **Step 5: Build all targets**
 
 Run: `npm run build`
 Expected: exit 0.
 
-- [ ] **Step 6: Review the branch diff**
+- [x] **Step 6: Review the branch diff**
 
 Run: `git diff --stat main...HEAD`
 Expected: test files, the new helper, the design and plan docs, and the one `src/` comment.
