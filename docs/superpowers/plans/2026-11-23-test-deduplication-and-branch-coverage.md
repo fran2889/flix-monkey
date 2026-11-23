@@ -693,7 +693,7 @@ it('drops a queued request cleared during a processing pass', async () => {
     const adapter = buildMockAdapter().withStorageSetResolvingTo(undefined).build();
     adapter.storageGet = vi.fn(() => {
         reads += 1;
-        if (reads <= 2) return Promise.resolve('0');
+        if (reads <= 3) return Promise.resolve('0');
         return new Promise<string>(resolve => {
             releaseRead = () => resolve('0');
         });
@@ -707,7 +707,7 @@ it('drops a queued request cleared during a processing pass', async () => {
     const second = queue.enqueue('url2', 0, secondFetch);
     const secondResult = second.catch((error: unknown) => error);
     await flushAsyncWork();
-    expect(adapter.storageGet).toHaveBeenCalledTimes(3);
+    expect(adapter.storageGet).toHaveBeenCalledTimes(4);
     expect(secondFetch).not.toHaveBeenCalled();
 
     expect(queue.clear()).toBe(1);
@@ -719,7 +719,9 @@ it('drops a queued request cleared during a processing pass', async () => {
 });
 ```
 
-The first request uses two storage reads on the no-wait path. The third read is the processing pass for the second request; clearing while it is pending empties the queue before dispatch.
+The first request uses two storage reads. The second request's pass performs the
+loop-start read (third) and the pre-claim read (fourth). Clearing while the
+pre-claim read is pending empties the queue before dispatch.
 
 - [ ] **Step 2: Run the file**
 
