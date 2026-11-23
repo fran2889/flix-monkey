@@ -9,7 +9,6 @@ import type { ConfigManager } from '../../../../src/core/config/config-manager';
 import type { DisabledClientsManager } from '../../../../src/core/disabled-clients';
 import type { IdOverrideManager } from '../../../../src/core/id-override-manager';
 import type { Logger } from '../../../../src/core/logger';
-import { Title } from '../../../../src/core/title';
 import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
@@ -294,7 +293,7 @@ describe('OmdbApiClient', () => {
     });
 
     describe('details', () => {
-        it('uses the ID endpoint when the title has an IMDb ID', async () => {
+        it('fetches details by IMDb ID and fills in the missing apiTitle', async () => {
             const mockResponse = {
                 Response: 'True',
                 imdbID: 'tt1234567',
@@ -308,12 +307,14 @@ describe('OmdbApiClient', () => {
             const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
             const client = new OmdbApiClient({ ...deps, adapter });
             const minimalTitle = buildTitle().withDisplayTitle('Test').withImdbId('tt1234567').build();
+
             const result = await client.getDetails(minimalTitle);
 
             expect(result).not.toBeUndefined();
+            expect(result!.apiTitle).toBe('Test Movie');
+            expect(result!.displayTitle).toBe('Test');
             expect(result!.imdbId).toBe('tt1234567');
             expect(result!.imdbRating).toBe(8.5);
-            expect(result!.apiTitle).toBe('Test Movie');
             expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt1234567');
         });
         it('returns the title unchanged when it already has an apiTitle', async () => {
@@ -329,42 +330,6 @@ describe('OmdbApiClient', () => {
             const result = await client.getDetails(searchTitle);
             expect(result).toBe(searchTitle);
             expect(mockAdapterForTest.httpFetch).not.toHaveBeenCalled();
-        });
-        it('updates apiTitle from the OMDb response when the fallback has no apiTitle', async () => {
-            const mockResponse = {
-                Response: 'True',
-                imdbID: 'tt123',
-                Title: 'Updated Title',
-                Type: 'movie',
-            };
-            const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
-            const client = new OmdbApiClient({ ...deps, adapter });
-            const minimalTitle = buildTitle()
-                .withDisplayTitle('Test')
-                .withImdbId('tt123')
-                .withApiTitle(undefined)
-                .build();
-            const result = await client.getDetails(minimalTitle);
-            expect(result!.apiTitle).toBe('Updated Title');
-            expect(result!.imdbId).toBe('tt123');
-            expect(result!.displayTitle).toBe('Test');
-        });
-        it('fetches details by IMDb ID for a cached title without an apiTitle', async () => {
-            const mockResponse = {
-                Response: 'True',
-                imdbID: 'tt123',
-                Title: 'Updated Title',
-                imdbRating: '8.5',
-                Type: 'movie',
-            };
-            const adapter = buildMockAdapter().withHttpFetchResolvingTo(mockResponse).build();
-            const client = new OmdbApiClient({ ...deps, adapter });
-            const cachedTitle = new Title({ displayTitle: 'Test', imdbId: 'tt123' });
-            const result = await client.getDetails(cachedTitle);
-
-            expect(result!.apiTitle).toBe('Updated Title');
-            expect(result!.imdbRating).toBe(8.5);
-            expect(adapter.httpFetch).toHaveBeenCalledWith('https://www.omdbapi.com/?apikey=key&i=tt123');
         });
         it('returns undefined and logs the display title, IMDb ID, and provider message on a details miss', async () => {
             const adapter = buildMockAdapter()
