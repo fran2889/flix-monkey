@@ -370,11 +370,18 @@ describe('OmdbApiClient', () => {
             const status = await client.getStatus();
             expect(status.healthy).toBe(false);
         });
-        it('defers to the base health check when an API key is configured', async () => {
-            // mockConfig.get() returns a non-empty key, so the client falls through to
-            // BaseApiClient.getStatus(), which gates on the disabled manager.
-            const client = new OmdbApiClient(deps);
-            expect(await client.getStatus()).toEqual({ healthy: true });
+        it('reports the base disabled status when an API key is configured', async () => {
+            const disabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(true),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const client = new OmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+            expect(await client.getStatus()).toEqual({
+                healthy: false,
+                reason: 'Temporarily disabled due to errors',
+            });
         });
     });
 

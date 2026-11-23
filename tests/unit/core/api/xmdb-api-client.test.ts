@@ -249,9 +249,18 @@ describe('XmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
-    it('defers to the base health check when an API key is configured', async () => {
-        const client = new XmdbApiClient(deps);
-        expect(await client.getStatus()).toEqual({ healthy: true });
+    it('reports the base disabled status when an API key is configured', async () => {
+        const disabledManagerForTest: DisabledClientsManager = {
+            isDisabled: vi.fn().mockResolvedValue(true),
+            disable: vi.fn().mockResolvedValue(undefined),
+            resetAll: vi.fn().mockResolvedValue([]),
+        } as unknown as DisabledClientsManager;
+        const client = new XmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+        expect(await client.getStatus()).toEqual({
+            healthy: false,
+            reason: 'Temporarily disabled due to errors',
+        });
     });
 
     describe('response parsing', () => {
