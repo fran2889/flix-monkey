@@ -4,6 +4,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as FetchProxy from '../../../../src/targets/extension/fetch-proxy';
 import { flushAsyncWork } from '../../../helpers/async';
 import { type BackgroundListener, installBackgroundHarness } from '../../../helpers/background-harness';
 import { chrome } from '../../../mocks/chrome';
@@ -15,6 +16,14 @@ const { executeMigrations } = vi.hoisted(() => ({
 vi.mock('../../../../src/targets/extension/migrations', () => ({
     createExtensionMigrationExecutor: () => executeMigrations,
 }));
+
+vi.mock('../../../../src/targets/extension/fetch-proxy', async importOriginal => {
+    const actual = await importOriginal<typeof FetchProxy>();
+    return {
+        ...actual,
+        handleFetchMessage: vi.fn(actual.handleFetchMessage),
+    };
+});
 
 describe('Chrome service worker', () => {
     let messageListener: BackgroundListener;
@@ -140,6 +149,24 @@ describe('Chrome service worker', () => {
             expect(sendResponse).toHaveBeenCalledWith({ ok: true, data: 'The Matrix' });
             expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1234);
             setTimeoutSpy.mockRestore();
+        });
+        it.each([
+            ['an Error rejection', new Error('proxy exploded'), 'proxy exploded'],
+            ['a non-Error rejection', 'proxy exploded', 'proxy exploded'],
+        ])('responds with the proxy error for %s', async (_label, rejection, expected) => {
+            const { handleFetchMessage } = await import('../../../../src/targets/extension/fetch-proxy');
+            vi.mocked(handleFetchMessage).mockRejectedValueOnce(rejection);
+
+            const sendResponse = vi.fn();
+            const result = messageListener(
+                { type: 'FM_FETCH', url: 'https://xmdbapi.com' },
+                { id: 'test-ext' },
+                sendResponse
+            );
+
+            expect(result).toBe(true);
+            await flushAsyncWork();
+            expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: expected });
         });
         it('ignores non-FM_FETCH messages', () => {
             const result = messageListener({ type: 'OTHER' }, { id: 'test-ext' }, vi.fn());
