@@ -4,9 +4,13 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ApiClient } from '../../../src/core/api/base-api-client';
+import { type ApiClient, type ApiClientDeps, BaseApiClient } from '../../../src/core/api/base-api-client';
 import { ApiClientManager } from '../../../src/core/api-manager';
+import type { ConfigManager } from '../../../src/core/config/config-manager';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients';
+import type { IdOverrideManager } from '../../../src/core/id-override-manager';
+import type { RequestQueue } from '../../../src/core/request-queue';
+import type { Title } from '../../../src/core/title';
 import { FlixMonkeyError } from '../../../src/core/utils/index';
 import { buildMockAdapter } from '../../mocks/adapter';
 import { buildCacheEntry } from '../../mocks/cache';
@@ -14,6 +18,25 @@ import { buildLogger } from '../../mocks/logger';
 import { buildTitle, emptyTitleData } from '../../mocks/title';
 
 const disabledManager = new DisabledClientsManager(buildMockAdapter().build());
+
+class RatedStubClient extends BaseApiClient {
+    constructor(deps: ApiClientDeps) {
+        super(deps, 'xmdb', {
+            clear: vi.fn().mockReturnValue(0),
+            enqueue: vi.fn(),
+        } as unknown as RequestQueue);
+    }
+    async search(displayTitle: string): Promise<Title | undefined> {
+        return buildTitle().withDisplayTitle(displayTitle).withImdbId('tt1234567').build();
+    }
+    async getDetails(searchTitle: Title): Promise<Title | undefined> {
+        return buildTitle()
+            .withDisplayTitle(searchTitle.displayTitle)
+            .withImdbId('tt1234567')
+            .withImdbRating(7.5)
+            .build();
+    }
+}
 
 describe('ApiClientManager', () => {
     describe('fetching', () => {
@@ -66,6 +89,34 @@ describe('ApiClientManager', () => {
                 'Unknown Movie',
                 expect.objectContaining({ source: 'omdb', imdbRating: undefined })
             );
+        });
+
+        it('reads the disabled marker once per lookup', async () => {
+            const adapter = buildMockAdapter()
+                .withStorageGetResolvingTo(
+                    vi.fn((key: string) => Promise.resolve(key === 'fm_disabled_xmdb' ? '0' : undefined))
+                )
+                .build();
+            const lookupDisabledManager = new DisabledClientsManager(adapter);
+            const logger = buildLogger().build();
+            const deps: ApiClientDeps = {
+                adapter,
+                config: { get: () => 'key' } as unknown as ConfigManager,
+                disabledManager: lookupDisabledManager,
+                logger,
+                overrideManager: {
+                    getImdbId: vi.fn().mockResolvedValue(undefined),
+                    setImdbId: vi.fn().mockResolvedValue(undefined),
+                } as unknown as IdOverrideManager,
+            };
+            const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+            const manager = new ApiClientManager(logger, mockCache, lookupDisabledManager, new RatedStubClient(deps));
+
+            const result = await manager.getData('Some Title');
+
+            expect(result.imdbRating).toBe(7.5);
+            expect(adapter.storageGet.mock.calls).toEqual([['fm_disabled_xmdb']]);
+            expect(adapter.storageSet).not.toHaveBeenCalled();
         });
     });
 

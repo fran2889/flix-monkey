@@ -16,21 +16,21 @@ export class DisabledClientsManager {
     }
 
     /**
-     * Checks if an API client is currently disabled due to recent failures.
+     * Reports whether an API client is currently locked out after failures.
+     *
+     * Reads `fm_disabled_<source>` and never writes storage, so an expired marker
+     * stays in storage and simply reads as healthy. An absent, non-numeric, `'0'`,
+     * or expired value reads as healthy; a malformed value never disables a
+     * provider.
      *
      * @param source - The API provider identifier (e.g., 'xmdb', 'omdb').
-     * @returns True if the source is currently disabled (lockout active), false otherwise.
+     * @returns True only while the stored expiry is in the future.
      */
     async isDisabled(source: ApiSourceType): Promise<boolean> {
-        const key = this.#key(source);
-        const val = await this.#adapter.storageGet(key);
-        const disabledUntil = Number.parseInt(typeof val === 'string' ? val : '0', 10);
-        if (disabledUntil === 0) return false;
-        if (Date.now() > disabledUntil) {
-            await this.#adapter.storageSet(key, '0');
-            return false;
-        }
-        return true;
+        const raw = await this.#adapter.storageGet(this.#key(source));
+        const disabledUntil = typeof raw === 'string' ? Number.parseInt(raw, 10) : Number.NaN;
+        if (!Number.isFinite(disabledUntil)) return false;
+        return Date.now() < disabledUntil;
     }
 
     #key(source: ApiSourceType): string {

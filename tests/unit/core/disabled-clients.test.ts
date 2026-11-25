@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Fran
  * SPDX-License-Identifier: GPL-3.0-only
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiSource } from '../../../src/core/constants';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients';
@@ -41,6 +41,41 @@ describe('DisabledClientsManager', () => {
     it('reports a source as not disabled after its expiry', async () => {
         mockAdapter.storageGet.mockResolvedValue((Date.now() - 1000).toString());
         expect(await manager.isDisabled('xmdb')).toBe(false);
+        expect(mockAdapter.storageSet).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ['a non-numeric string', 'abc'],
+        ['an empty string', ''],
+        ['whitespace', '  '],
+        ['a boolean', true],
+        ['a past timestamp with a trailing character', `${Date.now() - 1000}x`],
+    ])('reports a source as not disabled when the stored marker is %s', async (_label, stored) => {
+        mockAdapter.storageGet.mockResolvedValue(stored);
+        expect(await manager.isDisabled('xmdb')).toBe(false);
+        expect(mockAdapter.storageSet).not.toHaveBeenCalled();
+    });
+
+    it('reports a source as not disabled at the exact expiry millisecond', async () => {
+        vi.useFakeTimers({ now: 1_000_000 });
+        try {
+            mockAdapter.storageGet.mockResolvedValue('1000000');
+            expect(await manager.isDisabled('xmdb')).toBe(false);
+            expect(mockAdapter.storageSet).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('propagates a storage read failure', async () => {
+        mockAdapter.storageGet.mockRejectedValue(new Error('storage failed'));
+        await expect(manager.isDisabled('xmdb')).rejects.toThrow('storage failed');
+    });
+
+    it('reports nothing and writes nothing when resetting a malformed marker', async () => {
+        mockAdapter.storageGet.mockResolvedValue('abc');
+        expect(await manager.resetAll()).toEqual([]);
+        expect(mockAdapter.storageSet).not.toHaveBeenCalled();
     });
 
     it('resets all disabled clients and returns their names', async () => {

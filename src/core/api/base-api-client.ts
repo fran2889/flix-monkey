@@ -86,18 +86,14 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Applies the ID override and disabled-client short circuits around the
-     * search then details pipeline described by `ApiClient.fetch`.
+     * Applies the ID override around the search then details pipeline described
+     * by `ApiClient.fetch`.
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param imdbId - Optional IMDb ID that skips search.
      * @returns Hydrated title, or undefined when no match is found.
      */
     async fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined> {
-        if (await this.#isDisabled()) {
-            return undefined;
-        }
-
         const overrideId = await this.#overrideManager.getImdbId(displayTitle);
         if (overrideId) {
             this.#logger.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
@@ -121,12 +117,8 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    async #isDisabled(): Promise<boolean> {
-        return this.#disabledManager.isDisabled(this.#source);
-    }
-
     async getStatus(): Promise<ClientStatus> {
-        if (await this.#isDisabled()) {
+        if (await this.#disabledManager.isDisabled(this.#source)) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
         }
         return { healthy: true };

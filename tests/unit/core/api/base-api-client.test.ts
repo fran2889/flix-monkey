@@ -59,6 +59,20 @@ describe('BaseApiClient', () => {
             expect(status.healthy).toBe(false);
             expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
         });
+        it('consults the disabled manager exactly once for a status check', async () => {
+            const disabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(false),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const client = new XmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+            const status = await client.getStatus();
+
+            expect(status).toEqual({ healthy: true });
+            expect(disabledManagerForTest.isDisabled).toHaveBeenCalledOnce();
+            expect(disabledManagerForTest.isDisabled).toHaveBeenCalledWith('xmdb');
+        });
     });
 
     describe('fetch', () => {
@@ -120,6 +134,24 @@ describe('BaseApiClient', () => {
 
             expect(result?.imdbId).toBe('tt9999999');
             expect(client.getDetails).toHaveBeenCalledWith(expect.objectContaining({ imdbId: 'tt9999999' }));
+        });
+        it('does not consult the disabled manager during a fetch', async () => {
+            const disabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(true),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const adapterForTest = buildMockAdapter().withHttpFetchResolvingTo({ results: [] }).build();
+            const client = new XmdbApiClient({
+                ...deps,
+                adapter: adapterForTest,
+                disabledManager: disabledManagerForTest,
+            });
+
+            const result = await client.fetch('Some Title');
+
+            expect(result).toBeUndefined();
+            expect(disabledManagerForTest.isDisabled).not.toHaveBeenCalled();
         });
     });
 

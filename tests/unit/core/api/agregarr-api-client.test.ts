@@ -486,33 +486,6 @@ describe('AgregarrApiClient', () => {
             // Note: markDisabled is NOT called when getDetails returns undefined (only when it throws)
             expect(mockDisabledManagerForTest.disable).not.toHaveBeenCalled();
         });
-
-        it('does not fetch when the client is disabled', async () => {
-            const mockDisabledManagerForTest: DisabledClientsManager = {
-                isDisabled: vi.fn().mockResolvedValue(true),
-                disable: vi.fn().mockResolvedValue(undefined),
-                resetAll: vi.fn().mockResolvedValue([]),
-            } as unknown as DisabledClientsManager;
-            const mockAdapter = buildMockAdapter()
-                .withHttpFetchResolvingTo({
-                    ok: true,
-                    json: () => Promise.resolve({ name: 'Movie', ratings: [] }),
-                })
-                .build();
-
-            const client = new AgregarrApiClient({
-                ...deps,
-                adapter: mockAdapter,
-                disabledManager: mockDisabledManagerForTest,
-                logger: mockLoggerForTests,
-                overrideManager: mockOverrideManagerForTests,
-            });
-
-            const result = await client.fetch('Test Movie');
-
-            expect(result).toBeUndefined();
-            expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled();
-        });
     });
 
     describe('response parsing', () => {

@@ -112,14 +112,14 @@ The JSDoc states that the call never writes storage, and that an absent, non-num
 
 Documented reading of each input:
 
-| Stored value             | Result  | Write |
-| ------------------------ | ------- | ----- |
-| absent (`undefined`)     | healthy | none  |
-| `'0'`                    | healthy | none  |
-| non-numeric, `''`, `'  '`| healthy | none  |
-| boolean `true` or `false`| healthy | none  |
-| past timestamp           | healthy | none  |
-| future timestamp         | disabled| none  |
+| Stored value              | Result   | Write |
+| ------------------------- | -------- | ----- |
+| absent (`undefined`)      | healthy  | none  |
+| `'0'`                     | healthy  | none  |
+| non-numeric, `''`, `'  '` | healthy  | none  |
+| boolean `true` or `false` | healthy  | none  |
+| past timestamp            | healthy  | none  |
+| future timestamp          | disabled | none  |
 
 One deliberate, inert boundary change: at the exact millisecond where `Date.now() === disabledUntil`, the old code still read disabled (`Date.now() > disabledUntil` was false) and the new code reads healthy. Lockouts are `CLIENT_DISABLE_DURATION` (one hour), so this cannot be observed.
 

@@ -38,10 +38,12 @@
 ### Task 1: Make `isDisabled()` a pure read with an inert malformed path
 
 **Files:**
+
 - Modify: `src/core/disabled-clients.ts:19-33` (`isDisabled` and its JSDoc only; `#key`, `disable`, `resetAll` untouched)
 - Test: `tests/unit/core/disabled-clients.test.ts`
 
 **Interfaces:**
+
 - Consumes: `PlatformAdapter.storageGet(key): Promise<string | boolean | undefined>`.
 - Produces: `DisabledClientsManager.isDisabled(source: ApiSourceType): Promise<boolean>` with the same signature and new semantics: never writes storage; `undefined`, a boolean, `'0'`, a non-numeric value, and an expired timestamp all return `false`; only a strictly future timestamp returns `true`.
 
@@ -60,7 +62,7 @@ git commit -m "docs: plan side-effect-free disabled-provider reads"
 
 Expected: branch is `fix/side-effect-free-disabled-reads` and `git status` is clean.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Add `vi` to the Vitest import of `tests/unit/core/disabled-clients.test.ts`, then change the existing expiry test and add four tests next to it:
 
@@ -106,18 +108,19 @@ it('reports nothing and writes nothing when resetting a malformed marker', async
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify each one fails for the right reason**
+- [x] **Step 3: Run the tests to verify each one fails for the right reason**
 
 Run: `npx vitest run tests/unit/core/disabled-clients.test.ts`
 
 Expected:
+
 - `reports a source as not disabled after its expiry` FAILS on `storageSet` having been called with `['fm_disabled_xmdb', '0']`.
 - Each of the five `... when the stored marker is ...` cases FAILS on `isDisabled` returning `true` (`NaN` fails both of the old comparisons).
 - `reports a source as not disabled at the exact expiry millisecond` FAILS on `isDisabled` returning `true`.
 - `reports nothing and writes nothing when resetting a malformed marker` FAILS on `resetAll` returning `['xmdb', 'omdb', 'agregarr']` and on `storageSet`.
 - `propagates a storage read failure` PASSES. It is a guard against the refactor swallowing the read error into `false`; leave it in place.
 
-- [ ] **Step 4: Implement the pure read**
+- [x] **Step 4: Implement the pure read**
 
 In `src/core/disabled-clients.ts`, replace the body of `isDisabled()` with exactly:
 
@@ -148,12 +151,12 @@ Update the JSDoc to state the read-only contract, for example:
  */
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/unit/core/disabled-clients.test.ts`
 Expected: PASS, all cases including the three untouched `resetAll` tests.
 
-- [ ] **Step 6: Run the dependent suite**
+- [x] **Step 6: Run the dependent suite**
 
 Run: `npx vitest run tests/unit/core/api tests/unit/core/api-manager.test.ts`
 Expected: PASS. Nothing outside this manager reads `fm_disabled_*`, and `resetAll`'s write for an active lockout is unchanged.
@@ -163,16 +166,18 @@ Expected: PASS. Nothing outside this manager reads `fm_disabled_*`, and `resetAl
 ### Task 2: Give the disabled gate a single owner
 
 **Files:**
+
 - Modify: `src/core/api/base-api-client.ts:88-133` (delete the `#isDisabled()` prologue call and the helper; inline into `getStatus()`; fix the `fetch` JSDoc)
 - Modify: `tests/unit/core/api-manager.test.ts` (new end-to-end read-count test)
 - Modify: `tests/unit/core/api/base-api-client.test.ts` (two new tests)
 - Modify: `tests/unit/core/api/agregarr-api-client.test.ts:490-514` (delete one stale test)
 
 **Interfaces:**
+
 - Consumes: `DisabledClientsManager.isDisabled(source)` from Task 1, pure and read-only.
 - Produces: `BaseApiClient.getStatus()` as the only reader of `fm_disabled_<source>`; `BaseApiClient.fetch()` reads no storage for health and keeps its signature `fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined>`. The private `#isDisabled()` method no longer exists.
 
-- [ ] **Step 1: Write the failing end-to-end read-count test**
+- [x] **Step 1: Write the failing end-to-end read-count test**
 
 Append to the `fetching` group of `tests/unit/core/api-manager.test.ts`. Add these imports: `BaseApiClient` and `type ApiClientDeps` from `../../../src/core/api/base-api-client`, `type ConfigManager` from `../../../src/core/config/config-manager`, `type IdOverrideManager` from `../../../src/core/id-override-manager`, `type RequestQueue` from `../../../src/core/request-queue`, `type Title` from `../../../src/core/title`. `buildTitle`, `buildLogger`, `buildMockAdapter`, `DisabledClientsManager`, and `ApiClientManager` are already imported.
 
@@ -202,9 +207,7 @@ Declare the class at module scope in the test file (below the existing `disabled
 ```ts
 it('reads the disabled marker once per lookup', async () => {
     const adapter = buildMockAdapter()
-        .withStorageGetResolvingTo((key: string) =>
-            Promise.resolve(key === 'fm_disabled_xmdb' ? '0' : undefined)
-        )
+        .withStorageGetResolvingTo((key: string) => Promise.resolve(key === 'fm_disabled_xmdb' ? '0' : undefined))
         .build();
     const disabledManager = new DisabledClientsManager(adapter);
     const logger = buildLogger().build();
@@ -231,13 +234,13 @@ it('reads the disabled marker once per lookup', async () => {
 
 The stub `search` and `getDetails` return `Title` objects directly, so the request queue is never enqueued and no `fm_last_req_*` read is recorded. The mock override manager keeps `fm-idoverride:*` out of the recorded reads.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run tests/unit/core/api-manager.test.ts -t "reads the disabled marker once per lookup"`
 
 Expected: FAIL with a received value of two identical entries, roughly `[ [ 'fm_disabled_xmdb' ], [ 'fm_disabled_xmdb' ] ]`, because `getStatus()` and `fetch()` each read the key.
 
-- [ ] **Step 3: Write the failing client-level tests**
+- [x] **Step 3: Write the failing client-level tests**
 
 In `tests/unit/core/api/base-api-client.test.ts`, add this to `describe('status')`:
 
@@ -277,13 +280,13 @@ it('does not consult the disabled manager during a fetch', async () => {
 });
 ```
 
-- [ ] **Step 4: Run the new client tests**
+- [x] **Step 4: Run the new client tests**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts -t "disabled manager"`
 
 Expected: `consults the disabled manager exactly once for a status check` PASSES (it pins the contract that survives inlining `#isDisabled`, so it guards against copying the call into both methods). `does not consult the disabled manager during a fetch` FAILS on `isDisabled` having been called once, and returns `undefined` for the wrong reason: the guard short-circuits before the search.
 
-- [ ] **Step 5: Implement the single owner**
+- [x] **Step 5: Implement the single owner**
 
 In `src/core/api/base-api-client.ts`:
 
@@ -300,22 +303,22 @@ async getStatus(): Promise<ClientStatus> {
 }
 ```
 
-4. Change the `fetch()` docstring's first line to `Applies the ID override around the search then details pipeline described by \`ApiClient.fetch\`.` and drop the phrase "disabled-client short circuits". Leave the `ApiClient.fetch` interface docstring (including "Callers must gate through `getStatus` before invoking") untouched; it becomes true again.
+4. Change the `fetch()` docstring's first line to `Applies the ID override around the search then details pipeline described by \`ApiClient.fetch\`.`and drop the phrase "disabled-client short circuits". Leave the`ApiClient.fetch`interface docstring (including "Callers must gate through`getStatus` before invoking") untouched; it becomes true again.
 
 Do not touch `ApiClientManager.#fetch`, `disable()`, the queue, or the 4xx policy.
 
-- [ ] **Step 6: Run the affected files and delete the stale test**
+- [x] **Step 6: Run the affected files and delete the stale test**
 
 Run: `npx vitest run tests/unit/core/api/agregarr-api-client.test.ts`
 
 Expected: one FAILURE, `does not fetch when the client is disabled`, on `expect(mockOverrideManagerForTests.getImdbId).not.toHaveBeenCalled()`: the client no longer owns the decision. Its premise is what this change removes; the manager-level skip is already covered by `skips an unhealthy client and does not cache the result` in `api-manager.test.ts`. Delete that whole `it(...)` block (`tests/unit/core/api/agregarr-api-client.test.ts:490-514`) and leave the surrounding tests alone.
 
-- [ ] **Step 7: Run every affected file**
+- [x] **Step 7: Run every affected file**
 
 Run: `npx vitest run tests/unit/core/api tests/unit/core/api-manager.test.ts tests/unit/core/disabled-clients.test.ts`
 Expected: PASS, including `omdb-api-client.test.ts` and `xmdb-api-client.test.ts` (the `'No API key configured'` and `'Temporarily disabled due to errors'` reasons still surface), and the new read-count test now seeing exactly one `fm_disabled_xmdb` read.
 
-- [ ] **Step 8: Run the full suite**
+- [x] **Step 8: Run the full suite**
 
 Run: `npm test`
 Expected: PASS with no failures and no new warnings; report any failure you see by name, including one this change did not cause.
@@ -325,19 +328,21 @@ Expected: PASS with no failures and no new warnings; report any failure you see 
 ### Task 3: Full verification and the single commit
 
 **Files:**
+
 - Verify only; no source edits unless a gate fails.
 - Commit: `src/core/disabled-clients.ts`, `src/core/api/base-api-client.ts`, `tests/unit/core/disabled-clients.test.ts`, `tests/unit/core/api/base-api-client.test.ts`, `tests/unit/core/api-manager.test.ts`, `tests/unit/core/api/agregarr-api-client.test.ts`.
 
 **Interfaces:**
+
 - Consumes: everything from Tasks 1 and 2.
 - Produces: one commit, `fix(api): read disabled provider state without writing storage`.
 
-- [ ] **Step 1: Run the static gates**
+- [x] **Step 1: Run the static gates**
 
 Run: `npm run type-check && npm run lint && npm run format:check`
 Expected: all three exit 0 with no output from Prettier and no ESLint errors. If Prettier reports files, run `npm run format` and re-run the gate.
 
-- [ ] **Step 2: Run the coverage gate**
+- [x] **Step 2: Run the coverage gate**
 
 Run: `npm run test:coverage`
 Expected: PASS, with branches, statements, and functions each at or above 90. Two branches leave `isDisabled()` (the `=== 0` early return and the expiry write) and one is added; one stale test is removed. Report the three percentages.
