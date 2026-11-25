@@ -898,7 +898,18 @@ describe('FlixMonkeyApp', () => {
             await withPromptResult('tt0133093', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
+        });
+
+        it('evicts a Unicode entry by display title when the IMDb ID changes', async () => {
+            const container = document.createElement('div');
+            container.setAttribute('data-fm-key', 'caf%C3%A9');
+            document.body.appendChild(container);
+            const { onEditClick } = await decorateAndCaptureActions(container);
+
+            await withPromptResult('tt0133093', () => onEditClick('Café'));
+
+            expect(mockCache.delete).toHaveBeenCalledWith('Café');
         });
 
         it('extracts the IMDb ID from an IMDb URL', async () => {
@@ -909,7 +920,7 @@ describe('FlixMonkeyApp', () => {
             await withPromptResult('https://www.imdb.com/title/tt0133093/', () => onEditClick('Test Movie'));
 
             expect(mockOverrideManager.setImdbId).toHaveBeenCalledWith('Test Movie', 'tt0133093');
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
         });
 
         it('prefills the prompt with the current override before the API IMDb ID', async () => {
@@ -931,7 +942,19 @@ describe('FlixMonkeyApp', () => {
 
             await onRefreshClick('Test Movie');
 
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
+            expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
+        });
+
+        it('evicts a Unicode entry by display title on refresh', async () => {
+            const container = document.createElement('div');
+            container.setAttribute('data-fm-key', 'caf%C3%A9');
+            document.body.appendChild(container);
+            const { onRefreshClick } = await decorateAndCaptureActions(container);
+
+            await onRefreshClick('Café');
+
+            expect(mockCache.delete).toHaveBeenCalledWith('Café');
             expect(mockRenderer.removeLoadingOverlay).toHaveBeenCalled();
         });
 
@@ -958,7 +981,7 @@ describe('FlixMonkeyApp', () => {
             void onRefreshClick('Test Movie');
 
             await flushAsyncWork();
-            expect(mockCache.delete).toHaveBeenCalledWith('test_movie');
+            expect(mockCache.delete).toHaveBeenCalledWith('Test Movie');
             expect(logger.error).toHaveBeenCalledWith('Failed to refresh ratings for "Test Movie"', expect.any(Error));
         });
     });
