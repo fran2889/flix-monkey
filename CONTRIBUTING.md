@@ -101,7 +101,12 @@ rules.
       && npm run test:coverage
     ```
 
-    If you changed a workflow, also run `actionlint`.
+    If you changed a workflow, also run `actionlint` and `zizmor`:
+
+    ```bash
+    actionlint
+    zizmor --offline .
+    ```
 
     If you changed documentation, also run the link check (lychee 0.24+,
     installed separately):
