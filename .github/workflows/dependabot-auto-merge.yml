@@ -12,15 +12,26 @@ jobs:
     auto-merge:
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor == 'dependabot[bot]'
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
         steps:
+            # pull_request_target has write access, so the run must never check
+            # out or execute the pull request. This guard refuses fork heads;
+            # Dependabot always opens from this repository.
+            - name: Refuse a pull request from another repository
+              if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+              run: exit 1
+
             - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
               id: meta
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Approve and enable auto-merge for patch updates
-              if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+            # Action bumps run new code in CI with the job's token, so they are
+            # reviewed even when the version bump is a patch.
+            - name: Approve and enable auto-merge for npm patch updates
+              if: >-
+                  steps.meta.outputs.update-type == 'version-update:semver-patch'
+                  && steps.meta.outputs.package-ecosystem == 'npm'
               run: |
                   gh pr review --approve "$PR_URL"
                   gh pr merge --auto --squash "$PR_URL"
