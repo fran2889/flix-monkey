@@ -107,17 +107,17 @@ Member order after the change: `isDisabled()`, `#disabledUntil()`, `#key()`, `di
 
 Behavior table:
 
-| Stored `fm_disabled_<source>` | Parsed | `isDisabled()` | Storage write |
-| --- | --- | --- | --- |
-| absent (`undefined`) | 0 | false | none |
-| `'0'` (written by `resetAll()`) | 0 | false | none |
-| future timestamp | expiry | true | none |
-| past timestamp | past | false | none, previously wrote `'0'` |
-| `'abc'` | `NaN` to 0 | false | none, previously stuck true |
-| `'12abc'` | 12 | false (long expired) | none |
-| `'Infinity'` | `NaN` to 0 | false | none |
-| `'-5'` | -5 | false | none |
-| `true` (boolean) | 0 | false | none |
+| Stored `fm_disabled_<source>`   | Parsed     | `isDisabled()`       | Storage write                |
+| ------------------------------- | ---------- | -------------------- | ---------------------------- |
+| absent (`undefined`)            | 0          | false                | none                         |
+| `'0'` (written by `resetAll()`) | 0          | false                | none                         |
+| future timestamp                | expiry     | true                 | none                         |
+| past timestamp                  | past       | false                | none, previously wrote `'0'` |
+| `'abc'`                         | `NaN` to 0 | false                | none, previously stuck true  |
+| `'12abc'`                       | 12         | false (long expired) | none                         |
+| `'Infinity'`                    | `NaN` to 0 | false                | none                         |
+| `'-5'`                          | -5         | false                | none                         |
+| `true` (boolean)                | 0          | false                | none                         |
 
 `disable()` and `resetAll()` are unchanged. `resetAll()` still writes `'0'` only for sources that are currently disabled, so the `Re-enabled API clients:` list at `src/core/ui/settings-ui.ts:101` keeps its meaning: an expired or malformed marker already read healthy and is not reported. The next `disable()` overwrites the stale key.
 
@@ -145,15 +145,15 @@ Documentation that must change, because the current text names a short circuit t
 
 ## Interfaces That Change
 
-| Surface | Before | After |
-| --- | --- | --- |
-| `DisabledClientsManager.isDisabled(source)` | Reads the marker, writes `'0'` on expiry, can return true forever on `NaN` | Reads the marker. No write. Absent, `'0'`, non-string, non-numeric, and expired all read false |
-| `DisabledClientsManager#disabledUntil(source)` | Does not exist | Private. Returns 0 or the parsed expiry |
-| `ApiClient.fetch(displayTitle, imdbId?)` | Perform a disabled check, then the override and search, then details | Performs no disabled check. A caller must gate through `getStatus()` |
-| `BaseApiClient.fetch(...)` | Same as the interface | Same as the interface. JSDoc names the removed short circuit |
-| `BaseApiClient.getStatus()` | Calls `#isDisabled()` | Unchanged, and now the only caller of `#isDisabled()` |
-| `ApiClientManager.#fetch(...)` | Gates through `getStatus()`, then `fetch()` | Unchanged. Still the single disabled read per lookup |
-| Storage shape of `fm_disabled_<source>` | Decimal string, `'0'` or a timestamp | Same. No migration |
+| Surface                                        | Before                                                                     | After                                                                                          |
+| ---------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `DisabledClientsManager.isDisabled(source)`    | Reads the marker, writes `'0'` on expiry, can return true forever on `NaN` | Reads the marker. No write. Absent, `'0'`, non-string, non-numeric, and expired all read false |
+| `DisabledClientsManager#disabledUntil(source)` | Does not exist                                                             | Private. Returns 0 or the parsed expiry                                                        |
+| `ApiClient.fetch(displayTitle, imdbId?)`       | Perform a disabled check, then the override and search, then details       | Performs no disabled check. A caller must gate through `getStatus()`                           |
+| `BaseApiClient.fetch(...)`                     | Same as the interface                                                      | Same as the interface. JSDoc names the removed short circuit                                   |
+| `BaseApiClient.getStatus()`                    | Calls `#isDisabled()`                                                      | Unchanged, and now the only caller of `#isDisabled()`                                          |
+| `ApiClientManager.#fetch(...)`                 | Gates through `getStatus()`, then `fetch()`                                | Unchanged. Still the single disabled read per lookup                                           |
+| Storage shape of `fm_disabled_<source>`        | Decimal string, `'0'` or a timestamp                                       | Same. No migration                                                                             |
 
 User-observable change: a provider whose marker was corrupted becomes usable again without a manual reset, and a provider disabled at any point no longer causes a storage write on every lookup.
 

@@ -39,10 +39,12 @@ Deliberately not pinned: the one-millisecond boundary where `expiry === Date.now
 ### Task 1: Commit the design record
 
 **Files:**
+
 - Existing (verify only): `docs/superpowers/specs/2026-11-26-make-disabled-provider-reads-side-effect-design.md`
 - Create: `docs/superpowers/plans/2026-11-26-make-disabled-provider-reads-side-effect.md` (this plan, saved as-is)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: the branch that Tasks 2 to 4 commit onto.
 
@@ -72,15 +74,17 @@ Expected: one commit, `git log --oneline -1` shows the message, and no `Generate
 ### Task 2: Make `DisabledClientsManager.isDisabled()` a pure read
 
 **Files:**
+
 - Modify: `src/core/disabled-clients.ts:17-35` (the `isDisabled()` member and a new private helper)
 - Test: `tests/unit/core/disabled-clients.test.ts`
 
 **Interfaces:**
+
 - Consumes: `this.#adapter.storageGet(key)` returning `StorageValue | undefined` where `StorageValue = string | boolean`, and `this.#key(source)`.
 - Produces: `isDisabled(source: ApiSourceType): Promise<boolean>`, read-only, false for an absent, `'0'`, non-string, non-numeric, or expired marker; private `#disabledUntil(source: ApiSourceType): Promise<number>` returning `0` or the parsed expiry. `disable()` and `resetAll()` keep their current signatures and write policy.
 - Member order after this task: `isDisabled()`, `#disabledUntil()`, `#key()`, `disable()`, `resetAll()`.
 
-- [ ] **Step 1: Replace the three read cases with one parameterized test**
+- [x] **Step 1: Replace the three read cases with one parameterized test**
 
 In `tests/unit/core/disabled-clients.test.ts`, delete `reports a source as not disabled before any disable`, `reports a source as disabled before its expiry`, and `reports a source as not disabled after its expiry`. Add a `StorageValue` type import (`import type { StorageValue } from '../../../src/platform/adapter';`) and insert this test where those three were:
 
@@ -105,17 +109,18 @@ it.each([
 
 Leave `disables a source and stores its expiry`, `resets all disabled clients and returns their names`, `resets every client in ApiSource order`, and `stops at the first storage error during reset` untouched. Do not drop the boolean row: it is the only case that covers the non-string branch.
 
-- [ ] **Step 2: Run the file to verify it fails**
+- [x] **Step 2: Run the file to verify it fails**
 
 Run: `npx vitest run tests/unit/core/disabled-clients.test.ts`
 
 Expected: FAIL, and for these reasons:
+
 - `an expired marker`: the boolean is `false` as expected but `storageSet` has been called with `('fm_disabled_xmdb', '0')`.
 - `a non-numeric marker` and `a non-finite marker`: expected `false`, received `true`.
 - `a numeric-prefix marker` and `a negative marker`: the boolean passes, the `storageSet` assertion fails.
 - `a missing marker`, `a zero marker`, `an unexpired marker`, `a boolean marker`: pass.
 
-- [ ] **Step 3: Implement the pure read**
+- [x] **Step 3: Implement the pure read**
 
 In `src/core/disabled-clients.ts`, reduce the method to one comparison and add the private reader directly after it:
 
@@ -139,13 +144,13 @@ In `src/core/disabled-clients.ts`, reduce the method to one comparison and add t
 
 Use exactly `Number.parseInt(value, 10)` plus `Number.isNaN`, matching `RequestQueue#getLastGlobalRequestTime` (`src/core/request-queue.ts:103`). Do not use `Number(value)`.
 
-- [ ] **Step 4: Run the file to verify it passes**
+- [x] **Step 4: Run the file to verify it passes**
 
 Run: `npx vitest run tests/unit/core/disabled-clients.test.ts`
 
 Expected: PASS, 5 `it` blocks (the `it.each` plus the four reset and disable tests), 13 cases total.
 
-- [ ] **Step 5: Run the unit suite**
+- [x] **Step 5: Run the unit suite**
 
 Run: `npm test`
 
@@ -158,16 +163,18 @@ Do not commit yet. The spec's Process section pins one code commit covering Task
 ### Task 3: Remove the disabled check from `BaseApiClient.fetch()`
 
 **Files:**
+
 - Modify: `src/core/api/base-api-client.ts:33-52` (the `ApiClient.fetch` interface JSDoc), `:88-96` (the `fetch` JSDoc), `:97-99` (the leading check to delete), `:124-132` (`#isDisabled()` and `getStatus()` swap places)
 - Test: `tests/unit/core/api/base-api-client.test.ts`
 - Test: `tests/unit/core/api-manager.test.ts`
 - Test: `tests/unit/core/api/agregarr-api-client.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DisabledClientsManager.isDisabled()` from Task 2, `ApiClientManager.#fetch()`'s unchanged `getStatus()` gate, and the existing `deps`, `mockDisabledManagerForTest`, and `buildTitle()` test helpers.
 - Produces: `ApiClient.fetch(displayTitle, imdbId?)` and `BaseApiClient.fetch(...)` performing no disabled check; `BaseApiClient.getStatus()` as the only caller of `#isDisabled()`; `#isDisabled()` placed after `getStatus()`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `tests/unit/core/api/base-api-client.test.ts`, inside `describe('fetch')`, add:
 
@@ -190,40 +197,41 @@ it('performs no disabled check of its own', async () => {
 
 The stub returns `true`, the value that would short circuit if the check were still there, and `search` is stubbed so no HTTP happens. A fresh spy is required because the file-level `mockDisabledManager` is shared and already recorded calls from the status tests.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts -t "performs no disabled check of its own"`
 
 Expected: FAIL with `expected "isDisabled" to not be called at all, but actually been called 1 times`, and `result` is `undefined` only because the check returned early.
 
-- [ ] **Step 3: Implement the change**
+- [x] **Step 3: Implement the change**
 
 In `src/core/api/base-api-client.ts`:
 
 - Delete the two lines at the top of `fetch()`:
 
 ```ts
-        if (await this.#isDisabled()) {
-            return undefined;
-        }
+if (await this.#isDisabled()) {
+    return undefined;
+}
 ```
 
 `fetch()` then opens with `const overrideId = await this.#overrideManager.getImdbId(displayTitle);` and the rest of the pipeline is unchanged.
+
 - Move `#isDisabled()` so it follows `getStatus()`; `getStatus()` becomes its only caller. Both stay private and unexported, and `disable()` and the accessors keep their current positions.
 - Replace the `fetch()` JSDoc with copy that names only the override short circuit and states the gate requirement:
 
 ```ts
-    /**
-     * Applies the ID override short circuit around the search then details
-     * pipeline described by `ApiClient.fetch`.
-     *
-     * This client performs no disabled check of its own. Callers must gate
-     * through `getStatus` first.
-     *
-     * @param displayTitle - Title as shown by the streaming service.
-     * @param imdbId - Optional IMDb ID that skips search.
-     * @returns Hydrated title, or undefined when no match is found.
-     */
+/**
+ * Applies the ID override short circuit around the search then details
+ * pipeline described by `ApiClient.fetch`.
+ *
+ * This client performs no disabled check of its own. Callers must gate
+ * through `getStatus` first.
+ *
+ * @param displayTitle - Title as shown by the streaming service.
+ * @param imdbId - Optional IMDb ID that skips search.
+ * @returns Hydrated title, or undefined when no match is found.
+ */
 ```
 
 - Strengthen the `ApiClient.fetch` interface JSDoc so the consequence is explicit:
@@ -234,43 +242,43 @@ In `src/core/api/base-api-client.ts`:
      * disabled. A supplied IMDb ID or a stored ID override skips the search step.
 ```
 
-- [ ] **Step 4: Run the file and the Agregarr file**
+- [x] **Step 4: Run the file and the Agregarr file**
 
 Run: `npx vitest run tests/unit/core/api/base-api-client.test.ts tests/unit/core/api/agregarr-api-client.test.ts`
 
 Expected: the new fetch test passes, and `AgregarrApiClient > override handling > does not fetch when the client is disabled` now FAILS, because `fetch` no longer consults `isDisabled` and the call proceeds into the override and search path. That failure is the proof that the test existed only to pin the check being removed.
 
-- [ ] **Step 5: Delete the superseded test and add the counting pins**
+- [x] **Step 5: Delete the superseded test and add the counting pins**
 
 - In `tests/unit/core/api/agregarr-api-client.test.ts`, delete the whole `it('does not fetch when the client is disabled', ...)` block inside `describe('override handling')`. Leave the `DisabledClientsManager` type import and the other stubs alone; they are still used.
 - In `tests/unit/core/api/base-api-client.test.ts`, inside `describe('status')`, append one assertion to `returns an unhealthy status when the client is disabled`:
 
 ```ts
-            expect(mockDisabledManagerForTest.isDisabled).toHaveBeenCalledOnce();
+expect(mockDisabledManagerForTest.isDisabled).toHaveBeenCalledOnce();
 ```
 
 - In `tests/unit/core/api-manager.test.ts`, inside `describe('fetching')`, add:
 
 ```ts
-        it('checks provider health once per lookup', async () => {
-            const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
-            const mockClient: ApiClient = {
-                source: 'agregarr',
-                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
-                fetch: vi.fn().mockResolvedValue(buildTitle().withSource('agregarr').build()),
-                disable: vi.fn(),
-            };
-            const manager = new ApiClientManager(buildLogger().build(), mockCache, disabledManager, mockClient);
+it('checks provider health once per lookup', async () => {
+    const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+    const mockClient: ApiClient = {
+        source: 'agregarr',
+        getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+        fetch: vi.fn().mockResolvedValue(buildTitle().withSource('agregarr').build()),
+        disable: vi.fn(),
+    };
+    const manager = new ApiClientManager(buildLogger().build(), mockCache, disabledManager, mockClient);
 
-            await manager.getData('Some Title');
+    await manager.getData('Some Title');
 
-            expect(mockClient.getStatus).toHaveBeenCalledOnce();
-        });
+    expect(mockClient.getStatus).toHaveBeenCalledOnce();
+});
 ```
 
 These two assertions are pins, not RED tests: both pass before and after the production change, and their job is to hold the "one `getStatus()` per lookup, one `isDisabled()` per `getStatus()`" chain in place. Record that in the commit description that accompanies the branch, not in an extra test.
 
-- [ ] **Step 6: Run the affected files, then the suite**
+- [x] **Step 6: Run the affected files, then the suite**
 
 Run: `npx vitest run tests/unit/core/disabled-clients.test.ts tests/unit/core/api/base-api-client.test.ts tests/unit/core/api-manager.test.ts tests/unit/core/api/agregarr-api-client.test.ts`
 
@@ -293,13 +301,15 @@ Expected: one commit. `git show --stat HEAD` lists exactly those six files, and 
 ### Task 4: Verify and deliver
 
 **Files:**
+
 - No file changes. Verification and PR only.
 
 **Interfaces:**
+
 - Consumes: the two commits from Tasks 1 and 3 on `fix/disabled-provider-reads`.
 - Produces: a pushed branch and a pull request titled `fix(api): make disabled-provider reads side-effect free`.
 
-- [ ] **Step 1: Run the full pre-PR gate**
+- [x] **Step 1: Run the full pre-PR gate**
 
 Run: `npm run type-check && npm run lint && npm run format:check && npm run build && npm run test:coverage`
 

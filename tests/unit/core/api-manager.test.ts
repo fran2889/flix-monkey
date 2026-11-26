@@ -35,6 +35,20 @@ describe('ApiClientManager', () => {
                 expect.stringContaining('Successfully retrieved ratings for "Some Title" from agregarr')
             );
         });
+        it('checks provider health once per lookup', async () => {
+            const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
+            const mockClient: ApiClient = {
+                source: 'agregarr',
+                getStatus: vi.fn().mockResolvedValue({ healthy: true }),
+                fetch: vi.fn().mockResolvedValue(buildTitle().withSource('agregarr').build()),
+                disable: vi.fn(),
+            };
+            const manager = new ApiClientManager(buildLogger().build(), mockCache, disabledManager, mockClient);
+
+            await manager.getData('Some Title');
+
+            expect(mockClient.getStatus).toHaveBeenCalledOnce();
+        });
         it('returns a not-found title with no rating when the client returns nothing', async () => {
             const mockCache = { read: vi.fn().mockResolvedValue(undefined), write: vi.fn() };
             const client: ApiClient = {
