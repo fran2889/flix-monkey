@@ -1,6 +1,9 @@
 name: Dependabot Auto-Merge
 
 on:
+    # Auto-merge needs a write token, which pull_request does not give
+    # Dependabot, and the job refuses fork heads before approving anything.
+    # zizmor: ignore[dangerous-triggers]
     pull_request_target:
         branches: [main]
 

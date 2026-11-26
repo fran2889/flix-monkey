@@ -1,0 +1,9 @@
+# actionlint 1.7.12 (the newest release) cannot parse GitHub's $/ syntax for
+# same-repository actions, so this audit stays off until actionlint supports it.
+# Patch cooldowns are deliberately 5 days; majors still wait 20.
+rules:
+    self-repository:
+        disable: true
+    dependabot-cooldown:
+        config:
+            days: 5
