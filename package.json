@@ -32,6 +32,9 @@
         "test:ui": "vitest run tests/ui",
         "test:integration": "vitest run -c vitest.integration.config.js",
         "test:coverage": "vitest run tests/unit tests/ui --coverage",
+        "check": "npm run type-check && npm run lint && npm run format:check && npm test",
+        "check:full": "npm run type-check && npm run lint && npm run format:check && npm run check:repo && npm run audit && npm run build && npm run lint:firefox && npm run test:coverage",
+        "check:repo": "actionlint && zizmor --offline . && lychee --config .lychee.toml \"*.md\" docs .github",
         "audit": "better-npm-audit audit --level moderate --require-notes --require-expiry",
         "audit:fix": "npm audit fix --force-will-break-dependencies=false"
     },
