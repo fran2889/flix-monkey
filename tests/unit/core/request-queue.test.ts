@@ -83,7 +83,8 @@ describe('RequestQueue', () => {
                     releaseRead = () => resolve('0');
                 });
             });
-            const queue = buildQueue(0, adapter);
+            const logger = buildLogger().build();
+            const queue = buildQueue(0, adapter, logger);
             const firstFetch = vi.fn().mockResolvedValue('first');
             const secondFetch = vi.fn().mockResolvedValue('second');
 
@@ -101,6 +102,7 @@ describe('RequestQueue', () => {
 
             expect(secondFetch).not.toHaveBeenCalled();
             await expect(secondResult).resolves.toEqual(new Error('Client Disabled'));
+            expect(logger.warn).not.toHaveBeenCalled();
         });
     });
 
