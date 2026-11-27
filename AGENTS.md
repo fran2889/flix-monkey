@@ -114,6 +114,7 @@ Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
 - CI enforces seven merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, actionlint, and zizmor), doc-links (offline file and anchor checks), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
+- Workflows read Node from `.nvmrc`. CI and nightly use the composite action in `.github/actions/setup` (referenced as `$/.github/actions/setup`), which also runs `npm ci --ignore-scripts`. Publish workflows keep inline setup because they check out released tags that may predate the action; update-store-description and release keep it because their cache and install needs differ.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
 ### Releases
