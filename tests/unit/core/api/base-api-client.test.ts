@@ -17,6 +17,12 @@ import type { PlatformAdapter } from '../../../../src/platform/adapter';
 import { buildMockAdapter } from '../../../mocks/adapter';
 import { buildLogger } from '../../../mocks/logger';
 
+interface StubClientOptions {
+    adapter?: PlatformAdapter;
+    disabledManager?: DisabledClientsManager;
+    queue?: RequestQueue;
+}
+
 const mockOverrideManager: IdOverrideManager = {
     getImdbId: vi.fn().mockResolvedValue(undefined),
     setImdbId: vi.fn().mockResolvedValue(undefined),
@@ -40,12 +46,6 @@ const deps: ApiClientDeps = {
     logger: mockLogger,
     overrideManager: mockOverrideManager,
 };
-
-interface StubClientOptions {
-    adapter?: PlatformAdapter;
-    disabledManager?: DisabledClientsManager;
-    queue?: RequestQueue;
-}
 
 class StubClient extends BaseApiClient {
     constructor(source: 'xmdb' | 'omdb' | 'agregarr', logger: Logger, options: StubClientOptions = {}) {
