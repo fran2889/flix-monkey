@@ -344,6 +344,9 @@ export function isCompleteSettingsMap(
     return CONFIG_FIELDS.every(field => !isSettingField(field) || Object.hasOwn(value, field.key));
 }
 
+// The defaults map is built from CONFIG_FIELDS, so this check cannot fail unless
+// the field list and the map construction drift apart.
+/* v8 ignore next 3 */
 if (!isCompleteSettingsMap(configDefaults)) {
     throw new Error('CONFIG_DEFAULTS is missing a setting key');
 }
