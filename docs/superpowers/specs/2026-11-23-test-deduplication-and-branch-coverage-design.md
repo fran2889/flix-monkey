@@ -2,7 +2,7 @@
 
 Date: 2026-11-23
 
-Status: proposed
+Status: accepted
 
 ## Intent
 
