@@ -11,9 +11,11 @@ Stack: TypeScript (ES2022, ESM), Node.js 24.x, Rollup, ESLint, Prettier, Vitest 
 - Install: `npm install`
 - Build: `npm run build` (all three targets)
 - Test: `npm test`
+- Auto-fix lint and format: `npm run lint:fix && npm run format`
+- Static checks (type-check, lint, format): `npm run check:static`
 - Fast local check: `npm run check`
 - Full local check before a PR: `npm run check:full` (needs actionlint 1.7.12, zizmor 1.33+, and lychee 0.24+ on `PATH`, plus network for the audit and web-ext)
-- Workflow and link checks alone: `npm run check:workflows`
+- Repo checks alone (workflows and links): `npm run check:repo`
 
 Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 
@@ -108,7 +110,7 @@ Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
-- The merge gate is the `merge-gate` job in `.github/workflows/ci.yml`; its `needs` list is the authoritative set of required jobs: type-check, lint-and-audit (ESLint, Prettier, audit, actionlint, and zizmor), doc-links (offline file and anchor checks), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run `npm run check:full` locally.
+- The `merge-gate` job in `.github/workflows/ci.yml` aggregates the required CI jobs; `dependency-review` and `CodeQL` are required separately. Its `needs` list covers type-check, lint-and-audit (ESLint, Prettier, audit, actionlint, and zizmor), doc-links (offline file and anchor checks), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run `npm run check:full` locally.
 - Workflows read Node from `.nvmrc`. CI and nightly use the composite action in `.github/actions/setup` (referenced as `$/.github/actions/setup`), which also runs `npm ci --ignore-scripts`. Publish workflows keep inline setup because they check out released tags that may predate the action; update-store-description and release keep it because their cache and install needs differ.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
