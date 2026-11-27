@@ -12,8 +12,7 @@ Stack: TypeScript (ES2022, ESM), Node.js 24.x, Rollup, ESLint, Prettier, Vitest 
 - Build: `npm run build` (all three targets)
 - Test: `npm test`
 - Auto-fix lint and format: `npm run lint:fix && npm run format`
-- Static checks (type-check, lint, format): `npm run check:static`
-- Fast local check: `npm run check`
+- Fast local check: `npm run check` (type-check, lint, format, tests)
 - Full local check before a PR: `npm run check:full` (needs actionlint 1.7.12, zizmor 1.33+, and lychee 0.24+ on `PATH`, plus network for the audit and web-ext)
 - Repo checks alone (workflows and links): `npm run check:repo`
 

@@ -96,12 +96,11 @@ rules.
     npm run check:full
     ```
 
-    `npm run check` is the fast offline gate. `npm run check:full` adds the
-    workflow and link checks, audit, build, Firefox lint, and coverage; it needs
-    actionlint 1.7.12, zizmor 1.33+, and lychee 0.24+ on `PATH`, plus network for
-    the audit and web-ext. For workflow or documentation changes only,
-    `npm run check:repo` runs those three. Both scripts share
-    `npm run check:static` for type-check, lint, and format.
+    `npm run check` runs type-check, lint, format, and the tests.
+    `npm run check:full` adds the workflow and link checks, audit, build, Firefox
+    lint, and coverage; it needs actionlint 1.7.12, zizmor 1.33+, and lychee
+    0.24+ on `PATH`, plus network for the audit and web-ext. For workflow or
+    documentation changes only, `npm run check:repo` runs those three.
 
 5.  **Submit your PR:**
     Push your branch and open a Pull Request against the `main` branch. Follow the
