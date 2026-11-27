@@ -29,12 +29,6 @@ export interface BackgroundHarness {
     messageListener: BackgroundListener;
 }
 
-function missingListener(name: string): BackgroundListener {
-    return (): never => {
-        throw new Error(`Background listener ${name} was not registered`);
-    };
-}
-
 /**
  * Installs a browser namespace mock on `global`, captures the listeners the
  * entry module registers, and stubs the timer, fetch, and abort globals the
@@ -95,5 +89,11 @@ export function installBackgroundHarness(
             (installedListener ?? missingListener('onInstalled'))(...args),
         messageListener: (...args: unknown[]): BackgroundListenerResult =>
             (messageListener ?? missingListener('onMessage'))(...args),
+    };
+}
+
+function missingListener(name: string): BackgroundListener {
+    return (): never => {
+        throw new Error(`Background listener ${name} was not registered`);
     };
 }
