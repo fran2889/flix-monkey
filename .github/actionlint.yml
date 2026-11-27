@@ -1,0 +1,7 @@
+# actionlint 1.7.12 cannot parse GitHub's $/ self-repository syntax. This
+# ignores only the setup action reference; zizmor's self-repository audit stays
+# enabled, and a misspelled path still reports a different message.
+paths:
+    .github/workflows/**/*.yml:
+        ignore:
+            - 'specifying action "\$/.github/actions/setup" in invalid format'

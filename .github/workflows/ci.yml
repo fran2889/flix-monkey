@@ -20,7 +20,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm run type-check
 
     lint-and-audit:
@@ -38,9 +38,12 @@ jobs:
             - name: Audit workflows
               uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1 # v0.9.2
               with:
+                  # Keep this false: true switches zizmor to SARIF mode, where
+                  # findings stop using failure exit codes and no longer block
+                  # the job.
                   advanced-security: false
                   version: '1.33.1'
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm run audit
             - run: npm run lint
             - run: npm run format:check
@@ -67,7 +70,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm rebuild sharp
             - run: npm run build
             - name: Lint Firefox extension
@@ -81,7 +84,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm run test:unit
 
     test-ui:
@@ -91,7 +94,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm run test:ui
 
     test-coverage:
@@ -101,7 +104,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: ./.github/actions/setup
+            - uses: $/.github/actions/setup
             - run: npm run test:coverage
             - name: Upload coverage results
               uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

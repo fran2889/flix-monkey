@@ -1,8 +1,4 @@
-# actionlint 1.7.12 (the newest release) cannot parse GitHub's $/ syntax for
-# same-repository actions, so this audit stays off until actionlint supports it.
 rules:
-    self-repository:
-        disable: true
     # Cooldowns live in .github/dependabot.yml, which sets them explicitly for
     # every updater.
     dependabot-cooldown:
