@@ -100,37 +100,26 @@ describe('CacheManager', () => {
             });
             expect(adapter.storageDelete).toHaveBeenCalledWith('fmc:missing_data');
         });
-        it('returns an entry with an indefinite expiry', async () => {
-            const titleObj = buildTitle()
-                .withDisplayTitle('Indefinite Title')
-                .withApiTitle('Indefinite Title')
-                .withImdbRating(8.0)
-                .build();
-            const entry = buildCacheEntry()
-                .withDisplayTitle('Indefinite Title')
-                .withImdbId(undefined)
-                .withData(titleObj.toCacheJSON())
-                .withExpiry(undefined)
-                .build();
+        it.each([
+            ['a missing expiry', { displayTitle: 'Indefinite Title', data: {} }],
+            [
+                'a null expiry',
+                {
+                    displayTitle: 'Legacy Movie',
+                    imdbId: null,
+                    data: { apiTitle: 'Legacy Movie', imdbRating: 8.1 },
+                    expires: null,
+                },
+            ],
+        ])('treats an entry with %s as never expiring', async (_label, entry) => {
             adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
-            const result = await cacheManager.read('Indefinite Title');
-            expect(result).not.toBeUndefined();
-            expect(result!.getTitle().displayTitle).toBe('Indefinite Title');
-        });
-        it('treats a pre-migration entry with null expiry as never expiring', async () => {
-            const legacyRaw = JSON.stringify({
-                displayTitle: 'Legacy Movie',
-                imdbId: null,
-                data: { apiTitle: 'Legacy Movie', imdbRating: 8.1 },
-                expires: null,
-            });
-            adapter.storageGet.mockResolvedValue(legacyRaw);
 
-            const result = await cacheManager.read('Legacy Movie');
+            const result = await cacheManager.read(entry.displayTitle);
 
             expect(result).toBeDefined();
             expect(result!.isExpired).toBe(false);
             expect(result!.imdbId).toBeUndefined();
+            expect(result!.getTitle().displayTitle).toBe(entry.displayTitle);
         });
         it('returns undefined, logs the syntax error, and deletes the entry when JSON parsing fails', async () => {
             adapter.storageGet.mockResolvedValue('invalid-json{');
@@ -308,7 +297,7 @@ describe('CacheManager', () => {
                 error: expect.any(Error),
             });
         });
-        it('returns the cache entry on a hit', async () => {
+        it('returns a cache entry with its title and metadata', async () => {
             const titleObj = buildTitle()
                 .withDisplayTitle('Cached Movie')
                 .withApiTitle('Cached Movie')
@@ -322,37 +311,14 @@ describe('CacheManager', () => {
                 .withExpiry(Date.now() + 100000)
                 .build();
             adapter.storageGet.mockResolvedValue(JSON.stringify(entry));
+
             const result = await cacheManager.read('Cached Movie');
-            expect(result).not.toBeUndefined();
-            expect(result).toBeInstanceOf(CacheEntry);
-            expect(result!.imdbId).toBe('tt123');
-            expect(result!.getTitle().imdbRating).toBe(8.0);
-        });
-        it('returns a cache entry with a title for valid data', async () => {
-            const now = Date.now();
-            const entryData = {
-                displayTitle: 'Cached Movie',
-                imdbId: 'tt456',
-                data: {
-                    apiTitle: 'Cached Movie',
-                    imdbId: 'tt456',
-                    year: 2020,
-                    imdbRating: 7.5,
-                    imdbVotes: undefined,
-                    rtRating: undefined,
-                    mcRating: undefined,
-                    source: undefined,
-                    type: undefined,
-                },
-                expires: now + 10000,
-            };
-            adapter.storageGet.mockResolvedValue(JSON.stringify(entryData));
-            const result = await cacheManager.read('Cached Movie');
-            expect(result).not.toBeUndefined();
+
             expect(result).toBeInstanceOf(CacheEntry);
             expect(result!.getTitle()).toBeInstanceOf(Title);
             expect(result!.getTitle().displayTitle).toBe('Cached Movie');
-            expect(result!.imdbId).toBe('tt456');
+            expect(result!.imdbId).toBe('tt123');
+            expect(result!.getTitle().imdbRating).toBe(8.0);
             expect(result!.isExpired).toBe(false);
         });
         it('marks an entry past its expiry as expired', async () => {

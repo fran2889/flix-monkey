@@ -72,6 +72,38 @@ describe('RequestQueue', () => {
             await Promise.all([first, second]);
             expect(rejected).toEqual(['first', 'second']);
         });
+        it('drops a queued request cleared during a processing pass', async () => {
+            let reads = 0;
+            let releaseRead: () => void = () => undefined;
+            const adapter = buildMockAdapter().withStorageSetResolvingTo(undefined).build();
+            adapter.storageGet = vi.fn(() => {
+                reads += 1;
+                if (reads <= 3) return Promise.resolve('0');
+                return new Promise<string>(resolve => {
+                    releaseRead = () => resolve('0');
+                });
+            });
+            const logger = buildLogger().build();
+            const queue = buildQueue(0, adapter, logger);
+            const firstFetch = vi.fn().mockResolvedValue('first');
+            const secondFetch = vi.fn().mockResolvedValue('second');
+
+            await queue.enqueue('url1', 0, firstFetch);
+
+            const second = queue.enqueue('url2', 0, secondFetch);
+            const secondResult = second.catch((error: unknown) => error);
+            await flushAsyncWork();
+            expect(adapter.storageGet).toHaveBeenCalledTimes(4);
+            expect(secondFetch).not.toHaveBeenCalled();
+
+            expect(queue.clear()).toBe(1);
+            releaseRead();
+            await flushAsyncWork();
+
+            expect(secondFetch).not.toHaveBeenCalled();
+            await expect(secondResult).resolves.toEqual(new Error('Client Disabled'));
+            expect(logger.warn).not.toHaveBeenCalled();
+        });
     });
 
     it('rejects the caller with the original fetch error', async () => {

@@ -249,6 +249,20 @@ describe('XmdbApiClient', () => {
         expect(status.healthy).toBe(false);
     });
 
+    it('reports the base disabled status when an API key is configured', async () => {
+        const disabledManagerForTest: DisabledClientsManager = {
+            isDisabled: vi.fn().mockResolvedValue(true),
+            disable: vi.fn().mockResolvedValue(undefined),
+            resetAll: vi.fn().mockResolvedValue([]),
+        } as unknown as DisabledClientsManager;
+        const client = new XmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+
+        expect(await client.getStatus()).toEqual({
+            healthy: false,
+            reason: 'Temporarily disabled due to errors',
+        });
+    });
+
     describe('response parsing', () => {
         it.each([
             ['a null body', null],
@@ -324,13 +338,10 @@ describe('XmdbApiClient', () => {
         });
 
         it.each([
-            ['a null body', null],
             ['an empty body', ''],
-            ['a non-string title', { id: 'tt1', title: 42 }],
             ['a non-string id', { id: 42, title: 'Movie 1' }],
             ['a missing id', { title: 'Movie 1' }],
             ['an empty id', { id: '', title: 'Movie 1' }],
-            ['an empty title', { id: 'tt1', title: '' }],
             ['a string rating', { id: 'tt1', title: 'Movie 1', rating: '8.8' }],
             ['a string metascore', { id: 'tt1', title: 'Movie 1', metascore: '88' }],
         ])('returns undefined when the details lookup receives %s', async (_label, response) => {

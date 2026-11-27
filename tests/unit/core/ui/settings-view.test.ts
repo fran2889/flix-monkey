@@ -8,13 +8,28 @@ import {
     CONFIG_FIELDS,
     type ConfigField,
     GROUPS,
-    isActionField,
     isSettingField,
     ROW_LABELS,
+    type SettingConfigField,
 } from '../../../../src/core/config/index';
 import { SettingsView } from '../../../../src/core/ui/settings-view';
 
 const configFields: readonly ConfigField[] = CONFIG_FIELDS;
+
+const settingFields = configFields.filter(isSettingField);
+
+function storedValueFor(field: SettingConfigField): boolean | string {
+    if (field.type === 'checkbox') return !field.default;
+    if (field.type === 'select') {
+        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
+        const storedValue = optionValues.find(option => option !== field.default);
+        if (storedValue === undefined) {
+            throw new Error(`Select field ${field.key} has no option other than its default`);
+        }
+        return storedValue;
+    }
+    return `stored-${field.key}`;
+}
 
 describe('SettingsView', () => {
     let actions: {
@@ -41,46 +56,35 @@ describe('SettingsView', () => {
     });
 
     describe('rendering', () => {
-        it('renders each config field from its definition', () => {
+        it.each(settingFields)('renders $key from its definition', field => {
             view.render(container, {});
 
-            configFields.forEach(field => {
-                // Skip action fields - they are rendered as buttons, not inputs
-                if (isActionField(field)) return;
+            const label = Array.from(container.querySelectorAll('label')).find(
+                element => element.textContent === field.label
+            );
+            expect(label, `Label for ${field.key} not found`).toBeDefined();
 
-                const label = Array.from(container.querySelectorAll('label')).find(
-                    element => element.textContent === field.label
-                );
-                expect(label, `Label for ${field.key} not found`).toBeDefined();
+            const input = container.querySelector(`[id="fm-${field.key}"]`);
+            expect(input, `Input for ${field.key} not found`).toBeDefined();
 
-                const input = container.querySelector(`[id="fm-${field.key}"]`);
-                expect(input, `Input for ${field.key} not found`).toBeDefined();
+            if (field.type === 'select') {
+                expect((input as HTMLSelectElement).tagName).toBe('SELECT');
+                expect(
+                    [...(input as HTMLSelectElement).options].map(option => [option.value, option.textContent])
+                ).toEqual(field.options.map(option => (Array.isArray(option) ? option : [option, option])));
+            } else {
+                expect((input as HTMLInputElement).type).toBe(field.type);
+            }
 
-                if (field.type === 'select') {
-                    expect((input as HTMLSelectElement).tagName).toBe('SELECT');
-                } else if (field.type === 'checkbox') {
-                    expect((input as HTMLInputElement).type).toBe('checkbox');
-                } else {
-                    expect((input as HTMLInputElement).type).toBe('text');
-                }
-
-                if (field.type === 'select') {
-                    expect(
-                        [...(input as HTMLSelectElement).options].map(option => [option.value, option.textContent])
-                    ).toEqual(field.options.map(option => (Array.isArray(option) ? option : [option, option])));
-                }
-
-                if (field.labelUrl) {
-                    const link = label?.querySelector('a');
-                    expect(link).not.toBeNull();
-                    expect((link as HTMLAnchorElement)?.href).toBe(field.labelUrl);
-                    expect((link as HTMLAnchorElement)?.target).toBe('_blank');
-                    expect(label!.hasAttribute('for')).toBe(false);
-                } else {
-                    const link = label?.querySelector('a');
-                    expect(link).toBeNull();
-                }
-            });
+            if (field.labelUrl) {
+                const link = label?.querySelector('a');
+                expect(link).not.toBeNull();
+                expect((link as HTMLAnchorElement)?.href).toBe(field.labelUrl);
+                expect((link as HTMLAnchorElement)?.target).toBe('_blank');
+                expect(label!.hasAttribute('for')).toBe(false);
+            } else {
+                expect(label?.querySelector('a')).toBeNull();
+            }
         });
 
         it('renders groups in the order their first field appears', () => {
@@ -217,37 +221,23 @@ describe('SettingsView', () => {
         });
     });
     describe('field population', () => {
-        it('populates every field with its default when settings are empty', () => {
+        it.each(settingFields)('renders $key with its default', field => {
             view.render(container, {});
 
-            configFields.forEach(field => {
-                if (isActionField(field)) return;
-                const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
-                const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
-                expect(value).toBe(field.default);
-            });
+            const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
+            const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
+
+            expect(value).toBe(field.default);
         });
 
-        it('populates every field with its stored value', () => {
-            const storedSettings = Object.fromEntries(
-                configFields.filter(isSettingField).map(field => {
-                    if (field.type === 'checkbox') return [field.key, !field.default];
-                    if (field.type === 'select') {
-                        const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
-                        return [field.key, optionValues.find(option => option !== field.default)];
-                    }
-                    return [field.key, `stored-${field.key}`];
-                })
-            );
+        it.each(settingFields)('renders $key with its stored value', field => {
+            const storedValue = storedValueFor(field);
+            view.render(container, { [field.key]: storedValue });
 
-            view.render(container, storedSettings);
+            const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
+            const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
 
-            configFields.forEach(field => {
-                if (isActionField(field)) return;
-                const input = container.querySelector(`#fm-${field.key}`) as HTMLInputElement | HTMLSelectElement;
-                const value = field.type === 'checkbox' ? (input as HTMLInputElement).checked : input.value;
-                expect(value).toBe(storedSettings[field.key]);
-            });
+            expect(value).toBe(storedValue);
         });
 
         it('uses configured defaults for optional rating fields', () => {
@@ -316,6 +306,9 @@ describe('SettingsView', () => {
         expect(actions.onResetClients).toHaveBeenCalledOnce();
     });
     describe('view state', () => {
+        it('returns an empty snapshot before the view renders', () => {
+            expect(view.readValues()).toEqual({});
+        });
         it('returns one snapshot from its rendered fields', () => {
             const fields: readonly ConfigField[] = [
                 { key: 'debug', label: 'Debug', type: 'checkbox', default: false, group: 'debug' },
