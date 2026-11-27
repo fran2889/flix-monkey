@@ -93,34 +93,14 @@ rules.
     you push:
 
     ```bash
-    npm run type-check \
-      && npm run lint \
-      && npm run format:check \
-      && npm run audit \
-      && npm run build \
-      && npm run test:coverage
+    npm run check:full
     ```
 
-    If you changed a workflow, also run `actionlint` and `zizmor`:
-
-    ```bash
-    actionlint
-    zizmor --offline .
-    ```
-
-    If you changed documentation, also run the link check (lychee 0.24+,
-    installed separately):
-
-    ```bash
-    lychee --config .lychee.toml '*.md' docs .github
-    ```
-
-    If you changed the Firefox manifest, also run:
-
-    ```bash
-    npm run build:firefox
-    npm run lint:firefox
-    ```
+    `npm run check` is the fast offline gate. `npm run check:full` adds workflow
+    checks, audit, build, Firefox lint, and coverage; it needs actionlint 1.7.12,
+    zizmor 1.33+, and lychee 0.24+ on `PATH`, plus network for the audit and
+    web-ext. For workflow or documentation changes only,
+    `npm run check:workflows` runs those three.
 
 5.  **Submit your PR:**
     Push your branch and open a Pull Request against the `main` branch. Follow the

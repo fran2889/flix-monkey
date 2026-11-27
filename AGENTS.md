@@ -10,15 +10,10 @@ Stack: TypeScript (ES2022, ESM), Node.js 24.x, Rollup, ESLint, Prettier, Vitest 
 
 - Install: `npm install`
 - Build: `npm run build` (all three targets)
-- Lint and format (report): `npm run lint && npm run format:check`
-- Lint and format (auto-fix): `npm run lint:fix && npm run format`
-- Type check: `npm run type-check`
 - Test: `npm test`
-- Full local check before a PR: `npm run type-check && npm run lint && npm run format:check && npm run audit && npm run build && npm run test:coverage`
-- Lint workflows: `actionlint` 1.7.12, installed separately; run it from the repo root. CI runs it through `raven-actions/actionlint`
-- Audit workflows: `zizmor` 1.33+, installed separately; run `zizmor --offline .` from the repo root. CI runs it through `zizmorcore/zizmor-action` with online audits
-- Check doc links: `lychee --config .lychee.toml '*.md' docs .github` (lychee 0.24+, installed separately); run it from the repo root. CI runs it through `lycheeverse/lychee-action`
-- Lint the Firefox extension: `npm run build:firefox && npm run lint:firefox`
+- Fast local check: `npm run check`
+- Full local check before a PR: `npm run check:full` (needs actionlint 1.7.12, zizmor 1.33+, and lychee 0.24+ on `PATH`, plus network for the audit and web-ext)
+- Workflow and link checks alone: `npm run check:workflows`
 
 Other npm scripts and their exact definitions live in `package.json`. Read it rather than trusting a copy.
 
@@ -113,7 +108,7 @@ Shared with human contributors: [CONTRIBUTING.md](./CONTRIBUTING.md#issue-and-pr
 
 - Branches: `type/kebab-case-slug`, 2 to 4 words, where `type` matches the PR title type. Match the prefix to the title (`refactor/`, not `feat/`, for a `refactor:` PR).
 - PR titles are squash-merged and parsed by release-please, so they use Conventional Commits. Match the scope to the changed directory's final name (`src/core/cache/` becomes `cache`, `src/core/services/` becomes `services`).
-- CI enforces seven merge-gate jobs: type-check, lint-and-audit (ESLint, Prettier, audit, actionlint, and zizmor), doc-links (offline file and anchor checks), build (all targets plus web-ext lint), test-unit, test-ui, and test-coverage. Run the equivalent commands locally first.
+- The merge gate is the `merge-gate` job in `.github/workflows/ci.yml`; its `needs` list is the authoritative set of required jobs. Run `npm run check:full` locally.
 - Workflow setup uses the composite action in `.github/actions/setup`, which installs Node from `.nvmrc` and runs `npm ci`. Publish, update-store-description, and release keep their own setup steps.
 - Issue titles: imperative, descriptive, no trailing period. Issue templates apply `bug` and `enhancement`; add other labels deliberately, and never apply Dependabot's automation labels by hand.
 
