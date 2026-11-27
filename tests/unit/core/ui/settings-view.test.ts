@@ -22,7 +22,11 @@ function storedValueFor(field: SettingConfigField): boolean | string {
     if (field.type === 'checkbox') return !field.default;
     if (field.type === 'select') {
         const optionValues = field.options.map(option => (Array.isArray(option) ? option[0] : option));
-        return optionValues.find(option => option !== field.default) ?? field.default;
+        const storedValue = optionValues.find(option => option !== field.default);
+        if (storedValue === undefined) {
+            throw new Error(`Select field ${field.key} has no option other than its default`);
+        }
+        return storedValue;
     }
     return `stored-${field.key}`;
 }
