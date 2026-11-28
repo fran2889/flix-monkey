@@ -88,10 +88,25 @@ describe('BaseApiClient', () => {
             const status = await client.getStatus();
             expect(status.healthy).toBe(false);
             expect((status as { healthy: false; reason: string }).reason).toBe('Temporarily disabled due to errors');
+            expect(mockDisabledManagerForTest.isDisabled).toHaveBeenCalledOnce();
         });
     });
 
     describe('fetch', () => {
+        it('performs no disabled check of its own', async () => {
+            const disabledManagerForTest: DisabledClientsManager = {
+                isDisabled: vi.fn().mockResolvedValue(true),
+                disable: vi.fn().mockResolvedValue(undefined),
+                resetAll: vi.fn().mockResolvedValue([]),
+            } as unknown as DisabledClientsManager;
+            const client = new XmdbApiClient({ ...deps, disabledManager: disabledManagerForTest });
+            client.search = vi.fn().mockResolvedValue(undefined);
+
+            const result = await client.fetch('Some Title');
+
+            expect(result).toBeUndefined();
+            expect(disabledManagerForTest.isDisabled).not.toHaveBeenCalled();
+        });
         it('rejects when the fetch fails', async () => {
             const mockAdapterForTest = buildMockAdapter()
                 .withHttpFetchRejectingWith(new Error('Network error'))

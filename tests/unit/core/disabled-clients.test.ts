@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ApiSource } from '../../../src/core/constants';
 import { DisabledClientsManager } from '../../../src/core/disabled-clients';
+import type { StorageValue } from '../../../src/platform/adapter';
 import type { MockPlatformAdapter } from '../../mocks/adapter';
 import { buildMockAdapter } from '../../mocks/adapter';
 
@@ -18,9 +19,21 @@ describe('DisabledClientsManager', () => {
         manager = new DisabledClientsManager(mockAdapter);
     });
 
-    it('reports a source as not disabled before any disable', async () => {
-        mockAdapter.storageGet.mockResolvedValue(undefined);
-        expect(await manager.isDisabled('xmdb')).toBe(false);
+    it.each([
+        { label: 'a missing marker', stored: undefined, expected: false },
+        { label: 'a zero marker', stored: '0', expected: false },
+        { label: 'an unexpired marker', stored: (Date.now() + 5000).toString(), expected: true },
+        { label: 'an expired marker', stored: (Date.now() - 5000).toString(), expected: false },
+        { label: 'a non-numeric marker', stored: 'abc', expected: false },
+        { label: 'a numeric-prefix marker', stored: '12abc', expected: false },
+        { label: 'a non-finite marker', stored: 'Infinity', expected: false },
+        { label: 'a negative marker', stored: '-5', expected: false },
+        { label: 'a boolean marker', stored: true, expected: false },
+    ])('reports $label as $expected without writing to storage', async ({ stored, expected }) => {
+        mockAdapter.storageGet.mockResolvedValue(stored as StorageValue | undefined);
+
+        expect(await manager.isDisabled('xmdb')).toBe(expected);
+        expect(mockAdapter.storageSet).not.toHaveBeenCalled();
     });
 
     it('disables a source and stores its expiry', async () => {
@@ -31,16 +44,6 @@ describe('DisabledClientsManager', () => {
 
         const expiry = Number.parseInt(mockAdapter.storageSet.mock.calls[0]?.[1] as string, 10);
         expect(expiry).toBeGreaterThanOrEqual(now + 1000);
-    });
-
-    it('reports a source as disabled before its expiry', async () => {
-        mockAdapter.storageGet.mockResolvedValue((Date.now() + 5000).toString());
-        expect(await manager.isDisabled('xmdb')).toBe(true);
-    });
-
-    it('reports a source as not disabled after its expiry', async () => {
-        mockAdapter.storageGet.mockResolvedValue((Date.now() - 1000).toString());
-        expect(await manager.isDisabled('xmdb')).toBe(false);
     });
 
     it('resets all disabled clients and returns their names', async () => {

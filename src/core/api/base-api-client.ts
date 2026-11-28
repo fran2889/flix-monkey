@@ -41,8 +41,9 @@ export interface ApiClient {
     /**
      * Fetches a hydrated title through the search then details pipeline.
      *
-     * Callers must gate through `getStatus` before invoking. A supplied IMDb ID
-     * or a stored ID override skips the search step.
+     * Callers must gate through `getStatus` before invoking: the client performs
+     * no disabled check, so an ungated call proceeds even while the provider is
+     * disabled. A supplied IMDb ID or a stored ID override skips the search step.
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param imdbId - Optional IMDb ID that skips search.
@@ -86,18 +87,17 @@ export abstract class BaseApiClient implements ApiClient {
     }
 
     /**
-     * Applies the ID override and disabled-client short circuits around the
-     * search then details pipeline described by `ApiClient.fetch`.
+     * Applies the ID override short circuit around the search then details
+     * pipeline described by `ApiClient.fetch`.
+     *
+     * This client performs no disabled check of its own. Callers must gate
+     * through `getStatus` first.
      *
      * @param displayTitle - Title as shown by the streaming service.
      * @param imdbId - Optional IMDb ID that skips search.
      * @returns Hydrated title, or undefined when no match is found.
      */
     async fetch(displayTitle: string, imdbId?: string): Promise<Title | undefined> {
-        if (await this.#isDisabled()) {
-            return undefined;
-        }
-
         const overrideId = await this.#overrideManager.getImdbId(displayTitle);
         if (overrideId) {
             this.#logger.debug(`Using override IMDb ID ${overrideId} for "${displayTitle}"`);
@@ -121,15 +121,15 @@ export abstract class BaseApiClient implements ApiClient {
         return detailedTitle.withSource(this.#source);
     }
 
-    async #isDisabled(): Promise<boolean> {
-        return this.#disabledManager.isDisabled(this.#source);
-    }
-
     async getStatus(): Promise<ClientStatus> {
         if (await this.#isDisabled()) {
             return { healthy: false, reason: 'Temporarily disabled due to errors' };
         }
         return { healthy: true };
+    }
+
+    async #isDisabled(): Promise<boolean> {
+        return this.#disabledManager.isDisabled(this.#source);
     }
 
     /**
