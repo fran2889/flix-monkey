@@ -191,6 +191,7 @@ describe('OverlayRenderer', () => {
             const renderer = new OverlayRenderer(buildConfig().build());
             const container = document.createElement('div');
             container.style.position = initial;
+            document.body.appendChild(container);
 
             renderer.ensureRelative(container);
 
